@@ -85,6 +85,59 @@ export class SetupRoomTypeDto {
 
 // ─── Step 3: Rooms ───────────────────────────────────────────────────────────
 
+export class SetupCustomRoomDto {
+  @ApiProperty({ example: 1, minimum: 1, description: 'Floor number' })
+  @IsInt()
+  @Min(1)
+  floor: number
+
+  @ApiProperty({ example: 1, minimum: 1, description: 'Room index within floor (1-based)' })
+  @IsInt()
+  @Min(1)
+  index: number
+
+  @ApiProperty({ example: 'P101', description: 'Room code / number' })
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/\S/, { message: 'roomNumber must not be blank' })
+  @MaxLength(255)
+  roomNumber: string
+
+  @ApiPropertyOptional({ example: '25.50', description: 'Room area in m²' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^(?:0|[1-9]\d{0,6})(?:\.\d{1,2})?$/, {
+    message: 'area must be a positive decimal with up to two decimal places',
+  })
+  area?: string
+
+  @ApiPropertyOptional({ example: 2, minimum: 1, description: 'Maximum occupants per room' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  maxOccupants?: number
+
+  @ApiPropertyOptional({
+    example: 0,
+    description: '0-based index into roomTypes array provided in step 2',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  roomTypeIndex?: number
+
+  @ApiPropertyOptional({
+    example: [0, 1],
+    description: '0-based indices into services array provided in step 2',
+    type: [Number],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  serviceIndices?: number[]
+}
+
 export class SetupRoomsDto {
   @ApiProperty({
     example: 3,
@@ -149,6 +202,16 @@ export class SetupRoomsDto {
   @IsInt({ each: true })
   @Min(0, { each: true })
   serviceIndices?: number[]
+
+  @ApiPropertyOptional({
+    type: [SetupCustomRoomDto],
+    description: 'Optional per-room customizations overriding the bulk template defaults',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SetupCustomRoomDto)
+  customRooms?: SetupCustomRoomDto[]
 }
 
 // ─── Full Setup Payload ───────────────────────────────────────────────────────

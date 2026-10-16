@@ -32,7 +32,7 @@ import {
   AlertTriangle,
   MapPin,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, TextInput } from '@/components/ui'
 
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
@@ -48,6 +48,7 @@ import {
   getContacts,
   initMessagesSocket,
 } from '@/services/message.service'
+import { dispatchMessagesUpdated } from '@/hooks'
 
 // Avatar colors based on user identity
 const AVATAR_COLORS = [
@@ -246,7 +247,9 @@ export default function TenantMessagesPage() {
         setMessages(prev => appendOrUpdateMessage(prev, newMsg))
         // Auto mark as read if received in active chat from landlord
         if (newMsg.senderId !== user?.id) {
-          markAsRead(activeChatRef.current.id).catch(() => {})
+          markAsRead(activeChatRef.current.id)
+            .then(() => dispatchMessagesUpdated())
+            .catch(() => {})
         }
       }
 
@@ -265,6 +268,7 @@ export default function TenantMessagesPage() {
           return c
         }),
       )
+      dispatchMessagesUpdated()
     })
 
     socket.on(
@@ -318,10 +322,13 @@ export default function TenantMessagesPage() {
 
     // Mark as read on open
     if (activeChat.unreadCount > 0) {
-      markAsRead(activeChat.id).catch(() => {})
+      markAsRead(activeChat.id)
+        .then(() => dispatchMessagesUpdated())
+        .catch(() => {})
       setConversations(prev =>
         prev.map(c => (c.id === activeChat.id ? { ...c, unreadCount: 0 } : c)),
       )
+      dispatchMessagesUpdated()
     }
 
     return () => {
@@ -462,10 +469,10 @@ export default function TenantMessagesPage() {
   }
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] bg-white border-y border-zinc-200/80 overflow-hidden flex relative animate-in fade-in duration-300">
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-[100dvh] lg:h-screen bg-white border-y border-zinc-200/80 overflow-hidden flex relative animate-in fade-in duration-300">
       {/* PANE 1: Left Conversation List */}
       <div
-        className={`w-full md:w-80 lg:w-88 border-r border-zinc-200/80 flex flex-col bg-zinc-50/50 shrink-0 ${
+        className={`w-full md:w-80 lg:w-88 border-r border-zinc-200/80 flex flex-col bg-zinc-50/50 shrink-0 h-full ${
           mobileShowChat ? 'hidden md:flex' : 'flex'
         }`}
       >
@@ -481,22 +488,28 @@ export default function TenantMessagesPage() {
           </div>
 
           <div className="relative">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
+            <TextInput
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder={t('tenantSearchChatPlaceholder')}
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              rightIcon={
+                searchTerm ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="p-1 h-auto text-zinc-400 hover:text-zinc-600 hover:bg-transparent cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                ) : undefined
+              }
+              className="py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              containerClassName="space-y-0"
             />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
           {/* Filter Tabs */}
@@ -507,17 +520,20 @@ export default function TenantMessagesPage() {
               { id: 'employee', label: t('tenantTabStaff') },
               { id: 'unread', label: t('tenantTabUnread') },
             ].map(tab => (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setActiveFilter(tab.id as any)}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                className={`px-3 py-1 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                   activeFilter === tab.id
-                    ? 'bg-[#2AC1BC] text-white shadow-xs'
+                    ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC] hover:text-white'
                     : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                 }`}
               >
                 {tab.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -534,7 +550,10 @@ export default function TenantMessagesPage() {
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300" />
               <p className="font-semibold text-zinc-600">{t('tenantNoConversationsTitle')}</p>
               {contacts.length > 0 ? (
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
+                  type="button"
                   onClick={async () => {
                     try {
                       const newConv = await getOrCreateConversation(contacts[0].id)
@@ -544,12 +563,12 @@ export default function TenantMessagesPage() {
                       console.error(err)
                     }
                   }}
-                  className="mt-2 px-3 py-1.5 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#23a8a3] transition-colors"
+                  className="mt-2 px-3 py-1.5 h-auto bg-[#2AC1BC] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#23a8a3] transition-colors cursor-pointer"
                 >
                   {t('tenantStartChatWith', {
                     name: formatDisplayName(contacts[0].fullName, t('tenantFallbackLandlord')),
                   })}
-                </button>
+                </Button>
               ) : (
                 <p className="text-[11px]">{t('tenantCheckContractNotice')}</p>
               )}
@@ -641,13 +660,15 @@ export default function TenantMessagesPage() {
             <div className="p-3 sm:px-5 sm:py-3.5 border-b border-zinc-200/80 flex items-center justify-between gap-2 bg-white shrink-0 z-10 shadow-2xs">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {/* Back to list on mobile */}
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setMobileShowChat(false)}
-                  className="md:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
+                  className="md:hidden p-1.5 -ml-1 h-auto text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
                   title={t('tenantBackToList')}
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-700" />
-                </button>
+                </Button>
 
                 <div className="relative shrink-0">
                   <div
@@ -704,17 +725,19 @@ export default function TenantMessagesPage() {
                 >
                   <Phone className="w-4 h-4" />
                 </a>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowRightDrawer(!showRightDrawer)}
-                  className={`p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                  className={`p-1.5 sm:p-2 h-auto rounded-xl border transition-all cursor-pointer shadow-2xs ${
                     showRightDrawer
-                      ? 'bg-[#2AC1BC] text-white border-[#2AC1BC]'
+                      ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:bg-[#2AC1BC] hover:text-white'
                       : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
                   }`}
                   title={t('tenantRoomInfoTooltip')}
                 >
                   <Info className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -865,13 +888,15 @@ export default function TenantMessagesPage() {
                 {t('tenantQuickPillsTitle')}:
               </span>
               {quickReplies.map((pill, idx) => (
-                <button
+                <Button
                   key={idx}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleSendMessage(pill)}
-                  className="px-2.5 py-1 rounded-xl bg-zinc-50 border border-zinc-200/80 text-[11px] font-semibold text-zinc-600 hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC] hover:text-[#2AC1BC] transition-all shrink-0 cursor-pointer"
+                  className="px-2.5 py-1 h-auto rounded-xl bg-zinc-50 border border-zinc-200/80 text-[11px] font-semibold text-zinc-600 hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC] hover:text-[#2AC1BC] transition-all shrink-0 cursor-pointer"
                 >
                   {pill}
-                </button>
+                </Button>
               ))}
             </div>
 
@@ -884,15 +909,17 @@ export default function TenantMessagesPage() {
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 shrink-0"
                   >
                     <span>{att.name}</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() =>
                         setPendingAttachments(prev => prev.filter((_, i) => i !== idx))
                       }
-                      className="text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                      className="p-0.5 h-auto text-zinc-400 hover:text-zinc-700 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -906,45 +933,52 @@ export default function TenantMessagesPage() {
               }}
               className="p-2.5 sm:p-3.5 border-t border-zinc-200/80 bg-white flex items-center gap-2 shrink-0"
             >
-              <input
+              <TextInput
                 type="file"
                 ref={fileInputRef}
+                containerClassName="hidden"
                 className="hidden"
                 onChange={e => handleFileUpload(e, 'file')}
               />
-              <input
+              <TextInput
                 type="file"
                 ref={imageInputRef}
                 accept="image/*"
+                containerClassName="hidden"
                 className="hidden"
                 onChange={e => handleFileUpload(e, 'image')}
               />
 
               <div className="flex items-center gap-1 text-zinc-400">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                  className="p-2 h-auto hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer text-zinc-400 hover:text-zinc-600"
                   title={t('tenantAttachFileTooltip')}
                 >
                   <Paperclip className="w-4 h-4" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => imageInputRef.current?.click()}
-                  className="p-2 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                  className="p-2 h-auto hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer text-zinc-400 hover:text-zinc-600"
                   title={t('tenantSendImageTooltip')}
                 >
                   <ImageIcon className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
 
-              <input
+              <TextInput
                 type="text"
                 value={inputMessage}
                 onChange={e => setInputMessage(e.target.value)}
                 placeholder={t('tenantTypeMessagePlaceholder')}
-                className="flex-1 px-3.5 py-2 sm:py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+                containerClassName="flex-1 space-y-0"
+                className="py-2 sm:py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               />
 
               <Button
@@ -978,18 +1012,20 @@ export default function TenantMessagesPage() {
           />
 
           {/* Side Panel Content */}
-          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:w-80 xl:w-88 border-l border-zinc-200/80 bg-zinc-50 flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
+          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:h-full lg:w-80 xl:w-88 border-l border-zinc-200/80 bg-zinc-50 flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
             {/* Header on mobile */}
             <div className="flex lg:hidden items-center justify-between pb-3 border-b border-zinc-200">
               <span className="text-xs font-black text-zinc-900 uppercase">
                 {t('tenantRoomInfoTitle')}
               </span>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setShowRightDrawer(false)}
-                className="p-1.5 rounded-lg hover:bg-zinc-200 text-zinc-600 cursor-pointer"
+                className="p-1.5 h-auto rounded-lg hover:bg-zinc-200 text-zinc-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Room Overview Card */}
@@ -1099,12 +1135,14 @@ export default function TenantMessagesPage() {
               alt={t('tenantViewPhoto')}
               className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl"
             />
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setPreviewImage(null)}
-              className="absolute -top-3 -right-3 p-2 bg-white text-zinc-800 rounded-full shadow-lg hover:bg-zinc-100 cursor-pointer"
+              className="absolute -top-3 -right-3 p-2 h-auto bg-white text-zinc-800 rounded-full shadow-lg hover:bg-zinc-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}

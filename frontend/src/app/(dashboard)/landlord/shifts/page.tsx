@@ -18,14 +18,13 @@ import {
   Layers,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
+import { Button, TextInput, SearchInput } from '@/components/ui'
 
 export default function ShiftsPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
   const buildingId = activeBuilding?.id || ''
 
   const [shifts, setShifts] = useState<ShiftItem[]>([])
@@ -142,7 +141,7 @@ export default function ShiftsPage() {
       setFormError(
         err?.response?.data?.message ||
           err?.message ||
-          (isEn ? 'An error occurred. Please try again.' : 'Có lỗi xảy ra. Vui lòng thử lại.'),
+          t('landlordShiftsDeleteError'),
       )
     } finally {
       setIsSubmitting(false)
@@ -218,7 +217,7 @@ export default function ShiftsPage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
             <Clock className="w-4 h-4" />
-            <span>{isEn ? ' · Staff Management' : ' · Quản lý nhân sự'}</span>
+            <span> · {t('landlordScheduleStaffManagement')}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
             {t('landlordShiftsTitle')}
@@ -226,17 +225,17 @@ export default function ShiftsPage() {
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
             {t('landlordShiftsSubtitle')}:{' '}
             <strong className="text-zinc-800">
-              {activeBuilding?.name || (isEn ? 'property' : 'tòa nhà')}
+              {activeBuilding?.name || t('landlordRoomsBuildingDefault')}
             </strong>
           </p>
         </div>
 
-        <button
+        <Button
           onClick={openCreateModal}
           className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" /> {t('landlordShiftsAddNewBtn')}
-        </button>
+        </Button>
       </div>
 
       <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
@@ -293,13 +292,12 @@ export default function ShiftsPage() {
       </div>
 
       <div className="relative max-w-sm">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-        <input
-          type="text"
+        <SearchInput
           placeholder={t('landlordShiftsFieldNamePh')}
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+          onChange={setSearchQuery}
+          containerClassName="w-full space-y-0"
+          className="w-full py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
         />
       </div>
 
@@ -322,12 +320,12 @@ export default function ShiftsPage() {
             </p>
           </div>
           {!searchQuery && (
-            <button
+            <Button
               onClick={openCreateModal}
               className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl transition-all shadow-sm cursor-pointer"
             >
               {t('landlordShiftsAddNow')}
-            </button>
+            </Button>
           )}
         </div>
       ) : (
@@ -388,18 +386,22 @@ export default function ShiftsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-zinc-100">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => openEditModal(shift)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer flex-1 justify-center"
+                    className="h-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer flex-1 justify-center"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnEdit')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDelete(shift)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex-1 justify-center border border-rose-200"
+                    className="h-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-700 rounded-xl transition-colors cursor-pointer flex-1 justify-center border border-rose-200"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnDelete')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )
@@ -429,61 +431,50 @@ export default function ShiftsPage() {
                     : t('landlordShiftsCreateSubtitle')}
                 </p>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleAttemptClose}
-                className="p-2 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  {t('landlordShiftsFieldName')}
-                </label>
-                <input
-                  type="text"
-                  value={formName}
-                  onChange={e => {
-                    setFormName(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  placeholder={t('landlordShiftsFieldNamePh')}
-                  className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                  autoFocus
-                />
-              </div>
+              <TextInput
+                label={t('landlordShiftsFieldName')}
+                required
+                value={formName}
+                onChange={e => {
+                  setFormName(e.target.value)
+                  setIsDirty(true)
+                }}
+                placeholder={t('landlordShiftsFieldNamePh')}
+                autoFocus
+              />
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    {t('landlordShiftsFieldStartTime')}
-                  </label>
-                  <input
-                    type="time"
-                    value={formStart}
-                    onChange={e => {
-                      setFormStart(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                    {t('landlordShiftsFieldEndTime')}
-                  </label>
-                  <input
-                    type="time"
-                    value={formEnd}
-                    onChange={e => {
-                      setFormEnd(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                  />
-                </div>
+                <TextInput
+                  type="time"
+                  label={t('landlordShiftsFieldStartTime')}
+                  required
+                  value={formStart}
+                  onChange={e => {
+                    setFormStart(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+                <TextInput
+                  type="time"
+                  label={t('landlordShiftsFieldEndTime')}
+                  required
+                  value={formEnd}
+                  onChange={e => {
+                    setFormEnd(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
               </div>
 
               {formStart && formEnd && (
@@ -504,14 +495,15 @@ export default function ShiftsPage() {
               )}
 
               <div className="flex gap-2.5 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleAttemptClose}
                   className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-60 rounded-xl transition-all shadow-sm shadow-[#2AC1BC]/20 cursor-pointer"
@@ -524,7 +516,7 @@ export default function ShiftsPage() {
                   {editingShift
                     ? t('landlordShiftsSaveShiftBtn')
                     : t('landlordShiftsCreateShiftBtn')}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -539,18 +531,20 @@ export default function ShiftsPage() {
             </h3>
             <p className="text-xs text-zinc-500 mb-5">{t('landlordShiftsConfirmCloseDesc')}</p>
             <div className="flex gap-2.5">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={handleConfirmClose}
-                className="flex-1 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                className="flex-1 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 border border-rose-200 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordShiftsConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

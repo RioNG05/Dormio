@@ -27,8 +27,7 @@ import {
   FileQuestion,
   AlertCircle,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { NumberInput } from '@/components/ui/NumberInput'
+import { Button, NumberInput, TextInput } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
@@ -719,12 +718,13 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     />
 
                     {/* Hidden File Inputs for Device Upload & Camera Capture */}
-                    <input
+                    <TextInput
                       ref={el => {
                         deviceUploadRefs.current[sId] = el
                       }}
                       type="file"
                       accept="image/*"
+                      containerClassName="hidden"
                       className="hidden"
                       onChange={e => {
                         if (e.target.files?.[0]) {
@@ -732,13 +732,14 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         }
                       }}
                     />
-                    <input
+                    <TextInput
                       ref={el => {
                         cameraUploadRefs.current[sId] = el
                       }}
                       type="file"
                       accept="image/*"
                       capture="environment"
+                      containerClassName="hidden"
                       className="hidden"
                       onChange={e => {
                         if (e.target.files?.[0]) {

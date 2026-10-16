@@ -29,6 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
 
 export default function ListingsPage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
@@ -121,7 +122,7 @@ export default function ListingsPage() {
 
   useEffect(() => {
     loadData()
-  }, [page, pageSize, statusFilter])
+  }, [page, pageSize, statusFilter, searchQuery])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -329,68 +330,73 @@ export default function ListingsPage() {
 
       {/* Filter and View Mode Toolbar */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-          <input
-            type="text"
+        <form onSubmit={handleSearchSubmit} className="w-full md:max-w-xs">
+          <SearchInput
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={val => {
+              setSearchQuery(val)
+              setPage(1)
+            }}
             placeholder={t('landlordListingsSearchPlaceholder')}
-            className="w-full pl-9 pr-4 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
+            containerClassName="w-full space-y-0"
+            className="w-full py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
           />
         </form>
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
           {/* Status Filter */}
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={e => {
-                setStatusFilter(e.target.value)
-                setPage(1)
-              }}
-              className="rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50/50 hover:bg-white focus:outline-none focus:border-[#FF6B35] transition-colors appearance-none cursor-pointer"
-            >
-              <option value="">{t('landlordListingsFilterAllStatus')}</option>
-              <option value="posted">{t('landlordListingsStatusPosted')}</option>
-              <option value="draft">{t('landlordListingsStatusDraft')}</option>
-              <option value="hidden">{t('landlordListingsStatusHidden')}</option>
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-          </div>
+          <SelectInput
+            value={statusFilter}
+            onChange={e => {
+              setStatusFilter(e.target.value)
+              setPage(1)
+            }}
+            containerClassName="w-auto space-y-0"
+            className="rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50/50 hover:bg-white focus:outline-none focus:border-[#FF6B35] transition-colors cursor-pointer"
+            options={[
+              { value: '', label: t('landlordListingsFilterAllStatus') },
+              { value: 'posted', label: t('landlordListingsStatusPosted') },
+              { value: 'draft', label: t('landlordListingsStatusDraft') },
+              { value: 'hidden', label: t('landlordListingsStatusHidden') },
+            ]}
+          />
 
           {/* View Toggle (Grid / Table) */}
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('grid')
                 setPageSize(6)
                 setPage(1)
               }}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`h-auto flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 viewMode === 'grid'
-                  ? 'bg-white text-[#FF6B35] shadow-sm'
+                  ? 'bg-white text-[#FF6B35] shadow-sm hover:bg-white hover:text-[#FF6B35]'
                   : 'text-zinc-500 hover:text-zinc-900'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" /> {t('landlordListingsViewGrid')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('table')
                 setPageSize(10)
                 setPage(1)
               }}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`h-auto flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 viewMode === 'table'
-                  ? 'bg-white text-[#FF6B35] shadow-sm'
+                  ? 'bg-white text-[#FF6B35] shadow-sm hover:bg-white hover:text-[#FF6B35]'
                   : 'text-zinc-500 hover:text-zinc-900'
               }`}
             >
               <List className="w-3.5 h-3.5" /> {t('landlordListingsViewList')}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -518,10 +524,12 @@ export default function ListingsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleToggleStatus(item)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                        className={`h-auto flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                           item.status === 'posted'
                             ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
                             : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
@@ -541,7 +549,7 @@ export default function ListingsPage() {
                             <Eye className="w-3.5 h-3.5" /> {t('landlordListingsActionRepublish')}
                           </>
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -611,15 +619,17 @@ export default function ListingsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleToggleStatus(item)}
-                        className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold transition-colors cursor-pointer"
+                        className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold transition-colors cursor-pointer"
                       >
                         {item.status === 'posted'
                           ? t('landlordListingsBtnToggleHide')
                           : t('landlordListingsBtnToggleShow')}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -635,8 +645,7 @@ export default function ListingsPage() {
           {/* Items per page and range display */}
           <div className="flex items-center gap-2 text-zinc-600">
             <span>{t('landlordListingsItemsPerPage')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize}
@@ -645,7 +654,8 @@ export default function ListingsPage() {
                 setPageSize(val)
                 setPage(1)
               }}
-              className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg focus:outline-none focus:border-[#FF6B35]"
+              containerClassName="w-16 space-y-0"
+              className="py-1 text-center font-bold border border-zinc-200 rounded-lg focus:outline-none focus:border-[#FF6B35]"
             />
             <span>{t('landlordListingsPerPageUnit')} | </span>
             <span className="font-bold text-zinc-900">
@@ -656,66 +666,76 @@ export default function ListingsPage() {
 
           {/* 5-Page Window Jumping Controls */}
           <div className="flex items-center gap-1.5">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={page <= 1}
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              className="p-2 border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="h-8 w-8 p-0 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title={t('landlordListingsPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
             {windowStart > 1 && (
               <>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPage(1)}
-                  className="w-8 h-8 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                  className="h-8 w-8 p-0 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
                 >
                   1
-                </button>
+                </Button>
                 {windowStart > 2 && <span className="px-1 text-zinc-400">...</span>}
               </>
             )}
 
             {pageNumbers.map(num => (
-              <button
+              <Button
                 key={num}
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setPage(num)}
-                className={`w-8 h-8 font-bold rounded-xl transition-colors cursor-pointer ${
+                className={`h-8 w-8 p-0 font-bold rounded-xl transition-colors cursor-pointer ${
                   page === num
-                    ? 'bg-[#FF6B35] text-white shadow-sm shadow-[#FF6B35]/20'
+                    ? 'bg-[#FF6B35] text-white shadow-sm shadow-[#FF6B35]/20 hover:bg-[#FF6B35]/90 hover:text-white'
                     : 'border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                 }`}
               >
                 {num}
-              </button>
+              </Button>
             ))}
 
             {windowEnd < totalPages && (
               <>
                 {windowEnd < totalPages - 1 && <span className="px-1 text-zinc-400">...</span>}
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPage(totalPages)}
-                  className="w-8 h-8 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
+                  className="h-8 w-8 p-0 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
                 >
                   {totalPages}
-                </button>
+                </Button>
               </>
             )}
 
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              className="p-2 border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              className="h-8 w-8 p-0 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title={t('landlordListingsPaginationNext')}
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -32,6 +32,8 @@ import { ExportContractResponseDto } from './dto/export-contract-response.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
+import { RequireTier } from '../../common/decorators/require-tier.decorator'
+import { SubscriptionPackage } from '@prisma'
 import type { JwtPayload } from '../auth/types/jwt-payload.type'
 
 @ApiTags('Landlord Contracts')
@@ -228,6 +230,7 @@ export class LandlordContractsController {
 
   @Post(':id/export')
   @UseGuards(PropertyOwnershipGuard)
+  @RequireTier(SubscriptionPackage.plus)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
     required: true,
@@ -237,11 +240,15 @@ export class LandlordContractsController {
   @ApiOperation({
     summary: 'Export Contract (UC-L-15)',
     description:
-      'Renders the unified contract template, persists a new ContractDocument entry, logs AuditLog, and returns document download and print URLs.',
+      'Renders the unified contract template, persists a new ContractDocument entry, logs AuditLog, and returns document download and print URLs. Requires Plus tier.',
   })
   @ApiCreatedResponse({
     type: ExportContractResponseDto,
     description: 'Contract document exported and created successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or higher',
   })
   async exportContract(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -259,6 +266,7 @@ export class LandlordContractsController {
 
   @Get(':id/print')
   @UseGuards(PropertyOwnershipGuard)
+  @RequireTier(SubscriptionPackage.plus)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
     required: true,
@@ -268,11 +276,15 @@ export class LandlordContractsController {
   @ApiOperation({
     summary: 'Print Contract Template HTML (UC-L-15)',
     description:
-      'Direct-print trigger: renders the identical server-side contract template formatted for A4 print. Supports ?autoPrint=true to trigger print dialog on load.',
+      'Direct-print trigger: renders the identical server-side contract template formatted for A4 print. Supports ?autoPrint=true to trigger print dialog on load. Requires Plus tier.',
   })
   @ApiProduces('text/html')
   @ApiOkResponse({
     description: 'Returns rendered HTML page ready for printing',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or higher',
   })
   async printContract(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -299,6 +311,7 @@ export class LandlordContractsController {
 
   @Get(':id/documents')
   @UseGuards(PropertyOwnershipGuard)
+  @RequireTier(SubscriptionPackage.plus)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
     required: true,
@@ -307,10 +320,14 @@ export class LandlordContractsController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'List Contract Documents (UC-L-15)',
-    description: 'Retrieves all generated ContractDocument records for this contract.',
+    description: 'Retrieves all generated ContractDocument records for this contract. Requires Plus tier.',
   })
   @ApiOkResponse({
     description: 'List of contract documents retrieved successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or higher',
   })
   async getContractDocuments(
     @Headers('x-boarding-house-id') boardingHouseId: string,
@@ -328,6 +345,7 @@ export class LandlordContractsController {
 
   @Get(':id/documents/:documentId/download')
   @UseGuards(PropertyOwnershipGuard)
+  @RequireTier(SubscriptionPackage.plus)
   @ApiHeader({
     name: 'X-Boarding-House-Id',
     required: true,
@@ -337,10 +355,14 @@ export class LandlordContractsController {
   @ApiOperation({
     summary: 'Download Contract Document (UC-L-15)',
     description:
-      'Downloadable-file trigger: streams the rendered contract document as a downloadable HTML file.',
+      'Downloadable-file trigger: streams the rendered contract document as a downloadable HTML file. Requires Plus tier.',
   })
   @ApiOkResponse({
     description: 'File download stream',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires Plus subscription tier or higher',
   })
   async downloadContractDocument(
     @Headers('x-boarding-house-id') boardingHouseId: string,

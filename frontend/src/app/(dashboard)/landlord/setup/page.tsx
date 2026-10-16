@@ -2,30 +2,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Building2,
-  Wrench,
-  Sparkles,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  Plus,
-  Trash2,
-  AlertCircle,
-  CheckCircle2,
-  Layers,
-  X,
-  LoaderCircle,
-  AlertTriangle,
-  Info,
-  CreditCard,
-  QrCode,
-} from 'lucide-react'
+import { Building2, Layers, Sparkles, CreditCard } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
+import { Button, Form, Text } from '@/components/ui'
 import {
   setupBoardingHouse,
   type SetupBoardingHousePayload,
+  type SetupCustomRoomPayload,
   type SetupRoomTypePayload,
   type SetupServicePayload,
 } from '@/services/boarding-house.service'
@@ -36,51 +20,39 @@ import {
   type Ward,
   FALLBACK_PROVINCES,
 } from '@/services/vietnam-address.service'
-import { MapAddressPicker, type SelectedMapAddress } from '@/components/landlord/MapAddressPicker'
-import { CoverPhotoUpload } from '@/components/landlord/CoverPhotoUpload'
+import type { SelectedMapAddress } from '@/components/landlord/MapAddressPicker'
 import { userService } from '@/services/user.service'
-
-// ─── TYPES & CONSTANTS ────────────────────────────────────────────────────────
-
-type WizardStep = 1 | 2 | 3 | 4
-
-interface ServiceItem extends SetupServicePayload {
-  id: string
-}
-
-interface RoomTypeItem extends SetupRoomTypePayload {
-  id: string
-}
-
-const MAX_FREE_TIER_ROOMS = 10
-
-const POPULAR_BANKS = [
-  'MB Bank',
-  'Vietcombank',
-  'Techcombank',
-  'VPBank',
-  'ACB',
-  'BIDV',
-  'VietinBank',
-  'TPBank',
-]
-
-const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+import {
+  StepperItem,
+  Step1GeneralInfo,
+  Step2ServicesAndRoomTypes,
+  Step3BulkRoomsAndPreview,
+  Step4BankAccount,
+} from './components'
+import {
+  createId,
+  MAX_FREE_TIER_ROOMS,
+  type BankInfoState,
+  type CustomRoomData,
+  type GeneralInfoState,
+  type RoomsConfigState,
+  type RoomTypeItem,
+  type ServiceItem,
+  type WizardStep,
+} from './types'
 
 export default function SetupWizardPage() {
   const router = useRouter()
   const { buildings, selectBuilding, refreshBuildings, upgradeToLandlord } = useAuth()
   const t = useTranslations('landlord')
-  const { currentLocale } = useLanguage()
 
   // ─── WIZARD PROGRESS ─────────────────────────────────────────────────────────
   const [step, setStep] = useState<WizardStep>(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [showCancelModal, setShowCancelModal] = useState(false)
 
   // ─── STEP 1 STATE: GENERAL INFO ──────────────────────────────────────────────
-  const [info, setInfo] = useState({
+  const [info, setInfo] = useState<GeneralInfoState>({
     name: '',
     description: '',
     country: 'Việt Nam',
@@ -139,7 +111,7 @@ export default function SetupWizardPage() {
   ])
 
   // ─── STEP 3 STATE: BULK ROOM GENERATION ──────────────────────────────────────
-  const [roomsConfig, setRoomsConfig] = useState({
+  const [roomsConfig, setRoomsConfig] = useState<RoomsConfigState>({
     floorCount: 3,
     roomsPerFloor: 3,
     nameFormat: 'P{floor}0{index}',
@@ -149,8 +121,11 @@ export default function SetupWizardPage() {
     serviceIndices: [0, 1, 2], // default apply initial services
   })
 
+  // ─── STEP 3: INDIVIDUAL ROOM CUSTOMIZATION OVERRIDES ──────────────────────────
+  const [roomOverrides, setRoomOverrides] = useState<Record<string, CustomRoomData>>({})
+
   // ─── STEP 4 STATE: BANK ACCOUNT (PAYOUT / VIETQR) ────────────────────────────
-  const [bankInfo, setBankInfo] = useState({
+  const [bankInfo, setBankInfo] = useState<BankInfoState>({
     bankName: '',
     accountNumber: '',
     accountName: '',
@@ -300,23 +275,7 @@ export default function SetupWizardPage() {
     }))
   }
 
-  // ─── HELPERS & TOUCHED DETECTION ─────────────────────────────────────────────
-  const isDirty = useMemo(() => {
-    return (
-      info.name.trim() !== '' ||
-      info.street.trim() !== '' ||
-      info.province.trim() !== '' ||
-      info.houseNumber.trim() !== '' ||
-      info.ward.trim() !== '' ||
-      Boolean(thumbnailFile) ||
-      bankInfo.bankName.trim() !== '' ||
-      bankInfo.accountNumber.trim() !== '' ||
-      bankInfo.accountName.trim() !== '' ||
-      step > 1
-    )
-  }, [info, thumbnailFile, bankInfo, step])
-
-  const updateInfo = (field: keyof typeof info, value: string) => {
+  const updateInfo = (field: keyof GeneralInfoState, value: string) => {
     setInfo(prev => {
       const next = { ...prev, [field]: value }
       // Auto-sync floorCount in Step 3 if totalFloor changes
@@ -420,36 +379,15 @@ export default function SetupWizardPage() {
 
   const isQuotaExceeded = totalRoomsToCreate > MAX_FREE_TIER_ROOMS
 
-  const generatedRoomsPreview = useMemo(() => {
-    const list: Array<{ floor: number; roomNumbers: string[] }> = []
-    const floors = Math.min(Math.max(1, roomsConfig.floorCount), 30)
-    const perFloor = Math.min(Math.max(1, roomsConfig.roomsPerFloor), 30)
-
-    for (let f = 1; f <= floors; f++) {
-      const roomNumbers: string[] = []
-      for (let i = 1; i <= perFloor; i++) {
-        const num = roomsConfig.nameFormat
-          .replace(/\{floor\}/g, String(f))
-          .replace(/\{index\}/g, String(i))
-        roomNumbers.push(num)
-      }
-      list.push({ floor: f, roomNumbers })
-    }
-    return list
-  }, [roomsConfig.floorCount, roomsConfig.roomsPerFloor, roomsConfig.nameFormat])
-
-  const toggleServiceIndex = (index: number) => {
-    setRoomsConfig(prev => {
-      const current = prev.serviceIndices
-      if (current.includes(index)) {
-        return { ...prev, serviceIndices: current.filter(i => i !== index) }
-      } else {
-        return { ...prev, serviceIndices: [...current, index] }
-      }
-    })
+  const computeDefaultRoomCode = (
+    floor: number,
+    index: number,
+    format = roomsConfig.nameFormat,
+  ) => {
+    return format.replace(/\{floor\}/g, String(floor)).replace(/\{index\}/g, String(index))
   }
 
-  // ─── SUBMISSION (ATOMIC ) ─────────────────────────────────────────────
+  // ─── SUBMISSION (ATOMIC) ─────────────────────────────────────────────────────
   const handleSubmit = async () => {
     setErrorMessage(null)
 
@@ -500,6 +438,47 @@ export default function SetupWizardPage() {
       idx => idx >= 0 && idx < cleanedServices.length,
     )
 
+    const hasAnyCustomRoom = Object.keys(roomOverrides).length > 0
+    let customRoomsPayload: SetupCustomRoomPayload[] | undefined = undefined
+
+    if (hasAnyCustomRoom) {
+      customRoomsPayload = []
+      for (let f = 1; f <= roomsConfig.floorCount; f++) {
+        for (let i = 1; i <= roomsConfig.roomsPerFloor; i++) {
+          const key = `${f}-${i}`
+          const override = roomOverrides[key]
+          if (override) {
+            const overrideRoomTypeIndex = Math.min(
+              Math.max(0, override.roomTypeIndex),
+              cleanedRoomTypes.length - 1,
+            )
+            const overrideServiceIndices = override.serviceIndices.filter(
+              idx => idx >= 0 && idx < cleanedServices.length,
+            )
+            customRoomsPayload.push({
+              floor: f,
+              index: i,
+              roomNumber: override.roomNumber.trim() || computeDefaultRoomCode(f, i),
+              area: override.area.trim() || undefined,
+              maxOccupants: override.maxOccupants || undefined,
+              roomTypeIndex: overrideRoomTypeIndex,
+              serviceIndices: overrideServiceIndices,
+            })
+          } else {
+            customRoomsPayload.push({
+              floor: f,
+              index: i,
+              roomNumber: computeDefaultRoomCode(f, i),
+              area: roomsConfig.area.trim() || undefined,
+              maxOccupants: roomsConfig.maxOccupants || undefined,
+              roomTypeIndex: safeRoomTypeIndex,
+              serviceIndices: safeServiceIndices,
+            })
+          }
+        }
+      }
+    }
+
     const payload: SetupBoardingHousePayload = {
       name: info.name.trim(),
       description: info.description.trim() || undefined,
@@ -523,6 +502,7 @@ export default function SetupWizardPage() {
         maxOccupants: roomsConfig.maxOccupants || undefined,
         roomTypeIndex: safeRoomTypeIndex,
         serviceIndices: safeServiceIndices,
+        customRooms: customRoomsPayload,
       },
       bankAccount: {
         bankName: bankInfo.bankName.trim(),
@@ -578,19 +558,6 @@ export default function SetupWizardPage() {
   }
 
   const handleCancel = () => {
-    if (isDirty) {
-      setShowCancelModal(true)
-    } else {
-      if (buildings.length > 0) {
-        router.push('/landlord')
-      } else {
-        router.push('/')
-      }
-    }
-  }
-
-  const confirmDiscardAndExit = () => {
-    setShowCancelModal(false)
     if (buildings.length > 0) {
       router.push('/landlord')
     } else {
@@ -604,18 +571,22 @@ export default function SetupWizardPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+            <Text as="h1" size="2xl" weight="black" className="mt-2 sm:text-3xl tracking-tight">
               {t('landlordSetupTitle')}
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500 font-medium">{t('landlordSetupSubtitle')}</p>
+            </Text>
+            <Text as="p" size="sm" color="secondary" weight="medium" className="mt-1">
+              {t('landlordSetupSubtitle')}
+            </Text>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={handleCancel}
-            className="self-start sm:self-auto text-xs font-bold text-zinc-400 hover:text-zinc-700 px-3 py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors"
+            className="self-start sm:self-auto text-xs font-bold text-zinc-500 hover:text-zinc-800"
           >
             {t('landlordSetupCancel')}
-          </button>
+          </Button>
         </div>
 
         {/* Wizard Stepper Bar */}
@@ -668,1035 +639,79 @@ export default function SetupWizardPage() {
 
       {/* Global Error Banner */}
       {errorMessage && (
-        <div
-          role="alert"
-          className="rounded-2xl border border-red-200 bg-red-50/90 p-4 text-sm text-red-700 flex items-start gap-3 shadow-xs animate-in fade-in"
-        >
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-bold text-red-900">{t('landlordSetupErrorTitle')}</p>
-            <p className="text-red-700 leading-relaxed">{errorMessage}</p>
-          </div>
-        </div>
+        <Form.Alert
+          variant="error"
+          title={t('landlordSetupErrorTitle')}
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
       )}
 
       {/* ─── STEP 1: GENERAL PROPERTY INFORMATION ────────────────────────────── */}
       {step === 1 && (
-        <section className="space-y-6 animate-in fade-in duration-300">
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-            <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-zinc-900">
-                  {t('landlordSetupSection1Title')}
-                </h2>
-                <p className="text-xs text-zinc-500 font-medium">
-                  {t('landlordSetupSection1Desc')}
-                </p>
-              </div>
-            </div>
-
-            {/* Google Maps / Interactive Map Address Picker */}
-            <MapAddressPicker
-              provinces={provinces}
-              onSelectAddress={handleMapAddressSelect}
-              initialAddress={[info.houseNumber, info.street, info.ward, info.province]
-                .filter(Boolean)
-                .join(', ')}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-              {/* Country (Locked) */}
-              <Field
-                label={t('landlordSetupCountryLabel')}
-                hint={t('landlordSetupCountryLockedNotice')}
-                required
-              >
-                <input
-                  type="text"
-                  readOnly
-                  disabled
-                  value="Việt Nam"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-semibold text-zinc-500 cursor-not-allowed select-none"
-                />
-              </Field>
-
-              {/* Province / City Dropdown */}
-              <Field label={t('landlordSetupProvinceLabel')} required>
-                <select
-                  required
-                  value={info.province}
-                  onChange={e => handleProvinceSelect(e.target.value)}
-                  disabled={isLoadingProvinces}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 disabled:bg-zinc-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {isLoadingProvinces
-                      ? t('landlordSetupProvinceLoading')
-                      : `-- ${t('landlordSetupProvinceSelect')} --`}
-                  </option>
-                  {provinces.map(prov => (
-                    <option key={prov.code} value={prov.name}>
-                      {prov.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              {/* Ward Dropdown */}
-              <Field label={t('landlordSetupWardLabel')} required>
-                <select
-                  required
-                  value={info.ward}
-                  onChange={e => updateInfo('ward', e.target.value)}
-                  disabled={!selectedProvinceCode || isLoadingWards}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 disabled:bg-zinc-50 disabled:cursor-not-allowed"
-                >
-                  {!selectedProvinceCode ? (
-                    <option value="">{t('landlordSetupWardSelectProvinceFirst')}</option>
-                  ) : isLoadingWards ? (
-                    <option value="">{t('landlordSetupWardLoading')}</option>
-                  ) : (
-                    <>
-                      <option value="">-- {t('landlordSetupWardSelect')} --</option>
-                      {wards.map(w => (
-                        <option key={w.code} value={w.name}>
-                          {w.name}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </Field>
-
-              {/* Street */}
-              <Field label={t('landlordSetupStreetLabel')} required>
-                <input
-                  type="text"
-                  required
-                  value={info.street}
-                  onChange={e => updateInfo('street', e.target.value)}
-                  placeholder={t('landlordSetupStreetPlaceholder')}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
-              {/* House Number */}
-              <Field label={t('landlordSetupHouseNumberLabel')} required>
-                <input
-                  type="text"
-                  required
-                  value={info.houseNumber}
-                  onChange={e => updateInfo('houseNumber', e.target.value)}
-                  placeholder={t('landlordSetupHouseNumberPlaceholder')}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
-              {/* Building Name */}
-              <Field label={t('landlordSetupNameLabel')} required hint={t('landlordSetupNameHint')}>
-                <input
-                  type="text"
-                  required
-                  value={info.name}
-                  onChange={e => updateInfo('name', e.target.value)}
-                  placeholder={t('landlordSetupNamePlaceholder')}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
-              {/* Total Floors */}
-              <Field
-                label={t('landlordSetupTotalFloorLabel')}
-                hint={t('landlordSetupTotalFloorHint')}
-              >
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={info.totalFloor}
-                  onChange={e => updateInfo('totalFloor', e.target.value)}
-                  placeholder={t('landlordSetupTotalFloorPlaceholder')}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
-              {/* Built At Date */}
-              <Field label={t('landlordSetupBuiltAtLabel')} required>
-                <input
-                  type="date"
-                  required
-                  value={info.builtAt}
-                  onChange={e => updateInfo('builtAt', e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
-                />
-              </Field>
-
-              {/* Cover Photo Upload */}
-              <div className="md:col-span-2">
-                <CoverPhotoUpload
-                  value={info.thumbnail}
-                  onChange={url => updateInfo('thumbnail', url)}
-                  onFileChange={file => setThumbnailFile(file)}
-                  label={t('landlordSetupThumbnailLabel')}
-                  hint={t('landlordSetupThumbnailHint')}
-                />
-              </div>
-
-              {/* Summary Description */}
-              <div className="md:col-span-2">
-                <Field
-                  label={t('landlordSetupDescriptionLabel')}
-                  hint={t('landlordSetupDescriptionHint')}
-                >
-                  <textarea
-                    rows={3}
-                    value={info.description}
-                    onChange={e => updateInfo('description', e.target.value)}
-                    placeholder={t('landlordSetupDescriptionPlaceholder')}
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15 resize-none"
-                  />
-                </Field>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-colors"
-            >
-              {t('landlordSetupCancel')}
-            </button>
-            <button
-              type="button"
-              disabled={!isStep1Valid}
-              onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-sm hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {t('landlordSetupNextToStep2')} <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </section>
+        <Step1GeneralInfo
+          info={info}
+          onUpdateInfo={updateInfo}
+          provinces={provinces}
+          isLoadingProvinces={isLoadingProvinces}
+          selectedProvinceCode={selectedProvinceCode}
+          wards={wards}
+          isLoadingWards={isLoadingWards}
+          onProvinceSelect={handleProvinceSelect}
+          onMapAddressSelect={handleMapAddressSelect}
+          onThumbnailFileChange={file => setThumbnailFile(file)}
+          isValid={isStep1Valid}
+          onNext={() => setStep(2)}
+          onCancel={handleCancel}
+        />
       )}
 
       {/* ─── STEP 2: SERVICES & ROOM TYPES ──────────────────────────────────── */}
       {step === 2 && (
-        <section className="space-y-6 animate-in fade-in duration-300">
-          {/* Services Section */}
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                  <Wrench className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-zinc-900">
-                    {t('landlordSetupSection2aTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordSetupSection2aDesc')}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={addService}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" /> {t('landlordSetupAddService')}
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {services.length === 0 ? (
-                <div className="p-4 rounded-2xl border border-dashed border-zinc-200 text-center text-xs text-zinc-400">
-                  {t('landlordSetupNoServices')}
-                </div>
-              ) : (
-                services.map((service, index) => (
-                  <div
-                    key={service.id}
-                    className="p-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 space-y-3"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                      <div className="sm:col-span-4">
-                        <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                          {t('landlordSetupServiceNameLabel').replace('{index}', String(index + 1))}
-                        </label>
-                        <input
-                          type="text"
-                          value={service.name}
-                          onChange={e => updateService(service.id, 'name', e.target.value)}
-                          placeholder={t('landlordSetupServiceNamePlaceholder')}
-                          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-3">
-                        <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                          {t('landlordSetupServicePriceLabel')}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={service.price}
-                          onChange={e => updateService(service.id, 'price', e.target.value)}
-                          placeholder="3500"
-                          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                          {t('landlordSetupServiceUnitLabel')}
-                        </label>
-                        <input
-                          type="text"
-                          value={service.unit}
-                          onChange={e => updateService(service.id, 'unit', e.target.value)}
-                          placeholder={t('landlordSetupServiceUnitPlaceholder')}
-                          className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2 flex items-center gap-4 py-2">
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={service.isMetered}
-                            onChange={e => updateService(service.id, 'isMetered', e.target.checked)}
-                            className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] h-3.5 w-3.5"
-                          />
-                          {t('landlordSetupServiceMetered')}
-                        </label>
-
-                        <label className="flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={service.autoApplied}
-                            onChange={e =>
-                              updateService(service.id, 'autoApplied', e.target.checked)
-                            }
-                            className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] h-3.5 w-3.5"
-                          />
-                          {t('landlordSetupServiceAutoApplied')}
-                        </label>
-                      </div>
-
-                      <div className="sm:col-span-1 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeService(service.id)}
-                          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title={t('landlordSetupDeleteService')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Room Types Section */}
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-black text-zinc-900">
-                      {t('landlordSetupSection2bTitle')}
-                    </h2>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-600 px-2 py-0.5 rounded-md border border-red-200">
-                      {t('landlordSetupSection2bRequired')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordSetupSection2bDesc')}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={addRoomType}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" /> {t('landlordSetupAddRoomType')}
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {roomTypes.map((rt, index) => (
-                <div
-                  key={rt.id}
-                  className="p-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 space-y-3"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                    <div className="sm:col-span-5">
-                      <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                        {t('landlordSetupRoomTypeNameLabel').replace('{index}', String(index + 1))}{' '}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={rt.name}
-                        onChange={e => updateRoomType(rt.id, 'name', e.target.value)}
-                        placeholder={t('landlordSetupRoomTypeNamePlaceholder')}
-                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label className="text-[11px] font-bold text-zinc-500 block mb-1">
-                        {t('landlordSetupRoomTypeDescLabel')}
-                      </label>
-                      <input
-                        type="text"
-                        value={rt.description ?? ''}
-                        onChange={e => updateRoomType(rt.id, 'description', e.target.value)}
-                        placeholder={t('landlordSetupRoomTypeDescPlaceholder')}
-                        className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-1 flex justify-end">
-                      {roomTypes.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeRoomType(rt.id)}
-                          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                          title={t('landlordSetupDeleteRoomType')}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" /> {t('landlordSetupBackToStep1')}
-            </button>
-            <button
-              type="button"
-              disabled={!isStep2Valid}
-              onClick={() => setStep(3)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-sm hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {t('landlordSetupNextToStep3')} <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </section>
+        <Step2ServicesAndRoomTypes
+          services={services}
+          onAddService={addService}
+          onUpdateService={updateService}
+          onRemoveService={removeService}
+          roomTypes={roomTypes}
+          onAddRoomType={addRoomType}
+          onUpdateRoomType={updateRoomType}
+          onRemoveRoomType={removeRoomType}
+          isValid={isStep2Valid}
+          onBack={() => setStep(1)}
+          onNext={() => setStep(3)}
+        />
       )}
 
       {/* ─── STEP 3: BULK GENERATE ROOMS & PREVIEW ─────────────────────────── */}
       {step === 3 && (
-        <section className="space-y-6 animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Generation Settings Form */}
-            <div className="lg:col-span-7 rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-zinc-900">
-                    {t('landlordSetupSection3Title')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordSetupSection3Desc')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label={t('landlordSetupFloorCountLabel')} required>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={roomsConfig.floorCount}
-                    onChange={e =>
-                      setRoomsConfig(prev => ({
-                        ...prev,
-                        floorCount: Math.max(1, parseInt(e.target.value, 10) || 1),
-                      }))
-                    }
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </Field>
-
-                <Field label={t('landlordSetupRoomsPerFloorLabel')} required>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={roomsConfig.roomsPerFloor}
-                    onChange={e =>
-                      setRoomsConfig(prev => ({
-                        ...prev,
-                        roomsPerFloor: Math.max(1, parseInt(e.target.value, 10) || 1),
-                      }))
-                    }
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </Field>
-
-                <div className="sm:col-span-2">
-                  <Field
-                    label={t('landlordSetupNameFormatLabel')}
-                    required
-                    hint={t('landlordSetupNameFormatHint')}
-                  >
-                    <input
-                      type="text"
-                      required
-                      value={roomsConfig.nameFormat}
-                      onChange={e =>
-                        setRoomsConfig(prev => ({
-                          ...prev,
-                          nameFormat: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {nameFormatPresets.map(preset => (
-                        <button
-                          key={preset.value}
-                          type="button"
-                          onClick={() =>
-                            setRoomsConfig(prev => ({
-                              ...prev,
-                              nameFormat: preset.value,
-                            }))
-                          }
-                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${
-                            roomsConfig.nameFormat === preset.value
-                              ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] font-bold'
-                              : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                          }`}
-                        >
-                          {preset.label}
-                        </button>
-                      ))}
-                    </div>
-                  </Field>
-                </div>
-
-                <Field label={t('landlordSetupAreaLabel')}>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.1"
-                    value={roomsConfig.area}
-                    onChange={e =>
-                      setRoomsConfig(prev => ({
-                        ...prev,
-                        area: e.target.value,
-                      }))
-                    }
-                    placeholder="25.0"
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </Field>
-
-                <Field label={t('landlordSetupMaxOccupantsLabel')}>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={roomsConfig.maxOccupants}
-                    onChange={e =>
-                      setRoomsConfig(prev => ({
-                        ...prev,
-                        maxOccupants: Math.max(1, parseInt(e.target.value, 10) || 1),
-                      }))
-                    }
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </Field>
-
-                <div className="sm:col-span-2">
-                  <Field label={t('landlordSetupDefaultRoomTypeLabel')} required>
-                    <select
-                      value={roomsConfig.roomTypeIndex}
-                      onChange={e =>
-                        setRoomsConfig(prev => ({
-                          ...prev,
-                          roomTypeIndex: parseInt(e.target.value, 10),
-                        }))
-                      }
-                      className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                    >
-                      {roomTypes
-                        .filter(rt => rt.name.trim())
-                        .map((rt, idx) => (
-                          <option key={rt.id} value={idx}>
-                            {rt.name} {rt.description ? `(${rt.description})` : ''}
-                          </option>
-                        ))}
-                    </select>
-                  </Field>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-bold text-zinc-700 block mb-2">
-                    {t('landlordSetupAutoAssignServicesLabel')}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {services
-                      .filter(s => s.name.trim())
-                      .map((service, idx) => {
-                        const isSelected = roomsConfig.serviceIndices.includes(idx)
-                        return (
-                          <button
-                            key={service.id}
-                            type="button"
-                            onClick={() => toggleServiceIndex(idx)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                              isSelected
-                                ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC]'
-                                : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                            }`}
-                          >
-                            <span
-                              className={`w-3 h-3 rounded-full flex items-center justify-center border text-[9px] ${
-                                isSelected
-                                  ? 'bg-[#2AC1BC] text-white border-transparent'
-                                  : 'border-zinc-300 bg-white'
-                              }`}
-                            >
-                              {isSelected && '✓'}
-                            </span>
-                            {service.name} ({service.price}₫/{service.unit})
-                          </button>
-                        )
-                      })}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Live Room Preview Panel & Quota Indicator */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#2AC1BC]" />
-                    <h3 className="text-sm font-black text-zinc-900">
-                      {t('landlordSetupPreviewTitle')}
-                    </h3>
-                  </div>
-                  <span className="text-xs font-extrabold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2.5 py-0.5 rounded-full">
-                    {totalRoomsToCreate} {t('landlordSetupRoomsTotal')}
-                  </span>
-                </div>
-
-                {/* Quota Indicator Banner */}
-                {isQuotaExceeded ? (
-                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 space-y-1.5 animate-in fade-in">
-                    <div className="flex items-center gap-2 font-bold text-amber-900">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      {t('landlordSetupQuotaExceededTitle')
-                        .replace('{total}', String(totalRoomsToCreate))
-                        .replace('{max}', String(MAX_FREE_TIER_ROOMS))}
-                    </div>
-                    <p className="text-amber-800 leading-relaxed font-medium">
-                      {t('landlordSetupQuotaExceededDesc').replace(
-                        '{max}',
-                        String(MAX_FREE_TIER_ROOMS),
-                      )}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 font-semibold">
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      {t('landlordSetupQuotaLimitLabel')}
-                    </span>
-                    <span className="font-extrabold">
-                      {t('landlordSetupQuotaRatio')
-                        .replace('{total}', String(totalRoomsToCreate))
-                        .replace('{max}', String(MAX_FREE_TIER_ROOMS))}
-                    </span>
-                  </div>
-                )}
-
-                {/* Live Preview Room Grid by Floor */}
-                <div className="max-h-[380px] overflow-y-auto space-y-3 pr-1">
-                  {generatedRoomsPreview.map(group => (
-                    <div
-                      key={group.floor}
-                      className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100 space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-zinc-600 uppercase tracking-wider">
-                          {t('landlordSetupFloorPrefix')} {group.floor}
-                        </span>
-                        <span className="text-[10px] text-zinc-400 font-bold">
-                          {t('landlordSetupPreviewFloorRooms').replace(
-                            '{count}',
-                            String(group.roomNumbers.length),
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {group.roomNumbers.map(roomCode => (
-                          <span
-                            key={roomCode}
-                            className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white border border-zinc-200 text-xs font-bold text-zinc-800 shadow-2xs"
-                          >
-                            {roomCode}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-2 text-[11px] text-zinc-400 flex items-center gap-1.5 border-t border-zinc-100">
-                  <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                  {t('landlordSetupPreviewHint')}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3 Navigation / Submit */}
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => setStep(2)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" /> {t('landlordSetupBackToStep2')}
-            </button>
-            <button
-              type="button"
-              disabled={isSubmitting || isQuotaExceeded || totalRoomsToCreate < 1}
-              onClick={() => setStep(4)}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-md hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {t('landlordSetupNextToStep4')}
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </section>
+        <Step3BulkRoomsAndPreview
+          roomsConfig={roomsConfig}
+          onChangeRoomsConfig={setRoomsConfig}
+          roomOverrides={roomOverrides}
+          onSetRoomOverrides={setRoomOverrides}
+          roomTypes={roomTypes}
+          services={services}
+          totalRoomsToCreate={totalRoomsToCreate}
+          isQuotaExceeded={isQuotaExceeded}
+          nameFormatPresets={nameFormatPresets}
+          isSubmitting={isSubmitting}
+          onBack={() => setStep(2)}
+          onNext={() => setStep(4)}
+        />
       )}
 
       {/* ─── STEP 4: BANK ACCOUNT INFORMATION (PAYOUT / VIETQR) ──────────────── */}
       {step === 4 && (
-        <section className="space-y-6 animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Bank Account Input Form */}
-            <div className="lg:col-span-7 rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-zinc-900">
-                    {t('landlordSetupSection4Title')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordSetupSection4Desc')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Field label={t('landlordSetupBankNameLabel')} required>
-                  <input
-                    type="text"
-                    required
-                    value={bankInfo.bankName}
-                    onChange={e => setBankInfo(prev => ({ ...prev, bankName: e.target.value }))}
-                    placeholder={t('landlordSetupBankNamePlaceholder')}
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                  <div className="mt-2 space-y-1.5">
-                    <span className="text-[11px] font-bold text-zinc-400">
-                      {t('landlordSetupBankQuickSelectLabel')}
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {POPULAR_BANKS.map(bName => (
-                        <button
-                          key={bName}
-                          type="button"
-                          onClick={() => setBankInfo(prev => ({ ...prev, bankName: bName }))}
-                          className={`text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-colors ${
-                            bankInfo.bankName === bName
-                              ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] font-bold'
-                              : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                          }`}
-                        >
-                          {bName}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </Field>
-
-                <Field label={t('landlordSetupBankAccNumLabel')} required>
-                  <input
-                    type="text"
-                    required
-                    value={bankInfo.accountNumber}
-                    onChange={e =>
-                      setBankInfo(prev => ({
-                        ...prev,
-                        accountNumber: e.target.value.replace(/[^0-9]/g, ''),
-                      }))
-                    }
-                    placeholder={t('landlordSetupBankAccNumPlaceholder')}
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC] font-mono"
-                  />
-                </Field>
-
-                <Field label={t('landlordSetupBankAccNameLabel')} required>
-                  <input
-                    type="text"
-                    required
-                    value={bankInfo.accountName}
-                    onChange={e =>
-                      setBankInfo(prev => ({
-                        ...prev,
-                        accountName: e.target.value.toUpperCase(),
-                      }))
-                    }
-                    placeholder={t('landlordSetupBankAccNamePlaceholder')}
-                    className="w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm font-medium text-zinc-900 focus:outline-none focus:border-[#2AC1BC] uppercase font-bold"
-                  />
-                </Field>
-
-                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-xs text-zinc-600 space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-zinc-800">
-                    <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                    <span>{t('landlordSetupBankStepNote')}</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">
-                    {t('landlordSetupBankAutoNotice')}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Live VietQR Card Preview */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xs space-y-4">
-                <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
-                  <CreditCard className="w-4 h-4 text-[#2AC1BC]" />
-                  <h3 className="text-sm font-black text-zinc-900">
-                    {t('landlordSetupBankCardPreviewTitle')}
-                  </h3>
-                </div>
-
-                <div className="p-6 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 text-white rounded-3xl border border-zinc-800 space-y-4 text-center shadow-xl relative overflow-hidden w-full">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#2AC1BC]/10 rounded-full blur-xl pointer-events-none" />
-                  <QrCode className="w-16 h-16 text-[#2AC1BC] mx-auto relative z-10 animate-pulse" />
-                  <div className="relative z-10 space-y-1">
-                    <h4 className="text-sm font-black text-white">
-                      {bankInfo.bankName || 'MB Bank / Vietcombank'}
-                    </h4>
-                    <p className="text-lg font-black text-[#2AC1BC] font-mono tracking-widest">
-                      {bankInfo.accountNumber || '0000000000'}
-                    </p>
-                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider">
-                      {bankInfo.accountName || 'NGUYEN VAN A'}
-                    </p>
-                  </div>
-                  <span className="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/30 relative z-10 whitespace-nowrap">
-                    {t('landlordSetupBankAutoNotice')}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 4 Navigation / Final Submit */}
-          <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => setStep(3)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" /> {t('landlordSetupBackToStep3')}
-            </button>
-            <button
-              type="button"
-              disabled={isSubmitting || !isStep4Valid}
-              onClick={handleSubmit}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[#2AC1BC] text-white text-sm font-black shadow-md hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {isSubmitting ? (
-                <>
-                  <LoaderCircle className="w-4 h-4 animate-spin" />
-                  {t('landlordSetupSubmitting')}
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  {t('landlordSetupSubmit')}
-                </>
-              )}
-            </button>
-          </div>
-        </section>
-      )}
-
-      {/* ─── CUSTOM POPUP CONFIRMATION MODAL (RULE 10) ───────────────────────── */}
-      {showCancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-zinc-100 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-zinc-900">
-                {t('landlordSetupConfirmCloseTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                {t('landlordSetupConfirmCloseDesc')}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(false)}
-                className="px-4 py-2 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
-              >
-                {t('landlordSetupConfirmCloseContinue')}
-              </button>
-              <button
-                type="button"
-                onClick={confirmDiscardAndExit}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors shadow-xs"
-              >
-                {t('landlordSetupConfirmCloseDiscard')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <Step4BankAccount
+          bankInfo={bankInfo}
+          onChangeBankInfo={setBankInfo}
+          isValid={isStep4Valid}
+          isSubmitting={isSubmitting}
+          onBack={() => setStep(3)}
+          onSubmit={handleSubmit}
+        />
       )}
     </div>
-  )
-}
-
-// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
-
-function StepperItem({
-  stepNumber,
-  currentStep,
-  stepLabel,
-  title,
-  desc,
-  icon,
-  onClick,
-}: {
-  stepNumber: WizardStep
-  currentStep: WizardStep
-  stepLabel: string
-  title: string
-  desc: string
-  icon: React.ReactNode
-  onClick: () => void
-}) {
-  const isCompleted = currentStep > stepNumber
-  const isActive = currentStep === stepNumber
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-2xl border text-left transition-all ${
-        isActive
-          ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 shadow-xs'
-          : isCompleted
-            ? 'border-zinc-200 bg-white hover:bg-zinc-50'
-            : 'border-zinc-100 bg-zinc-50/50 opacity-60'
-      }`}
-    >
-      <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
-          isCompleted
-            ? 'bg-emerald-600 text-white'
-            : isActive
-              ? 'bg-[#2AC1BC] text-white shadow-sm'
-              : 'bg-zinc-200 text-zinc-600'
-        }`}
-      >
-        {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : icon}
-      </div>
-      <div className="min-w-0 hidden sm:block">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-black uppercase text-zinc-400">
-            {stepLabel} {stepNumber}
-          </span>
-        </div>
-        <p
-          className={`text-xs font-black truncate ${isActive ? 'text-zinc-900' : 'text-zinc-600'}`}
-        >
-          {title}
-        </p>
-        <p className="text-[10px] text-zinc-400 truncate font-medium">{desc}</p>
-      </div>
-    </button>
-  )
-}
-
-function Field({
-  label,
-  required,
-  hint,
-  children,
-}: {
-  label: string
-  required?: boolean
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <label className="block space-y-1.5">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-zinc-700">
-          {label} {required && <span className="text-red-500">*</span>}
-        </span>
-        {hint && <span className="text-[11px] text-zinc-400 font-medium">{hint}</span>}
-      </div>
-      {children}
-    </label>
   )
 }

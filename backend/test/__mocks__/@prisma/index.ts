@@ -55,7 +55,13 @@ export enum SubscriptionStatus {
 
 export enum BillingCycle {
   monthly = 'monthly',
+  quarterly = 'quarterly',
   yearly = 'yearly',
+}
+
+export enum Gender {
+  male = 'male',
+  female = 'female',
 }
 
 export enum ExpenseStatus {

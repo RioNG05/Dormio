@@ -36,6 +36,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput } from '@/components/ui'
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
@@ -396,23 +397,29 @@ export default function LandlordDebtsPage() {
         </div>
 
         <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={handleTriggerFlip}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50 h-auto"
             title={t('landlordDebtsSyncTooltip')}
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-600' : ''}`} />
             <span>{isRefreshing ? t('landlordDebtsSyncing') : t('landlordDebtsSyncBtn')}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 h-auto"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
             <span>{t('landlordDebtsExportExcel')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -509,65 +516,61 @@ export default function LandlordDebtsPage() {
       {/* ─── Filter & Control Bar ─────────────────────────────────────────────── */}
       <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
         {/* Search Input */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
+          <SearchInput
             value={searchTerm}
-            onChange={e => {
-              setSearchTerm(e.target.value)
+            onChange={val => {
+              setSearchTerm(val)
               setCurrentPage(1)
             }}
             placeholder={t('landlordDebtsSearchPlaceholder')}
-            className="w-full pl-9 pr-4 py-2 text-xs font-semibold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+            containerClassName="w-full space-y-0"
+            className="w-full text-xs font-semibold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl"
           />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
 
         {/* Filters and View Switcher */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Duration Filter */}
-          <select
+          <SelectInput
             value={durationFilter}
             onChange={e => {
               setDurationFilter(e.target.value as typeof durationFilter)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-          >
-            <option value="all">{t('landlordDebtsAllDurations')}</option>
-            <option value="overdue">{t('landlordDebtsFilterOverdue')}</option>
-            <option value="1_month">{t('landlordDebtsFilter1Month')}</option>
-            <option value="2_months">{t('landlordDebtsFilter2Months')}</option>
-            <option value="bad_debt">{t('landlordDebtsFilterBadDebt')}</option>
-          </select>
+            options={[
+              { value: 'all', label: t('landlordDebtsAllDurations') },
+              { value: 'overdue', label: t('landlordDebtsFilterOverdue') },
+              { value: '1_month', label: t('landlordDebtsFilter1Month') },
+              { value: '2_months', label: t('landlordDebtsFilter2Months') },
+              { value: 'bad_debt', label: t('landlordDebtsFilterBadDebt') },
+            ]}
+            containerClassName="w-auto space-y-0"
+            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl"
+          />
 
           {/* Sort By */}
-          <select
+          <SelectInput
             value={sortBy}
             onChange={e => {
               setSortBy(e.target.value as typeof sortBy)
               setCurrentPage(1)
             }}
-            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-          >
-            <option value="debt_desc">{t('landlordDebtsSortDebtDesc')}</option>
-            <option value="aging_desc">{t('landlordDebtsSortAgingDesc')}</option>
-            <option value="room_asc">{t('landlordDebtsSortRoomAsc')}</option>
-          </select>
+            options={[
+              { value: 'debt_desc', label: t('landlordDebtsSortDebtDesc') },
+              { value: 'aging_desc', label: t('landlordDebtsSortAgingDesc') },
+              { value: 'room_asc', label: t('landlordDebtsSortRoomAsc') },
+            ]}
+            containerClassName="w-auto space-y-0"
+            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl"
+          />
 
           {/* View Mode Toggle per Rule #9 */}
           <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-1.5 h-auto w-auto rounded-lg transition-all ${
                 viewMode === 'grid'
                   ? 'bg-white text-teal-600 shadow-sm font-bold'
                   : 'text-zinc-400 hover:text-zinc-600'
@@ -575,10 +578,13 @@ export default function LandlordDebtsPage() {
               title={t('landlordDebtsViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-1.5 h-auto w-auto rounded-lg transition-all ${
                 viewMode === 'table'
                   ? 'bg-white text-teal-600 shadow-sm font-bold'
                   : 'text-zinc-400 hover:text-zinc-600'
@@ -586,7 +592,7 @@ export default function LandlordDebtsPage() {
               title={t('landlordDebtsViewTable')}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -612,15 +618,18 @@ export default function LandlordDebtsPage() {
               : t('landlordDebtsEmptyAllPaidDesc')}
           </p>
           {(searchTerm || durationFilter !== 'all') && (
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setSearchTerm('')
                 setDurationFilter('all')
               }}
-              className="mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-xs font-bold text-zinc-700 transition-all"
+              className="mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-xs font-bold text-zinc-700 transition-all border-0 h-auto"
             >
               {t('landlordDebtsClearFilter')}
-            </button>
+            </Button>
           )}
         </div>
       ) : viewMode === 'grid' ? (
@@ -659,11 +668,11 @@ export default function LandlordDebtsPage() {
                 <div className="p-5 border-b border-zinc-100">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isSelected}
                         onChange={() => handleToggleSelectRoom(room.roomId)}
-                        className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500/20 border-zinc-300 cursor-pointer"
+                        size="sm"
+                        containerClassName="w-auto"
                       />
                       <div>
                         <div className="flex items-center gap-2">
@@ -762,26 +771,32 @@ export default function LandlordDebtsPage() {
 
                 {/* Card Actions */}
                 <div className="p-4 bg-white border-t border-zinc-100 flex items-center gap-2">
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => setInvoicesModalRoom(room)}
-                    className="flex-1 py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                    className="flex-1 py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm h-auto"
                   >
                     <Eye className="w-3.5 h-3.5 text-zinc-500" />
                     <span>{t('landlordDebtsBtnViewInvoices')}</span>
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
                     onClick={() => {
                       setReminderModalRoom(room)
                       setReminderNote('')
                       setIsReminderDirty(false)
                       setReminderCopied(false)
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm shadow-teal-500/20"
+                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm shadow-teal-500/20 h-auto border-0"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{t('landlordDebtsBtnSendReminder')}</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
             )
@@ -795,11 +810,11 @@ export default function LandlordDebtsPage() {
               <thead className="bg-zinc-50/80 text-zinc-500 uppercase tracking-wider font-extrabold border-b border-zinc-200 text-[11px]">
                 <tr>
                   <th className="p-4 w-10 text-center">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isAllCurrentPageSelected}
                       onChange={handleToggleSelectAll}
-                      className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500/20 border-zinc-300 cursor-pointer"
+                      size="sm"
+                      containerClassName="w-auto flex justify-center"
                     />
                   </th>
                   <th className="p-4">{t('landlordDebtsThRoomTenant')}</th>
@@ -842,11 +857,11 @@ export default function LandlordDebtsPage() {
                       }`}
                     >
                       <td className="p-4 text-center">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={isSelected}
                           onChange={() => handleToggleSelectRoom(room.roomId)}
-                          className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500/20 border-zinc-300 cursor-pointer"
+                          size="sm"
+                          containerClassName="w-auto flex justify-center"
                         />
                       </td>
 
@@ -914,25 +929,31 @@ export default function LandlordDebtsPage() {
 
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <button
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setInvoicesModalRoom(room)}
-                            className="p-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all"
+                            className="h-8 w-8 p-0 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all"
                             title={t('landlordDebtsBtnViewInvoices')}
                           >
                             <Eye className="w-4 h-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               setReminderModalRoom(room)
                               setReminderNote('')
                               setIsReminderDirty(false)
                               setReminderCopied(false)
                             }}
-                            className="p-1.5 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-all font-bold"
+                            className="h-8 w-8 p-0 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-all font-bold"
                             title={t('landlordDebtsBtnSendReminder')}
                           >
                             <Send className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -949,19 +970,17 @@ export default function LandlordDebtsPage() {
         <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
             <span>{t('landlordDebtsPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
-              value={pageSize}
+              value={pageSize || ''}
               onChange={e => {
-                const val = Number(e.target.value)
-                if (val >= 1 && val <= 100) {
-                  setPageSize(val)
-                  setCurrentPage(1)
-                }
+                const val = parseInt(e.target.value)
+                setPageSize(isNaN(val) || val <= 0 ? 1 : val)
+                setCurrentPage(1)
               }}
-              className="w-14 px-2 py-1 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
+              containerClassName="w-16 space-y-0"
+              className="w-16 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-teal-500 text-xs h-7"
             />
             <span>{t('landlordDebtsPaginationPerPage')}</span>
             <span className="text-zinc-300">|</span>
@@ -973,18 +992,24 @@ export default function LandlordDebtsPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="p-2 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="h-9 w-9 p-0 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title={t('landlordDebtsPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
             {visiblePages.map(pageNum => (
-              <button
+              <Button
                 key={pageNum}
+                type="button"
+                variant={pageNum === currentPage ? 'primary' : 'outline'}
+                size="sm"
                 onClick={() => setCurrentPage(pageNum)}
                 style={{
                   backgroundColor: pageNum === currentPage ? '#2AC1BC' : undefined,
@@ -996,17 +1021,20 @@ export default function LandlordDebtsPage() {
                 }`}
               >
                 {pageNum}
-              </button>
+              </Button>
             ))}
 
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="p-2 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="h-9 w-9 p-0 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title={t('landlordDebtsPaginationNext')}
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1035,12 +1063,15 @@ export default function LandlordDebtsPage() {
                 </p>
               </div>
 
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setInvoicesModalRoom(null)}
-                className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200/60 rounded-xl transition-all"
+                className="h-9 w-9 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200/60 rounded-xl transition-all"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Invoices List */}
@@ -1101,7 +1132,10 @@ export default function LandlordDebtsPage() {
                         {formatCurrency(inv.totalAmount)}
                       </span>
 
-                      <button
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                           setPaymentModalInvoice({
                             id: inv.id,
@@ -1113,11 +1147,11 @@ export default function LandlordDebtsPage() {
                           setPaymentNote('')
                           setIsPaymentDirty(false)
                         }}
-                        className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all border border-emerald-200 flex items-center gap-1 active:scale-95"
+                        className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all border border-emerald-200 flex items-center gap-1 active:scale-95 h-auto"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
                         <span>{t('landlordDebtsModalCollectNow')}</span>
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -1126,12 +1160,15 @@ export default function LandlordDebtsPage() {
 
             {/* Modal Footer */}
             <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setInvoicesModalRoom(null)}
-                className="px-5 py-2.5 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all"
+                className="px-5 py-2.5 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1153,12 +1190,15 @@ export default function LandlordDebtsPage() {
                 </div>
               </div>
 
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleRequestCloseReminder}
-                className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                className="h-8 w-8 p-0 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body */}
@@ -1210,10 +1250,8 @@ export default function LandlordDebtsPage() {
 
               {/* Custom Memo Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">
-                  {t('landlordDebtsModalMemoLabel')}
-                </label>
-                <input
+                <TextInput
+                  label={t('landlordDebtsModalMemoLabel')}
                   type="text"
                   value={reminderNote}
                   onChange={e => {
@@ -1221,6 +1259,7 @@ export default function LandlordDebtsPage() {
                     setIsReminderDirty(true)
                   }}
                   placeholder={t('landlordDebtsModalMemoPlaceholder')}
+                  containerClassName="w-full space-y-1.5"
                   className="w-full px-3.5 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
@@ -1231,9 +1270,12 @@ export default function LandlordDebtsPage() {
                   <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
                     {t('landlordDebtsModalTemplateTitle')}
                   </label>
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleCopyReminder(reminderModalRoom)}
-                    className="text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"
+                    className="h-auto p-0 text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1 hover:bg-transparent"
                   >
                     {reminderCopied ? (
                       <>
@@ -1246,7 +1288,7 @@ export default function LandlordDebtsPage() {
                         <span>{t('landlordDebtsModalCopyBtn')}</span>
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
                 <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs text-zinc-700 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto leading-relaxed">
                   {buildReminderText(reminderModalRoom, reminderNote)}
@@ -1256,17 +1298,23 @@ export default function LandlordDebtsPage() {
 
             {/* Modal Footer */}
             <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end gap-2.5">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleRequestCloseReminder}
-                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all"
+                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalCancelBtn')}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
                 disabled={isSendingReminder}
                 onClick={() => handleSendInAppReminder(reminderModalRoom)}
-                className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-teal-600/20 disabled:opacity-50"
+                className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-teal-600/20 disabled:opacity-50 h-auto border-0"
               >
                 {isSendingReminder ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1274,7 +1322,7 @@ export default function LandlordDebtsPage() {
                   <Send className="w-4 h-4" />
                 )}
                 <span>{t('landlordDebtsModalSendAppBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1291,12 +1339,15 @@ export default function LandlordDebtsPage() {
                   {t('landlordDebtsModalPaymentTitle', { room: paymentModalInvoice.roomNumber })}
                 </h3>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleRequestClosePayment}
-                className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-xl"
+                className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-600 rounded-xl"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 space-y-4">
@@ -1314,42 +1365,44 @@ export default function LandlordDebtsPage() {
                   {t('landlordDebtsModalPaymentMethod')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setPaymentMethod('cash')
                       setIsPaymentDirty(true)
                     }}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all h-auto ${
                       paymentMethod === 'cash'
                         ? 'bg-teal-50 border-teal-500 text-teal-700'
                         : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                     }`}
                   >
                     {t('landlordDebtsModalMethodCash')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setPaymentMethod('banking')
                       setIsPaymentDirty(true)
                     }}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all h-auto ${
                       paymentMethod === 'banking'
                         ? 'bg-teal-50 border-teal-500 text-teal-700'
                         : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                     }`}
                   >
                     {t('landlordDebtsModalMethodBanking')}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">
-                  {t('landlordDebtsModalPaymentNoteLabel')}
-                </label>
-                <textarea
+                <TextareaInput
+                  label={t('landlordDebtsModalPaymentNoteLabel')}
                   rows={2}
                   value={paymentNote}
                   onChange={e => {
@@ -1357,23 +1410,30 @@ export default function LandlordDebtsPage() {
                     setIsPaymentDirty(true)
                   }}
                   placeholder={t('landlordDebtsModalPaymentNotePlaceholder')}
+                  containerClassName="w-full space-y-1.5"
                   className="w-full px-3 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
                 />
               </div>
             </div>
 
             <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end gap-2.5">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleRequestClosePayment}
-                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all"
+                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalCancelBtn')}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
                 disabled={isSubmittingPayment}
                 onClick={handleRecordPayment}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 disabled:opacity-50"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 disabled:opacity-50 h-auto border-0"
               >
                 {isSubmittingPayment ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1381,7 +1441,7 @@ export default function LandlordDebtsPage() {
                   <Check className="w-4 h-4" />
                 )}
                 <span>{t('landlordDebtsModalConfirmPaymentBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1403,18 +1463,24 @@ export default function LandlordDebtsPage() {
               </p>
             </div>
             <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setConfirmCloseTarget(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all h-auto border-0"
               >
                 {t('landlordDebtsModalKeepEditing')}
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmDiscard}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20 h-auto border-0"
               >
                 {t('landlordDebtsModalDiscardAndClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ import { postService, PostQuotaStatus } from '@/services/post.service'
 import { TextInput } from '@/components/ui/TextInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { NumberInput } from '@/components/ui/NumberInput'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { MultiImageUpload } from '@/components/MultiImageUpload'
 
 export default function PublicCreatePostPage() {

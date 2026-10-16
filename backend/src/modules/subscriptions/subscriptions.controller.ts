@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Headers,
   UseGuards,
   Request,
   Logger,
@@ -48,6 +49,23 @@ export class SubscriptionsController {
     const userId = req.user?.id || req.user?.sub
     this.logger.log(`GET /api/v1/landlord/subscriptions/plans called by user ${userId}`)
     return this.subscriptionsService.getPlans()
+  }
+
+  @Get('current')
+  @ApiOperation({
+    summary: 'Lấy gói đăng ký hiện tại của người dùng',
+    description: 'Trả về gói dịch vụ đang hoạt động (free, plus, pro) của landlord.',
+  })
+  @ApiOkResponse({
+    description: 'Thông tin gói đăng ký hiện tại',
+  })
+  async getCurrentSubscription(
+    @Request() req: any,
+    @Headers('x-boarding-house-id') boardingHouseId?: string,
+  ) {
+    const userId = req.user?.id || req.user?.sub
+    this.logger.log(`GET /api/v1/landlord/subscriptions/current called by user ${userId}`)
+    return this.subscriptionsService.getCurrentSubscription(userId, boardingHouseId)
   }
 
   @Get('tier-status/:planName')

@@ -32,7 +32,7 @@ import {
   UserCheck,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { staffService, StaffItem } from '@/services/staff.service'
 import {
   scheduleService,
@@ -40,16 +40,25 @@ import {
   WorkScheduleItem,
   SchedulesSummary,
 } from '@/services/schedule.service'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  Checkbox,
+  SearchInput,
+} from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
 const DAYS_OF_WEEK = [
-  { key: '2', label: 'Thứ 2', enLabel: 'Monday', short: 'T2', enShort: 'Mon', dayIndex: 1 },
-  { key: '3', label: 'Thứ 3', enLabel: 'Tuesday', short: 'T3', enShort: 'Tue', dayIndex: 2 },
-  { key: '4', label: 'Thứ 4', enLabel: 'Wednesday', short: 'T4', enShort: 'Wed', dayIndex: 3 },
-  { key: '5', label: 'Thứ 5', enLabel: 'Thursday', short: 'T5', enShort: 'Thu', dayIndex: 4 },
-  { key: '6', label: 'Thứ 6', enLabel: 'Friday', short: 'T6', enShort: 'Fri', dayIndex: 5 },
-  { key: '7', label: 'Thứ 7', enLabel: 'Saturday', short: 'T7', enShort: 'Sat', dayIndex: 6 },
-  { key: 'CN', label: 'Chủ Nhật', enLabel: 'Sunday', short: 'CN', enShort: 'Sun', dayIndex: 0 },
+  { key: '2', labelKey: 'landlordScheduleDayMon', shortKey: 'landlordScheduleDayMonShort', dayIndex: 1 },
+  { key: '3', labelKey: 'landlordScheduleDayTue', shortKey: 'landlordScheduleDayTueShort', dayIndex: 2 },
+  { key: '4', labelKey: 'landlordScheduleDayWed', shortKey: 'landlordScheduleDayWedShort', dayIndex: 3 },
+  { key: '5', labelKey: 'landlordScheduleDayThu', shortKey: 'landlordScheduleDayThuShort', dayIndex: 4 },
+  { key: '6', labelKey: 'landlordScheduleDayFri', shortKey: 'landlordScheduleDayFriShort', dayIndex: 5 },
+  { key: '7', labelKey: 'landlordScheduleDaySat', shortKey: 'landlordScheduleDaySatShort', dayIndex: 6 },
+  { key: 'CN', labelKey: 'landlordScheduleDaySun', shortKey: 'landlordScheduleDaySunShort', dayIndex: 0 },
 ]
 
 function getMondayOfCurrentWeek(d = new Date()): Date {
@@ -77,8 +86,6 @@ function formatDisplayDate(dateStr: string): string {
 export default function WorkforceSchedulePage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
   const buildingId = activeBuilding?.id || ''
 
   // ─── View & Navigation States ──────────────────────────────────────────
@@ -184,13 +191,13 @@ export default function WorkforceSchedulePage() {
       days.push({
         date: d,
         dateString: dateStr,
-        label: info.label,
-        short: info.short,
+        label: t(info.labelKey),
+        short: t(info.shortKey),
         isToday: dateStr === todayStr,
       })
     }
     return days
-  }, [selectedWeekStart])
+  }, [selectedWeekStart, t])
 
   const weekRangeLabel = useMemo(() => {
     const startStr = formatDisplayDate(formatDateString(weekDays[0].date))
@@ -258,7 +265,7 @@ export default function WorkforceSchedulePage() {
       console.error('Failed to fetch schedules:', err)
       showToast(
         'error',
-        isEn ? 'Could not load shift list.' : 'Không thể tải danh sách ca làm việc.',
+        t('landlordScheduleToastFailedLoad'),
       )
     } finally {
       setIsLoading(false)
@@ -347,23 +354,15 @@ export default function WorkforceSchedulePage() {
   const handleSubmitRecurring = async (e: React.FormEvent) => {
     e.preventDefault()
     if (recurringEmployeeIds.length === 0) {
-      showToast(
-        'error',
-        isEn ? 'Please select at least one employee.' : 'Vui lòng chọn ít nhất một nhân viên.',
-      )
+      showToast('error', t('landlordScheduleToastSelectEmployee'))
       return
     }
     if (!recurringShiftId) {
-      showToast('error', isEn ? 'Please select a shift.' : 'Vui lòng chọn ca làm việc.')
+      showToast('error', t('landlordScheduleToastSelectShift'))
       return
     }
     if (recurringDays.length === 0) {
-      showToast(
-        'error',
-        isEn
-          ? 'Please select at least one day of the week.'
-          : 'Vui lòng chọn ít nhất một ngày trong tuần.',
-      )
+      showToast('error', t('landlordScheduleToastSelectDays'))
       return
     }
 
@@ -384,8 +383,7 @@ export default function WorkforceSchedulePage() {
     } catch (err: any) {
       showToast(
         'error',
-        err?.response?.data?.message ||
-          (isEn ? 'Failed to create recurring shifts' : 'Lỗi khi tạo ca làm việc định kỳ'),
+        err?.response?.data?.message || t('landlordScheduleToastFailedRecurring'),
       )
     } finally {
       setIsSubmittingRecurring(false)
@@ -396,15 +394,15 @@ export default function WorkforceSchedulePage() {
   const handleSubmitAdhoc = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!adhocEmployeeId) {
-      showToast('error', isEn ? 'Please select an employee.' : 'Vui lòng chọn nhân viên.')
+      showToast('error', t('landlordScheduleToastSelectEmployeeSingle'))
       return
     }
     if (!adhocShiftId) {
-      showToast('error', isEn ? 'Please select a shift.' : 'Vui lòng chọn ca làm việc.')
+      showToast('error', t('landlordScheduleToastSelectShift'))
       return
     }
     if (!adhocWorkDate) {
-      showToast('error', isEn ? 'Please select a work date.' : 'Vui lòng chọn ngày làm việc.')
+      showToast('error', t('landlordScheduleToastSelectWorkDate'))
       return
     }
 
@@ -423,8 +421,7 @@ export default function WorkforceSchedulePage() {
     } catch (err: any) {
       showToast(
         'error',
-        err?.response?.data?.message ||
-          (isEn ? 'Failed to assign ad-hoc shift' : 'Lỗi khi xếp ca làm việc đột xuất'),
+        err?.response?.data?.message || t('landlordScheduleToastFailedAdhoc'),
       )
     } finally {
       setIsSubmittingAdhoc(false)
@@ -453,8 +450,7 @@ export default function WorkforceSchedulePage() {
     } catch (err: any) {
       showToast(
         'error',
-        err?.response?.data?.message ||
-          (isEn ? 'Failed to create shift template' : 'Lỗi khi tạo ca làm việc'),
+        err?.response?.data?.message || t('landlordScheduleToastFailedCreateShift'),
       )
     } finally {
       setIsCreatingShift(false)
@@ -501,7 +497,7 @@ export default function WorkforceSchedulePage() {
             status: editStatus,
           },
         )
-        showToast('success', res?.message || 'Đã cập nhật toàn bộ các ca định kỳ trong tương lai!')
+        showToast('success', res?.message || t('landlordScheduleToastSuccessUpdateAllFuture'))
       } else {
         // Edit single occurrence
         await scheduleService.updateSchedule(buildingId, selectedScheduleForEdit.id, {
@@ -511,7 +507,7 @@ export default function WorkforceSchedulePage() {
         })
         showToast(
           'success',
-          isEn ? 'Shift updated successfully!' : 'Đã cập nhật ca làm việc thành công!',
+          t('landlordScheduleToastSuccessUpdate'),
         )
       }
 
@@ -520,8 +516,7 @@ export default function WorkforceSchedulePage() {
     } catch (err: any) {
       showToast(
         'error',
-        err?.response?.data?.message ||
-          (isEn ? 'Failed to update shift' : 'Lỗi khi cập nhật ca làm việc'),
+        err?.response?.data?.message || t('landlordScheduleToastFailedUpdate'),
       )
     } finally {
       setIsSubmittingEdit(false)
@@ -535,17 +530,18 @@ export default function WorkforceSchedulePage() {
 
     if (isRecurring) {
       const confirmAction = confirm(
-        `Ca trực này thuộc chuỗi phân ca lặp lại.\n\nBấm "OK" để chỉ hủy ca ngày ${formatDisplayDate(
-          item.workDate,
-        )}.\nBấm "Cancel" nếu bạn muốn xem tùy chọn hủy chuỗi tương lai trong modal Chỉnh sửa.`,
+        t('landlordScheduleConfirmRecurringDelete', {
+          date: formatDisplayDate(item.workDate),
+        }),
       )
       if (!confirmAction) return
     } else {
       if (
         !confirm(
-          `Bạn có chắc muốn hủy ca trực của ${item.employeeName} vào ngày ${formatDisplayDate(
-            item.workDate,
-          )}?`,
+          t('landlordScheduleDeleteConfirm', {
+            name: item.employeeName,
+            date: formatDisplayDate(item.workDate),
+          }),
         )
       )
         return
@@ -553,10 +549,10 @@ export default function WorkforceSchedulePage() {
 
     try {
       await scheduleService.deleteSchedule(buildingId, item.id, mode)
-      showToast('success', isEn ? 'Shift canceled successfully!' : 'Đã hủy ca làm việc thành công.')
+      showToast('success', t('landlordScheduleToastSuccessCancel'))
       fetchSchedules()
     } catch (err: any) {
-      showToast('error', err?.response?.data?.message || 'Lỗi khi hủy ca làm việc')
+      showToast('error', err?.response?.data?.message || t('landlordScheduleToastFailedCancel'))
     }
   }
 
@@ -618,7 +614,7 @@ export default function WorkforceSchedulePage() {
         <div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
             <CalendarDays className="w-4 h-4" />
-            <span>{isEn ? ' · Staff Management' : ' · Quản lý nhân sự'}</span>
+            <span> · {t('landlordScheduleStaffManagementTag')}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
             {t('landlordScheduleTitle')}
@@ -626,14 +622,15 @@ export default function WorkforceSchedulePage() {
           <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
             {t('landlordScheduleSubtitleFull')} ({' '}
             <strong className="text-zinc-800">
-              {activeBuilding?.name || (isEn ? 'current property' : 'Tòa nhà hiện tại')}
+              {activeBuilding?.name || t('landlordScheduleCurrentProperty')}
             </strong>
             )
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               setIsDirty(false)
               setIsShiftsModalOpen(true)
@@ -641,10 +638,11 @@ export default function WorkforceSchedulePage() {
             className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5 text-zinc-500" />
-            <span>{isEn ? 'Shift Templates' : 'Quản lý ca mẫu'}</span>
-          </button>
+            <span>{t('landlordScheduleBtnShiftTemplates')}</span>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
             onClick={() => {
               setIsDirty(false)
               setIsAdhocModalOpen(true)
@@ -653,9 +651,9 @@ export default function WorkforceSchedulePage() {
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t('landlordScheduleBtnAssign')}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => {
               setIsDirty(false)
               setIsRecurringModalOpen(true)
@@ -664,7 +662,7 @@ export default function WorkforceSchedulePage() {
           >
             <Repeat className="w-3.5 h-3.5" />
             <span>{t('landlordScheduleBtnRecurring')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -681,7 +679,7 @@ export default function WorkforceSchedulePage() {
             {summary.totalSchedules}
           </div>
           <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'Within timeframe' : 'Trong khoảng thời gian'}
+            {t('landlordScheduleStatWithinTimeframe')}
           </p>
         </div>
 
@@ -696,14 +694,14 @@ export default function WorkforceSchedulePage() {
             {summary.scheduledCount}
           </div>
           <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'Ready for duty' : 'Sẵn sàng thực hiện'}
+            {t('landlordScheduleStatReadyForDuty')}
           </p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              {isEn ? 'Recurring Shifts' : 'Ca lặp lại'}
+              {t('landlordScheduleStatRecurringShifts')}
             </span>
             <Repeat className="w-4 h-4 text-blue-500" />
           </div>
@@ -711,20 +709,20 @@ export default function WorkforceSchedulePage() {
             {summary.recurringCount}
           </div>
           <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'Weekly recurring' : 'Tự động hàng tuần'}
+            {t('landlordScheduleStatWeeklyRecurring')}
           </p>
         </div>
 
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              {isEn ? 'Ad-hoc Shifts' : 'Ca đột xuất'}
+              {t('landlordScheduleStatAdhocShifts')}
             </span>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-amber-600">{summary.adhocCount}</div>
           <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'On demand' : 'Phân theo nhu cầu'}
+            {t('landlordScheduleStatOnDemand')}
           </p>
         </div>
       </div>
@@ -734,28 +732,34 @@ export default function WorkforceSchedulePage() {
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Week Date Navigator */}
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handlePrevWeek}
-              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200"
+              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto w-auto"
               title={t('landlordScheduleBtnPrevWeek')}
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleCurrentWeek}
-              className="px-3 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200"
+              className="px-3 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto"
             >
               {t('landlordScheduleBtnToday')}
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleNextWeek}
-              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200"
+              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto w-auto"
               title={t('landlordScheduleBtnNextWeek')}
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
 
             <div className="flex items-center gap-2 pl-2 text-sm font-bold text-zinc-800">
               <CalendarIcon className="w-4 h-4 text-[#2AC1BC]" />
@@ -766,9 +770,11 @@ export default function WorkforceSchedulePage() {
           {/* View Mode Switcher (Rule #9) */}
           <div className="flex items-center gap-2 self-end md:self-auto">
             <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setViewMode('calendar')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto ${
                   viewMode === 'calendar'
                     ? 'bg-white text-zinc-900 shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-800'
@@ -776,10 +782,12 @@ export default function WorkforceSchedulePage() {
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
                 <span>{t('landlordScheduleViewCalendar')}</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto ${
                   viewMode === 'list'
                     ? 'bg-white text-zinc-900 shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-800'
@@ -787,63 +795,52 @@ export default function WorkforceSchedulePage() {
               >
                 <List className="w-3.5 h-3.5" />
                 <span>{t('landlordScheduleViewList')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Filter row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
-              placeholder={t('landlordScheduleFilterSearchPh')}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50"
-            />
-          </div>
+          <SearchInput
+            placeholder={t('landlordScheduleFilterSearchPh')}
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
 
-          <select
+          <SelectInput
             value={filterEmployeeId}
             onChange={e => setFilterEmployeeId(e.target.value)}
-            className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
-          >
-            <option value="">
-              {t('landlordScheduleFilterStaffPh')} ({staffList.length})
-            </option>
-            {staffList.map(s => (
-              <option key={s.employeeId} value={s.employeeId}>
-                {s.fullName} ({s.positionName})
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: `${t('landlordScheduleFilterStaffPh')} (${staffList.length})` },
+              ...staffList.map(s => ({
+                value: s.employeeId,
+                label: `${s.fullName} (${s.positionName})`,
+              })),
+            ]}
+          />
 
-          <select
+          <SelectInput
             value={filterShiftId}
             onChange={e => setFilterShiftId(e.target.value)}
-            className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
-          >
-            <option value="">
-              {t('landlordScheduleFilterShiftPh')} ({shifts.length})
-            </option>
-            {shifts.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name} ({s.startTime} - {s.endTime})
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: `${t('landlordScheduleFilterShiftPh')} (${shifts.length})` },
+              ...shifts.map(s => ({
+                value: s.id,
+                label: `${s.name} (${s.startTime} - ${s.endTime})`,
+              })),
+            ]}
+          />
 
-          <select
+          <SelectInput
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-zinc-50/50 cursor-pointer"
-          >
-            <option value="all">{t('landlordScheduleFilterStatusPh')}</option>
-            <option value="scheduled">{t('landlordScheduleStatusAssigned')}</option>
-            <option value="canceled">{t('landlordScheduleStatusCanceled')}</option>
-          </select>
+            options={[
+              { value: 'all', label: t('landlordScheduleFilterStatusPh') },
+              { value: 'scheduled', label: t('landlordScheduleStatusAssigned') },
+              { value: 'canceled', label: t('landlordScheduleStatusCanceled') },
+            ]}
+          />
         </div>
       </div>
 
@@ -852,7 +849,7 @@ export default function WorkforceSchedulePage() {
         <div className="bg-white border border-zinc-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
           <p className="text-xs font-bold text-zinc-500">
-            {isEn ? 'Loading workforce schedule...' : 'Đang tải lịch phân ca làm việc...'}
+            {t('landlordScheduleLoading')}
           </p>
         </div>
       ) : viewMode === 'calendar' ? (
@@ -882,7 +879,7 @@ export default function WorkforceSchedulePage() {
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span className="text-xs font-extrabold">
-                      {isEn ? (day as any).enLabel : day.label}
+                      {day.label}
                     </span>
                     {day.isToday && (
                       <span className="px-1.5 py-0.2 text-[9px] font-black uppercase bg-[#2AC1BC] text-white rounded-full">
@@ -894,7 +891,7 @@ export default function WorkforceSchedulePage() {
                     {formatDisplayDate(day.dateString)}
                   </div>
                   <div className="text-[10px] font-bold text-zinc-400 mt-1">
-                    {daySchedules.length} {isEn ? 'shifts' : 'ca trực'}
+                    {daySchedules.length} {t('landlordScheduleShiftsCount')}
                   </div>
                 </div>
 
@@ -932,14 +929,14 @@ export default function WorkforceSchedulePage() {
                           {schedule.isRecurring ? (
                             <span
                               className="flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100"
-                              title={isEn ? 'Weekly recurring shift' : 'Ca lặp lại hàng tuần'}
+                              title={t('landlordScheduleWeeklyRecurringTitle')}
                             >
                               <Repeat className="w-2.5 h-2.5" />
-                              <span>{isEn ? 'Repeat' : 'Lặp'}</span>
+                              <span>{t('landlordScheduleRepeat')}</span>
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-md">
-                              {isEn ? 'Ad-hoc' : 'Đơn lẻ'}
+                              {t('landlordScheduleAdhoc')}
                             </span>
                           )}
                         </div>
@@ -949,7 +946,7 @@ export default function WorkforceSchedulePage() {
                           {schedule.employeeName}
                         </div>
                         <div className="text-[10px] text-zinc-400 font-semibold truncate mb-2">
-                          {schedule.positionName || (isEn ? 'Staff' : 'Nhân viên')}
+                          {schedule.positionName || t('landlordScheduleStaffFallback')}
                         </div>
 
                         {/* Working hours */}
@@ -962,21 +959,25 @@ export default function WorkforceSchedulePage() {
 
                         {/* Action Buttons (visible on hover or focus) */}
                         <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-zinc-100">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenEditModal(schedule)}
-                            className="p-1 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                            title={isEn ? 'Edit shift' : 'Chỉnh sửa ca này'}
+                            className="p-1 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
+                            title={t('landlordScheduleEditShiftTitle')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                           {schedule.status !== 'canceled' && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDeleteSchedule(schedule)}
-                              className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title={isEn ? 'Cancel shift' : 'Hủy ca này'}
+                              className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
+                              title={t('landlordScheduleCancelShiftTitle')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -998,15 +999,12 @@ export default function WorkforceSchedulePage() {
                 <CalendarIcon className="w-7 h-7" />
               </div>
               <h3 className="text-base font-extrabold text-zinc-900 mb-1">
-                {isEn ? 'No shift schedules found' : 'Không tìm thấy ca làm việc'}
+                {t('landlordScheduleEmptyTitle')}
               </h3>
               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                {isEn
-                  ? 'No shifts found for the selected timeframe or filter.'
-                  : 'Chưa có ca làm việc nào trong khoảng thời gian hoặc theo bộ lọc'}
-                đã chọn. Bấm vào nút bên dưới để phân ca.
+                {t('landlordScheduleEmptyDesc')}
               </p>
-              <button
+              <Button
                 onClick={() => {
                   setIsDirty(false)
                   setIsRecurringModalOpen(true)
@@ -1014,7 +1012,7 @@ export default function WorkforceSchedulePage() {
                 className="mt-4 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer"
               >
                 {t('landlordScheduleBtnRecurring')}
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1023,10 +1021,10 @@ export default function WorkforceSchedulePage() {
                   <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-400 font-extrabold uppercase text-[10px] tracking-wider">
                     <th className="py-3.5 px-4">{t('landlordScheduleColDate')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColStaff')}</th>
-                    <th className="py-3.5 px-4">{isEn ? 'Position' : 'Vị trí'}</th>
+                    <th className="py-3.5 px-4">{t('landlordScheduleColPosition')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColShift')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColTime')}</th>
-                    <th className="py-3.5 px-4">{isEn ? 'Type' : 'Loại phân ca'}</th>
+                    <th className="py-3.5 px-4">{t('landlordScheduleColType')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColStatus')}</th>
                     <th className="py-3.5 px-4 text-right">{t('landlordScheduleColActions')}</th>
                   </tr>
@@ -1042,7 +1040,7 @@ export default function WorkforceSchedulePage() {
                         <div className="text-[10px] text-zinc-400">{item.employeePhone}</div>
                       </td>
                       <td className="py-3 px-4 text-zinc-500 font-semibold">
-                        {item.positionName || (isEn ? 'Staff' : 'Nhân viên')}
+                        {item.positionName || t('landlordScheduleStaffFallback')}
                       </td>
                       <td className="py-3 px-4">
                         <span
@@ -1060,11 +1058,11 @@ export default function WorkforceSchedulePage() {
                         {item.isRecurring ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
                             <Repeat className="w-2.5 h-2.5" />
-                            <span>{isEn ? 'Weekly Recurring' : 'Lặp lại hàng tuần'}</span>
+                            <span>{t('landlordScheduleWeeklyRecurringBadge')}</span>
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md">
-                            {isEn ? 'Ad-hoc Shift' : 'Đơn lẻ (Đột xuất)'}
+                            {t('landlordScheduleAdhocShiftBadge')}
                           </span>
                         )}
                       </td>
@@ -1081,21 +1079,25 @@ export default function WorkforceSchedulePage() {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="inline-flex items-center gap-1">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenEditModal(item)}
-                            className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                             title={t('landlordShiftsBtnEdit')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                           {item.status !== 'canceled' && (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleDeleteSchedule(item)}
-                              className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title={isEn ? 'Cancel shift' : 'Hủy ca'}
+                              className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
+                              title={t('landlordScheduleCancelShiftAction')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </td>
@@ -1107,9 +1109,8 @@ export default function WorkforceSchedulePage() {
               {/* Rule #9: Standardized Pagination Bar */}
               <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-                  <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-                  <input
-                    type="number"
+                  <span>{t('landlordSchedulePaginationShowing')}</span>
+                  <NumberInput
                     min={1}
                     max={100}
                     value={listPageSize}
@@ -1119,62 +1120,72 @@ export default function WorkforceSchedulePage() {
                     }}
                     className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white"
                   />
-                  <span>/ trang</span>
+                  <span>{t('landlordSchedulePaginationPerPage')}</span>
                   <span className="text-zinc-300">|</span>
                   <span>
                     {(listPage - 1) * listPageSize + 1}-
-                    {Math.min(listPage * listPageSize, totalListItems)} {isEn ? 'of' : 'trên'}{' '}
-                    {totalListItems} {isEn ? 'items' : 'mục'}
+                    {Math.min(listPage * listPageSize, totalListItems)} {t('landlordSchedulePaginationOf')}{' '}
+                    {totalListItems} {t('landlordSchedulePaginationItems')}
                   </span>
                 </div>
 
                 {/* 5-page window jumping */}
                 <div className="flex items-center gap-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={windowStart <= 1}
                     onClick={() => handlePageJump(-5)}
-                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                    title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
+                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto"
+                    title={t('landlordScheduleBack5Pages')}
                   >
                     «
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={listPage <= 1}
                     onClick={() => setListPage(p => Math.max(p - 1, 1))}
-                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                  </button>
+                  </Button>
 
                   {pageNumbers.map(p => (
-                    <button
+                    <Button
                       key={p}
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setListPage(p)}
-                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 ${
                         listPage === p
-                          ? 'bg-[#2AC1BC] text-white shadow-sm'
+                          ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6] hover:text-white'
                           : 'text-zinc-600 hover:bg-zinc-200'
                       }`}
                     >
                       {p}
-                    </button>
+                    </Button>
                   ))}
 
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={listPage >= totalListPages}
                     onClick={() => setListPage(p => Math.min(p + 1, totalListPages))}
-                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto"
                   >
                     <ChevronRight className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={windowStart + 5 > totalListPages}
                     onClick={() => handlePageJump(5)}
-                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
-                    title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
+                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto"
+                    title={t('landlordScheduleForward5Pages')}
                   >
                     »
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1208,19 +1219,18 @@ export default function WorkforceSchedulePage() {
                     {t('landlordScheduleModalRecurringTitle')}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    {isEn
-                      ? 'Auto-generate shift series materialized into daily assignments'
-                      : 'Tạo chuỗi lịch tự động và kết xuất thành các ca'}
-                    {isEn ? 'independently by week' : 'trực độc lập theo tuần'}
+                    {t('landlordScheduleModalRecurringSubtitle')}
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleAttemptCloseModal('recurring')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Form */}
@@ -1235,8 +1245,9 @@ export default function WorkforceSchedulePage() {
                     <span>{t('landlordScheduleModalStaffLabel')}</span>
                     <span className="text-rose-500">*</span>
                   </label>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => {
                       if (recurringEmployeeIds.length === staffList.length) {
                         setRecurringEmployeeIds([])
@@ -1245,25 +1256,19 @@ export default function WorkforceSchedulePage() {
                       }
                       setIsDirty(true)
                     }}
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer p-0 h-auto"
                   >
                     {recurringEmployeeIds.length === staffList.length
-                      ? isEn
-                        ? 'Deselect All'
-                        : 'Bỏ chọn tất cả'
-                      : isEn
-                        ? 'Select All'
-                        : 'Chọn tất cả'}
-                  </button>
+                      ? t('landlordScheduleDeselectAll')
+                      : t('landlordScheduleSelectAll')}
+                  </Button>
                 </div>
 
                 {staffList.length === 0 ? (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>
-                      {isEn
-                        ? 'No active staff members found at this property. Please add employees first.'
-                        : 'Chưa có nhân viên đang hoạt động tại tòa nhà này. Vui lòng thêm nhân viên trước.'}
+                      {t('landlordScheduleNoStaffWarning')}
                     </span>
                   </div>
                 ) : (
@@ -1271,36 +1276,36 @@ export default function WorkforceSchedulePage() {
                     {staffList.map(s => {
                       const isChecked = recurringEmployeeIds.includes(s.employeeId)
                       return (
-                        <label
+                        <div
                           key={s.employeeId}
-                          className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-all ${
+                          className={`p-2 rounded-lg border text-xs transition-all ${
                             isChecked
                               ? 'bg-white border-[#2AC1BC] text-zinc-900 shadow-sm'
                               : 'bg-transparent border-transparent hover:bg-zinc-100 text-zinc-600'
                           }`}
                         >
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isChecked}
                             onChange={e => {
                               if (e.target.checked) {
                                 setRecurringEmployeeIds(prev => [...prev, s.employeeId])
                               } else {
                                 setRecurringEmployeeIds(prev =>
-                                  prev.filter(id => id !== s.employeeId),
+                                   prev.filter(id => id !== s.employeeId),
                                 )
                               }
                               setIsDirty(true)
                             }}
-                            className="rounded text-[#2AC1BC] focus:ring-[#2AC1BC]"
+                            label={
+                              <div className="truncate">
+                                <span className="font-bold">{s.fullName}</span>
+                                <span className="text-[10px] text-zinc-400 ml-1">
+                                  ({s.positionName || t('landlordScheduleStaffFallback')})
+                                </span>
+                              </div>
+                            }
                           />
-                          <div className="truncate">
-                            <span className="font-bold">{s.fullName}</span>
-                            <span className="text-[10px] text-zinc-400 ml-1">
-                              ({s.positionName || (isEn ? 'Staff' : 'Nhân viên')})
-                            </span>
-                          </div>
-                        </label>
+                        </div>
                       )
                     })}
                   </div>
@@ -1309,25 +1314,22 @@ export default function WorkforceSchedulePage() {
 
               {/* Select Shift */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                  <span>{t('landlordScheduleModalShiftLabel')}</span>
-                  <span className="text-rose-500">*</span>
-                </label>
-                <select
+                <SelectInput
+                  label={t('landlordScheduleModalShiftLabel')}
+                  required
                   value={recurringShiftId}
                   onChange={e => {
                     setRecurringShiftId(e.target.value)
                     setIsDirty(true)
                   }}
-                  className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
-                >
-                  <option value="">{t('landlordScheduleModalShiftPh')}</option>
-                  {shifts.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.startTime} - {s.endTime})
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: t('landlordScheduleModalShiftPh') },
+                    ...shifts.map(s => ({
+                      value: s.id,
+                      label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                    })),
+                  ]}
+                />
               </div>
 
               {/* Select Days of Week */}
@@ -1338,38 +1340,41 @@ export default function WorkforceSchedulePage() {
                     <span className="text-rose-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '3', '4', '5', '6'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800"
+                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T2 - T6
-                    </button>
+                    </Button>
                     <span className="text-zinc-300">·</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '4', '6'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800"
+                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T2, 4, 6
-                    </button>
+                    </Button>
                     <span className="text-zinc-300">·</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setRecurringDays(['3', '5', '7'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800"
+                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T3, 5, 7
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -1377,9 +1382,11 @@ export default function WorkforceSchedulePage() {
                   {DAYS_OF_WEEK.map(d => {
                     const isSelected = recurringDays.includes(d.key)
                     return (
-                      <button
+                      <Button
                         key={d.key}
                         type="button"
+                        variant={isSelected ? 'primary' : 'outline'}
+                        size="sm"
                         onClick={() => {
                           if (isSelected) {
                             setRecurringDays(prev => prev.filter(k => k !== d.key))
@@ -1388,14 +1395,14 @@ export default function WorkforceSchedulePage() {
                           }
                           setIsDirty(true)
                         }}
-                        className={`py-2 px-1 text-center rounded-xl border text-xs font-extrabold transition-all cursor-pointer ${
+                        className={`py-2 px-1 text-center rounded-xl border text-xs font-extrabold transition-all cursor-pointer h-auto ${
                           isSelected
                             ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-sm shadow-[#2AC1BC]/20'
                             : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
                         }`}
                       >
-                        {d.short}
-                      </button>
+                        {t(d.shortKey as any)}
+                      </Button>
                     )
                   })}
                 </div>
@@ -1403,86 +1410,60 @@ export default function WorkforceSchedulePage() {
 
               {/* Date Range */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>{isEn ? 'Start Date' : 'Bắt đầu từ ngày'}</span>
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={recurringStartDate}
-                    onChange={e => {
-                      setRecurringStartDate(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
-                  />
-                </div>
+                <TextInput
+                  type="date"
+                  label={t('landlordScheduleStartDate')}
+                  required
+                  value={recurringStartDate}
+                  onChange={e => {
+                    setRecurringStartDate(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>{t('landlordScheduleModalUntilLabel')}</span>
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={recurringEndDate}
-                    onChange={e => {
-                      setRecurringEndDate(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
-                  />
-                </div>
+                <TextInput
+                  type="date"
+                  label={t('landlordScheduleModalUntilLabel')}
+                  required
+                  value={recurringEndDate}
+                  onChange={e => {
+                    setRecurringEndDate(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
               </div>
 
               {/* Duty Note */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700">
-                  {t('landlordScheduleModalNoteLabel')}
-                </label>
-                <textarea
-                  rows={2}
-                  value={recurringNote}
-                  onChange={e => {
-                    setRecurringNote(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  placeholder={t('landlordScheduleModalNotePh')}
-                  className="w-full px-4 py-2.5 text-xs font-medium border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
-                />
-              </div>
+              <TextareaInput
+                label={t('landlordScheduleModalNoteLabel')}
+                rows={2}
+                value={recurringNote}
+                onChange={e => {
+                  setRecurringNote(e.target.value)
+                  setIsDirty(true)
+                }}
+                placeholder={t('landlordScheduleModalNotePh')}
+              />
 
               {/* Pre-calculation Alert */}
               <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  {isEn ? (
-                    <>
-                      The system will automatically generate recurrence rules and{' '}
-                      <strong>materialize</strong> daily shift assignments. You can later adjust
-                      individual shifts independently without altering the full series.
-                    </>
-                  ) : (
-                    <>
-                      Hệ thống sẽ tự động tạo mẫu lặp và <strong>kết xuất</strong> thành các ca trực
-                      cụ thể theo từng ngày. Sau khi tạo, bạn có thể điều chỉnh riêng lẻ từng ca mà
-                      không ảnh hưởng tới toàn chuỗi.
-                    </>
-                  )}
+                  {t('landlordScheduleRecurringInfo')}
                 </span>
               </div>
 
               {/* Modal Footer */}
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleAttemptCloseModal('recurring')}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmittingRecurring}
                   className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
@@ -1490,12 +1471,12 @@ export default function WorkforceSchedulePage() {
                   {isSubmittingRecurring ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{isEn ? 'Materializing shifts...' : 'Đang kết xuất ca trực...'}</span>
+                      <span>{t('landlordScheduleMaterializing')}</span>
                     </>
                   ) : (
                     <span>{t('landlordScheduleModalSubmitRecurring')}</span>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1527,18 +1508,18 @@ export default function WorkforceSchedulePage() {
                     {t('landlordScheduleModalAssignTitle')}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    {isEn
-                      ? 'Assign a one-time ad-hoc shift for an employee'
-                      : 'Xếp ca làm việc một lần không định kỳ cho nhân viên'}
+                    {t('landlordScheduleModalAdhocSubtitle')}
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleAttemptCloseModal('adhoc')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <form
@@ -1546,72 +1527,61 @@ export default function WorkforceSchedulePage() {
               className="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar"
             >
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                  <span>{t('landlordScheduleModalStaffLabel')}</span>
-                  <span className="text-rose-500">*</span>
-                </label>
-                <select
+                <SelectInput
+                  label={t('landlordScheduleModalStaffLabel')}
+                  required
                   value={adhocEmployeeId}
                   onChange={e => {
                     setAdhocEmployeeId(e.target.value)
                     setIsDirty(true)
                   }}
-                  className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
-                >
-                  <option value="">{t('landlordScheduleModalStaffPh')}</option>
-                  {staffList.map(s => (
-                    <option key={s.employeeId} value={s.employeeId}>
-                      {s.fullName} ({s.positionName || (isEn ? 'Staff' : 'Nhân viên')})
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { value: '', label: t('landlordScheduleModalStaffPh') },
+                    ...staffList.map(s => ({
+                      value: s.employeeId,
+                      label: `${s.fullName} (${s.positionName || t('landlordScheduleStaffFallback')})`,
+                    })),
+                  ]}
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>{t('landlordScheduleModalShiftLabel')}</span>
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <select
+                  <SelectInput
+                    label={t('landlordScheduleModalShiftLabel')}
+                    required
                     value={adhocShiftId}
                     onChange={e => {
                       setAdhocShiftId(e.target.value)
                       setIsDirty(true)
                     }}
-                    className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
-                  >
-                    <option value="">{t('landlordScheduleModalShiftPh')}</option>
-                    {shifts.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.startTime} - {s.endTime})
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: '', label: t('landlordScheduleModalShiftPh') },
+                      ...shifts.map(s => ({
+                        value: s.id,
+                        label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                      })),
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                    <span>{t('landlordScheduleModalDateLabel')}</span>
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <input
+                  <TextInput
                     type="date"
+                    label={t('landlordScheduleModalDateLabel')}
+                    required
                     value={adhocWorkDate}
                     onChange={e => {
                       setAdhocWorkDate(e.target.value)
                       setIsDirty(true)
                     }}
-                    className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700">
-                  {t('landlordScheduleModalNoteLabel')}
-                </label>
-                <textarea
+                <TextareaInput
+                  label={t('landlordScheduleModalNoteLabel')}
                   rows={3}
                   value={adhocNote}
                   onChange={e => {
@@ -1619,19 +1589,19 @@ export default function WorkforceSchedulePage() {
                     setIsDirty(true)
                   }}
                   placeholder={t('landlordScheduleModalNotePh')}
-                  className="w-full px-4 py-2.5 text-xs font-medium border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
                 />
               </div>
 
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleAttemptCloseModal('adhoc')}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmittingAdhoc}
                   className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
@@ -1639,12 +1609,12 @@ export default function WorkforceSchedulePage() {
                   {isSubmittingAdhoc ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{isEn ? 'Saving...' : 'Đang lưu...'}</span>
+                      <span>{t('landlordScheduleSaving')}</span>
                     </>
                   ) : (
                     <span>{t('landlordScheduleModalSubmitAssign')}</span>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1673,21 +1643,21 @@ export default function WorkforceSchedulePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    {isEn ? 'Shift Templates Configuration' : 'Cấu hình ca làm việc mẫu'}
+                    {t('landlordScheduleModalTemplatesTitle')}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
-                    {isEn
-                      ? 'Manage duty hours and shift templates for the property'
-                      : 'Quản lý danh sách các khung giờ và ca làm việc tại tòa nhà'}
+                    {t('landlordScheduleModalTemplatesSubtitle')}
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleAttemptCloseModal('shifts')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto flex-1 space-y-6 custom-scrollbar">
@@ -1702,59 +1672,49 @@ export default function WorkforceSchedulePage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <input
-                    type="text"
-                    placeholder={isEn ? 'Shift name (e.g. Split shift)' : 'Tên ca (ví dụ: Ca gãy)'}
+                  <TextInput
+                    placeholder={t('landlordScheduleShiftNamePh')}
                     value={newShiftName}
                     onChange={e => {
                       setNewShiftName(e.target.value)
                       setIsDirty(true)
                     }}
-                    className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
                   />
-                  <input
+                  <TextInput
                     type="time"
                     value={newShiftStart}
                     onChange={e => {
                       setNewShiftStart(e.target.value)
                       setIsDirty(true)
                     }}
-                    className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
                   />
-                  <input
+                  <TextInput
                     type="time"
                     value={newShiftEnd}
                     onChange={e => {
                       setNewShiftEnd(e.target.value)
                       setIsDirty(true)
                     }}
-                    className="px-3 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white"
                   />
                 </div>
 
                 <div className="flex justify-end pt-1">
-                  <button
+                  <Button
                     type="submit"
                     disabled={isCreatingShift}
                     className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer disabled:opacity-50"
                   >
                     {isCreatingShift
-                      ? isEn
-                        ? 'Creating...'
-                        : 'Đang tạo...'
-                      : isEn
-                        ? '+ Add Shift'
-                        : '+ Thêm ca'}
-                  </button>
+                      ? t('landlordScheduleCreating')
+                      : t('landlordScheduleAddShiftBtnText')}
+                  </Button>
                 </div>
               </form>
 
               {/* Current Shifts List */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-700">
-                  {isEn
-                    ? `Active shift templates (${shifts.length})`
-                    : `Danh sách ca làm việc hiện hành (${shifts.length})`}
+                  {t('landlordScheduleActiveTemplates', { count: shifts.length })}
                 </label>
                 <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
                   {shifts.map(s => (
@@ -1778,13 +1738,15 @@ export default function WorkforceSchedulePage() {
                         </div>
                       </div>
 
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeleteShift(s.id, s.name)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                         title={t('landlordShiftsBtnDelete')}
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -1792,13 +1754,14 @@ export default function WorkforceSchedulePage() {
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => handleAttemptCloseModal('shifts')}
                 className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
-                {isEn ? 'Close' : 'Đóng'}
-              </button>
+                {t('landlordScheduleClose')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1826,7 +1789,7 @@ export default function WorkforceSchedulePage() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-zinc-900">
-                    {isEn ? 'Edit Shift Assignment' : 'Chỉnh sửa ca làm việc'}
+                    {t('landlordScheduleModalEditTitle')}
                   </h2>
                   <p className="text-[11px] text-zinc-400 font-semibold">
                     {selectedScheduleForEdit.employeeName} ·{' '}
@@ -1834,12 +1797,14 @@ export default function WorkforceSchedulePage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => handleAttemptCloseModal('edit')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <form
@@ -1848,111 +1813,122 @@ export default function WorkforceSchedulePage() {
             >
               {/* Shift Picker */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700">
-                  {isEn ? 'Select new shift' : 'Chọn ca làm việc mới'}
-                </label>
-                <select
+                <SelectInput
+                  label={t('landlordScheduleSelectNewShift')}
                   value={editShiftId}
                   onChange={e => {
                     setEditShiftId(e.target.value)
                     setIsDirty(true)
                   }}
-                  className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
-                >
-                  {shifts.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.startTime} - {s.endTime})
-                    </option>
-                  ))}
-                </select>
+                  options={shifts.map(s => ({
+                    value: s.id,
+                    label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                  }))}
+                />
               </div>
 
               {/* Status Picker */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700">
-                  {isEn ? 'Shift Status' : 'Trạng thái ca làm việc'}
-                </label>
-                <select
+                <SelectInput
+                  label={t('landlordScheduleShiftStatus')}
                   value={editStatus}
                   onChange={e => {
                     setEditStatus(e.target.value as 'scheduled' | 'canceled')
                     setIsDirty(true)
                   }}
-                  className="w-full px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] bg-white cursor-pointer"
-                >
-                  <option value="scheduled">
-                    {t('landlordScheduleStatusAssigned')} (scheduled)
-                  </option>
-                  <option value="canceled">{t('landlordScheduleStatusCanceled')}</option>
-                </select>
+                  options={[
+                    {
+                      value: 'scheduled',
+                      label: `${t('landlordScheduleStatusAssigned')} (scheduled)`,
+                    },
+                    { value: 'canceled', label: t('landlordScheduleStatusCanceled') },
+                  ]}
+                />
               </div>
 
               {/* Scope Choice if Recurring ( Rule) */}
               {selectedScheduleForEdit.isRecurring && selectedScheduleForEdit.recurrenceId && (
                 <div className="space-y-2.5 p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl">
                   <label className="text-xs font-extrabold text-zinc-800 block">
-                    {isEn ? 'Scope of Changes' : 'Phạm vi áp dụng chỉnh sửa'}
+                    {t('landlordScheduleEditScope')}
                   </label>
 
-                  <label className="flex items-start gap-2.5 text-xs cursor-pointer">
-                    <input
-                      type="radio"
-                      name="editScope"
-                      checked={editScope === 'single'}
-                      onChange={() => {
-                        setEditScope('single')
-                        setIsDirty(true)
-                      }}
-                      className="mt-0.5 text-[#2AC1BC] focus:ring-[#2AC1BC]"
-                    />
+                  <div
+                    onClick={() => {
+                      setEditScope('single')
+                      setIsDirty(true)
+                    }}
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                      editScope === 'single'
+                        ? 'bg-white border-[#2AC1BC] shadow-xs'
+                        : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                        editScope === 'single'
+                          ? 'border-[#2AC1BC] bg-[#2AC1BC]'
+                          : 'border-zinc-300 bg-white'
+                      }`}
+                    >
+                      {editScope === 'single' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
                     <div>
                       <span className="font-bold text-zinc-800">
-                        {isEn ? 'Apply to this shift only' : 'Chỉ áp dụng cho ca ngày này'}
+                        {t('landlordScheduleEditScopeSingleTitle')}
                       </span>
                       <p className="text-[11px] text-zinc-400">
-                        {isEn
-                          ? 'Only update this single shift. Future recurring schedules remain untouched.'
-                          : 'Chỉ cập nhật ca trực hiện tại. Chuỗi lịch lặp lại trong tương lai vẫn giữ nguyên.'}
+                        {t('landlordScheduleEditScopeSingleDesc')}
                       </p>
                     </div>
-                  </label>
+                  </div>
 
-                  <label className="flex items-start gap-2.5 text-xs cursor-pointer pt-2 border-t border-zinc-200">
-                    <input
-                      type="radio"
-                      name="editScope"
-                      checked={editScope === 'future'}
-                      onChange={() => {
-                        setEditScope('future')
-                        setIsDirty(true)
-                      }}
-                      className="mt-0.5 text-[#2AC1BC] focus:ring-[#2AC1BC]"
-                    />
+                  <div
+                    onClick={() => {
+                      setEditScope('future')
+                      setIsDirty(true)
+                    }}
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+                      editScope === 'future'
+                        ? 'bg-white border-amber-500 shadow-xs'
+                        : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                        editScope === 'future'
+                          ? 'border-amber-500 bg-amber-500'
+                          : 'border-zinc-300 bg-white'
+                      }`}
+                    >
+                      {editScope === 'future' && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </div>
                     <div>
                       <span className="font-bold text-amber-700">
-                        {isEn
-                          ? 'Apply to all future recurring shifts'
-                          : 'Áp dụng cho toàn bộ các ca trong tương lai'}
+                        {t('landlordScheduleEditScopeFutureTitle')}
                       </span>
                       <p className="text-[11px] text-amber-600/80 leading-relaxed">
-                        {isEn
-                          ? 'This will overwrite all recurring shifts from today onwards, including individually customized shifts.'
-                          : 'Thao tác này sẽ ghi đè lên toàn bộ ca làm việc định kỳ từ hôm nay trở đi, bao gồm các ca đã từng được chỉnh sửa riêng lẻ.'}
+                        {t('landlordScheduleEditScopeFutureDesc')}
                       </p>
                     </div>
-                  </label>
+                  </div>
                 </div>
               )}
 
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleAttemptCloseModal('edit')}
                   className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmittingEdit}
                   className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
@@ -1960,12 +1936,12 @@ export default function WorkforceSchedulePage() {
                   {isSubmittingEdit ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{isEn ? 'Saving...' : 'Đang lưu...'}</span>
+                      <span>{t('landlordScheduleSaving')}</span>
                     </>
                   ) : (
                     <span>{t('landlordShiftsSaveShiftBtn')}</span>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1997,15 +1973,17 @@ export default function WorkforceSchedulePage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
                 onClick={() => {
                   setIsConfirmCloseOpen(false)
                   performCloseModal(pendingModalToClose)
@@ -2013,7 +1991,7 @@ export default function WorkforceSchedulePage() {
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
               >
                 {t('landlordShiftsConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

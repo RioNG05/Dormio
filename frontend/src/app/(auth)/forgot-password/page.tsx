@@ -4,6 +4,10 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Phone, Mail, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
+import { Text } from '@/components/ui/Text'
+import { Button } from '@/components/ui/Button'
+import { TextInput } from '@/components/ui/TextInput'
+import { Form } from '@/components/ui/Form'
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth')
@@ -21,16 +25,22 @@ export default function ForgotPasswordPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header & Badge */}
       <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
+        <Text
+          as="span"
+          variant="caption"
+          size="3xs"
+          weight="black"
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider"
+        >
           <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authForgotPassBadge')}
-        </span>
+        </Text>
 
-        <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
           {t('authForgotPassword')}
-        </h1>
-        <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+        </Text>
+        <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
           {t('authForgotPassSubtitle')}
-        </p>
+        </Text>
       </div>
 
       {submitted ? (
@@ -39,89 +49,111 @@ export default function ForgotPasswordPage() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <h3 className="text-base font-black text-zinc-900">
+            <Text as="h3" variant="heading" size="base" className="text-zinc-900">
               {t('authForgotPassSuccessTitle')}
-            </h3>
-            <p className="text-xs text-zinc-500 font-medium mt-1 leading-relaxed">
+            </Text>
+            <Text variant="body" size="xs" color="subtle" className="mt-1 leading-relaxed">
               {t('authForgotPassSuccessMsg', { account: accountIdentifier })}
-            </p>
+            </Text>
           </div>
-          <button
+          <Button
+            type="button"
+            variant="secondary"
+            size="md"
             onClick={() => setSubmitted(false)}
-            className="px-6 py-2.5 bg-zinc-900 text-white font-extrabold text-xs rounded-xl hover:bg-zinc-800 transition-all cursor-pointer shadow-md"
+            className="px-6 py-2.5 rounded-xl font-extrabold text-xs"
           >
             {t('authForgotPassResendBtn')}
-          </button>
+          </Button>
         </div>
       ) : (
         <>
-          {/* Input Method Selector Tabs (Phone vs Email) */}
-          <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60">
-            <button
+          {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
+          <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60 gap-1">
+            <Button
               type="button"
+              variant={method === 'phone' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => setMethod('phone')}
-              className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              leftIcon={<Phone className="w-3.5 h-3.5" />}
+              className={`flex-1 rounded-xl text-xs font-extrabold ${
                 method === 'phone'
-                  ? 'bg-white text-[#2AC1BC] shadow-xs'
+                  ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
                   : 'text-zinc-500 hover:text-zinc-800'
               }`}
             >
-              <Phone className="w-3.5 h-3.5" /> {t('authLoginMethodPhone')}
-            </button>
-            <button
+              {t('authLoginMethodPhone')}
+            </Button>
+            <Button
               type="button"
+              variant={method === 'email' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => setMethod('email')}
-              className={`flex-1 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              leftIcon={<Mail className="w-3.5 h-3.5" />}
+              className={`flex-1 rounded-xl text-xs font-extrabold ${
                 method === 'email'
-                  ? 'bg-white text-[#2AC1BC] shadow-xs'
+                  ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
                   : 'text-zinc-500 hover:text-zinc-800'
               }`}
             >
-              <Mail className="w-3.5 h-3.5" /> {t('authLoginMethodEmail')}
-            </button>
+              {t('authLoginMethodEmail')}
+            </Button>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider block">
-                {method === 'phone' ? t('authForgotPassPhoneLabel') : t('authForgotPassEmailLabel')}
-              </label>
-              <div className="relative">
-                {method === 'phone' ? (
-                  <Phone className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          {/* Form using Base Form Component */}
+          <Form onSubmit={handleSubmit} className="space-y-4">
+            <TextInput
+              label={
+                method === 'phone' ? t('authForgotPassPhoneLabel') : t('authForgotPassEmailLabel')
+              }
+              labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+              type={method === 'phone' ? 'tel' : 'email'}
+              required
+              placeholder={method === 'phone' ? '0987 654 321' : 'nguyenvana@gmail.com'}
+              value={accountIdentifier}
+              onChange={e => setAccountIdentifier(e.target.value)}
+              leftIcon={
+                method === 'phone' ? (
+                  <Phone className="w-4 h-4 text-zinc-400" />
                 ) : (
-                  <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                )}
-                <input
-                  type={method === 'phone' ? 'tel' : 'email'}
-                  required
-                  placeholder={method === 'phone' ? '0987 654 321' : 'nguyenvana@gmail.com'}
-                  value={accountIdentifier}
-                  onChange={e => setAccountIdentifier(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#2AC1BC]"
-                />
-              </div>
-            </div>
+                  <Mail className="w-4 h-4 text-zinc-400" />
+                )
+              }
+              className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+            />
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
-            >
-              <span>{t('authForgotPassSubmitBtn')}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+            {/* Submit Button using Base Form.Actions & Button */}
+            <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+                className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+              >
+                {t('authForgotPassSubmitBtn')}
+              </Button>
+            </Form.Actions>
+          </Form>
         </>
       )}
 
       {/* Bottom Auth Navigation Link */}
-      <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        {t('authForgotPassRememberPrompt')}{' '}
-        <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
-          {t('authForgotPassBackToLogin')}
-        </Link>
+      <div className="text-center pt-2">
+        <Text variant="body" size="xs" color="subtle">
+          {t('authForgotPassRememberPrompt')}{' '}
+          <Link href="/login">
+            <Text
+              as="span"
+              variant="body"
+              size="xs"
+              weight="extrabold"
+              className="text-[#2AC1BC] hover:underline"
+            >
+              {t('authForgotPassBackToLogin')}
+            </Text>
+          </Link>
+        </Text>
       </div>
     </div>
   )

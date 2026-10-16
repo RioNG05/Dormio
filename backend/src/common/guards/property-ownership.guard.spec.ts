@@ -148,4 +148,52 @@ describe('PropertyOwnershipGuard (UC-L-23)', () => {
     expect(req.boardingHouseId).toBe(VALID_UUID)
     expect(req.boardingHouse).toEqual(mockHouse)
   })
+
+  it('should prioritize x-boarding-house-id header over params.id when called from resource controllers like RoomsController', async () => {
+    const ROOM_ID = '99999999-9999-4999-8999-999999999999'
+    const req: any = {
+      user: { id: USER_ID },
+      headers: { 'x-boarding-house-id': VALID_UUID },
+      params: { id: ROOM_ID },
+    }
+    const context: any = {
+      ...createMockContext(req),
+      getClass: () => ({ name: 'RoomsController' }),
+    }
+    const mockHouse = { id: VALID_UUID, name: 'Dormio Premier Q.1' }
+    prisma.boardingHouse.findFirst.mockResolvedValue(mockHouse)
+
+    const result = await guard.canActivate(context)
+
+    expect(result).toBe(true)
+    expect(prisma.boardingHouse.findFirst).toHaveBeenCalledWith({
+      where: { id: VALID_UUID, ownerId: USER_ID },
+      select: { id: true, name: true },
+    })
+    expect(req.boardingHouseId).toBe(VALID_UUID)
+    expect(req.boardingHouse).toEqual(mockHouse)
+  })
+
+  it('should prioritize params.id when called on BoardingHousesController', async () => {
+    const req: any = {
+      user: { id: USER_ID },
+      headers: { 'x-boarding-house-id': OTHER_UUID },
+      params: { id: VALID_UUID },
+    }
+    const context: any = {
+      ...createMockContext(req),
+      getClass: () => ({ name: 'BoardingHousesController' }),
+    }
+    const mockHouse = { id: VALID_UUID, name: 'Dormio Premier Q.1' }
+    prisma.boardingHouse.findFirst.mockResolvedValue(mockHouse)
+
+    const result = await guard.canActivate(context)
+
+    expect(result).toBe(true)
+    expect(prisma.boardingHouse.findFirst).toHaveBeenCalledWith({
+      where: { id: VALID_UUID, ownerId: USER_ID },
+      select: { id: true, name: true },
+    })
+    expect(req.boardingHouseId).toBe(VALID_UUID)
+  })
 })

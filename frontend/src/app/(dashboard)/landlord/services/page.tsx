@@ -39,6 +39,7 @@ import {
   ServicesSummary,
   ServiceAssignedRoom,
 } from '@/services/service.service'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput } from '@/components/ui'
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth()
@@ -478,32 +479,44 @@ export default function ServicesPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={() => showAlert(t('landlordServicesAlertImportDeveloping'), 'info')}
-            className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+            className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5 h-auto"
           >
             <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={() => showAlert(t('landlordServicesAlertExportSuccess'), 'success')}
-            className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+            className="cursor-pointer px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5 h-auto"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={fetchServices}
-            className="cursor-pointer px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
+            className="cursor-pointer px-3 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5 h-auto"
             title={t('landlordServicesRefresh')}
           >
             <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? 'animate-spin' : ''}`} />{' '}
             {t('landlordServicesRefresh')}
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
             onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer h-auto border-0"
           >
             <Plus className="w-4 h-4" /> {t('landlordServicesAddNew')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -617,29 +630,31 @@ export default function ServicesPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Bar */}
           <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
+            <SearchInput
               placeholder={t('landlordServicesSearchPlaceholder')}
               value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
+              onChange={val => {
+                setSearchQuery(val)
                 setCurrentPage(1)
               }}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+              containerClassName="w-full space-y-0"
+              className="w-full text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />
           </div>
 
           {/* Right Toolbar: View Mode Toggle */}
           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
             <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200">
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setViewMode('grid')
                   setItemsPerPage(6)
                   setCurrentPage(1)
                 }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                className={`p-1.5 h-auto w-auto rounded-lg transition-colors cursor-pointer ${
                   viewMode === 'grid'
                     ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
                     : 'text-zinc-500 hover:text-zinc-900'
@@ -647,14 +662,17 @@ export default function ServicesPage() {
                 title={t('landlordServicesViewGrid')}
               >
                 <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setViewMode('list')
                   setItemsPerPage(10)
                   setCurrentPage(1)
                 }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                className={`p-1.5 h-auto w-auto rounded-lg transition-colors cursor-pointer ${
                   viewMode === 'list'
                     ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
                     : 'text-zinc-500 hover:text-zinc-900'
@@ -662,7 +680,7 @@ export default function ServicesPage() {
                 title={t('landlordServicesViewTable')}
               >
                 <List className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -674,20 +692,23 @@ export default function ServicesPage() {
             { label: t('landlordServicesFilterMetered'), val: 'metered' },
             { label: t('landlordServicesFilterFixed'), val: 'room' },
           ].map(tab => (
-            <button
+            <Button
               key={tab.val}
+              type="button"
+              variant={typeFilter === tab.val ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => {
                 setTypeFilter(tab.val)
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer h-auto ${
                 typeFilter === tab.val
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70'
+                  ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20 hover:bg-[#25ad87] border-0'
+                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70 border-0'
               }`}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -765,11 +786,13 @@ export default function ServicesPage() {
                         </span>
                       </div>
 
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={e => handleToggleActive(service, e)}
-                        className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          isActive ? 'bg-[#2AC1BC]' : 'bg-zinc-300'
+                        className={`h-7 w-12 p-0 relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          isActive ? 'bg-[#2AC1BC] hover:bg-[#25ad87]' : 'bg-zinc-300 hover:bg-zinc-400'
                         }`}
                         title={
                           isActive
@@ -783,7 +806,7 @@ export default function ServicesPage() {
                             isActive ? 'translate-x-5' : 'translate-x-0'
                           }`}
                         />
-                      </button>
+                      </Button>
                     </div>
 
                     {/* Service Specification Table */}
@@ -815,29 +838,38 @@ export default function ServicesPage() {
 
                   {/* Footer Action Controls */}
                   <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5 text-xs">
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleOpenRoomsModal(service)}
-                      className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer text-[11px]"
+                      className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer text-[11px] h-auto border-0"
                       title={t('landlordServicesAppliedRooms')}
                     >
                       <Home className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
                       {t('landlordServicesRoomsCount', { count: service.appliedRoomsCount })}
-                    </button>
+                    </Button>
 
                     <div className="flex items-center gap-1">
-                      <button
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleOpenEditModal(service)}
-                        className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-[#2AC1BC]/30 text-[11px]"
+                        className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-[#2AC1BC]/30 text-[11px] h-auto"
                       >
                         <Edit3 className="w-3.5 h-3.5" /> {t('landlordServicesEdit')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setDeleteTarget(service)}
-                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-rose-200 text-[11px]"
+                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer border border-rose-200 text-[11px] h-auto w-auto"
                         title={t('landlordServicesDeleteTooltip')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -935,21 +967,26 @@ export default function ServicesPage() {
                           </span>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <button
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenRoomsModal(service)}
-                            className="font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
+                            className="font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer h-auto p-0 hover:bg-transparent"
                           >
                             <Home className="w-3.5 h-3.5" />{' '}
                             {t('landlordServicesRoomsCount', { count: service.appliedRoomsCount })}
-                          </button>
+                          </Button>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={e => handleToggleActive(service, e)}
-                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                isActive ? 'bg-[#2AC1BC]' : 'bg-zinc-300'
+                              className={`h-6 w-11 p-0 relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                isActive ? 'bg-[#2AC1BC] hover:bg-[#25ad87]' : 'bg-zinc-300 hover:bg-zinc-400'
                               }`}
                               title={
                                 isActive
@@ -962,7 +999,7 @@ export default function ServicesPage() {
                                   isActive ? 'translate-x-5' : 'translate-x-0'
                                 }`}
                               />
-                            </button>
+                            </Button>
                             <span
                               className={`text-xs font-bold ${isActive ? 'text-emerald-600 font-black' : 'text-zinc-400'}`}
                             >
@@ -974,20 +1011,26 @@ export default function ServicesPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleOpenEditModal(service)}
-                              className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors inline-flex items-center gap-1 cursor-pointer h-auto border-0"
                             >
                               <Edit3 className="w-3 h-3 text-[#2AC1BC]" />{' '}
                               {t('landlordServicesEdit')}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setDeleteTarget(service)}
-                              className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer"
+                              className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors cursor-pointer h-auto w-auto"
                               title={t('landlordServicesDeleteTooltip')}
                             >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -1005,8 +1048,7 @@ export default function ServicesPage() {
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
             <span>{t('landlordServicesPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={itemsPerPage || ''}
@@ -1015,7 +1057,8 @@ export default function ServicesPage() {
                 setItemsPerPage(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100))
                 setCurrentPage(1)
               }}
-              className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+              containerClassName="w-16 space-y-0"
+              className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
             />
             <span>{t('landlordServicesPaginationPerPage')}</span>
           </div>
@@ -1045,33 +1088,42 @@ export default function ServicesPage() {
 
           return (
             <div className="flex items-center gap-1.5">
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer h-auto"
               >
                 &larr; {t('landlordServicesPaginationPrev')}
-              </button>
+              </Button>
               {visiblePages.map(page => (
-                <button
+                <Button
                   key={page}
+                  type="button"
+                  variant={currentPage === page ? 'primary' : 'outline'}
+                  size="sm"
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                  className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
                     currentPage === page
-                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
+                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
                       : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                   }`}
                 >
                   {page}
-                </button>
+                </Button>
               ))}
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer h-auto"
               >
                 {t('landlordServicesPaginationNext')} &rarr;
-              </button>
+              </Button>
             </div>
           )
         })()}
@@ -1102,138 +1154,140 @@ export default function ServicesPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleCloseModal}
-                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer h-auto w-auto"
               >
                 <Plus className="w-5 h-5 rotate-45" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
-              <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">
-                  {t('landlordServicesFormNameLabel')} <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder={t('landlordServicesFormNamePlaceholder')}
-                  value={formName}
+              <TextInput
+                label={t('landlordServicesFormNameLabel')}
+                required
+                type="text"
+                placeholder={t('landlordServicesFormNamePlaceholder')}
+                value={formName}
+                onChange={e => {
+                  setFormName(e.target.value)
+                  setIsDirty(true)
+                }}
+                containerClassName="w-full space-y-1"
+                labelClassName="block font-extrabold text-zinc-700"
+                className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <SelectInput
+                  label={t('landlordServicesFormMeasurementLabel')}
+                  value={formIsMetered ? 'metered' : 'fixed'}
                   onChange={e => {
-                    setFormName(e.target.value)
+                    setFormIsMetered(e.target.value === 'metered')
                     setIsDirty(true)
                   }}
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                  options={[
+                    { value: 'metered', label: t('landlordServicesFormOptionMetered') },
+                    { value: 'fixed', label: t('landlordServicesFormOptionFixed') },
+                  ]}
+                  containerClassName="w-full space-y-1"
+                  labelClassName="block font-extrabold text-zinc-700"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-white cursor-pointer"
+                />
+
+                <SelectInput
+                  label={t('landlordServicesFormRuleLabel')}
+                  value={formAutoApplied ? 'mandatory' : 'optional'}
+                  onChange={e => {
+                    setFormAutoApplied(e.target.value === 'mandatory')
+                    setIsDirty(true)
+                  }}
+                  options={[
+                    { value: 'mandatory', label: t('landlordServicesFormOptionMandatory') },
+                    { value: 'optional', label: t('landlordServicesFormOptionOptional') },
+                  ]}
+                  containerClassName="w-full space-y-1"
+                  labelClassName="block font-extrabold text-zinc-700"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-white cursor-pointer"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">
-                    {t('landlordServicesFormMeasurementLabel')}
-                  </label>
-                  <select
-                    value={formIsMetered ? 'metered' : 'fixed'}
-                    onChange={e => {
-                      setFormIsMetered(e.target.value === 'metered')
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="metered">{t('landlordServicesFormOptionMetered')}</option>
-                    <option value="fixed">{t('landlordServicesFormOptionFixed')}</option>
-                  </select>
-                </div>
+                <TextInput
+                  label={t('landlordServicesFormUnitLabel')}
+                  required
+                  type="text"
+                  placeholder={t('landlordServicesFormUnitPlaceholder')}
+                  value={formUnit}
+                  onChange={e => {
+                    setFormUnit(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  containerClassName="w-full space-y-1"
+                  labelClassName="block font-extrabold text-zinc-700"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                />
 
-                <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">
-                    {t('landlordServicesFormRuleLabel')}
-                  </label>
-                  <select
-                    value={formAutoApplied ? 'mandatory' : 'optional'}
-                    onChange={e => {
-                      setFormAutoApplied(e.target.value === 'mandatory')
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="mandatory">{t('landlordServicesFormOptionMandatory')}</option>
-                    <option value="optional">{t('landlordServicesFormOptionOptional')}</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">
-                    {t('landlordServicesFormUnitLabel')} <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={t('landlordServicesFormUnitPlaceholder')}
-                    value={formUnit}
-                    onChange={e => {
-                      setFormUnit(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-extrabold text-zinc-700 mb-1">
-                    {t('landlordServicesFormPriceLabel')} <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={100}
-                    placeholder={t('landlordServicesFormPricePlaceholder')}
-                    value={formPrice}
-                    onChange={e => {
-                      setFormPrice(e.target.value === '' ? '' : Number(e.target.value))
-                      setIsDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordServicesFormPriceLabel')}
+                  required
+                  min={0}
+                  step={100}
+                  placeholder={t('landlordServicesFormPricePlaceholder')}
+                  value={formPrice}
+                  onChange={e => {
+                    setFormPrice(e.target.value === '' ? '' : Number(e.target.value))
+                    setIsDirty(true)
+                  }}
+                  containerClassName="w-full space-y-1"
+                  labelClassName="block font-extrabold text-zinc-700"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                />
               </div>
 
               <div>
-                <label className="block font-extrabold text-zinc-700 mb-1">
-                  {t('landlordServicesFormStatusLabel')}
-                </label>
-                <select
+                <SelectInput
+                  label={t('landlordServicesFormStatusLabel')}
                   value={formStatus}
                   onChange={e => {
                     setFormStatus(e.target.value as 'active' | 'inactive')
                     setIsDirty(true)
                   }}
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none appearance-none bg-white cursor-pointer"
-                >
-                  <option value="active">{t('landlordServicesFormOptionActive')}</option>
-                  <option value="inactive">{t('landlordServicesFormOptionInactive')}</option>
-                </select>
+                  options={[
+                    { value: 'active', label: t('landlordServicesFormOptionActive') },
+                    { value: 'inactive', label: t('landlordServicesFormOptionInactive') },
+                  ]}
+                  containerClassName="w-full space-y-1"
+                  labelClassName="block font-extrabold text-zinc-700"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-white cursor-pointer"
+                />
               </div>
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleCloseModal}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer h-auto"
               >
                 {t('landlordServicesModalCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleSaveService}
                 disabled={isSubmitting}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all disabled:opacity-50 flex items-center gap-1.5"
+                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all disabled:opacity-50 flex items-center gap-1.5 h-auto border-0"
               >
                 {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {t('landlordServicesModalSave')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1260,12 +1314,15 @@ export default function ServicesPage() {
                   </span>
                 </div>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setRoomsModalService(null)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-2 text-xs">
@@ -1317,12 +1374,15 @@ export default function ServicesPage() {
               )}
             </div>
 
-            <button
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
               onClick={() => setRoomsModalService(null)}
-              className="w-full py-2.5 bg-[#2AC1BC] text-white font-bold rounded-xl text-xs hover:bg-[#25ad87] transition-colors cursor-pointer shadow-2xs"
+              className="w-full py-2.5 bg-[#2AC1BC] text-white font-bold rounded-xl text-xs hover:bg-[#25ad87] transition-colors cursor-pointer shadow-2xs h-auto border-0"
             >
               {t('landlordServicesRoomsClose')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1350,22 +1410,26 @@ export default function ServicesPage() {
             </div>
 
             <div className="flex items-center justify-center gap-3 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
+                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs h-auto"
               >
                 {t('landlordServicesDeleteCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 onClick={handleDeleteService}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 px-4 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-500/30 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 px-4 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-500/30 disabled:opacity-50 flex items-center justify-center gap-1.5 h-auto"
               >
                 {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {t('landlordServicesDeleteConfirm')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1435,20 +1499,24 @@ function ConfirmModal({
         </div>
 
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={onCancel}
-            className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs h-auto"
           >
             {cancelText || t('landlordServicesConfirmCloseKeep')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
+            size="sm"
             onClick={onConfirm}
-            className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
+            className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30 h-auto border-0"
           >
             {confirmText || t('landlordServicesConfirmCloseDiscard')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -1515,12 +1583,13 @@ function AlertModal({
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
 
-        <button
+        <Button
           onClick={onClose}
-          className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
+          size="sm"
+          className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer h-auto border-0 ${config.btnColor}`}
         >
           {btnText || t('landlordServicesAlertUnderstand')}
-        </button>
+        </Button>
       </div>
     </div>
   )

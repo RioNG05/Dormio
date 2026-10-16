@@ -44,6 +44,18 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  Checkbox,
+  Form,
+  SearchInput,
+} from '@/components/ui'
+import { cn } from '@/lib/utils'
 import {
   landlordInvoiceService,
   LandlordInvoiceItem,
@@ -58,6 +70,7 @@ function InvoicesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations('landlord')
+  const { toast } = useToast()
 
   const getInvoiceStatusLabel = (status: string) => {
     switch (status) {
@@ -324,9 +337,10 @@ function InvoicesContent() {
         )
         if (detail?.data) setSelectedInvoice(detail.data)
       }
+      toast.success(t('landlordInvoicesBtnConfirmPaid'))
     } catch (err: any) {
       console.error('Lỗi cập nhật thanh toán:', err)
-      alert(err?.message || t('landlordInvoicesAlertUpdateStatusFailed'))
+      toast.error(err?.message || t('landlordInvoicesAlertUpdateStatusFailed'))
     }
   }
 
@@ -334,7 +348,7 @@ function InvoicesContent() {
   const handleCreateInvoiceSubmit = async () => {
     if (!activeBuilding?.id) return
     if (!createForm.roomId) {
-      alert(t('landlordInvoicesAlertSelectRoom'))
+      toast.warning(t('landlordInvoicesAlertSelectRoom'))
       return
     }
     try {
@@ -360,9 +374,11 @@ function InvoicesContent() {
       })
       setIsCreateModalOpen(false)
       setIsCreateFormDirty(false)
+      toast.success(t('landlordInvoicesBtnSubmitCreate'))
       await fetchInvoices()
     } catch (err: any) {
       console.error('Lỗi tạo hóa đơn:', err)
+      toast.error(err?.message || t('landlordInvoicesAlertCreateFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -391,25 +407,34 @@ function InvoicesContent() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleOpenOcrModal}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+            className="flex-1 sm:flex-none border-amber-200/80 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs"
+            leftIcon={<Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />}
           >
-            <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />{' '}
             {t('landlordInvoicesBtnOcrScan')}
-          </button>
+          </Button>
 
-          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200/80 rounded-xl hover:bg-zinc-50 transition-all cursor-pointer shadow-2xs whitespace-nowrap">
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />{' '}
-            {t('landlordInvoicesBtnExportExcel')}
-          </button>
-
-          <button
-            onClick={handleOpenCreateModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer whitespace-nowrap"
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none border-zinc-200/80 bg-white text-zinc-700 hover:bg-zinc-50 text-xs"
+            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />}
           >
-            <Plus className="w-4 h-4 shrink-0" /> {t('landlordInvoicesBtnCreateInvoice')}
-          </button>
+            {t('landlordInvoicesBtnExportExcel')}
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleOpenCreateModal}
+            className="w-full sm:w-auto text-xs"
+            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
+          >
+            {t('landlordInvoicesBtnCreateInvoice')}
+          </Button>
         </div>
       </div>
 
@@ -510,17 +535,14 @@ function InvoicesContent() {
       <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Box */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchInput
               placeholder={t('landlordInvoicesSearchPlaceholder')}
               value={searchTerm}
-              onChange={e => {
-                setSearchTerm(e.target.value)
+              onChange={val => {
+                setSearchTerm(val)
                 setCurrentPage(1)
               }}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />
           </div>
 
@@ -528,167 +550,132 @@ function InvoicesContent() {
           <div className="flex items-center gap-2 justify-between shrink-0 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {/* Month Filter Dropdown */}
-              <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
-                <div className="flex items-center gap-1 shrink-0">
-                  <Calendar className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                  <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">
-                    {t('landlordInvoicesFilterMonth')}
-                  </span>
-                </div>
-                <select
+              <div className="flex-1 sm:flex-none min-w-[130px]">
+                <SelectInput
                   value={selectedMonth}
                   onChange={e => {
                     setSelectedMonth(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
-                >
-                  <option value="all">{t('landlordInvoicesAllMonths')}</option>
-                  <option value="01">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '01')}
-                  </option>
-                  <option value="02">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '02')}
-                  </option>
-                  <option value="03">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '03')}
-                  </option>
-                  <option value="04">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '04')}
-                  </option>
-                  <option value="05">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '05')}
-                  </option>
-                  <option value="06">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '06')}
-                  </option>
-                  <option value="07">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '07')}
-                  </option>
-                  <option value="08">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '08')}
-                  </option>
-                  <option value="09">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '09')}
-                  </option>
-                  <option value="10">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '10')}
-                  </option>
-                  <option value="11">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '11')}
-                  </option>
-                  <option value="12">
-                    {t('landlordInvoicesMonthPrefix').replace('{month}', '12')}
-                  </option>
-                </select>
+                  leftIcon={<Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                  options={[
+                    { value: 'all', label: t('landlordInvoicesAllMonths') },
+                    { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
+                    { value: '02', label: t('landlordInvoicesMonthPrefix').replace('{month}', '02') },
+                    { value: '03', label: t('landlordInvoicesMonthPrefix').replace('{month}', '03') },
+                    { value: '04', label: t('landlordInvoicesMonthPrefix').replace('{month}', '04') },
+                    { value: '05', label: t('landlordInvoicesMonthPrefix').replace('{month}', '05') },
+                    { value: '06', label: t('landlordInvoicesMonthPrefix').replace('{month}', '06') },
+                    { value: '07', label: t('landlordInvoicesMonthPrefix').replace('{month}', '07') },
+                    { value: '08', label: t('landlordInvoicesMonthPrefix').replace('{month}', '08') },
+                    { value: '09', label: t('landlordInvoicesMonthPrefix').replace('{month}', '09') },
+                    { value: '10', label: t('landlordInvoicesMonthPrefix').replace('{month}', '10') },
+                    { value: '11', label: t('landlordInvoicesMonthPrefix').replace('{month}', '11') },
+                    { value: '12', label: t('landlordInvoicesMonthPrefix').replace('{month}', '12') },
+                  ]}
+                />
               </div>
 
               {/* Year Filter Dropdown */}
-              <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 min-w-0">
-                <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">
-                  {t('landlordInvoicesFilterYear')}
-                </span>
-                <select
+              <div className="flex-1 sm:flex-none min-w-[110px]">
+                <SelectInput
                   value={selectedYear}
                   onChange={e => {
                     setSelectedYear(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs w-full sm:w-auto truncate"
-                >
-                  <option value="all">{t('landlordInvoicesAllYears')}</option>
-                  <option value="2026">2026</option>
-                  <option value="2025">2025</option>
-                  <option value="2024">2024</option>
-                </select>
+                  options={[
+                    { value: 'all', label: t('landlordInvoicesAllYears') },
+                    { value: '2026', label: '2026' },
+                    { value: '2025', label: '2025' },
+                    { value: '2024', label: '2024' },
+                  ]}
+                />
               </div>
             </div>
 
             {/* View Switcher */}
             <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <button
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={cn(
+                  'h-7 w-7 rounded-lg',
+                  viewMode === 'grid' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                )}
                 title={t('landlordInvoicesViewGrid')}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="icon"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'table'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={cn(
+                  'h-7 w-7 rounded-lg',
+                  viewMode === 'table' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                )}
                 title={t('landlordInvoicesViewTable')}
               >
                 <List className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Quick Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
-          <button
+          <Button
+            size="sm"
+            variant={activeTab === 'all' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveTab('all')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
-              activeTab === 'all'
-                ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-            }`}
+            className="rounded-xl text-xs"
           >
             {t('landlordInvoicesTabAll').replace('{count}', String(totalInvoicesCount))}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant={activeTab === 'unpaid' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveTab('unpaid')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
-              activeTab === 'unpaid'
-                ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-            }`}
+            className="rounded-xl text-xs"
           >
             {t('landlordInvoicesTabUnpaid').replace('{count}', String(unpaidCount))}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant={activeTab === 'paid' ? 'primary' : 'secondary'}
             onClick={() => {
               setActiveTab('paid')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
-              activeTab === 'paid'
-                ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-            }`}
+            className="rounded-xl text-xs"
           >
             {t('landlordInvoicesTabPaid').replace('{count}', String(paidCount))}
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            variant={activeTab === 'overdue' ? 'danger' : 'secondary'}
             onClick={() => {
               setActiveTab('overdue')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
-              activeTab === 'overdue'
-                ? 'bg-rose-500 text-white shadow-2xs'
-                : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-            }`}
+            className={cn(
+              'rounded-xl text-xs',
+              activeTab !== 'overdue' && 'bg-rose-50 text-rose-700 hover:bg-rose-100',
+            )}
           >
             {t('landlordInvoicesTabOverdue').replace('{count}', String(overdueCount))}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -706,13 +693,14 @@ function InvoicesContent() {
               {t('landlordInvoicesNoDataDesc')}
             </p>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleOpenCreateModal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#25aca7] text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer hover:scale-105"
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4" />
-            <span>{t('landlordInvoicesBtnCreateInvoice')}</span>
-          </button>
+            {t('landlordInvoicesBtnCreateInvoice')}
+          </Button>
         </div>
       ) : paginatedInvoices.length === 0 ? (
         <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
@@ -834,20 +822,25 @@ function InvoicesContent() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setSelectedInvoice(inv)}
-                      className="flex-1 py-2 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      className="flex-1 text-xs"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
                     >
-                      <Eye className="w-3.5 h-3.5" /> {t('landlordInvoicesBtnViewDetail')}
-                    </button>
+                      {t('landlordInvoicesBtnViewDetail')}
+                    </Button>
                     {!isPaid && (
-                      <button
+                      <Button
+                        size="sm"
                         onClick={() => handleMarkAsPaid(inv.id)}
-                        className="py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3"
                         title={t('landlordInvoicesTooltipMarkPaid')}
+                        leftIcon={<Check className="w-3.5 h-3.5" />}
                       >
-                        <Check className="w-3.5 h-3.5" /> {t('landlordInvoicesBtnCollect')}
-                      </button>
+                        {t('landlordInvoicesBtnCollect')}
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -906,12 +899,15 @@ function InvoicesContent() {
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setSelectedInvoice(inv)}
-                        className="px-2.5 py-1 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                        className="text-xs"
+                        leftIcon={<Eye className="w-3.5 h-3.5" />}
                       >
-                        <Eye className="w-3.5 h-3.5" /> {t('landlordInvoicesBtnViewDetail')}
-                      </button>
+                        {t('landlordInvoicesBtnViewDetail')}
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -926,8 +922,7 @@ function InvoicesContent() {
         <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
           <div className="flex items-center gap-2 text-zinc-600">
             <span>{t('landlordInvoicesPaginationShow')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={50}
               value={pageSize}
@@ -936,7 +931,8 @@ function InvoicesContent() {
                 setPageSize(val)
                 setCurrentPage(1)
               }}
-              className="w-14 px-2 py-1 border border-zinc-200 rounded-lg text-center font-black focus:outline-none focus:border-[#2AC1BC]"
+              containerClassName="w-16"
+              className="text-center font-black py-1 text-xs"
             />
             <span>{t('landlordInvoicesPaginationPerPage')}</span>
             <span className="text-zinc-400">|</span>
@@ -949,55 +945,61 @@ function InvoicesContent() {
 
           {/* Page Jumping Controls */}
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
+              className="h-8 w-8"
             >
               <ChevronLeft className="w-4 h-4 text-zinc-600" />
-            </button>
+            </Button>
 
             {windowStart > 1 && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
+                className="h-8 px-2 text-xs"
                 title={t('landlordInvoicesTooltipPrev5')}
               >
                 &laquo;
-              </button>
+              </Button>
             )}
 
             {visiblePages.map(p => (
-              <button
+              <Button
                 key={p}
+                variant={currentPage === p ? 'primary' : 'outline'}
+                size="icon"
                 onClick={() => setCurrentPage(p)}
-                className={`w-8 h-8 rounded-lg text-xs font-extrabold cursor-pointer transition-all ${
-                  currentPage === p
-                    ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                    : 'hover:bg-zinc-100 text-zinc-700'
-                }`}
+                className={cn('h-8 w-8 text-xs', currentPage !== p && 'text-zinc-700')}
               >
                 {p}
-              </button>
+              </Button>
             ))}
 
             {windowStart + windowSize <= totalPages && (
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="px-2 py-1 border border-zinc-200 rounded-lg hover:bg-zinc-100 text-xs font-bold text-zinc-600 cursor-pointer"
+                className="h-8 px-2 text-xs"
                 title={t('landlordInvoicesTooltipNext5')}
               >
                 &raquo;
-              </button>
+              </Button>
             )}
 
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              className="p-1.5 border border-zinc-200 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-100 cursor-pointer"
+              className="h-8 w-8"
             >
               <ChevronRight className="w-4 h-4 text-zinc-600" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1043,12 +1045,14 @@ function InvoicesContent() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setSelectedInvoice(null)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Scroll Content */}
@@ -1129,7 +1133,7 @@ function InvoicesContent() {
                         </td>
                         <td className="px-4 py-3 text-zinc-600">
                           {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} (
-                          {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
+                            {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.elecRate.toLocaleString('vi-VN')} ₫
@@ -1150,7 +1154,7 @@ function InvoicesContent() {
                         </td>
                         <td className="px-4 py-3 text-zinc-600">
                           {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} (
-                          {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
+                            {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.waterRate.toLocaleString('vi-VN')} ₫
@@ -1248,7 +1252,9 @@ function InvoicesContent() {
             <div className="p-4 border-t border-zinc-100 bg-white flex flex-wrap items-center justify-between gap-3">
               {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
               {selectedInvoice.status !== 'Đã thu' ? (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     const roomNum = selectedInvoice.roomId
                     const tenantName = selectedInvoice.tenantName
@@ -1257,11 +1263,11 @@ function InvoicesContent() {
                       `/landlord/messages?room=${encodeURIComponent(roomNum)}&tenant=${encodeURIComponent(tenantName)}&invId=${encodeURIComponent(selectedInvoice.id)}&amount=${selectedInvoice.totalAmount}&period=${encodeURIComponent(selectedInvoice.period)}&autoSend=true`,
                     )
                   }}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs font-extrabold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+                  className="bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs"
+                  leftIcon={<Send className="w-3.5 h-3.5 text-[#2AC1BC]" />}
                 >
-                  <Send className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
                   {t('landlordInvoicesBtnRemindChat')}
-                </button>
+                </Button>
               ) : (
                 /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
                 <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black rounded-xl">
@@ -1277,14 +1283,16 @@ function InvoicesContent() {
               <div className="flex items-center gap-2">
                 {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
                 {selectedInvoice.status !== 'Đã thu' && (
-                  <button
+                  <Button
+                    size="sm"
                     onClick={() =>
                       handleMarkAsPaid(selectedInvoice.id, t('landlordInvoicesPaymentMethodManual'))
                     }
-                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs"
+                    leftIcon={<Check className="w-4 h-4" />}
                   >
-                    <Check className="w-4 h-4" /> {t('landlordInvoicesBtnConfirmPaid')}
-                  </button>
+                    {t('landlordInvoicesBtnConfirmPaid')}
+                  </Button>
                 )}
               </div>
             </div>
@@ -1316,85 +1324,76 @@ function InvoicesContent() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleRequestCloseCreate}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Form Content */}
             <div className="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-zinc-700">
-                    {t('landlordInvoicesFieldRoom')}
-                  </label>
-                  <select
-                    value={createForm.roomId}
-                    onChange={e => {
-                      const selectedId = e.target.value
-                      const r = availableRooms.find(rm => rm.id === selectedId)
-                      let elecRate = createForm.elecRate
-                      let waterRate = createForm.waterRate
-                      if (r?.services) {
-                        const elec = r.services.find(
-                          s =>
-                            s.isMetered &&
-                            (s.name.toLowerCase().includes('điện') ||
-                              s.name.toLowerCase().includes('electric')),
-                        )
-                        if (elec) elecRate = Number(elec.price) || elecRate
-                        const water = r.services.find(
-                          s =>
-                            s.isMetered &&
-                            (s.name.toLowerCase().includes('nước') ||
-                              s.name.toLowerCase().includes('water')),
-                        )
-                        if (water) waterRate = Number(water.price) || waterRate
-                      }
-                      setCreateForm({
-                        ...createForm,
-                        roomId: selectedId,
-                        roomName: r ? `${t('landlordRoomDetailRoomPrefix')} ${r.roomNumber}` : '',
-                        elecRate,
-                        waterRate,
-                      })
-                      setIsCreateFormDirty(true)
-                    }}
-                    className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
-                  >
-                    <option value="">{t('landlordInvoicesSelectRoomPlaceholder')}</option>
-                    {availableRooms.map(r => (
-                      <option key={r.id} value={r.id}>
-                        {t('landlordInvoicesRoomOption')
-                          .replace('{roomNumber}', r.roomNumber)
-                          .replace('{floor}', String(r.floor))
-                          .replace(
-                            '{roomType}',
-                            r.roomType?.name || t('landlordInvoicesStandardRoom'),
-                          )}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordInvoicesFieldRoom')}
+                  value={createForm.roomId}
+                  onChange={e => {
+                    const selectedId = e.target.value
+                    const r = availableRooms.find(rm => rm.id === selectedId)
+                    let elecRate = createForm.elecRate
+                    let waterRate = createForm.waterRate
+                    if (r?.services) {
+                      const elec = r.services.find(
+                        s =>
+                          s.isMetered &&
+                          (s.name.toLowerCase().includes('điện') ||
+                            s.name.toLowerCase().includes('electric')),
+                      )
+                      if (elec) elecRate = Number(elec.price) || elecRate
+                      const water = r.services.find(
+                        s =>
+                          s.isMetered &&
+                          (s.name.toLowerCase().includes('nước') ||
+                            s.name.toLowerCase().includes('water')),
+                      )
+                      if (water) waterRate = Number(water.price) || waterRate
+                    }
+                    setCreateForm({
+                      ...createForm,
+                      roomId: selectedId,
+                      roomName: r ? `${t('landlordRoomDetailRoomPrefix')} ${r.roomNumber}` : '',
+                      elecRate,
+                      waterRate,
+                    })
+                    setIsCreateFormDirty(true)
+                  }}
+                  options={[
+                    { value: '', label: t('landlordInvoicesSelectRoomPlaceholder') },
+                    ...availableRooms.map(r => ({
+                      value: r.id,
+                      label: t('landlordInvoicesRoomOption')
+                        .replace('{roomNumber}', r.roomNumber)
+                        .replace('{floor}', String(r.floor))
+                        .replace(
+                          '{roomType}',
+                          r.roomType?.name || t('landlordInvoicesStandardRoom'),
+                        ),
+                    })),
+                  ]}
+                />
 
-                <div className="space-y-1">
-                  <label className="font-bold text-zinc-700">
-                    {t('landlordInvoicesFieldPeriod')}
-                  </label>
-                  <input
-                    type="text"
-                    value={createForm.period}
-                    onChange={e => {
-                      setCreateForm({ ...createForm, period: e.target.value })
-                      setIsCreateFormDirty(true)
-                    }}
-                    placeholder="08/2026"
-                    className="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-xs focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <TextInput
+                  label={t('landlordInvoicesFieldPeriod')}
+                  value={createForm.period}
+                  onChange={e => {
+                    setCreateForm({ ...createForm, period: e.target.value })
+                    setIsCreateFormDirty(true)
+                  }}
+                  placeholder="08/2026"
+                />
               </div>
 
               {/* Meter Readings Inputs */}
@@ -1404,65 +1403,45 @@ function InvoicesContent() {
                 </span>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-zinc-500">
-                      {t('landlordInvoicesElecOld')}
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.elecOld}
-                      onChange={e => {
-                        setCreateForm({ ...createForm, elecOld: parseInt(e.target.value) || 0 })
-                        setIsCreateFormDirty(true)
-                      }}
-                      className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold"
-                    />
-                  </div>
+                  <NumberInput
+                    label={t('landlordInvoicesElecOld')}
+                    value={createForm.elecOld}
+                    onChange={e => {
+                      setCreateForm({ ...createForm, elecOld: parseInt(e.target.value) || 0 })
+                      setIsCreateFormDirty(true)
+                    }}
+                  />
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-amber-700">
-                      {t('landlordInvoicesElecNew')}
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.elecNew}
-                      onChange={e => {
-                        setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 })
-                        setIsCreateFormDirty(true)
-                      }}
-                      className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs font-bold text-amber-800"
-                    />
-                  </div>
+                  <NumberInput
+                    label={t('landlordInvoicesElecNew')}
+                    value={createForm.elecNew}
+                    onChange={e => {
+                      setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 })
+                      setIsCreateFormDirty(true)
+                    }}
+                    labelClassName="text-amber-700"
+                    className="border-amber-300 text-amber-800"
+                  />
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-zinc-500">
-                      {t('landlordInvoicesWaterOld')}
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.waterOld}
-                      onChange={e => {
-                        setCreateForm({ ...createForm, waterOld: parseInt(e.target.value) || 0 })
-                        setIsCreateFormDirty(true)
-                      }}
-                      className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold"
-                    />
-                  </div>
+                  <NumberInput
+                    label={t('landlordInvoicesWaterOld')}
+                    value={createForm.waterOld}
+                    onChange={e => {
+                      setCreateForm({ ...createForm, waterOld: parseInt(e.target.value) || 0 })
+                      setIsCreateFormDirty(true)
+                    }}
+                  />
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-extrabold text-blue-700">
-                      {t('landlordInvoicesWaterNew')}
-                    </label>
-                    <input
-                      type="number"
-                      value={createForm.waterNew}
-                      onChange={e => {
-                        setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 })
-                        setIsCreateFormDirty(true)
-                      }}
-                      className="w-full p-2 bg-white border border-blue-300 rounded-lg text-xs font-bold text-blue-800"
-                    />
-                  </div>
+                  <NumberInput
+                    label={t('landlordInvoicesWaterNew')}
+                    value={createForm.waterNew}
+                    onChange={e => {
+                      setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 })
+                      setIsCreateFormDirty(true)
+                    }}
+                    labelClassName="text-blue-700"
+                    className="border-blue-300 text-blue-800"
+                  />
                 </div>
               </div>
 
@@ -1493,24 +1472,24 @@ function InvoicesContent() {
 
             {/* Footer */}
             <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleRequestCloseCreate}
-                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordInvoicesBtnCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 disabled={isSubmitting}
+                isLoading={isSubmitting}
                 onClick={handleCreateInvoiceSubmit}
-                className="px-5 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
               >
-                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>
-                  {isSubmitting
-                    ? t('landlordInvoicesBtnSubmitting')
-                    : t('landlordInvoicesBtnSubmitCreate')}
-                </span>
-              </button>
+                {isSubmitting
+                  ? t('landlordInvoicesBtnSubmitting')
+                  : t('landlordInvoicesBtnSubmitCreate')}
+              </Button>
             </div>
           </div>
         </div>
@@ -1540,12 +1519,14 @@ function InvoicesContent() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleRequestCloseOcr}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Split Screen Content */}
@@ -1589,17 +1570,15 @@ function InvoicesContent() {
                       <span className="text-base font-black text-zinc-800">1.318 kWh</span>
                     </div>
                     <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
-                      <span className="text-[10px] font-extrabold text-amber-700 block">
-                        {t('landlordInvoicesOcrNewIndex')}
-                      </span>
-                      <input
-                        type="text"
+                      <TextInput
+                        label={t('landlordInvoicesOcrNewIndex')}
                         value={ocrMeterValue}
                         onChange={e => {
                           setOcrMeterValue(e.target.value)
                           setIsOcrFormDirty(true)
                         }}
-                        className="w-full text-base font-black text-amber-700 bg-transparent outline-none border-b border-amber-500/50"
+                        labelClassName="text-amber-700 text-[10px]"
+                        className="text-base font-black text-amber-700 border-none bg-transparent"
                       />
                     </div>
                   </div>
@@ -1629,21 +1608,25 @@ function InvoicesContent() {
                 </div>
 
                 <div className="pt-2 flex gap-3">
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleRequestCloseOcr}
-                    className="flex-1 py-3 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                    className="flex-1"
                   >
                     {t('landlordInvoicesBtnCancel')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => {
                       setIsOcrModalOpen(false)
                       setIsOcrFormDirty(false)
                     }}
-                    className="flex-1 py-3 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-md transition-all cursor-pointer"
+                    className="flex-1"
                   >
                     {t('landlordInvoicesOcrConfirm')}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1674,19 +1657,23 @@ function InvoicesContent() {
             </div>
 
             <div className="flex items-center gap-3 pt-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordInvoicesConfirmCloseKeep')}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmCloseModal}
-                className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordInvoicesConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

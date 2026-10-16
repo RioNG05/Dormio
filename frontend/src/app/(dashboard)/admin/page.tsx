@@ -1,14 +1,14 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useLanguage } from '@/context/LanguageContext'
+import { useRouter } from 'next/navigation'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import {
   Users,
   Building2,
   Wallet,
   AlertTriangle,
-  ShieldCheck,
   Megaphone,
   Newspaper,
   TrendingUp,
@@ -17,217 +17,170 @@ import {
   CheckCircle2,
   ShieldAlert,
   ChevronRight,
+  RefreshCw,
+  AlertCircle,
+  ShieldCheck,
+  Building,
 } from 'lucide-react'
 import { adminAnalyticsService, AdminOverviewResponse } from '@/services/admin-analytics.service'
+import { grievanceService, AdminGrievanceItem } from '@/services/grievance.service'
+import { postService, PublicPostListing } from '@/services/post.service'
+import { Button, Text } from '@/components/ui'
+
+function formatDisplayDate(dateStr: string, locale: string) {
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString(locale === 'en' ? 'en-US' : 'vi-VN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateStr
+  }
+}
 
 export default function AdminDashboardPage() {
   const { locale } = useLanguage()
-  const isEn = locale === 'en'
+  const t = useTranslations('admin')
+  const router = useRouter()
 
-  const [liveOverview, setLiveOverview] = React.useState<AdminOverviewResponse | null>(null)
+  const [overview, setOverview] = useState<AdminOverviewResponse | null>(null)
+  const [urgentGrievances, setUrgentGrievances] = useState<AdminGrievanceItem[]>([])
+  const [flaggedListings, setFlaggedListings] = useState<PublicPostListing[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  React.useEffect(() => {
-    adminAnalyticsService
-      .getAdminOverview()
-      .then(data => setLiveOverview(data))
-      .catch(err => console.warn('Failed to fetch live admin overview, using fallback:', err))
-  }, [])
+  const numberLocale = locale === 'en' ? 'en-US' : 'vi-VN'
 
-  const totalUsersVal = liveOverview
-    ? new Intl.NumberFormat(isEn ? 'en-US' : 'vi-VN').format(liveOverview.totalUsers)
-    : '12,480'
+  const fetchDashboardData = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setIsRefreshing(true)
+      } else {
+        setIsLoading(true)
+      }
+      setError(null)
 
-  const userSubtext = liveOverview
-    ? `${liveOverview.userRoles?.tenant || 0} ${isEn ? 'Tenants' : 'Khách'} • ${liveOverview.userRoles?.landlord || 0} ${isEn ? 'Landlords' : 'Chủ trọ'} • ${liveOverview.userRoles?.employee || 0} ${isEn ? 'Staff' : 'NV'}`
-    : isEn
-      ? '8,920 Tenants • 3,140 Landlords • 420 Staff'
-      : '8.920 Khách • 3.140 Chủ trọ • 420 NV'
+      try {
+        const [overviewRes, grievanceRes, postsRes] = await Promise.all([
+          adminAnalyticsService.getAdminOverview().catch(err => {
+            console.error('Failed to load admin overview:', err)
+            return null
+          }),
+          grievanceService.getAdminGrievanceQueue({ limit: 4 }).catch(err => {
+            console.error('Failed to load urgent grievances:', err)
+            return null
+          }),
+          postService.browsePosts({ limit: 4 }).catch(err => {
+            console.error('Failed to load moderation listings:', err)
+            return null
+          }),
+        ])
 
-  const userGrowth = liveOverview
-    ? `${liveOverview.userGrowthRate >= 0 ? '+' : ''}${liveOverview.userGrowthRate}%`
-    : '+14.2%'
-
-  const totalHousesVal = liveOverview
-    ? new Intl.NumberFormat(isEn ? 'en-US' : 'vi-VN').format(liveOverview.totalHouses)
-    : '1,850'
-
-  const propSubtext = liveOverview
-    ? `${new Intl.NumberFormat(isEn ? 'en-US' : 'vi-VN').format(liveOverview.totalRooms)} ${isEn ? 'rooms' : 'phòng'} • ${liveOverview.occupancyRate}% ${isEn ? 'Occupancy' : 'lấp đầy'}`
-    : isEn
-      ? '24,600 rooms • 88.5% Occupancy'
-      : '24.600 phòng • 88.5% lấp đầy'
-
-  const propGrowth = liveOverview
-    ? `${liveOverview.propertyGrowthRate >= 0 ? '+' : ''}${liveOverview.propertyGrowthRate}%`
-    : '+8.6%'
-
-  const revenueVal = liveOverview
-    ? new Intl.NumberFormat(isEn ? 'en-US' : 'vi-VN').format(liveOverview.platformRevenue)
-    : '148.500.000'
-
-  const revenueGrowth = liveOverview
-    ? `${liveOverview.revenueGrowthRate >= 0 ? '+' : ''}${liveOverview.revenueGrowthRate}%`
-    : '+22.4%'
-
-  const pendingGrv = liveOverview ? String(liveOverview.pendingGrievancesCount) : '7'
-
-  const urgentGrvText = liveOverview
-    ? `${liveOverview.urgentGrievancesCount} ${isEn ? 'URGENT cases awaiting action' : 'vụ việc KHẨN CẤP cần xử lý ngay'}`
-    : isEn
-      ? '3 URGENT cases awaiting action'
-      : '3 vụ việc KHẨN CẤP cần xử lý ngay'
-
-  const reportedItemsVal = liveOverview ? String(liveOverview.reportedItemsCount) : '12'
-
-  // Dynamic quick stats from live API with fallbacks
-  const stats = [
-    {
-      id: 'users',
-      label: isEn ? 'Total Users' : 'Tổng người dùng',
-      value: totalUsersVal,
-      subtext: userSubtext,
-      growth: userGrowth,
-      isPositive: true,
-      icon: Users,
-      color: 'text-blue-600 bg-blue-50 border-blue-100',
+        if (overviewRes) {
+          setOverview(overviewRes)
+        }
+        if (grievanceRes?.items) {
+          setUrgentGrievances(grievanceRes.items)
+        }
+        if (postsRes?.data) {
+          setFlaggedListings(postsRes.data)
+        }
+      } catch (err: any) {
+        console.error('Error fetching admin dashboard data:', err)
+        setError(t('adminLoadError'))
+      } finally {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
     },
-    {
-      id: 'properties',
-      label: isEn ? 'Houses & Rooms' : 'Nhà trọ & Phòng',
-      value: totalHousesVal,
-      subtext: propSubtext,
-      growth: propGrowth,
-      isPositive: true,
-      icon: Building2,
-      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    },
-    {
-      id: 'revenue',
-      label: isEn ? 'Platform Revenue' : 'Doanh thu nền tảng',
-      value: revenueVal,
-      unit: '₫',
-      subtext: isEn
-        ? 'Subscription packages & Post credits'
-        : 'Gói dịch vụ chủ trọ & Lượt đăng tin',
-      growth: revenueGrowth,
-      isPositive: true,
-      icon: Wallet,
-      color: 'text-orange-600 bg-orange-50 border-orange-100',
-    },
-    {
-      id: 'grievances',
-      label: isEn ? 'Pending Grievances' : 'Khiếu nại chờ xử lý',
-      value: pendingGrv,
-      subtext: urgentGrvText,
-      growth: isEn ? 'Action needed' : 'Cần can thiệp',
-      isPositive: false,
-      icon: AlertTriangle,
-      color: 'text-orange-600 bg-orange-50 border-orange-100',
-      badge: liveOverview
-        ? `${liveOverview.urgentGrievancesCount} ${isEn ? 'URGENT' : 'KHẨN CẤP'}`
-        : isEn
-          ? '3 URGENT'
-          : '3 KHẨN CẤP',
-      link: '/admin/grievances',
-    },
-    {
-      id: 'moderation',
-      label: isEn ? 'Reported Items' : 'Vi phạm & Nghi vấn',
-      value: reportedItemsVal,
-      subtext: isEn ? 'Flagged rental listings' : 'Tin đăng bị báo cáo / ẩn',
-      growth: isEn ? 'Needs review' : 'Chờ kiểm tra',
-      isPositive: false,
-      icon: ShieldAlert,
-      color: 'text-amber-600 bg-amber-50 border-amber-100',
-      badge: `${reportedItemsVal} ${isEn ? 'Items' : 'Mục'}`,
-      link: '/admin/blogs',
-    },
-  ]
+    [t],
+  )
 
-  // Urgent Grievances Quick Queue
-  const urgentGrievances = [
-    {
-      id: 'GRV-1092',
-      tenant: 'Nguyễn Thị Mai',
-      tenantPhone: '0912.345.678',
-      house: 'Dormio Sunrise (Phòng 302)',
-      landlord: 'Trần Đức Nam',
-      category: isEn ? 'Illegal deposit withholding' : 'Không chịu hoàn tiền cọc kết thúc HĐ',
-      priority: 'urgent',
-      time: isEn ? '25 mins ago' : '25 phút trước',
-    },
-    {
-      id: 'GRV-1088',
-      tenant: 'Lê Hoàng Phúc',
-      tenantPhone: '0988.112.233',
-      house: 'Ký túc xá Cao Lỗ (Phòng 104)',
-      landlord: 'Võ Thị Bích',
-      category: isEn ? 'Abrupt power cut & safety breach' : 'Cắt điện vô cớ & đe dọa đuổi trọ',
-      priority: 'urgent',
-      time: isEn ? '1 hour ago' : '1 giờ trước',
-    },
-    {
-      id: 'GRV-1085',
-      tenant: 'Phạm Hải Đăng',
-      tenantPhone: '0909.876.543',
-      house: 'Nhà trọ Thảo Điền Garden (Phòng 201)',
-      landlord: 'Đặng Quốc Cường',
-      category: isEn
-        ? 'Misleading room facilities vs listing'
-        : 'Phòng thực tế dột nát, khác 100% hình đăng',
-      priority: 'high',
-      time: isEn ? '3 hours ago' : '3 giờ trước',
-    },
-  ]
+  useEffect(() => {
+    fetchDashboardData()
+  }, [fetchDashboardData])
 
-  // Flagged Listings Quick Queue
-  const flaggedListings = [
-    {
-      id: 'LST-8904',
-      title: isEn
-        ? 'Studio Luxury Q1 full options only 800k/month'
-        : 'Studio Cao cấp Quận 1 full nội thất chỉ 800k/tháng',
-      landlord: 'Lê Minh Tuấn',
-      reason: isEn
-        ? 'Fraudulent price: Unrealistic bait price (800k/mo in Q1)'
-        : 'Giá ảo câu khách bất thường (800.000 ₫/tháng ở Q1)',
-      reportsCount: 8,
-      status: 'active',
-      flaggedDate: isEn ? 'Today, 10:20' : 'Hôm nay, 10:20',
-    },
-    {
-      id: 'LST-8891',
-      title: isEn
-        ? 'Clean single room near FPT University'
-        : 'Phòng đơn khép kín gần ĐH FPT - Có gác lửng',
-      landlord: 'Nguyễn Văn Hùng',
-      reason: isEn
-        ? 'Stolen photos from Pinterest / watermark mismatch'
-        : 'Sử dụng ảnh mạng Pinterest, không trùng cơ sở',
-      reportsCount: 4,
-      status: 'active',
-      flaggedDate: isEn ? 'Yesterday' : 'Hôm qua',
-    },
-    {
-      id: 'LST-8876',
-      title: isEn
-        ? 'Cheap boarding house Binh Thanh - Ask deposit via personal QR'
-        : 'Nhà trọ giá rẻ Bình Thạnh - Yêu cầu cọc trước STK cá nhân',
-      landlord: 'Phạm Thu Thảo',
-      reason: isEn
-        ? 'Bypassing escrow deposit, suspected scam'
-        : 'Ép chuyển cọc ngoài không qua nền tảng bảo vệ',
-      reportsCount: 11,
-      status: 'active',
-      flaggedDate: isEn ? '2 days ago' : '2 ngày trước',
-    },
-  ]
+  const stats = overview
+    ? [
+        {
+          id: 'users',
+          label: t('adminStatTotalUsers'),
+          value: new Intl.NumberFormat(numberLocale).format(overview.totalUsers || 0),
+          subtext: t('adminStatUserSubtext', {
+            tenants: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.tenant || 0),
+            landlords: new Intl.NumberFormat(numberLocale).format(
+              overview.userRoles?.landlord || 0,
+            ),
+            staff: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.employee || 0),
+          }),
+          growth: `${overview.userGrowthRate >= 0 ? '+' : ''}${overview.userGrowthRate || 0}%`,
+          isPositive: (overview.userGrowthRate || 0) >= 0,
+          icon: Users,
+          color: 'text-blue-600 bg-blue-50 border-blue-100',
+          link: '/admin/users',
+        },
+        {
+          id: 'properties',
+          label: t('adminStatHousesRooms'),
+          value: new Intl.NumberFormat(numberLocale).format(overview.totalHouses || 0),
+          subtext: t('adminStatPropSubtext', {
+            rooms: new Intl.NumberFormat(numberLocale).format(overview.totalRooms || 0),
+            occupancy: overview.occupancyRate || 0,
+          }),
+          growth: `${overview.propertyGrowthRate >= 0 ? '+' : ''}${overview.propertyGrowthRate || 0}%`,
+          isPositive: (overview.propertyGrowthRate || 0) >= 0,
+          icon: Building2,
+          color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+          link: '/admin/boarding-houses',
+        },
+        {
+          id: 'revenue',
+          label: t('adminStatPlatformRevenue'),
+          value: new Intl.NumberFormat(numberLocale).format(overview.platformRevenue || 0),
+          unit: '₫',
+          subtext: t('adminStatRevenueSubtext'),
+          growth: `${overview.revenueGrowthRate >= 0 ? '+' : ''}${overview.revenueGrowthRate || 0}%`,
+          isPositive: (overview.revenueGrowthRate || 0) >= 0,
+          icon: Wallet,
+          color: 'text-orange-600 bg-orange-50 border-orange-100',
+          link: '/admin/analytics',
+        },
+        {
+          id: 'grievances',
+          label: t('adminStatPendingGrievances'),
+          value: String(overview.pendingGrievancesCount || 0),
+          subtext: t('adminStatUrgentGrvText', { count: overview.urgentGrievancesCount || 0 }),
+          growth: t('adminStatActionNeeded'),
+          isPositive: false,
+          icon: AlertTriangle,
+          color: 'text-orange-600 bg-orange-50 border-orange-100',
+          badge: t('adminStatUrgentBadge', { count: overview.urgentGrievancesCount || 0 }),
+          link: '/admin/grievances',
+        },
+        {
+          id: 'moderation',
+          label: t('adminStatReportedItems'),
+          value: String(overview.reportedItemsCount || 0),
+          subtext: t('adminStatReportedSubtext'),
+          growth: t('adminStatNeedsReview'),
+          isPositive: false,
+          icon: ShieldAlert,
+          color: 'text-amber-600 bg-amber-50 border-amber-100',
+          badge: t('adminStatItemsBadge', { count: overview.reportedItemsCount || 0 }),
+          link: '/admin/blogs',
+        },
+      ]
+    : []
 
   return (
     <div className="space-y-8 pb-12">
       {/* Top Hero Banner & Title */}
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/90 text-white p-6 sm:p-8 shadow-xl">
-        {/* Ambient Decorative Glow */}
         <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-orange-500/15 blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
 
@@ -236,125 +189,192 @@ export default function AdminDashboardPage() {
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-orange-500/25 text-orange-300 border border-orange-500/40 tracking-wider uppercase">
                 <ShieldAlert className="w-3.5 h-3.5 text-orange-400" />
-                {isEn ? 'System Administrator Control Hub' : 'Cổng Kiểm Soát Quản Trị Hệ Thống'}
+                {t('adminHubBadge')}
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                {isEn ? 'All services online' : 'Hệ thống vận hành ổn định'}
+                {t('adminServicesOnline')}
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              {isEn ? 'Platform Overview & Governance' : 'Tổng Quan Vận Hành & Giám Sát Nền Tảng'}
-            </h1>
-            <p className="text-sm text-zinc-300 leading-relaxed max-w-2xl">
-              {isEn
-                ? 'Monitor national data, moderate suspicious listings and boarding houses, resolve tenant grievances, and dispatch multi-channel announcements.'
-                : 'Theo dõi dữ liệu toàn quốc, kiểm soát bài đăng & nhà trọ nghi vấn, xử lý khiếu nại từ khách thuê và gửi thông báo đa kênh.'}
-            </p>
+            <Text
+              as="h1"
+              variant="heading"
+              size="2xl"
+              weight="black"
+              className="text-white sm:text-3xl tracking-tight"
+            >
+              {t('adminPageTitle')}
+            </Text>
+            <Text as="p" size="sm" className="text-zinc-300 leading-relaxed max-w-2xl">
+              {t('adminPageSubtitle')}
+            </Text>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions & Refresh */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <Link
-              href="/admin/notifications"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/15 transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchDashboardData(true)}
+              disabled={isRefreshing}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
             >
-              <Megaphone className="w-4 h-4 text-orange-400" />
-              <span>{isEn ? 'Send Broadcast' : 'Gửi thông báo'}</span>
-            </Link>
-            <Link
-              href="/admin/blogs"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs border border-white/15 transition-all shadow-xs cursor-pointer whitespace-nowrap"
+              {t('adminRefresh')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/admin/notifications')}
+              leftIcon={<Megaphone className="w-4 h-4 text-orange-400" />}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
             >
-              <Newspaper className="w-4 h-4 text-amber-400" />
-              <span>{isEn ? 'New Blog Post' : 'Soạn bài Blog'}</span>
-            </Link>
-            <Link
-              href="/admin/analytics"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-md shadow-orange-600/30 cursor-pointer whitespace-nowrap"
+              {t('adminActionSendBroadcast')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/admin/blogs')}
+              leftIcon={<Newspaper className="w-4 h-4 text-amber-400" />}
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
             >
-              <TrendingUp className="w-4 h-4" />
-              <span>{isEn ? 'Full Analytics' : 'Báo cáo chi tiết'}</span>
-            </Link>
+              {t('adminActionNewBlog')}
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => router.push('/admin/analytics')}
+              leftIcon={<TrendingUp className="w-4 h-4" />}
+              className="bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-md shadow-orange-600/30"
+            >
+              {t('adminActionFullAnalytics')}
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* 5 KPI Metric Cards - Bulletproof against text-dropping & overflow */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
-        {stats.map(item => {
-          const Icon = item.icon
-          return (
+      {/* Error Banner with Retry */}
+      {error && !isLoading && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <Text size="sm" weight="semibold">
+              {error}
+            </Text>
+          </div>
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => fetchDashboardData()}
+            className="shrink-0"
+          >
+            {t('adminRetry')}
+          </Button>
+        </div>
+      )}
+
+      {/* 5 KPI Metric Cards */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
+          {[1, 2, 3, 4, 5].map(i => (
             <div
-              key={item.id}
-              className="group relative bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
+              key={i}
+              className="bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs animate-pulse space-y-4"
             >
-              <div>
-                {/* Top row: Icon on left, Growth/Status badge on right */}
-                <div className="flex items-center justify-between gap-2 mb-3.5">
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${item.color}`}
-                  >
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
-                  {item.growth && (
-                    <span
-                      className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
-                        item.isPositive
-                          ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
-                          : 'text-orange-700 bg-orange-50 border-orange-200/80'
-                      }`}
-                    >
-                      {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
-                      {!item.isPositive && <AlertTriangle className="w-3 h-3 shrink-0" />}
-                      {item.growth}
-                    </span>
-                  )}
-                </div>
-
-                {/* Card Title Label (Full width, no truncation) */}
-                <span className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-                  {item.label}
-                </span>
-
-                {/* Main Metric Value (Bound inline with unit, NEVER drops lines) */}
-                <div className="flex items-baseline gap-1 text-zinc-900 leading-none whitespace-nowrap">
-                  <span className="text-2xl sm:text-[26px] font-black tracking-tight">
-                    {item.value}
-                  </span>
-                  {item.unit && (
-                    <span className="text-sm font-extrabold text-zinc-500 select-none">
-                      {item.unit}
-                    </span>
-                  )}
-                </div>
-
-                {/* Informative Subtext */}
-                <p className="text-[11px] font-medium text-zinc-500 mt-2.5 leading-relaxed">
-                  {item.subtext}
-                </p>
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 bg-zinc-200 rounded-xl" />
+                <div className="w-16 h-5 bg-zinc-200 rounded-full" />
               </div>
-
-              {/* Card Footer Link */}
-              {item.link ? (
-                <Link
-                  href={item.link}
-                  className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
-                >
-                  <span>{isEn ? 'Handle now' : 'Truy cập xử lý ngay'}</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              ) : (
-                <div className="mt-4 pt-3 border-t border-zinc-100/70 flex items-center justify-between text-[11px] font-medium text-zinc-400">
-                  <span>{isEn ? 'System verified' : 'Dữ liệu xác thực'}</span>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                </div>
-              )}
+              <div className="space-y-2">
+                <div className="w-20 h-3 bg-zinc-200 rounded" />
+                <div className="w-28 h-7 bg-zinc-200 rounded" />
+                <div className="w-full h-3 bg-zinc-100 rounded" />
+              </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
+          {stats.map(item => {
+            const Icon = item.icon
+            return (
+              <div
+                key={item.id}
+                className="group relative bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3.5">
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${item.color}`}
+                    >
+                      <Icon className="w-4.5 h-4.5" />
+                    </div>
+                    {item.growth && (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
+                          item.isPositive
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
+                            : 'text-orange-700 bg-orange-50 border-orange-200/80'
+                        }`}
+                      >
+                        {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
+                        {!item.isPositive && <AlertTriangle className="w-3 h-3 shrink-0" />}
+                        {item.growth}
+                      </span>
+                    )}
+                  </div>
+
+                  <Text
+                    as="span"
+                    size="xs"
+                    weight="bold"
+                    color="secondary"
+                    className="block uppercase tracking-wider mb-1.5"
+                  >
+                    {item.label}
+                  </Text>
+
+                  <div className="flex items-baseline gap-1 text-zinc-900 leading-none whitespace-nowrap">
+                    <span className="text-2xl sm:text-[26px] font-black tracking-tight">
+                      {item.value}
+                    </span>
+                    {item.unit && (
+                      <span className="text-sm font-extrabold text-zinc-500 select-none">
+                        {item.unit}
+                      </span>
+                    )}
+                  </div>
+
+                  <Text
+                    as="p"
+                    size="2xs"
+                    color="secondary"
+                    className="mt-2.5 leading-relaxed font-medium"
+                  >
+                    {item.subtext}
+                  </Text>
+                </div>
+
+                {item.link ? (
+                  <Link
+                    href={item.link}
+                    className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
+                  >
+                    <span>{t('adminStatHandleNow')}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                ) : (
+                  <div className="mt-4 pt-3 border-t border-zinc-100/70 flex items-center justify-between text-[11px] font-medium text-zinc-400">
+                    <span>{t('adminStatVerified')}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Operational Highlights Section (Grievance Queue & Moderation Queue) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -367,64 +387,118 @@ export default function AdminDashboardPage() {
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">
-                    {isEn ? 'Urgent Tenant Grievances' : 'Khiếu Nại Cần Xử Lý Khẩn Cấp'}
-                  </h2>
-                  <p className="text-xs text-zinc-400">
-                    {isEn
-                      ? 'Priority complaints escalated to system admins'
-                      : 'Các phản ánh có độ ưu tiên cao từ khách thuê trọ'}
-                  </p>
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="base"
+                    weight="black"
+                    className="text-zinc-900"
+                  >
+                    {t('adminUrgentGrievancesTitle')}
+                  </Text>
+                  <Text as="p" size="xs" color="secondary">
+                    {t('adminUrgentGrievancesSubtitle')}
+                  </Text>
                 </div>
               </div>
               <Link
                 href="/admin/grievances"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-orange-700 hover:text-orange-800 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
-                <span>{isEn ? 'View all (7)' : 'Xem tất cả (7)'}</span>
+                <span>
+                  {isLoading
+                    ? t('adminViewAll')
+                    : t('adminViewAllWithCount', {
+                        count: overview?.pendingGrievancesCount ?? urgentGrievances.length,
+                      })}
+                </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {urgentGrievances.map(item => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
-                >
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-orange-600 text-white uppercase tracking-wider">
-                        {item.priority === 'urgent'
-                          ? isEn
-                            ? 'URGENT'
-                            : 'KHẨN CẤP'
-                          : isEn
-                            ? 'HIGH'
-                            : 'CAO'}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-zinc-600">{item.id}</span>
-                      <span className="text-[11px] text-zinc-400">• {item.time}</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-zinc-900 leading-snug">
-                      {item.category}
-                    </h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">
-                      <span className="font-semibold text-zinc-800">{item.tenant}</span> (
-                      {item.tenantPhone}) <span className="text-zinc-400">→</span>{' '}
-                      <span className="text-zinc-700 font-medium">{item.house}</span>
-                    </p>
-                  </div>
-
-                  <Link
-                    href="/admin/grievances"
-                    className="shrink-0 px-4 py-2 rounded-xl bg-white hover:bg-orange-600 text-orange-700 hover:text-white border border-orange-200/90 hover:border-orange-600 text-xs font-bold transition-all shadow-2xs text-center cursor-pointer whitespace-nowrap"
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 animate-pulse space-y-2"
                   >
-                    {isEn ? 'Resolve' : 'Xử lý ngay'}
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="h-4 bg-zinc-200 rounded w-1/3" />
+                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : urgentGrievances.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-2.5" />
+                <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+                  {t('adminUrgentGrievancesEmpty')}
+                </Text>
+                <Text as="p" size="xs" color="secondary" className="mt-1 max-w-sm">
+                  {t('adminUrgentGrievancesEmptyDesc')}
+                </Text>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {urgentGrievances.map(item => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                  >
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                            item.priority === 'high'
+                              ? 'bg-orange-600 text-white'
+                              : item.priority === 'medium'
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-zinc-600 text-white'
+                          }`}
+                        >
+                          {item.priority === 'high'
+                            ? t('adminPriorityHigh')
+                            : item.priority === 'medium'
+                              ? t('adminPriorityMedium')
+                              : t('adminPriorityLow')}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-zinc-600">
+                          {item.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="text-[11px] text-zinc-400">
+                          • {formatDisplayDate(item.createdAt, locale)}
+                        </span>
+                      </div>
+                      <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
+                        {item.title}
+                      </Text>
+                      <p className="text-xs text-zinc-600 leading-relaxed">
+                        <span className="font-semibold text-zinc-800">{item.tenantName}</span> (
+                        {item.tenantPhone || t('adminNoPhone')}){' '}
+                        <span className="text-zinc-400">→</span>{' '}
+                        <span className="text-zinc-700 font-medium">
+                          {item.boardingHouseName
+                            ? `${item.boardingHouseName}${item.roomNumber ? ` (Phòng ${item.roomNumber})` : ''}`
+                            : '---'}
+                        </span>
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/admin/grievances?search=${encodeURIComponent(item.id)}`)
+                      }
+                      className="shrink-0 bg-white hover:bg-orange-600 text-orange-700 hover:text-white border-orange-200/90 hover:border-orange-600 text-xs font-bold transition-all shadow-2xs whitespace-nowrap"
+                    >
+                      {t('adminResolveNow')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -437,55 +511,111 @@ export default function AdminDashboardPage() {
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">
-                    {isEn ? 'Suspicious Listings & Houses' : 'Tin Đăng & Nhà Trọ Nghi Vấn'}
-                  </h2>
-                  <p className="text-xs text-zinc-400">
-                    {isEn
-                      ? 'Reported by users or flagged by security filters'
-                      : 'Bị người dùng báo cáo hoặc có dấu hiệu lừa đảo/giá ảo'}
-                  </p>
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="base"
+                    weight="black"
+                    className="text-zinc-900"
+                  >
+                    {t('adminSuspiciousListingsTitle')}
+                  </Text>
+                  <Text as="p" size="xs" color="secondary">
+                    {t('adminSuspiciousListingsSubtitle')}
+                  </Text>
                 </div>
               </div>
               <Link
                 href="/admin/blogs"
                 className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
-                <span>{isEn ? 'Inspect (12)' : 'Kiểm duyệt (12)'}</span>
+                <span>
+                  {isLoading
+                    ? t('adminInspect')
+                    : t('adminInspectWithCount', {
+                        count: overview?.reportedItemsCount ?? flaggedListings.length,
+                      })}
+                </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {flaggedListings.map(item => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
-                >
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase">
-                        {item.reportsCount} {isEn ? 'Reports' : 'Báo cáo'}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-zinc-600">{item.id}</span>
-                      <span className="text-[11px] text-zinc-400">• {item.flaggedDate}</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-zinc-900 leading-snug">{item.title}</h3>
-                    <div className="inline-flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200/70 px-2.5 py-1 rounded-lg font-medium">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span className="line-clamp-1">{item.reason}</span>
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/admin/blogs"
-                    className="shrink-0 px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md text-center cursor-pointer whitespace-nowrap"
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 animate-pulse space-y-2"
                   >
-                    {isEn ? 'Inspect & Lock' : 'Kiểm tra & Khóa'}
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    <div className="h-4 bg-zinc-200 rounded w-1/3" />
+                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : flaggedListings.length === 0 ? (
+              <div className="p-8 text-center flex flex-col items-center justify-center bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
+                <ShieldCheck className="w-10 h-10 text-emerald-500 mb-2.5" />
+                <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+                  {t('adminSuspiciousListingsEmpty')}
+                </Text>
+                <Text as="p" size="xs" color="secondary" className="mt-1 max-w-sm">
+                  {t('adminSuspiciousListingsEmptyDesc')}
+                </Text>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {flaggedListings.map(item => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                  >
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase">
+                          {item.status}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-zinc-600">
+                          {item.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="text-[11px] text-zinc-400">
+                          • {formatDisplayDate(item.createdAt, locale)}
+                        </span>
+                      </div>
+                      <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
+                        {item.title}
+                      </Text>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                        {item.room?.boardingHouseName && (
+                          <span className="flex items-center gap-1 font-medium text-zinc-700">
+                            <Building className="w-3.5 h-3.5 text-zinc-400" />
+                            {item.room.boardingHouseName}
+                            {item.room.roomNumber ? ` • P.${item.room.roomNumber}` : ''}
+                          </span>
+                        )}
+                        <span className="text-zinc-300">|</span>
+                        <span className="font-semibold text-orange-600">
+                          {t('adminDepositAmountLabel', {
+                            amount: `${new Intl.NumberFormat(numberLocale).format(item.depositAmount)} ₫`,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/admin/blogs?search=${encodeURIComponent(item.id)}`)
+                      }
+                      className="shrink-0 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md whitespace-nowrap"
+                    >
+                      {t('adminInspectAndLock')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -493,15 +623,46 @@ export default function AdminDashboardPage() {
       {/* Direct Access to Admin Submodules */}
       <div className="bg-zinc-100/80 rounded-3xl p-6 sm:p-7 border border-zinc-200/80">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs sm:text-sm font-black text-zinc-600 uppercase tracking-wider">
-            {isEn ? 'Direct Access to Admin Modules' : 'Các Phân Hệ Quản Trị Hệ Thống'}
-          </h2>
-          <span className="text-xs font-semibold text-zinc-400">
-            {isEn ? '4 core management areas' : '4 phân hệ cốt lõi'}
-          </span>
+          <Text
+            as="h2"
+            size="xs"
+            weight="black"
+            color="secondary"
+            className="uppercase tracking-wider sm:text-sm"
+          >
+            {t('adminSubmodulesTitle')}
+          </Text>
+          <Text as="span" size="xs" weight="semibold" color="secondary">
+            {t('adminSubmodulesCount', { count: 5 })}
+          </Text>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <Link
+            href="/admin/users"
+            className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Users className="w-5 h-5" />
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+              </div>
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
+                {t('adminModUsersTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
+                {t('adminModUsersDesc')}
+              </Text>
+            </div>
+          </Link>
+
           <Link
             href="/admin/boarding-houses"
             className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
@@ -513,14 +674,17 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? 'Boarding House Moderation' : 'Kiểm Duyệt Nhà Trọ'}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn
-                  ? 'Inspect room capacities, occupancy & lock fraudulent houses'
-                  : 'Thẩm định cơ sở, tỷ lệ lấp đầy, khóa nhà trọ vi phạm'}
-              </p>
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
+                {t('adminModHousesTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
+                {t('adminModHousesDesc')}
+              </Text>
             </div>
           </Link>
 
@@ -535,14 +699,17 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? 'Tenant Grievances' : 'Khiếu Nại Khách Thuê'}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn
-                  ? 'Resolve or reject tenant complaints with proof'
-                  : 'Xử lý mâu thuẫn cọc, an ninh, ghi chú kết luận'}
-              </p>
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
+                {t('adminModGrievancesTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
+                {t('adminModGrievancesDesc')}
+              </Text>
             </div>
           </Link>
 
@@ -557,14 +724,17 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? 'Mass Dispatcher' : 'Gửi Thông Báo Hàng Loạt'}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn
-                  ? 'Broadcast via In-App, Email, SMS, Zalo ZNS'
-                  : 'Chiến dịch In-App, Email, SMS, Zalo cho chủ trọ & khách'}
-              </p>
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
+                {t('adminModBroadcastTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
+                {t('adminModBroadcastDesc')}
+              </Text>
             </div>
           </Link>
 
@@ -579,14 +749,17 @@ export default function AdminDashboardPage() {
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
-              <h3 className="text-sm font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
-                {isEn ? 'Blog & Post Moderation' : 'Kiểm Duyệt Bài Viết'}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">
-                {isEn
-                  ? 'Inspect, edit, lock, publish & delete public rental posts'
-                  : 'Kiểm tra, khóa tin, xuất bản và xóa bài đăng vi phạm'}
-              </p>
+              <Text
+                as="h3"
+                size="sm"
+                weight="bold"
+                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+              >
+                {t('adminModBlogsTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" className="mt-1.5 leading-relaxed">
+                {t('adminModBlogsDesc')}
+              </Text>
             </div>
           </Link>
         </div>

@@ -1086,13 +1086,13 @@ export class ContractsService {
                 typeof primaryTenant.userIdentification.placeOfOrigin === 'string'
                   ? primaryTenant.userIdentification.placeOfOrigin
                   : primaryTenant.userIdentification.placeOfOrigin
-                    ? JSON.stringify(primaryTenant.userIdentification.placeOfOrigin)
+                    ? primaryTenant.userIdentification.placeOfOrigin
                     : null,
               placeOfResidence:
                 typeof primaryTenant.userIdentification.placeOfResidence === 'string'
                   ? primaryTenant.userIdentification.placeOfResidence
                   : primaryTenant.userIdentification.placeOfResidence
-                    ? JSON.stringify(primaryTenant.userIdentification.placeOfResidence)
+                    ? primaryTenant.userIdentification.placeOfResidence
                     : null,
               issueDate: primaryTenant.userIdentification.issueDate,
             }

@@ -3,6 +3,7 @@ import { ContractsService } from './contracts.service'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { AuthService } from '../auth/auth.service'
+import { UploadService } from '../upload/upload.service'
 import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common'
 import { Prisma } from '@prisma'
 
@@ -61,6 +62,12 @@ const mockAuthService = {
   findOrCreateByPhone: jest.fn(),
 }
 
+const mockUploadService = {
+  uploadFile: jest.fn(),
+  uploadBuffer: jest.fn(),
+  deleteFile: jest.fn(),
+}
+
 describe('ContractsService', () => {
   let service: ContractsService
 
@@ -73,6 +80,7 @@ describe('ContractsService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: AuthService, useValue: mockAuthService },
+        { provide: UploadService, useValue: mockUploadService },
       ],
     }).compile()
 

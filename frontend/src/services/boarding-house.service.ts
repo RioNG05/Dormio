@@ -56,6 +56,8 @@ export interface BoardingHouse {
   totalFloor: number | null
   builtAt: string
   status: 'active' | 'inactive' | 'banned'
+  thumbnail?: string | null
+  totalRooms?: number
   services: BoardingHouseService[]
   roomTypes: BoardingHouseRoomType[]
 }
@@ -77,6 +79,16 @@ export interface SetupRoomTypePayload {
   description?: string
 }
 
+export interface SetupCustomRoomPayload {
+  floor: number
+  index: number
+  roomNumber: string
+  area?: string
+  maxOccupants?: number
+  roomTypeIndex?: number
+  serviceIndices?: number[]
+}
+
 export interface SetupRoomsPayload {
   floorCount: number
   roomsPerFloor: number
@@ -85,6 +97,7 @@ export interface SetupRoomsPayload {
   maxOccupants?: number
   roomTypeIndex: number
   serviceIndices?: number[]
+  customRooms?: SetupCustomRoomPayload[]
 }
 
 export interface SetupBoardingHousePayload {
@@ -145,6 +158,39 @@ export async function getMyBoardingHouses(options?: {
     options,
   )
   return response.data
+}
+
+export interface UpdateBoardingHousePayload {
+  name?: string
+  description?: string
+  country?: string
+  province?: string
+  city?: string
+  district?: string
+  ward?: string
+  street?: string
+  houseNumber?: string
+  totalFloor?: number
+  builtAt?: string
+  thumbnail?: string
+}
+
+export async function getBoardingHouseById(id: string): Promise<BoardingHouse> {
+  const response = await api.get<{ success: boolean; data: BoardingHouse } | BoardingHouse>(
+    `/v1/boarding-houses/${id}`,
+  )
+  return (response as any)?.data || response
+}
+
+export async function updateBoardingHouse(
+  id: string,
+  payload: UpdateBoardingHousePayload,
+): Promise<BoardingHouse> {
+  const response = await api.patch<{ success: boolean; data: BoardingHouse } | BoardingHouse>(
+    `/v1/boarding-houses/${id}`,
+    payload,
+  )
+  return (response as any)?.data || response
 }
 
 export interface OverviewRooms {

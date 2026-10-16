@@ -50,11 +50,23 @@ import {
 
 import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
-import { Button, Text } from '@/components/ui'
+import { Button, Text, SelectInput } from '@/components/ui'
+import { useUnreadMessages } from '@/hooks'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const tNav = useTranslations('nav')
   const pathname = usePathname()
+  const {
+    user,
+    isLoggedIn,
+    logout,
+    capabilities,
+    buildings,
+    activeBuildingId,
+    activeBuilding,
+    selectBuilding,
+  } = useAuth()
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [buildingDropdownOpen, setBuildingDropdownOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -108,6 +120,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isTenant = pathname?.startsWith('/tenant')
   const isAdmin = pathname?.startsWith('/admin')
   const isStaff = pathname?.startsWith('/staff')
+  const isLandlord = !isAdmin && !isStaff && !isTenant
+
+  const { unreadCount: unreadMessagesCount } = useUnreadMessages(
+    isLoggedIn && (isTenant || isLandlord),
+  )
 
   const staffMenus = [
     { name: tNav('staffOverview'), href: '/staff', icon: LayoutDashboard },
@@ -118,6 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const adminMenus = [
     { name: tNav('adminOverview'), href: '/admin', icon: LayoutDashboard },
     { name: tNav('adminAnalytics'), href: '/admin/analytics', icon: BarChart2 },
+    { name: tNav('adminUsers'), href: '/admin/users', icon: Users },
     ...(FEATURE_FLAGS.ENABLE_BHRP
       ? [{ name: tNav('adminPostModeration'), href: '/admin/blogs', icon: ShieldCheck }]
       : []),
@@ -294,27 +312,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const isActive =
               pathname === item.href ||
               (item.href !== '/tenant' && pathname?.startsWith(item.href + '/'))
+            const isMessages = item.href === '/tenant/messages'
             return (
               <Link
                 key={idx}
                 href={item.href}
                 scroll={false}
-                className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`relative flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
                 }`}
               >
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                <div className="flex items-center gap-3 min-w-0">
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                  )}
+                  <item.icon
+                    className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-400'}`}
+                    strokeWidth={isActive ? 2 : 1.75}
+                  />
+                  <Text as="span" size="sm" weight={isActive ? 'bold' : 'medium'} color="inherit">
+                    {item.name}
+                  </Text>
+                </div>
+                {isMessages && unreadMessagesCount > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold shadow-2xs animate-in zoom-in-75 duration-150">
+                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                  </span>
                 )}
-                <item.icon
-                  className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-400'}`}
-                  strokeWidth={isActive ? 2 : 1.75}
-                />
-                <Text as="span" size="sm" weight={isActive ? 'bold' : 'medium'} color="inherit">
-                  {item.name}
-                </Text>
               </Link>
             )
           })}
@@ -368,15 +394,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => toggleGroup(block.key!)}
                 className="flex items-center justify-between w-full px-3 py-1.5 h-auto hover:bg-transparent rounded-lg text-left"
               >
-                <Text
-                  as="span"
-                  variant="overline"
-                  weight="bold"
-                  color="subtle"
-                  className="hover:text-zinc-600 transition-colors"
-                >
-                  {block.group}
-                </Text>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Text
+                    as="span"
+                    variant="overline"
+                    weight="bold"
+                    color="subtle"
+                    className="hover:text-zinc-600 transition-colors"
+                  >
+                    {block.group}
+                  </Text>
+                  {block.key === 'van-hanh' && !isOpen && unreadMessagesCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold shadow-2xs">
+                      {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                    </span>
+                  )}
+                </div>
                 {isOpen ? (
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 ) : (
@@ -390,32 +423,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     const isActive =
                       pathname === item.href ||
                       (item.href !== '/landlord' && pathname?.startsWith(item.href + '/'))
+                    const isMessages = item.href === '/landlord/messages'
                     return (
                       <Link
                         key={i}
                         href={item.href}
                         scroll={false}
-                        className={`relative flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        className={`relative flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                           isActive
                             ? 'bg-primary/10 text-primary'
                             : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
                         }`}
                       >
-                        {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                        <div className="flex items-center gap-3 min-w-0">
+                          {isActive && (
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
+                          )}
+                          <item.icon
+                            className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-400'}`}
+                            strokeWidth={isActive ? 2 : 1.75}
+                          />
+                          <Text
+                            as="span"
+                            size="sm"
+                            weight={isActive ? 'bold' : 'medium'}
+                            color="inherit"
+                          >
+                            {item.name}
+                          </Text>
+                        </div>
+                        {isMessages && unreadMessagesCount > 0 && (
+                          <span className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold shadow-2xs animate-in zoom-in-75 duration-150">
+                            {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                          </span>
                         )}
-                        <item.icon
-                          className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-400'}`}
-                          strokeWidth={isActive ? 2 : 1.75}
-                        />
-                        <Text
-                          as="span"
-                          size="sm"
-                          weight={isActive ? 'bold' : 'medium'}
-                          color="inherit"
-                        >
-                          {item.name}
-                        </Text>
                       </Link>
                     )
                   })}
@@ -427,17 +468,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
     )
   }
-
-  const {
-    user,
-    isLoggedIn,
-    logout,
-    capabilities,
-    buildings,
-    activeBuildingId,
-    activeBuilding,
-    selectBuilding,
-  } = useAuth()
 
   // DYNAMICALLY UPDATE BROWSER DOCUMENT TITLE BASED ON ACTIVE BUILDING & ROUTE
   React.useEffect(() => {
@@ -528,10 +558,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Text>
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={() => setBuildingDropdownOpen(prev => !prev)}
-        className="w-full bg-white border border-zinc-200 hover:border-[#2AC1BC] rounded-xl px-2.5 py-2 text-left text-xs font-black text-zinc-900 focus:outline-none cursor-pointer shadow-2xs flex items-center justify-between transition-all"
+        className="w-full bg-white border border-zinc-200 hover:border-[#2AC1BC] hover:bg-white rounded-xl px-2.5 py-2 text-left text-xs font-black text-zinc-900 focus:outline-none cursor-pointer shadow-2xs flex items-center justify-between transition-all h-auto"
         title={tNav('switchPropertyTooltip')}
       >
         <div className="min-w-0 flex-1 pr-1.5">
@@ -552,7 +584,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             buildingDropdownOpen ? 'rotate-180 text-[#2AC1BC]' : ''
           }`}
         />
-      </button>
+      </Button>
 
       {buildingDropdownOpen && (
         <>
@@ -567,16 +599,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {buildings.map(b => {
                 const isActive = b.id === activeBuildingId
                 return (
-                  <button
+                  <Button
                     key={b.id}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       selectBuilding(b.id)
                       setBuildingDropdownOpen(false)
                     }}
-                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer h-auto border-0 ${
                       isActive
-                        ? 'bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs'
+                        ? 'bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs hover:bg-[#2AC1BC]/15'
                         : 'hover:bg-zinc-50 text-zinc-700 font-bold'
                     }`}
                   >
@@ -602,7 +636,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </Text>
                     </div>
                     {isActive && <Check className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
-                  </button>
+                  </Button>
                 )
               })}
             </div>
@@ -951,19 +985,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             ) : (
               !isTenant && (
-                <div className="relative min-w-0 max-w-[140px] sm:max-w-[200px]">
-                  <select
+                <div className="min-w-0 max-w-[140px] sm:max-w-[200px]">
+                  <SelectInput
                     value={activeBuildingId}
                     onChange={e => selectBuilding(e.target.value)}
-                    className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer appearance-none pr-6 truncate"
-                  >
-                    {buildings.map(b => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    options={buildings.map(b => ({
+                      value: b.id,
+                      label: b.name,
+                    }))}
+                    className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer pr-6 truncate h-8"
+                    containerClassName="space-y-0"
+                  />
                 </div>
               )
             )}

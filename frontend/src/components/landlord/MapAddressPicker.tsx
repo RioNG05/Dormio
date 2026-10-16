@@ -12,6 +12,8 @@ import {
   Minimize2,
 } from 'lucide-react'
 import { Province, matchProvince } from '@/services/vietnam-address.service'
+import { mapService, type MapsConfig } from '@/services/map.service'
+import { Button, TextInput } from '@/components/ui'
 
 export interface SelectedMapAddress {
   province: string
@@ -51,8 +53,25 @@ export function MapAddressPicker({
   const [resolvedAddress, setResolvedAddress] = useState<SelectedMapAddress | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  const isGoogleAvailable = Boolean(apiKey && apiKey.trim() !== '')
+  const [mapConfig, setMapConfig] = useState<MapsConfig>({
+    apiKey: null,
+    isGoogleAvailable: false,
+    provider: 'osm',
+  })
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    mapService.getMapsConfig().then(cfg => {
+      if (isMounted) {
+        setMapConfig(cfg)
+        setIsConfigLoaded(true)
+      }
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Default coordinates: Ho Chi Minh City center
   const defaultCoords = { lat: 10.7769, lng: 106.7009 }
@@ -155,7 +174,11 @@ export function MapAddressPicker({
 
   // Initialize Map
   useEffect(() => {
+    if (!isConfigLoaded) return
     let isMounted = true
+
+    const isGoogleAvailable = mapConfig.isGoogleAvailable && Boolean(mapConfig.apiKey)
+    const apiKey = mapConfig.apiKey
 
     if (isGoogleAvailable) {
       // 1. Load Google Maps API
@@ -312,7 +335,7 @@ export function MapAddressPicker({
         mapInstanceRef.current = null
       }
     }
-  }, [isGoogleAvailable, apiKey])
+  }, [isConfigLoaded, mapConfig])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -350,7 +373,11 @@ export function MapAddressPicker({
             <h4 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
               Chọn địa chỉ từ bản đồ
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2AC1BC]/10 text-[#2AC1BC]">
-                {isGoogleAvailable ? 'Google Maps' : 'Interactive Map'}
+                {!isConfigLoaded
+                  ? 'Đang tải bản đồ...'
+                  : mapConfig.isGoogleAvailable && mapConfig.apiKey
+                    ? 'Google Maps'
+                    : 'Interactive Map'}
               </span>
             </h4>
             <p className="text-xs text-zinc-500">
@@ -360,41 +387,33 @@ export function MapAddressPicker({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => setIsExpanded(prev => !prev)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+            leftIcon={isExpanded ? <Minimize2 className="h-3.5 w-3.5 text-zinc-500" /> : <Maximize2 className="h-3.5 w-3.5 text-zinc-500" />}
           >
-            {isExpanded ? (
-              <>
-                <Minimize2 className="h-3.5 w-3.5 text-zinc-500" />
-                <span>Thu nhỏ</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="h-3.5 w-3.5 text-zinc-500" />
-                <span>Phóng to bản đồ</span>
-              </>
-            )}
-          </button>
+            {isExpanded ? 'Thu nhỏ' : 'Phóng to bản đồ'}
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={openGoogleMapsDirectly}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#2AC1BC]/30 bg-[#2AC1BC]/5 text-xs font-semibold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors"
+            rightIcon={<ExternalLink className="h-3.5 w-3.5" />}
+            className="border-[#2AC1BC]/30 bg-[#2AC1BC]/5 text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
           >
-            <span>Mở trên Google Maps</span>
-            <ExternalLink className="h-3.5 w-3.5" />
-          </button>
+            Mở trên Google Maps
+          </Button>
         </div>
       </div>
 
       {/* Search Bar */}
       <div className="mt-4 flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-          <input
-            type="text"
+        <div className="flex-1">
+          <TextInput
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => {
@@ -404,28 +423,21 @@ export function MapAddressPicker({
               }
             }}
             placeholder="Nhập địa chỉ, tên đường hoặc địa danh để tìm kiếm..."
-            className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 pl-10 pr-3.5 py-2.5 text-sm font-medium text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15"
+            leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
           />
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="primary"
           onClick={handleSearchOSM}
           disabled={isSearching || !searchQuery.trim()}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-xs font-bold hover:bg-[#25aca7] disabled:opacity-50 disabled:cursor-not-allowed transition-all shrink-0"
+          isLoading={isSearching}
+          leftIcon={!isSearching ? <Navigation className="h-3.5 w-3.5" /> : undefined}
+          className="shrink-0"
         >
-          {isSearching ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Đang tìm...</span>
-            </>
-          ) : (
-            <>
-              <Navigation className="h-3.5 w-3.5" />
-              <span>Tìm vị trí</span>
-            </>
-          )}
-        </button>
+          {isSearching ? 'Đang tìm...' : 'Tìm vị trí'}
+        </Button>
       </div>
 
       {/* Map Container */}
@@ -486,18 +498,19 @@ export function MapAddressPicker({
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="primary"
               onClick={handleApply}
-              className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 shadow-xs ${
+              leftIcon={<Check className="h-4 w-4" />}
+              className={`shrink-0 shadow-xs ${
                 isApplied
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-[#2AC1BC] text-white hover:bg-[#25aca7]'
+                  ? '!bg-emerald-600 hover:!bg-emerald-700 text-white'
+                  : 'bg-[#2AC1BC] hover:bg-[#25aca7] text-white'
               }`}
             >
-              <Check className="h-4 w-4" />
-              <span>{isApplied ? 'Đã áp dụng vào form!' : 'Áp dụng vào form'}</span>
-            </button>
+              {isApplied ? 'Đã áp dụng vào form!' : 'Áp dụng vào form'}
+            </Button>
           </div>
         </div>
       )}

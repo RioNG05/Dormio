@@ -43,10 +43,32 @@ export interface OrderStatusResponse {
   paidAt?: string
 }
 
+export interface CurrentSubscriptionResponse {
+  tier: 'free' | 'plus' | 'pro'
+  hasActiveSubscription: boolean
+  subscription: {
+    id: string
+    planName: 'free' | 'plus' | 'pro'
+    startDate: string
+    endDate: string
+    billingCycle: string
+    price: number
+  } | null
+}
+
 export const subscriptionService = {
   async getPlans(): Promise<SubscriptionPlanItem[]> {
     const res = await api.get<any>('/v1/landlord/subscriptions/plans')
     return res?.data || res || []
+  },
+
+  async getCurrentSubscription(buildingId?: string): Promise<CurrentSubscriptionResponse> {
+    const headers: Record<string, string> = {}
+    if (buildingId) {
+      headers['X-Boarding-House-Id'] = buildingId
+    }
+    const res = await api.get<any>('/v1/landlord/subscriptions/current', { headers, silent: true })
+    return res?.data || res || { tier: 'free', hasActiveSubscription: false, subscription: null }
   },
 
   async getTierStatus(planName: string): Promise<TierStatusResponse> {

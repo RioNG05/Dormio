@@ -38,6 +38,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput } from '@/components/ui'
 
 function PaymentsContent() {
   const { activeBuilding } = useAuth()
@@ -340,104 +341,96 @@ function PaymentsContent() {
       <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Box */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder="Tìm theo mã giao dịch, số phòng, số biên nhận, tên khách..."
-              className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all"
-            />
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
+              setCurrentPage(1)
+            }}
+            placeholder="Tìm theo mã giao dịch, số phòng, số biên nhận, tên khách..."
+            containerClassName="flex-1 space-y-0"
+            className="py-2 bg-zinc-50 border-zinc-200 text-xs font-semibold"
+          />
 
           {/* Filter Dropdowns Row */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Room Filter Dropdown */}
-            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800">
-              <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">Phòng:</span>
-              <select
-                value={selectedRoom}
-                onChange={e => {
-                  setSelectedRoom(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs max-w-[120px] truncate"
-              >
-                <option value="all">Tất cả phòng</option>
-                {availableRooms.map(r => (
-                  <option key={r.id} value={r.id}>
-                    Phòng {r.roomNumber}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectInput
+              value={selectedRoom}
+              onChange={e => {
+                setSelectedRoom(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: 'Tất cả phòng' },
+                ...availableRooms.map(r => ({
+                  value: r.id,
+                  label: `Phòng ${r.roomNumber}`,
+                })),
+              ]}
+              containerClassName="space-y-0 max-w-[150px]"
+              className="py-2 text-xs font-bold bg-zinc-50"
+            />
 
             {/* Method Filter Dropdown */}
-            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800">
-              <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">
-                Hình thức:
-              </span>
-              <select
-                value={selectedMethod}
-                onChange={e => {
-                  setSelectedMethod(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs"
-              >
-                <option value="all">Tất cả hình thức</option>
-                <option value="banking">VietQR / Chuyển khoản</option>
-                <option value="cash">Tiền mặt</option>
-              </select>
-            </div>
+            <SelectInput
+              value={selectedMethod}
+              onChange={e => {
+                setSelectedMethod(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: 'Tất cả hình thức' },
+                { value: 'banking', label: 'VietQR / Chuyển khoản' },
+                { value: 'cash', label: 'Tiền mặt' },
+              ]}
+              containerClassName="space-y-0 max-w-[170px]"
+              className="py-2 text-xs font-bold bg-zinc-50"
+            />
 
             {/* Month Filter Dropdown */}
-            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800">
-              <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">Tháng:</span>
-              <select
-                value={selectedMonth}
-                onChange={e => {
-                  setSelectedMonth(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs"
-              >
-                <option value="all">Tất cả tháng</option>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={String(i + 1)}>
-                    Tháng {i + 1}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SelectInput
+              value={selectedMonth}
+              onChange={e => {
+                setSelectedMonth(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: 'Tất cả tháng' },
+                ...Array.from({ length: 12 }, (_, i) => ({
+                  value: String(i + 1),
+                  label: `Tháng ${i + 1}`,
+                })),
+              ]}
+              containerClassName="space-y-0 max-w-[130px]"
+              className="py-2 text-xs font-bold bg-zinc-50"
+            />
 
             {/* Year Filter Dropdown */}
-            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800">
-              <span className="text-zinc-500 font-medium text-[11px] hidden sm:inline">Năm:</span>
-              <select
-                value={selectedYear}
-                onChange={e => {
-                  setSelectedYear(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="bg-transparent font-black text-zinc-900 focus:outline-none cursor-pointer pr-1 text-xs"
-              >
-                <option value="all">Tất cả năm</option>
-                <option value="2026">2026</option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-              </select>
-            </div>
+            <SelectInput
+              value={selectedYear}
+              onChange={e => {
+                setSelectedYear(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: 'Tất cả năm' },
+                { value: '2026', label: '2026' },
+                { value: '2025', label: '2025' },
+                { value: '2024', label: '2024' },
+              ]}
+              containerClassName="space-y-0 max-w-[130px]"
+              className="py-2 text-xs font-bold bg-zinc-50"
+            />
 
             {/* View Switcher (Rule 9) */}
             <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'grid'
                     ? 'bg-white text-zinc-900 shadow-2xs'
                     : 'text-zinc-500 hover:text-zinc-900'
@@ -445,10 +438,13 @@ function PaymentsContent() {
                 title="Dạng Lưới (Grid - Mặc định)"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'table'
                     ? 'bg-white text-zinc-900 shadow-2xs'
                     : 'text-zinc-500 hover:text-zinc-900'
@@ -456,56 +452,65 @@ function PaymentsContent() {
                 title="Dạng Bảng (Table)"
               >
                 <List className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Quick Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setActiveTab('all')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
+            className={`h-auto px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
               activeTab === 'all'
-                ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#25ad87]'
                 : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
             }`}
           >
             Tất cả giao dịch ({summary.totalTransactions})
-          </button>
+          </Button>
 
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setActiveTab('banking')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+            className={`h-auto px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
               activeTab === 'banking'
-                ? 'bg-indigo-600 text-white shadow-2xs'
+                ? 'bg-indigo-600 text-white shadow-2xs hover:bg-indigo-700'
                 : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-indigo-400" />
             VietQR / Ngân hàng ({formatLargeMoney(summary.bankingRevenue)})
-          </button>
+          </Button>
 
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setActiveTab('cash')
               setCurrentPage(1)
             }}
-            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+            className={`h-auto px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
               activeTab === 'cash'
-                ? 'bg-amber-600 text-white shadow-2xs'
+                ? 'bg-amber-600 text-white shadow-2xs hover:bg-amber-700'
                 : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-amber-400" />
             Tiền mặt ({formatLargeMoney(summary.cashRevenue)})
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -530,7 +535,10 @@ function PaymentsContent() {
             </p>
           </div>
           <div className="pt-2 flex items-center justify-center gap-3">
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setSearchQuery('')
                 setSelectedRoom('all')
@@ -539,10 +547,10 @@ function PaymentsContent() {
                 setSelectedYear('all')
                 setActiveTab('all')
               }}
-              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer border-0 h-auto"
             >
               Đặt lại bộ lọc
-            </button>
+            </Button>
             <Link
               href="/landlord/invoices?status=unpaid"
               className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm transition-all"
@@ -665,10 +673,13 @@ function PaymentsContent() {
                       </span>
                       <div className="flex items-center gap-1.5">
                         {evidencePhotos.slice(0, 2).map((photo, idx) => (
-                          <button
+                          <Button
                             key={idx}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setPreviewImageUrl(photo.imageUrl)}
-                            className="w-7 h-7 rounded-lg overflow-hidden border border-zinc-200 hover:border-[#2AC1BC] transition-all cursor-pointer relative group/thumb"
+                            className="h-7 w-7 p-0 rounded-lg overflow-hidden border border-zinc-200 hover:border-[#2AC1BC] transition-all cursor-pointer relative group/thumb"
                             title={`Xem ảnh ${photo.serviceName}: ${photo.readingValue}`}
                           >
                             <img
@@ -679,7 +690,7 @@ function PaymentsContent() {
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition-opacity">
                               <Maximize2 className="w-2.5 h-2.5 text-white" />
                             </div>
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -692,12 +703,15 @@ function PaymentsContent() {
                     <Calendar className="w-3 h-3 text-zinc-400" /> {formatDateTime(p.paidAt)}
                   </span>
 
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedPayment(p)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-black rounded-xl transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-black rounded-xl transition-all cursor-pointer h-auto"
                   >
                     <Eye className="w-3.5 h-3.5" /> Xem Biên Nhận
-                  </button>
+                  </Button>
                 </div>
               </div>
             )
@@ -780,10 +794,13 @@ function PaymentsContent() {
                         {evidencePhotos.length > 0 ? (
                           <div className="flex items-center gap-1">
                             {evidencePhotos.slice(0, 2).map((photo, idx) => (
-                              <button
+                              <Button
                                 key={idx}
+                                type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => setPreviewImageUrl(photo.imageUrl)}
-                                className="w-6 h-6 rounded overflow-hidden border border-zinc-200 hover:border-[#2AC1BC] cursor-pointer"
+                                className="h-6 w-6 p-0 rounded overflow-hidden border border-zinc-200 hover:border-[#2AC1BC] cursor-pointer"
                                 title={`Xem ${photo.serviceName}: ${photo.readingValue}`}
                               >
                                 <img
@@ -791,7 +808,7 @@ function PaymentsContent() {
                                   alt={photo.serviceName}
                                   className="w-full h-full object-cover"
                                 />
-                              </button>
+                              </Button>
                             ))}
                             {evidencePhotos.length > 2 && (
                               <span className="text-[10px] text-zinc-400 font-bold">
@@ -805,12 +822,15 @@ function PaymentsContent() {
                       </td>
 
                       <td className="px-5 py-4 text-right">
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setSelectedPayment(p)}
-                          className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 font-black rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
+                          className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 font-black rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
                         >
                           <Eye className="w-3.5 h-3.5" /> Biên Nhận
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   )
@@ -826,21 +846,20 @@ function PaymentsContent() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-600 shadow-2xs">
           {/* Left: Displayed Range & Custom Page Size Input */}
           <div className="flex items-center gap-3">
-            <span>
+            <span className="flex items-center gap-1">
               Hiển thị{' '}
-              <select
-                value={pageSize}
+              <NumberInput
+                min={1}
+                max={500}
+                value={pageSize || ''}
                 onChange={e => {
-                  setPageSize(Number(e.target.value))
+                  const val = parseInt(e.target.value)
+                  setPageSize(isNaN(val) || val <= 0 ? 1 : val)
                   setCurrentPage(1)
                 }}
-                className="mx-1 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg font-black text-zinc-900 focus:outline-none cursor-pointer"
-              >
-                <option value="6">6</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
-              </select>{' '}
+                containerClassName="w-16 space-y-0"
+                className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
+              />{' '}
               / trang
             </span>
             <span className="text-zinc-300">|</span>
@@ -855,59 +874,74 @@ function PaymentsContent() {
           {/* Right: 5-Page Window Jumping Pagination Controls */}
           <div className="flex items-center gap-1">
             {/* First Page Button */}
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Về trang đầu"
             >
               <ChevronsLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
             {/* Jump -5 Pages */}
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
               disabled={currentPage <= 5}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Lùi 5 trang"
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
 
             {/* 5-Page Window Number Buttons */}
             {visiblePages.map(pageNum => (
-              <button
+              <Button
                 key={pageNum}
+                type="button"
+                variant={currentPage === pageNum ? 'primary' : 'outline'}
+                size="sm"
                 onClick={() => setCurrentPage(pageNum)}
-                className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                className={`h-8 w-8 p-0 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   currentPage === pageNum
-                    ? 'bg-[#2AC1BC] text-white shadow-2xs'
+                    ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#25ad87]'
                     : 'border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700'
                 }`}
               >
                 {pageNum}
-              </button>
+              </Button>
             ))}
 
             {/* Jump +5 Pages */}
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
               disabled={currentPage + 5 > totalPages}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Tiến 5 trang"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
 
             {/* Last Page Button */}
-            <button
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Đến trang cuối"
             >
               <ChevronsRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -939,20 +973,26 @@ function PaymentsContent() {
               </div>
 
               <div className="flex items-center gap-2 print:hidden">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={handlePrintReceipt}
-                  className="p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
+                  className="h-9 w-9 p-0 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
                   title="In biên nhận"
                 >
                   <Printer className="w-5 h-5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setSelectedPayment(null)}
-                  className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
+                  className="h-9 w-9 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
                   title="Đóng modal"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -1081,9 +1121,12 @@ function PaymentsContent() {
                       className="p-3 bg-amber-50/50 border border-amber-200/80 rounded-2xl flex items-center gap-3"
                     >
                       {mr.imageUrl ? (
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setPreviewImageUrl(mr.imageUrl)}
-                          className="w-16 h-16 rounded-xl overflow-hidden border border-amber-300/80 shrink-0 relative group/photo cursor-pointer"
+                          className="h-16 w-16 p-0 rounded-xl overflow-hidden border border-amber-300/80 shrink-0 relative group/photo cursor-pointer"
                         >
                           <img
                             src={mr.imageUrl}
@@ -1093,7 +1136,7 @@ function PaymentsContent() {
                           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/photo:opacity-100 flex items-center justify-center transition-opacity">
                             <Maximize2 className="w-3.5 h-3.5 text-white" />
                           </div>
-                        </button>
+                        </Button>
                       ) : (
                         <div className="w-16 h-16 rounded-xl bg-zinc-100 flex items-center justify-center shrink-0 text-zinc-400">
                           <Camera className="w-6 h-6 stroke-1" />
@@ -1108,12 +1151,15 @@ function PaymentsContent() {
                           Chỉ số: {mr.readingValue}
                         </span>
                         {mr.imageUrl && (
-                          <button
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setPreviewImageUrl(mr.imageUrl)}
-                            className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer flex items-center gap-1"
+                            className="h-auto p-0 text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer flex items-center gap-1 hover:bg-transparent"
                           >
                             <span>Xem ảnh phóng to</span> &rarr;
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -1126,18 +1172,24 @@ function PaymentsContent() {
             <div className="pt-4 border-t border-zinc-100 flex items-center justify-between print:hidden">
               <span className="text-[11px] text-zinc-400">Xác thực số hóa bởi Dormio BHMS</span>
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={handlePrintReceipt}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                  className="h-auto px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border-0"
                 >
                   <Printer className="w-3.5 h-3.5" /> In Biên Nhận
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
                   onClick={() => setSelectedPayment(null)}
-                  className="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black rounded-xl shadow-sm transition-all cursor-pointer"
+                  className="h-auto px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black rounded-xl shadow-sm transition-all cursor-pointer"
                 >
                   Đóng
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1148,13 +1200,16 @@ function PaymentsContent() {
       {previewImageUrl && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="relative max-w-3xl w-full max-h-[90vh] flex flex-col items-center">
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setPreviewImageUrl(null)}
-              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer"
+              className="absolute -top-12 right-0 h-10 w-10 p-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer"
               title="Đóng ảnh"
             >
               <X className="w-6 h-6" />
-            </button>
+            </Button>
             <img
               src={previewImageUrl}
               alt="Bằng chứng công tơ điện nước"

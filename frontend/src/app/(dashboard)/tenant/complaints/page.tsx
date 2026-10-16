@@ -26,7 +26,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, TextInput, TextareaInput } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
@@ -336,15 +336,18 @@ export default function TenantAdminComplaintsPage() {
         <div className="p-4 sm:p-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-zinc-50/50">
           {/* Status Capsule Filter Tabs with Badge Counts */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto p-1 bg-zinc-100/80 rounded-2xl">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
               onClick={() => {
                 setStatusFilter('all')
                 setCurrentPage(1)
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
                 statusFilter === 'all'
-                  ? 'bg-white text-zinc-900 shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900'
+                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-transparent'
               }`}
             >
               <span>{t('tenantTabAllIssues')}</span>
@@ -355,16 +358,19 @@ export default function TenantAdminComplaintsPage() {
               >
                 {complaints.length}
               </span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
               onClick={() => {
                 setStatusFilter('pending')
                 setCurrentPage(1)
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
                 statusFilter === 'pending'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900'
+                  ? 'bg-amber-500 text-white shadow-xs hover:bg-amber-500'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-transparent'
               }`}
             >
               <div className="flex items-center gap-1">
@@ -380,16 +386,19 @@ export default function TenantAdminComplaintsPage() {
               >
                 {complaints.filter(c => c.status === 'pending').length}
               </span>
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
               onClick={() => {
                 setStatusFilter('resolved')
                 setCurrentPage(1)
               }}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
                 statusFilter === 'resolved'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900'
+                  ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-transparent'
               }`}
             >
               <div className="flex items-center gap-1">
@@ -409,49 +418,54 @@ export default function TenantAdminComplaintsPage() {
                   ).length
                 }
               </span>
-            </button>
+            </Button>
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             {/* View Mode Toggle: Grid vs Table (Rule #9) */}
             <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-xl shrink-0">
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                   viewMode === 'grid'
-                    ? 'bg-zinc-900 text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
+                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
                 }`}
                 title={t('tenantGridView')}
               >
                 <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-zinc-900 text-white shadow-xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
+                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
                 }`}
                 title={t('tenantTableView')}
               >
                 <List className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
-                }}
-                placeholder={t('tenantSearchGrievancePlaceholder')}
-                className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
-              />
-            </div>
+            <TextInput
+              type="text"
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value)
+                setCurrentPage(1)
+              }}
+              placeholder={t('tenantSearchGrievancePlaceholder')}
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              className="py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              containerClassName="w-full sm:w-64 space-y-0"
+            />
           </div>
         </div>
 
@@ -551,9 +565,14 @@ export default function TenantAdminComplaintsPage() {
                       </td>
                       <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-1 text-zinc-400 hover:text-zinc-700">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          type="button"
+                          className="p-1 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
+                        >
                           <Eye className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))
@@ -585,17 +604,20 @@ export default function TenantAdminComplaintsPage() {
             </Button>
 
             {Array.from({ length: totalPages }).map((_, i) => (
-              <button
+              <Button
                 key={i}
+                variant={currentPage === i + 1 ? 'primary' : 'ghost'}
+                size="sm"
+                type="button"
                 onClick={() => setCurrentPage(i + 1)}
-                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   currentPage === i + 1
-                    ? 'bg-[#2AC1BC] text-white shadow-xs'
+                    ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
                     : 'text-zinc-600 hover:bg-zinc-100'
                 }`}
               >
                 {i + 1}
-              </button>
+              </Button>
             ))}
 
             <Button
@@ -633,12 +655,15 @@ export default function TenantAdminComplaintsPage() {
                   <p className="text-xs text-zinc-400">{t('tenantCreateGrievanceModalSubtitle')}</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={handleCloseModal}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
+                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <form
@@ -667,20 +692,22 @@ export default function TenantAdminComplaintsPage() {
                     },
                     { key: 'high', label: t('tenantPriorityUrgentDesc'), color: 'border-rose-300' },
                   ].map(p => (
-                    <button
+                    <Button
                       key={p.key}
+                      variant="secondary"
+                      size="sm"
                       type="button"
                       onClick={() => setPriority(p.key as GrievancePriority)}
-                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      className={`p-2.5 h-auto rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                         priority === p.key
                           ? p.key === 'high'
-                            ? 'bg-rose-50 border-rose-500 text-rose-700 shadow-xs'
-                            : 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] shadow-xs'
+                            ? 'bg-rose-50 border-rose-500 text-rose-700 shadow-xs hover:bg-rose-50'
+                            : 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] shadow-xs hover:bg-[#2AC1BC]/10'
                           : 'bg-white text-zinc-600 hover:bg-zinc-50'
                       }`}
                     >
                       {p.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -690,11 +717,12 @@ export default function TenantAdminComplaintsPage() {
                 <label className="font-bold text-zinc-700 block mb-1.5">
                   {t('tenantFieldTitleLabel')} <span className="text-rose-500">*</span>
                 </label>
-                <input
+                <TextInput
                   type="text"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder={t('tenantFieldTitlePlaceholder')}
+                  containerClassName="space-y-0"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
               </div>
@@ -704,11 +732,12 @@ export default function TenantAdminComplaintsPage() {
                 <label className="font-bold text-zinc-700 block mb-1.5">
                   {t('tenantFieldDescLabel')} <span className="text-rose-500">*</span>
                 </label>
-                <textarea
+                <TextareaInput
                   rows={4}
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder={t('tenantFieldDescPlaceholder')}
+                  containerClassName="space-y-0"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs leading-relaxed"
                 />
               </div>
@@ -727,33 +756,37 @@ export default function TenantAdminComplaintsPage() {
                       className="relative h-20 rounded-xl overflow-hidden border border-zinc-200 group"
                     >
                       <img src={img} alt="Evidence" className="w-full h-full object-cover" />
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         type="button"
                         onClick={() => removeUploadedImage(idx)}
-                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 p-1 h-auto bg-black/60 hover:bg-black/80 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="w-3.5 h-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   ))}
 
                   {uploadedImages.length < 5 && (
-                    <button
+                    <Button
+                      variant="ghost"
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-20 rounded-xl border border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer"
+                      className="h-20 w-full rounded-xl border border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer"
                     >
                       <UploadCloud className="w-5 h-5 mb-1" />
                       <span className="text-[10px] font-bold">{t('tenantAddPhotoBtn')}</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
-                <input
+                <TextInput
                   ref={fileInputRef}
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={handleFileUpload}
+                  containerClassName="hidden"
                   className="hidden"
                 />
               </div>
@@ -797,12 +830,15 @@ export default function TenantAdminComplaintsPage() {
                 </span>
                 {getStatusBadge(selectedGrievance.status)}
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setSelectedGrievance(null)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
+                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed">
@@ -953,12 +989,15 @@ export default function TenantAdminComplaintsPage() {
               <span className="text-xs font-bold text-zinc-700">
                 {t('tenantEvidencePhotoTitle')}
               </span>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
                 onClick={() => setPreviewImage(null)}
-                className="p-1 hover:bg-zinc-100 rounded-full"
+                className="p-1 h-auto hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="max-h-[70vh] overflow-hidden rounded-2xl bg-zinc-100">
               <img src={previewImage} alt="Preview" className="w-full h-full object-contain" />

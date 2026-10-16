@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { postService, PublicPostListing } from '@/services/post.service'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
 import {
   ArrowLeft,
   Newspaper,
@@ -440,86 +441,100 @@ export default function AdminPostDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Lock / Unlock Post */}
           {post.status === 'locked' ? (
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => setIsUnlockModalOpen(true)}
               disabled={actionLoading}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+              className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               title={t('adminModActionUnlock')}
             >
               <Unlock className="w-3.5 h-3.5" />
               <span>{t('adminModActionUnlock')}</span>
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="danger"
+              size="sm"
               onClick={() => {
                 setLockReason('')
                 setLockReasonError('')
                 setIsLockModalOpen(true)
               }}
               disabled={actionLoading}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+              className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               title={t('adminModActionLock')}
             >
               <Lock className="w-3.5 h-3.5" />
               <span>{t('adminModActionLock')}</span>
-            </button>
+            </Button>
           )}
 
           {/* Status Transitions: Publish / Revert to Draft (when not locked) */}
           {post.status !== 'locked' &&
             (post.status === 'posted' ? (
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleRevertToDraft}
                 disabled={actionLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                className="h-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                 title={t('adminBlogsDetailRevertTitle')}
               >
                 <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
                 <span>{t('adminBlogsDetailRevertBtn')}</span>
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handlePublishPost}
                 disabled={actionLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                className="h-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                 title={t('adminBlogsDetailPublishTitle')}
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>{t('adminBlogsDetailPublishBtn')}</span>
-              </button>
+              </Button>
             ))}
 
           {/* Edit Content */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleOpenEdit}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailEditBtn')}</span>
-          </button>
+          </Button>
 
           {/* Delete Post */}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setDeleteReason('')
               setDeleteError('')
               setIsDeleteModalOpen(true)
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailDeleteBtn')}</span>
-          </button>
+          </Button>
 
           {/* Refresh */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => fetchPostDetail(true)}
             disabled={loading}
-            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors shadow-2xs cursor-pointer"
+            className="h-auto p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors shadow-2xs cursor-pointer"
             title={t('adminModRefresh')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -540,12 +555,14 @@ export default function AdminPostDetailPage() {
             )}
             <span>{feedbackMsg.text}</span>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setFeedbackMsg(null)}
-            className="p-1 hover:bg-black/5 rounded-lg text-zinc-500 cursor-pointer"
+            className="h-auto p-1 hover:bg-black/5 rounded-lg text-zinc-500 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -568,13 +585,15 @@ export default function AdminPostDetailPage() {
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => setIsUnlockModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            className="h-auto px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
           >
             <Unlock className="w-3.5 h-3.5" />
             <span>{t('adminModActionUnlock')}</span>
-          </button>
+          </Button>
         </div>
       )}
 
@@ -652,9 +671,11 @@ export default function AdminPostDetailPage() {
               <div className="flex items-center gap-1.5 font-mono">
                 <span className="text-zinc-400">UUID:</span>
                 <span className="text-zinc-700 font-semibold">{post.id}</span>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleCopyId}
-                  className="p-1 text-zinc-400 hover:text-zinc-700 rounded transition-colors cursor-pointer"
+                  className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded transition-colors cursor-pointer"
                   title={t('adminBlogsDetailCopyUuid')}
                 >
                   {copied ? (
@@ -662,7 +683,7 @@ export default function AdminPostDetailPage() {
                   ) : (
                     <Copy className="w-3 h-3 text-zinc-400" />
                   )}
-                </button>
+                </Button>
               </div>
 
               <div className="flex items-center gap-1">
@@ -737,17 +758,19 @@ export default function AdminPostDetailPage() {
             {allImages.length > 1 && (
               <div className="flex items-center gap-2.5 overflow-x-auto pb-1 pt-1">
                 {allImages.map((img, idx) => (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     key={img.id || idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                    className={`h-auto p-0 relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                       activeImageIndex === idx
                         ? 'border-orange-600 ring-2 ring-orange-500/20 shadow-xs'
                         : 'border-zinc-200 hover:border-zinc-300 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -882,12 +905,14 @@ export default function AdminPostDetailPage() {
                   {t('adminBlogsDetailEditModalTitle')}
                 </h2>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleRequestCloseEdit}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                className="h-auto p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
@@ -899,94 +924,78 @@ export default function AdminPostDetailPage() {
               )}
 
               {/* Title */}
-              <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {t('adminBlogsFieldTitle')}:
-                </label>
-                <input
-                  type="text"
-                  value={formTitle}
-                  onChange={e => setFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
-                />
-              </div>
+              <TextInput
+                label={`${t('adminBlogsFieldTitle')}:`}
+                type="text"
+                value={formTitle}
+                onChange={e => setFormTitle(e.target.value)}
+                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
+              />
 
               {/* Status & Deposit */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-zinc-700 block">
-                    {t('adminBlogsFieldStatus')}:
-                  </label>
-                  <select
-                    value={formStatus}
-                    onChange={e => setFormStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-zinc-800 cursor-pointer focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="posted">{t('adminBlogsStatusPublished')}</option>
-                    <option value="draft">{t('adminBlogsStatusDraft')}</option>
-                    <option value="hidden">{t('adminBlogsStatusHidden')}</option>
-                    <option value="locked">{t('adminModBadgeLocked')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={`${t('adminBlogsFieldStatus')}:`}
+                  value={formStatus}
+                  onChange={e => setFormStatus(e.target.value as any)}
+                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-zinc-800 cursor-pointer focus:outline-none focus:border-orange-500"
+                  options={[
+                    { value: 'posted', label: t('adminBlogsStatusPublished') },
+                    { value: 'draft', label: t('adminBlogsStatusDraft') },
+                    { value: 'hidden', label: t('adminBlogsStatusHidden') },
+                    { value: 'locked', label: t('adminModBadgeLocked') },
+                  ]}
+                />
 
-                <div className="space-y-1">
-                  <label className="font-bold text-zinc-700 block">
-                    {t('adminBlogsFieldDeposit')}:
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={100000}
-                    value={formDepositAmount}
-                    onChange={e => setFormDepositAmount(Number(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
-                  />
-                </div>
+                <NumberInput
+                  label={`${t('adminBlogsFieldDeposit')}:`}
+                  min={0}
+                  step={100000}
+                  value={formDepositAmount}
+                  onChange={e => setFormDepositAmount(Number(e.target.value) || 0)}
+                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
+                />
               </div>
 
               {/* Cover Image URL */}
-              <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {t('adminBlogsFieldCoverImage')}:
-                </label>
-                <input
-                  type="text"
-                  value={formCoverImage}
-                  onChange={e => setFormCoverImage(e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white"
-                />
-              </div>
+              <TextInput
+                label={`${t('adminBlogsFieldCoverImage')}:`}
+                type="text"
+                value={formCoverImage}
+                onChange={e => setFormCoverImage(e.target.value)}
+                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white"
+              />
 
               {/* Content */}
-              <div className="space-y-1">
-                <label className="font-bold text-zinc-700 block">
-                  {t('adminBlogsFieldContent')}:
-                </label>
-                <textarea
-                  rows={8}
-                  value={formContent}
-                  onChange={e => setFormContent(e.target.value)}
-                  className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
-                />
-              </div>
+              <TextareaInput
+                label={`${t('adminBlogsFieldContent')}:`}
+                rows={8}
+                value={formContent}
+                onChange={e => setFormContent(e.target.value)}
+                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
+              />
             </div>
 
             <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleRequestCloseEdit}
                 disabled={isSaving}
-                className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="h-auto px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleSaveEdit}
                 disabled={isSaving}
-                className="px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+                isLoading={isSaving}
+                className="h-auto px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
               >
-                {isSaving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminBlogsDetailSaveChanges')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1027,25 +1036,28 @@ export default function AdminPostDetailPage() {
                   t('adminModLockPresetScamDeposit'),
                   t('adminModLockPresetViolation'),
                 ].map(preset => (
-                  <button
+                  <Button
                     key={preset}
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => {
                       setLockReason(preset)
                       setLockReasonError('')
                     }}
-                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
+                    className={`h-auto px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
                       lockReason === preset
                         ? 'bg-red-50 border-red-300 text-red-700'
                         : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
                     }`}
                   >
                     {preset}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
-              <textarea
+              <TextareaInput
+                label={t('adminModLockReasonLabel')}
                 rows={3}
                 value={lockReason}
                 onChange={e => {
@@ -1053,26 +1065,30 @@ export default function AdminPostDetailPage() {
                   if (e.target.value.trim()) setLockReasonError('')
                 }}
                 placeholder={t('adminModLockReasonPlaceholder')}
-                className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed mt-1"
+                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed mt-1"
               />
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleRequestCloseLock}
                 disabled={isLocking}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmLock}
                 disabled={isLocking}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isLocking}
+                className="h-auto px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
-                {isLocking && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminModLockConfirmBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1097,21 +1113,25 @@ export default function AdminPostDetailPage() {
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsUnlockModalOpen(false)}
                 disabled={isUnlocking}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isUnlocking}
+                className="h-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
-                {isUnlocking && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminModUnlockConfirmBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1148,10 +1168,8 @@ export default function AdminPostDetailPage() {
             )}
 
             <div className="space-y-1 text-xs">
-              <label className="font-bold text-zinc-700 block">
-                {t('adminBlogsDeleteReasonLabel')}
-              </label>
-              <textarea
+              <TextareaInput
+                label={t('adminBlogsDeleteReasonLabel')}
                 rows={3}
                 value={deleteReason}
                 onChange={e => {
@@ -1159,7 +1177,7 @@ export default function AdminPostDetailPage() {
                   if (e.target.value.trim()) setDeleteError('')
                 }}
                 placeholder={t('adminBlogsDeleteReasonPlaceholder')}
-                className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed"
+                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed"
               />
               <div className="text-[10px] text-zinc-400 text-right">
                 {deleteReason.length} / 500 {t('adminBlogsDetailCharsUnit')}
@@ -1167,21 +1185,25 @@ export default function AdminPostDetailPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleRequestCloseDelete}
                 disabled={isDeleting}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting || !deleteReason.trim()}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                isLoading={isDeleting}
+                className="h-auto px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isDeleting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminBlogsDetailConfirmDeleteAndDispatch')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1203,18 +1225,22 @@ export default function AdminPostDetailPage() {
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsContinueEditing')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
+                className="h-auto px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
               >
                 {t('adminBlogsDiscardAndClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

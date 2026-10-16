@@ -34,6 +34,17 @@ import {
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  Checkbox,
+  Form,
+  SearchInput,
+} from '@/components/ui'
 import { formatCurrency } from '@/utils'
 import {
   bulkGenerateRooms,
@@ -85,10 +96,7 @@ export default function RoomsPage() {
   const [invoiceFilter, setInvoiceFilter] = useState('')
 
   // Feedback Notification
-  const [toastMessage, setToastMessage] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
+  const { toast } = useToast()
 
   // Modals & dirty tracking according to Rule 10
   const [isSingleModalOpen, setIsSingleModalOpen] = useState(false)
@@ -109,7 +117,7 @@ export default function RoomsPage() {
     isOpen: false,
     title: t('landlordRoomsConfirmCloseTitle'),
     message: t('landlordRoomsConfirmCloseMessage'),
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   // Single room form states
@@ -403,10 +411,7 @@ export default function RoomsPage() {
           imageUrl: formImageUrl.trim() || undefined,
           serviceIds: selectedServiceIds,
         })
-        setToastMessage({
-          type: 'success',
-          text: t('landlordRoomsToastUpdateSuccess', { room: formRoomNumber.trim() }),
-        })
+        toast.success(t('landlordRoomsToastUpdateSuccess', { room: formRoomNumber.trim() }))
       } else {
         // Create Room
         await createRoom(buildingId, {
@@ -419,10 +424,7 @@ export default function RoomsPage() {
           imageUrl: formImageUrl.trim() || undefined,
           serviceIds: selectedServiceIds,
         })
-        setToastMessage({
-          type: 'success',
-          text: t('landlordRoomsToastCreateSuccess', { room: formRoomNumber.trim() }),
-        })
+        toast.success(t('landlordRoomsToastCreateSuccess', { room: formRoomNumber.trim() }))
       }
 
       // Refresh room list from server
@@ -550,10 +552,7 @@ export default function RoomsPage() {
         serviceIds: bulkServiceIds,
       })
 
-      setToastMessage({
-        type: 'success',
-        text: t('landlordRoomsToastBulkSuccess', { count: response.count }),
-      })
+      toast.success(t('landlordRoomsToastBulkSuccess', { count: response.count }))
 
       // Refresh room list from server
       await fetchBuildingData(buildingId)
@@ -626,6 +625,8 @@ export default function RoomsPage() {
   const currentPageRoomIds = paginatedRooms.map(r => r.fullRoomId || r.id)
   const isAllCurrentPageSelected =
     currentPageRoomIds.length > 0 && currentPageRoomIds.every(id => selectedRoomIds.includes(id))
+  const isIndeterminate =
+    currentPageRoomIds.some(id => selectedRoomIds.includes(id)) && !isAllCurrentPageSelected
 
   const toggleSelectAllCurrentPage = () => {
     if (isAllCurrentPageSelected) {
@@ -651,30 +652,6 @@ export default function RoomsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Toast Feedback */}
-      {toastMessage && (
-        <div
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-sm font-bold animate-in slide-in-from-top-2 duration-200 ${
-            toastMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : 'bg-red-50 text-red-800 border-red-200'
-          }`}
-        >
-          {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
-          )}
-          <span>{toastMessage.text}</span>
-          <button
-            onClick={() => setToastMessage(null)}
-            className="ml-2 p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -684,33 +661,31 @@ export default function RoomsPage() {
           <p className="text-sm text-zinc-500 mt-0.5">{t('landlordRoomsPageSubtitle')}</p>
         </div>
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
-          <button className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
-            <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
-          </button>
-          <button className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5">
-            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
-          </button>
-
           {/* Bulk Generate Trigger Button */}
-          <button
+          <Button
+            type="button"
+            variant="secondary"
             onClick={() => {
               resetBulkForm()
               setIsBulkModalOpen(true)
             }}
-            className="cursor-pointer px-4 py-2 text-xs sm:text-sm font-bold text-zinc-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+            leftIcon={<Sparkles className="w-4 h-4 text-amber-700" />}
+            className="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-zinc-800"
             title={t('landlordRoomsBulkGenerateTooltip')}
           >
-            <Sparkles className="w-4 h-4 text-amber-700" />
             <span>{t('landlordRoomsBulkGenerateBtn')}</span>
-          </button>
+          </Button>
 
           {/* Single Room Add Button */}
-          <button
+          <Button
+            type="button"
+            variant="primary"
             onClick={handleOpenCreateModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+            leftIcon={<Plus className="w-4 h-4" />}
+            className="w-full sm:w-auto"
           >
-            <Plus className="w-4 h-4" /> {t('landlordRoomsAddRoomBtn')}
-          </button>
+            {t('landlordRoomsAddRoomBtn')}
+          </Button>
         </div>
       </div>
 
@@ -840,87 +815,83 @@ export default function RoomsPage() {
         <div className="p-4 border-b border-zinc-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-zinc-50/40">
           <div className="flex items-center gap-3">
             {/* Search Input */}
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder={t('landlordRoomsSearchInputPlaceholder')}
-                value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all shadow-2xs"
-              />
-            </div>
+            <SearchInput
+              placeholder={t('landlordRoomsSearchInputPlaceholder')}
+              value={searchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-full sm:w-72"
+            />
 
             {/* View Switcher: Grid vs Table (Rule 9: Grid default) */}
             <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <button
+              <Button
                 type="button"
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
                 onClick={() => handleViewModeChange('grid')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                leftIcon={<Grid className="w-3.5 h-3.5" />}
+                className={
                   viewMode === 'grid'
                     ? 'bg-white text-zinc-900 shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-800'
-                }`}
+                }
                 title={t('landlordRoomsViewGridTooltip')}
               >
-                <Grid className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('landlordRoomsViewGrid')}</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="sm"
                 onClick={() => handleViewModeChange('table')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                leftIcon={<List className="w-3.5 h-3.5" />}
+                className={
                   viewMode === 'table'
                     ? 'bg-white text-zinc-900 shadow-sm'
                     : 'text-zinc-500 hover:text-zinc-800'
-                }`}
+                }
                 title={t('landlordRoomsViewTableTooltip')}
               >
-                <List className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('landlordRoomsViewTable')}</span>
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={e => {
-                  setStatusFilter(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="pl-3 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-2xs"
-              >
-                <option value="">{t('landlordRoomsAllStatuses')}</option>
-                <option value="Trống">{t('landlordRoomsStatusVacant')}</option>
-                <option value="Đang thuê">{t('landlordRoomsStatusOccupied')}</option>
-                <option value="Bảo trì">{t('landlordRoomsStatusMaintenance')}</option>
-                <option value="Đặt cọc">{t('landlordRoomsStatusReserved')}</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-            </div>
+            <SelectInput
+              value={statusFilter}
+              onChange={e => {
+                setStatusFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-auto min-w-[140px]"
+              options={[
+                { value: '', label: t('landlordRoomsAllStatuses') },
+                { value: 'Trống', label: t('landlordRoomsStatusVacant') },
+                { value: 'Đang thuê', label: t('landlordRoomsStatusOccupied') },
+                { value: 'Bảo trì', label: t('landlordRoomsStatusMaintenance') },
+                { value: 'Đặt cọc', label: t('landlordRoomsStatusReserved') },
+              ]}
+            />
 
-            <div className="relative">
-              <select
-                value={contractFilter}
-                onChange={e => {
-                  setContractFilter(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="pl-3 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl appearance-none hover:bg-zinc-50 focus:outline-none focus:border-[#2AC1BC] cursor-pointer shadow-2xs"
-              >
-                <option value="">{t('landlordRoomsAllContracts')}</option>
-                <option value="active">{t('landlordRoomsContractActive')}</option>
-                <option value="expired">{t('landlordRoomsContractExpired')}</option>
-                <option value="none">{t('landlordRoomsContractNone')}</option>
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
-            </div>
+            <SelectInput
+              value={contractFilter}
+              onChange={e => {
+                setContractFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-auto min-w-[150px]"
+              options={[
+                { value: '', label: t('landlordRoomsAllContracts') },
+                { value: 'active', label: t('landlordRoomsContractActive') },
+                { value: 'expired', label: t('landlordRoomsContractExpired') },
+                { value: 'none', label: t('landlordRoomsContractNone') },
+              ]}
+            />
           </div>
         </div>
 
@@ -942,23 +913,26 @@ export default function RoomsPage() {
               </h3>
               <p className="text-xs text-zinc-500 max-w-sm">{t('landlordRoomsEmptyDesc')}</p>
               <div className="flex items-center gap-3 mt-5">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setSearchQuery('')
                     setStatusFilter('')
                     setContractFilter('')
                     setInvoiceFilter('')
                   }}
-                  className="px-4 py-2 bg-white border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors shadow-2xs cursor-pointer"
                 >
                   {t('landlordRoomsClearFilter')}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => setIsBulkModalOpen(true)}
-                  className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
+                  leftIcon={<Sparkles className="w-4 h-4" />}
                 >
-                  <Sparkles className="w-4 h-4" /> {t('landlordRoomsBulkGenerateBtn')}
-                </button>
+                  {t('landlordRoomsBulkGenerateBtn')}
+                </Button>
               </div>
             </div>
           ) : viewMode === 'grid' ? (
@@ -990,10 +964,8 @@ export default function RoomsPage() {
                         <div
                           key={`${room.building}-${room.id}`}
                           onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${
-                            isSelected ? 'ring-2 ring-[#2AC1BC] ' : ''
-                          }${
-                            isOccupied
+                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${isSelected ? 'ring-2 ring-[#2AC1BC] ' : ''
+                            }${isOccupied
                               ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]'
                               : isMaintenance
                                 ? 'bg-[#FF6B35]/10 border-[#FF6B35]/30 hover:border-[#FF6B35]'
@@ -1002,33 +974,33 @@ export default function RoomsPage() {
                                   : isVacant
                                     ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500'
                                     : 'bg-white border-zinc-200 hover:border-zinc-300'
-                          }`}
+                            }`}
                         >
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isSelected}
                             onChange={e => {
                               e.stopPropagation()
                               toggleSelectRoom(room.fullRoomId || room.id)
                             }}
-                            className="absolute top-2 left-2 w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC] cursor-pointer"
+                            className="absolute top-2 left-2 cursor-pointer z-10"
                           />
 
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={e => {
                               e.stopPropagation()
                               handleOpenEditModal(room)
                             }}
-                            className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-800 hover:bg-white/80 rounded-md transition-all cursor-pointer opacity-80 hover:opacity-100"
+                            className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-800 hover:bg-white/80 rounded-md transition-all cursor-pointer opacity-80 hover:opacity-100 h-auto w-auto z-10"
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
                             <Edit className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
 
                           <span
-                            className={`text-lg font-black mt-1 ${
-                              isOccupied
+                            className={`text-lg font-black mt-1 ${isOccupied
                                 ? 'text-[#2AC1BC]'
                                 : isMaintenance
                                   ? 'text-[#FF6B35]'
@@ -1037,14 +1009,13 @@ export default function RoomsPage() {
                                     : isVacant
                                       ? 'text-blue-600'
                                       : 'text-zinc-800'
-                            }`}
+                              }`}
                           >
                             {room.id}
                           </span>
 
                           <span
-                            className={`text-[9px] font-black uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md ${
-                              isOccupied
+                            className={`text-[9px] font-black uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md ${isOccupied
                                 ? 'text-[#2AC1BC] bg-[#2AC1BC]/15'
                                 : isMaintenance
                                   ? 'text-[#FF6B35] bg-[#FF6B35]/15'
@@ -1053,7 +1024,7 @@ export default function RoomsPage() {
                                     : isVacant
                                       ? 'text-blue-600 bg-blue-500/15'
                                       : 'text-zinc-500 bg-zinc-100'
-                            }`}
+                              }`}
                           >
                             {room.status === 'Đang thuê'
                               ? t('landlordRoomsStatusOccupied')
@@ -1079,12 +1050,12 @@ export default function RoomsPage() {
                 <thead>
                   <tr className="bg-zinc-100 text-zinc-700 font-bold border-b border-zinc-200 uppercase tracking-wider text-[10px]">
                     <th className="p-3 w-10 text-center">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={isAllCurrentPageSelected}
+                        indeterminate={isIndeterminate}
                         onChange={toggleSelectAllCurrentPage}
-                        className="w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC] cursor-pointer"
                         title={t('landlordRoomsSelectAllTooltip')}
+                        containerClassName="items-center justify-center"
                       />
                     </th>
                     <th className="p-3">{t('landlordRoomsColRoomNumber')}</th>
@@ -1107,11 +1078,10 @@ export default function RoomsPage() {
                         }`}
                       >
                         <td className="p-3 text-center">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isSelected}
                             onChange={() => toggleSelectRoom(room.fullRoomId || room.id)}
-                            className="w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC] cursor-pointer"
+                            containerClassName="items-center justify-center"
                           />
                         </td>
                         <td className="p-3 font-black text-zinc-900 text-sm">{room.id}</td>
@@ -1175,21 +1145,25 @@ export default function RoomsPage() {
                             })}
                           </div>
                         </td>
-                        <td className="p-3 text-right space-x-1.5">
-                          <button
+                        <td className="p-3 text-right space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleOpenEditModal(room)}
-                            className="p-1.5 text-zinc-500 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                            className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
                             <Edit className="w-4 h-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                            className="p-1.5 text-zinc-500 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                            className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
                             title={t('landlordRoomsViewDetailTooltip')}
                           >
                             <Eye className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     )
@@ -1205,8 +1179,7 @@ export default function RoomsPage() {
           {/* Left section: Pagination controls */}
           <div className="flex items-center gap-2">
             <span>{t('landlordRoomsPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize}
@@ -1230,60 +1203,63 @@ export default function RoomsPage() {
 
           {/* Right section: 5-page window jumping controls */}
           <div className="flex items-center gap-1">
-            {/* Jump -5 window */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handlePrevWindow}
               disabled={windowStart === 1}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 h-8 w-8"
               title={t('landlordRoomsPaginationPrev5')}
             >
               <ChevronsLeft className="w-4 h-4 text-zinc-600" />
-            </button>
+            </Button>
 
-            {/* Prev single page */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={safeCurrentPage === 1}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 h-8 w-8"
               title={t('landlordRoomsPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4 text-zinc-600" />
-            </button>
+            </Button>
 
-            {/* 5-page numbered window */}
             {pageNumbers.map(num => (
-              <button
+              <Button
                 key={num}
+                variant={safeCurrentPage === num ? 'primary' : 'outline'}
+                size="sm"
                 onClick={() => setCurrentPage(num)}
-                className={`min-w-8 h-8 px-2 rounded-lg font-bold transition-all cursor-pointer ${
-                  safeCurrentPage === num
-                    ? 'bg-[#2AC1BC] text-white shadow-xs'
-                    : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                className={`min-w-8 h-8 px-2 font-bold ${
+                  safeCurrentPage === num ? 'bg-[#2AC1BC] text-white shadow-xs' : ''
                 }`}
               >
                 {num}
-              </button>
+              </Button>
             ))}
 
-            {/* Next single page */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={safeCurrentPage >= totalPages}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 h-8 w-8"
               title={t('landlordRoomsPaginationNext')}
             >
               <ChevronRight className="w-4 h-4 text-zinc-600" />
-            </button>
+            </Button>
 
-            {/* Jump +5 window */}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleNextWindow}
               disabled={windowStart + 5 > totalPages}
-              className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 h-8 w-8"
               title={t('landlordRoomsPaginationNext5')}
             >
               <ChevronsRight className="w-4 h-4 text-zinc-600" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -1314,13 +1290,15 @@ export default function RoomsPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleCloseBulkModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body Form */}
@@ -1329,13 +1307,12 @@ export default function RoomsPage() {
               className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-zinc-50/40"
             >
               {bulkError && (
-                <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-start gap-2.5">
-                  <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                  <div className="space-y-1">
-                    <p className="font-black text-red-800">{t('landlordRoomsBulkErrorHeader')}</p>
-                    <p className="font-medium leading-relaxed">{bulkError}</p>
-                  </div>
-                </div>
+                <Form.Alert
+                  variant="error"
+                  title={t('landlordRoomsBulkErrorHeader')}
+                  message={bulkError}
+                  onClose={() => setBulkError(null)}
+                />
               )}
 
               {/* Quota Info Banner */}
@@ -1363,158 +1340,137 @@ export default function RoomsPage() {
                   />
                 </div>
                 {isOverQuota && (
-                  <p className="text-[11px] font-bold text-red-600 flex items-center gap-1 mt-1">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    {t('landlordRoomsBulkQuotaWarning', {
+                  <Form.Alert
+                    variant="warning"
+                    message={t('landlordRoomsBulkQuotaWarning', {
                       count: totalGeneratedCount,
                       max: maxPlanRoom,
                     })}
-                  </p>
+                  />
                 )}
               </div>
 
               {/* Form Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('landlordRoomsBulkFloorCountLabel')} <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={bulkFloorCount}
-                    onChange={e => {
-                      setBulkFloorCount(parseInt(e.target.value, 10) || 1)
-                      setIsBulkDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2 text-xs font-bold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordRoomsBulkFloorCountLabel')}
+                  required
+                  min={1}
+                  max={50}
+                  value={bulkFloorCount}
+                  onChange={e => {
+                    setBulkFloorCount(parseInt(e.target.value, 10) || 1)
+                    setIsBulkDirty(true)
+                  }}
+                />
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('landlordRoomsBulkRoomsPerFloorLabel')}{' '}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={bulkRoomsPerFloor}
-                    onChange={e => {
-                      setBulkRoomsPerFloor(parseInt(e.target.value, 10) || 1)
-                      setIsBulkDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2 text-xs font-bold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordRoomsBulkRoomsPerFloorLabel')}
+                  required
+                  min={1}
+                  max={50}
+                  value={bulkRoomsPerFloor}
+                  onChange={e => {
+                    setBulkRoomsPerFloor(parseInt(e.target.value, 10) || 1)
+                    setIsBulkDirty(true)
+                  }}
+                />
 
                 <div className="sm:col-span-2 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-zinc-700">
-                      {t('landlordRoomsBulkNameFormatLabel')}{' '}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <span className="text-[11px] text-zinc-400">
-                      Placeholder:{' '}
-                      <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
-                        &#123;floor&#125;
-                      </code>
-                      ,{' '}
-                      <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
-                        &#123;index&#125;
-                      </code>
-                    </span>
-                  </div>
-                  <input
-                    type="text"
+                  <TextInput
+                    label={t('landlordRoomsBulkNameFormatLabel')}
+                    required
                     value={bulkNameFormat}
                     onChange={e => {
                       setBulkNameFormat(e.target.value)
                       setIsBulkDirty(true)
                     }}
                     placeholder={t('landlordRoomsBulkNameFormatPlaceholder')}
-                    className="w-full px-3.5 py-2 text-xs font-bold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 font-mono text-zinc-800"
+                    labelRight={
+                      <span className="text-[11px] text-zinc-400">
+                        Placeholder:{' '}
+                        <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
+                          &#123;floor&#125;
+                        </code>
+                        ,{' '}
+                        <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
+                          &#123;index&#125;
+                        </code>
+                      </span>
+                    }
                   />
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-zinc-500">
                     <span className="font-bold">{t('landlordRoomsBulkSuggestedPatterns')}</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setBulkNameFormat('P{floor}0{index}')
                         setIsBulkDirty(true)
                       }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer"
+                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
                     >
                       P&#123;floor&#125;0&#123;index&#125;
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setBulkNameFormat('{floor}0{index}')
                         setIsBulkDirty(true)
                       }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer"
+                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
                     >
                       &#123;floor&#125;0&#123;index&#125;
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setBulkNameFormat('P{floor}{index:02}')
                         setIsBulkDirty(true)
                       }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer"
+                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
                     >
                       P&#123;floor&#125;&#123;index:02&#125;
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('landlordRoomsBulkRoomTypeLabel')}
-                  </label>
-                  <select
-                    value={bulkRoomTypeId}
-                    onChange={e => {
-                      setBulkRoomTypeId(e.target.value)
-                      setIsBulkDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2 text-xs font-bold text-zinc-800 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                  >
-                    {metadata?.roomTypes && metadata.roomTypes.length > 0 ? (
-                      metadata.roomTypes.map(rt => (
-                        <option key={rt.id} value={rt.id}>
-                          {rt.name}
-                        </option>
-                      ))
-                    ) : (
-                      <>
-                        <option value="studio">{t('landlordRoomsTypeStudio')}</option>
-                        <option value="1pn">{t('landlordRoomsType1Bed')}</option>
-                        <option value="2pn">{t('landlordRoomsType2Bed')}</option>
-                      </>
-                    )}
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('landlordRoomsBulkRoomTypeLabel')}
+                  value={bulkRoomTypeId}
+                  onChange={e => {
+                    setBulkRoomTypeId(e.target.value)
+                    setIsBulkDirty(true)
+                  }}
+                  options={
+                    metadata?.roomTypes && metadata.roomTypes.length > 0
+                      ? metadata.roomTypes.map(rt => ({
+                          value: rt.id,
+                          label: rt.name,
+                        }))
+                      : [
+                          { value: 'studio', label: t('landlordRoomsTypeStudio') },
+                          { value: '1pn', label: t('landlordRoomsType1Bed') },
+                          { value: '2pn', label: t('landlordRoomsType2Bed') },
+                        ]
+                  }
+                />
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('landlordRoomsBulkAreaLabel')}
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={bulkArea}
-                    onChange={e => {
-                      setBulkArea(e.target.value)
-                      setIsBulkDirty(true)
-                    }}
-                    className="w-full px-3.5 py-2 text-xs font-bold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                  />
-                </div>
+                <NumberInput
+                  label={t('landlordRoomsBulkAreaLabel')}
+                  min={1}
+                  value={bulkArea}
+                  onChange={e => {
+                    setBulkArea(e.target.value)
+                    setIsBulkDirty(true)
+                  }}
+                  suffixText="m²"
+                />
               </div>
 
               {/* Service Associations Checkboxes */}
@@ -1534,29 +1490,20 @@ export default function RoomsPage() {
                     ? metadata.services.map(srv => {
                         const checked = bulkServiceIds.includes(srv.id)
                         return (
-                          <label
+                          <Checkbox
                             key={srv.id}
-                            className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                              checked
-                                ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/40 text-[#2AC1BC]'
-                                : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => {
-                                setBulkServiceIds(prev =>
-                                  prev.includes(srv.id)
-                                    ? prev.filter(id => id !== srv.id)
-                                    : [...prev, srv.id],
-                                )
-                                setIsBulkDirty(true)
-                              }}
-                              className="w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC]"
-                            />
-                            <span className="truncate">{srv.name}</span>
-                          </label>
+                            variant="card"
+                            checked={checked}
+                            onChange={() => {
+                              setBulkServiceIds(prev =>
+                                prev.includes(srv.id)
+                                  ? prev.filter(id => id !== srv.id)
+                                  : [...prev, srv.id],
+                              )
+                              setIsBulkDirty(true)
+                            }}
+                            label={srv.name}
+                          />
                         )
                       })
                     : ['Điện', 'Nước', 'WiFi', 'Vệ sinh'].map((item, idx) => {
@@ -1571,17 +1518,12 @@ export default function RoomsPage() {
                                   ? t('landlordRoomsServiceCleaning')
                                   : item
                         return (
-                          <label
+                          <Checkbox
                             key={idx}
-                            className="flex items-center gap-2 p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              defaultChecked
-                              className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
-                            />
-                            <span>{itemLabel}</span>
-                          </label>
+                            variant="card"
+                            defaultChecked
+                            label={itemLabel}
+                          />
                         )
                       })}
                 </div>
@@ -1616,27 +1558,24 @@ export default function RoomsPage() {
 
               {/* Modal Action Buttons */}
               <div className="pt-2 flex items-center justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleCloseBulkModal}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordRoomsBulkBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={isBulkSubmitting || isOverQuota}
-                  className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-sm transition-all cursor-pointer"
+                  isLoading={isBulkSubmitting}
+                  leftIcon={<Sparkles className="w-4 h-4" />}
                 >
-                  {isBulkSubmitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
-                  )}
                   {isBulkSubmitting
                     ? t('landlordRoomsBulkBtnSubmitting')
                     : t('landlordRoomsBulkBtnConfirm', { count: totalGeneratedCount })}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1677,12 +1616,15 @@ export default function RoomsPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleCloseSingleModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Content */}
@@ -1693,10 +1635,11 @@ export default function RoomsPage() {
               <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-50/50 space-y-6">
                 {/* Error Banner */}
                 {singleError && (
-                  <div className="p-4 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-800 text-xs font-semibold flex items-start gap-2.5 shadow-2xs animate-in fade-in">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                    <span>{singleError}</span>
-                  </div>
+                  <Form.Alert
+                    variant="error"
+                    message={singleError}
+                    onClose={() => setSingleError(null)}
+                  />
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -1713,169 +1656,119 @@ export default function RoomsPage() {
                           <label className="text-xs font-bold text-zinc-700">
                             {t('landlordRoomsSingleBuildingLabel')}
                           </label>
-                          <div className="w-full px-3 py-2 text-xs border border-zinc-200 bg-zinc-50 rounded-xl font-medium text-zinc-700 truncate">
+                          <div className="w-full px-3.5 py-2.5 text-xs border border-zinc-200 bg-zinc-50 rounded-xl font-medium text-zinc-700 truncate">
                             {activeBuilding?.name || 'Dormio Boarding House'}
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSingleRoomNumberLabel')}{' '}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={formRoomNumber}
-                            onChange={e => {
-                              setFormRoomNumber(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            placeholder="VD: 101, A01"
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-zinc-900"
-                          />
-                        </div>
+                        <TextInput
+                          label={t('landlordRoomsSingleRoomNumberLabel')}
+                          required
+                          value={formRoomNumber}
+                          onChange={e => {
+                            setFormRoomNumber(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          placeholder="VD: 101, A01"
+                        />
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSingleRoomTypeLabel')}{' '}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            value={formRoomTypeId}
-                            onChange={e => {
-                              setFormRoomTypeId(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
-                          >
-                            {metadata?.roomTypes && metadata.roomTypes.length > 0 ? (
-                              metadata.roomTypes.map(rt => (
-                                <option key={rt.id} value={rt.id}>
-                                  {rt.name}
-                                </option>
-                              ))
-                            ) : (
-                              <>
-                                <option value="studio">{t('landlordRoomsTypeStudio')}</option>
-                                <option value="1pn">{t('landlordRoomsType1Bed')}</option>
-                                <option value="2pn">{t('landlordRoomsType2Bed')}</option>
-                              </>
-                            )}
-                          </select>
-                        </div>
+                        <SelectInput
+                          label={t('landlordRoomsSingleRoomTypeLabel')}
+                          required
+                          value={formRoomTypeId}
+                          onChange={e => {
+                            setFormRoomTypeId(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          options={
+                            metadata?.roomTypes && metadata.roomTypes.length > 0
+                              ? metadata.roomTypes.map(rt => ({
+                                  value: rt.id,
+                                  label: rt.name,
+                                }))
+                              : [
+                                  { value: 'studio', label: t('landlordRoomsTypeStudio') },
+                                  { value: '1pn', label: t('landlordRoomsType1Bed') },
+                                  { value: '2pn', label: t('landlordRoomsType2Bed') },
+                                ]
+                          }
+                        />
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSingleFloorLabel')}{' '}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="number"
-                            min={1}
-                            required
-                            value={formFloor}
-                            onChange={e => {
-                              setFormFloor(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            placeholder="VD: 1, 2..."
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                          />
-                        </div>
+                        <NumberInput
+                          label={t('landlordRoomsSingleFloorLabel')}
+                          required
+                          min={1}
+                          value={formFloor}
+                          onChange={e => {
+                            setFormFloor(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          placeholder="VD: 1, 2..."
+                        />
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsBulkAreaLabel')}
-                          </label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            min={1}
-                            value={formArea}
-                            onChange={e => {
-                              setFormArea(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            placeholder="25"
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                          />
-                        </div>
+                        <NumberInput
+                          label={t('landlordRoomsBulkAreaLabel')}
+                          min={1}
+                          step="0.1"
+                          value={formArea}
+                          onChange={e => {
+                            setFormArea(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          placeholder="25"
+                          suffixText="m²"
+                        />
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSingleMaxOccupantsLabel')}
-                          </label>
-                          <input
-                            type="number"
-                            min={1}
-                            value={formMaxOccupants}
-                            onChange={e => {
-                              setFormMaxOccupants(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            placeholder="2"
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
-                          />
-                        </div>
+                        <NumberInput
+                          label={t('landlordRoomsSingleMaxOccupantsLabel')}
+                          min={1}
+                          value={formMaxOccupants}
+                          onChange={e => {
+                            setFormMaxOccupants(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          placeholder="2"
+                        />
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSingleStatusLabel')}
-                          </label>
-                          <select
-                            value={formStatus}
-                            onChange={e => {
-                              setFormStatus(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900 bg-white"
-                          >
-                            <option value="available">
-                              {t('landlordRoomsSingleStatusAvailable')}
-                            </option>
-                            <option value="occupied">
-                              {t('landlordRoomsSingleStatusOccupied')}
-                            </option>
-                            <option value="maintainace">
-                              {t('landlordRoomsSingleStatusMaintenance')}
-                            </option>
-                            <option value="deposited">
-                              {t('landlordRoomsSingleStatusDeposited')}
-                            </option>
-                          </select>
-                        </div>
+                        <SelectInput
+                          label={t('landlordRoomsSingleStatusLabel')}
+                          value={formStatus}
+                          onChange={e => {
+                            setFormStatus(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          options={[
+                            { value: 'available', label: t('landlordRoomsSingleStatusAvailable') },
+                            { value: 'occupied', label: t('landlordRoomsSingleStatusOccupied') },
+                            {
+                              value: 'maintainace',
+                              label: t('landlordRoomsSingleStatusMaintenance'),
+                            },
+                            { value: 'deposited', label: t('landlordRoomsSingleStatusDeposited') },
+                          ]}
+                        />
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSinglePriceLabel')}
-                          </label>
-                          <input
-                            type="text"
-                            value={formPrice}
-                            onChange={e => {
-                              setFormPrice(e.target.value)
-                              setIsSingleDirty(true)
-                            }}
-                            placeholder="3.500.000"
-                            className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-bold text-[#2AC1BC]"
-                          />
-                        </div>
+                        <TextInput
+                          label={t('landlordRoomsSinglePriceLabel')}
+                          value={formPrice}
+                          onChange={e => {
+                            setFormPrice(e.target.value)
+                            setIsSingleDirty(true)
+                          }}
+                          placeholder="3.500.000"
+                          rightIcon={<span className="text-xs font-bold text-[#2AC1BC]">đ</span>}
+                        />
                       </div>
 
-                      <div className="space-y-1.5 pt-1">
-                        <label className="text-xs font-bold text-zinc-700">
-                          {t('landlordRoomsSingleImageLabel')}
-                        </label>
-                        <input
-                          type="text"
+                      <div className="pt-1">
+                        <TextInput
+                          label={t('landlordRoomsSingleImageLabel')}
                           value={formImageUrl}
                           onChange={e => {
                             setFormImageUrl(e.target.value)
                             setIsSingleDirty(true)
                           }}
                           placeholder="https://images.unsplash.com/photo-..."
-                          className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] font-medium text-zinc-900"
                         />
                       </div>
                     </div>
@@ -1902,35 +1795,25 @@ export default function RoomsPage() {
                           ? metadata.services.map(srv => {
                               const isChecked = selectedServiceIds.includes(srv.id)
                               return (
-                                <label
+                                <Checkbox
                                   key={srv.id}
-                                  className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                                    isChecked
-                                      ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/40 text-[#2AC1BC]'
-                                      : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={() => {
-                                        setSelectedServiceIds(prev =>
-                                          prev.includes(srv.id)
-                                            ? prev.filter(id => id !== srv.id)
-                                            : [...prev, srv.id],
-                                        )
-                                        setIsSingleDirty(true)
-                                      }}
-                                      className="w-3.5 h-3.5 rounded text-[#2AC1BC] border-zinc-300 focus:ring-[#2AC1BC]"
-                                    />
-                                    <span className="truncate">{srv.name}</span>
-                                  </div>
-                                  <span className="text-[11px] font-mono text-zinc-500 shrink-0">
-                                    {formatCurrency(Number(srv.price) || srv.price, currentLocale)}{' '}
-                                    / {srv.unit}
-                                  </span>
-                                </label>
+                                  variant="card"
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    setSelectedServiceIds(prev =>
+                                      prev.includes(srv.id)
+                                        ? prev.filter(id => id !== srv.id)
+                                        : [...prev, srv.id],
+                                    )
+                                    setIsSingleDirty(true)
+                                  }}
+                                  label={srv.name}
+                                  description={
+                                    srv.price !== undefined
+                                      ? `${formatCurrency(Number(srv.price) || srv.price, currentLocale)} / ${srv.unit}`
+                                      : undefined
+                                  }
+                                />
                               )
                             })
                           : [
@@ -1955,22 +1838,13 @@ export default function RoomsPage() {
                                 rate: '20.000 đ/phòng',
                               },
                             ].map((srv, idx) => (
-                              <label
+                              <Checkbox
                                 key={idx}
-                                className="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-700 cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="checkbox"
-                                    defaultChecked
-                                    className="w-3.5 h-3.5 rounded text-[#2AC1BC]"
-                                  />
-                                  <span>{srv.name}</span>
-                                </div>
-                                <span className="text-[11px] font-mono text-zinc-400">
-                                  {srv.rate}
-                                </span>
-                              </label>
+                                variant="card"
+                                defaultChecked
+                                label={srv.name}
+                                description={srv.rate}
+                              />
                             ))}
                       </div>
                     </div>
@@ -1994,9 +1868,11 @@ export default function RoomsPage() {
                           'Ban công',
                           'WC riêng',
                         ].map(item => (
-                          <button
+                          <Button
                             key={item}
                             type="button"
+                            variant={selectedAmenities.includes(item) ? 'primary' : 'outline'}
+                            size="sm"
                             onClick={() => {
                               setSelectedAmenities(prev =>
                                 prev.includes(item)
@@ -2005,14 +1881,14 @@ export default function RoomsPage() {
                               )
                               setIsSingleDirty(true)
                             }}
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer h-auto ${
                               selectedAmenities.includes(item)
-                                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20'
                                 : 'text-zinc-600 bg-white border-zinc-200 hover:bg-zinc-50'
                             }`}
                           >
                             {item}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -2022,7 +1898,7 @@ export default function RoomsPage() {
                         <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionNotes')}
                       </h3>
-                      <textarea
+                      <TextareaInput
                         rows={4}
                         value={formNotes}
                         onChange={e => {
@@ -2030,7 +1906,6 @@ export default function RoomsPage() {
                           setIsSingleDirty(true)
                         }}
                         placeholder={t('landlordRoomsSingleNotesPlaceholder')}
-                        className="w-full px-3 py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] resize-none"
                       />
                     </div>
                   </div>
@@ -2039,32 +1914,29 @@ export default function RoomsPage() {
 
               {/* Modal Actions */}
               <div className="p-5 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleCloseSingleModal}
                   disabled={isSingleSubmitting}
-                  className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('landlordRoomsSingleBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={isSingleSubmitting}
-                  className="flex items-center gap-2 px-6 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-sm transition-all cursor-pointer"
+                  isLoading={isSingleSubmitting}
+                  leftIcon={
+                    selectedRoomId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />
+                  }
                 >
-                  {isSingleSubmitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : selectedRoomId ? (
-                    <Edit className="w-4 h-4" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
                   {isSingleSubmitting
                     ? t('landlordRoomsSingleBtnSaving')
                     : selectedRoomId
                       ? t('landlordRoomsSingleBtnSaveEdit')
                       : t('landlordRoomsSingleBtnSaveCreate')}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -2118,20 +1990,22 @@ function ConfirmModal({
         </div>
 
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel}
-            className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs"
+            className="flex-1"
           >
             {t('landlordRoomsContinueEditing')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="danger"
             onClick={onConfirm}
-            className="flex-1 py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-amber-500/30"
+            className="flex-1 bg-amber-500 hover:bg-amber-600 border-amber-500 text-white"
           >
             {t('landlordRoomsDiscardAndClose')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

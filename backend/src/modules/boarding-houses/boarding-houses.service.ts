@@ -10,6 +10,7 @@ import { Prisma, SubscriptionPackage, SubscriptionStatus, UserRole } from '@pris
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto'
 import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto'
+import { UpdateBoardingHouseDto } from './dto/update-boarding-house.dto'
 import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto'
 import {
   MultiPropertyOverviewResponseDto,
@@ -53,7 +54,10 @@ export class BoardingHousesService {
 
     // Resolve subscription quota before entering the transaction
     const maxRoom = await this.resolveMaxRoom(userId)
-    const roomsToCreate = dto.rooms.floorCount * dto.rooms.roomsPerFloor
+    const hasCustomRooms = Boolean(dto.rooms.customRooms && dto.rooms.customRooms.length > 0)
+    const roomsToCreate = hasCustomRooms
+      ? dto.rooms.customRooms!.length
+      : dto.rooms.floorCount * dto.rooms.roomsPerFloor
 
     if (roomsToCreate > maxRoom) {
       throw new UnprocessableEntityException(
@@ -74,6 +78,28 @@ export class BoardingHousesService {
       throw new BadRequestException(
         `serviceIndex ${outOfBoundsService} is out of bounds — only ${(dto.services ?? []).length} service(s) provided`,
       )
+    }
+
+    if (hasCustomRooms) {
+      for (const cr of dto.rooms.customRooms!) {
+        if (
+          cr.roomTypeIndex !== undefined &&
+          cr.roomTypeIndex !== null &&
+          cr.roomTypeIndex >= dto.roomTypes.length
+        ) {
+          throw new BadRequestException(
+            `customRoom roomTypeIndex ${cr.roomTypeIndex} is out of bounds — only ${dto.roomTypes.length} room type(s) provided`,
+          )
+        }
+        const outOfBoundsCrService = (cr.serviceIndices ?? []).find(
+          idx => idx >= (dto.services ?? []).length,
+        )
+        if (outOfBoundsCrService !== undefined) {
+          throw new BadRequestException(
+            `customRoom serviceIndex ${outOfBoundsCrService} is out of bounds — only ${(dto.services ?? []).length} service(s) provided`,
+          )
+        }
+      }
     }
 
     const result = await this.prisma.$transaction(async tx => {
@@ -149,25 +175,39 @@ export class BoardingHousesService {
 
       // Step 7 — INSERT Room[] + RoomService[]
       let roomsCreated = 0
-      for (let floor = 1; floor <= dto.rooms.floorCount; floor++) {
-        for (let index = 1; index <= dto.rooms.roomsPerFloor; index++) {
-          const roomNumber = renderName(floor, index)
+      if (hasCustomRooms) {
+        for (const cr of dto.rooms.customRooms!) {
+          const roomTypeId =
+            cr.roomTypeIndex !== undefined && cr.roomTypeIndex !== null
+              ? (roomTypeIds[cr.roomTypeIndex] ?? resolvedRoomTypeId)
+              : resolvedRoomTypeId
+
+          const area = cr.area
+            ? new Prisma.Decimal(cr.area)
+            : dto.rooms.area
+              ? new Prisma.Decimal(dto.rooms.area)
+              : null
+
+          const maxOccupants = cr.maxOccupants ?? dto.rooms.maxOccupants ?? null
+
           const room = await tx.room.create({
             data: {
               boardingHouseId: boardingHouse.id,
-              roomNumber,
-              floor,
-              roomTypeId: resolvedRoomTypeId,
-              area: dto.rooms.area ? new Prisma.Decimal(dto.rooms.area) : null,
-              maxOccupants: dto.rooms.maxOccupants ?? null,
+              roomNumber: cr.roomNumber.trim(),
+              floor: cr.floor,
+              roomTypeId,
+              area,
+              maxOccupants,
               status: 'available',
             },
           })
 
-          // Step 7b — INSERT RoomService[] for each resolved service
-          if (resolvedServiceIds.length > 0) {
+          const roomServiceIndices = cr.serviceIndices ?? dto.rooms.serviceIndices ?? []
+          const roomServiceIds = roomServiceIndices.map(idx => serviceIds[idx]).filter(Boolean)
+
+          if (roomServiceIds.length > 0) {
             await tx.roomService.createMany({
-              data: resolvedServiceIds.map(serviceId => ({
+              data: roomServiceIds.map(serviceId => ({
                 roomId: room.id,
                 serviceId,
               })),
@@ -175,6 +215,35 @@ export class BoardingHousesService {
           }
 
           roomsCreated++
+        }
+      } else {
+        for (let floor = 1; floor <= dto.rooms.floorCount; floor++) {
+          for (let index = 1; index <= dto.rooms.roomsPerFloor; index++) {
+            const roomNumber = renderName(floor, index)
+            const room = await tx.room.create({
+              data: {
+                boardingHouseId: boardingHouse.id,
+                roomNumber,
+                floor,
+                roomTypeId: resolvedRoomTypeId,
+                area: dto.rooms.area ? new Prisma.Decimal(dto.rooms.area) : null,
+                maxOccupants: dto.rooms.maxOccupants ?? null,
+                status: 'available',
+              },
+            })
+
+            // Step 7b — INSERT RoomService[] for each resolved service
+            if (resolvedServiceIds.length > 0) {
+              await tx.roomService.createMany({
+                data: resolvedServiceIds.map(serviceId => ({
+                  roomId: room.id,
+                  serviceId,
+                })),
+              })
+            }
+
+            roomsCreated++
+          }
         }
       }
 
@@ -339,6 +408,87 @@ export class BoardingHousesService {
         })),
       })),
     }
+  }
+
+  // ─── UC-L-01: Get Single Boarding House Details ──────────────────────────
+
+  async getBoardingHouseById(
+    userId: string,
+    boardingHouseId: string,
+  ): Promise<BoardingHouseResponseDto> {
+    this.logger.log(`Fetching boarding house ${boardingHouseId} for user ${userId}`)
+
+    const house = await this.prisma.boardingHouse.findFirst({
+      where: { id: boardingHouseId, ownerId: userId },
+      include: {
+        services: true,
+        roomTypes: true,
+        _count: {
+          select: {
+            rooms: true,
+          },
+        },
+      },
+    })
+
+    if (!house) {
+      throw new NotFoundException(
+        'Boarding house not found or you do not have permission to access it',
+      )
+    }
+
+    return this.mapBoardingHouseResponse(house, house.services, house.roomTypes)
+  }
+
+  // ─── UC-L-01: Update Boarding House Information ──────────────────────────
+
+  async updateBoardingHouse(
+    userId: string,
+    boardingHouseId: string,
+    dto: UpdateBoardingHouseDto,
+  ): Promise<BoardingHouseResponseDto> {
+    this.logger.log(`Updating boarding house ${boardingHouseId} for user ${userId}`)
+
+    const existing = await this.prisma.boardingHouse.findFirst({
+      where: { id: boardingHouseId, ownerId: userId },
+    })
+
+    if (!existing) {
+      throw new NotFoundException(
+        'Boarding house not found or you do not have permission to access it',
+      )
+    }
+
+    const updated = await this.prisma.boardingHouse.update({
+      where: { id: boardingHouseId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name.trim() }),
+        ...(dto.description !== undefined && { description: dto.description.trim() || null }),
+        ...(dto.thumbnail !== undefined && { thumbnail: dto.thumbnail }),
+        ...(dto.country !== undefined && { country: dto.country.trim() }),
+        ...(dto.province !== undefined && { province: dto.province.trim() }),
+        ...(dto.city !== undefined && { city: dto.city.trim() }),
+        ...(dto.district !== undefined && { district: dto.district.trim() }),
+        ...(dto.ward !== undefined && { ward: dto.ward.trim() }),
+        ...(dto.street !== undefined && { street: dto.street.trim() }),
+        ...(dto.houseNumber !== undefined && { houseNumber: dto.houseNumber.trim() }),
+        ...(dto.totalFloor !== undefined && { totalFloor: dto.totalFloor }),
+        ...(dto.builtAt !== undefined && { builtAt: new Date(dto.builtAt) }),
+      },
+      include: {
+        services: true,
+        roomTypes: true,
+        _count: {
+          select: {
+            rooms: true,
+          },
+        },
+      },
+    })
+
+    this.invalidateOverviewCache(boardingHouseId)
+
+    return this.mapBoardingHouseResponse(updated, updated.services, updated.roomTypes)
   }
 
   // ─── UC-L-08: In-Memory Cache (Periodic Caching per Spec) ────────────────
@@ -1195,6 +1345,8 @@ export class BoardingHousesService {
       builtAt: Date
       status: string
       thumbnail?: string | null
+      _count?: { rooms?: number }
+      totalRooms?: number
     },
     services: Array<{
       id: string
@@ -1225,6 +1377,7 @@ export class BoardingHousesService {
       builtAt: boardingHouse.builtAt.toISOString(),
       status: boardingHouse.status,
       thumbnail: boardingHouse.thumbnail ?? null,
+      totalRooms: boardingHouse._count?.rooms ?? boardingHouse.totalRooms ?? 0,
       services: services.map(s => ({
         id: s.id,
         name: s.name,

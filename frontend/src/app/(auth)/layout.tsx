@@ -2,42 +2,73 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
-import { Building2, CheckCircle2, TrendingUp, Zap, Sparkles, ShieldCheck, Star } from 'lucide-react'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { Building2, CheckCircle2, Star } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
+import { Text } from '@/components/ui/Text'
+import { Button } from '@/components/ui/Button'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('auth')
   const { currentLocale } = useLanguage()
+  const pathname = usePathname()
+  const isLegalPage = ['/terms', '/privacy', '/policy'].some(path => pathname?.startsWith(path))
 
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding) */}
-      <div className="flex flex-1 flex-col justify-between px-4 py-8 sm:px-8 lg:px-14 xl:px-16 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl">
-        {/* Header Brand Logo */}
-        <div className="flex items-center justify-between pb-6">
+    <div className="flex h-screen max-h-screen overflow-hidden bg-white">
+      {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding, cố định layout, chỉ cuộn nội dung form/chính sách) */}
+      <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
+        {/* Header Brand Logo & Language Switcher */}
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 shrink-0">
           <Logo size="lg" />
 
-          <Link
-            href="/"
-            className="text-xs font-extrabold text-zinc-500 hover:text-[#2AC1BC] transition-colors"
-          >
-            {t('authLayoutBackHome')}
-          </Link>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            {isLegalPage && (
+              <>
+                <Link href="/register">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs font-bold text-zinc-700 hover:bg-zinc-50 border-zinc-200 px-3 py-1.5 rounded-xl h-auto"
+                  >
+                    {t('authLegalBackToRegister')}
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    className="text-xs font-bold px-3.5 py-1.5 rounded-xl h-auto shadow-xs"
+                  >
+                    {t('authLoginBtn')}
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Dynamic Form Content */}
-        <div className="py-4">{children}</div>
+        {/* Dynamic Form Content: Có scroll nội bộ, không làm phình vỡ layout trang */}
+        <div className="flex-1 overflow-y-auto min-h-0 py-3 pr-0.5 custom-scrollbar">
+          {children}
+        </div>
 
         {/* Footer Legal Note */}
-        <div className="pt-6 border-t border-zinc-100 text-center sm:text-left text-[11px] text-zinc-400 font-medium">
-          {t('authLayoutFooterLegal', { year: new Date().getFullYear() })}
+        <div className="pt-3 border-t border-zinc-100 text-center sm:text-left shrink-0">
+          <Text variant="caption" size="2xs" color="subtle">
+            {t('authLayoutFooterLegal', { year: new Date().getFullYear() })}
+          </Text>
         </div>
       </div>
 
-      {/* Cột Phải: Visual Interactive Dashboard Mockup Showcase (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-1 bg-[#090d12] relative flex-col items-center justify-center p-12 overflow-hidden border-l border-zinc-800">
+      {/* Cột Phải: Visual Interactive Dashboard Mockup Showcase (Cố định toàn màn hình, không bị kéo dài) */}
+      <div className="hidden lg:flex flex-1 bg-[#090d12] relative flex-col items-center justify-center p-12 overflow-hidden border-l border-zinc-800 h-full max-h-full">
         {/* Ambient Glowing Orbs */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#2AC1BC]/15 rounded-full blur-[130px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF6B35]/15 rounded-full blur-[130px] pointer-events-none" />
@@ -54,53 +85,100 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-white">
+                  <Text as="h3" variant="heading" size="sm" className="text-white">
                     {t('authLayoutShowcaseRoomTitle')}
-                  </h3>
-                  <p className="text-[11px] text-zinc-400 font-medium">
+                  </Text>
+                  <Text variant="caption" size="2xs" color="subtle">
                     {t('authLayoutShowcaseRoomAddress')}
-                  </p>
+                  </Text>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/30">
+              <Text
+                as="span"
+                variant="caption"
+                size="3xs"
+                weight="black"
+                className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30"
+              >
                 {t('authLayoutShowcaseStatusActive')}
-              </span>
+              </Text>
             </div>
 
             {/* 3 Metric Stat Boxes */}
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">
+                <Text
+                  as="span"
+                  variant="caption"
+                  size="2xs"
+                  weight="bold"
+                  color="subtle"
+                  className="block"
+                >
                   {t('authLayoutShowcaseMetricRent')}
-                </span>
-                <div className="text-base font-black text-white">
+                </Text>
+                <Text as="div" variant="heading" size="base" className="text-white">
                   {formatCurrency(4500000, currentLocale)}
-                </div>
-                <span className="text-[9px] text-emerald-400 font-extrabold block">
+                </Text>
+                <Text
+                  as="span"
+                  variant="caption"
+                  size="3xs"
+                  weight="black"
+                  className="text-emerald-400 block"
+                >
                   {t('authLayoutShowcaseMetricCollected')}
-                </span>
+                </Text>
               </div>
 
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">
+                <Text
+                  as="span"
+                  variant="caption"
+                  size="2xs"
+                  weight="bold"
+                  color="subtle"
+                  className="block"
+                >
                   {t('authLayoutShowcaseMetricUtilities')}
-                </span>
-                <div className="text-base font-black text-white">
+                </Text>
+                <Text as="div" variant="heading" size="base" className="text-white">
                   {formatCurrency(680000, currentLocale)}
-                </div>
-                <span className="text-[9px] text-[#2AC1BC] font-extrabold block">
+                </Text>
+                <Text
+                  as="span"
+                  variant="caption"
+                  size="3xs"
+                  weight="black"
+                  className="text-[#2AC1BC] block"
+                >
                   {t('authLayoutShowcaseMetricAutoOcr')}
-                </span>
+                </Text>
               </div>
 
               <div className="bg-zinc-950/80 p-3.5 rounded-2xl border border-zinc-800/80 space-y-1">
-                <span className="text-[10px] text-zinc-400 font-bold block">
+                <Text
+                  as="span"
+                  variant="caption"
+                  size="2xs"
+                  weight="bold"
+                  color="subtle"
+                  className="block"
+                >
                   {t('authLayoutShowcaseMetricOccupancy')}
-                </span>
-                <div className="text-base font-black text-white">98.5%</div>
-                <span className="text-[9px] text-[#FF6B35] font-extrabold block">
+                </Text>
+                <Text as="div" variant="heading" size="base" className="text-white">
+                  98.5%
+                </Text>
+                <Text
+                  as="span"
+                  variant="caption"
+                  size="3xs"
+                  weight="black"
+                  className="text-[#FF6B35] block"
+                >
                   {t('authLayoutShowcaseMetricOccupancyGrowth')}
-                </span>
+                </Text>
               </div>
             </div>
 
@@ -111,17 +189,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-white">
+                  <Text as="h4" variant="heading" size="xs" className="text-white">
                     {t('authLayoutShowcaseVietQrTitle')}
-                  </h4>
-                  <p className="text-[10px] text-zinc-400 font-medium">
+                  </Text>
+                  <Text variant="caption" size="2xs" color="subtle">
                     {t('authLayoutShowcaseVietQrDesc')}
-                  </p>
+                  </Text>
                 </div>
               </div>
-              <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black rounded-lg shrink-0">
+              <Text
+                as="span"
+                variant="caption"
+                size="3xs"
+                weight="black"
+                className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-lg shrink-0"
+              >
                 {t('authLayoutShowcaseVietQrSuccess')}
-              </span>
+              </Text>
             </div>
 
             {/* Floating Verified Landlord Testimonial Overlay */}
@@ -130,19 +214,21 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 NQ
               </div>
               <div className="space-y-0.5">
-                <h5 className="text-xs font-extrabold text-white">
+                <Text as="h5" variant="heading" size="xs" className="text-white">
                   {t('authLayoutTestimonialAuthor')}
-                </h5>
-                <p className="text-[10px] text-zinc-400 font-medium">
+                </Text>
+                <Text variant="caption" size="2xs" color="subtle">
                   {t('authLayoutTestimonialRole')}
-                </p>
+                </Text>
                 <div className="flex items-center gap-1 text-[10px] text-amber-400 font-black pt-0.5">
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
                   <Star className="w-3 h-3 fill-amber-400" />
-                  <span className="text-zinc-300 ml-1">{t('authLayoutTestimonialQuote')}</span>
+                  <Text as="span" variant="caption" size="2xs" className="text-zinc-300 ml-1">
+                    {t('authLayoutTestimonialQuote')}
+                  </Text>
                 </div>
               </div>
             </div>

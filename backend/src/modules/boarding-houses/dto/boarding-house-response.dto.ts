@@ -82,6 +82,9 @@ export class BoardingHouseResponseDto {
 
   @ApiProperty({ type: [BoardingHouseRoomTypeResponseDto] })
   roomTypes: BoardingHouseRoomTypeResponseDto[]
+
+  @ApiPropertyOptional({ example: 12, description: 'Total number of rooms in this property' })
+  totalRooms?: number
 }
 
 export class CreateBoardingHouseResponseDto {
@@ -94,7 +97,7 @@ export class CreateBoardingHouseResponseDto {
 
 export class BoardingHouseListItemResponseDto extends BoardingHouseResponseDto {
   @ApiProperty({ example: 12, description: 'Total number of rooms in this property' })
-  totalRooms: number
+  declare totalRooms: number
 }
 
 export class BoardingHouseListResponseDto {

@@ -22,26 +22,48 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
  * @Controller('rooms')
  */
+interface GuardRequest {
+  user?: JwtPayload
+  headers: Record<string, string | string[] | undefined>
+  params?: Record<string, string | undefined>
+  query?: Record<string, string | undefined>
+  baseUrl?: string
+  originalUrl?: string
+  url?: string
+  boardingHouseId?: string
+  boardingHouse?: { id: string; name: string }
+}
+
 @Injectable()
 export class PropertyOwnershipGuard implements CanActivate {
   constructor(private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest<{
-      user: JwtPayload
-      headers: Record<string, string>
-      params?: Record<string, string>
-      query?: Record<string, string>
-      boardingHouseId?: string
-      boardingHouse?: { id: string; name: string }
-    }>()
+    const req = context.switchToHttp().getRequest<GuardRequest>()
 
-    // Check header first (standard BHMS context), then fallback to route params or query
-    const headerId = req.headers['x-boarding-house-id']
-    const paramId = req.params?.boardingHouseId || req.params?.id
-    const queryId = req.query?.boardingHouseId
+    const className = context.getClass?.()?.name
+    const isBoardingHouseRoute =
+      className === 'BoardingHousesController' ||
+      Boolean(req.baseUrl?.includes('boarding-houses') || req.originalUrl?.includes('/boarding-houses/'))
 
-    let rawId = (headerId || paramId || queryId)?.trim()
+    const rawHeader = req.headers?.['x-boarding-house-id']
+    const headerId = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader
+    const queryId = typeof req.query?.boardingHouseId === 'string' ? req.query.boardingHouseId : undefined
+    const paramPropertyId = req.params?.boardingHouseId
+
+    let rawId: string | undefined
+
+    if (isBoardingHouseRoute) {
+      // For boarding-house specific endpoints, the route param :id identifies the house
+      rawId = req.params?.id || paramPropertyId || headerId || queryId
+    } else {
+      // For all resource controllers (rooms, contracts, invoices...), x-boarding-house-id header
+      // is the primary context. Route param :id is the resource ID (roomId, contractId...) and
+      // must NOT override the header!
+      rawId = headerId || paramPropertyId || queryId || (className ? undefined : req.params?.id)
+    }
+
+    rawId = rawId?.trim()
 
     if (!rawId) {
       throw new BadRequestException('X-Boarding-House-Id header is required')

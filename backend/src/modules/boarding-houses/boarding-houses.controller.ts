@@ -5,6 +5,7 @@ import {
   Logger,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common'
@@ -24,6 +25,7 @@ import { JwtPayload } from '../auth/types/jwt-payload.type'
 import { BoardingHousesService } from './boarding-houses.service'
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto'
 import { SetupBoardingHouseDto } from './dto/setup-boarding-house.dto'
+import { UpdateBoardingHouseDto } from './dto/update-boarding-house.dto'
 import { BoardingHouseOverviewResponseDto } from './dto/boarding-house-overview-response.dto'
 import { MultiPropertyOverviewResponseDto } from './dto/multi-property-overview-response.dto'
 import { AiStrategyResponseDto } from './dto/ai-strategy-response.dto'
@@ -154,6 +156,49 @@ export class BoardingHousesController {
   ): Promise<BoardingHouseOverviewResponseDto> {
     this.logger.log(`GET /boarding-houses/${boardingHouseId}/analytics called by user ${user.id}`)
     return this.boardingHousesService.getDashboardOverview(user.id, boardingHouseId)
+  }
+
+  @Get(':id')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+  @ApiOperation({
+    summary: 'Get single boarding house details for landlord',
+    description: 'Returns boarding house information, room types, services and configurations.',
+  })
+  @ApiOkResponse({
+    description: 'Boarding house retrieved successfully',
+    type: BoardingHouseResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Boarding house not found' })
+  async getBoardingHouseById(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<BoardingHouseResponseDto> {
+    this.logger.log(`GET /boarding-houses/${id} called by user ${user.id}`)
+    return this.boardingHousesService.getBoardingHouseById(user.id, id)
+  }
+
+  @Patch(':id')
+  @ApiAuth()
+  @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
+  @ApiOperation({
+    summary: 'Update boarding house information',
+    description:
+      'Updates property general information such as name, address, thumbnail, total floors, and description.',
+  })
+  @ApiOkResponse({
+    description: 'Boarding house updated successfully',
+    type: BoardingHouseResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input payload' })
+  @ApiResponse({ status: 404, description: 'Boarding house not found' })
+  async updateBoardingHouse(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateBoardingHouseDto,
+  ): Promise<BoardingHouseResponseDto> {
+    this.logger.log(`PATCH /boarding-houses/${id} called by user ${user.id}`)
+    return this.boardingHousesService.updateBoardingHouse(user.id, id, dto)
   }
 
   @Get()

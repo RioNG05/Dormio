@@ -36,6 +36,7 @@ import {
   getTodayISODate,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { Button, TextInput, SelectInput, TextareaInput, Checkbox } from '@/components/ui'
 import {
   staffScheduleService,
   StaffBoardingHouse,
@@ -439,31 +440,34 @@ function StaffScheduleContent() {
             {isHousesLoading ? (
               <div className="h-8 w-44 bg-zinc-100 rounded-xl animate-pulse" />
             ) : (
-              <select
+              <SelectInput
                 value={selectedHouse}
                 onChange={e => setSelectedHouse(e.target.value)}
+                options={[
+                  { value: 'all', label: t('filterAllHouses') },
+                  ...boardingHouses.map(house => ({
+                    value: house.id,
+                    label: getLocalizedPlace(house.name, isEn),
+                  })),
+                ]}
                 className="px-3.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
-              >
-                <option value="all">{t('filterAllHouses')}</option>
-                {boardingHouses.map(house => (
-                  <option key={house.id} value={house.id}>
-                    {getLocalizedPlace(house.name, isEn)}
-                  </option>
-                ))}
-              </select>
+                containerClassName="w-auto"
+              />
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               type="button"
               onClick={handleCurrentWeek}
-              className="text-xs font-bold text-zinc-600 hover:text-[#2AC1BC] flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-auto p-0 text-xs font-bold text-zinc-600 hover:text-[#2AC1BC] hover:bg-transparent flex items-center gap-1.5 transition-colors cursor-pointer"
               title={t('titleReturnCurrentWeek')}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC]" />
               <span>{todayLabel}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -471,34 +475,40 @@ function StaffScheduleContent() {
         <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 type="button"
                 onClick={handlePrevWeek}
-                className="p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
+                className="p-1.5 h-auto rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
                 title={t('titlePrevWeek')}
               >
                 <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 type="button"
                 onClick={handleNextWeek}
-                className="p-1.5 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
+                className="p-1.5 h-auto rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-100 cursor-pointer transition-colors"
                 title={t('titleNextWeek')}
               >
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Nút bấm "Xem lịch hôm nay" để trở về lịch làm việc của tuần hiện tại */}
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               type="button"
               onClick={handleCurrentWeek}
-              className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+              className="px-3 py-1.5 h-auto rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
               title={t('titleTodaySchedule')}
             >
               <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
               <span>{t('btnTodaySchedule')}</span>
-            </button>
+            </Button>
 
             <span className="text-xs sm:text-sm font-black text-zinc-900 ml-1">
               {t('weekLabel')}
@@ -684,11 +694,10 @@ function StaffScheduleContent() {
                 }`}
               >
                 <div className="flex items-start gap-3.5 flex-1">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={duty.completed}
                     onChange={() => handleToggleDuty(duty)}
-                    className="w-5 h-5 rounded-md text-[#2AC1BC] focus:ring-[#2AC1BC] mt-1 cursor-pointer shrink-0"
+                    className="mt-1"
                   />
 
                   <div className="space-y-1.5 flex-1">
@@ -758,14 +767,16 @@ function StaffScheduleContent() {
                     </div>
                   )}
 
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     type="button"
                     onClick={() => handleOpenDutyProofModal(duty)}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200 shadow-2xs"
+                    className="px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200 shadow-2xs"
                   >
                     <FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />
                     <span>{t('btnUpdateDetails')}</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -806,13 +817,15 @@ function StaffScheduleContent() {
                   {getShiftName(selectedSchedule.shift.name)}
                 </h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => setSelectedSchedule(null)}
-                className="p-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors cursor-pointer"
+                className="p-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* UNIFIED CONTENT: SHIFT INFO + CO-WORKERS + DUTIES (NO TABS) */}
@@ -971,13 +984,14 @@ function StaffScheduleContent() {
 
             {/* Modal Close Button */}
             <div className="pt-3 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={() => setSelectedSchedule(null)}
-                className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="w-full py-2.5 h-auto bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t('btnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1003,13 +1017,15 @@ function StaffScheduleContent() {
                   {t('dutyModalHeader')}
                 </h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => setActiveDutyForProof(null)}
-                className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                className="p-1 h-auto rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             {/* Task Info */}
@@ -1033,10 +1049,11 @@ function StaffScheduleContent() {
             </div>
 
             {/* Hidden File Input */}
-            <input
+            <TextInput
               ref={dutyFileInputRef}
               type="file"
               accept="image/*"
+              containerClassName="hidden"
               className="hidden"
               onChange={handleFileUpload}
             />
@@ -1060,27 +1077,30 @@ function StaffScheduleContent() {
                     </span>
                     <p className="text-[11px] text-zinc-500 font-mono">{todayStr}</p>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     type="button"
                     onClick={() => setDutyDraftPhoto(null)}
-                    className="p-2 rounded-xl bg-white hover:bg-red-50 text-zinc-400 hover:text-red-600 border border-zinc-200 transition-colors cursor-pointer"
+                    className="p-2 h-auto rounded-xl bg-white hover:bg-red-50 text-zinc-400 hover:text-red-600 border border-zinc-200 transition-colors cursor-pointer"
                     title={t('deletePhoto')}
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               ) : (
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   onClick={() => dutyFileInputRef.current?.click()}
-                  className="w-full py-4 px-4 rounded-2xl border-2 border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50/70 hover:bg-[#2AC1BC]/5 text-zinc-700 text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  className="w-full h-auto py-4 px-4 rounded-2xl border-2 border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50/70 hover:bg-[#2AC1BC]/5 text-zinc-700 text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Camera className="w-6 h-6 text-[#2AC1BC]" />
                   <span>{t('clickToCapturePhoto')}</span>
                   <span className="text-[10px] text-zinc-400 font-normal">
                     {t('autoTimestampDesc')}
                   </span>
-                </button>
+                </Button>
               )}
             </div>
 
@@ -1089,7 +1109,7 @@ function StaffScheduleContent() {
               <label className="text-[11px] font-bold text-zinc-600 block">
                 {t('dutyNoteLabel')}
               </label>
-              <textarea
+              <TextareaInput
                 rows={3}
                 value={dutyDraftNote}
                 onChange={e => setDutyDraftNote(e.target.value)}
@@ -1100,32 +1120,35 @@ function StaffScheduleContent() {
 
             {/* Actions */}
             <div className="pt-3 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-2.5">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={() => setActiveDutyForProof(null)}
-                className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2.5 h-auto bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t('btnCancel')}
-              </button>
+              </Button>
 
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  variant="secondary"
                   type="button"
                   onClick={() => handleSaveDutyProof(false)}
-                  className="px-4 py-2.5 bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2.5 h-auto bg-white hover:bg-zinc-100 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
                 >
                   <FileText className="w-3.5 h-3.5 text-zinc-500" />
                   <span>{t('saveProgress')}</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
+                  variant="primary"
                   type="button"
                   onClick={() => handleSaveDutyProof(true)}
-                  className="px-4.5 py-2.5 bg-[#2AC1BC] hover:bg-[#22a8a4] text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                  className="px-4.5 py-2.5 h-auto bg-[#2AC1BC] hover:bg-[#22a8a4] text-white text-xs font-black rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{t('btnCompleteDuty')}</span>
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1151,13 +1174,15 @@ function StaffScheduleContent() {
                   {previewPhotoModal.title}
                 </h3>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => setPreviewPhotoModal(null)}
-                className="p-1 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                className="p-1 h-auto rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="relative bg-zinc-950 aspect-video max-h-[380px] flex items-center justify-center">
@@ -1180,13 +1205,14 @@ function StaffScheduleContent() {
             )}
 
             <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
-              <button
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={() => setPreviewPhotoModal(null)}
-                className="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 h-auto bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t('btnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

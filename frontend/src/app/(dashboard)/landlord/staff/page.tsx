@@ -28,15 +28,29 @@ import {
   FileText,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  SearchInput,
+} from '@/components/ui'
+import { cn } from '@/lib/utils'
 import { staffService, StaffItem, JobPosition, StaffSummary } from '@/services/staff.service'
 
 export default function StaffPage() {
   const { activeBuilding } = useAuth()
   const buildingId = activeBuilding?.id || ''
   const t = useTranslations('landlord')
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
+  const { toast } = useToast()
+
+  const formatDate = (dateStr?: string | Date | null) => {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleDateString('vi-VN')
+  }
 
   // Data states
   const [staffList, setStaffList] = useState<StaffItem[]>([])
@@ -396,9 +410,14 @@ export default function StaffPage() {
       await staffService.updateStaffStatus(buildingId, staff.assignmentId, {
         status: nextStatus,
       })
+      toast.success(
+        nextStatus === 'active'
+          ? t('landlordStaffConfirmActivate', { name: staff.fullName })
+          : t('landlordStaffConfirmDeactivate', { name: staff.fullName }),
+      )
       await fetchStaffData()
     } catch (err: any) {
-      alert(err?.response?.data?.message || t('landlordStaffAlertUpdateStatusError'))
+      toast.error(err?.response?.data?.message || t('landlordStaffAlertUpdateStatusError'))
     }
   }
 
@@ -418,11 +437,13 @@ export default function StaffPage() {
           name: posFormName.trim(),
           description: posFormDesc.trim() || undefined,
         })
+        toast.success(t('landlordStaffPositionsBtnSave'))
       } else {
         await staffService.createPosition(buildingId, {
           name: posFormName.trim(),
           description: posFormDesc.trim() || undefined,
         })
+        toast.success(t('landlordStaffPositionsBtnSave'))
       }
 
       setEditingPosition(null)
@@ -445,9 +466,10 @@ export default function StaffPage() {
 
     try {
       await staffService.deletePosition(buildingId, pos.id)
+      toast.success(t('landlordStaffPositionsDeleteTooltip'))
       await fetchStaffData()
     } catch (err: any) {
-      alert(err?.response?.data?.message || t('landlordStaffAlertDeletePosError'))
+      toast.error(err?.response?.data?.message || t('landlordStaffAlertDeletePosError'))
     }
   }
 
@@ -479,7 +501,9 @@ export default function StaffPage() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               setEditingPosition(null)
               setIsAddingPositionInline(false)
@@ -488,21 +512,22 @@ export default function StaffPage() {
               setPosErrorMessage('')
               setIsPositionsModalOpen(true)
             }}
-            className="flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl shadow-2xs transition-all cursor-pointer shrink-0"
+            leftIcon={<Briefcase className="w-4 h-4 text-[#2AC1BC]" />}
           >
-            <Briefcase className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t('landlordStaffManagePositions', { count: positions.length })}</span>
-          </button>
+            {t('landlordStaffManagePositions', { count: positions.length })}
+          </Button>
 
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               resetOnboardForm()
               setIsOnboardModalOpen(true)
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
+            leftIcon={<Plus className="w-4 h-4" />}
+            className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold"
           >
-            <Plus className="w-4 h-4" /> {t('landlordStaffAddNew')}
-          </button>
+            {t('landlordStaffAddNew')}
+          </Button>
         </div>
       </div>
 
@@ -570,75 +595,74 @@ export default function StaffPage() {
       <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Bar */}
-          <div className="relative w-full md:max-w-xs">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
+          <div className="w-full md:max-w-xs">
+            <SearchInput
               placeholder={t('landlordStaffSearchPlaceholder')}
               value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
+              onChange={val => {
+                setSearchQuery(val)
                 setCurrentPage(1)
               }}
-              className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />
           </div>
 
           <div className="flex flex-wrap items-center justify-between md:justify-end gap-2.5">
             {/* Position filter */}
-            <div className="relative min-w-[170px]">
-              <select
+            <div className="min-w-[170px]">
+              <SelectInput
                 value={positionFilter}
                 onChange={e => {
                   setPositionFilter(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="w-full rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-800 bg-zinc-50 focus:bg-white focus:outline-none focus:border-[#2AC1BC] appearance-none cursor-pointer"
-              >
-                <option value="all">
-                  {t('landlordStaffAllPositions', { count: positions.length })}
-                </option>
-                {positions.map(pos => (
-                  <option key={pos.id} value={pos.id}>
-                    {pos.name} {pos.staffCount ? `(${pos.staffCount})` : ''}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+                options={[
+                  { value: 'all', label: t('landlordStaffAllPositions', { count: positions.length }) },
+                  ...positions.map(pos => ({
+                    value: pos.id,
+                    label: `${pos.name} ${pos.staffCount ? `(${pos.staffCount})` : ''}`,
+                  })),
+                ]}
+              />
             </div>
 
             {/* View Mode Toggle (Rule #9) */}
             <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <button
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
                 onClick={() => {
                   setViewMode('grid')
                   setPageSize(6)
                   setCurrentPage(1)
                 }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                className={cn(
+                  'p-1.5 h-auto rounded-lg',
                   viewMode === 'grid'
                     ? 'bg-white text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                    : 'text-zinc-500 hover:text-zinc-900',
+                )}
                 title={t('landlordStaffViewGrid')}
               >
                 <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="sm"
                 onClick={() => {
                   setViewMode('table')
                   setPageSize(10)
                   setCurrentPage(1)
                 }}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                className={cn(
+                  'p-1.5 h-auto rounded-lg',
                   viewMode === 'table'
                     ? 'bg-white text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                    : 'text-zinc-500 hover:text-zinc-900',
+                )}
                 title={t('landlordStaffViewTable')}
               >
                 <List className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -650,27 +674,31 @@ export default function StaffPage() {
             { label: t('landlordStaffTabActive'), val: 'active', count: summary.activeStaff },
             { label: t('landlordStaffTabInactive'), val: 'inactive', count: summary.inactiveStaff },
           ].map(tab => (
-            <button
+            <Button
               key={tab.val}
+              variant={statusFilter === tab.val ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => {
                 setStatusFilter(tab.val as any)
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={cn(
+                'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
                 statusFilter === tab.val
-                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70'
-              }`}
+                  ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/20'
+                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70',
+              )}
             >
               <span>{tab.label}</span>
               <span
-                className={`px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ${
-                  statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700'
-                }`}
+                className={cn(
+                  'px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ml-1.5',
+                  statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700',
+                )}
               >
                 {tab.count}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -696,15 +724,16 @@ export default function StaffPage() {
                 : t('landlordStaffEmptyDesc')}
             </p>
           </div>
-          <button
+          <Button
+            size="sm"
             onClick={() => {
               resetOnboardForm()
               setIsOnboardModalOpen(true)
             }}
-            className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl transition-all shadow-sm cursor-pointer"
+            className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold"
           >
             {t('landlordStaffAddNow')}
-          </button>
+          </Button>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 default) */
@@ -766,7 +795,7 @@ export default function StaffPage() {
                       <span>
                         {t('landlordStaffJoinedLabel')}{' '}
                         <strong className="text-zinc-700">
-                          {new Date(staff.joinedAt).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                          {formatDate(staff.joinedAt)}
                         </strong>
                       </span>
                     </div>
@@ -788,37 +817,43 @@ export default function StaffPage() {
                 {/* Card Footer Actions: Assign Role & Toggle Status */}
                 <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setSelectedStaff(staff)
                         setIsDetailModalOpen(true)
                       }}
-                      className="text-xs font-bold text-zinc-600 hover:text-zinc-900 px-2.5 py-1.5 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
+                      className="text-xs font-bold text-zinc-600 hover:text-zinc-900"
                     >
                       {t('landlordStaffBtnDetail')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleOpenAssignRoleModal(staff)}
-                      className="text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 px-2.5 py-1.5 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+                      className="text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
                       title={t('landlordStaffBtnAssignRoleTooltip')}
+                      leftIcon={<Edit3 className="w-3 h-3" />}
                     >
-                      <Edit3 className="w-3 h-3" /> {t('landlordStaffBtnAssignRole')}
-                    </button>
+                      {t('landlordStaffBtnAssignRole')}
+                    </Button>
                   </div>
 
-                  <button
+                  <Button
+                    size="sm"
+                    variant={isActive ? 'danger' : 'secondary'}
                     onClick={() => handleToggleStatus(staff)}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={cn(
+                      'text-xs font-bold',
                       isActive
                         ? 'text-rose-600 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/60'
-                        : 'text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30'
-                    }`}
+                        : 'text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30',
+                    )}
+                    leftIcon={<Power className="w-3 h-3" />}
                   >
-                    <Power className="w-3 h-3" />
-                    <span>
-                      {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
-                    </span>
-                  </button>
+                    {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
+                  </Button>
                 </div>
               </div>
             )
@@ -871,7 +906,7 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 font-bold text-zinc-900">{staff.phoneNumber}</td>
                       <td className="px-6 py-4 text-zinc-600">
-                        {new Date(staff.joinedAt).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                        {formatDate(staff.joinedAt)}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -888,29 +923,36 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
+                          <Button
+                            size="sm"
+                            variant="secondary"
                             onClick={() => handleOpenAssignRoleModal(staff)}
-                            className="px-2.5 py-1 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-lg transition-colors cursor-pointer"
+                            className="px-2.5 py-1 h-auto text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-lg"
                             title={t('landlordStaffBtnAssignRoleTooltip')}
                           >
                             {t('landlordStaffBtnAssignRole')}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
                             onClick={() => {
                               setSelectedStaff(staff)
                               setIsDetailModalOpen(true)
                             }}
-                            className="px-2.5 py-1 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg transition-colors cursor-pointer"
+                            className="px-2.5 py-1 h-auto text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg"
                           >
                             {t('landlordStaffBtnDetail')}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             onClick={() => handleToggleStatus(staff)}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                            className={cn(
+                              'p-1.5 h-auto rounded-lg border',
                               isActive
                                 ? 'text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100'
-                                : 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20'
-                            }`}
+                                : 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20',
+                            )}
                             title={
                               isActive
                                 ? t('landlordStaffTooltipDeactivate')
@@ -918,7 +960,7 @@ export default function StaffPage() {
                             }
                           >
                             <Power className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -935,8 +977,7 @@ export default function StaffPage() {
         <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
           <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200">
             <span>{t('landlordStaffPaginationShowing')}</span>
-            <input
-              type="number"
+            <NumberInput
               min={1}
               max={100}
               value={pageSize || ''}
@@ -945,7 +986,7 @@ export default function StaffPage() {
                 setPageSize(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100))
                 setCurrentPage(1)
               }}
-              className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+              className="w-14 text-center font-extrabold text-zinc-900 bg-white"
             />
             <span>{t('landlordStaffPaginationPerPage')}</span>
           </div>
@@ -966,33 +1007,38 @@ export default function StaffPage() {
 
         {/* 5-Page Window Jumping Pagination */}
         <div className="flex items-center gap-1.5">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-            className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             &larr; {t('landlordStaffPaginationPrev')}
-          </button>
+          </Button>
           {visiblePages.map(page => (
-            <button
+            <Button
               key={page}
+              variant={currentPage === page ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => setCurrentPage(page)}
-              className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+              className={cn(
+                'w-8 h-8 p-0 text-xs font-extrabold rounded-xl',
                 currentPage === page
-                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-              }`}
+                  ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/30'
+                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50',
+              )}
             >
               {page}
-            </button>
+            </Button>
           ))}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
             onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-            className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
             {t('landlordStaffPaginationNext')} &rarr;
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1025,13 +1071,15 @@ export default function StaffPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 type="button"
                 onClick={() => handleAttemptCloseModal('onboard')}
-                className="p-1.5 rounded-xl hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-600"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleSubmitOnboard} className="flex flex-col flex-1 overflow-hidden">
@@ -1050,9 +1098,8 @@ export default function StaffPage() {
                     <span className="text-rose-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                      <input
+                    <div className="flex-1">
+                      <TextInput
                         type="tel"
                         required
                         placeholder={t('landlordStaffOnboardPhonePlaceholder')}
@@ -1069,21 +1116,18 @@ export default function StaffPage() {
                             handleSearchPhone(lookupPhone)
                           }
                         }}
-                        className="w-full pl-10 pr-4 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+                        leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
                       />
                     </div>
-                    <button
+                    <Button
                       type="button"
                       onClick={() => handleSearchPhone(lookupPhone)}
                       disabled={isSearchingUser || !lookupPhone.trim()}
-                      className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0"
+                      isLoading={isSearchingUser}
+                      className="bg-zinc-900 hover:bg-zinc-800 text-white shrink-0"
                     >
-                      {isSearchingUser ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        t('landlordStaffOnboardBtnCheck')
-                      )}
-                    </button>
+                      {t('landlordStaffOnboardBtnCheck')}
+                    </Button>
                   </div>
                   <p className="text-[11px] text-zinc-400">{t('landlordStaffOnboardPhoneHelp')}</p>
                 </div>
@@ -1130,23 +1174,16 @@ export default function StaffPage() {
                       <span>{t('landlordStaffOnboardNewAccountTitle')}</span>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-700">
-                        {t('landlordStaffOnboardFullNameLabel')}{' '}
-                        <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder={t('landlordStaffOnboardFullNamePlaceholder')}
-                        value={fullNameInput}
-                        onChange={e => {
-                          setFullNameInput(e.target.value)
-                          setFormDirty(true)
-                        }}
-                        className="w-full px-3.5 py-2 text-xs font-semibold bg-white border border-orange-200 rounded-xl focus:outline-none focus:border-[#FF6B35] transition-all"
-                      />
-                    </div>
+                    <TextInput
+                      label={t('landlordStaffOnboardFullNameLabel')}
+                      required
+                      placeholder={t('landlordStaffOnboardFullNamePlaceholder')}
+                      value={fullNameInput}
+                      onChange={e => {
+                        setFullNameInput(e.target.value)
+                        setFormDirty(true)
+                      }}
+                    />
 
                     <div className="p-2.5 bg-white/80 rounded-xl border border-orange-100 text-[11px] text-zinc-600 leading-relaxed space-y-1">
                       <p className="font-bold text-orange-700">
@@ -1164,131 +1201,101 @@ export default function StaffPage() {
                       <span>{t('landlordStaffOnboardPositionLabel')}</span>
                       <span className="text-rose-500">*</span>
                     </label>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       type="button"
                       onClick={() => setIsCreatingNewPosition(!isCreatingNewPosition)}
-                      className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
+                      className="text-[11px] font-bold text-[#2AC1BC] hover:underline h-auto p-0"
                     >
                       {isCreatingNewPosition
                         ? t('landlordStaffOnboardSelectExistingPos')
                         : t('landlordStaffOnboardCreateNewPos')}
-                    </button>
+                    </Button>
                   </div>
 
                   {!isCreatingNewPosition ? (
-                    <div className="relative">
-                      <select
-                        value={selectedPositionId}
-                        onChange={e => {
-                          setSelectedPositionId(e.target.value)
-                          setFormDirty(true)
-                        }}
-                        className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] appearance-none cursor-pointer"
-                      >
-                        {positions.map(pos => (
-                          <option key={pos.id} value={pos.id}>
-                            {pos.name} {pos.description ? `— ${pos.description}` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                    </div>
+                    <SelectInput
+                      value={selectedPositionId}
+                      onChange={e => {
+                        setSelectedPositionId(e.target.value)
+                        setFormDirty(true)
+                      }}
+                      options={positions.map(pos => ({
+                        value: pos.id,
+                        label: `${pos.name} ${pos.description ? `— ${pos.description}` : ''}`,
+                      }))}
+                    />
                   ) : (
                     <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
-                      <div>
-                        <label className="text-[11px] font-bold text-zinc-600">
-                          {t('landlordStaffOnboardNewPosNameLabel')}{' '}
-                          <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required={isCreatingNewPosition}
-                          placeholder={t('landlordStaffOnboardNewPosNamePlaceholder')}
-                          value={newPositionName}
-                          onChange={e => {
-                            setNewPositionName(e.target.value)
-                            setFormDirty(true)
-                          }}
-                          className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold text-zinc-600">
-                          {t('landlordStaffOnboardNewPosDescLabel')}
-                        </label>
-                        <input
-                          type="text"
-                          placeholder={t('landlordStaffOnboardNewPosDescPlaceholder')}
-                          value={newPositionDesc}
-                          onChange={e => {
-                            setNewPositionDesc(e.target.value)
-                            setFormDirty(true)
-                          }}
-                          className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                        />
-                      </div>
+                      <TextInput
+                        label={t('landlordStaffOnboardNewPosNameLabel')}
+                        labelClassName="text-[11px] font-bold text-zinc-600"
+                        required={isCreatingNewPosition}
+                        placeholder={t('landlordStaffOnboardNewPosNamePlaceholder')}
+                        value={newPositionName}
+                        onChange={e => {
+                          setNewPositionName(e.target.value)
+                          setFormDirty(true)
+                        }}
+                      />
+                      <TextInput
+                        label={t('landlordStaffOnboardNewPosDescLabel')}
+                        labelClassName="text-[11px] font-bold text-zinc-600"
+                        placeholder={t('landlordStaffOnboardNewPosDescPlaceholder')}
+                        value={newPositionDesc}
+                        onChange={e => {
+                          setNewPositionDesc(e.target.value)
+                          setFormDirty(true)
+                        }}
+                      />
                     </div>
                   )}
                 </div>
 
                 {/* Start Date & Notes */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700">
-                      {t('landlordStaffOnboardStartDateLabel')}
-                    </label>
-                    <input
-                      type="date"
-                      value={joinedAtInput}
-                      onChange={e => {
-                        setJoinedAtInput(e.target.value)
-                        setFormDirty(true)
-                      }}
-                      className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
+                  <TextInput
+                    type="date"
+                    label={t('landlordStaffOnboardStartDateLabel')}
+                    labelClassName="text-xs font-bold text-zinc-700"
+                    value={joinedAtInput}
+                    onChange={e => {
+                      setJoinedAtInput(e.target.value)
+                      setFormDirty(true)
+                    }}
+                  />
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700">
-                      {t('landlordStaffOnboardNoteLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t('landlordStaffOnboardNotePlaceholder')}
-                      value={noteInput}
-                      onChange={e => {
-                        setNoteInput(e.target.value)
-                        setFormDirty(true)
-                      }}
-                      className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
+                  <TextInput
+                    label={t('landlordStaffOnboardNoteLabel')}
+                    labelClassName="text-xs font-bold text-zinc-700"
+                    placeholder={t('landlordStaffOnboardNotePlaceholder')}
+                    value={noteInput}
+                    onChange={e => {
+                      setNoteInput(e.target.value)
+                      setFormDirty(true)
+                    }}
+                  />
                 </div>
               </div>
 
               {/* Modal Footer */}
               <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/60">
-                <button
+                <Button
+                  variant="secondary"
                   type="button"
                   onClick={() => handleAttemptCloseModal('onboard')}
-                  className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                 >
                   {t('landlordStaffOnboardBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSubmitting || (foundUser?.isAlreadyStaffAtThisHouse ?? false)}
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-50 rounded-xl transition-all shadow-md shadow-[#2AC1BC]/20 cursor-pointer flex items-center gap-2"
+                  isLoading={isSubmitting}
+                  className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold shadow-md shadow-[#2AC1BC]/20"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{t('landlordStaffOnboardBtnSaving')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordStaffOnboardBtnSave')}</span>
-                  )}
-                </button>
+                  {t('landlordStaffOnboardBtnSave')}
+                </Button>
               </div>
             </form>
           </div>
@@ -1324,13 +1331,15 @@ export default function StaffPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => handleAttemptCloseModal('assignRole')}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <form onSubmit={handleSaveAssignRole} className="p-6 space-y-4">
@@ -1362,44 +1371,35 @@ export default function StaffPage() {
                     {t('landlordStaffAssignSelectRoleLabel')}{' '}
                     <span className="text-rose-500">*</span>
                   </label>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => setIsAssignCreatingNew(!isAssignCreatingNew)}
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer p-0 h-auto"
                   >
                     {isAssignCreatingNew
                       ? t('landlordStaffOnboardSelectExistingPos')
                       : t('landlordStaffOnboardCreateNewPos')}
-                  </button>
+                  </Button>
                 </div>
 
                 {!isAssignCreatingNew ? (
-                  <div className="relative">
-                    <select
-                      value={assignTargetPositionId}
-                      onChange={e => {
-                        setAssignTargetPositionId(e.target.value)
-                        setFormDirty(true)
-                      }}
-                      className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] appearance-none cursor-pointer"
-                    >
-                      {positions.map(pos => (
-                        <option key={pos.id} value={pos.id}>
-                          {pos.name} {pos.description ? `— ${pos.description}` : ''}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                  </div>
+                  <SelectInput
+                    value={assignTargetPositionId}
+                    onChange={e => {
+                      setAssignTargetPositionId(e.target.value)
+                      setFormDirty(true)
+                    }}
+                    options={positions.map(pos => ({
+                      value: pos.id,
+                      label: `${pos.name}${pos.description ? ` — ${pos.description}` : ''}`,
+                    }))}
+                  />
                 ) : (
                   <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
                     <div>
-                      <label className="text-[11px] font-bold text-zinc-600">
-                        {t('landlordStaffOnboardNewPosNameLabel')}{' '}
-                        <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="text"
+                      <TextInput
+                        label={t('landlordStaffOnboardNewPosNameLabel')}
                         required
                         placeholder={t('landlordStaffOnboardNewPosNamePlaceholder')}
                         value={assignNewPosName}
@@ -1407,22 +1407,17 @@ export default function StaffPage() {
                           setAssignNewPosName(e.target.value)
                           setFormDirty(true)
                         }}
-                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-zinc-600">
-                        {t('landlordStaffOnboardNewPosDescLabel')}
-                      </label>
-                      <input
-                        type="text"
+                      <TextInput
+                        label={t('landlordStaffOnboardNewPosDescLabel')}
                         placeholder={t('landlordStaffOnboardNewPosDescPlaceholder')}
                         value={assignNewPosDesc}
                         onChange={e => {
                           setAssignNewPosDesc(e.target.value)
                           setFormDirty(true)
                         }}
-                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
                       />
                     </div>
                   </div>
@@ -1444,14 +1439,15 @@ export default function StaffPage() {
 
               {/* Modal Actions */}
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => handleAttemptCloseModal('assignRole')}
                   className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                 >
                   {t('landlordStaffAssignBtnCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isAssignSubmitting}
                   className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-50 rounded-xl transition-all shadow-md shadow-[#2AC1BC]/20 cursor-pointer flex items-center gap-2"
@@ -1464,7 +1460,7 @@ export default function StaffPage() {
                   ) : (
                     <span>{t('landlordStaffAssignBtnConfirm')}</span>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1500,13 +1496,15 @@ export default function StaffPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => handleAttemptCloseModal('positions')}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
@@ -1529,56 +1527,46 @@ export default function StaffPage() {
                         ? t('landlordStaffPositionsEditTitle')
                         : t('landlordStaffPositionsAddTitle')}
                     </h4>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
                       }}
-                      className="text-[11px] text-zinc-400 hover:text-zinc-700 font-bold"
+                      className="text-[11px] text-zinc-400 hover:text-zinc-700 font-bold p-0 h-auto"
                     >
                       {t('landlordStaffPositionsBtnCloseForm')}
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-700">
-                        {t('landlordStaffPositionsNameLabel')}{' '}
-                        <span className="text-rose-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder={t('landlordStaffPositionsNamePlaceholder')}
-                        value={posFormName}
-                        onChange={e => {
-                          setPosFormName(e.target.value)
-                          setFormDirty(true)
-                        }}
-                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-zinc-700">
-                        {t('landlordStaffPositionsDescLabel')}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder={t('landlordStaffPositionsDescPlaceholder')}
-                        value={posFormDesc}
-                        onChange={e => {
-                          setPosFormDesc(e.target.value)
-                          setFormDirty(true)
-                        }}
-                        className="w-full mt-1 px-3 py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC]"
-                      />
-                    </div>
+                    <TextInput
+                      label={t('landlordStaffPositionsNameLabel')}
+                      required
+                      placeholder={t('landlordStaffPositionsNamePlaceholder')}
+                      value={posFormName}
+                      onChange={e => {
+                        setPosFormName(e.target.value)
+                        setFormDirty(true)
+                      }}
+                    />
+                    <TextInput
+                      label={t('landlordStaffPositionsDescLabel')}
+                      placeholder={t('landlordStaffPositionsDescPlaceholder')}
+                      value={posFormDesc}
+                      onChange={e => {
+                        setPosFormDesc(e.target.value)
+                        setFormDirty(true)
+                      }}
+                    />
                   </div>
 
                   <div className="flex justify-end gap-2 pt-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
@@ -1586,16 +1574,17 @@ export default function StaffPage() {
                       className="px-3 py-1.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
                     >
                       {t('landlordStaffPositionsBtnCancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
                       disabled={isPosSubmitting}
+                      size="sm"
                       className="px-4 py-1.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-xs"
                     >
                       {isPosSubmitting
                         ? t('landlordStaffPositionsBtnSaving')
                         : t('landlordStaffPositionsBtnSave')}
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}
@@ -1607,18 +1596,19 @@ export default function StaffPage() {
                     {t('landlordStaffPositionsListTitle', { count: positions.length })}
                   </span>
                   {!isAddingPositionInline && !editingPosition && (
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setIsAddingPositionInline(true)
                         setEditingPosition(null)
                         setPosFormName('')
                         setPosFormDesc('')
                       }}
-                      className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer p-0 h-auto"
                     >
                       <Plus className="w-3.5 h-3.5" /> {t('landlordStaffPositionsBtnAddNew')}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -1643,24 +1633,28 @@ export default function StaffPage() {
                       </div>
 
                       <div className="flex items-center gap-2 self-end sm:self-center">
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setEditingPosition(pos)
                             setIsAddingPositionInline(false)
                             setPosFormName(pos.name)
                             setPosFormDesc(pos.description || '')
                           }}
-                          className="p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                           title={t('landlordStaffPositionsEditTooltip')}
                         >
                           <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleDeletePosition(pos)}
                           disabled={(pos.staffCount || 0) > 0}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer h-auto w-auto"
                           title={
                             (pos.staffCount || 0) > 0
                               ? t('landlordStaffPositionsCannotDeleteTooltip')
@@ -1668,7 +1662,7 @@ export default function StaffPage() {
                           }
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -1677,13 +1671,14 @@ export default function StaffPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => handleAttemptCloseModal('positions')}
                 className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffPositionsBtnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1732,7 +1727,7 @@ export default function StaffPage() {
               </div>
             </div>
 
-            <button
+            <Button
               onClick={() =>
                 copyToClipboard(
                   t('landlordStaffCredShareMessage', {
@@ -1754,14 +1749,15 @@ export default function StaffPage() {
                   <span>{t('landlordStaffCredCopyBtn')}</span>
                 </>
               )}
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setCredentialModal(prev => ({ ...prev, isOpen: false }))}
-              className="text-xs font-bold text-zinc-500 hover:text-zinc-800 transition-colors"
+              className="text-xs font-bold text-zinc-500 hover:text-zinc-800 transition-colors p-0 h-auto"
             >
               {t('landlordStaffCredCloseBtn')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1790,12 +1786,14 @@ export default function StaffPage() {
                 </div>
               </div>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsDetailModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
+                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors h-auto w-auto"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-3 text-xs bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
@@ -1834,7 +1832,7 @@ export default function StaffPage() {
                   {t('landlordStaffDetailJoinedLabel')}
                 </span>
                 <span className="font-medium text-zinc-700">
-                  {new Date(selectedStaff.joinedAt).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                  {formatDate(selectedStaff.joinedAt)}
                 </span>
               </div>
               {selectedStaff.leftAt && (
@@ -1843,7 +1841,7 @@ export default function StaffPage() {
                     {t('landlordStaffDetailLeftLabel')}
                   </span>
                   <span className="font-medium text-rose-600">
-                    {new Date(selectedStaff.leftAt).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                    {formatDate(selectedStaff.leftAt)}
                   </span>
                 </div>
               )}
@@ -1858,7 +1856,7 @@ export default function StaffPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+              <Button
                 onClick={() => {
                   handleOpenAssignRoleModal(selectedStaff)
                   setIsDetailModalOpen(false)
@@ -1866,8 +1864,9 @@ export default function StaffPage() {
                 className="px-3.5 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffBtnAssignRole')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => {
                   handleToggleStatus(selectedStaff)
                   setIsDetailModalOpen(false)
@@ -1877,13 +1876,13 @@ export default function StaffPage() {
                 {selectedStaff.status === 'active'
                   ? t('landlordStaffBtnDeactivate')
                   : t('landlordStaffBtnActivate')}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setIsDetailModalOpen(false)}
                 className="px-4 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffDetailBtnClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1914,20 +1913,22 @@ export default function StaffPage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordStaffConfirmCloseKeep')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
                 onClick={handleConfirmClose}
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
               >
                 {t('landlordStaffConfirmCloseDiscard')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

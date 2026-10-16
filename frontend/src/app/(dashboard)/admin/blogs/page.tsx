@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   Newspaper,
 } from 'lucide-react'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
 
 const HOUSE_PLACEHOLDER = '/house-placeholder.jpg'
 
@@ -488,22 +489,25 @@ export default function AdminPostModerationPage() {
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleRefresh}
             disabled={refreshing || loading}
-            className="p-2.5 rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+            className="p-2.5 h-auto rounded-2xl bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs shadow-2xs"
+            leftIcon={<RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />}
             title={t('adminModRefresh')}
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />
-          </button>
+          />
 
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-all shadow-sm cursor-pointer"
+            className="rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-sm"
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4" />
             <span>{t('adminModNewPost')}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -520,9 +524,14 @@ export default function AdminPostModerationPage() {
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             <span className="font-bold">{feedbackMsg.text}</span>
           </div>
-          <button onClick={() => setFeedbackMsg(null)} className="p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFeedbackMsg(null)}
+            className="p-1 h-auto"
+          >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -533,12 +542,14 @@ export default function AdminPostModerationPage() {
             <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
             <span className="font-semibold">{error}</span>
           </div>
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => fetchPosts()}
-            className="px-3 py-1 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors cursor-pointer text-xs"
+            className="px-3 py-1 h-auto text-xs"
           >
             {t('adminBlogsRetry')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -579,8 +590,7 @@ export default function AdminPostModerationPage() {
                 {/* 1. Filter Article / Post */}
                 <th className="p-2.5 font-normal">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
+                    <TextInput
                       type="text"
                       value={filterArticle}
                       onChange={e => {
@@ -588,31 +598,38 @@ export default function AdminPostModerationPage() {
                         setCurrentPage(1)
                       }}
                       placeholder={t('adminBlogsFilterArticlePlaceholder')}
-                      className="w-full pl-8 pr-7 py-1.5 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                      containerClassName="space-y-0"
+                      className="py-1.5 bg-white border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                      leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+                      rightIcon={
+                        filterArticle ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setFilterArticle('')
+                              setCurrentPage(1)
+                            }}
+                            className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        ) : undefined
+                      }
                     />
-                    {filterArticle && (
-                      <button
-                        onClick={() => {
-                          setFilterArticle('')
-                          setCurrentPage(1)
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
                   </div>
                 </th>
 
                 {/* 2. Filter Category / Property */}
                 <th className="p-2.5 font-normal">
-                  <select
+                  <SelectInput
                     value={filterProperty}
                     onChange={e => {
                       setFilterProperty(e.target.value)
                       setCurrentPage(1)
                     }}
-                    className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                    containerClassName="space-y-0"
+                    className="w-full py-1.5 px-2 bg-white border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
                     <option value="all">{t('adminBlogsFilterPropertyAll')}</option>
                     {availableProperties.map(propName => (
@@ -620,7 +637,7 @@ export default function AdminPostModerationPage() {
                         {propName}
                       </option>
                     ))}
-                  </select>
+                  </SelectInput>
                 </th>
 
                 {/* 3. Engagement Column */}
@@ -628,31 +645,33 @@ export default function AdminPostModerationPage() {
 
                 {/* 4. Filter Deposit / Price */}
                 <th className="p-2.5 font-normal">
-                  <select
+                  <SelectInput
                     value={filterDeposit}
                     onChange={e => {
                       setFilterDeposit(e.target.value as any)
                       setCurrentPage(1)
                     }}
-                    className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                    containerClassName="space-y-0"
+                    className="w-full py-1.5 px-2 bg-white border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
                     <option value="all">{t('adminBlogsFilterDepositAll')}</option>
                     <option value="free">{t('adminBlogsFilterDepositFree')}</option>
                     <option value="under_2m">{t('adminBlogsFilterDepositUnder2m')}</option>
                     <option value="2m_5m">{t('adminBlogsFilterDeposit2m5m')}</option>
                     <option value="above_5m">{t('adminBlogsFilterDepositAbove5m')}</option>
-                  </select>
+                  </SelectInput>
                 </th>
 
                 {/* 5. Filter Status */}
                 <th className="p-2.5 font-normal">
-                  <select
+                  <SelectInput
                     value={statusFilter}
                     onChange={e => {
                       setStatusFilter(e.target.value as any)
                       setCurrentPage(1)
                     }}
-                    className="w-full py-1.5 px-2 bg-white border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                    containerClassName="space-y-0"
+                    className="w-full py-1.5 px-2 bg-white border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
                     <option value="all">{t('adminModFilterAll')}</option>
                     <option value="posted">{t('adminModFilterPosted')}</option>
@@ -660,20 +679,22 @@ export default function AdminPostModerationPage() {
                     <option value="hidden">{t('adminModFilterHidden')}</option>
                     <option value="locked">{t('adminModFilterLocked')}</option>
                     <option value="reported">{t('adminModFilterReported')}</option>
-                  </select>
+                  </SelectInput>
                 </th>
 
                 {/* 6. Filter Actions (Reset button) */}
                 <th className="p-2.5 font-normal text-right">
                   {isAnyFilterActive && (
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={handleResetFilters}
-                      className="px-2.5 py-1 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                      className="px-2.5 py-1 h-auto rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
                       title={t('adminBlogsFilterResetTooltip')}
+                      leftIcon={<RotateCcw className="w-3 h-3" />}
                     >
-                      <RotateCcw className="w-3 h-3" />
                       <span>{t('adminBlogsFilterReset')}</span>
-                    </button>
+                    </Button>
                   )}
                 </th>
               </tr>
@@ -689,7 +710,7 @@ export default function AdminPostModerationPage() {
                       </div>
                       <h3 className="text-base font-bold text-zinc-800">
                         {isAnyFilterActive
-                          ? t('adminBlogsFilterNoMatchTitle')
+                           ? t('adminBlogsFilterNoMatchTitle')
                           : t('adminBlogsNoPosts')}
                       </h3>
                       <p className="text-xs text-zinc-400 max-w-sm mx-auto">
@@ -698,21 +719,25 @@ export default function AdminPostModerationPage() {
                           : t('adminBlogsNoPostsDesc')}
                       </p>
                       {isAnyFilterActive ? (
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={handleResetFilters}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs transition-colors cursor-pointer"
+                          className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs"
+                          leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                         >
-                          <RotateCcw className="w-3.5 h-3.5" />
                           <span>{t('adminBlogsFilterReset')}</span>
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="primary"
+                          size="sm"
                           onClick={handleOpenCreate}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition-colors cursor-pointer"
+                          className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs"
+                          leftIcon={<Plus className="w-4 h-4" />}
                         >
-                          <Plus className="w-4 h-4" />
                           <span>{t('adminBlogsCreateFirst')}</span>
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -823,28 +848,34 @@ export default function AdminPostModerationPage() {
                         <div className="flex flex-wrap justify-end items-end gap-1">
                           {/* Lock / Unlock */}
                           {item.status === 'locked' ? (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleOpenUnlock(item)}
-                              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer text-xs font-bold"
+                              className="h-auto p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer text-xs font-bold"
                               title={t('adminModActionUnlock')}
                             >
                               <Unlock className="w-4 h-4" />
-                            </button>
+                            </Button>
                           ) : (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleOpenLock(item)}
-                              className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                              className="h-auto p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
                               title={t('adminModActionLock')}
                             >
                               <Lock className="w-4 h-4" />
-                            </button>
+                            </Button>
                           )}
 
                           {/* Toggle Publish */}
                           {item.status !== 'locked' && (
-                            <button
+                            <Button
+                              variant="secondary"
+                              size="sm"
                               onClick={() => handleTogglePublish(item)}
-                              className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer text-xs font-semibold"
+                              className="h-auto p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer text-xs font-semibold"
                               title={
                                 item.status === 'posted'
                                   ? t('adminBlogsUnpublish')
@@ -854,17 +885,19 @@ export default function AdminPostModerationPage() {
                               {item.status === 'posted'
                                 ? t('adminBlogsHideTitle')
                                 : t('adminBlogsShowTitle')}
-                            </button>
+                            </Button>
                           )}
 
                           {/* Delete */}
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenDelete(item)}
-                            className="p-1.5 rounded-lg bg-zinc-100 hover:bg-red-100 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
+                            className="h-auto p-1.5 rounded-lg bg-zinc-100 hover:bg-red-100 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
                             title={t('adminModActionDelete')}
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -880,8 +913,7 @@ export default function AdminPostModerationPage() {
       <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
         <div className="flex items-center gap-2">
           <span>{t('adminBlogsPaginationShowing')}</span>
-          <input
-            type="number"
+          <NumberInput
             min={1}
             max={100}
             value={pageSize}
@@ -890,6 +922,7 @@ export default function AdminPostModerationPage() {
               setPageSize(val)
               setCurrentPage(1)
             }}
+            containerClassName="space-y-0 w-14"
             className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-none focus:border-orange-500"
           />
           <span>{t('adminBlogsPaginationPerPage')}</span>
@@ -906,53 +939,63 @@ export default function AdminPostModerationPage() {
         </div>
 
         <div className="flex items-center gap-1 self-end sm:self-auto">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsFirstPage')}
           >
             <ChevronsLeft className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
             disabled={currentPage <= 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsPrev5Pages')}
           >
             <ChevronLeft className="w-4 h-4" />
-          </button>
+          </Button>
 
           {pageNumbers.map(num => (
-            <button
+            <Button
               key={num}
+              variant={currentPage === num ? 'primary' : 'secondary'}
+              size="sm"
               onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
+              className={`h-auto w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
                 currentPage === num
                   ? 'bg-orange-600 text-white shadow-2xs'
                   : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
               }`}
             >
               {num}
-            </button>
+            </Button>
           ))}
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
             disabled={currentPage >= totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsNext5Pages')}
           >
             <ChevronRight className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setCurrentPage(totalPages)}
             disabled={currentPage === totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
+            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsLastPage')}
           >
             <ChevronsRight className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -985,24 +1028,25 @@ export default function AdminPostModerationPage() {
                   { label: t('adminModLockPresetScamDeposit') },
                   { label: t('adminModLockPresetViolation') },
                 ].map((preset, idx) => (
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     key={idx}
                     onClick={() => setLockReason(preset.label)}
-                    className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-semibold transition-colors cursor-pointer"
+                    className="h-auto px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     {preset.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
 
             {/* Reason input */}
-            <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold text-zinc-700 block">
-                {t('adminModLockReasonLabel')} <span className="text-red-500">*</span>
-              </label>
-              <textarea
+            <div className="text-left">
+              <TextareaInput
+                label={t('adminModLockReasonLabel')}
+                required
                 rows={3}
                 value={lockReason}
                 onChange={e => {
@@ -1010,36 +1054,35 @@ export default function AdminPostModerationPage() {
                   if (lockReasonError) setLockReasonError('')
                 }}
                 placeholder={t('adminModLockReasonPlaceholder')}
-                className={`w-full p-2.5 bg-zinc-50 border rounded-xl text-xs font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white transition-all ${
+                error={lockReasonError}
+                className={
                   lockReasonError
                     ? 'border-red-400 bg-red-50/20'
                     : 'border-zinc-200 focus:border-red-500'
-                }`}
+                }
               />
-              {lockReasonError && (
-                <p className="text-[11px] font-bold text-red-600 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {lockReasonError}
-                </p>
-              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setLockTarget(null)}
                 disabled={isLocking}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmLock}
                 disabled={isLocking || !lockReason.trim()}
-                className="px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isLocking}
+                className="h-auto px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
-                {isLocking && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminModLockConfirmBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1066,21 +1109,25 @@ export default function AdminPostModerationPage() {
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setUnlockTarget(null)}
                 disabled={isUnlocking}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isUnlocking}
+                className="h-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
-                {isUnlocking && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminModUnlockConfirmBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1108,12 +1155,14 @@ export default function AdminPostModerationPage() {
                   <p className="text-xs text-zinc-400">{t('adminBlogsCreateModalSubtitle')}</p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleRequestCloseCreate}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl cursor-pointer"
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {createError && (
@@ -1124,96 +1173,80 @@ export default function AdminPostModerationPage() {
             )}
 
             <form onSubmit={handleSaveCreate} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t('adminBlogsFieldTitle')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={createTitle}
-                  onChange={e => setCreateTitle(e.target.value)}
-                  placeholder={t('adminBlogsFieldTitlePlaceholder')}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-                />
-              </div>
+              <TextInput
+                label={t('adminBlogsFieldTitle')}
+                required
+                type="text"
+                value={createTitle}
+                onChange={e => setCreateTitle(e.target.value)}
+                placeholder={t('adminBlogsFieldTitlePlaceholder')}
+                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+              />
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t('adminBlogsFieldCoverImage')}
-                </label>
-                <input
-                  type="url"
-                  value={createCoverImage}
-                  onChange={e => setCreateCoverImage(e.target.value)}
-                  placeholder={t('adminBlogsFieldCoverImagePlaceholder')}
-                  className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-                />
-              </div>
+              <TextInput
+                label={t('adminBlogsFieldCoverImage')}
+                type="url"
+                value={createCoverImage}
+                onChange={e => setCreateCoverImage(e.target.value)}
+                placeholder={t('adminBlogsFieldCoverImagePlaceholder')}
+                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+              />
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t('adminBlogsFieldContent')} <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={createContent}
-                  onChange={e => setCreateContent(e.target.value)}
-                  placeholder={t('adminBlogsFieldContentPlaceholder')}
-                  className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
-                />
-              </div>
+              <TextareaInput
+                label={t('adminBlogsFieldContent')}
+                required
+                rows={4}
+                value={createContent}
+                onChange={e => setCreateContent(e.target.value)}
+                placeholder={t('adminBlogsFieldContentPlaceholder')}
+                className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700 block">
-                    {t('adminBlogsFieldDeposit')}
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={50000}
-                    value={createDepositAmount}
-                    onChange={e => setCreateDepositAmount(Number(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-                  />
-                </div>
+                <NumberInput
+                  label={t('adminBlogsFieldDeposit')}
+                  min={0}
+                  step={50000}
+                  value={createDepositAmount}
+                  onChange={e => setCreateDepositAmount(Number(e.target.value) || 0)}
+                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+                />
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-700 block">
-                    {t('adminBlogsFieldStatus')}
-                  </label>
-                  <select
-                    value={createStatus}
-                    onChange={e => setCreateStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
-                  >
-                    <option value="posted">{t('adminBlogsStatusOptionPublished')}</option>
-                    <option value="draft">{t('adminBlogsStatusOptionDraft')}</option>
-                  </select>
-                </div>
+                <SelectInput
+                  label={t('adminBlogsFieldStatus')}
+                  value={createStatus}
+                  onChange={e => setCreateStatus(e.target.value as any)}
+                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+                  options={[
+                    { value: 'posted', label: t('adminBlogsStatusOptionPublished') },
+                    { value: 'draft', label: t('adminBlogsStatusOptionDraft') },
+                  ]}
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="sm"
                   onClick={handleRequestCloseCreate}
                   disabled={isSavingCreate}
-                  className="px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                  className="h-auto px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
                 >
                   {t('adminBlogsCancel')}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="primary"
+                  size="sm"
                   disabled={isSavingCreate}
-                  className="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  isLoading={isSavingCreate}
+                  className="h-auto px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
-                  {isSavingCreate && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   <span>
                     {isSavingCreate ? t('adminBlogsSubmitting') : t('adminBlogsSubmitCreate')}
                   </span>
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -1240,11 +1273,10 @@ export default function AdminPostModerationPage() {
               {t('adminBlogsDeleteConfirm', { title: deleteTarget.title })}
             </p>
 
-            <div className="space-y-1.5 text-left">
-              <label className="text-xs font-bold text-zinc-700 block">
-                {t('adminBlogsDeleteReasonLabel')} <span className="text-red-500">*</span>
-              </label>
-              <textarea
+            <div className="text-left">
+              <TextareaInput
+                label={t('adminBlogsDeleteReasonLabel')}
+                required
                 rows={3}
                 value={deleteReason}
                 onChange={e => {
@@ -1252,36 +1284,35 @@ export default function AdminPostModerationPage() {
                   if (deleteReasonError) setDeleteReasonError('')
                 }}
                 placeholder={t('adminBlogsDeleteReasonPlaceholder')}
-                className={`w-full p-2.5 bg-zinc-50 border rounded-xl text-xs font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:bg-white transition-all ${
+                error={deleteReasonError}
+                className={
                   deleteReasonError
                     ? 'border-red-400 bg-red-50/20'
                     : 'border-zinc-200 focus:border-orange-500'
-                }`}
+                }
               />
-              {deleteReasonError && (
-                <p className="text-[11px] font-bold text-red-600 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {deleteReasonError}
-                </p>
-              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setDeleteTarget(null)}
                 disabled={isDeleting}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting || !deleteReason.trim()}
-                className="px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                isLoading={isDeleting}
+                className="h-auto px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
-                {isDeleting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                 <span>{t('adminBlogsDeleteSubmit')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1303,18 +1334,22 @@ export default function AdminPostModerationPage() {
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
+                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsContinueEditing')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
+                className="h-auto px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
               >
                 {t('adminBlogsDiscardAndClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

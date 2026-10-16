@@ -32,4 +32,8 @@ export default () => ({
     modelImage: process.env.AI_MODEL_IMAGE ?? 'gemini-3.5-flash-lite',
     modelText: process.env.AI_MODEL_TEXT ?? 'gemini-3.5-flash-lite',
   },
+
+  maps: {
+    apiKey: process.env.GOOGLE_MAPS_API_KEY,
+  },
 })

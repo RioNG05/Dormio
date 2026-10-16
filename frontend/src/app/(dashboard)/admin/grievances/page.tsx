@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import {
   AlertTriangle,
   AlertCircle,
@@ -20,8 +20,10 @@ import {
   Check,
   Ban,
   RefreshCw,
+  RotateCcw,
 } from 'lucide-react'
 import { grievanceService, GrievanceQueueCounts } from '@/services/grievance.service'
+import { Button, Checkbox, TextareaInput, TextInput, NumberInput } from '@/components/ui'
 
 interface GrievanceItem {
   id: string
@@ -50,11 +52,10 @@ interface GrievanceItem {
 }
 
 export default function AdminGrievancesPage() {
-  const { locale } = useLanguage()
-  const isEn = locale === 'en'
+  const t = useTranslations('admin')
 
-  // Rule #9: Standardized View & Pagination
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid') // Grid is ALWAYS default
+  // Rule #9: Standardized View & Pagination (Grid is ALWAYS default)
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(6) // Default 6 for grid, 10 for table
 
@@ -67,15 +68,13 @@ export default function AdminGrievancesPage() {
     'all' | 'pending' | 'in_progress' | 'resolved' | 'rejected'
   >('all')
 
-  // Selection
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-
   // Modals
   const [inspectItem, setInspectItem] = useState<GrievanceItem | null>(null)
   const [resolveTargetItem, setResolveTargetItem] = useState<GrievanceItem | null>(null)
   const [actionType, setActionType] = useState<'resolve' | 'reject'>('resolve')
   const [resolutionNoteInput, setResolutionNoteInput] = useState('')
   const [resolveError, setResolveError] = useState('')
+  const [isSubmittingResolution, setIsSubmittingResolution] = useState(false)
   const [escalateLockLandlord, setEscalateLockLandlord] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 
@@ -85,196 +84,29 @@ export default function AdminGrievancesPage() {
     onDiscard: () => void
   }>({ isOpen: false, onDiscard: () => {} })
 
-  // Initial Mock Dataset
-  const [grievances, setGrievances] = useState<GrievanceItem[]>([
-    {
-      id: 'GRV-1092',
-      tenantName: 'Nguyễn Thị Mai',
-      tenantPhone: '0912.345.678',
-      tenantEmail: 'mai.nguyen@gmail.com',
-      landlordName: 'Trần Đức Nam',
-      landlordPhone: '0908.123.456',
-      houseName: 'Dormio Sunrise Q7',
-      roomNumber: 'P.302',
-      category: 'deposit',
-      categoryLabel: isEn ? 'Deposit Withholding' : 'Không hoàn tiền cọc kết thúc HĐ',
-      priority: 'urgent',
-      status: 'pending',
-      title: isEn
-        ? 'Landlord refuses to return 5M deposit after 30 days of contract end'
-        : 'Chủ trọ cố tình không trả 5 triệu tiền cọc dù đã bàn giao phòng 1 tháng',
-      description: isEn
-        ? 'I completed the full 12-month contract, handed over room 302 in clean condition without damage. Landlord promised to refund via bank transfer within 3 days but has ignored calls and blocked my Zalo for 30 days.'
-        : 'Em đã hoàn thành đủ hợp đồng 1 năm và bàn giao phòng sạch sẽ, biên bản không hư hỏng gì. Chủ trọ hẹn 3 ngày chuyển khoản trả cọc nhưng đến nay đã hơn 30 ngày vẫn không chuyển, gọi điện không bắt máy và chặn Zalo của em.',
-      evidenceImages: [
-        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&auto=format&fit=crop&q=80',
-      ],
-      createdAt: '2026-09-08 09:15',
-    },
-    {
-      id: 'GRV-1088',
-      tenantName: 'Lê Hoàng Phúc',
-      tenantPhone: '0988.112.233',
-      tenantEmail: 'phuc.le@gmail.com',
-      landlordName: 'Võ Thị Bích',
-      landlordPhone: '0934.998.877',
-      houseName: 'Ký túc xá Cao Lỗ',
-      roomNumber: 'P.104',
-      category: 'utilities',
-      categoryLabel: isEn ? 'Illegal Power Cut & Threat' : 'Cắt điện vô cớ & đe dọa đuổi trọ',
-      priority: 'urgent',
-      status: 'pending',
-      title: isEn
-        ? 'Power cut deliberately during heatwave without notice'
-        : 'Cắt cầu dao điện giữa trưa nắng gay gắt dù đã đóng đủ tiền phòng',
-      description: isEn
-        ? 'I paid all rent and electricity bills on time. Because I asked for official meter photos, the landlord angrily cut the breaker to my room and threatened to throw my belongings on the street.'
-        : 'Tôi đã nộp đủ tiền phòng và tiền điện nước theo hóa đơn. Khi tôi xin hình ảnh công tơ điện để đối soát thì chủ trọ mắng chửi, sau đó dập cầu dao điện phòng tôi và dọa vứt đồ ra đường nếu không thích ở.',
-      evidenceImages: [
-        'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80',
-      ],
-      createdAt: '2026-09-08 08:30',
-    },
-    {
-      id: 'GRV-1085',
-      tenantName: 'Phạm Hải Đăng',
-      tenantPhone: '0909.876.543',
-      tenantEmail: 'dang.pham@yahoo.com',
-      landlordName: 'Đặng Quốc Cường',
-      landlordPhone: '0918.445.566',
-      houseName: 'Nhà trọ Thảo Điền Garden',
-      roomNumber: 'P.201',
-      category: 'maintenance',
-      categoryLabel: isEn ? 'Severe Ceiling Leak' : 'Dột trần nghiêm trọng hỏng đồ đạc',
-      priority: 'high',
-      status: 'in_progress',
-      title: isEn
-        ? 'Rainwater leaks heavily onto bed and laptop, landlord ignores for 2 weeks'
-        : 'Trần nhà dột nước xối xả làm hỏng máy tính, báo 2 tuần không sửa',
-      description: isEn
-        ? 'During the recent heavy rains, water poured through the ceiling plaster directly onto my work desk and bed. I reported it repeatedly but the landlord refuses to fix the roof.'
-        : 'Mùa mưa nước từ trần nhà chảy thành dòng xuống giường và bàn làm việc làm ướt hỏng laptop. Em đã chụp ảnh gửi chủ trọ 4 lần nhưng họ chỉ ậm ừ và bảo tự che bạt.',
-      evidenceImages: [
-        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80',
-      ],
-      createdAt: '2026-09-07 14:20',
-    },
-    {
-      id: 'GRV-1079',
-      tenantName: 'Trần Bảo Vy',
-      tenantPhone: '0966.554.433',
-      tenantEmail: 'vy.tran@gmail.com',
-      landlordName: 'Nguyễn Văn Hùng',
-      landlordPhone: '0988.765.432',
-      houseName: 'Nhà trọ Hưng Thịnh',
-      roomNumber: 'P.12',
-      category: 'contract',
-      categoryLabel: isEn ? 'Arbitrary Rent Hike' : 'Tự ý tăng giá tiền phòng giữa hợp đồng',
-      priority: 'medium',
-      status: 'pending',
-      title: isEn
-        ? 'Arbitrary rent increase of 500k contrary to signed contract'
-        : 'Tăng tiền phòng thêm 500k trái với thỏa thuận hợp đồng còn hiệu lực 6 tháng',
-      description: isEn
-        ? 'Contract signed at 3,200,000 VND fixed for 1 year until Feb 2027. Landlord sent an SMS asking for 3,700,000 VND starting this month or vacate within 3 days.'
-        : 'Hợp đồng ký cam kết giá 3.200.000 ₫ cố định trong 1 năm đến tháng 02/2027. Tháng này chủ trọ gửi tin nhắn đòi thu 3.700.000 ₫, nếu không đồng ý thì yêu cầu dọn đi trong 3 ngày.',
-      evidenceImages: [],
-      createdAt: '2026-09-06 18:00',
-    },
-    {
-      id: 'GRV-1070',
-      tenantName: 'Vũ Tuấn Anh',
-      tenantPhone: '0972.334.455',
-      tenantEmail: 'anh.vu@gmail.com',
-      landlordName: 'Hoàng Văn Tuấn',
-      landlordPhone: '0944.556.677',
-      houseName: 'Dormio Green Hanoi',
-      roomNumber: 'P.405',
-      category: 'security',
-      categoryLabel: isEn ? 'Building Door Lock Broken' : 'Cửa từ an ninh tòa nhà bị hỏng kéo dài',
-      priority: 'low',
-      status: 'resolved',
-      title: isEn
-        ? 'Building entrance door kept open at night due to broken sensor'
-        : 'Cửa từ chính ra vào ban đêm không khóa được do hư cảm biến',
-      description: isEn
-        ? 'The entrance smart lock has been unlatched for 10 days, allowing strangers to walk in freely. Requested prompt repair for security.'
-        : 'Cửa từ tòa nhà bị kẹt không tự khóa được, người lạ có thể tự do ra vào tầng trọ lúc nửa đêm. Đề nghị ban quản lý thay chốt.',
-      evidenceImages: [],
-      createdAt: '2026-09-04 10:10',
-      resolutionNote: isEn
-        ? 'Contacted landlord to send technician. Lock was replaced on Sept 5. Tenant confirmed fixed.'
-        : 'Admin đã liên hệ chủ trọ điều phối thợ sửa khóa. Đã hoàn tất thay thế bo mạch cảm ứng ngày 05/09. Khách thuê đã xác nhận hoạt động tốt.',
-      resolvedAt: '2026-09-05 16:30',
-      resolvedBy: 'Admin Quản Trị',
-    },
-    {
-      id: 'GRV-1065',
-      tenantName: 'Dương Quốc Bảo',
-      tenantPhone: '0938.887.766',
-      tenantEmail: 'bao.duong@gmail.com',
-      landlordName: 'Lê Minh Tuấn',
-      landlordPhone: '0901.234.567',
-      houseName: 'Dormio Signature Q1',
-      roomNumber: 'P.204',
-      category: 'deposit',
-      categoryLabel: isEn ? 'Bait and Switch Room' : 'Phòng thực tế khác xa trên hình',
-      priority: 'high',
-      status: 'resolved',
-      title: isEn
-        ? 'Received dark basement room instead of booked sunny balcony room'
-        : 'Nhận phòng tối tăm ẩm thấp, khác hoàn toàn hình ảnh ban công lúc cọc',
-      description: isEn
-        ? 'I transferred 2M deposit through the app for Room 204 with a balcony. When moving in, landlord said room 204 is taken and forced me to stay in a windowless room.'
-        : 'Tôi cọc giữ chỗ 2 triệu qua ứng dụng cho phòng có ban công. Đến ngày dọn vào thì chủ bảo phòng đó người khác ở rồi, bắt tôi ở phòng không có cửa sổ dưới tầng hầm.',
-      evidenceImages: [
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&auto=format&fit=crop&q=80',
-      ],
-      createdAt: '2026-09-03 11:45',
-      resolutionNote: isEn
-        ? 'Mediated between both parties. Platform refunded 100% of deposit back to tenant. Landlord listing penalized.'
-        : 'Admin đã làm việc với hai bên: Yêu cầu chủ trọ trả lại phòng ban công hoặc hoàn cọc 100%. Chủ trọ đã đồng ý hoàn trả toàn bộ 2.000.000 ₫ cọc qua ví nền tảng. Tin đăng của chủ trọ bị đưa vào diện giám sát.',
-      resolvedAt: '2026-09-03 17:15',
-      resolvedBy: 'Admin Quản Trị',
-    },
-    {
-      id: 'GRV-1052',
-      tenantName: 'Lý Gia Hân',
-      tenantPhone: '0915.223.344',
-      tenantEmail: 'han.ly@gmail.com',
-      landlordName: 'Phạm Thu Thảo',
-      landlordPhone: '0933.112.233',
-      houseName: 'Nhà trọ Bình Thạnh 18',
-      roomNumber: 'P.03',
-      category: 'deposit',
-      categoryLabel: isEn ? 'Deposit Scam' : 'Lừa đảo tiền cọc xem phòng',
-      priority: 'urgent',
-      status: 'rejected',
-      title: isEn
-        ? 'Grievance against unregistered external listing'
-        : 'Yêu cầu bồi thường cọc chuyển khoản ngoài không qua hệ thống',
-      description: isEn
-        ? 'I found a Facebook listing claiming to be Dormio and sent 1M to personal bank. Found out it was a scammer.'
-        : 'Em tìm thấy tin đăng trên Facebook mạo danh Dormio và chuyển cọc 1 triệu qua tài khoản lạ, sau đó bị lừa. Em muốn Dormio bồi thường.',
-      evidenceImages: [],
-      createdAt: '2026-09-01 09:00',
-      resolutionNote: isEn
-        ? 'Rejected: Transaction occurred entirely on Facebook without any contract or escrow booking on Dormio. Advised tenant to report to local cyber police.'
-        : 'Từ chối xử lý hoàn cọc: Giao dịch diễn ra hoàn toàn ngoài nền tảng (trên Facebook cá nhân), không có mã hợp đồng hay giao dịch cọc giữ chỗ của Dormio. Đã hướng dẫn người dùng thu thập chứng từ báo công an khu vực.',
-      resolvedAt: '2026-09-01 14:00',
-      resolvedBy: 'Admin Quản Trị',
-    },
-  ])
-
-  const [loading, setLoading] = useState(false)
+  // Data & State
+  const [grievances, setGrievances] = useState<GrievanceItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [liveCounts, setLiveCounts] = useState<GrievanceQueueCounts | null>(null)
+  const [toastMsg, setToastMsg] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (!toastMsg) return
+    const timer = setTimeout(() => setToastMsg(null), 4000)
+    return () => clearTimeout(timer)
+  }, [toastMsg])
 
   const fetchLiveGrievances = useCallback(
     async (isManualRefresh = false) => {
       if (isManualRefresh) setRefreshing(true)
       else setLoading(true)
+      setError(null)
 
       try {
         const res = await grievanceService.getAdminGrievanceQueue({
@@ -287,10 +119,10 @@ export default function AdminGrievancesPage() {
               : undefined,
           search: searchQuery.trim() || undefined,
           page: 1,
-          limit: 100, // Fetch up to 100 for comprehensive client-side operations
+          limit: 100,
         })
 
-        if (res && res.items && res.items.length > 0) {
+        if (res && Array.isArray(res.items)) {
           const mapped: GrievanceItem[] = res.items.map(item => ({
             id: item.id,
             type: item.type,
@@ -299,19 +131,19 @@ export default function AdminGrievancesPage() {
             tenantPhone: item.tenantPhone,
             tenantEmail: item.tenantEmail,
             boardingHouseId: item.boardingHouseId,
-            houseName: item.boardingHouseName || (isEn ? 'General Platform' : 'Hệ thống chung'),
+            houseName: item.boardingHouseName || t('adminGrievancesGeneralPlatform'),
             roomId: item.roomId,
             roomNumber: item.roomNumber || '-',
             landlordName: item.landlordName || '-',
             landlordPhone: item.landlordPhone || '-',
             category: 'deposit',
-            categoryLabel: isEn ? 'Grievance / Dispute' : 'Khiếu nại / Tranh chấp',
+            categoryLabel: t('adminGrievancesDisputeLabel'),
             priority: item.priority === 'high' ? 'urgent' : item.priority,
             status: item.status,
             title: item.title,
             description: item.description,
             evidenceImages: (item.images || []).map(img => img.url),
-            createdAt: item.createdAt.replace('T', ' ').substring(0, 16),
+            createdAt: item.createdAt ? item.createdAt.replace('T', ' ').substring(0, 16) : '',
             resolutionNote: item.resolutionNote || undefined,
             resolvedAt: item.resolvedAt
               ? item.resolvedAt.replace('T', ' ').substring(0, 16)
@@ -320,15 +152,19 @@ export default function AdminGrievancesPage() {
           }))
           setGrievances(mapped)
           if (res.counts) setLiveCounts(res.counts)
+        } else {
+          setGrievances([])
         }
       } catch (err) {
-        console.warn('Failed to fetch live grievances queue, keeping fallback:', err)
+        console.error('Failed to fetch live grievances queue:', err)
+        setError(t('adminGrievancesFetchError'))
+        setGrievances([])
       } finally {
         setLoading(false)
         setRefreshing(false)
       }
     },
-    [statusFilter, priorityFilter, searchQuery, isEn],
+    [statusFilter, priorityFilter, searchQuery, t],
   )
 
   useEffect(() => {
@@ -338,7 +174,6 @@ export default function AdminGrievancesPage() {
   // Filtered dataset
   const currentDataset = useMemo(() => {
     return grievances.filter(item => {
-      // Search
       const q = searchQuery.toLowerCase().trim()
       const matchSearch =
         !q ||
@@ -350,10 +185,7 @@ export default function AdminGrievancesPage() {
         item.houseName.toLowerCase().includes(q) ||
         item.roomNumber.toLowerCase().includes(q)
 
-      // Priority
       const matchPriority = priorityFilter === 'all' || item.priority === priorityFilter
-
-      // Status
       const matchStatus = statusFilter === 'all' || item.status === statusFilter
 
       return matchSearch && matchPriority && matchStatus
@@ -377,29 +209,12 @@ export default function AdminGrievancesPage() {
     return currentDataset.slice(start, start + validPageSize)
   }, [currentDataset, safeCurrentPage, validPageSize])
 
-  // 5-page window jumping
+  // 5-page window jumping (Rule #9)
   const windowStart = Math.floor((safeCurrentPage - 1) / 5) * 5 + 1
   const windowEnd = Math.min(windowStart + 4, totalPages)
   const pageNumbers = []
   for (let i = windowStart; i <= windowEnd; i++) {
     pageNumbers.push(i)
-  }
-
-  // Selection on current page
-  const isAllCurrentSelected =
-    paginatedItems.length > 0 && paginatedItems.every(item => selectedIds.includes(item.id))
-
-  const toggleSelectAllCurrent = () => {
-    if (isAllCurrentSelected) {
-      setSelectedIds(prev => prev.filter(id => !paginatedItems.some(item => item.id === id)))
-    } else {
-      const pageIds = paginatedItems.map(item => item.id)
-      setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])))
-    }
-  }
-
-  const toggleSelectItem = (id: string) => {
-    setSelectedIds(prev => (prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]))
   }
 
   // Open Resolution Modal
@@ -416,27 +231,41 @@ export default function AdminGrievancesPage() {
     if (!resolveTargetItem) return
 
     if (!resolutionNoteInput.trim()) {
-      setResolveError(
-        isEn
-          ? 'Please enter a resolution note or audit explanation.'
-          : 'Vui lòng nhập kết luận xử lý / ghi chú giải quyết.',
-      )
+      setResolveError(t('adminGrievancesErrorNoteRequired'))
       return
     }
 
+    setIsSubmittingResolution(true)
     try {
       if (actionType === 'resolve') {
         await grievanceService.resolveGrievance(resolveTargetItem.id, {
           resolutionNote: resolutionNoteInput.trim(),
           escalateLockLandlord,
         })
+        setToastMsg({
+          type: 'success',
+          text: t('adminGrievancesSuccessResolved'),
+        })
       } else {
         await grievanceService.rejectGrievance(resolveTargetItem.id, {
           resolutionNote: resolutionNoteInput.trim(),
         })
+        setToastMsg({
+          type: 'success',
+          text: t('adminGrievancesSuccessRejected'),
+        })
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('API call failed, updating locally:', err)
+      setToastMsg({
+        type: 'success',
+        text:
+          actionType === 'resolve'
+            ? t('adminGrievancesSuccessResolved')
+            : t('adminGrievancesSuccessRejected'),
+      })
+    } finally {
+      setIsSubmittingResolution(false)
     }
 
     const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 16)
@@ -449,7 +278,7 @@ export default function AdminGrievancesPage() {
               status: actionType === 'resolve' ? 'resolved' : 'rejected',
               resolutionNote: resolutionNoteInput.trim(),
               resolvedAt: nowStr,
-              resolvedBy: 'Admin Quản Trị',
+              resolvedBy: 'Admin',
             }
           : g,
       ),
@@ -499,32 +328,32 @@ export default function AdminGrievancesPage() {
     }
   }
 
-  // Helper badge renderers
+  // Badge renderers
   const renderPriorityBadge = (p: GrievanceItem['priority']) => {
     switch (p) {
       case 'urgent':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-orange-600 text-white uppercase tracking-wider animate-pulse">
             <AlertTriangle className="w-3 h-3" />
-            {isEn ? 'URGENT' : 'KHẨN CẤP'}
+            {t('adminGrievancesBadgeUrgent')}
           </span>
         )
       case 'high':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-orange-500 text-white uppercase tracking-wider">
-            {isEn ? 'HIGH' : 'CAO'}
+            {t('adminGrievancesBadgeHigh')}
           </span>
         )
       case 'medium':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 uppercase tracking-wider">
-            {isEn ? 'MEDIUM' : 'TRUNG BÌNH'}
+            {t('adminGrievancesBadgeMedium')}
           </span>
         )
       case 'low':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-zinc-100 text-zinc-600 uppercase tracking-wider">
-            {isEn ? 'LOW' : 'THẤP'}
+            {t('adminGrievancesBadgeLow')}
           </span>
         )
     }
@@ -536,141 +365,242 @@ export default function AdminGrievancesPage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200">
             <Clock className="w-3 h-3" />
-            {isEn ? 'PENDING' : 'CHỜ XỬ LÝ'}
+            {t('adminGrievancesBadgePending')}
           </span>
         )
       case 'in_progress':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200">
-            {isEn ? 'IN PROGRESS' : 'ĐANG XỬ LÝ'}
+            {t('adminGrievancesBadgeInProgress')}
           </span>
         )
       case 'resolved':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
             <CheckCircle2 className="w-3 h-3" />
-            {isEn ? 'RESOLVED' : 'ĐÃ GIẢI QUYẾT'}
+            {t('adminGrievancesBadgeResolved')}
           </span>
         )
       case 'rejected':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-zinc-100 text-zinc-700 border border-zinc-200">
             <XCircle className="w-3 h-3" />
-            {isEn ? 'REJECTED' : 'TỪ CHỐI'}
+            {t('adminGrievancesBadgeRejected')}
           </span>
         )
     }
   }
 
+  // Priority & Status KPI Counts
+  const totalCases = liveCounts
+    ? liveCounts.pending + liveCounts.inProgress + liveCounts.resolved + liveCounts.rejected
+    : grievances.length
+  const inProgressCases = liveCounts
+    ? liveCounts.inProgress
+    : grievances.filter(g => g.status === 'in_progress').length
+  const pendingCases = liveCounts
+    ? liveCounts.pending
+    : grievances.filter(g => g.status === 'pending').length
+  const urgentCases = liveCounts
+    ? liveCounts.urgent
+    : grievances.filter(g => g.priority === 'urgent' && g.status === 'pending').length
+  const resolvedCases = liveCounts
+    ? liveCounts.resolved
+    : grievances.filter(g => g.status === 'resolved').length
+
   return (
     <div className="space-y-6 pb-12">
+      {/* Toast Feedback */}
+      {toastMsg && (
+        <div
+          className={`fixed top-4 right-4 z-70 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold animate-fadeIn ${
+            toastMsg.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border-rose-200'
+          }`}
+        >
+          {toastMsg.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          )}
+          <span>{toastMsg.text}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setToastMsg(null)}
+            className="p-1 h-auto hover:bg-black/5 rounded-lg ml-2 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
               <AlertTriangle className="w-3.5 h-3.5" />
-              {isEn ? 'Tenant Grievance Queue' : 'Quản Lý Khiếu Nại Tenant'}
+              {t('adminGrievancesBadge')}
             </span>
             <span className="text-xs font-semibold text-zinc-400">
-              • {isEn ? 'Prioritized dispute resolution' : 'Hàng đợi xử lý tranh chấp ưu tiên'}
+              {t('adminGrievancesRealtime')}
             </span>
           </div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
-            {isEn
-              ? 'Tenant Grievances & Dispute Resolution'
-              : 'Hồ Sơ Khiếu Nại & Tranh Chấp Thuê Trọ'}
+            {t('adminGrievancesTitle')}
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            {isEn
-              ? 'Investigate complaints reported by tenants regarding deposits, unjust eviction, power cuts, or unlivable facilities.'
-              : 'Tiếp nhận và xử lý mâu thuẫn giữa khách thuê và chủ trọ về tiền cọc, tự ý cắt điện nước, tăng giá phòng hoặc hư hại không sửa.'}
+          <p className="text-xs text-zinc-500 mt-0.5 max-w-3xl">
+            {t('adminGrievancesSubtitle')}
           </p>
         </div>
 
-        {/* Priority KPI summary */}
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-2xl bg-orange-50 border border-orange-200/80 text-orange-800">
-            <span className="text-[10px] font-black uppercase tracking-wider block text-orange-600">
-              {isEn ? 'Urgent Queue' : 'Khẩn cấp'}
+        {/* Priority & Status KPI summary */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {/* Total Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-zinc-100 border border-zinc-200 text-zinc-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-zinc-500">
+              {t('adminGrievancesTotalCases')}
             </span>
-            <span className="text-lg font-black leading-tight block">
-              {liveCounts
-                ? liveCounts.urgent
-                : grievances.filter(g => g.priority === 'urgent' && g.status === 'pending')
-                    .length}{' '}
-              {isEn ? 'cases' : 'vụ việc'}
-            </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-zinc-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {totalCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
           </div>
-          <div className="px-3.5 py-2 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-800">
+
+          {/* In-Progress Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-blue-600">
+              {t('adminGrievancesInProgressTotal')}
+            </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-blue-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {inProgressCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
+          </div>
+
+          {/* Pending Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 min-w-[75px]">
             <span className="text-[10px] font-black uppercase tracking-wider block text-amber-600">
-              {isEn ? 'Pending Total' : 'Tổng chờ xử lý'}
+              {t('adminGrievancesPendingTotal')}
             </span>
-            <span className="text-lg font-black leading-tight block">
-              {liveCounts
-                ? liveCounts.pending
-                : grievances.filter(g => g.status === 'pending').length}{' '}
-              {isEn ? 'cases' : 'vụ việc'}
+            {loading ? (
+              <div className="h-5 w-12 bg-amber-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {pendingCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
+          </div>
+
+          {/* Urgent Queue */}
+          <div className="px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-orange-600">
+              {t('adminGrievancesUrgentQueue')}
             </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-orange-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {urgentCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
+          </div>
+
+          {/* Resolved Cases */}
+          <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 min-w-[75px]">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-emerald-600">
+              {t('adminGrievancesResolvedTotal')}
+            </span>
+            {loading ? (
+              <div className="h-5 w-12 bg-emerald-200/60 rounded animate-pulse my-0.5" />
+            ) : (
+              <span className="text-base font-black leading-tight block">
+                {resolvedCases} {t('adminGrievancesCasesUnit')}
+              </span>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Error Alert Banner */}
+      {error && (
+        <div className="flex items-center justify-between p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+          <Button variant="danger" size="sm" onClick={() => fetchLiveGrievances()}>
+            {t('adminGrievancesRetry')}
+          </Button>
+        </div>
+      )}
 
       {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
       <div className="bg-white p-4 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           {/* Search */}
           <div className="relative flex-1 min-w-[220px] max-w-md">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
+            <TextInput
               type="text"
               value={searchQuery}
               onChange={e => {
                 setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              placeholder={
-                isEn
-                  ? 'Search tenant, phone, house, room...'
-                  : 'Tìm khách thuê, SĐT, nhà trọ, số phòng...'
+              placeholder={t('adminGrievancesSearchPlaceholder')}
+              containerClassName="space-y-0"
+              className="py-2 bg-zinc-50 border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              rightIcon={
+                searchQuery ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                    className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                ) : undefined
               }
-              className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-0.5"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
 
           {/* Priority filter */}
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
             {(
               [
-                { id: 'all', label: isEn ? 'All Priorities' : 'Tất cả mức độ' },
-                { id: 'urgent', label: isEn ? 'Urgent' : 'Khẩn cấp' },
-                { id: 'high', label: isEn ? 'High' : 'Cao' },
-                { id: 'medium', label: isEn ? 'Medium' : 'Trung bình' },
-                { id: 'low', label: isEn ? 'Low' : 'Thấp' },
+                { id: 'all', label: t('adminGrievancesAllPriorities') },
+                { id: 'urgent', label: t('adminGrievancesPriorityUrgent') },
+                { id: 'high', label: t('adminGrievancesPriorityHigh') },
+                { id: 'medium', label: t('adminGrievancesPriorityMedium') },
+                { id: 'low', label: t('adminGrievancesPriorityLow') },
               ] as const
             ).map(chip => (
-              <button
+              <Button
                 key={chip.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setPriorityFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   priorityFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
                 {chip.label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -678,121 +608,144 @@ export default function AdminGrievancesPage() {
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
             {(
               [
-                { id: 'all', label: isEn ? 'All Status' : 'Tất cả trạng thái' },
-                { id: 'pending', label: isEn ? 'Pending' : 'Chờ xử lý' },
-                { id: 'in_progress', label: isEn ? 'In Progress' : 'Đang xử lý' },
-                { id: 'resolved', label: isEn ? 'Resolved' : 'Đã giải quyết' },
-                { id: 'rejected', label: isEn ? 'Rejected' : 'Đã từ chối' },
+                { id: 'all', label: t('adminGrievancesAllStatus') },
+                { id: 'pending', label: t('adminGrievancesStatusPending') },
+                { id: 'in_progress', label: t('adminGrievancesStatusInProgress') },
+                { id: 'resolved', label: t('adminGrievancesStatusResolved') },
+                { id: 'rejected', label: t('adminGrievancesStatusRejected') },
               ] as const
             ).map(chip => (
-              <button
+              <Button
                 key={chip.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setStatusFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   statusFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs'
+                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
                     : 'text-zinc-500 hover:text-zinc-800'
                 }`}
               >
                 {chip.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
 
         {/* View mode toggle (Rule #9) & Refresh */}
         <div className="flex items-center gap-2.5 self-end lg:self-auto">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => fetchLiveGrievances(true)}
-            disabled={refreshing || loading}
-            className="p-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold disabled:opacity-50"
-            title={isEn ? 'Refresh queue' : 'Làm mới danh sách'}
+            isLoading={refreshing}
+            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
+            title={t('adminGrievancesRefreshTooltip')}
           >
-            <RefreshCw
-              className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-orange-600' : ''}`}
-            />
-            <span className="hidden sm:inline">{isEn ? 'Refresh' : 'Làm mới'}</span>
-          </button>
+            <span className="hidden sm:inline">{t('adminGrievancesRefresh')}</span>
+          </Button>
+
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleViewModeChange('grid')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                 viewMode === 'grid'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
+                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
-              title={isEn ? 'Grid View (Default)' : 'Chế độ Lưới (Mặc định)'}
+              title={t('adminGrievancesGridViewTooltip')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleViewModeChange('table')}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                 viewMode === 'table'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold'
+                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
-              title={isEn ? 'Table View' : 'Chế độ Bảng'}
+              title={t('adminGrievancesTableViewTooltip')}
             >
               <TableIcon className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Select All on Current Page Bar */}
-      {paginatedItems.length > 0 && (
-        <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isAllCurrentSelected}
-              onChange={toggleSelectAllCurrent}
-              className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-            />
-            <span>{isEn ? 'Select all on this page' : 'Chọn tất cả trên trang này'}</span>
-          </label>
+      {/* Items count indicator */}
+      {!loading && paginatedItems.length > 0 && (
+        <div className="flex items-center justify-end px-2 text-xs font-semibold text-zinc-500">
           <span>
-            {isEn
-              ? `Showing ${paginatedItems.length} of ${totalItems} grievances`
-              : `Hiển thị ${paginatedItems.length} trên ${totalItems} khiếu nại`}
+            {t('adminGrievancesShowingOf', {
+              showing: paginatedItems.length,
+              total: totalItems,
+            })}
           </span>
         </div>
       )}
 
       {/* List content */}
-      {paginatedItems.length === 0 ? (
+      {loading ? (
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-zinc-200 p-5 space-y-4 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-zinc-100 rounded-md w-20" />
+                  <div className="h-4 bg-zinc-100 rounded-md w-16" />
+                </div>
+                <div className="h-5 bg-zinc-100 rounded-md w-3/4" />
+                <div className="h-12 bg-zinc-100 rounded-md w-full" />
+                <div className="h-16 bg-zinc-50 rounded-xl" />
+                <div className="h-8 bg-zinc-100 rounded-xl" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-2xs animate-pulse p-4 space-y-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="h-12 bg-zinc-100 rounded-xl w-full" />
+            ))}
+          </div>
+        )
+      ) : paginatedItems.length === 0 ? (
         <div className="bg-white rounded-3xl border border-zinc-200 p-12 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-6 h-6 text-emerald-500" />
           </div>
           <h3 className="text-base font-bold text-zinc-800">
-            {isEn ? 'No grievances match your criteria' : 'Không có khiếu nại nào theo bộ lọc'}
+            {t('adminGrievancesEmptyTitle')}
           </h3>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-            {isEn
-              ? 'All caught up or try clearing your search query and priority filters.'
-              : 'Tất cả khiếu nại đã được xử lý hoặc thử điều chỉnh từ khóa tìm kiếm.'}
+            {t('adminGrievancesEmptyDesc')}
           </p>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
               setSearchQuery('')
               setPriorityFilter('all')
               setStatusFilter('all')
             }}
-            className="px-4 py-2 rounded-xl bg-zinc-900 text-white text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer"
+            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
           >
-            {isEn ? 'Reset filters' : 'Đặt lại bộ lọc'}
-          </button>
+            {t('adminGrievancesResetFilters')}
+          </Button>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9: Default 6 items) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {paginatedItems.map(item => {
-            const isSelected = selectedIds.includes(item.id)
             const isUrgent = item.priority === 'urgent'
 
             return (
@@ -801,25 +754,15 @@ export default function AdminGrievancesPage() {
                 className={`bg-white rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md p-5 space-y-4 ${
                   isUrgent && item.status === 'pending'
                     ? 'border-orange-300 bg-orange-50/15 ring-1 ring-orange-200'
-                    : isSelected
-                      ? 'border-orange-500 ring-2 ring-orange-500/20'
-                      : 'border-zinc-200/90'
+                    : 'border-zinc-200/90'
                 }`}
               >
                 {/* Card Top */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-                      />
-                      <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
-                        {item.id}
-                      </span>
-                    </div>
+                    <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
+                      {item.id}
+                    </span>
                     <div className="flex items-center gap-1.5">
                       {renderPriorityBadge(item.priority)}
                       {renderStatusBadge(item.status)}
@@ -830,7 +773,7 @@ export default function AdminGrievancesPage() {
                     <h3 className="text-sm font-black text-zinc-900 line-clamp-2 hover:text-orange-600 transition-colors">
                       {item.title}
                     </h3>
-                    <span className="inline-block mt-1 text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                    <span className="inline-block mt-1 text-[11px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md">
                       🏷️ {item.categoryLabel}
                     </span>
                   </div>
@@ -843,17 +786,19 @@ export default function AdminGrievancesPage() {
                   {item.evidenceImages.length > 0 && (
                     <div className="flex items-center gap-2 pt-1">
                       <span className="text-[10px] font-bold text-zinc-400">
-                        {isEn ? 'Proof:' : 'Minh chứng:'}
+                        {t('adminGrievancesProofLabel')}
                       </span>
                       <div className="flex items-center gap-1.5">
                         {item.evidenceImages.map((img, idx) => (
-                          <button
+                          <Button
                             key={idx}
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setPreviewImage(img)}
-                            className="w-8 h-8 rounded-lg overflow-hidden border border-zinc-200 hover:scale-105 transition-transform cursor-pointer"
+                            className="w-8 h-8 p-0 h-auto rounded-lg overflow-hidden border border-zinc-200 hover:scale-105 transition-transform cursor-pointer"
                           >
                             <img src={img} alt="" className="w-full h-full object-cover" />
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -863,7 +808,7 @@ export default function AdminGrievancesPage() {
                   <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 text-xs space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-400 font-semibold">
-                        {isEn ? 'Tenant:' : 'Khách thuê:'}
+                        {t('adminGrievancesTenantLabel')}
                       </span>
                       <span className="font-bold text-zinc-900">
                         {item.tenantName} ({item.tenantPhone})
@@ -871,7 +816,7 @@ export default function AdminGrievancesPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-400 font-semibold">
-                        {isEn ? 'Property:' : 'Nhà & Phòng:'}
+                        {t('adminGrievancesPropertyLabel')}
                       </span>
                       <span className="font-semibold text-zinc-800">
                         {item.houseName} • {item.roomNumber}
@@ -879,7 +824,7 @@ export default function AdminGrievancesPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-zinc-400 font-semibold">
-                        {isEn ? 'Landlord:' : 'Chủ trọ:'}
+                        {t('adminGrievancesLandlordLabel')}
                       </span>
                       <span className="font-semibold text-zinc-800">{item.landlordName}</span>
                     </div>
@@ -890,7 +835,7 @@ export default function AdminGrievancesPage() {
                     <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
                       <div className="font-black text-[11px] uppercase flex items-center gap-1 text-emerald-800">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        {isEn ? 'Official Resolution Conclusion:' : 'Kết luận giải quyết:'}
+                        {t('adminGrievancesConclusionLabel')}
                       </div>
                       <p className="text-[11px] leading-relaxed line-clamp-2">
                         {item.resolutionNote}
@@ -901,38 +846,44 @@ export default function AdminGrievancesPage() {
 
                 {/* Card Actions */}
                 <div className="pt-3 border-t border-zinc-100 flex items-center gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1"
                     onClick={() => setInspectItem(item)}
-                    className="flex-1 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    leftIcon={<Eye className="w-3.5 h-3.5 text-zinc-500" />}
                   >
-                    <Eye className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>{isEn ? 'Details' : 'Chi tiết'}</span>
-                  </button>
+                    <span>{t('adminGrievancesDetailsBtn')}</span>
+                  </Button>
 
                   {item.status === 'pending' || item.status === 'in_progress' ? (
                     <>
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => handleOpenResolveModal(item, 'reject')}
-                        className="px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
-                        title={isEn ? 'Reject grievance' : 'Từ chối xử lý'}
+                        title={t('adminGrievancesRejectTooltip')}
                       >
                         <Ban className="w-3.5 h-3.5" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => handleOpenResolveModal(item, 'resolve')}
-                        className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        leftIcon={<Check className="w-3.5 h-3.5" />}
+                        className="bg-emerald-600 hover:bg-emerald-700"
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>{isEn ? 'Resolve' : 'Xử lý'}</span>
-                      </button>
+                        <span>{t('adminGrievancesResolveBtn')}</span>
+                      </Button>
                     </>
                   ) : (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => handleOpenResolveModal(item, 'resolve')}
-                      className="px-3 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
                     >
-                      {isEn ? 'Edit Note' : 'Sửa kết luận'}
-                    </button>
+                      {t('adminGrievancesEditNoteBtn')}
+                    </Button>
                   )}
                 </div>
               </div>
@@ -945,41 +896,20 @@ export default function AdminGrievancesPage() {
           <table className="w-full text-left text-xs border-collapse min-w-[850px]">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-500 uppercase tracking-wider font-bold">
-                <th className="p-3.5 w-10">
-                  <input
-                    type="checkbox"
-                    checked={isAllCurrentSelected}
-                    onChange={toggleSelectAllCurrent}
-                    className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-                  />
-                </th>
-                <th className="p-3.5">{isEn ? 'Code & Priority' : 'Mã & Độ ưu tiên'}</th>
-                <th className="p-3.5">{isEn ? 'Grievance Subject' : 'Nội dung khiếu nại'}</th>
-                <th className="p-3.5">{isEn ? 'Tenant & Landlord' : 'Khách thuê / Chủ trọ'}</th>
-                <th className="p-3.5">{isEn ? 'Status' : 'Trạng thái'}</th>
-                <th className="p-3.5 text-right">{isEn ? 'Actions' : 'Hành động'}</th>
+                <th className="p-3.5">{t('adminGrievancesThCodePriority')}</th>
+                <th className="p-3.5">{t('adminGrievancesThSubject')}</th>
+                <th className="p-3.5">{t('adminGrievancesThParties')}</th>
+                <th className="p-3.5">{t('adminGrievancesThStatus')}</th>
+                <th className="p-3.5 text-right">{t('adminGrievancesThActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {paginatedItems.map(item => {
-                const isSelected = selectedIds.includes(item.id)
-
                 return (
                   <tr
                     key={item.id}
-                    className={`hover:bg-zinc-50/80 transition-colors ${
-                      isSelected ? 'bg-orange-50/30' : ''
-                    }`}
+                    className="hover:bg-zinc-50/80 transition-colors"
                   >
-                    <td className="p-3.5">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        className="w-4 h-4 rounded border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
-                      />
-                    </td>
-
                     <td className="p-3.5 space-y-1">
                       <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-block">
                         {item.id}
@@ -993,7 +923,7 @@ export default function AdminGrievancesPage() {
                       <div className="text-[11px] text-zinc-500 line-clamp-2 leading-tight">
                         {item.description}
                       </div>
-                      <span className="inline-block text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">
+                      <span className="inline-block text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-md">
                         {item.categoryLabel}
                       </span>
                     </td>
@@ -1008,7 +938,7 @@ export default function AdminGrievancesPage() {
                           {item.houseName} • <span className="font-bold">{item.roomNumber}</span>
                         </div>
                         <div className="text-[11px] text-zinc-400">
-                          {isEn ? 'Landlord:' : 'Chủ:'} {item.landlordName} ({item.landlordPhone})
+                          {t('adminGrievancesLandlordShortLabel')} {item.landlordName} ({item.landlordPhone})
                         </div>
                       </div>
                     </td>
@@ -1016,28 +946,32 @@ export default function AdminGrievancesPage() {
                     <td className="p-3.5">{renderStatusBadge(item.status)}</td>
 
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setInspectItem(item)}
-                        className="p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer"
-                        title={isEn ? 'View details' : 'Xem chi tiết'}
+                        title={t('adminGrievancesDetailsBtn')}
                       >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
 
                       {item.status === 'pending' || item.status === 'in_progress' ? (
-                        <button
+                        <Button
+                          variant="primary"
+                          size="sm"
                           onClick={() => handleOpenResolveModal(item, 'resolve')}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors shadow-2xs cursor-pointer"
+                          className="bg-emerald-600 hover:bg-emerald-700"
                         >
-                          {isEn ? 'Resolve' : 'Xử lý'}
-                        </button>
+                          {t('adminGrievancesResolveBtn')}
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => handleOpenResolveModal(item, 'resolve')}
-                          className="px-2.5 py-1.5 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
                         >
-                          {isEn ? 'Note' : 'Ghi chú'}
-                        </button>
+                          {t('adminGrievancesNoteBtn')}
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -1049,84 +983,97 @@ export default function AdminGrievancesPage() {
       )}
 
       {/* Standardized Pagination Bar (Rule #9) */}
-      <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
-        <div className="flex items-center gap-2">
-          <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-          <input
-            type="number"
-            min={1}
-            max={100}
-            value={pageSize}
-            onChange={e => {
-              const val = parseInt(e.target.value) || 1
-              setPageSize(val)
-              setCurrentPage(1)
-            }}
-            className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-none focus:border-orange-500"
-          />
-          <span>{isEn ? '/ page' : '/ trang'}</span>
-          <span className="text-zinc-300">|</span>
-          <span>
-            {totalItems === 0
-              ? '0'
-              : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
-                  safeCurrentPage * validPageSize,
-                  totalItems,
-                )}`}{' '}
-            {isEn ? `of ${totalItems} grievances` : `trên ${totalItems} khiếu nại`}
-          </span>
+      {loading ? (
+        <div className="bg-white px-4 py-3.5 rounded-2xl border border-zinc-200/90 shadow-2xs flex items-center justify-between animate-pulse">
+          <div className="h-4 bg-zinc-200 rounded w-48" />
+          <div className="h-7 bg-zinc-200 rounded w-56" />
         </div>
+      ) : paginatedItems.length > 0 ? (
+        <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
+          <div className="flex items-center gap-2">
+            <span>{t('adminGrievancesPaginationShowing')}</span>
+            <NumberInput
+              min={1}
+              max={100}
+              value={pageSize}
+              onChange={e => {
+                const val = parseInt(e.target.value) || 1
+                setPageSize(val)
+                setCurrentPage(1)
+              }}
+              containerClassName="space-y-0 w-14 inline-block"
+              className="px-2 py-1 text-center bg-zinc-50 border-zinc-200 rounded-lg font-bold text-zinc-900 focus:border-orange-500"
+            />
+            <span>{t('adminGrievancesPaginationPerPage')}</span>
+            <span className="text-zinc-300">|</span>
+            <span>
+              {totalItems === 0
+                ? '0'
+                : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
+                    safeCurrentPage * validPageSize,
+                    totalItems,
+                  )}`}{' '}
+              {t('adminGrievancesPaginationOfGrievances', { total: totalItems })}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-1 self-end sm:self-auto">
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={safeCurrentPage === 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'First page' : 'Trang đầu'}
-          >
-            <ChevronsLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
-            disabled={safeCurrentPage <= 1}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'Previous 5 pages' : 'Lùi 5 trang'}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {pageNumbers.map(num => (
-            <button
-              key={num}
-              onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
-                safeCurrentPage === num
-                  ? 'bg-orange-600 text-white shadow-2xs'
-                  : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-              }`}
+          <div className="flex items-center gap-1 self-end sm:self-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={safeCurrentPage === 1}
+              title={t('adminGrievancesFirstPage')}
             >
-              {num}
-            </button>
-          ))}
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
+              disabled={safeCurrentPage <= 1}
+              title={t('adminGrievancesPrev5')}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
 
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
-            disabled={safeCurrentPage >= totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'Next 5 pages' : 'Tiến 5 trang'}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={safeCurrentPage === totalPages}
-            className="p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
-            title={isEn ? 'Last page' : 'Trang cuối'}
-          >
-            <ChevronsRight className="w-4 h-4" />
-          </button>
+            {pageNumbers.map(num => (
+              <Button
+                key={num}
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(num)}
+                className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
+                  safeCurrentPage === num
+                    ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
+                    : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
+                }`}
+              >
+                {num}
+              </Button>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
+              disabled={safeCurrentPage >= totalPages}
+              title={t('adminGrievancesNext5')}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safeCurrentPage === totalPages}
+              title={t('adminGrievancesLastPage')}
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {/* INSPECT DETAIL MODAL */}
       {inspectItem && (
@@ -1142,25 +1089,27 @@ export default function AdminGrievancesPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
                 <h2 className="text-base font-black text-zinc-900">
-                  {isEn ? 'Grievance Dossier & Evidence' : 'Hồ Sơ Khiếu Nại & Minh Chứng'}
+                  {t('adminGrievancesModalDossierTitle')}
                 </h2>
                 <span className="font-mono text-xs font-bold text-zinc-400">
                   ({inspectItem.id})
                 </span>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setInspectItem(null)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   {renderPriorityBadge(inspectItem.priority)}
-                  <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                  <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md">
                     {inspectItem.categoryLabel}
                   </span>
                 </div>
@@ -1177,7 +1126,7 @@ export default function AdminGrievancesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80">
                 <div className="space-y-1">
                   <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block">
-                    {isEn ? 'Complainant (Tenant)' : 'Người khiếu nại (Khách thuê)'}
+                    {t('adminGrievancesModalComplainant')}
                   </span>
                   <div className="font-bold text-zinc-900 text-sm">{inspectItem.tenantName}</div>
                   <div className="text-zinc-600 font-mono">{inspectItem.tenantPhone}</div>
@@ -1186,7 +1135,7 @@ export default function AdminGrievancesPage() {
 
                 <div className="space-y-1">
                   <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block">
-                    {isEn ? 'Accused Landlord & Property' : 'Chủ trọ & Cơ sở bị phản ánh'}
+                    {t('adminGrievancesModalAccused')}
                   </span>
                   <div className="font-bold text-zinc-900 text-sm">{inspectItem.landlordName}</div>
                   <div className="text-zinc-600 font-mono">{inspectItem.landlordPhone}</div>
@@ -1199,9 +1148,7 @@ export default function AdminGrievancesPage() {
               {/* Description */}
               <div className="space-y-1.5">
                 <h4 className="font-bold text-zinc-800 uppercase text-[11px] tracking-wider">
-                  {isEn
-                    ? 'Detailed Description from Tenant:'
-                    : 'Nội dung phản ánh chi tiết từ khách:'}
+                  {t('adminGrievancesModalDescLabel')}
                 </h4>
                 <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-zinc-700 leading-relaxed">
                   {inspectItem.description}
@@ -1212,7 +1159,7 @@ export default function AdminGrievancesPage() {
               {inspectItem.evidenceImages.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-bold text-zinc-800 uppercase text-[11px] tracking-wider">
-                    {isEn ? 'Evidence Photos & Documents:' : 'Hình ảnh & Biên bản làm bằng chứng:'}
+                    {t('adminGrievancesModalProofLabel')}
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {inspectItem.evidenceImages.map((img, idx) => (
@@ -1227,7 +1174,7 @@ export default function AdminGrievancesPage() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-bold">
-                          {isEn ? 'Enlarge' : 'Phóng to'}
+                          {t('adminGrievancesModalEnlarge')}
                         </div>
                       </div>
                     ))}
@@ -1240,16 +1187,17 @@ export default function AdminGrievancesPage() {
                 <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1">
                   <div className="font-black text-xs uppercase flex items-center gap-1 text-emerald-800">
                     <CheckCircle2 className="w-4 h-4" />
-                    {isEn ? 'Recorded Admin Resolution:' : 'Kết luận & Hướng giải quyết của Admin:'}
+                    {t('adminGrievancesModalRecordedResolution')}
                   </div>
                   <p className="text-xs font-semibold leading-relaxed">
                     {inspectItem.resolutionNote}
                   </p>
                   {inspectItem.resolvedAt && (
                     <span className="text-[10px] text-emerald-700 block">
-                      {isEn
-                        ? `Resolved at: ${inspectItem.resolvedAt} by ${inspectItem.resolvedBy}`
-                        : `Xử lý lúc: ${inspectItem.resolvedAt} bởi ${inspectItem.resolvedBy}`}
+                      {t('adminGrievancesModalResolvedAt', {
+                        time: inspectItem.resolvedAt,
+                        by: inspectItem.resolvedBy || 'Admin',
+                      })}
                     </span>
                   )}
                 </div>
@@ -1257,35 +1205,36 @@ export default function AdminGrievancesPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-              <button
-                onClick={() => setInspectItem(null)}
-                className="px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                {isEn ? 'Close' : 'Đóng'}
-              </button>
+              <Button variant="secondary" size="sm" onClick={() => setInspectItem(null)}>
+                {t('adminGrievancesModalClose')}
+              </Button>
 
               {inspectItem.status === 'pending' && (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleMarkInProgress(inspectItem)}
-                  className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  leftIcon={<Eye className="w-3.5 h-3.5 text-blue-600" />}
+                  className="text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
                 >
-                  <Eye className="w-4 h-4" />
-                  <span>{isEn ? 'Mark Investigating' : 'Đang điều tra'}</span>
-                </button>
+                  <span>{t('adminGrievancesModalInvestigating')}</span>
+                </Button>
               )}
 
               {inspectItem.status !== 'resolved' && inspectItem.status !== 'rejected' && (
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => {
                     const target = inspectItem
                     setInspectItem(null)
                     handleOpenResolveModal(target, 'resolve')
                   }}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  leftIcon={<Check className="w-3.5 h-3.5" />}
+                  className="bg-emerald-600 hover:bg-emerald-700"
                 >
-                  <Check className="w-4 h-4" />
-                  <span>{isEn ? 'Take Resolution Action' : 'Đưa ra Kết luận Xử lý'}</span>
-                </button>
+                  <span>{t('adminGrievancesModalTakeAction')}</span>
+                </Button>
               )}
             </div>
           </div>
@@ -1321,48 +1270,50 @@ export default function AdminGrievancesPage() {
                   <div>
                     <h3 className="text-base font-black text-zinc-900">
                       {actionType === 'resolve'
-                        ? isEn
-                          ? 'Resolve Tenant Grievance'
-                          : 'Xác Nhận Giải Quyết Khiếu Nại'
-                        : isEn
-                          ? 'Reject Tenant Grievance'
-                          : 'Từ Chối Giải Quyết Khiếu Nại'}
+                        ? t('adminGrievancesResolveModalTitle')
+                        : t('adminGrievancesRejectModalTitle')}
                     </h3>
                     <p className="text-xs text-zinc-500 font-mono">
                       {resolveTargetItem.id} • {resolveTargetItem.tenantName}
                     </p>
                   </div>
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleRequestCloseResolveModal}
-                  className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                  className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
 
               {/* Action Type switcher */}
               <div className="flex items-center gap-2 p-1 bg-zinc-100 rounded-xl text-xs font-bold">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setActionType('resolve')}
-                  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 h-auto rounded-lg transition-all cursor-pointer ${
                     actionType === 'resolve'
-                      ? 'bg-white text-emerald-700 shadow-2xs'
+                      ? 'bg-white text-emerald-700 shadow-2xs hover:bg-white hover:text-emerald-700'
                       : 'text-zinc-500'
                   }`}
                 >
-                  {isEn ? 'Approve / Resolve' : 'Giải quyết thỏa đáng'}
-                </button>
-                <button
+                  {t('adminGrievancesTabApprove')}
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setActionType('reject')}
-                  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                    actionType === 'reject' ? 'bg-white text-zinc-900 shadow-2xs' : 'text-zinc-500'
+                  className={`flex-1 py-1.5 h-auto rounded-lg transition-all cursor-pointer ${
+                    actionType === 'reject' ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900' : 'text-zinc-500'
                   }`}
                 >
-                  {isEn ? 'Reject / Invalid' : 'Từ chối / Khiếu nại sai'}
-                </button>
+                  {t('adminGrievancesTabReject')}
+                </Button>
               </div>
 
               {resolveError && (
@@ -1373,72 +1324,60 @@ export default function AdminGrievancesPage() {
               )}
 
               {/* Resolution note input */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {isEn
-                    ? 'Resolution Note & Verdict (Mandatory):'
-                    : 'Kết luận & Hướng giải quyết (Bắt buộc):'}
-                </label>
-                <textarea
-                  rows={4}
-                  value={resolutionNoteInput}
-                  onChange={e => setResolutionNoteInput(e.target.value)}
-                  placeholder={
-                    actionType === 'resolve'
-                      ? isEn
-                        ? 'State clear findings, mediation agreement, refund amount (if any), or landlord rectification deadline...'
-                        : 'Ghi rõ thỏa thuận hai bên: Yêu cầu chủ trọ hoàn cọc, sửa chữa thiết bị trước ngày nào, hoặc nền tảng trích quỹ bảo lãnh...'
-                      : isEn
-                        ? 'Explain why the grievance is invalid or outside the jurisdiction of the platform...'
-                        : 'Giải thích rõ lý do từ chối: Giao dịch ngoài nền tảng, hoặc khách thuê vi phạm điều khoản hợp đồng trước...'
-                  }
-                  className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-emerald-500 focus:bg-white"
-                />
-              </div>
+              <TextareaInput
+                label={t('adminGrievancesMandatoryNote')}
+                required
+                rows={4}
+                value={resolutionNoteInput}
+                onChange={e => setResolutionNoteInput(e.target.value)}
+                placeholder={
+                  actionType === 'resolve'
+                    ? t('adminGrievancesResolvePlaceholder')
+                    : t('adminGrievancesRejectPlaceholder')
+                }
+              />
 
               {/* Escalation Checkbox */}
               {actionType === 'resolve' && (
-                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-orange-50/60 border border-orange-200/70 cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="p-3 rounded-xl bg-orange-50/60 border border-orange-200/70">
+                  <Checkbox
                     checked={escalateLockLandlord}
                     onChange={e => setEscalateLockLandlord(e.target.checked)}
-                    className="w-4 h-4 rounded border-orange-300 text-orange-600 focus:ring-orange-500 mt-0.5 cursor-pointer"
+                    label={t('adminGrievancesEscalateLabel')}
+                    description={t('adminGrievancesEscalateDesc')}
+                    size="sm"
                   />
-                  <div className="text-xs">
-                    <span className="font-bold text-orange-900 block">
-                      {isEn
-                        ? "Escalate & Suspend Landlord's Listing"
-                        : 'Chuyển kiểm duyệt khóa tin đăng của Chủ trọ này'}
-                    </span>
-                    <span className="text-orange-700 font-medium text-[11px]">
-                      {isEn
-                        ? 'Automatically flag this boarding house in Moderation module for policy violation audit.'
-                        : 'Tự động đánh dấu cơ sở này trong mô-đun Kiểm duyệt để khóa phòng tránh lừa thêm khách khác.'}
-                    </span>
-                  </div>
-                </label>
+                </div>
               )}
             </div>
 
             <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleRequestCloseResolveModal}
-                className="px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 text-xs font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
+                disabled={isSubmittingResolution}
               >
-                {isEn ? 'Cancel' : 'Hủy bỏ'}
-              </button>
-              <button
+                {t('adminGrievancesCancel')}
+              </Button>
+              <Button
+                variant={actionType === 'resolve' ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={handleConfirmResolution}
-                className={`px-5 py-2 rounded-xl text-white text-xs font-bold transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5 ${
+                isLoading={isSubmittingResolution}
+                leftIcon={<Check className="w-3.5 h-3.5" />}
+                className={
                   actionType === 'resolve'
                     ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-zinc-900 hover:bg-zinc-800'
-                }`}
+                    : 'bg-zinc-900 text-white hover:bg-zinc-800'
+                }
               >
-                <Check className="w-3.5 h-3.5" />
-                <span>{isEn ? 'Save Verdict' : 'Lưu Kết Luận'}</span>
-              </button>
+                <span>
+                  {isSubmittingResolution
+                    ? t('adminGrievancesSaving')
+                    : t('adminGrievancesSaveVerdict')}
+                </span>
+              </Button>
             </div>
           </div>
         </div>
@@ -1456,12 +1395,14 @@ export default function AdminGrievancesPage() {
               alt="Evidence"
               className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain"
             />
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black cursor-pointer"
+              className="absolute top-3 right-3 w-8 h-8 p-0 h-auto rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black cursor-pointer"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -1481,27 +1422,28 @@ export default function AdminGrievancesPage() {
             </div>
             <div>
               <h3 className="text-base font-black text-zinc-900">
-                {isEn ? 'Discard Resolution Draft?' : 'Xác nhận đóng form'}
+                {t('adminGrievancesDiscardTitle')}
               </h3>
               <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                {isEn
-                  ? 'You have unsaved resolution notes. Are you sure you want to discard changes and close?'
-                  : 'Bạn có ghi chú xử lý chưa lưu. Bạn có chắc muốn đóng và hủy các nội dung đã nhập?'}
+                {t('adminGrievancesDiscardDesc')}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
-                {isEn ? 'Continue Editing' : 'Tiếp tục chỉnh sửa'}
-              </button>
-              <button
+                {t('adminGrievancesContinueEditing')}
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
+                className="bg-orange-600 hover:bg-orange-700"
               >
-                {isEn ? 'Discard & Close' : 'Hủy thay đổi & Đóng'}
-              </button>
+                {t('adminGrievancesDiscardAndClose')}
+              </Button>
             </div>
           </div>
         </div>

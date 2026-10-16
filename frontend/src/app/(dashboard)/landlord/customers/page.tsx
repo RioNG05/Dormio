@@ -26,7 +26,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
 
 export default function CustomersPage() {
   const { activeBuilding } = useAuth()
@@ -133,9 +133,9 @@ export default function CustomersPage() {
         const mapped: Customer[] = list.flatMap((c: any): Customer[] => {
           const daysRemaining = c.endDate
             ? Math.max(
-                0,
-                Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-              )
+              0,
+              Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+            )
             : undefined
           const contractStatus =
             c.status === 'active'
@@ -280,47 +280,15 @@ export default function CustomersPage() {
             {t('landlordCustomersPageSubheading')}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              showAlert(
-                t('landlordCustomersAlertImportExcel'),
-                'info',
-                t('landlordCustomersAlertExperimentalTitle'),
-              )
-            }
-            className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-100 shadow-2xs gap-1.5"
-          >
-            <UploadCloud className="w-4 h-4 text-emerald-600" />
-            <span>{t('landlordCustomersImportBtn')}</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              showAlert(
-                t('landlordCustomersAlertExportExcel'),
-                'success',
-                t('landlordCustomersAlertExportTitle'),
-              )
-            }
-            className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-100 shadow-2xs gap-1.5"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-blue-600" />
-            <span>{t('landlordCustomersExportBtn')}</span>
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => router.push('/landlord/contracts/create')}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-xl"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('landlordCustomersBtnAddContract')}</span>
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => router.push('/landlord/contracts/create')}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-xl"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{t('landlordCustomersBtnAddContract')}</span>
+        </Button>
       </div>
 
       {/* Building Overview Banner */}
@@ -451,35 +419,34 @@ export default function CustomersPage() {
                 color: 'text-blue-700 bg-blue-50 border-blue-200',
               },
             ].map(tab => (
-              <button
+              <Button
                 key={tab.id}
+                variant="ghost"
+                size="sm"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${
-                  statusFilter === tab.id
-                    ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs'
-                    : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
-                }`}
+                className={`h-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
+                  ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs hover:bg-[#2AC1BC]/90 hover:text-white'
+                  : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+                  }`}
               >
                 <span className="whitespace-nowrap">{tab.label}</span>
                 <span
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${
-                    statusFilter === tab.id ? 'bg-white/20 text-white' : tab.color
-                  }`}
+                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${statusFilter === tab.id ? 'bg-white/20 text-white' : tab.color
+                    }`}
                 >
                   {tab.count}
                 </span>
-              </button>
+              </Button>
             ))}
 
             {/* Separator Line */}
             <div className="hidden xl:block h-6 w-px bg-zinc-200 mx-1 shrink-0" />
 
             {/* Search Input using Base Component */}
-            <TextInput
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+            <SearchInput
               placeholder={t('landlordCustomersSearchPlaceholder')}
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={setSearchQuery}
               containerClassName="w-full sm:w-52 shrink-0 space-y-0"
               className="py-1.5 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
             />
@@ -500,36 +467,38 @@ export default function CustomersPage() {
 
           {/* Right Controls: View Mode Switcher */}
           <div className="flex items-center justify-end gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0 self-end lg:self-auto">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('grid')
                 setItemsPerPage(6)
                 setCurrentPage(1)
               }}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+              className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid'
+                ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
+                : 'text-zinc-500 hover:text-zinc-900'
+                }`}
               title={t('landlordCustomersViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('list')
                 setItemsPerPage(10)
                 setCurrentPage(1)
               }}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'list'
-                  ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+              className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list'
+                ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
+                : 'text-zinc-500 hover:text-zinc-900'
+                }`}
               title={t('landlordCustomersViewList')}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -588,13 +557,12 @@ export default function CustomersPage() {
                     </div>
                   </div>
                   <span
-                    className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${
-                      customer.status === 'Đang ở'
-                        ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
-                        : customer.status === 'Sắp hết hợp đồng'
-                          ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
-                          : 'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}
+                    className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
+                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
+                      : customer.status === 'Sắp hết hợp đồng'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
+                        : 'bg-blue-50 text-blue-700 border border-blue-200'
+                      }`}
                   >
                     {getCustomerStatusLabel(customer.status)}
                   </span>
@@ -627,9 +595,9 @@ export default function CustomersPage() {
                       <span className="text-orange-600 animate-pulse whitespace-nowrap">
                         {customer.daysRemaining !== undefined
                           ? t('landlordCustomersContractDaysRemaining').replace(
-                              '{days}',
-                              String(customer.daysRemaining),
-                            )
+                            '{days}',
+                            String(customer.daysRemaining),
+                          )
                           : t('landlordCustomersDaysRemainingShort')}
                       </span>
                     </div>
@@ -645,16 +613,18 @@ export default function CustomersPage() {
                   >
                     <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
                   </a>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={e => {
                       e.stopPropagation()
                       handleOpenChat(customer)
                     }}
-                    className="py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
+                    className="h-auto py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] hover:text-white transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
                   >
                     <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
-                  </button>
+                  </Button>
                   <Link
                     href={`/landlord/customers/${customer.contractId || customer.id}`}
                     className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
@@ -738,13 +708,12 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-3.5 whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${
-                            customer.status === 'Đang ở'
-                              ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                              : customer.status === 'Sắp hết hợp đồng'
-                                ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
-                                : 'bg-blue-50 text-blue-700 border border-blue-200'
-                          }`}
+                          className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
+                            ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                            : customer.status === 'Sắp hết hợp đồng'
+                              ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
+                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            }`}
                         >
                           {getCustomerStatusLabel(customer.status)}
                         </span>
@@ -761,14 +730,16 @@ export default function CustomersPage() {
                           >
                             <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
                           </a>
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleOpenChat(customer)}
                             title={t('landlordCustomersMessageBtn')}
-                            className="px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                            className="h-auto px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] hover:text-white transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
                           >
                             <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
-                          </button>
+                          </Button>
                           <Link
                             href={`/landlord/customers/${customer.contractId || customer.id}`}
                             className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
@@ -847,11 +818,10 @@ export default function CustomersPage() {
                   variant={currentPage === page ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all p-0 ${
-                    currentPage === page
-                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
-                      : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                  }`}
+                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all p-0 ${currentPage === page
+                    ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
+                    : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                    }`}
                 >
                   {page}
                 </Button>

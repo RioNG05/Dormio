@@ -1,72 +1,43 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
   Search,
   FileSignature,
   X,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  ChevronDown,
-  DollarSign,
-  Home,
-  Image as ImageIcon,
-  User,
-  Building2,
   LayoutGrid,
   List,
-  FileText,
   CalendarDays,
   Ban,
-  ArrowLeft,
   Copy,
   Printer,
-  Edit2,
-  Zap,
-  ClipboardList,
-  UploadCloud,
   Users,
   Gauge,
-  History,
   MapPin,
-  FileSpreadsheet,
   CreditCard,
   Eye,
   Loader2,
   AlertTriangle,
-  Download,
+  User,
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
+import { useSubscriptionTier } from '@/hooks'
 import { getLandlordContracts, ContractItem, exportContract } from '@/services/contract.service'
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
-
-function getStatusLabel(status: string, isEn: boolean): string {
-  switch (status) {
-    case 'active':
-      return isEn ? 'Active' : 'Đang hiệu lực'
-    case 'draft':
-      return isEn ? 'Draft' : 'Chờ xác nhận'
-    case 'expired':
-      return isEn ? 'Expired' : 'Hết hạn'
-    case 'canceled':
-      return isEn ? 'Terminated' : 'Đã chấm dứt'
-    case 'Đang hiệu lực':
-      return isEn ? 'Active' : 'Đang hiệu lực'
-    case 'Chờ xác nhận':
-      return isEn ? 'Draft' : 'Chờ xác nhận'
-    case 'Quá hạn':
-      return isEn ? 'Overdue' : 'Quá hạn'
-    case 'Đã chấm dứt':
-      return isEn ? 'Terminated' : 'Đã chấm dứt'
-    default:
-      return status
-  }
-}
+import {
+  Button,
+  TextInput,
+  DateInput,
+  NumberInput,
+  SelectInput,
+  SearchInput,
+  ToastContainer,
+  ToastItem,
+} from '@/components/ui'
 
 function mapContractStatus(rawStatus: string): string {
   switch (rawStatus) {
@@ -87,48 +58,110 @@ export default function ContractsPage() {
   const { activeBuilding } = useAuth()
   const router = useRouter()
   const t = useTranslations('landlord')
-  const { currentLocale, locale } = useLanguage()
-  const isEn = (currentLocale || locale) === 'en'
-  const [showDiscardModal, setShowDiscardModal] = useState(false)
+  const { requireTier } = useSubscriptionTier()
 
-  const getContractStatusLabel = (status: string) => {
-    switch (status) {
-      case 'Đang hiệu lực':
-      case 'Còn hiệu lực':
-        return t('landlordContractsStatusActive')
-      case 'Sắp hết hạn':
-        return t('landlordContractsStatusExpiring')
-      case 'Quá hạn':
-        return t('landlordContractsStatusOverdue')
-      case 'Đã chấm dứt':
-      case 'Chấm dứt':
-        return t('landlordContractsStatusEnded')
-      case 'Chờ xác nhận':
-        return t('landlordContractsStatusDraft')
-      default:
-        return status
-    }
-  }
-
-  const getPaymentStatusLabel = (status: string) => {
-    switch (status) {
-      case 'Đã thu đủ':
-        return t('landlordContractsPaymentStatusPaid')
-      case 'Còn nợ':
-        return t('landlordContractsPaymentStatusUnpaid')
-      default:
-        return status
-    }
-  }
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [step, setStep] = useState(1)
-  const [isDirty, setIsDirty] = useState(false)
-  // Rule #10: custom confirm-close modal instead of window.confirm
+  // Rule #10: Unsaved changes confirmation modal state
   const [showCloseConfirm, setShowCloseConfirm] = useState(false)
+  const [modalPendingClose, setModalPendingClose] = useState<(() => void) | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
 
   const [isMounted, setIsMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [contracts, setContracts] = useState<any[]>([])
+
+  // Selection for quick action modals (Extend, Terminate, Print)
+  const [selectedContract, setSelectedContract] = useState<any>(null)
+
+  // Filters & Pagination (Rule #9: Grid default 6, List default 10)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(6)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  // Quick Action Modals
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false)
+  const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false)
+
+  // Form states inside modals
+  const [extendEndDate, setExtendEndDate] = useState('')
+  const [extendRent, setExtendRent] = useState('')
+  const [terminateDate, setTerminateDate] = useState('')
+  const [terminateReason, setTerminateReason] = useState('')
+  const [finalElecIndex, setFinalElecIndex] = useState('')
+  const [finalWaterIndex, setFinalWaterIndex] = useState('')
+
+  // Preview contract modal
+  const [previewModal, setPreviewModal] = useState<{
+    isOpen: boolean
+    contractId: string
+    roomNumber: string
+    tenantName?: string
+  }>({
+    isOpen: false,
+    contractId: '',
+    roomNumber: '',
+    tenantName: '',
+  })
+
+  // Toast notifications using base ToastContainer
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+
+  const showToast = useCallback(
+    (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+      const id = Date.now().toString() + Math.random().toString(36).substring(2, 5)
+      setToasts(prev => [...prev, { id, message, type, duration: 4000 }])
+    },
+    [],
+  )
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(tItem => tItem.id !== id))
+  }, [])
+
+  // Centralized Status Label mappings (Rule #14)
+  const getContractStatusLabel = useCallback(
+    (status: string) => {
+      switch (status) {
+        case 'active':
+        case 'Đang hiệu lực':
+        case 'Còn hiệu lực':
+          return t('landlordContractsStatusActive')
+        case 'draft':
+        case 'Chờ xác nhận':
+          return t('landlordContractsStatusDraft')
+        case 'expired':
+        case 'Quá hạn':
+          return t('landlordContractsStatusOverdue')
+        case 'Sắp hết hạn':
+          return t('landlordContractsStatusExpiring')
+        case 'canceled':
+        case 'Đã chấm dứt':
+        case 'Chấm dứt':
+          return t('landlordContractsStatusEnded')
+        default:
+          return status
+      }
+    },
+    [t],
+  )
+
+  const getPaymentStatusLabel = useCallback(
+    (status: string) => {
+      switch (status) {
+        case 'paid':
+        case 'Đã thu đủ':
+          return t('landlordContractsPaymentStatusPaid')
+        case 'unpaid':
+        case 'Còn nợ':
+          return t('landlordContractsPaymentStatusUnpaid')
+        default:
+          return status
+      }
+    },
+    [t],
+  )
 
   useEffect(() => {
     setIsMounted(true)
@@ -149,7 +182,7 @@ export default function ContractsPage() {
           building: activeBuilding.id,
           room: c.room.roomNumber,
           roomType: c.room.roomTypeName || 'Studio',
-          tenant: c.tenant?.fullName || (isEn ? 'Tenant' : 'Khách thuê'),
+          tenant: c.tenant?.fullName || t('landlordContractsTenantFallback'),
           tenantId: c.tenant?.id || 'KH-1',
           tenantPhone: c.tenant?.phoneNumber || '',
           startDate: new Date(c.startDate).toLocaleDateString('vi-VN'),
@@ -160,7 +193,7 @@ export default function ContractsPage() {
           deposit: `${c.depositAmount.toLocaleString('vi-VN')} ₫`,
           depositAmount: c.depositAmount,
           paymentDate: `${c.monthlyPaymentDate}`,
-          paymentStatus: isEn ? 'Collected' : 'Đã thu đủ',
+          paymentStatus: 'Đã thu đủ',
           status: mapContractStatus(c.status),
           documentsCount: c.documentsCount,
           createdAt: new Date(c.createdAt).toLocaleDateString('vi-VN'),
@@ -168,137 +201,60 @@ export default function ContractsPage() {
           members: [],
         }))
         setContracts(mapped)
+      } else {
+        setContracts([])
       }
     } catch (err: any) {
       console.warn('Could not load contracts from backend, using fallback data:', err)
-      setLoadError(
-        isEn
-          ? 'Failed to load contracts. Please try again.'
-          : 'Không thể tải danh sách hợp đồng. Vui lòng thử lại.',
-      )
+      setLoadError(t('landlordContractsLoadError'))
     } finally {
       setIsLoading(false)
     }
-  }, [activeBuilding?.id, isEn])
+  }, [activeBuilding?.id, t])
 
   useEffect(() => {
     fetchContracts()
   }, [fetchContracts])
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [selectedContract, setSelectedContract] = useState<any>(null)
-  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false)
-  const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false)
-  const [isCheckoutNoticeModalOpen, setIsCheckoutNoticeModalOpen] = useState(false)
-  const [isEditingContract, setIsEditingContract] = useState(false)
-  const [isAdjustRentModalOpen, setIsAdjustRentModalOpen] = useState(false)
-  const [isAdjustDepositModalOpen, setIsAdjustDepositModalOpen] = useState(false)
-  const [isAdjustPaymentDateModalOpen, setIsAdjustPaymentDateModalOpen] = useState(false)
-  const [adjustRentMethod, setAdjustRentMethod] = useState<'percent' | 'add' | 'set'>('percent')
-  const [adjustDepositMethod, setAdjustDepositMethod] = useState<'percent' | 'add' | 'set'>(
-    'percent',
-  )
-  const [selectedContractIds, setSelectedContractIds] = useState<string[]>([])
-  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false)
-  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false)
-  const [editingService, setEditingService] = useState<any>(null)
-  const [members, setMembers] = useState<any[]>([])
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      name: isEn ? 'Security' : 'Bảo vệ',
-      type: isEn ? 'Fixed' : 'Cố định',
-      price: 50000,
-      unit: isEn ? '₫/room' : 'đ/phòng',
-      applied: true,
-    },
-    {
-      id: 2,
-      name: isEn ? 'Electricity' : 'Điện',
-      type: isEn ? 'Metered' : 'Đồng hồ',
-      price: 3500,
-      unit: 'đ/kWh',
-      applied: true,
-    },
-    {
-      id: 3,
-      name: isEn ? 'Water' : 'Nước',
-      type: isEn ? 'Metered' : 'Đồng hồ',
-      price: 25000,
-      unit: 'đ/m³',
-      applied: true,
-    },
-    {
-      id: 4,
-      name: isEn ? 'Garbage' : 'Rác',
-      type: isEn ? 'Fixed' : 'Cố định',
-      price: 40000,
-      unit: isEn ? '₫/room' : 'đ/phòng',
-      applied: true,
-    },
-  ])
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [isExportingPdf, setIsExportingPdf] = useState(false)
-  const [previewModal, setPreviewModal] = useState<{
-    isOpen: boolean
-    contractId: string
-    roomNumber: string
-    tenantName?: string
-  }>({
-    isOpen: false,
-    contractId: '',
-    roomNumber: '',
-    tenantName: '',
-  })
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
-  }
-
-  // Rule #10: Custom confirmation modal instead of window.confirm
-  const handleCloseModal = () => {
+  // Rule #10: Modal close handling with confirmation if unsaved changes exist
+  const requestCloseModal = (closeFn: () => void) => {
     if (isDirty) {
-      setShowDiscardModal(true)
+      setModalPendingClose(() => closeFn)
+      setShowCloseConfirm(true)
     } else {
-      setIsModalOpen(false)
-      setTimeout(() => setStep(1), 200)
+      closeFn()
     }
   }
 
   const handleConfirmDiscard = () => {
     setShowCloseConfirm(false)
-    setIsModalOpen(false)
-    setTimeout(() => {
-      setIsDirty(false)
-      setStep(1)
-    }, 200)
+    setIsDirty(false)
+    if (modalPendingClose) {
+      modalPendingClose()
+      setModalPendingClose(null)
+    }
+  }
+
+
+  const formatDateToDisplay = (dateStr: string) => {
+    if (!dateStr) return ''
+    const parts = dateStr.split('-')
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`
+    return dateStr
   }
 
   // Export current contract list as CSV
   const handleExportCsv = () => {
-    const headers = isEn
-      ? [
-          'Contract ID',
-          'Room',
-          'Tenant',
-          'Start Date',
-          'End Date',
-          'Rent Price',
-          'Deposit',
-          'Status',
-        ]
-      : [
-          'Mã HĐ',
-          'Phòng',
-          'Khách thuê',
-          'Ngày bắt đầu',
-          'Ngày kết thúc',
-          'Giá thuê',
-          'Tiền cọc',
-          'Trạng thái',
-        ]
+    const headers = [
+      t('landlordContractsCsvHeaderId'),
+      t('landlordContractsCsvHeaderRoom'),
+      t('landlordContractsCsvHeaderTenant'),
+      t('landlordContractsCsvHeaderStartDate'),
+      t('landlordContractsCsvHeaderEndDate'),
+      t('landlordContractsCsvHeaderRentPrice'),
+      t('landlordContractsCsvHeaderDeposit'),
+      t('landlordContractsCsvHeaderStatus'),
+    ]
     const rows = contracts.map((c: any) => [
       c.id,
       c.room,
@@ -307,7 +263,7 @@ export default function ContractsPage() {
       c.endDate,
       c.price,
       c.deposit,
-      isEn ? getStatusLabel(c.status, true) : c.status,
+      getContractStatusLabel(c.status),
     ])
     const csv = [headers, ...rows]
       .map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(','))
@@ -319,14 +275,20 @@ export default function ContractsPage() {
     a.download = `contracts_${activeBuilding?.name || 'export'}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.csv`
     a.click()
     URL.revokeObjectURL(url)
-    showToast(
-      isEn ? 'Contract list exported successfully!' : 'Đã xuất danh sách hợp đồng thành công!',
-      'success',
-    )
+    showToast(t('landlordContractsToastCsvExportSuccess'), 'success')
   }
 
-  // Handle print/export of a single contract via server-side template modal
+  // Handle print/preview modal
   const handlePrintContract = (contract: any) => {
+    if (
+      !requireTier(
+        'plus',
+        t('landlordContractDetailTierRequiredMsg') ||
+          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+      )
+    ) {
+      return
+    }
     setPreviewModal({
       isOpen: true,
       contractId: contract.id,
@@ -335,17 +297,23 @@ export default function ContractsPage() {
     })
   }
 
-  // Direct export of contract document
+  // Direct export of contract document (HTML/PDF)
   const handleExportContract = async (contract: any) => {
+    if (
+      !requireTier(
+        'plus',
+        t('landlordContractDetailTierRequiredMsg') ||
+          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+      )
+    ) {
+      return
+    }
     if (!activeBuilding?.id) return
     try {
-      showToast(
-        isEn ? 'Exporting contract document...' : 'Đang xuất tài liệu hợp đồng...',
-        'success',
-      )
+      showToast(t('landlordContractsToastDocExporting'), 'info')
       const res = await exportContract(activeBuilding.id, contract.id)
       if (res?.data) {
-        showToast(isEn ? 'Contract exported successfully!' : 'Xuất hợp đồng thành công!', 'success')
+        showToast(t('landlordContractsToastDocExportSuccess'), 'success')
         fetchContracts()
         const blob = new Blob([res.data.html || ''], { type: 'text/html;charset=utf-8' })
         const url = URL.createObjectURL(blob)
@@ -359,204 +327,41 @@ export default function ContractsPage() {
       }
     } catch (err: any) {
       console.error('Failed to export contract:', err)
-      showToast(
-        err.message || (isEn ? 'Failed to export contract.' : 'Không thể xuất hợp đồng.'),
-        'error',
-      )
+      showToast(err.message || t('landlordContractsToastDocExportFailed'), 'error')
     }
   }
 
-  const formatDateToInput = (dateStr: string) => {
-    if (!dateStr) return ''
-    const parts = dateStr.split('/')
-    if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`
-    return dateStr
-  }
-
-  const formatDateToDisplay = (dateStr: string) => {
-    if (!dateStr) return ''
-    const parts = dateStr.split('-')
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`
-    return dateStr
-  }
-
-  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false)
-  const [contracts, setContracts] = useState<any[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(6)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-
-  if (!isMounted) {
-    return null
-  }
-
-  // ─── Loading / error states rendered inside JSX below ───
-
   const handleTerminateContract = () => {
+    if (!selectedContract) return
     const updated = contracts.map(c =>
       c.id === selectedContract.id ? { ...c, status: 'Đã chấm dứt' } : c,
     )
     setContracts(updated)
     setSelectedContract(updated.find(c => c.id === selectedContract.id))
     setIsTerminateModalOpen(false)
+    setIsDirty(false)
     showToast(t('landlordContractsToastTerminateSuccess'), 'success')
   }
 
-  const handleExtendContract = (newDate: string) => {
+  const handleExtendContract = () => {
+    if (!selectedContract || !extendEndDate) return
     const updated = contracts.map(c =>
-      c.id === selectedContract.id ? { ...c, endDate: formatDateToDisplay(newDate) } : c,
+      c.id === selectedContract.id ? { ...c, endDate: formatDateToDisplay(extendEndDate) } : c,
     )
     setContracts(updated)
     setSelectedContract(updated.find(c => c.id === selectedContract.id))
     setIsExtendModalOpen(false)
+    setIsDirty(false)
+    setExtendEndDate('')
+    setExtendRent('')
     showToast(t('landlordContractsToastExtendSuccess'), 'success')
   }
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const currentPageIds = paginatedContracts.map(c => c.id)
-    if (e.target.checked) {
-      setSelectedContractIds(Array.from(new Set([...selectedContractIds, ...currentPageIds])))
-    } else {
-      setSelectedContractIds(selectedContractIds.filter(id => !currentPageIds.includes(id)))
-    }
-  }
-
-  const handleSelectOne = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
-    e.stopPropagation()
-    if (e.target.checked) {
-      setSelectedContractIds([...selectedContractIds, id])
-    } else {
-      setSelectedContractIds(selectedContractIds.filter(selectedId => selectedId !== id))
-    }
-  }
 
   const copyToClipboard = (e: React.MouseEvent, text: string) => {
     e.stopPropagation()
     navigator.clipboard.writeText(text)
     showToast(t('landlordContractsToastCodeCopied'), 'success')
-  }
-
-  const handleFinish = () => {
-    setIsModalOpen(false)
-    setTimeout(() => {
-      setStep(1)
-      setIsDirty(false)
-    }, 200)
-  }
-
-  const handleSaveContract = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const reason = formData.get('reason') as string
-
-    if (!reason || reason.trim() === '') {
-      showToast(t('landlordContractsToastReasonRequired'), 'error')
-      return
-    }
-
-    const updatedContract = {
-      ...selectedContract,
-      room: formData.get('room'),
-      startDate: formatDateToDisplay(formData.get('startDate') as string),
-      endDate: formatDateToDisplay(formData.get('endDate') as string),
-      price: formData.get('price') + ' ₫',
-      deposit: formData.get('deposit') + ' ₫',
-      paymentDate: formData.get('paymentDate'),
-    }
-
-    const today = new Date().toLocaleDateString('vi-VN')
-    updatedContract.history = [
-      { date: today, user: 'Admin', content: reason },
-      ...(updatedContract.history || []),
-    ]
-
-    setContracts(contracts.map(c => (c.id === selectedContract.id ? updatedContract : c)))
-    setSelectedContract(updatedContract)
-    setIsEditingContract(false)
-
-    showToast(t('landlordContractsToastUpdateContractSuccess'), 'success')
-  }
-
-  const handleSaveCheckoutNotice = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const date = formData.get('checkoutDate') as string
-    const note = formData.get('checkoutNote') as string
-
-    if (!date) {
-      showToast(t('landlordContractsToastCheckoutDateRequired'), 'error')
-      return
-    }
-
-    const updatedContract = {
-      ...selectedContract,
-      checkoutNotice: {
-        date: formatDateToDisplay(date),
-        note: note,
-      },
-    }
-
-    setContracts(contracts.map(c => (c.id === selectedContract.id ? updatedContract : c)))
-    setSelectedContract(updatedContract)
-    setIsCheckoutNoticeModalOpen(false)
-    showToast(t('landlordContractsToastCheckoutSuccess'), 'success')
-  }
-
-  const handleSaveMember = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const customer = formData.get('customer') as string
-    const relation = formData.get('relation') as string
-    if (!customer) {
-      showToast(t('landlordContractsToastCustomerRequired'), 'error')
-      return
-    }
-    setMembers([...members, { name: customer, relation }])
-    setIsAddMemberModalOpen(false)
-    showToast(t('landlordContractsToastAddMemberSuccess'), 'success')
-  }
-
-  const handleSaveService = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    const name = formData.get('name') as string
-    const priceStr = formData.get('price') as string
-    const isApplied = formData.get('applied') === 'on'
-
-    if (!name) {
-      showToast(t('landlordContractsToastServiceNameRequired'), 'error')
-      return
-    }
-
-    if (editingService) {
-      if (!isApplied) {
-        setServices(services.map(s => (s.id === editingService.id ? { ...s, applied: false } : s)))
-      } else {
-        setServices(
-          services.map(s =>
-            s.id === editingService.id
-              ? { ...s, price: priceStr ? parseInt(priceStr) : s.price, applied: true }
-              : s,
-          ),
-        )
-      }
-      showToast(t('landlordContractsToastUpdateServiceSuccess'), 'success')
-    } else {
-      setServices([
-        ...services,
-        {
-          id: Date.now(),
-          name,
-          type: 'Tùy chỉnh',
-          price: priceStr ? parseInt(priceStr) : 0,
-          unit: 'VNĐ',
-          applied: true,
-        },
-      ])
-      showToast(t('landlordContractsToastAddServiceSuccess'), 'success')
-    }
-    setIsServiceModalOpen(false)
-    setEditingService(null)
   }
 
   const filteredContracts = contracts.filter(c => {
@@ -568,7 +373,7 @@ export default function ContractsPage() {
     )
       return false
     if (statusFilter) {
-      const displayStatus = getStatusLabel(c.status, isEn)
+      const displayStatus = getContractStatusLabel(c.status)
       const rawStatus = c.status
       if (rawStatus !== statusFilter && displayStatus !== statusFilter) return false
     }
@@ -576,882 +381,75 @@ export default function ContractsPage() {
   })
 
   const totalItems = filteredContracts.length
-  const totalPages = Math.ceil(totalItems / rowsPerPage)
+  const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage))
   const paginatedContracts = filteredContracts.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage,
   )
 
+  const terminateReasonOptions = useMemo(
+    () => [
+      { value: '', label: t('landlordContractsTerminateReasonPlaceholder') },
+      { value: '1', label: t('landlordContractsTerminateReason1') },
+      { value: '2', label: t('landlordContractsTerminateReason2') },
+      { value: '3', label: t('landlordContractsTerminateReason3') },
+    ],
+    [t],
+  )
+
+  if (!isMounted) {
+    return null
+  }
+
   return (
     <div className="space-y-6 relative min-h-screen">
-      {/* Rule #10: Custom Confirm-Close Modal (replaces window.confirm) */}
+      {/* Rule #10: Custom Confirm-Close Modal */}
       {showCloseConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
               <h3 className="text-base font-bold text-zinc-900 mb-2">
-                {isEn ? 'Confirm Close Form' : 'Xác nhận đóng form'}
+                {t('landlordContractsConfirmCloseTitle')}
               </h3>
               <p className="text-sm text-zinc-600">
-                {isEn
-                  ? 'You have unsaved changes. Are you sure you want to discard them?'
-                  : 'Bạn có thay đổi chưa lưu. Bạn có chắc muốn huỷ tất cả?'}
+                {t('landlordContractsConfirmCloseDesc')}
               </p>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
-              <button
+              <Button
+                variant="outline"
+                className="flex-1"
                 onClick={() => setShowCloseConfirm(false)}
-                className="flex-1 px-4 py-2 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
               >
-                {isEn ? 'Continue Editing' : 'Tiếp tục chỉnh sửa'}
-              </button>
-              <button
+                {t('landlordContractsConfirmCloseContinue')}
+              </Button>
+              <Button
+                variant="danger"
+                className="flex-1"
                 onClick={handleConfirmDiscard}
-                className="flex-1 px-4 py-2 text-sm font-bold text-white bg-rose-500 rounded-xl hover:bg-rose-600 transition-colors"
               >
-                {isEn ? 'Discard & Close' : 'Hủy thay đổi & Đóng'}
-              </button>
+                {t('landlordContractsConfirmCloseDiscard')}
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {selectedContract && isDetailViewOpen ? (
-        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <button
-                onClick={() => {
-                  setSelectedContract(null)
-                  setIsDetailViewOpen(false)
-                }}
-                className="mt-1 p-2 hover:bg-zinc-100 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-zinc-600" />
-              </button>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-zinc-900">
-                    {t('landlordContractsRoomPrefix').replace('{room}', selectedContract.room)}
-                  </h1>
-                  <span
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                      selectedContract.status === 'Đang hiệu lực'
-                        ? 'bg-green-50 text-green-600 border-green-100'
-                        : selectedContract.status === 'Quá hạn'
-                          ? 'bg-orange-50 text-orange-600 border-orange-100'
-                          : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                    }`}
-                  >
-                    {getContractStatusLabel(selectedContract.status)}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-zinc-500">
-                  <span className="font-medium text-zinc-700">
-                    {selectedContract.building === 'dormio'
-                      ? 'Dormio Building'
-                      : selectedContract.building === 'vinahouse'
-                        ? 'VinaHouse'
-                        : 'Dormio Building'}
-                  </span>
-                  <span>·</span>
-                  <span className="font-medium text-primary">{selectedContract.tenant}</span>
-                  <span className="hidden sm:inline">|</span>
-                  <span>
-                    {t('landlordContractsContractCode')}: {selectedContract.id}
-                  </span>
-                  <button className="hover:text-zinc-700">
-                    <Copy className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setIsExtendModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-              >
-                <CalendarDays className="w-4 h-4" /> {t('landlordContractsBtnExtend')}
-              </button>
-              <button
-                onClick={() => setIsTerminateModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-danger bg-danger-bg border border-danger-border rounded-lg hover:bg-orange-100 transition-colors"
-              >
-                <Ban className="w-4 h-4" /> {t('landlordContractsBtnTerminate')}
-              </button>
-              <button
-                onClick={() => alert(t('landlordContractsPdfAlert'))}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
-                title={isEn ? 'Preview & Print Contract' : 'Xem trước & In hợp đồng'}
-              >
-                <Printer className="w-4 h-4" /> {t('landlordContractsBtnPrint')}
-              </button>
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Thông tin hợp đồng */}
-              <form
-                onSubmit={handleSaveContract}
-                className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-zinc-900">
-                      {t('landlordContractsContractInfoTitle')}
-                    </h3>
-                  </div>
-                  {isEditingContract ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingContract(false)}
-                        className="px-3 py-1 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
-                      >
-                        {t('landlordContractsBtnCancel')}
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover transition-colors shadow-sm"
-                      >
-                        {t('landlordContractsBtnSaveChange')}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingContract(true)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" /> {t('landlordContractsBtnEdit')}
-                    </button>
-                  )}
-                </div>
-                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordRoomDetailRoomPrefix')}
-                    </div>
-                    {isEditingContract ? (
-                      <input
-                        type="text"
-                        name="room"
-                        defaultValue={selectedContract.room}
-                        className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                      />
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        {selectedContract.room}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordSetupTotalFloorLabel')}
-                    </div>
-                    {isEditingContract ? (
-                      <input
-                        type="text"
-                        name="building"
-                        defaultValue="Dormio Building"
-                        className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                      />
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        Dormio Building
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordContractsStartDateLabel')}
-                    </div>
-                    {isEditingContract ? (
-                      <input
-                        type="date"
-                        name="startDate"
-                        defaultValue={formatDateToInput(selectedContract.startDate)}
-                        className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer"
-                      />
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        {selectedContract.startDate}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordContractsEndDateLabel')}
-                    </div>
-                    {isEditingContract ? (
-                      <input
-                        type="date"
-                        name="endDate"
-                        defaultValue={formatDateToInput(selectedContract.endDate)}
-                        className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer"
-                      />
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        {selectedContract.endDate}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordContractsRentPriceLabel')}
-                    </div>
-                    {isEditingContract ? (
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name="price"
-                          defaultValue={selectedContract.price.replace(' ₫', '')}
-                          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">
-                          {t('landlordContractsCurrencyVnd')}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        {selectedContract.price}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordContractsDepositLabel')}
-                    </div>
-                    {isEditingContract ? (
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name="deposit"
-                          defaultValue={selectedContract.deposit?.replace(' ₫', '') || '0'}
-                          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">
-                          {t('landlordContractsCurrencyVnd')}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        {selectedContract.deposit}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {isEditingContract
-                        ? t('landlordContractsPaymentDateMonthlyLabel')
-                        : t('landlordContractsPaymentDateLabel')}
-                    </div>
-                    {isEditingContract ? (
-                      <input
-                        type="number"
-                        name="paymentDate"
-                        min="1"
-                        max="31"
-                        defaultValue={selectedContract.paymentDate || '5'}
-                        className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                      />
-                    ) : (
-                      <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                        {t('landlordContractsPaymentDateEveryMonth').replace(
-                          '{day}',
-                          selectedContract.paymentDate || '5',
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-zinc-500 mb-1.5">
-                      {t('landlordContractsStartDateLabel')}
-                    </div>
-                    <div className="w-full px-3 py-2 text-sm font-semibold text-zinc-900 bg-zinc-50/50 rounded-lg border border-transparent">
-                      11/07/2026
-                    </div>
-                  </div>
-                </div>
-                {isEditingContract && (
-                  <div className="px-5 pb-5 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="border-t border-zinc-100 pt-5 mt-1">
-                      <label className="block text-sm font-semibold text-zinc-700 mb-2">
-                        {t('landlordContractsEditReasonLabel')}{' '}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        name="reason"
-                        className="w-full px-4 py-3 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                        rows={3}
-                        placeholder={t('landlordContractsEditReasonPlaceholder')}
-                      ></textarea>
-                    </div>
-                  </div>
-                )}
-
-                {/* Lịch sử thay đổi */}
-                <div className="px-5 py-4 bg-zinc-50/30 border-t border-zinc-100">
-                  <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-2 mb-3">
-                    <History className="w-4 h-4 text-zinc-500" />
-                    {t('landlordContractsHistoryTitle')}
-                  </h4>
-                  {selectedContract.history && selectedContract.history.length > 0 ? (
-                    <div className="space-y-3 pl-1.5">
-                      {selectedContract.history.map((item: any, idx: number) => (
-                        <div key={idx} className="relative pl-4 border-l-2 border-primary/20">
-                          <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-primary" />
-                          <p className="text-sm font-medium text-zinc-800">{item.content}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5">
-                            {item.date} • {item.user}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-zinc-500 italic">
-                      {t('landlordContractsHistoryEmpty')}
-                    </p>
-                  )}
-                </div>
-              </form>
-
-              {/* Thông báo trả phòng */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <CalendarDays className="w-4 h-4 text-orange-500" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordContractsCheckoutNoticeTitle')}
-                  </h3>
-                </div>
-                <div className="p-5 flex flex-col gap-4">
-                  {selectedContract.checkoutNotice ? (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-zinc-500 mb-1">
-                            {t('landlordContractsCheckoutNoticeDate')}
-                          </p>
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {selectedContract.checkoutNotice.date}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-500 mb-1">
-                            {t('landlordContractsCheckoutNoticeNote')}
-                          </p>
-                          <p className="text-sm font-semibold text-zinc-900">
-                            {selectedContract.checkoutNotice.note ||
-                              t('landlordContractsCheckoutNoticeNoNote')}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <button
-                          onClick={() => setIsCheckoutNoticeModalOpen(true)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition-colors"
-                        >
-                          <Edit2 className="w-4 h-4" /> {t('landlordContractsCheckoutNoticeUpdate')}
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm text-zinc-600">
-                        {t('landlordContractsCheckoutNoticeEmpty')}
-                      </p>
-                      <div>
-                        <button
-                          onClick={() => setIsCheckoutNoticeModalOpen(true)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition-colors"
-                        >
-                          <ClipboardList className="w-4 h-4" />{' '}
-                          {t('landlordContractsCheckoutNoticeBtn')}
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Tài liệu hợp đồng */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <ImageIcon className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordContractsContractDocumentsTitle')}
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <div className="border-2 border-dashed border-zinc-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group">
-                    <div className="p-3 bg-zinc-100 rounded-full group-hover:bg-primary/10 transition-colors mb-3">
-                      <UploadCloud className="w-6 h-6 text-zinc-500 group-hover:text-primary" />
-                    </div>
-                    <h4 className="font-semibold text-zinc-900 text-sm">
-                      {t('landlordContractsContractDocumentsUploadTitle')}
-                    </h4>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {t('landlordContractsContractDocumentsUploadDesc')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Khách thuê chính */}
-              <div
-                onClick={() => router.push(`/landlord/customers?id=${selectedContract.tenantId}`)}
-                className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group"
-              >
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 group-hover:bg-primary/5 transition-colors">
-                  <User className="w-4 h-4 text-primary" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordContractsPrimaryTenantTitle')}
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/20 rounded-xl group-hover:bg-primary/10 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
-                      {selectedContract.tenant.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-zinc-900 text-sm">
-                        {selectedContract.tenant}
-                      </div>
-                      <div className="text-xs text-zinc-500">0123456789</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Phòng thuê */}
-              <div
-                onClick={() => router.push(`/landlord/rooms?id=${selectedContract.room}`)}
-                className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-green-500/30 transition-all group"
-              >
-                <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100 bg-zinc-50/50 group-hover:bg-green-50/50 transition-colors">
-                  <Home className="w-4 h-4 text-green-500" />
-                  <h3 className="font-semibold text-zinc-900">
-                    {t('landlordRoomDetailRoomPrefix')}
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3 p-3 bg-green-50/50 border border-green-100 rounded-xl group-hover:bg-green-100/50 transition-colors">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center">
-                      <Building2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-green-700 text-sm">
-                        {t('landlordContractsRoomPrefix').replace('{room}', selectedContract.room)}
-                      </div>
-                      <div className="text-xs text-green-600/80">{selectedContract.roomType}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Thành viên */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-purple-500" />
-                    <h3 className="font-semibold text-zinc-900">
-                      {t('landlordContractsMembersTitle')}
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => setIsAddMemberModalOpen(true)}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" />
-                    {t('landlordContractsModalServiceAdd')}
-                  </button>
-                </div>
-                <div className="p-0">
-                  {members.length > 0 ? (
-                    <div className="divide-y divide-zinc-100">
-                      {members.map((m, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-3 p-4 hover:bg-zinc-50 transition-colors"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600 font-bold text-sm">
-                            {m.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-zinc-900 text-sm">{m.name}</div>
-                            <div className="text-xs text-zinc-500">{m.relation}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-5 text-center">
-                      <p className="text-sm text-zinc-500">{t('landlordContractsMembersEmpty')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Dịch vụ */}
-              <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-orange-500" />
-                    <h3 className="font-semibold text-zinc-900">
-                      {t('landlordContractsServicesTitle')}
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setEditingService(null)
-                      setIsServiceModalOpen(true)
-                    }}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" />
-                    {t('landlordContractsModalServiceAdd')}
-                  </button>
-                </div>
-                <div className="p-0 divide-y divide-zinc-100">
-                  {services
-                    .filter(s => s.applied)
-                    .map(service => (
-                      <div
-                        key={service.id}
-                        className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-zinc-900">{service.name}</span>
-                          <span className="text-[10px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded">
-                            {service.type === 'Cố định'
-                              ? t('landlordContractsServiceTypeFixed')
-                              : service.type === 'Đồng hồ'
-                                ? t('landlordContractsServiceTypeMetered')
-                                : service.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-orange-600">
-                            {service.price > 0
-                              ? service.price.toLocaleString()
-                              : t('landlordContractsServiceFree')}{' '}
-                            <span className="text-xs text-zinc-500 font-normal">
-                              {service.price > 0 ? service.unit : ''}
-                            </span>
-                          </span>
-                          <button
-                            onClick={() => {
-                              setEditingService(service)
-                              setIsServiceModalOpen(true)
-                            }}
-                            className="text-zinc-400 hover:text-zinc-700 transition-colors"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  {services.filter(s => s.applied).length === 0 && (
-                    <div className="p-5 text-center">
-                      <p className="text-sm text-zinc-500">{t('landlordContractsServicesEmpty')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Shared modals are rendered at the bottom */}
-
-          {/* Checkout Notice Modal */}
-          {isCheckoutNoticeModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md">
-              <form
-                onSubmit={handleSaveCheckoutNotice}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-300"
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    {t('landlordContractsCheckoutNoticeModalTitle')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsCheckoutNoticeModalOpen(false)}
-                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsCheckoutNoticeDate')}{' '}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="checkoutDate"
-                      defaultValue={formatDateToInput(selectedContract.checkoutNotice?.date)}
-                      required
-                      className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsCheckoutNoticeNote')}
-                    </label>
-                    <input
-                      type="text"
-                      name="checkoutNote"
-                      defaultValue={selectedContract.checkoutNotice?.note}
-                      placeholder={t('landlordContractsCheckoutNoticeNotePlaceholder')}
-                      className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <button
-                    type="button"
-                    onClick={() => setIsCheckoutNoticeModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm"
-                  >
-                    {t('landlordContractsBtnCancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
-                  >
-                    {t('landlordContractsBtnSave')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Add Member Modal */}
-          {isAddMemberModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md">
-              <form
-                onSubmit={handleSaveMember}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-300"
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    {t('landlordContractsAddMemberModalTitle')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddMemberModalOpen(false)}
-                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsAddMemberSelectCustomer')}{' '}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="customer"
-                      required
-                      className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white"
-                    >
-                      <option value="">{t('landlordContractsAddMemberSelectPlaceholder')}</option>
-                      <option value="Trần Thị B">Trần Thị B</option>
-                      <option value="Nguyễn Văn A">Nguyễn Văn A</option>
-                      <option value="Lê Văn C">Lê Văn C</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsAddMemberRelation')}
-                    </label>
-                    <input
-                      type="text"
-                      name="relation"
-                      placeholder={t('landlordContractsAddMemberRelationPlaceholder')}
-                      className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddMemberModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm"
-                  >
-                    {t('landlordContractsBtnCancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
-                  >
-                    {t('landlordSetupAddRoomType')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Service Modal */}
-          {isServiceModalOpen && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md">
-              <form
-                onSubmit={handleSaveService}
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-300"
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-                  <h3 className="text-lg font-bold text-zinc-900">
-                    {editingService
-                      ? t('landlordContractsServiceEditModalTitle')
-                      : t('landlordSetupAddService')}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsServiceModalOpen(false)
-                      setEditingService(null)
-                    }}
-                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsServiceNameLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      defaultValue={editingService?.name || ''}
-                      placeholder={t('landlordContractsServiceNamePlaceholder')}
-                      readOnly={!!editingService}
-                      className={`w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${editingService ? 'bg-zinc-100 text-zinc-500 outline-none' : ''}`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsServiceCustomPriceLabel')}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        name="price"
-                        defaultValue={editingService?.price || ''}
-                        placeholder="0"
-                        className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">
-                        {t('landlordContractsCurrencyVnd')}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      {t('landlordContractsServiceReasonLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      name="reason"
-                      placeholder={t('landlordContractsServiceReasonPlaceholder')}
-                      className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    />
-                  </div>
-                  {editingService && (
-                    <label className="flex items-center gap-2 mt-4 cursor-pointer w-max">
-                      <input
-                        type="checkbox"
-                        name="applied"
-                        defaultChecked={editingService.applied}
-                        className="w-4 h-4 text-primary rounded border-zinc-300 focus:ring-primary"
-                      />
-                      <span className="text-sm font-medium text-zinc-900">
-                        {t('landlordContractsServiceApplied')}
-                      </span>
-                    </label>
-                  )}
-                </div>
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100 bg-zinc-50/50">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsServiceModalOpen(false)
-                      setEditingService(null)
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm"
-                  >
-                    {t('landlordContractsBtnCancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
-                  >
-                    {t('landlordContractsBtnSave')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Toast Notification */}
-          {toast && (
-            <div
-              className={`fixed bottom-6 right-6 z-[100] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-xl shadow-black/5 text-sm font-medium animate-in slide-in-from-bottom-5 fade-in duration-300 ${toast.type === 'success' ? 'bg-zinc-900 text-white' : 'bg-red-50 text-red-600 border border-red-100'}`}
-            >
-              {toast.type === 'success' ? (
-                <Check className="w-4 h-4 text-primary" />
-              ) : (
-                <Ban className="w-4 h-4" />
-              )}
-              {toast.message}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+      <div className="space-y-6 animate-in fade-in duration-500 pb-12">
           {/* Top Page Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-zinc-900">{t('landlordContractsTitle')}</h1>
               <p className="text-sm text-zinc-500">{t('landlordContractsSubtitle')}</p>
             </div>
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => alert(t('landlordContractsExcelImportNotice'))}
-                className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
-              >
-                <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
-              </button>
-              <button
-                onClick={() => alert(t('landlordContractsExcelExportSuccess'))}
-                className="cursor-pointer px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs flex items-center gap-1.5"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-blue-600" />
-                {isEn ? 'Export CSV' : 'Xuất CSV'}
-              </button>
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => router.push('/landlord/contracts/create')}
-                className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
+                leftIcon={<Plus className="w-4 h-4" />}
               >
-                <Plus className="w-4 h-4" /> {t('landlordContractsCreateBtn')}
-              </button>
-            </div>
+                {t('landlordContractsCreateBtn')}
+              </Button>
           </div>
 
           {/* Building Overview Banner Card */}
@@ -1464,7 +462,7 @@ export default function ContractsPage() {
               <div className="space-y-3 max-w-xl w-full">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                    {activeBuilding.name}
+                    {activeBuilding?.name || 'Dormio Building'}
                   </h2>
                   <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
                     {t('landlordContractsBannerOperating')}
@@ -1475,17 +473,19 @@ export default function ContractsPage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                     <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                      {activeBuilding.address}
+                      {activeBuilding?.address || ''}
                     </span>
                   </div>
-                  <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                  >
-                    <span>{t('landlordOverviewViewMap')}</span> &rarr;
-                  </a>
+                  {activeBuilding?.address && (
+                    <a
+                      href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                    >
+                      <span>{t('landlordOverviewViewMap')}</span> &rarr;
+                    </a>
+                  )}
                 </div>
 
                 <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
@@ -1493,7 +493,7 @@ export default function ContractsPage() {
                 </p>
               </div>
 
-              {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets, Services, Customers) */}
+              {/* 4 Stat Chips */}
               <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
                 <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
                   <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
@@ -1556,7 +556,7 @@ export default function ContractsPage() {
             </div>
           </div>
 
-          {/* SINGLE ROW TOOLBAR (Filter Pills + Search Bar all in 1 Row) */}
+          {/* Single Row Toolbar (Filter Pills + Search Bar + View Mode) */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Status Filter Pills */}
@@ -1570,75 +570,86 @@ export default function ContractsPage() {
                 ].map(tab => {
                   const isActive = statusFilter === tab.value
                   return (
-                    <button
+                    <Button
                       key={tab.value}
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setStatusFilter(tab.value)
                         setCurrentPage(1)
                       }}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                      className={`h-auto px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                         isActive
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20'
+                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20 hover:bg-[#2AC1BC]/90 hover:text-white'
                           : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80'
                       }`}
                     >
                       {tab.label}
-                    </button>
+                    </Button>
                   )
                 })}
               </div>
 
-              {/* Search Input & View Mode Switcher */}
+              {/* Search & View Mode */}
               <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    type="text"
+                <div className="w-full sm:w-64">
+                  <SearchInput
                     placeholder={t('landlordContractsSearchPlaceholder')}
                     value={searchQuery}
-                    onChange={e => {
-                      setSearchQuery(e.target.value)
+                    onChange={val => {
+                      setSearchQuery(val)
                       setCurrentPage(1)
                     }}
-                    className="w-full pl-9 pr-4 py-2 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+                    className="bg-zinc-50 focus:bg-white text-xs"
                   />
                 </div>
 
                 <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setViewMode('grid')
                       setRowsPerPage(6)
                       setCurrentPage(1)
                     }}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold' : 'text-zinc-500 hover:text-zinc-900'}`}
+                    className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
+                        : 'text-zinc-500 hover:text-zinc-900'
+                    }`}
                     title={t('landlordContractsGridView')}
                   >
                     <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       setViewMode('list')
                       setRowsPerPage(10)
                       setCurrentPage(1)
                     }}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold' : 'text-zinc-500 hover:text-zinc-900'}`}
+                    className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === 'list'
+                        ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
+                        : 'text-zinc-500 hover:text-zinc-900'
+                    }`}
                     title={t('landlordContractsListView')}
                   >
                     <List className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Grid View or Table View Container */}
           {/* Loading State */}
           {isLoading && (
             <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
               <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
               <p className="text-sm font-semibold text-zinc-500">
-                {isEn ? 'Loading contracts...' : 'Đang tải danh sách hợp đồng...'}
+                {t('landlordContractsLoading')}
               </p>
             </div>
           )}
@@ -1648,15 +659,17 @@ export default function ContractsPage() {
             <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
               <AlertTriangle className="w-8 h-8 text-rose-500" />
               <p className="text-sm font-semibold text-rose-600">{loadError}</p>
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={fetchContracts}
-                className="px-4 py-2 text-sm font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] transition-colors"
               >
-                {isEn ? 'Retry' : 'Thử lại'}
-              </button>
+                {t('landlordContractsRetry')}
+              </Button>
             </div>
           )}
 
+          {/* Grid / Table View */}
           {!isLoading && !loadError && (
             <>
               {viewMode === 'grid' ? (
@@ -1667,50 +680,37 @@ export default function ContractsPage() {
                     </div>
                   ) : (
                     paginatedContracts.map((c, idx) => {
-                      const isSelected = selectedContractIds.includes(c.id)
                       return (
                         <div
                           key={c.id || idx}
                           onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                          className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden ${
-                            isSelected
-                              ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 ring-2 ring-[#2AC1BC]/20'
-                              : 'border-zinc-200/80 hover:border-[#2AC1BC]/40'
-                          }`}
+                          className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
                         >
-                          {/* Card Header: Checkbox + Room & Building & Status */}
                           <div>
+                            {/* Card Header: Room & Status */}
                             <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
-                              <div className="flex items-start gap-2.5">
-                                <div onClick={e => e.stopPropagation()} className="pt-0.5">
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={e => handleSelectOne(e, c.id)}
-                                    className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                                  />
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                                    {t('landlordRoomDetailRoomPrefix')} {c.room}
+                                  </h3>
+                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    {activeBuilding?.name || 'Dormio'}
+                                  </span>
                                 </div>
-                                <div>
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                                      {t('landlordRoomDetailRoomPrefix')} {c.room}
-                                    </h3>
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                      {activeBuilding?.name || 'Dormio'}
-                                    </span>
-                                  </div>
-                                  <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
-                                    <span>
-                                      {t('landlordContractsContractCodeShort')} {c.id}
-                                    </span>
-                                    <button
-                                      onClick={e => copyToClipboard(e, c.id)}
-                                      className="p-0.5 hover:text-[#2AC1BC] transition-colors rounded"
-                                      title={t('landlordContractsCopyCodeTitle')}
-                                    >
-                                      <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                    </button>
-                                  </div>
+                                <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
+                                  <span>
+                                    {t('landlordContractsContractCodeShort')} {c.id}
+                                  </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={e => copyToClipboard(e, c.id)}
+                                    className="h-auto p-0.5 hover:text-[#2AC1BC] transition-colors rounded cursor-pointer"
+                                    title={t('landlordContractsCopyCodeTitle')}
+                                  >
+                                    <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                  </Button>
                                 </div>
                               </div>
 
@@ -1740,14 +740,14 @@ export default function ContractsPage() {
                             <div className="py-3 space-y-2.5">
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <User className="w-3.5 h-3.5 text-zinc-400" />{' '}
+                                  <User className="w-3.5 h-3.5 text-zinc-400" />
                                   {t('landlordContractsRepresentative')}
                                 </span>
                                 <div className="flex flex-col items-end">
                                   <span className="font-extrabold text-zinc-900">{c.tenant}</span>
                                   {c.members && c.members.length > 0 && (
                                     <span className="text-[10px] font-bold text-zinc-500 flex items-center gap-1">
-                                      <Users className="w-3 h-3 text-zinc-400" />{' '}
+                                      <Users className="w-3 h-3 text-zinc-400" />
                                       {t('landlordContractsRoommatesCount').replace(
                                         '{count}',
                                         String(c.members.length),
@@ -1759,7 +759,7 @@ export default function ContractsPage() {
 
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <DollarSign className="w-3.5 h-3.5 text-zinc-400" />{' '}
+                                  <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
                                   {t('landlordContractsRentPriceLabel')}:
                                 </span>
                                 <span className="font-black text-sm text-[#2AC1BC]">
@@ -1769,7 +769,7 @@ export default function ContractsPage() {
 
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />{' '}
+                                  <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
                                   {t('landlordContractsDurationLabel')}
                                 </span>
                                 <div className="flex items-center gap-1.5">
@@ -1786,7 +786,7 @@ export default function ContractsPage() {
 
                               <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
                                 <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <CreditCard className="w-3.5 h-3.5 text-zinc-400" />{' '}
+                                  <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
                                   {t('landlordContractsPaymentLabel')}
                                 </span>
                                 <span
@@ -1796,9 +796,6 @@ export default function ContractsPage() {
                                       : 'bg-rose-50 text-rose-700 border-rose-200'
                                   }`}
                                 >
-                                  {c.paymentStatus === 'Còn nợ' && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                  )}
                                   {getPaymentStatusLabel(c.paymentStatus)}
                                 </span>
                               </div>
@@ -1807,50 +804,57 @@ export default function ContractsPage() {
 
                           {/* Card Footer Actions */}
                           <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                            <button
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border-[#2AC1BC]/30 text-xs font-extrabold"
                               onClick={e => {
                                 e.stopPropagation()
-                                setSelectedContract(c)
-                                setIsDetailViewOpen(true)
+                                router.push(`/landlord/contracts/${c.id}`)
                               }}
-                              className="px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                              leftIcon={<Eye className="w-3.5 h-3.5" />}
                             >
-                              <Eye className="w-3.5 h-3.5" /> {t('landlordContractsBtnDetail')}
-                            </button>
+                              {t('landlordContractsBtnDetail')}
+                            </Button>
                             <div className="flex items-center gap-1.5">
-                              <button
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl"
                                 onClick={e => {
                                   e.stopPropagation()
                                   handlePrintContract(c)
                                 }}
-                                className="p-1.5 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl transition-all cursor-pointer"
-                                title={isEn ? 'Print / Export' : 'In / Xuất văn bản HĐ'}
+                                title={t('landlordContractsPrintExportTitle')}
                               >
                                 <Printer className="w-3.5 h-3.5 text-zinc-700" />
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border-emerald-200 text-xs font-bold"
                                 onClick={e => {
                                   e.stopPropagation()
                                   setSelectedContract(c)
                                   setIsExtendModalOpen(true)
                                 }}
-                                className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                                title={t('landlordContractsBtnExtend')}
+                                leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
                               >
-                                <CalendarDays className="w-3.5 h-3.5" />{' '}
                                 {t('landlordContractsBtnExtend')}
-                              </button>
-                              <button
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border-rose-200 text-xs font-bold"
                                 onClick={e => {
                                   e.stopPropagation()
                                   setSelectedContract(c)
                                   setIsTerminateModalOpen(true)
                                 }}
-                                className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                                title={t('landlordContractsBtnTerminate')}
+                                leftIcon={<Ban className="w-3.5 h-3.5" />}
                               >
-                                <Ban className="w-3.5 h-3.5" /> {t('landlordContractsBtnTerminate')}
-                              </button>
+                                {t('landlordContractsBtnTerminate')}
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -1859,23 +863,12 @@ export default function ContractsPage() {
                   )}
                 </div>
               ) : (
-                /* Table Container with Visible Horizontal Scrollbar */
+                /* Table View */
                 <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
                   <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
                     <table className="w-full min-w-[850px] text-xs text-left border-collapse">
                       <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
                         <tr>
-                          <th className="px-4 py-3.5 w-12 text-center whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              checked={
-                                paginatedContracts.length > 0 &&
-                                paginatedContracts.every(c => selectedContractIds.includes(c.id))
-                              }
-                              onChange={handleSelectAll}
-                              className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                            />
-                          </th>
                           <th className="px-5 py-3.5 whitespace-nowrap">
                             {t('landlordContractsTableHeaderRoomCode')}
                           </th>
@@ -1902,30 +895,18 @@ export default function ContractsPage() {
                       <tbody className="divide-y divide-zinc-100 bg-white">
                         {paginatedContracts.length === 0 ? (
                           <tr>
-                            <td colSpan={8} className="p-8 text-center text-zinc-400 font-bold">
+                            <td colSpan={7} className="p-8 text-center text-zinc-400 font-bold">
                               {t('landlordContractsNoContractsFound')}
                             </td>
                           </tr>
                         ) : (
                           paginatedContracts.map((c, idx) => {
-                            const isSelected = selectedContractIds.includes(c.id)
                             return (
                               <tr
                                 key={c.id || idx}
                                 onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                                className={`hover:bg-zinc-50/80 transition-colors group cursor-pointer ${isSelected ? 'bg-[#2AC1BC]/5' : ''}`}
+                                className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
                               >
-                                <td
-                                  className="px-4 py-4 text-center"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={e => handleSelectOne(e, c.id)}
-                                    className="rounded border-zinc-300 text-[#2AC1BC] focus:ring-[#2AC1BC] cursor-pointer"
-                                  />
-                                </td>
                                 <td className="px-5 py-4 whitespace-nowrap">
                                   <div className="flex flex-col gap-0.5">
                                     <div className="flex items-center gap-2">
@@ -1933,20 +914,20 @@ export default function ContractsPage() {
                                         {t('landlordRoomDetailRoomPrefix')} {c.room}
                                       </span>
                                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                        {c.building === 'dormio'
-                                          ? 'Dormio Premier'
-                                          : 'Dormio Campus'}
+                                        {activeBuilding?.name || 'Dormio'}
                                       </span>
                                     </div>
                                     <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
                                       <span>{c.id}</span>
-                                      <button
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
                                         onClick={e => copyToClipboard(e, c.id)}
-                                        className="p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded"
+                                        className="h-auto p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded cursor-pointer"
                                         title={t('landlordContractsCopyCodeTitle')}
                                       >
                                         <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                      </button>
+                                      </Button>
                                     </div>
                                   </div>
                                 </td>
@@ -1955,52 +936,42 @@ export default function ContractsPage() {
                                     <span className="font-extrabold text-zinc-900 text-sm">
                                       {c.tenant}
                                     </span>
-                                    {c.members && c.members.length > 0 && (
-                                      <span className="text-[10px] font-bold text-zinc-500 mt-0.5 flex items-center gap-1">
-                                        <Users className="w-3 h-3 text-zinc-400" />{' '}
-                                        {t('landlordContractsRoommatesCountTable').replace(
-                                          '{count}',
-                                          String(c.members.length),
-                                        )}
-                                      </span>
-                                    )}
+                                    <span className="text-[11px] text-zinc-400 font-bold">
+                                      {c.tenantPhone || '---'}
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-zinc-700 text-xs">
-                                      {c.startDate}{' '}
-                                      <span className="text-zinc-300 font-normal">-</span>{' '}
-                                      {c.endDate}
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-zinc-800">
+                                      {c.startDate} - {c.endDate}
                                     </span>
                                     {c.isOverdue && (
-                                      <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                                      <span className="text-[10px] font-black text-rose-600">
                                         {t('landlordContractsDueExpired')}
                                       </span>
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-5 py-4 font-black text-zinc-900 text-sm whitespace-nowrap">
-                                  {c.price}
+                                <td className="px-5 py-4 whitespace-nowrap">
+                                  <span className="font-black text-sm text-[#2AC1BC]">
+                                    {c.price}
+                                  </span>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap">
                                   <span
-                                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${
+                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${
                                       c.paymentStatus === 'Đã thu đủ'
                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : 'bg-rose-50 text-rose-700 border-rose-200'
                                     }`}
                                   >
-                                    {c.paymentStatus === 'Còn nợ' && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                    )}
                                     {getPaymentStatusLabel(c.paymentStatus)}
                                   </span>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap">
                                   <span
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${
                                       c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
@@ -2016,46 +987,62 @@ export default function ContractsPage() {
                                             ? 'bg-amber-500'
                                             : 'bg-zinc-400'
                                       }`}
-                                    ></span>
+                                    />
                                     {getContractStatusLabel(c.status)}
                                   </span>
                                 </td>
                                 <td className="px-5 py-4 text-right whitespace-nowrap">
                                   <div className="flex items-center justify-end gap-1 text-zinc-400">
-                                    <button
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-zinc-400 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
                                       onClick={e => {
                                         e.stopPropagation()
-                                        setIsExtendModalOpen(true)
-                                        setSelectedContract(c)
+                                        router.push(`/landlord/contracts/${c.id}`)
                                       }}
-                                      className="p-1.5 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors cursor-pointer"
+                                      title={t('landlordContractsBtnDetail')}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-zinc-400 hover:text-primary hover:bg-primary/10"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        setSelectedContract(c)
+                                        setIsExtendModalOpen(true)
+                                      }}
                                       title={t('landlordContractsBtnExtend')}
                                     >
                                       <CalendarDays className="w-4 h-4" />
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
                                       onClick={e => {
                                         e.stopPropagation()
                                         handlePrintContract(c)
                                       }}
-                                      className="p-1.5 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
-                                      title={
-                                        isEn ? 'Print / Export contract' : 'In / Xuất văn bản HĐ'
-                                      }
+                                      title={t('landlordContractsPrintExportTitle')}
                                     >
                                       <Printer className="w-4 h-4 text-[#2AC1BC]" />
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
                                       onClick={e => {
                                         e.stopPropagation()
-                                        setIsTerminateModalOpen(true)
                                         setSelectedContract(c)
+                                        setIsTerminateModalOpen(true)
                                       }}
-                                      className="p-1.5 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                                       title={t('landlordContractsBtnTerminate')}
                                     >
                                       <Ban className="w-4 h-4" />
-                                    </button>
+                                    </Button>
                                   </div>
                                 </td>
                               </tr>
@@ -2068,24 +1055,23 @@ export default function ContractsPage() {
                 </div>
               )}
 
-              {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
+              {/* Standardized Pagination Footer (Rule #9) */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
                 <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
                     <span>{t('landlordContractsPaginationShowing')}</span>
-                    <input
-                      type="number"
+                    <NumberInput
                       min={1}
                       max={500}
-                      value={rowsPerPage || ''}
+                      value={rowsPerPage || 1}
                       onChange={e => {
                         const val = parseInt(e.target.value)
                         setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val)
                         setCurrentPage(1)
                       }}
-                      className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                      className="w-14 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs"
                     />
-                    <span>/ trang</span>
+                    <span>{t('landlordContractsPaginationPerPage')}</span>
                   </div>
 
                   <span className="hidden sm:inline text-zinc-300">|</span>
@@ -2103,6 +1089,7 @@ export default function ContractsPage() {
                     {t('landlordContractsPaginationTotalContracts')}
                   </div>
                 </div>
+
                 {(() => {
                   const windowSize = 5
                   const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
@@ -2114,445 +1101,55 @@ export default function ContractsPage() {
 
                   return (
                     <div className="flex items-center gap-1.5">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="sm"
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
                         &larr; {t('landlordContractsPaginationPrev')}
-                      </button>
+                      </Button>
                       {visiblePages.map(page => (
-                        <button
+                        <Button
                           key={page}
+                          variant="ghost"
+                          size="sm"
                           onClick={() => setCurrentPage(page)}
-                          className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                          className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
                             currentPage === page
-                              ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
+                              ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 hover:bg-[#2AC1BC]/90 hover:text-white'
                               : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                           }`}
                         >
                           {page}
-                        </button>
+                        </Button>
                       ))}
-                      <button
-                        disabled={
-                          currentPage === totalPages || windowStart + windowSize > totalPages
-                        }
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
                         onClick={() =>
                           setCurrentPage(Math.min(windowStart + windowSize, totalPages))
                         }
-                        className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
                         {t('landlordContractsPaginationNext')} &rarr;
-                      </button>
+                      </Button>
                     </div>
                   )
                 })()}
               </div>
 
-              {/* Floating Action Bar */}
-              {selectedContractIds.length > 0 && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[40] bg-white/80 backdrop-blur-xl rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/60 px-2 py-2 flex items-center gap-2 animate-in slide-in-from-bottom-10 fade-in duration-500">
-                  <div className="px-5 py-2 bg-gradient-to-r from-primary to-primary-hover text-white font-bold text-sm rounded-full whitespace-nowrap shadow-md shadow-primary/20">
-                    {t('landlordContractsBatchCount').replace(
-                      '{count}',
-                      String(selectedContractIds.length),
-                    )}
-                  </div>
-                  <div className="w-px h-6 bg-zinc-200/50 mx-1"></div>
-                  <button
-                    onClick={() => setIsExtendModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap"
-                  >
-                    <CalendarDays className="w-4 h-4 text-primary" />{' '}
-                    {t('landlordContractsBatchExtend')}
-                  </button>
-                  <button
-                    onClick={() => setIsAdjustRentModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap"
-                  >
-                    <DollarSign className="w-4 h-4 text-primary" />{' '}
-                    {t('landlordContractsBatchAdjustRent')}
-                  </button>
-                  <button
-                    onClick={() => setIsAdjustDepositModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap"
-                  >
-                    <FileText className="w-4 h-4 text-primary" />{' '}
-                    {t('landlordContractsBatchAdjustDeposit')}
-                  </button>
-                  <button
-                    onClick={() => setIsAdjustPaymentDateModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-zinc-700 hover:bg-white hover:shadow-sm rounded-full transition-all whitespace-nowrap"
-                  >
-                    <CalendarDays className="w-4 h-4 text-primary" />{' '}
-                    {t('landlordContractsBatchAdjustPaymentDate')}
-                  </button>
-                  <div className="w-px h-6 bg-zinc-200/50 mx-1"></div>
-                  <button
-                    onClick={() => setSelectedContractIds([])}
-                    className="p-2 text-zinc-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors shrink-0"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
+
             </>
           )}
         </div>
-      )}
 
-      {/* Shared Modals */}
-      {isAdjustRentModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsAdjustRentModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">
-                {t('landlordContractsAdjustRentModalTitle').replace(
-                  '{count}',
-                  String(selectedContractIds.length),
-                )}
-              </h2>
-              <button
-                onClick={() => setIsAdjustRentModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">
-                  {t('landlordContractsAdjustMethod')}
-                </label>
-                <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
-                  <button
-                    onClick={() => setAdjustRentMethod('percent')}
-                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'percent' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}
-                  >
-                    {t('landlordContractsAdjustMethodPercent').replace(' (+/-)', '')}
-                  </button>
-                  <button
-                    onClick={() => setAdjustRentMethod('add')}
-                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'add' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}
-                  >
-                    {t('landlordContractsAdjustMethodAdd')}
-                  </button>
-                  <button
-                    onClick={() => setAdjustRentMethod('set')}
-                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustRentMethod === 'set' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}
-                  >
-                    {t('landlordContractsAdjustMethodSet')}
-                  </button>
-                </div>
-              </div>
-
-              {adjustRentMethod === 'percent' && (
-                <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">
-                    {t('landlordContractsAdjustMethodPercent')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder={t('landlordContractsAdjustMethodPercentPlaceholder')}
-                      className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">
-                      %
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {adjustRentMethod === 'add' && (
-                <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">
-                    {t('landlordContractsAdjustValueAmount')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="VD: 200000"
-                      className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">
-                      ₫
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {adjustRentMethod === 'set' && (
-                <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">
-                    {t('landlordContractsAdjustNewValue')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="VND"
-                      className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">
-                      {t('landlordContractsCurrencyVnd')}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">
-                  {t('landlordContractsAdjustReason')}
-                </label>
-                <textarea
-                  placeholder={t('landlordContractsAdjustReasonPlaceholder')}
-                  rows={3}
-                  className="w-full px-4 py-3 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none placeholder:text-zinc-400"
-                ></textarea>
-              </div>
-            </div>
-
-            <div className="p-6 pt-2 flex justify-between gap-3">
-              <button
-                onClick={() => setIsAdjustRentModalOpen(false)}
-                className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center"
-              >
-                {t('landlordContractsBtnCancel')}
-              </button>
-              <button
-                onClick={() => {
-                  setIsAdjustRentModalOpen(false)
-                  showToast(
-                    t('landlordContractsToastAdjustRentSuccess').replace(
-                      '{count}',
-                      String(selectedContractIds.length),
-                    ),
-                    'success',
-                  )
-                }}
-                className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center"
-              >
-                {t('landlordContractsApplyBtn')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isAdjustDepositModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsAdjustDepositModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">
-                {t('landlordContractsAdjustDepositModalTitle').replace(
-                  '{count}',
-                  String(selectedContractIds.length),
-                )}
-              </h2>
-              <button
-                onClick={() => setIsAdjustDepositModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">
-                  {t('landlordContractsAdjustMethod')}
-                </label>
-                <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
-                  <button
-                    onClick={() => setAdjustDepositMethod('percent')}
-                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'percent' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}
-                  >
-                    {t('landlordContractsAdjustMethodPercent').replace(' (+/-)', '')}
-                  </button>
-                  <button
-                    onClick={() => setAdjustDepositMethod('add')}
-                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'add' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}
-                  >
-                    {t('landlordContractsAdjustMethodAdd')}
-                  </button>
-                  <button
-                    onClick={() => setAdjustDepositMethod('set')}
-                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${adjustDepositMethod === 'set' ? 'bg-primary text-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'}`}
-                  >
-                    {t('landlordContractsAdjustMethodSet')}
-                  </button>
-                </div>
-              </div>
-
-              {adjustDepositMethod === 'percent' && (
-                <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">
-                    {t('landlordContractsAdjustMethodPercent')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder={t('landlordContractsAdjustMethodPercentPlaceholder')}
-                      className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">
-                      %
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {adjustDepositMethod === 'add' && (
-                <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">
-                    {t('landlordContractsAdjustValueAmount')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="VD: 200000"
-                      className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">
-                      ₫
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {adjustDepositMethod === 'set' && (
-                <div>
-                  <label className="block text-sm font-bold text-zinc-800 mb-2">
-                    {t('landlordContractsAdjustNewValue')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="VND"
-                      className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-400 pointer-events-none">
-                      {t('landlordContractsCurrencyVnd')}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">
-                  {t('landlordContractsAdjustReason')}
-                </label>
-                <textarea
-                  placeholder={t('landlordContractsAdjustReasonPlaceholder')}
-                  rows={3}
-                  className="w-full px-4 py-3 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none placeholder:text-zinc-400"
-                ></textarea>
-              </div>
-            </div>
-
-            <div className="p-6 pt-2 flex justify-between gap-3">
-              <button
-                onClick={() => setIsAdjustDepositModalOpen(false)}
-                className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center"
-              >
-                {t('landlordContractsBtnCancel')}
-              </button>
-              <button
-                onClick={() => {
-                  setIsAdjustDepositModalOpen(false)
-                  showToast(
-                    t('landlordContractsToastAdjustDepositSuccess').replace(
-                      '{count}',
-                      String(selectedContractIds.length),
-                    ),
-                    'success',
-                  )
-                }}
-                className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center"
-              >
-                {t('landlordContractsApplyBtn')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isAdjustPaymentDateModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsAdjustPaymentDateModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-lg font-bold text-zinc-900">
-                {t('landlordContractsAdjustPaymentDateModalTitle').replace(
-                  '{count}',
-                  String(selectedContractIds.length),
-                )}
-              </h2>
-              <button
-                onClick={() => setIsAdjustPaymentDateModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-zinc-800 mb-2">
-                  {t('landlordContractsAdjustPaymentDayLabel')}
-                </label>
-                <input
-                  type="text"
-                  placeholder="1-31"
-                  className="w-full px-4 py-2.5 text-sm font-medium border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                />
-              </div>
-            </div>
-            <div className="p-6 pt-2 flex justify-between gap-3">
-              <button
-                onClick={() => setIsAdjustPaymentDateModalOpen(false)}
-                className="px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors w-1/3 text-center"
-              >
-                {t('landlordContractsBtnCancel')}
-              </button>
-              <button
-                onClick={() => {
-                  setIsAdjustPaymentDateModalOpen(false)
-                  showToast(
-                    t('landlordContractsToastAdjustPaymentDateSuccess').replace(
-                      '{count}',
-                      String(selectedContractIds.length),
-                    ),
-                    'success',
-                  )
-                }}
-                className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover transition-colors shadow-sm w-2/3 text-center"
-              >
-                {t('landlordContractsApplyBtn')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Extend Contract Modal */}
       {isExtendModalOpen && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
           onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsExtendModalOpen(false)
+            if (e.target === e.currentTarget) requestCloseModal(() => setIsExtendModalOpen(false))
           }}
         >
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
@@ -2560,123 +1157,98 @@ export default function ContractsPage() {
               <h2 className="text-xl font-bold text-zinc-900">
                 {t('landlordContractsExtendModalTitle')}
               </h2>
-              <button
-                onClick={() => setIsExtendModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
             <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">
-                  {t('landlordContractsExtendEndDateLabel')} <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="dd/mm/yyyy"
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  />
-                  <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">
-                  {t('landlordContractsExtendNewRentLabel')}
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="3.000.000"
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-zinc-500">
-                    {t('landlordContractsCurrencyVnd')}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 mt-1.5 font-medium">
-                  {t('landlordContractsExtendNewRentHint')}
-                </p>
-              </div>
+              <DateInput
+                label={t('landlordContractsExtendEndDateLabel')}
+                required
+                value={extendEndDate}
+                onChange={e => {
+                  setExtendEndDate(e.target.value)
+                  setIsDirty(true)
+                }}
+              />
+              <NumberInput
+                label={t('landlordContractsExtendNewRentLabel')}
+                placeholder="3000000"
+                suffixText={t('landlordContractsCurrencyVnd')}
+                helperText={t('landlordContractsExtendNewRentHint')}
+                value={extendRent}
+                onChange={e => {
+                  setExtendRent(e.target.value)
+                  setIsDirty(true)
+                }}
+              />
             </div>
             <div className="p-6 pt-2 flex justify-end gap-3">
-              <button
-                onClick={() => setIsExtendModalOpen(false)}
-                className="px-5 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm"
+              <Button
+                variant="outline"
+                onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
               >
                 {t('landlordContractsBtnCancel')}
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedContract) {
-                    setContracts(
-                      contracts.map(c =>
-                        c.id === selectedContract.id ? { ...c, status: 'Đang hiệu lực' } : c,
-                      ),
-                    )
-                  }
-                  setIsExtendModalOpen(false)
-                  showToast(t('landlordContractsToastExtendSuccess'), 'success')
-                }}
-                className="px-5 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleExtendContract}
               >
                 {t('landlordContractsBtnExtend')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Terminate Contract Modal */}
       {isTerminateModalOpen && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
           onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsTerminateModalOpen(false)
+            if (e.target === e.currentTarget) requestCloseModal(() => setIsTerminateModalOpen(false))
           }}
         >
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-xl font-bold text-danger">
+              <h2 className="text-xl font-bold text-rose-600">
                 {t('landlordContractsTerminateModalTitle')}
               </h2>
-              <button
-                onClick={() => setIsTerminateModalOpen(false)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors -mr-2"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
+                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
             <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">
-                  {t('landlordContractsTerminatedDateLabel')}{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="dd/mm/yyyy"
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
-                  />
-                  <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-900 mb-1.5">
-                  {t('landlordContractsTerminateReasonLabel')}{' '}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <select className="w-full pl-3 pr-10 py-2 text-sm border border-zinc-200 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 cursor-pointer">
-                    <option value="">{t('landlordContractsTerminateReasonPlaceholder')}</option>
-                    <option value="1">{t('landlordContractsTerminateReason1')}</option>
-                    <option value="2">{t('landlordContractsTerminateReason2')}</option>
-                    <option value="3">{t('landlordContractsTerminateReason3')}</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-                </div>
-              </div>
+              <DateInput
+                label={t('landlordContractsTerminatedDateLabel')}
+                required
+                value={terminateDate}
+                onChange={e => {
+                  setTerminateDate(e.target.value)
+                  setIsDirty(true)
+                }}
+              />
+
+              <SelectInput
+                label={t('landlordContractsTerminateReasonLabel')}
+                required
+                value={terminateReason}
+                onChange={e => {
+                  setTerminateReason(e.target.value)
+                  setIsDirty(true)
+                }}
+                options={terminateReasonOptions}
+              />
 
               <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-4">
                 <div className="flex items-center gap-2 text-primary font-medium">
@@ -2695,17 +1267,19 @@ export default function ContractsPage() {
                     <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">
                       {t('landlordContractsTerminateLastOldPrefix')} 11
                     </span>
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
+                    <div className="flex-1">
+                      <NumberInput
                         placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
-                        className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary"
+                        suffixText="kWh"
+                        value={finalElecIndex}
+                        onChange={e => {
+                          setFinalElecIndex(e.target.value)
+                          setIsDirty(true)
+                        }}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
-                        kWh
-                      </span>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-semibold w-12 text-zinc-800">
                       {t('landlordContractsTerminateLastWater')}
@@ -2713,465 +1287,53 @@ export default function ContractsPage() {
                     <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">
                       {t('landlordContractsTerminateLastOldPrefix')} 12
                     </span>
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
+                    <div className="flex-1">
+                      <NumberInput
                         placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
-                        className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary"
+                        suffixText="m³"
+                        value={finalWaterIndex}
+                        onChange={e => {
+                          setFinalWaterIndex(e.target.value)
+                          setIsDirty(true)
+                        }}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-400">
-                        m³
-                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="p-6 pt-2 flex justify-end gap-3">
-              <button
-                onClick={() => setIsTerminateModalOpen(false)}
-                className="px-5 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors shadow-sm"
+              <Button
+                variant="outline"
+                onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
               >
                 {t('landlordContractsBtnCancel')}
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedContract) {
-                    setContracts(
-                      contracts.map(c =>
-                        c.id === selectedContract.id ? { ...c, status: 'Đã chấm dứt' } : c,
-                      ),
-                    )
-                  }
-                  setIsTerminateModalOpen(false)
-                  showToast(t('landlordContractsToastTerminateSuccess'), 'success')
-                }}
-                className="px-5 py-2 text-sm font-bold text-white bg-danger rounded-lg hover:bg-danger-hover transition-colors shadow-sm"
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleTerminateContract}
               >
                 {t('landlordContractsBtnTerminate')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add Contract Modal (keeping existing one) */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseModal()
-          }}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300"
-            onInput={() => setIsDirty(true)}
-            onChange={() => setIsDirty(true)}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-zinc-100 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 text-primary rounded-lg">
-                  <FileSignature className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-zinc-900">
-                    {t('landlordContractsCreateTitle')}
-                  </h2>
-                  <p className="text-sm text-zinc-500">{t('landlordContractsCreateSubtitle')}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors absolute top-4 right-4 sm:relative sm:top-0 sm:right-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1 space-y-8 custom-scrollbar">
-              {/* Progress Bar */}
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                <button
-                  onClick={() => setStep(1)}
-                  className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-colors ${
-                    step === 1
-                      ? 'bg-primary text-white shadow-md'
-                      : step > 1
-                        ? 'bg-blue-50 text-primary'
-                        : 'bg-zinc-100 text-zinc-500'
-                  }`}
-                >
-                  {step > 1 ? <Check className="w-4 h-4" /> : <Home className="w-4 h-4" />}{' '}
-                  {t('landlordContractsCreateStep1Title')}
-                </button>
-                <ChevronRight className="w-4 h-4 text-zinc-300 hidden sm:block" />
-
-                <button
-                  onClick={() => step > 1 && setStep(2)}
-                  className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-colors ${
-                    step === 2
-                      ? 'bg-primary text-white shadow-md'
-                      : step > 2
-                        ? 'bg-blue-50 text-primary'
-                        : 'bg-zinc-100 text-zinc-500'
-                  }`}
-                >
-                  {step > 2 ? <Check className="w-4 h-4" /> : <DollarSign className="w-4 h-4" />}{' '}
-                  {t('landlordContractsCreateStep2Title')}
-                </button>
-                <ChevronRight className="w-4 h-4 text-zinc-300 hidden sm:block" />
-
-                <button
-                  onClick={() => step > 2 && setStep(3)}
-                  className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-colors ${
-                    step === 3 ? 'bg-primary text-white shadow-md' : 'bg-zinc-100 text-zinc-500'
-                  }`}
-                >
-                  <FileSignature className="w-4 h-4" /> {t('landlordContractsCreateStep3Title')}
-                </button>
-              </div>
-
-              {step === 1 && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                  <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">
-                      {t('landlordContractsCreateStep1Subtitle')}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordSetupTotalFloorLabel')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                          <option value="">
-                            {t('landlordContractsSelectBuildingPlaceholder')}
-                          </option>
-                          <option value="toaa">{t('landlordContractsMockBuildingA')}</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordRoomDetailRoomPrefix')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                          <option value="">{t('landlordContractsSelectRoomPlaceholder')}</option>
-                          <option value="101">101</option>
-                          <option value="102">102</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                      <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                        {t('landlordContractsTenantRepSubtitle')}
-                      </h3>
-                      <button className="text-sm text-primary font-bold hover:underline">
-                        {t('landlordContractsNewCustomerBtn')}
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700">
-                        {t('landlordContractsTenantLabel')} <span className="text-red-500">*</span>
-                      </label>
-                      <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                        <option value="">{t('landlordContractsSearchCustomerPlaceholder')}</option>
-                        <option value="kh1">Nguyễn Văn A - 0901234567</option>
-                      </select>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {t('landlordContractsSearchCustomerHint')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-4">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-sm transition-all"
-                    >
-                      {t('landlordSetupNextToStep2')} <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                  <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">
-                      {t('landlordContractsCreateStep2Subtitle')}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsRentPriceMonthlyLabel')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue="3.000.000"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsDepositLabel')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue="3.000.000"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsPaymentCycleLabel')}
-                        </label>
-                        <select className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors bg-white">
-                          <option value="1">{t('landlordContractsCycle1Month')}</option>
-                          <option value="3">{t('landlordContractsCycle3Months')}</option>
-                          <option value="6">{t('landlordContractsCycle6Months')}</option>
-                          <option value="12">{t('landlordContractsCycle12Months')}</option>
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsPaymentDateMonthlyLabel')}
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="31"
-                          defaultValue="5"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">
-                      {t('landlordContractsTableHeaderDuration')}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsStartDateLabel')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors text-zinc-700"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsEndDateLabel')}{' '}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors text-zinc-700"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">
-                      {t('landlordContractsInitialReadingTitle')}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsInitialReadingElec')}
-                        </label>
-                        <input
-                          type="number"
-                          defaultValue="0"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-zinc-700">
-                          {t('landlordContractsInitialReadingWater')}
-                        </label>
-                        <input
-                          type="number"
-                          defaultValue="0"
-                          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between pt-4">
-                    <button
-                      onClick={() => setStep(1)}
-                      className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> {t('landlordSetupBackToStep1')}
-                    </button>
-                    <button
-                      onClick={() => setStep(3)}
-                      className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-sm transition-all"
-                    >
-                      {t('landlordSetupNextToStep2')} <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                  <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
-                      <FileSignature className="w-8 h-8" />
-                    </div>
-                    <h2 className="text-xl font-bold text-zinc-900">
-                      {t('landlordContractsStepConfirmTitle')}
-                    </h2>
-                    <p className="text-sm text-zinc-500 mt-1">
-                      {t('landlordContractsStepConfirmDesc')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
-                      {t('landlordContractsCreateStep3Subtitle')}
-                    </h3>
-                    <div className="border-2 border-dashed border-zinc-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-zinc-50 hover:border-primary transition-colors cursor-pointer group">
-                      <ImageIcon className="w-10 h-10 text-zinc-400 group-hover:text-primary mb-3" />
-                      <span className="text-sm font-bold text-zinc-700">
-                        {t('landlordContractsUploadDocTitle')}
-                      </span>
-                      <span className="text-xs text-zinc-500 mt-1">
-                        {t('landlordContractsUploadDocHint')}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500 font-medium">
-                        {t('landlordRoomDetailRoomPrefix')}:
-                      </span>
-                      <span className="font-bold text-zinc-900">
-                        101 - {t('landlordContractsMockBuildingA')}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500 font-medium">
-                        {t('landlordContractsTenantLabel')}:
-                      </span>
-                      <span className="font-bold text-zinc-900">Nguyễn Văn A</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500 font-medium">
-                        {t('landlordContractsDurationLabel')}
-                      </span>
-                      <span className="font-bold text-zinc-900">
-                        {t('landlordContractsMockOneYearDuration')}
-                      </span>
-                    </div>
-                    <div className="flex justify-between pt-3 border-t border-zinc-200">
-                      <span className="text-zinc-500 font-medium">
-                        {t('landlordContractsTotalDepositDue')}
-                      </span>
-                      <span className="font-bold text-primary text-base">3.000.000 ₫</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between pt-4">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> {t('landlordSetupBackToStep1')}
-                    </button>
-                    <button
-                      onClick={handleFinish}
-                      className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-sm transition-all"
-                    >
-                      <Check className="w-4 h-4" /> {t('landlordContractsSignContractBtn')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Contract Preview & Print Modal */}
-      {previewModal.isOpen && activeBuilding?.id && (
+      {/* Contract Print / Preview Modal */}
+      {previewModal.isOpen && (
         <ContractPreviewModal
           isOpen={previewModal.isOpen}
           onClose={() => setPreviewModal(prev => ({ ...prev, isOpen: false }))}
-          buildingId={activeBuilding.id}
+          buildingId={activeBuilding?.id || ''}
           contractId={previewModal.contractId}
           roomNumber={previewModal.roomNumber}
           tenantName={previewModal.tenantName}
-          onExportSuccess={fetchContracts}
         />
       )}
 
-      {/* UNSAVED CHANGES POPUP (RULE 10) */}
-      {showDiscardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-zinc-100 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowDiscardModal(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-zinc-900">
-                {t('landlordContractsConfirmCloseTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                {t('landlordContractsConfirmCloseDesc')}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowDiscardModal(false)}
-                className="px-4 py-2 rounded-xl border border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors"
-              >
-                {t('landlordContractsConfirmCloseContinue')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDiscardModal(false)
-                  setIsModalOpen(false)
-                  setTimeout(() => {
-                    setIsDirty(false)
-                    setStep(1)
-                  }, 200)
-                }}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors shadow-xs"
-              >
-                {t('landlordContractsConfirmCloseDiscard')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Centralized Toast Notifications Container */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

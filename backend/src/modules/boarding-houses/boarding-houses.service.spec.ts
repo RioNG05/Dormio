@@ -17,6 +17,16 @@ describe('BoardingHousesService', () => {
 
   const mockPrisma: any = {
     $transaction: jest.fn(),
+    userSubscription: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
+    boardingHouse: {
+      count: jest.fn().mockResolvedValue(0),
+      findFirst: jest.fn(),
+    },
+    room: {
+      count: jest.fn(),
+    },
   }
 
   const createDto = {
@@ -251,6 +261,81 @@ describe('BoardingHousesService', () => {
         where: { id: 'user-1' },
         data: { role: UserRole.landlord },
       })
+    })
+
+    it('successfully creates customized rooms when customRooms is provided', async () => {
+      txClient.boardingHouse.create.mockResolvedValue({
+        id: 'bh-1',
+        name: 'Ánh Dương Setup',
+        description: null,
+        houseNumber: '12',
+        street: 'Nguyễn Văn Tăng',
+        ward: 'Long Thạnh Mỹ',
+        district: 'Quận 9',
+        province: 'TP. Hồ Chí Minh',
+        city: 'TP. Hồ Chí Minh',
+        country: 'Việt Nam',
+        totalFloor: 2,
+        builtAt: new Date('2022-05-10'),
+        status: 'active',
+        thumbnail: null,
+      })
+      txClient.service.create.mockResolvedValue({
+        id: 'svc-1',
+        name: 'Điện',
+        price: new Prisma.Decimal('3500.00'),
+        unit: 'kWh',
+        isMetered: true,
+        autoApplied: true,
+      })
+      txClient.roomType.create.mockResolvedValue({
+        id: 'rt-1',
+        name: 'Studio',
+        description: 'Gác lửng',
+      })
+      txClient.room.create.mockImplementation(() => Promise.resolve({ id: 'room-custom' }))
+      txClient.roomService.createMany.mockResolvedValue({ count: 1 })
+      txClient.user.update.mockResolvedValue({ id: 'user-1', role: UserRole.landlord })
+
+      const customDto = {
+        ...setupDto,
+        rooms: {
+          ...setupDto.rooms,
+          customRooms: [
+            {
+              floor: 1,
+              index: 1,
+              roomNumber: 'VIP-101',
+              area: '35.00',
+              maxOccupants: 4,
+              roomTypeIndex: 0,
+              serviceIndices: [0],
+            },
+            {
+              floor: 1,
+              index: 2,
+              roomNumber: 'STD-102',
+              area: '20.00',
+              maxOccupants: 2,
+              roomTypeIndex: 0,
+              serviceIndices: [0],
+            },
+          ],
+        },
+      }
+
+      const res = await service.setupBoardingHouse('user-1', customDto)
+      expect(res.success).toBe(true)
+      expect(res.roomsCreated).toBe(2)
+      expect(txClient.room.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            roomNumber: 'VIP-101',
+            floor: 1,
+            maxOccupants: 4,
+          }),
+        }),
+      )
     })
 
     it('rejects with 422 if room count exceeds free tier limit', async () => {

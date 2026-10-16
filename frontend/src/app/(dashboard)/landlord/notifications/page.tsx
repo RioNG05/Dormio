@@ -29,7 +29,7 @@ import {
   LandlordAnnouncementItem,
   LandlordAnnouncementsSummary,
 } from '@/services/announcement.service'
-import { Button, TextInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, NumberInput, SearchInput } from '@/components/ui'
 
 export default function NotificationsPage() {
   const { activeBuilding } = useAuth()
@@ -304,12 +304,15 @@ export default function NotificationsPage() {
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             )}
             <span>{toast.text}</span>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setToast(null)}
-              className="ml-2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
+              className="h-auto ml-2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -399,24 +402,11 @@ export default function NotificationsPage() {
 
       {/* 2. Action & Filter Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Search Input */}
         <div className="relative flex-1">
-          <TextInput
+          <SearchInput
             placeholder={t('landlordNotificationsSearchPlaceholder')}
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="w-4 h-4" />}
-            rightIcon={
-              searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="text-zinc-400 hover:text-zinc-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              ) : undefined
-            }
+            onChange={setSearchQuery}
           />
         </div>
 
@@ -453,48 +443,54 @@ export default function NotificationsPage() {
 
           {/* View Switcher (Rule #9: Grid is Default) */}
           <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200/80">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('grid')
                 if (itemsPerPage === 10) setItemsPerPage(6)
               }}
               title={t('landlordNotificationsViewGrid')}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
                 viewMode === 'grid'
                   ? 'bg-white text-zinc-900 shadow-2xs'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setViewMode('list')
                 if (itemsPerPage === 6) setItemsPerPage(10)
               }}
               title={t('landlordNotificationsViewList')}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
                 viewMode === 'list'
                   ? 'bg-white text-zinc-900 shadow-2xs'
                   : 'text-zinc-400 hover:text-zinc-700'
               }`}
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Refresh Button */}
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => fetchAnnouncements()}
             disabled={isLoading}
             title={t('landlordNotificationsRefreshList')}
-            className="p-2.5 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+            className="h-9 w-9 p-0 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#2AC1BC]' : ''}`} />
-          </button>
+          </Button>
 
           {/* Broadcast New Notice Button */}
           <Button
@@ -569,17 +565,19 @@ export default function NotificationsPage() {
                         <span className="text-[11px] font-semibold text-zinc-400">
                           {notif.sentAt}
                         </span>
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
                           onClick={e => {
                             e.stopPropagation()
                             setDeletingNotifId(notif.id)
                           }}
-                          className="text-zinc-300 hover:text-rose-500 transition-colors p-1 cursor-pointer"
+                          className="h-auto w-auto text-zinc-300 hover:text-rose-500 transition-colors p-1 cursor-pointer"
                           title={t('landlordNotificationsDeleteAction')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
@@ -625,17 +623,19 @@ export default function NotificationsPage() {
 
                   {/* Footer Details Button */}
                   <div className="pt-3 mt-3 border-t border-zinc-100 flex items-center justify-end">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={e => {
                         e.stopPropagation()
                         setSelectedNotifDetail(notif)
                       }}
-                      className="w-full px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                      className="w-full h-8 px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>{t('landlordNotificationsViewDetails')}</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )
@@ -742,22 +742,26 @@ export default function NotificationsPage() {
 
                         <td className="px-4 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setSelectedNotifDetail(notif)}
-                              className="px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
+                              className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>{t('landlordNotificationsBtnDetails')}</span>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setDeletingNotifId(notif.id)}
-                              className="p-1.5 text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
+                              className="h-auto w-auto p-1.5 text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
                               title={t('landlordNotificationsBtnDelete')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -774,8 +778,7 @@ export default function NotificationsPage() {
           <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
             <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
               <span>{t('landlordNotificationsPaginationShowing')}</span>
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={100}
                 value={itemsPerPage || ''}
@@ -784,7 +787,8 @@ export default function NotificationsPage() {
                   setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val)
                   setPage(1)
                 }}
-                className="w-12 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs"
+                containerClassName="w-16 space-y-0"
+                className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
               />
               <span>{t('landlordNotificationsPaginationPerPage')}</span>
             </div>
@@ -817,36 +821,42 @@ export default function NotificationsPage() {
 
             return (
               <div className="flex items-center gap-1.5">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   disabled={page === 1}
                   onClick={() => setPage(Math.max(windowStart - windowSize, 1))}
-                  className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   &larr; {t('landlordNotificationsPaginationPrev')}
-                </button>
+                </Button>
                 {visiblePages.map(p => (
-                  <button
+                  <Button
                     type="button"
+                    variant={page === p ? 'primary' : 'outline'}
+                    size="sm"
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                    className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
                       page === p
-                        ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
+                        ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 border-transparent'
                         : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
                     }`}
                   >
                     {p}
-                  </button>
+                  </Button>
                 ))}
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   disabled={page === totalPages || windowStart + windowSize > totalPages}
                   onClick={() => setPage(Math.min(windowStart + windowSize, totalPages))}
-                  className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   {t('landlordNotificationsPaginationNext')} &rarr;
-                </button>
+                </Button>
               </div>
             )
           })()}
@@ -877,13 +887,15 @@ export default function NotificationsPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={requestCloseNotifModal}
-                className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                className="h-auto w-auto p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Modal Body Form */}
@@ -899,23 +911,24 @@ export default function NotificationsPage() {
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {notificationTemplates.map(tmpl => (
-                    <button
+                    <Button
                       key={tmpl.title}
                       type="button"
+                      variant="ghost"
                       onClick={() => {
                         setNotifTitle(tmpl.title)
                         setNotifContent(tmpl.content)
                         setNotifCategory(tmpl.category)
                       }}
-                      className="p-2.5 text-left border border-zinc-200 hover:border-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-xl transition-all bg-white cursor-pointer group"
+                      className="h-auto p-2.5 text-left border border-zinc-200 hover:border-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-xl transition-all bg-white cursor-pointer group flex flex-col items-start justify-start w-full whitespace-normal"
                     >
-                      <div className="text-xs font-bold text-zinc-900 group-hover:text-[#2AC1BC] truncate">
+                      <div className="text-xs font-bold text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full">
                         {tmpl.title}
                       </div>
                       <div className="text-[10px] text-zinc-500 mt-0.5 font-medium">
                         {getCategoryLabel(tmpl.category)}
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -978,14 +991,16 @@ export default function NotificationsPage() {
 
               {/* Submit Footer */}
               <div className="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={requestCloseNotifModal}
                   disabled={isSubmitting}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer disabled:opacity-50"
+                  className="h-auto px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('landlordNotificationsBtnCancel')}
-                </button>
+                </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
@@ -1028,13 +1043,15 @@ export default function NotificationsPage() {
                   {t('landlordNotificationsDetailTitle')}
                 </h3>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedNotifDetail(null)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-full transition-colors cursor-pointer"
+                className="h-auto w-auto p-1.5 text-zinc-400 hover:text-white rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Body */}
@@ -1077,25 +1094,29 @@ export default function NotificationsPage() {
 
             {/* Actions */}
             <div className="p-4 border-t border-zinc-100 bg-zinc-50 flex items-center justify-between">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setDeletingNotifId(selectedNotifDetail.id)
                   setSelectedNotifDetail(null)
                 }}
-                className="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+                className="h-auto px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>{t('landlordNotificationsDetailDelete')}</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={() => setSelectedNotifDetail(null)}
-                className="px-5 py-2 text-xs font-bold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="h-auto px-5 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordNotificationsDetailClose')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1124,19 +1145,23 @@ export default function NotificationsPage() {
             </div>
 
             <div className="flex items-center justify-center gap-3 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 disabled={isDeleting}
                 onClick={() => setDeletingNotifId(null)}
-                className="flex-1 py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                className="flex-1 h-auto py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
               >
                 {t('landlordNotificationsBtnCancel')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                size="sm"
                 disabled={isDeleting}
                 onClick={() => handleDeleteAnnouncement(deletingNotifId)}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="flex-1 h-auto py-2.5 px-4 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {isDeleting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1144,7 +1169,7 @@ export default function NotificationsPage() {
                   <Trash2 className="w-4 h-4" />
                 )}
                 <span>{t('landlordNotificationsConfirmDeleteBtn')}</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

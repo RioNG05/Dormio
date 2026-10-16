@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
 import { getHighestRoleRedirect } from '@/utils'
-import { TextInput, Button, Checkbox } from '@/components/ui'
+import { TextInput, Button, Checkbox, Form, Text } from '@/components/ui'
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
@@ -98,15 +98,14 @@ export default function RegisterPage() {
         throw new Error(t('authRegisterErrCannotCreate'))
       }
 
-      // Determine highest achieved role and target redirect path:
-      // guest (/) -> leasing agent (/) -> tenant (/tenant) -> staff (/staff) -> landlord (/landlord) -> admin (/admin)
+      // Determine highest achieved role and target redirect path
       const { role: displayRole, redirectPath } = getHighestRoleRedirect(user)
 
       loginWithToken(token, {
         id: user.id,
-        name: user.username || fullName.trim() || trimmedPhone,
+        name: user.username || fullName || trimmedPhone,
         email: user.email || trimmedEmail || '',
-        phone: user.phoneNumber || trimmedPhone,
+        phone: user.phoneNumber,
         role: displayRole,
         mustChangePassword: false,
       })
@@ -114,9 +113,12 @@ export default function RegisterPage() {
       router.push(redirectPath)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('authLoginErrGeneric')
-      if (message.includes('phone_number_already_exists')) {
+      if (message.includes('phone') && (message.includes('exist') || message.includes('409'))) {
         setError(t('authRegisterErrPhoneExists'))
-      } else if (message.includes('email_already_exists')) {
+      } else if (
+        message.includes('email') &&
+        (message.includes('exist') || message.includes('409'))
+      ) {
         setError(t('authRegisterErrEmailExists'))
       } else {
         setError(message)
@@ -130,16 +132,16 @@ export default function RegisterPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
           {t('authRegisterTitle')}
-        </h1>
-        <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+        </Text>
+        <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
           {t('authRegisterSubtitle')}
-        </p>
+        </Text>
       </div>
 
-      {/* Main Registration Form reusing Base Components */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Main Registration Form reusing Base Form Component */}
+      <Form onSubmit={handleSubmit} isLoading={isLoading} className="space-y-4">
         {/* 1. Phone Number (Required) */}
         <TextInput
           label={t('authLoginPhoneLabel')}
@@ -190,14 +192,15 @@ export default function RegisterPage() {
           onChange={e => setPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors p-1"
+              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            </Button>
           }
           className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
         />
@@ -213,19 +216,20 @@ export default function RegisterPage() {
           onChange={e => setConfirmPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="text-zinc-400 hover:text-zinc-700 cursor-pointer transition-colors p-1"
+              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            </Button>
           }
           className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
         />
 
-        {/* 6. Terms Checkbox using Base Checkbox Component */}
+        {/* 6. Terms Checkbox using Base Checkbox & Text Component */}
         <div className="pt-1">
           <Checkbox
             id="register-terms"
@@ -233,48 +237,72 @@ export default function RegisterPage() {
             checked={agreed}
             onChange={e => setAgreed(e.target.checked)}
             label={
-              <span className="text-xs text-zinc-600 font-medium">
+              <Text variant="body" size="xs" color="secondary" className="select-none font-medium">
                 {t('authRegisterTermsAgree')}{' '}
-                <Link href="/policy" className="font-extrabold text-[#2AC1BC] hover:underline">
-                  {t('authRegisterTermsLink')}
+                <Link href="/terms">
+                  <Text
+                    as="span"
+                    variant="body"
+                    size="xs"
+                    weight="extrabold"
+                    className="text-[#2AC1BC] hover:underline"
+                  >
+                    {t('authRegisterTermsLink')}
+                  </Text>
                 </Link>{' '}
                 {t('authRegisterTermsAnd')}{' '}
-                <Link href="/policy" className="font-extrabold text-[#2AC1BC] hover:underline">
-                  {t('authRegisterPrivacyLink')}
+                <Link href="/privacy">
+                  <Text
+                    as="span"
+                    variant="body"
+                    size="xs"
+                    weight="extrabold"
+                    className="text-[#2AC1BC] hover:underline"
+                  >
+                    {t('authRegisterPrivacyLink')}
+                  </Text>
                 </Link>{' '}
                 {t('authRegisterTermsSuffix')}
-              </span>
+              </Text>
             }
           />
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-600 animate-in fade-in">
-            {error}
-          </div>
-        )}
+        {/* Error alert reusing Form.Alert */}
+        {error && <Form.Alert variant="error" message={error} onClose={() => setError(null)} />}
 
-        {/* Submit Button using Base Button Component */}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          disabled={!agreed || isLoading}
-          isLoading={isLoading}
-          rightIcon={<ArrowRight className="w-4 h-4" />}
-          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01] mt-2"
-        >
-          {t('authRegisterSubmitBtn')}
-        </Button>
-      </form>
+        {/* Submit Button using Base Form.Actions & Button Component */}
+        <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            disabled={!agreed || isLoading}
+            isLoading={isLoading}
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+          >
+            {t('authRegisterSubmitBtn')}
+          </Button>
+        </Form.Actions>
+      </Form>
 
       {/* Bottom Auth Navigation Link */}
-      <div className="text-center text-xs text-zinc-500 font-medium pt-2">
-        {t('authRegisterAlreadyAccount')}{' '}
-        <Link href="/login" className="font-extrabold text-[#2AC1BC] hover:underline">
-          {t('authRegisterLoginLink')}
-        </Link>
+      <div className="text-center pt-2">
+        <Text variant="body" size="xs" color="subtle">
+          {t('authRegisterAlreadyAccount')}{' '}
+          <Link href="/login">
+            <Text
+              as="span"
+              variant="body"
+              size="xs"
+              weight="extrabold"
+              className="text-[#2AC1BC] hover:underline"
+            >
+              {t('authRegisterLoginLink')}
+            </Text>
+          </Link>
+        </Text>
       </div>
     </div>
   )

@@ -95,7 +95,7 @@ export default function ContactPage() {
 
               {/* Channel 2: Email */}
               <a
-                href="mailto:ngquanghuy.work@gmail.com"
+                href="mailto:contact@dormio.site"
                 className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactEmailTooltip')}
               >
@@ -107,7 +107,7 @@ export default function ContactPage() {
                     {t('guestContactEmailTitle')}
                   </h3>
                   <p className="text-xs font-semibold text-zinc-800 mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline">
-                    ngquanghuy.work@gmail.com
+                    contact@dormio.site
                   </p>
                   <span className="text-[10px] text-zinc-400 font-medium block mt-1">
                     {t('guestContactEmailSub')}
@@ -129,7 +129,7 @@ export default function ContactPage() {
                   </p>
 
                   <a
-                    href="https://www.google.com/maps/search/?api=1&query=Tr%C6%B0%E1%BB%9Dng+%C4%90%E1%BA%A1i+h%E1%BB%8Dc+FPT+H%C3%A0+N%E1%BB%99i"
+                    href="https://www.google.com/maps/search/?api=1&query=Ho%C3%A0+L%E1%BA%A1c%2C+Th%E1%BA%A1ch+Th%E1%BA%A5t%2C+H%C3%A0+N%E1%BB%99i"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2AC1BC] hover:underline pt-1"
