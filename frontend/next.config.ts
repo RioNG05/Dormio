@@ -1,5 +1,8 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import fs from 'fs';
+
+const isWorkspaceRoot = fs.existsSync(path.resolve(__dirname, '../pnpm-workspace.yaml'));
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -16,7 +19,7 @@ const nextConfig: NextConfig = {
     '*.ngrok.app',
   ],
   turbopack: {
-    root: path.resolve(__dirname, '..'),
+    root: isWorkspaceRoot ? path.resolve(__dirname, '..') : __dirname,
   },
   images: {
     remotePatterns: [
