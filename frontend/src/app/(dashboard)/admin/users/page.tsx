@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import {
   adminUsersService,
   AdminUserItem,
@@ -35,6 +36,9 @@ import {
   Eye,
   Activity,
   UserCog,
+  Crown,
+  Sparkles,
+  Lock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Text } from '@/components/ui/Text'
@@ -48,6 +52,7 @@ import { NumberInput } from '@/components/ui/NumberInput'
 export default function AdminUsersManagementPage() {
   const { locale } = useLanguage()
   const t = useTranslations('admin')
+  const { user: currentUser } = useAuth()
 
   // Data state
   const [users, setUsers] = useState<AdminUserItem[]>([])
@@ -143,12 +148,14 @@ export default function AdminUsersManagementPage() {
   const [modalTab, setModalTab] = useState<'profile' | 'activity' | 'actions'>('profile')
 
   // Admin Action Modal States
-  const [actionType, setActionType] = useState<'ban' | 'unban' | 'role' | 'reset-password' | null>(null)
+  const [actionType, setActionType] = useState<'ban' | 'unban' | 'role' | 'reset-password' | 'tier' | null>(null)
   const [actionTargetUser, setActionTargetUser] = useState<AdminUserItem | null>(null)
   const [actionReason, setActionReason] = useState('')
   const [newRole, setNewRole] = useState<string>('tenant')
   const [tempPassword, setTempPassword] = useState('Dormio@2026')
   const [forceChangePassword, setForceChangePassword] = useState(true)
+  const [newTier, setNewTier] = useState<'free' | 'plus' | 'pro'>('free')
+  const [durationMonths, setDurationMonths] = useState<number>(1)
   const [actionSubmitting, setActionSubmitting] = useState(false)
 
   // Unsaved changes confirmation modal state (Rule 10)
@@ -171,24 +178,68 @@ export default function AdminUsersManagementPage() {
     }
   }
 
+  // Check if a target user is the Root System Admin (Nguyen Quang Huy)
+  const isRootAdminUser = useCallback(
+    (targetUser?: { phoneNumber?: string | null; email?: string | null; isRootAdmin?: boolean } | null) => {
+      if (!targetUser) return false
+      if (targetUser.isRootAdmin) return true
+      if (targetUser.phoneNumber === '0344265925') return true
+      if (targetUser.email && targetUser.email.toLowerCase().includes('ngquanghuy.work')) return true
+      return false
+    },
+    []
+  )
+
+  // Check if current user is authorized to modify the target user
+  // Root system admin cannot be modified by any other people
+  const canModifyUser = useCallback(
+    (targetUser?: AdminUserItem | AdminUserDetail | null) => {
+      if (!targetUser) return false
+      if (!isRootAdminUser(targetUser)) return true
+      if (!currentUser) return false
+      const isSelf =
+        (currentUser.id && currentUser.id === targetUser.id) ||
+        (currentUser.phone && currentUser.phone === targetUser.phoneNumber) ||
+        (currentUser.email && currentUser.email.toLowerCase().includes('ngquanghuy.work'))
+      return Boolean(isSelf)
+    },
+    [currentUser, isRootAdminUser]
+  )
+
+  const getRootAdminBadge = () => (
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+      <Shield className="w-3 h-3 text-amber-700" />
+      {t('adminUsersRootAdminBadge')}
+    </span>
+  )
+
   // Open action modal
-  const handleOpenAction = (user: AdminUserItem, type: 'ban' | 'unban' | 'role' | 'reset-password') => {
+  const handleOpenAction = (user: AdminUserItem, type: 'ban' | 'unban' | 'role' | 'reset-password' | 'tier') => {
+    if (!canModifyUser(user)) {
+      setToastMsg({ type: 'error', textKey: 'adminUsersRootAdminProtectedDesc' })
+      return
+    }
     setActionTargetUser(user)
     setActionType(type)
     setActionReason('')
     setNewRole(user.role)
     setTempPassword('Dormio@2026')
     setForceChangePassword(true)
+    const currentTier = (user.subscriptionPackage?.toLowerCase() as 'free' | 'plus' | 'pro') || 'free'
+    setNewTier(['free', 'plus', 'pro'].includes(currentTier) ? currentTier : 'free')
+    setDurationMonths(1)
   }
 
   // Check if form is dirty before closing (Rule 10)
   const isActionDirty = useMemo(() => {
+    const currentTier = (actionTargetUser?.subscriptionPackage?.toLowerCase() as 'free' | 'plus' | 'pro') || 'free'
     return (
       actionReason.trim().length > 0 ||
       (actionType === 'role' && actionTargetUser && newRole !== actionTargetUser.role) ||
-      (actionType === 'reset-password' && tempPassword !== 'Dormio@2026')
+      (actionType === 'reset-password' && tempPassword !== 'Dormio@2026') ||
+      (actionType === 'tier' && (newTier !== currentTier || durationMonths !== 1))
     )
-  }, [actionReason, actionType, actionTargetUser, newRole, tempPassword])
+  }, [actionReason, actionType, actionTargetUser, newRole, tempPassword, newTier, durationMonths])
 
   const requestCloseActionModal = () => {
     if (isActionDirty) {
@@ -210,6 +261,8 @@ export default function AdminUsersManagementPage() {
       setActionType(null)
       setActionTargetUser(null)
       setActionReason('')
+      setNewTier('free')
+      setDurationMonths(1)
     }
     setPendingCloseTarget(null)
   }
@@ -217,6 +270,12 @@ export default function AdminUsersManagementPage() {
   // Execute admin action
   const handleExecuteAction = async () => {
     if (!actionTargetUser || !actionType) return
+    if (!canModifyUser(actionTargetUser)) {
+      setToastMsg({ type: 'error', textKey: 'adminUsersRootAdminProtectedDesc' })
+      setActionType(null)
+      setActionTargetUser(null)
+      return
+    }
     setActionSubmitting(true)
     try {
       if (actionType === 'ban') {
@@ -246,12 +305,21 @@ export default function AdminUsersManagementPage() {
           type: 'success',
           text: `${t('adminUsersActionSuccess')} (${tempPassword})`,
         })
+      } else if (actionType === 'tier') {
+        await adminUsersService.updateUserTier(actionTargetUser.id, {
+          tier: newTier,
+          durationMonths: newTier === 'free' ? undefined : Number(durationMonths) || 1,
+          reason: actionReason.trim() || undefined,
+        })
+        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
       }
 
       // Close modal and refresh data
       setActionType(null)
       setActionTargetUser(null)
       setActionReason('')
+      setNewTier('free')
+      setDurationMonths(1)
       fetchUsers()
 
       // If user detail is also open, update it
@@ -369,6 +437,33 @@ export default function AdminUsersManagementPage() {
         )
       default:
         return <span className="text-xs text-zinc-500">{status}</span>
+    }
+  }
+
+  const getTierBadge = (tier?: string | null) => {
+    const normalized = (tier || 'free').toLowerCase()
+    switch (normalized) {
+      case 'pro':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-300">
+            <Crown className="w-3 h-3 text-amber-600" />
+            {t('adminUsersTierBadgePro')}
+          </span>
+        )
+      case 'plus':
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+            <Sparkles className="w-3 h-3 text-purple-600" />
+            {t('adminUsersTierBadgePlus')}
+          </span>
+        )
+      case 'free':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-600 border border-zinc-200">
+            {t('adminUsersTierBadgeFree')}
+          </span>
+        )
     }
   }
 
@@ -761,14 +856,11 @@ export default function AdminUsersManagementPage() {
                     {getStatusBadge(user.status)}
                   </div>
 
-                  {/* Role and Verified Tags */}
+                  {/* Role, Tier and Root Admin Tags */}
                   <div className="flex items-center gap-2 flex-wrap">
                     {getRoleBadge(user.role)}
-                    {user.subscriptionPackage && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
-                        {user.subscriptionPackage}
-                      </span>
-                    )}
+                    {getTierBadge(user.subscriptionPackage)}
+                    {isRootAdminUser(user) && getRootAdminBadge()}
                   </div>
 
                   {/* Contact Info */}
@@ -844,16 +936,38 @@ export default function AdminUsersManagementPage() {
                     {t('adminUsersBtnDetail')}
                   </Button>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenDetail(user, 'actions')}
-                    title={t('adminUsersTabActions')}
-                    className="px-2.5 rounded-xl border-zinc-200 hover:bg-zinc-100 text-zinc-700"
-                  >
-                    <UserCog className="w-4 h-4" />
-                  </Button>
+                  {canModifyUser(user) ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenAction(user, 'tier')}
+                        title={t('adminUsersBtnChangeTier')}
+                        className="px-2.5 rounded-xl border-purple-200 text-purple-700 hover:bg-purple-50"
+                      >
+                        <Crown className="w-4 h-4" />
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenDetail(user, 'actions')}
+                        title={t('adminUsersTabActions')}
+                        className="px-2.5 rounded-xl border-zinc-200 hover:bg-zinc-100 text-zinc-700"
+                      >
+                        <UserCog className="w-4 h-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <div
+                      className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 cursor-not-allowed"
+                      title={t('adminUsersRootAdminProtected')}
+                    >
+                      <Lock className="w-4 h-4" />
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -918,11 +1032,8 @@ export default function AdminUsersManagementPage() {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {getRoleBadge(user.role)}
-                          {user.subscriptionPackage && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200">
-                              {user.subscriptionPackage}
-                            </span>
-                          )}
+                          {getTierBadge(user.subscriptionPackage)}
+                          {isRootAdminUser(user) && getRootAdminBadge()}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">{getStatusBadge(user.status)}</td>
@@ -948,16 +1059,37 @@ export default function AdminUsersManagementPage() {
                           >
                             {t('adminUsersBtnDetail')}
                           </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenDetail(user, 'actions')}
-                            className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-800"
-                            title={t('adminUsersTabActions')}
-                          >
-                            <UserCog className="w-4 h-4" />
-                          </Button>
+                          {canModifyUser(user) ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenAction(user, 'tier')}
+                                className="p-1.5 rounded-xl text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+                                title={t('adminUsersBtnChangeTier')}
+                              >
+                                <Crown className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenDetail(user, 'actions')}
+                                className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-800"
+                                title={t('adminUsersTabActions')}
+                              >
+                                <UserCog className="w-4 h-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <span
+                              className="p-1.5 rounded-xl text-amber-600 cursor-not-allowed inline-flex items-center justify-center"
+                              title={t('adminUsersRootAdminProtected')}
+                            >
+                              <Lock className="w-4 h-4" />
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1088,13 +1220,16 @@ export default function AdminUsersManagementPage() {
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <Text as="h2" variant="heading" size="base" className="font-extrabold text-zinc-900">
-                    {selectedUser
-                      ? t('adminUsersModalTitle', {
-                          name: selectedUser.fullName || selectedUser.username || selectedUser.phoneNumber,
-                        })
-                      : t('adminUsersLoadingProfile')}
-                  </Text>
+                  <div className="flex items-center gap-2">
+                    <Text as="h2" variant="heading" size="base" className="font-extrabold text-zinc-900">
+                      {selectedUser
+                        ? t('adminUsersModalTitle', {
+                            name: selectedUser.fullName || selectedUser.username || selectedUser.phoneNumber,
+                          })
+                        : t('adminUsersLoadingProfile')}
+                    </Text>
+                    {selectedUser && isRootAdminUser(selectedUser) && getRootAdminBadge()}
+                  </div>
                   {selectedUser && (
                     <Text variant="caption" size="2xs" color="subtle">
                       ID: {selectedUser.id}
@@ -1174,6 +1309,7 @@ export default function AdminUsersManagementPage() {
                       <div className="flex items-center gap-2">
                         {getRoleBadge(selectedUser.role)}
                         {getStatusBadge(selectedUser.status)}
+                        {isRootAdminUser(selectedUser) && getRootAdminBadge()}
                       </div>
                       <Text as="span" size="xs" weight="semibold" color="secondary">
                         {t('adminUsersLabelJoinedDate')}: {formatJoinedDate(selectedUser.createdAt)} (
@@ -1210,9 +1346,30 @@ export default function AdminUsersManagementPage() {
                         <Text as="span" size="2xs" color="subtle" className="block">
                           {t('adminUsersLabelSubscription')}
                         </Text>
-                        <Text as="span" size="xs" weight="black" className="text-purple-700 uppercase">
-                          {selectedUser.subscriptionPackage || 'Free'}
-                        </Text>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {getTierBadge(selectedUser.subscriptionPackage)}
+                          {canModifyUser(selectedUser) ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenAction(selectedUser, 'tier')}
+                              className="p-1 h-6 text-xs text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg flex items-center gap-1 font-bold"
+                              title={t('adminUsersBtnChangeTier')}
+                            >
+                              <Sparkles className="w-3 h-3" />
+                              {t('adminUsersQuickChangeTier')}
+                            </Button>
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200"
+                              title={t('adminUsersRootAdminProtected')}
+                            >
+                              <Lock className="w-3 h-3 text-amber-600" />
+                              {t('adminUsersRootAdminProtected')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </Form.Grid>
                   </div>
@@ -1455,6 +1612,18 @@ export default function AdminUsersManagementPage() {
                     {t('adminUsersActionNotice')}
                   </Text>
 
+                  {!canModifyUser(selectedUser) && (
+                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
+                      <div className="flex items-center gap-2 font-bold text-sm text-amber-800">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>{t('adminUsersRootAdminProtectedTitle')}</span>
+                      </div>
+                      <Text as="p" size="xs" className="text-amber-800/90 leading-relaxed">
+                        {t('adminUsersRootAdminProtectedDesc')}
+                      </Text>
+                    </div>
+                  )}
+
                   <Form.Grid cols={2} gap="md" className="pt-2">
                     {/* Choice 1: Ban or Unban */}
                     {selectedUser.status === 'banned' ? (
@@ -1473,7 +1642,9 @@ export default function AdminUsersManagementPage() {
                           variant="primary"
                           size="sm"
                           onClick={() => handleOpenAction(selectedUser, 'unban')}
-                          className="w-full text-xs font-bold rounded-xl mt-1"
+                          disabled={!canModifyUser(selectedUser)}
+                          title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
+                          className="w-full text-xs font-bold rounded-xl mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {t('adminUsersBtnUnban')}
                         </Button>
@@ -1494,7 +1665,9 @@ export default function AdminUsersManagementPage() {
                           variant="danger"
                           size="sm"
                           onClick={() => handleOpenAction(selectedUser, 'ban')}
-                          className="w-full text-xs font-bold rounded-xl mt-1"
+                          disabled={!canModifyUser(selectedUser)}
+                          title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
+                          className="w-full text-xs font-bold rounded-xl mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {t('adminUsersBtnBan')}
                         </Button>
@@ -1517,14 +1690,40 @@ export default function AdminUsersManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenAction(selectedUser, 'role')}
-                        className="w-full text-xs font-bold rounded-xl mt-1"
+                        disabled={!canModifyUser(selectedUser)}
+                        title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
+                        className="w-full text-xs font-bold rounded-xl mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {t('adminUsersBtnChangeRole')}
                       </Button>
                     </div>
 
-                    {/* Choice 3: Reset Password */}
-                    <div className="p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 space-y-2 sm:col-span-2">
+                    {/* Choice 3: Change Subscription Tier */}
+                    <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/40 space-y-2">
+                      <div className="flex items-center gap-2 text-purple-800 font-extrabold text-sm">
+                        <Crown className="w-4 h-4 text-purple-600" />
+                        <Text as="span" size="sm" weight="extrabold" color="inherit">
+                          {t('adminUsersBtnChangeTier')}
+                        </Text>
+                      </div>
+                      <Text as="p" size="xs" color="secondary" className="leading-relaxed">
+                        {t('adminUsersTierDesc')}
+                      </Text>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenAction(selectedUser, 'tier')}
+                        disabled={!canModifyUser(selectedUser)}
+                        title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
+                        className="w-full text-xs font-bold rounded-xl mt-1 border-purple-200 text-purple-700 hover:bg-purple-100/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {t('adminUsersBtnChangeTier')}
+                      </Button>
+                    </div>
+
+                    {/* Choice 4: Reset Password */}
+                    <div className="p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 space-y-2">
                       <div className="flex items-center gap-2 text-zinc-800 font-extrabold text-sm">
                         <KeyRound className="w-4 h-4 text-orange-500" />
                         <Text as="span" size="sm" weight="extrabold" color="inherit">
@@ -1539,7 +1738,9 @@ export default function AdminUsersManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenAction(selectedUser, 'reset-password')}
-                        className="text-xs font-bold rounded-xl"
+                        disabled={!canModifyUser(selectedUser)}
+                        title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
+                        className="w-full text-xs font-bold rounded-xl mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {t('adminUsersBtnResetPassword')}
                       </Button>
@@ -1573,12 +1774,14 @@ export default function AdminUsersManagementPage() {
                     {actionType === 'unban' && t('adminUsersModalUnbanTitle')}
                     {actionType === 'role' && t('adminUsersModalRoleTitle')}
                     {actionType === 'reset-password' && t('adminUsersModalResetPassTitle')}
+                    {actionType === 'tier' && t('adminUsersModalTierTitle')}
                   </Text>
                   <Text variant="caption" size="xs" color="subtle">
                     {actionType === 'ban' && t('adminUsersModalBanDesc')}
                     {actionType === 'unban' && t('adminUsersModalUnbanDesc')}
                     {actionType === 'role' && t('adminUsersModalRoleDesc')}
                     {actionType === 'reset-password' && t('adminUsersModalResetPassDesc')}
+                    {actionType === 'tier' && t('adminUsersModalTierDesc')}
                   </Text>
                 </div>
                 <Button
@@ -1639,6 +1842,95 @@ export default function AdminUsersManagementPage() {
                     label={t('adminUsersForceChangeLabel')}
                     size="sm"
                   />
+                </div>
+              )}
+
+              {/* Tier selection & duration */}
+              {actionType === 'tier' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-700 mb-2">
+                      {t('adminUsersSelectNewTier')}
+                    </label>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {[
+                        {
+                          id: 'free' as const,
+                          name: t('adminUsersTierBadgeFree'),
+                          icon: Sparkles,
+                          color: 'border-zinc-200 text-zinc-700 hover:bg-zinc-50',
+                          activeColor: 'border-zinc-900 bg-zinc-900 text-white shadow-sm',
+                        },
+                        {
+                          id: 'plus' as const,
+                          name: t('adminUsersTierBadgePlus'),
+                          icon: Sparkles,
+                          color: 'border-purple-200 text-purple-700 hover:bg-purple-50',
+                          activeColor: 'border-purple-600 bg-purple-600 text-white shadow-sm',
+                        },
+                        {
+                          id: 'pro' as const,
+                          name: t('adminUsersTierBadgePro'),
+                          icon: Crown,
+                          color: 'border-amber-200 text-amber-700 hover:bg-amber-50',
+                          activeColor: 'border-amber-600 bg-amber-600 text-white shadow-sm',
+                        },
+                      ].map(tierOpt => {
+                        const isSelected = newTier === tierOpt.id
+                        const Icon = tierOpt.icon
+                        return (
+                          <button
+                            key={tierOpt.id}
+                            type="button"
+                            onClick={() => setNewTier(tierOpt.id)}
+                            className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center gap-1.5 font-bold text-xs ${
+                              isSelected ? tierOpt.activeColor : tierOpt.color
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" />
+                            <span>{tierOpt.name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {newTier === 'free' ? (
+                    <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs">
+                      {t('adminUsersTierFreeNotice')}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-zinc-700">
+                        {t('adminUsersTierDurationLabel')}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {[1, 3, 6, 12].map(m => (
+                          <Button
+                            key={m}
+                            type="button"
+                            variant={durationMonths === m ? 'primary' : 'outline'}
+                            size="sm"
+                            onClick={() => setDurationMonths(m)}
+                            className="flex-1 text-xs font-bold rounded-xl h-8"
+                          >
+                            {t('adminUsersTierDurationMonths', { count: m })}
+                          </Button>
+                        ))}
+                      </div>
+                      <NumberInput
+                        min={1}
+                        max={60}
+                        value={String(durationMonths)}
+                        onChange={e => {
+                          const v = parseInt(e.target.value, 10)
+                          if (!isNaN(v) && v > 0) setDurationMonths(v)
+                        }}
+                        className="rounded-2xl text-xs font-bold mt-1"
+                        placeholder={t('adminUsersTierDurationPlaceholder')}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 

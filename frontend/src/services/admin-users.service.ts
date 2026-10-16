@@ -19,6 +19,7 @@ export interface AdminUserItem {
   postsCount: number
   subscriptionPackage: string | null
   lastActiveAt: string | null
+  isRootAdmin?: boolean
 }
 
 export interface AdminUserIdentification {
@@ -177,5 +178,17 @@ export const adminUsersService = {
     const res = await api.post<any>(`/v1/admin/users/${id}/reset-password`, payload)
     return res?.data || res
   },
+
+  /**
+   * Update user subscription tier (free, plus, pro)
+   */
+  async updateUserTier(
+    id: string,
+    payload: { tier: 'free' | 'plus' | 'pro'; durationMonths?: number; reason?: string },
+  ) {
+    const res = await api.patch<any>(`/v1/admin/users/${id}/tier`, payload)
+    return res?.data || res
+  },
 }
+
 

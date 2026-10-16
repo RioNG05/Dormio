@@ -866,8 +866,28 @@ export const viAdmin = {
     adminUsersResetPwdDesc: "Cấp mật khẩu tạm thời mới và bắt buộc người dùng đổi mật khẩu ở lần đăng nhập tiếp theo.",
     adminUsersClose: "Đóng",
     adminUsersSelectNewRole: "Chọn vai trò mới",
-    adminUsersProcessing: "Đang xử lý..."
-
+    adminUsersProcessing: "Đang xử lý...",
+    adminUsersBtnChangeTier: "Đổi gói tài khoản",
+    adminUsersTierDesc: "Nâng cấp hoặc chuyển đổi gói hội viên (Free, Plus, Pro) cho người dùng.",
+    adminUsersModalTierTitle: "Thay đổi gói tài khoản người dùng",
+    adminUsersModalTierDesc: "Cập nhật cấp độ gói dịch vụ (Free, Plus, Pro) cùng thời hạn sử dụng tương ứng.",
+    adminUsersSelectNewTier: "Chọn gói tài khoản mới",
+    adminUsersTierFree: "Gói Miễn phí (Free)",
+    adminUsersTierPlus: "Gói Tiêu chuẩn (Plus)",
+    adminUsersTierPro: "Gói Chuyên nghiệp (Pro)",
+    adminUsersTierDurationLabel: "Thời hạn hiệu lực (tháng)",
+    adminUsersTierDurationPlaceholder: "Số tháng (VD: 1, 3, 6, 12)",
+    adminUsersTierFreeNotice: "Khi chuyển về gói Miễn phí (Free), tất cả các gói dịch vụ trả phí hiện tại của người dùng sẽ bị hủy hiệu lực.",
+    adminUsersTierBadgeFree: "Free",
+    adminUsersTierBadgePlus: "Plus",
+    adminUsersTierBadgePro: "Pro",
+    adminUsersTierDurationMonths: "{count} tháng",
+    adminUsersTierCurrent: "Gói hiện tại",
+    adminUsersQuickChangeTier: "Đổi gói",
+    adminUsersRootAdminBadge: "Quản trị viên hệ thống (Root)",
+    adminUsersRootAdminProtectedTitle: "Tài khoản Quản trị viên hệ thống được bảo vệ",
+    adminUsersRootAdminProtectedDesc: "Tài khoản Nguyễn Quang Huy (ngquanghuy.work, 0344265925) là Quản trị viên hệ thống cấp cao. Những người khác không thể thay đổi trạng thái, vai trò, gói dịch vụ hoặc mật khẩu của tài khoản này.",
+    adminUsersRootAdminProtected: "Tài khoản Quản trị viên hệ thống được bảo vệ, người khác không thể chỉnh sửa",
 }
 
 export default viAdmin;

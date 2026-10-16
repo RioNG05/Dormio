@@ -866,8 +866,28 @@ export const enAdmin = {
     adminUsersResetPwdDesc: "Set a new temporary password and force the user to change password on next login.",
     adminUsersClose: "Close",
     adminUsersSelectNewRole: "Select New Role",
-    adminUsersProcessing: "Processing..."
-
+    adminUsersProcessing: "Processing...",
+    adminUsersBtnChangeTier: "Change Tier",
+    adminUsersTierDesc: "Upgrade or change the subscription tier (Free, Plus, Pro) for this user.",
+    adminUsersModalTierTitle: "Change User Subscription Tier",
+    adminUsersModalTierDesc: "Update the user's subscription tier (Free, Plus, Pro) and corresponding validity period.",
+    adminUsersSelectNewTier: "Select New Subscription Tier",
+    adminUsersTierFree: "Free Plan",
+    adminUsersTierPlus: "Plus Plan",
+    adminUsersTierPro: "Pro Plan",
+    adminUsersTierDurationLabel: "Validity Duration (months)",
+    adminUsersTierDurationPlaceholder: "Months (e.g. 1, 3, 6, 12)",
+    adminUsersTierFreeNotice: "When reverting to Free tier, any active paid subscriptions will be canceled immediately.",
+    adminUsersTierBadgeFree: "Free",
+    adminUsersTierBadgePlus: "Plus",
+    adminUsersTierBadgePro: "Pro",
+    adminUsersTierDurationMonths: "{count} months",
+    adminUsersTierCurrent: "Current Tier",
+    adminUsersQuickChangeTier: "Change Tier",
+    adminUsersRootAdminBadge: "Root System Admin",
+    adminUsersRootAdminProtectedTitle: "Protected System Administrator Account",
+    adminUsersRootAdminProtectedDesc: "The account Nguyen Quang Huy (ngquanghuy.work, 0344265925) is the root system administrator. Other users cannot modify the status, role, subscription tier, or password of this account.",
+    adminUsersRootAdminProtected: "Root system administrator account is protected and cannot be modified by others",
 }
 
 export default enAdmin;
