@@ -26,7 +26,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput, ChipGroup } from '@/components/ui'
 
 export default function CustomersPage() {
   const { activeBuilding } = useAuth()
@@ -393,51 +393,36 @@ export default function CustomersPage() {
           {/* Left Controls: Status Pills + Search + Sort */}
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
             {/* Filter Pills */}
-            {[
-              {
-                id: '',
-                label: t('landlordCustomersAll'),
-                count: totalCustomers,
-                color: 'text-zinc-700 bg-zinc-100 border-zinc-200',
-              },
-              {
-                id: 'Đang ở',
-                label: t('landlordCustomersStatStayingShort'),
-                count: stayingCount,
-                color: 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30',
-              },
-              {
-                id: 'Sắp hết hợp đồng',
-                label: t('landlordCustomersStatExpiringShort'),
-                count: expiringCount,
-                color: 'text-orange-700 bg-orange-50 border-orange-200',
-              },
-              {
-                id: 'Đã rời',
-                label: t('landlordCustomersStatLeftShort'),
-                count: leftCount,
-                color: 'text-blue-700 bg-blue-50 border-blue-200',
-              },
-            ].map(tab => (
-              <Button
-                key={tab.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => setStatusFilter(tab.id)}
-                className={`h-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer whitespace-nowrap shrink-0 ${statusFilter === tab.id
-                  ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-2xs hover:bg-[#2AC1BC]/90 hover:text-white'
-                  : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
-                  }`}
-              >
-                <span className="whitespace-nowrap">{tab.label}</span>
-                <span
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap ${statusFilter === tab.id ? 'bg-white/20 text-white' : tab.color
-                    }`}
-                >
-                  {tab.count}
-                </span>
-              </Button>
-            ))}
+            <ChipGroup
+              value={statusFilter}
+              onChange={setStatusFilter}
+              className="flex-1 min-w-0"
+              options={[
+                {
+                  value: '',
+                  label: t('landlordCustomersAll'),
+                  count: totalCustomers,
+                },
+                {
+                  value: 'Đang ở',
+                  label: t('landlordCustomersStatStayingShort'),
+                  count: stayingCount,
+                  variant: 'default',
+                },
+                {
+                  value: 'Sắp hết hợp đồng',
+                  label: t('landlordCustomersStatExpiringShort'),
+                  count: expiringCount,
+                  variant: 'warning',
+                },
+                {
+                  value: 'Đã rời',
+                  label: t('landlordCustomersStatLeftShort'),
+                  count: leftCount,
+                  variant: 'info',
+                },
+              ]}
+            />
 
             {/* Separator Line */}
             <div className="hidden xl:block h-6 w-px bg-zinc-200 mx-1 shrink-0" />

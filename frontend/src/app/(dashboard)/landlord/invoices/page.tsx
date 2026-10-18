@@ -54,6 +54,7 @@ import {
   Checkbox,
   Form,
   SearchInput,
+  ChipGroup,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -625,57 +626,41 @@ function InvoicesContent() {
         </div>
 
         {/* Quick Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
-          <Button
-            size="sm"
-            variant={activeTab === 'all' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveTab('all')
+        <div className="border-t border-zinc-100 pt-3">
+          <ChipGroup<'all' | 'unpaid' | 'paid' | 'overdue'>
+            value={activeTab}
+            onChange={val => {
+              setActiveTab(val)
               setCurrentPage(1)
             }}
-            className="rounded-xl text-xs"
-          >
-            {t('landlordInvoicesTabAll').replace('{count}', String(totalInvoicesCount))}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={activeTab === 'unpaid' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveTab('unpaid')
-              setCurrentPage(1)
-            }}
-            className="rounded-xl text-xs"
-          >
-            {t('landlordInvoicesTabUnpaid').replace('{count}', String(unpaidCount))}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={activeTab === 'paid' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveTab('paid')
-              setCurrentPage(1)
-            }}
-            className="rounded-xl text-xs"
-          >
-            {t('landlordInvoicesTabPaid').replace('{count}', String(paidCount))}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={activeTab === 'overdue' ? 'danger' : 'secondary'}
-            onClick={() => {
-              setActiveTab('overdue')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'rounded-xl text-xs',
-              activeTab !== 'overdue' && 'bg-rose-50 text-rose-700 hover:bg-rose-100',
-            )}
-          >
-            {t('landlordInvoicesTabOverdue').replace('{count}', String(overdueCount))}
-          </Button>
+            scrollable
+            options={[
+              {
+                value: 'all',
+                label: t('landlordInvoicesTabAll').replace(/\s*\(?\{count\}\)?/, ''),
+                count: totalInvoicesCount,
+                variant: 'default',
+              },
+              {
+                value: 'unpaid',
+                label: t('landlordInvoicesTabUnpaid').replace(/\s*\(?\{count\}\)?/, ''),
+                count: unpaidCount,
+                variant: 'warning',
+              },
+              {
+                value: 'paid',
+                label: t('landlordInvoicesTabPaid').replace(/\s*\(?\{count\}\)?/, ''),
+                count: paidCount,
+                variant: 'success',
+              },
+              {
+                value: 'overdue',
+                label: t('landlordInvoicesTabOverdue').replace(/\s*\(?\{count\}\)?/, ''),
+                count: overdueCount,
+                variant: 'danger',
+              },
+            ]}
+          />
         </div>
       </div>
 

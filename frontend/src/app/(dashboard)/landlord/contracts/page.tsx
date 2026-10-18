@@ -37,6 +37,7 @@ import {
   SearchInput,
   ToastContainer,
   ToastItem,
+  ChipGroup,
 } from '@/components/ui'
 
 function mapContractStatus(rawStatus: string): string {
@@ -560,35 +561,21 @@ export default function ContractsPage() {
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Status Filter Pills */}
-              <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
-                {[
+              <ChipGroup
+                value={statusFilter}
+                onChange={val => {
+                  setStatusFilter(val)
+                  setCurrentPage(1)
+                }}
+                className="flex-1 min-w-0"
+                options={[
                   { label: t('landlordContractsFilterAll'), value: '' },
                   { label: t('landlordContractsFilterActive'), value: 'Đang hiệu lực' },
-                  { label: t('landlordContractsFilterExpiring'), value: 'Sắp hết hạn' },
-                  { label: t('landlordContractsFilterOverdue'), value: 'Quá hạn' },
-                  { label: t('landlordContractsFilterEnded'), value: 'Đã chấm dứt' },
-                ].map(tab => {
-                  const isActive = statusFilter === tab.value
-                  return (
-                    <Button
-                      key={tab.value}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setStatusFilter(tab.value)
-                        setCurrentPage(1)
-                      }}
-                      className={`h-auto px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
-                        isActive
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20 hover:bg-[#2AC1BC]/90 hover:text-white'
-                          : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200/80'
-                      }`}
-                    >
-                      {tab.label}
-                    </Button>
-                  )
-                })}
-              </div>
+                  { label: t('landlordContractsFilterExpiring'), value: 'Sắp hết hạn', variant: 'warning' },
+                  { label: t('landlordContractsFilterOverdue'), value: 'Quá hạn', variant: 'danger' },
+                  { label: t('landlordContractsFilterEnded'), value: 'Đã chấm dứt', variant: 'neutral' },
+                ]}
+              />
 
               {/* Search & View Mode */}
               <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">

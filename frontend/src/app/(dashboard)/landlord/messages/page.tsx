@@ -46,7 +46,7 @@ import {
   getContacts,
   initMessagesSocket,
 } from '@/services/message.service'
-import { TextInput, Button, SearchInput } from '@/components/ui'
+import { TextInput, Button, SearchInput, ChipGroup } from '@/components/ui'
 import { dispatchMessagesUpdated } from '@/hooks'
 
 const AVATAR_COLORS = [
@@ -696,88 +696,45 @@ function MessagesContent() {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px] font-extrabold">
-            <Button
-              type="button"
-              variant="ghost"
+          <div className="py-0.5">
+            <ChipGroup<'all' | 'unread' | 'read' | 'tenant' | 'lead'>
+              value={activeTab}
+              onChange={val => setActiveTab(val)}
+              scrollable
               size="sm"
-              onClick={() => setActiveTab('all')}
-              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'all'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
-            >
-              {t('landlordMessagesAll').replace('{count}', String(conversations.length))}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab('unread')}
-              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'unread'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
-            >
-              {t('landlordMessagesUnread').replace(
-                '{count}',
-                String(conversations.filter(c => c.unreadCount > 0).length),
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab('read')}
-              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'read'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
-            >
-              {t('landlordMessagesRead').replace(
-                '{count}',
-                String(conversations.filter(c => c.unreadCount === 0).length),
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab('tenant')}
-              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'tenant'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
-            >
-              {t('landlordMessagesTenant').replace(
-                '{count}',
-                String(conversations.filter(c => c.participant.role === 'tenant').length),
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveTab('lead')}
-              className={`h-auto px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                activeTab === 'lead'
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-              }`}
-            >
-              {t('landlordMessagesTabNewGuests').replace(
-                '{count}',
-                String(conversations.filter(c => c.participant.role !== 'tenant').length),
-              )}
-            </Button>
+              options={[
+                {
+                  value: 'all',
+                  label: t('landlordMessagesTabAll'),
+                  count: conversations.length,
+                  variant: 'default',
+                },
+                {
+                  value: 'unread',
+                  label: t('landlordMessagesTabUnread'),
+                  count: conversations.filter(c => c.unreadCount > 0).length,
+                  variant: 'warning',
+                },
+                {
+                  value: 'read',
+                  label: t('landlordMessagesTabRead'),
+                  count: conversations.filter(c => c.unreadCount === 0).length,
+                  variant: 'neutral',
+                },
+                {
+                  value: 'tenant',
+                  label: t('landlordMessagesTabTenant'),
+                  count: conversations.filter(c => c.participant.role === 'tenant').length,
+                  variant: 'info',
+                },
+                {
+                  value: 'lead',
+                  label: t('landlordMessagesTabLead'),
+                  count: conversations.filter(c => c.participant.role !== 'tenant').length,
+                  variant: 'purple',
+                },
+              ]}
+            />
           </div>
         </div>
 

@@ -33,6 +33,7 @@ import {
   SelectInput,
   TextareaInput,
   SearchInput,
+  ChipGroup,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -69,7 +70,9 @@ export default function ExpensesPage() {
 
   // Filters
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>('all')
-  const [activeStatusTab, setActiveStatusTab] = useState<string>('all')
+  const [activeStatusTab, setActiveStatusTab] = useState<
+    'all' | 'paid' | 'pending' | 'canceled'
+  >('all')
   const [searchTerm, setSearchTerm] = useState<string>('')
 
   // Loading states
@@ -572,31 +575,24 @@ export default function ExpensesPage() {
       {/* ─── Main Filter & Control Bar ───────────────────────────────────────── */}
       <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-sm space-y-3.5">
         {/* Category Switcher Horizontal Scroll */}
-        <div className="overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 flex items-center gap-1.5 border-b border-zinc-100 pb-3">
+        <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
           <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
             {t('landlordExpensesCategoryColon')}
           </span>
-          {categoriesList.map(cat => (
-            <Button
-              key={cat}
-              variant={activeCategoryTab === cat ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                setActiveCategoryTab(cat)
-                setCurrentPage(1)
-              }}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 whitespace-nowrap h-auto',
-                activeCategoryTab === cat
-                  ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-sm'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70',
-              )}
-            >
-              {cat === 'all'
-                ? t('landlordExpensesAllCategoriesWithCount', { count: summary.totalCount })
-                : getCategoryLabel(cat)}
-            </Button>
-          ))}
+          <ChipGroup
+            value={activeCategoryTab}
+            onChange={val => {
+              setActiveCategoryTab(val)
+              setCurrentPage(1)
+            }}
+            scrollable
+            options={categoriesList.map(cat => ({
+              value: cat,
+              label: cat === 'all' ? t('landlordExpensesAllCategories') : getCategoryLabel(cat),
+              count: cat === 'all' ? summary.totalCount : undefined,
+              variant: 'default' as const,
+            }))}
+          />
         </div>
 
         {/* Search Box & View Switcher Bar */}
@@ -647,71 +643,37 @@ export default function ExpensesPage() {
         </div>
 
         {/* Status Filter Pills Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'all' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('all')
+        <div className="pt-0.5">
+          <ChipGroup<'all' | 'paid' | 'pending' | 'canceled'>
+            value={activeStatusTab}
+            onChange={val => {
+              setActiveStatusTab(val)
               setCurrentPage(1)
             }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'all'
-                ? 'bg-zinc-900 hover:bg-zinc-800 text-white'
-                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200',
-            )}
-          >
-            {t('landlordExpensesAllStatuses')}
-          </Button>
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'paid' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('paid')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'paid'
-                ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white'
-                : 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20',
-            )}
-          >
-            {t('landlordExpensesStatusPaid')}
-          </Button>
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'pending' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('pending')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'pending'
-                ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                : 'bg-amber-50 text-amber-700 hover:bg-amber-100',
-            )}
-          >
-            {t('landlordExpensesStatusPending')}
-          </Button>
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'canceled' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('canceled')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'canceled'
-                ? 'bg-rose-500 hover:bg-rose-600 text-white'
-                : 'bg-rose-50 text-rose-700 hover:bg-rose-100',
-            )}
-          >
-            {t('landlordExpensesStatusCanceled')}
-          </Button>
+            scrollable
+            options={[
+              {
+                value: 'all',
+                label: t('landlordExpensesAllStatuses'),
+                variant: 'neutral',
+              },
+              {
+                value: 'paid',
+                label: t('landlordExpensesStatusPaid'),
+                variant: 'success',
+              },
+              {
+                value: 'pending',
+                label: t('landlordExpensesStatusPending'),
+                variant: 'warning',
+              },
+              {
+                value: 'canceled',
+                label: t('landlordExpensesStatusCanceled'),
+                variant: 'danger',
+              },
+            ]}
+          />
         </div>
       </div>
 

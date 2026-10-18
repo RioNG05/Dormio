@@ -51,6 +51,7 @@ import {
   Checkbox,
   Form,
   SearchInput,
+  ChipGroup,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -743,75 +744,48 @@ function DepositsContent() {
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 flex items-center justify-between gap-2 shrink-0 text-xs font-bold">
-          <div className="flex items-center gap-1.5 shrink-0">
+        <div className="py-0.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline">
               {t('landlordDepositsStatusFilterLabel')}
             </span>
 
-            <Button
-              variant={activeStatusTab === 'all' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setActiveStatusTab('all')
+            <ChipGroup<'all' | 'holding' | 'refunded' | 'deducted'>
+              value={activeStatusTab}
+              onChange={val => {
+                setActiveStatusTab(val)
                 setCurrentPage(1)
               }}
-              className="rounded-xl text-xs"
-            >
-              {t('landlordDepositsStatusAll')}
-            </Button>
-
-            <Button
-              variant={activeStatusTab === 'holding' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setActiveStatusTab('holding')
-                setCurrentPage(1)
-              }}
-              className={cn(
-                'rounded-xl text-xs',
-                activeStatusTab !== 'holding' && 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20',
-              )}
-            >
-              {t('landlordDepositsStatusHolding')} (
-              {selectedDepositTypeTab === 'hold'
-                ? stats.holdTypeHoldingCountTotal
-                : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal}
-              )
-            </Button>
-
-            <Button
-              variant={activeStatusTab === 'refunded' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setActiveStatusTab('refunded')
-                setCurrentPage(1)
-              }}
-              className={cn(
-                'rounded-xl text-xs',
-                activeStatusTab === 'refunded'
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100',
-              )}
-            >
-              {t('landlordDepositsStatusRefunded')} ({stats.refundedCountTotal})
-            </Button>
-
-            <Button
-              variant={activeStatusTab === 'deducted' ? 'danger' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setActiveStatusTab('deducted')
-                setCurrentPage(1)
-              }}
-              className={cn(
-                'rounded-xl text-xs',
-                activeStatusTab !== 'deducted' &&
-                  'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100',
-              )}
-            >
-              {t('landlordDepositsStatusDeducted')} ({stats.deductedCountTotal})
-            </Button>
+              scrollable
+              options={[
+                {
+                  value: 'all',
+                  label: t('landlordDepositsStatusAll'),
+                  variant: 'default',
+                },
+                {
+                  value: 'holding',
+                  label: t('landlordDepositsStatusHolding'),
+                  count:
+                    selectedDepositTypeTab === 'hold'
+                      ? stats.holdTypeHoldingCountTotal
+                      : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal,
+                  variant: 'info',
+                },
+                {
+                  value: 'refunded',
+                  label: t('landlordDepositsStatusRefunded'),
+                  count: stats.refundedCountTotal,
+                  variant: 'purple',
+                },
+                {
+                  value: 'deducted',
+                  label: t('landlordDepositsStatusDeducted'),
+                  count: stats.deductedCountTotal,
+                  variant: 'danger',
+                },
+              ]}
+            />
           </div>
 
           <span className="text-[11px] font-bold text-zinc-400 shrink-0 hidden sm:inline">

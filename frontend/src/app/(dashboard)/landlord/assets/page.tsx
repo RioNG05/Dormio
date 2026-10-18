@@ -42,7 +42,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/services/asset.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup } from '@/components/ui'
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth()
@@ -453,39 +453,23 @@ export default function AssetsPage() {
       {/* Category Tabs & Financial Valuation Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-xs">
         {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {['', 'Điện lạnh', 'Nội thất', 'Gia dụng', 'Điện nước', 'An ninh'].map(cat => (
-            <Button
-              key={cat}
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setCategoryFilter(cat)
-                setCurrentPage(1)
-              }}
-              className={`h-auto px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                categoryFilter === cat
-                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/20 hover:bg-[#25ad87]'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70'
-              }`}
-            >
-              {cat === ''
-                ? t('landlordAssetsFilterAllCategories')
-                : cat === 'Điện lạnh'
-                  ? t('landlordAssetsCatRefrigeration')
-                  : cat === 'Nội thất'
-                    ? t('landlordAssetsCatFurniture')
-                    : cat === 'Gia dụng'
-                      ? t('landlordAssetsCatAppliances')
-                      : cat === 'Điện nước'
-                        ? t('landlordAssetsCatUtilities')
-                        : cat === 'An ninh'
-                          ? t('landlordAssetsCatSecurity')
-                          : cat}
-            </Button>
-          ))}
-        </div>
+        <ChipGroup
+          scrollable
+          value={categoryFilter}
+          onChange={cat => {
+            setCategoryFilter(cat)
+            setCurrentPage(1)
+          }}
+          className="pb-1 sm:pb-0"
+          options={[
+            { value: '', label: t('landlordAssetsFilterAllCategories') },
+            { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+            { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+            { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+            { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+            { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+          ]}
+        />
 
         {/* Financial Valuation Summary */}
         <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">

@@ -39,7 +39,7 @@ import {
   ServicesSummary,
   ServiceAssignedRoom,
 } from '@/services/service.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup } from '@/components/ui'
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth()
@@ -686,30 +686,19 @@ export default function ServicesPage() {
         </div>
 
         {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-100">
-          {[
-            { label: t('landlordServicesFilterAll'), val: '' },
-            { label: t('landlordServicesFilterMetered'), val: 'metered' },
-            { label: t('landlordServicesFilterFixed'), val: 'room' },
-          ].map(tab => (
-            <Button
-              key={tab.val}
-              type="button"
-              variant={typeFilter === tab.val ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => {
-                setTypeFilter(tab.val)
-                setCurrentPage(1)
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer h-auto ${
-                typeFilter === tab.val
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/20 hover:bg-[#25ad87] border-0'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70 border-0'
-              }`}
-            >
-              {tab.label}
-            </Button>
-          ))}
+        <div className="pt-1 border-t border-zinc-100">
+          <ChipGroup
+            value={typeFilter}
+            onChange={val => {
+              setTypeFilter(val)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: '', label: t('landlordServicesFilterAll') },
+              { value: 'metered', label: t('landlordServicesFilterMetered') },
+              { value: 'room', label: t('landlordServicesFilterFixed') },
+            ]}
+          />
         </div>
       </div>
 
