@@ -28,7 +28,7 @@ export class StaffCheckOutDto {
 
   @ApiPropertyOptional({
     description: 'Optional explanation if checking out early',
-    example: 'Đã bàn giao ca sớm 30 phút cho đồng nghiệp có việc khẩn',
+    example: 'Handed over shift 30 mins early to colleague for urgent matter',
   })
   @IsOptional()
   @IsString()

@@ -28,7 +28,7 @@ export class MessageResponseDto {
   @ApiProperty({ example: 'user-uuid-1' })
   senderId: string
 
-  @ApiProperty({ example: 'Chào bạn, phòng 102 khi nào xem được?' })
+  @ApiProperty({ example: 'Hello, when can I view room 102?' })
   content: string
 
   @ApiProperty({ example: false })
@@ -51,7 +51,7 @@ export class ParticipantDto {
   @ApiPropertyOptional({ example: 'tenant_mai', nullable: true })
   username?: string | null
 
-  @ApiProperty({ example: 'Trần Thị Mai' })
+  @ApiProperty({ example: 'Tran Thi Mai' })
   fullName: string
 
   @ApiProperty({ example: '0977234567' })
@@ -66,10 +66,10 @@ export class ParticipantDto {
   @ApiProperty({ enum: UserRole, example: UserRole.tenant })
   role: UserRole
 
-  @ApiPropertyOptional({ example: 'Phòng 102', nullable: true })
+  @ApiPropertyOptional({ example: 'Room 102', nullable: true })
   roomName?: string | null
 
-  @ApiPropertyOptional({ example: 'Dormio Premier Quận 1', nullable: true })
+  @ApiPropertyOptional({ example: 'Dormio Premier District 1', nullable: true })
   boardingHouseName?: string | null
 }
 
@@ -100,7 +100,7 @@ export class ContactDto {
   @ApiProperty({ example: 'user-uuid-2' })
   id: string
 
-  @ApiProperty({ example: 'Trần Thị Mai' })
+  @ApiProperty({ example: 'Tran Thi Mai' })
   fullName: string
 
   @ApiProperty({ example: '0977234567' })
@@ -112,7 +112,7 @@ export class ContactDto {
   @ApiProperty({ enum: UserRole, example: UserRole.tenant })
   role: UserRole
 
-  @ApiPropertyOptional({ example: 'Phòng 102', nullable: true })
+  @ApiPropertyOptional({ example: 'Room 102', nullable: true })
   roomName?: string | null
 
   @ApiPropertyOptional({ example: 'Dormio Premier', nullable: true })

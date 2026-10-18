@@ -69,12 +69,12 @@ export class BoardingHousesController {
   @ApiAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: 'Báo cáo tổng quan đa cơ sở toàn danh mục (UC-L-24)',
+    summary: 'Multi-property portfolio overview report (UC-L-24)',
     description:
-      'Tổng hợp số liệu doanh thu, tỷ lệ lấp đầy, chi phí, lợi nhuận ròng, công nợ và hợp đồng sắp hết hạn trên toàn bộ các nhà trọ thuộc sở hữu của chủ nhà (Pro tier).',
+      'Aggregates revenue, occupancy rate, expenses, net profit, outstanding debt, and expiring contracts across all properties owned by landlord (Pro tier).',
   })
   @ApiOkResponse({
-    description: 'Báo cáo tổng hợp đa cơ sở được truy xuất thành công',
+    description: 'Multi-property aggregated report retrieved successfully',
     type: MultiPropertyOverviewResponseDto,
   })
   async getMultiPropertyOverview(
@@ -88,12 +88,12 @@ export class BoardingHousesController {
   @ApiAuth()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary: 'Chiến lược tiếp thị & tối ưu hoá chuỗi nhà trọ bằng AI (UC-L-24 / UC-L-12)',
+    summary: 'AI-driven marketing strategy and multi-property optimization (UC-L-24 / UC-L-12)',
     description:
-      'Tự động phân tích các cơ sở có tỷ lệ trống cao hoặc hợp đồng sắp đáo hạn để đề xuất chiến lược tiếp thị, bảng giá và kế hoạch hành động chi tiết.',
+      'Automatically analyzes properties with high vacancy rates or expiring contracts to propose marketing strategies, pricing tiers, and action plans.',
   })
   @ApiOkResponse({
-    description: 'Chiến lược tiếp thị AI được tạo thành công',
+    description: 'AI marketing strategy generated successfully',
     type: AiStrategyResponseDto,
   })
   async generateMultiPropertyAiStrategy(
@@ -122,12 +122,12 @@ export class BoardingHousesController {
   @ApiAuth()
   @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
   @ApiOperation({
-    summary: 'Lấy dữ liệu tổng quan & phân tích kinh doanh nhà trọ (UC-L-01 & UC-L-08)',
+    summary: 'Get boarding house business overview & analytics (UC-L-01 & UC-L-08)',
     description:
-      'Trả về số liệu tổng quan bao gồm thống kê phòng, doanh thu thực tế, công nợ, trạng thái thu tiền (collectionStatus), hợp đồng sắp hết hạn và dòng tiền 6 tháng.',
+      'Returns overview metrics including room stats, actual revenue, debt, collection status, expiring contracts, and 6-month cash flow.',
   })
   @ApiOkResponse({
-    description: 'Dữ liệu tổng quan được truy xuất thành công',
+    description: 'Overview data retrieved successfully',
     type: BoardingHouseOverviewResponseDto,
   })
   async getDashboardOverview(
@@ -142,12 +142,12 @@ export class BoardingHousesController {
   @ApiAuth()
   @UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
   @ApiOperation({
-    summary: 'Báo cáo & Phân tích chuyên sâu nhà trọ (UC-L-08)',
+    summary: 'Deep analytics and reporting for boarding house (UC-L-08)',
     description:
-      'Truy xuất báo cáo chi tiết về doanh thu, tỷ lệ lấp đầy, tiến độ thu tiền và xu hướng dòng tiền phục vụ trang Báo cáo & Thống kê.',
+      'Retrieve detailed report on revenue, occupancy rate, collection progress, and cash flow trends for reporting and statistics.',
   })
   @ApiOkResponse({
-    description: 'Dữ liệu báo cáo và phân tích được truy xuất thành công',
+    description: 'Analytics and report data retrieved successfully',
     type: BoardingHouseOverviewResponseDto,
   })
   async getPropertyAnalytics(

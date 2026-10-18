@@ -40,7 +40,7 @@ export class AssetsService {
     updatedAt: Date
     room?: { id: string; roomNumber: string } | null
   }): AssetItemDto {
-    const roomName = asset.room ? `Phòng ${asset.room.roomNumber}` : 'Khu vực chung / Chưa gán'
+    const roomName = asset.room ? `Room ${asset.room.roomNumber}` : 'Common Area / Unassigned'
 
     return {
       id: asset.id,
@@ -81,7 +81,7 @@ export class AssetsService {
         where: { id: dto.roomId, boardingHouseId },
       })
       if (!room) {
-        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.')
+        throw new BadRequestException('The selected room does not belong to this boarding house.')
       }
     }
 
@@ -251,7 +251,7 @@ export class AssetsService {
     })
 
     if (!asset) {
-      throw new NotFoundException('Không tìm thấy tài sản.')
+      throw new NotFoundException('Asset not found.')
     }
 
     return this.mapToAssetDto(asset)
@@ -273,7 +273,7 @@ export class AssetsService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy tài sản cần cập nhật.')
+      throw new NotFoundException('Asset to update not found.')
     }
 
     // If roomId changed and is not null, validate it
@@ -282,7 +282,7 @@ export class AssetsService {
         where: { id: dto.roomId, boardingHouseId },
       })
       if (!room) {
-        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.')
+        throw new BadRequestException('The selected room does not belong to this boarding house.')
       }
     }
 
@@ -353,7 +353,7 @@ export class AssetsService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy tài sản cần xóa.')
+      throw new NotFoundException('Asset to delete not found.')
     }
 
     await this.prisma.asset.delete({
@@ -379,7 +379,7 @@ export class AssetsService {
 
     return {
       success: true,
-      message: 'Đã xóa tài sản thành công.',
+      message: 'Asset deleted successfully.',
     }
   }
 }

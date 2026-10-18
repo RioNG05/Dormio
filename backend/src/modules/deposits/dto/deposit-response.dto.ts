@@ -14,7 +14,7 @@ export class DepositResponseDto {
   @ApiProperty({ example: 'house-uuid-1' })
   boardingHouseId: string
 
-  @ApiProperty({ example: 'Dormio Premier Quận 1' })
+  @ApiProperty({ example: 'Dormio Premier District 1' })
   boardingHouseName: string
 
   @ApiPropertyOptional({ example: 'contract-uuid-1', nullable: true })
@@ -44,7 +44,7 @@ export class DepositResponseDto {
   @ApiPropertyOptional({ example: 'user-uuid-1', nullable: true })
   recordedBy: string | null
 
-  @ApiProperty({ example: 'Trần Thị Mai' })
+  @ApiProperty({ example: 'Tran Thi Mai' })
   tenantName: string
 
   @ApiProperty({ example: '0977234567' })
@@ -62,10 +62,10 @@ export class DepositResponseDto {
   @ApiProperty({ example: 0 })
   refundAmount: number
 
-  @ApiPropertyOptional({ example: 'Khấu trừ 100% cọc', nullable: true })
+  @ApiPropertyOptional({ example: '100% deposit deduction', nullable: true })
   deductionReason: string | null
 
-  @ApiPropertyOptional({ example: 'Cọc giữ chỗ hẹn chốt hợp đồng', nullable: true })
+  @ApiPropertyOptional({ example: 'Holding deposit, contract to be finalized', nullable: true })
   note: string | null
 
   @ApiProperty({ example: '2026-08-15T10:00:00.000Z' })

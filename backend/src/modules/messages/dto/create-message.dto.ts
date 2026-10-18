@@ -50,10 +50,10 @@ export class MessageAttachmentInputDto {
 export class CreateMessageDto {
   @ApiProperty({
     description: 'Text content of the message',
-    example: 'Chào bạn, phòng 102 khi nào có thể vào xem được?',
+    example: 'Hello, when can I view room 102?',
   })
-  @IsString({ message: 'Nội dung tin nhắn phải là chuỗi ký tự' })
-  @IsNotEmpty({ message: 'Nội dung tin nhắn không được để trống' })
+  @IsString({ message: 'Message content must be a string' })
+  @IsNotEmpty({ message: 'Message content cannot be empty' })
   content: string
 
   @ApiPropertyOptional({

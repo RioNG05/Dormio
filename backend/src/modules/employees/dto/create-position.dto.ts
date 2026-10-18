@@ -3,8 +3,8 @@ import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class CreatePositionDto {
   @ApiProperty({
-    description: 'Job position name (e.g., Quản lý tòa nhà, Bảo vệ, Vệ sinh)',
-    example: 'Bảo vệ ca ngày',
+    description: 'Job position name (e.g., Building Manager, Security, Janitor)',
+    example: 'Day Shift Security',
   })
   @IsString()
   @IsNotEmpty()
@@ -12,8 +12,8 @@ export class CreatePositionDto {
   name: string
 
   @ApiPropertyOptional({
-    description: 'Free-text duty description (e.g., trực cổng, kiểm tra thẻ xe, tuần tra ban đêm)',
-    example: 'Trực cổng chính, ghi sổ khách ra vào, tuần tra khuôn viên.',
+    description: 'Free-text duty description (e.g., gate guard, vehicle check, night patrol)',
+    example: 'Main gate duty, visitor logbook registration, premises patrol.',
   })
   @IsOptional()
   @IsString()

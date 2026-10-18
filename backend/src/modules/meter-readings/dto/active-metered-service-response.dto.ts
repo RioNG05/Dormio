@@ -32,7 +32,7 @@ export class MeteredServiceItemDto {
   @ApiProperty({ example: 'd9b2d63d-a233-4123-847e-2972986422b4' })
   serviceId: string
 
-  @ApiProperty({ example: 'Điện' })
+  @ApiProperty({ example: 'Electricity' })
   serviceName: string
 
   @ApiProperty({ example: 3500 })

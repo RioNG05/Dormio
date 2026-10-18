@@ -21,7 +21,7 @@ export class UpdateLandlordMeterReadingDto {
 
   @ApiProperty({
     description: 'Reason for manual correction (audit log)',
-    example: 'Ghi nhầm chỉ số công tơ do chụp ảnh mờ, chủ trọ đính chính lại',
+    example: 'Typo due to blurry photo, landlord corrected reading value',
   })
   @IsString()
   @IsNotEmpty()

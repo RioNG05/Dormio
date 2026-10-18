@@ -4,7 +4,7 @@ import { IsOptional, IsString, MaxLength } from 'class-validator'
 export class UpdatePositionDto {
   @ApiPropertyOptional({
     description: 'Updated job position name',
-    example: 'Trưởng ban Quản lý tòa nhà',
+    example: 'Head Building Manager',
   })
   @IsOptional()
   @IsString()
@@ -13,7 +13,7 @@ export class UpdatePositionDto {
 
   @ApiPropertyOptional({
     description: 'Free-text duty description / responsibilities list shown to staff in UC-S-01',
-    example: 'Quản lý vận hành toàn diện, kiểm tra an ninh, tiếp nhận phản ánh người thuê',
+    example: 'Comprehensive operations management, security inspection, tenant grievances handling',
   })
   @IsOptional()
   @IsString()

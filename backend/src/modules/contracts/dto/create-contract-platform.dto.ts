@@ -70,7 +70,7 @@ export class CreateContractPlatformDto {
 
   @ApiPropertyOptional({
     description: 'Additional notes or contract terms',
-    example: 'Khách thuê từ nền tảng Dormio đã đặt cọc phòng.',
+    example: 'Tenant from Dormio platform who paid holding deposit.',
   })
   @IsOptional()
   @IsString()

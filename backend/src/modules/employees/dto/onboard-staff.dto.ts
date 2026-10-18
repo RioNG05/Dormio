@@ -9,13 +9,13 @@ export class OnboardStaffDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^(0|\+84)[3|5|7|8|9][0-9]{8}$|^[0-9]{9,15}$/, {
-    message: 'Số điện thoại không hợp lệ',
+    message: 'Invalid phone number',
   })
   phoneNumber: string
 
   @ApiPropertyOptional({
     description: 'Full name of staff member (required if creating a new user)',
-    example: 'Nguyễn Văn Bảo',
+    example: 'Nguyen Van Bao',
   })
   @IsOptional()
   @IsString()
@@ -32,7 +32,7 @@ export class OnboardStaffDto {
 
   @ApiPropertyOptional({
     description: 'Inline creation of a new job position name if positionId is not supplied',
-    example: 'Kỹ thuật điện nước',
+    example: 'Electrical & Plumbing Technician',
   })
   @IsOptional()
   @IsString()
@@ -41,7 +41,7 @@ export class OnboardStaffDto {
 
   @ApiPropertyOptional({
     description: 'Duties and responsibilities description for inline position creation',
-    example: 'Bảo trì hệ thống máy bơm, sửa chữa điện nước các phòng',
+    example: 'Maintaining water pump system, repairing electrical and plumbing issues in rooms',
   })
   @IsOptional()
   @IsString()
@@ -57,7 +57,7 @@ export class OnboardStaffDto {
 
   @ApiPropertyOptional({
     description: 'Optional note or assignment details',
-    example: 'Thử việc 1 tháng',
+    example: '1-month probation',
   })
   @IsOptional()
   @IsString()

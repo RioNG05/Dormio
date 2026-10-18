@@ -15,7 +15,7 @@ import { Type } from 'class-transformer'
 export class CreateExpenseDto {
   @ApiProperty({
     description: 'Expense item name or title',
-    example: 'Bảo trì thang máy định kỳ',
+    example: 'Periodic elevator maintenance',
   })
   @IsString()
   @IsNotEmpty()
@@ -24,13 +24,13 @@ export class CreateExpenseDto {
 
   @ApiProperty({
     description: 'Expense category',
-    example: 'Bảo trì & Sửa chữa',
+    example: 'Maintenance & Repairs',
     enum: [
-      'Bảo trì & Sửa chữa',
-      'Điện nước & Dịch vụ',
-      'Vệ sinh & An ninh',
-      'Trang thiết bị',
-      'Chi phí khác',
+      'Maintenance & Repairs',
+      'Utilities & Services',
+      'Cleaning & Security',
+      'Equipment & Furniture',
+      'Other Expenses',
     ],
   })
   @IsString()
@@ -74,7 +74,7 @@ export class CreateExpenseDto {
 
   @ApiPropertyOptional({
     description: 'Detailed description or notes about the expense',
-    example: 'Bảo dưỡng hệ thống cáp và phanh khẩn cấp thang máy.',
+    example: 'Maintenance of elevator cable system and emergency brakes.',
   })
   @IsOptional()
   @IsString()

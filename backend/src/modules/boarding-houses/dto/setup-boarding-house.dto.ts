@@ -25,7 +25,7 @@ const MONEY_PATTERN = /^(?:0|[1-9]\d{0,9})(?:\.\d{1,2})?$/
 // ─── Step 2a: Services ────────────────────────────────────────────────────────
 
 export class SetupServiceDto {
-  @ApiProperty({ example: 'Electricity', description: 'Service name, e.g. Điện, Nước, WiFi' })
+  @ApiProperty({ example: 'Electricity', description: 'Service name, e.g. Electricity, Water, WiFi' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'name must not be blank' })
@@ -42,7 +42,7 @@ export class SetupServiceDto {
   })
   price: string
 
-  @ApiProperty({ example: 'kWh', description: 'Billing unit, e.g. kWh, m³, tháng' })
+  @ApiProperty({ example: 'kWh', description: 'Billing unit, e.g. kWh, m³, month' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'unit must not be blank' })
@@ -252,14 +252,14 @@ export class SetupBoardingHouseDto {
   @MaxLength(255)
   street: string
 
-  @ApiProperty({ example: 'Linh Trung Ward', description: 'Ward (Phường/Xã)' })
+  @ApiProperty({ example: 'Linh Trung Ward', description: 'Ward' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'ward must not be blank' })
   @MaxLength(255)
   ward: string
 
-  @ApiProperty({ example: 'Thu Duc District', description: 'District (Quận/Huyện)' })
+  @ApiProperty({ example: 'Thu Duc District', description: 'District' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'district must not be blank' })
@@ -268,7 +268,7 @@ export class SetupBoardingHouseDto {
 
   @ApiProperty({
     example: 'Ho Chi Minh City',
-    description: 'Province or municipality (Tỉnh/Thành phố)',
+    description: 'Province or municipality',
   })
   @IsString()
   @IsNotEmpty()
@@ -276,13 +276,13 @@ export class SetupBoardingHouseDto {
   @MaxLength(255)
   province: string
 
-  @ApiPropertyOptional({ example: 'Thu Duc City', description: 'City/Town (Thành phố/Thị xã)' })
+  @ApiPropertyOptional({ example: 'Thu Duc City', description: 'City or town' })
   @IsOptional()
   @IsString()
   @MaxLength(255)
   city?: string
 
-  @ApiProperty({ example: 'Vietnam', description: 'Country — defaults to "Việt Nam"' })
+  @ApiProperty({ example: 'Vietnam', description: 'Country — defaults to "Vietnam"' })
   @IsString()
   @IsNotEmpty()
   @Matches(/\S/, { message: 'country must not be blank' })
@@ -322,7 +322,7 @@ export class SetupBoardingHouseDto {
   @ApiPropertyOptional({
     type: [SetupServiceDto],
     description:
-      'Initial services for this property. At least one is recommended (Điện, Nước, WiFi).',
+      'Initial services for this property. At least one is recommended (Electricity, Water, WiFi).',
   })
   @IsOptional()
   @IsArray()

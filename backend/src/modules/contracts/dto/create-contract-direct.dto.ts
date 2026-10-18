@@ -30,7 +30,7 @@ export class TenantIdentificationDto {
 
   @ApiProperty({
     description: 'Full legal name on citizen ID',
-    example: 'Nguyễn Văn An',
+    example: 'Nguyen Van An',
   })
   @IsString()
   @IsNotEmpty()
@@ -54,24 +54,24 @@ export class TenantIdentificationDto {
   gender: Gender
 
   @ApiPropertyOptional({
-    description: 'Nationality (default: Việt Nam)',
-    example: 'Việt Nam',
-    default: 'Việt Nam',
+    description: 'Nationality (default: Vietnam)',
+    example: 'Vietnam',
+    default: 'Vietnam',
   })
   @IsOptional()
   @IsString()
   nationality?: string
 
   @ApiPropertyOptional({
-    description: 'Place of origin (quê quán)',
-    example: { province: 'Hà Nội', district: 'Đan Phượng' },
+    description: 'Place of origin (native place)',
+    example: { province: 'Hanoi', district: 'Dan Phuong' },
   })
   @IsOptional()
   placeOfOrigin?: any
 
   @ApiPropertyOptional({
-    description: 'Place of residence (hộ khẩu thường trú)',
-    example: { address: 'Số 12 ngõ 45 Cầu Giấy, Hà Nội' },
+    description: 'Place of residence (permanent residence)',
+    example: { address: '12 Lane 45 Cau Giay, Hanoi' },
   })
   @IsOptional()
   placeOfResidence?: any
@@ -94,7 +94,7 @@ export class TenantIdentificationDto {
 
   @ApiPropertyOptional({
     description: 'Optional identification note or characteristics',
-    example: 'Nốt ruồi cách 1cm dưới mép phải',
+    example: 'Birthmark 1cm below right lip',
   })
   @IsOptional()
   @IsString()
@@ -142,7 +142,7 @@ export class CreateContractDirectDto {
 
   @ApiProperty({
     description: 'Tenant full name',
-    example: 'Nguyễn Văn An',
+    example: 'Nguyen Van An',
   })
   @IsString()
   @IsNotEmpty()
@@ -223,7 +223,7 @@ export class CreateContractDirectDto {
 
   @ApiPropertyOptional({
     description: 'Additional notes or contract terms',
-    example: 'Hợp đồng thuê 1 năm, đóng tiền ngày 5 hàng tháng.',
+    example: '1-year lease contract, rent due on the 5th of each month.',
   })
   @IsOptional()
   @IsString()

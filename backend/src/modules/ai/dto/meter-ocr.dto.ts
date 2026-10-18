@@ -22,11 +22,11 @@ export class ExtractMeterReadingDto {
 }
 
 export class MeterOcrResponseDto {
-  @ApiProperty({ description: 'Trạng thái ảnh có hợp lệ và đọc được số hay không', example: true })
+  @ApiProperty({ description: 'Whether the image is valid and readable', example: true })
   isValid: boolean
 
   @ApiProperty({
-    description: 'Mã lỗi nếu ảnh sai',
+    description: 'Error code if image is invalid',
     example: null,
     required: false,
     nullable: true,
@@ -34,14 +34,14 @@ export class MeterOcrResponseDto {
   errorCode?: string | null
 
   @ApiProperty({
-    description: 'Thông báo lỗi chi tiết từ AI nếu ảnh không hợp lệ',
+    description: 'Detailed error message from AI if image is invalid',
     example: null,
     required: false,
     nullable: true,
   })
   errorMessage?: string | null
 
-  @ApiProperty({ description: 'Chỉ số đo được từ công tơ', example: 1250.5, nullable: true })
+  @ApiProperty({ description: 'Meter reading value', example: 1250.5, nullable: true })
   readingValue: number | null
 
   @ApiProperty({ description: 'Raw detected string of digits', example: '012505' })

@@ -45,21 +45,21 @@ export class LandlordMeterReadingsController {
   @Get('room/:roomId/services')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Lấy danh sách dịch vụ đo lường & chỉ số gần nhất của phòng (UC-L-09)',
+    summary: 'Get metered services & latest readings for room (UC-L-09)',
     description:
-      'Trả về danh sách các dịch vụ đo lường (Điện, Nước) đang hoạt động của phòng kèm chỉ số cũ và chỉ số nháp chưa thanh toán.',
+      'Returns active metered services (Electricity, Water) for the room with previous and draft indices.',
   })
   @ApiHeader({
     name: 'X-Boarding-House-Id',
-    description: 'ID nhà trọ (bắt buộc)',
+    description: 'Boarding house ID (required)',
     required: true,
   })
-  @ApiParam({ name: 'roomId', description: 'UUID của phòng' })
+  @ApiParam({ name: 'roomId', description: 'Room UUID' })
   @ApiOkResponse({
-    description: 'Danh sách dịch vụ đo lường của phòng',
+    description: 'List of metered services for the room',
     type: LandlordRoomMeteredServicesResponseDto,
   })
-  @ApiNotFoundResponse({ description: 'Không tìm thấy phòng trong nhà trọ này' })
+  @ApiNotFoundResponse({ description: 'Room not found in this boarding house' })
   async getRoomMeteredServices(
     @Request() req: any,
     @Headers('X-Boarding-House-Id') boardingHouseId: string,
@@ -75,21 +75,21 @@ export class LandlordMeterReadingsController {
   @Get('room/:roomId/history')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Lấy lịch sử chốt chỉ số điện nước theo chu kỳ cho phòng (UC-L-09)',
+    summary: 'Get meter reading cycle history for room (UC-L-09)',
     description:
-      'Truy vấn toàn bộ lịch sử chốt số điện nước của phòng, phân nhóm theo chu kỳ hóa đơn, tính toán lượng tiêu thụ và thành tiền tương ứng.',
+      'Query complete meter reading history grouped by billing cycle, computing consumption and costs.',
   })
   @ApiHeader({
     name: 'X-Boarding-House-Id',
-    description: 'ID nhà trọ (bắt buộc)',
+    description: 'Boarding house ID (required)',
     required: true,
   })
-  @ApiParam({ name: 'roomId', description: 'UUID của phòng' })
+  @ApiParam({ name: 'roomId', description: 'Room UUID' })
   @ApiOkResponse({
-    description: 'Lịch sử chốt số điện nước của phòng',
+    description: 'Room meter reading history',
     type: LandlordRoomMeterHistoryResponseDto,
   })
-  @ApiNotFoundResponse({ description: 'Không tìm thấy phòng trong nhà trọ này' })
+  @ApiNotFoundResponse({ description: 'Room not found in this boarding house' })
   async getRoomMeterHistory(
     @Request() req: any,
     @Headers('X-Boarding-House-Id') boardingHouseId: string,
@@ -105,20 +105,20 @@ export class LandlordMeterReadingsController {
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Chủ trọ ghi nhận chỉ số điện nước thủ công (UC-L-09)',
+    summary: 'Record meter readings manually (UC-L-09)',
     description:
-      'Ghi nhận trực tiếp chỉ số điện nước (Điện, Nước) vào hệ thống mà không cần qua bước OCR/confirm của khách thuê. Dữ liệu được tính là chốt chính thức ngay lập tức.',
+      'Directly record meter readings into the system without tenant OCR/confirmation. Data is locked immediately.',
   })
   @ApiHeader({
     name: 'X-Boarding-House-Id',
-    description: 'ID nhà trọ (bắt buộc)',
+    description: 'Boarding house ID (required)',
     required: true,
   })
   @ApiOkResponse({
-    description: 'Đã lưu chỉ số điện nước thành công',
+    description: 'Meter readings saved successfully',
   })
-  @ApiBadRequestResponse({ description: 'Dữ liệu đầu vào không hợp lệ' })
-  @ApiNotFoundResponse({ description: 'Không tìm thấy phòng trong nhà trọ này' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiNotFoundResponse({ description: 'Room not found in this boarding house' })
   async recordMeterReading(
     @Request() req: any,
     @Headers('X-Boarding-House-Id') boardingHouseId: string,
@@ -133,21 +133,21 @@ export class LandlordMeterReadingsController {
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Chủ trọ chỉnh sửa/điều chỉnh chỉ số điện nước kèm lý do (UC-L-09)',
+    summary: 'Edit meter reading with reason (UC-L-09)',
     description:
-      'Cho phép chủ trọ điều chỉnh chỉ số điện nước khi phát hiện sai sót (yêu cầu điền lý do bắt buộc). Chỉ áp dụng cho các chỉ số thuộc kỳ chưa thanh toán.',
+      'Allows landlord to adjust meter reading with a mandatory reason. Only applicable to unbilled/unpaid cycles.',
   })
   @ApiHeader({
     name: 'X-Boarding-House-Id',
-    description: 'ID nhà trọ (bắt buộc)',
+    description: 'Boarding house ID (required)',
     required: true,
   })
-  @ApiParam({ name: 'id', description: 'UUID của bản ghi MeterReading cần sửa' })
+  @ApiParam({ name: 'id', description: 'MeterReading UUID to update' })
   @ApiOkResponse({
-    description: 'Đã cập nhật chỉ số điện nước thành công',
+    description: 'Meter reading updated successfully',
   })
-  @ApiBadRequestResponse({ description: 'Hóa đơn đã thanh toán hoặc dữ liệu không hợp lệ' })
-  @ApiNotFoundResponse({ description: 'Không tìm thấy bản ghi chỉ số điện nước' })
+  @ApiBadRequestResponse({ description: 'Invoice already paid or invalid data' })
+  @ApiNotFoundResponse({ description: 'Meter reading record not found' })
   async updateMeterReading(
     @Request() req: any,
     @Headers('X-Boarding-House-Id') boardingHouseId: string,

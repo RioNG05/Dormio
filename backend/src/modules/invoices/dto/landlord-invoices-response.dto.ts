@@ -12,7 +12,7 @@ export class LandlordMeterReadingDto {
   @ApiProperty({ description: 'Service ID (UUID)' })
   serviceId: string
 
-  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)' })
+  @ApiProperty({ description: 'Service name (e.g. Electricity, Water)' })
   serviceName: string
 
   @ApiProperty({ description: 'Unit (kWh, m³)' })
@@ -38,10 +38,10 @@ export class LandlordInvoiceItemDto {
   @ApiProperty({ description: 'Room name / number', example: 'P101' })
   roomName: string
 
-  @ApiProperty({ description: 'Boarding house name', example: 'Dormio Tân Bình' })
+  @ApiProperty({ description: 'Boarding house name', example: 'Dormio Tan Binh' })
   buildingName: string
 
-  @ApiProperty({ description: 'Tenant full name', example: 'Nguyễn Văn Tuấn' })
+  @ApiProperty({ description: 'Tenant full name', example: 'Nguyen Van Tuan' })
   tenantName: string
 
   @ApiProperty({ description: 'Tenant phone number', example: '0912345678' })
@@ -90,11 +90,11 @@ export class LandlordInvoiceItemDto {
   deadline: string
 
   @ApiProperty({
-    description: 'Status label in Vietnamese for direct UI rendering',
-    enum: ['Đã thu', 'Chưa thu', 'Quá hạn'],
-    example: 'Chưa thu',
+    description: 'Status label for direct UI rendering',
+    enum: ['Paid', 'Unpaid', 'Overdue'],
+    example: 'Unpaid',
   })
-  status: 'Đã thu' | 'Chưa thu' | 'Quá hạn'
+  status: 'Paid' | 'Unpaid' | 'Overdue'
 
   @ApiProperty({
     description: 'Raw system status code',

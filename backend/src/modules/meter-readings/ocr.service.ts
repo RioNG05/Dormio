@@ -49,7 +49,7 @@ export class OcrService {
           )
           throw new BadRequestException(
             ocrResult.errorMessage ||
-              'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể đọc được chỉ số.',
+              'The uploaded image is not a valid meter or the index cannot be read.',
           )
         }
 
@@ -62,7 +62,7 @@ export class OcrService {
 
         // If for some reason readingValue is null despite isValid=true
         throw new BadRequestException(
-          'Không thể trích xuất giá trị chỉ số từ ảnh. Vui lòng chụp lại ảnh rõ nét hơn.',
+          'Could not extract reading value from image. Please take a clearer photo.',
         )
       } catch (visionError: any) {
         // If it's already a BadRequestException from AI validation, rethrow directly
@@ -75,14 +75,14 @@ export class OcrService {
         )
         throw new BadRequestException(
           visionError?.message ||
-            'Không thể xử lý hình ảnh qua AI. Vui lòng thử lại với ảnh rõ nét hơn.',
+            'Failed to process image through AI. Please try again with a clearer photo.',
         )
       }
     }
 
     // Fallback if visionService is not injected or disabled
     throw new BadRequestException(
-      'Hệ thống AI nhận diện hiện không khả dụng. Vui lòng thử lại sau.',
+      'AI recognition system is currently unavailable. Please try again later.',
     )
   }
 }

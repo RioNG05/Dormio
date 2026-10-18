@@ -228,7 +228,7 @@ export class GrievancesService {
     })
 
     if (!grievance) {
-      throw new NotFoundException('Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.')
+      throw new NotFoundException('Grievance not found or you do not have permission to access it.')
     }
 
     return {
@@ -247,7 +247,7 @@ export class GrievancesService {
       createdAt: img.createdAt.toISOString(),
     }))
 
-    const tenantName = g.tenant?.userIdentification?.fullName || g.tenant?.username || 'Khách thuê'
+    const tenantName = g.tenant?.userIdentification?.fullName || g.tenant?.username || 'Tenant'
 
     const landlordName =
       g.boardingHouse?.owner?.userIdentification?.fullName ||
@@ -537,7 +537,7 @@ export class GrievancesService {
           senderId: adminId,
           type: 'grievance_resolved',
           isRead: false,
-          content: `Đơn khiếu nại "${existing.title}" của bạn đã được giải quyết: ${resolutionNote}`,
+          content: `Your grievance "${existing.title}" has been resolved: ${resolutionNote}`,
         },
       })
 
@@ -607,7 +607,7 @@ export class GrievancesService {
           senderId: adminId,
           type: 'grievance_rejected',
           isRead: false,
-          content: `Đơn khiếu nại "${existing.title}" của bạn đã bị từ chối: ${resolutionNote}`,
+          content: `Your grievance "${existing.title}" has been rejected: ${resolutionNote}`,
         },
       })
 

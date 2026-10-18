@@ -5,7 +5,7 @@ import { IsDateString, IsIn, IsInt, IsOptional, IsString, Min } from 'class-vali
 export class QueryStaffAttendanceHistoryDto {
   @ApiPropertyOptional({
     description: 'Search keyword matching date (YYYY-MM-DD), shift name, or property name',
-    example: 'Ca Sáng',
+    example: 'Morning Shift',
   })
   @IsOptional()
   @IsString()
@@ -31,8 +31,8 @@ export class QueryStaffAttendanceHistoryDto {
   date?: string
 
   @ApiPropertyOptional({
-    description: 'Filter shift name or shift type (e.g. Ca Sáng, Ca Chiều, Ca Đêm, or all)',
-    example: 'Ca Sáng',
+    description: 'Filter shift name or shift type (e.g. Morning Shift, Afternoon Shift, Night Shift, or all)',
+    example: 'Morning Shift',
   })
   @IsOptional()
   @IsString()

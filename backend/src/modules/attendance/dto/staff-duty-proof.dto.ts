@@ -28,7 +28,7 @@ export class StaffDutyProofDto {
 
   @ApiPropertyOptional({
     description: 'Progress or handover note for the duty',
-    example: 'Đã kiểm tra an ninh cổng chính, 45 xe máy sắp xếp gọn gàng.',
+    example: 'Checked main gate security, 45 motorbikes neatly organized.',
   })
   @IsOptional()
   @IsString()

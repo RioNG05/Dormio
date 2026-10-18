@@ -11,8 +11,8 @@ export class CreateManualDepositDto {
     description: 'Target room UUID to be deposited',
     example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
   })
-  @IsUUID('4', { message: 'Mã phòng phải là định dạng UUID hợp lệ' })
-  @IsNotEmpty({ message: 'Mã phòng không được để trống' })
+  @IsUUID('4', { message: 'Room ID must be a valid UUID' })
+  @IsNotEmpty({ message: 'Room ID is required' })
   roomId: string
 
   @ApiProperty({
@@ -21,16 +21,16 @@ export class CreateManualDepositDto {
     minimum: 1,
   })
   @Type(() => Number)
-  @IsNumber({}, { message: 'Tiền cọc phải là số hợp lệ' })
-  @Min(1, { message: 'Tiền cọc phải lớn hơn 0' })
+  @IsNumber({}, { message: 'Deposit amount must be a valid number' })
+  @Min(1, { message: 'Deposit amount must be greater than 0' })
   amount: number
 
   @ApiPropertyOptional({
     description: 'Full name of the prospective tenant holding the room',
-    example: 'Trần Thị Mai',
+    example: 'Tran Thi Mai',
   })
   @IsOptional()
-  @IsString({ message: 'Tên người đặt cọc phải là chuỗi ký tự' })
+  @IsString({ message: 'Tenant name must be a string' })
   tenantName?: string
 
   @ApiPropertyOptional({
@@ -40,7 +40,7 @@ export class CreateManualDepositDto {
   @IsOptional()
   @IsString()
   @Matches(/^(0[3|5|7|8|9])[0-9]{8}$/, {
-    message: 'Số điện thoại phải là số di động Việt Nam hợp lệ (10 chữ số)',
+    message: 'Phone number must be a valid Vietnamese mobile number (10 digits)',
   })
   tenantPhone?: string
 
@@ -54,7 +54,7 @@ export class CreateManualDepositDto {
 
   @ApiPropertyOptional({
     description: 'Landlord note or remarks about the deposit',
-    example: 'Cọc giữ chỗ hẹn chốt hợp đồng sau 7 ngày',
+    example: 'Holding deposit, contract to be signed within 7 days',
   })
   @IsOptional()
   @IsString()

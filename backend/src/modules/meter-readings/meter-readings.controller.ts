@@ -75,7 +75,7 @@ export class MeterReadingsController {
       `POST /api/v1/tenant/meter-readings/upload called by user: ${user?.id} for service: ${dto.serviceId}`,
     )
     const data = await this.meterReadingsService.uploadOrUpdateReading(user.id, dto)
-    return { success: true, data, message: 'Đã lưu chỉ số điện nước thành công' }
+    return { success: true, data, message: 'Meter readings recorded successfully' }
   }
 
   // ─── PATCH /api/v1/tenant/meter-readings/:id ────────────────────────────────
@@ -102,7 +102,7 @@ export class MeterReadingsController {
       `PATCH /api/v1/tenant/meter-readings/${id} called by user: ${user?.id} with value: ${dto.readingValue}`,
     )
     const data = await this.meterReadingsService.updateReadingValue(user.id, id, dto)
-    return { success: true, data, message: 'Đã cập nhật chỉ số thành công' }
+    return { success: true, data, message: 'Meter reading updated successfully' }
   }
 
   // ─── POST /api/v1/tenant/meter-readings/confirm ─────────────────────────────
@@ -127,7 +127,7 @@ export class MeterReadingsController {
     return {
       success: true,
       data,
-      message: 'Xác nhận chỉ số thành công. Hóa đơn đã được tạo!',
+      message: 'Meter readings confirmed successfully. Invoice has been generated!',
     }
   }
 }

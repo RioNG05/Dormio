@@ -6,11 +6,11 @@ export class AttendanceWatermarkDto {
   @IsString()
   time: string
 
-  @ApiProperty({ example: '123 Nguyễn Huệ, Quận 1, TP.HCM' })
+  @ApiProperty({ example: '123 Nguyen Hue, District 1, HCMC' })
   @IsString()
   place: string
 
-  @ApiProperty({ example: 'Phạm Văn Bảo (NV01)' })
+  @ApiProperty({ example: 'Pham Van Bao (EMP01)' })
   @IsString()
   staffName: string
 
@@ -46,7 +46,7 @@ export class StaffCheckInDto {
 
   @ApiPropertyOptional({
     description: 'Optional explanation if checking in late',
-    example: 'Kẹt xe nghiêm trọng trên đường đến ca trực',
+    example: 'Heavy traffic on the way to shift',
   })
   @IsOptional()
   @IsString()

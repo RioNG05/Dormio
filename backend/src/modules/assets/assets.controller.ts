@@ -197,7 +197,7 @@ export class AssetsController {
       type: 'object',
       properties: {
         success: { type: 'boolean', example: true },
-        message: { type: 'string', example: 'Đã xóa tài sản thành công.' },
+        message: { type: 'string', example: 'Asset deleted successfully.' },
       },
     },
   })

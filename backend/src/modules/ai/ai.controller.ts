@@ -65,22 +65,22 @@ export class AiController {
   @Post('vision/id-card')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Bóc tách thông tin Căn Cước Công Dân (CCCD) từ ảnh qua Gemini Vision',
+    summary: 'Extract identity card (ID card) information from image via Gemini Vision',
     description:
-      'Sử dụng model gemini-3.5-flash-lite để bóc tách 12 số CCCD, Họ tên, Ngày sinh, Địa chỉ từ ảnh mặt trước hoặc mặt sau của thẻ căn cước.',
+      'Uses Gemini model to extract 12-digit identity number, Full name, Date of birth, and Address from front or back ID card photo.',
   })
   @ApiOkResponse({
-    description: 'Thông tin CCCD được trích xuất thành công',
+    description: 'ID card information extracted successfully',
     type: IdCardOcrResponseDto,
   })
-  @ApiBadRequestResponse({ description: 'Ảnh không hợp lệ hoặc không rõ' })
+  @ApiBadRequestResponse({ description: 'Invalid or unclear image' })
   async extractIdCard(@Body() dto: ExtractIdCardDto) {
     this.logger.log(`POST /api/v1/ai/vision/id-card called for side: ${dto.side || 'front'}`)
     const data = await this.visionService.extractIdCard(dto.imageUrl, dto.side)
     return {
       success: true,
       data,
-      message: 'Bóc tách thông tin CCCD thành công',
+      message: 'ID card information extracted successfully',
     }
   }
 
@@ -88,12 +88,12 @@ export class AiController {
   @Post('chat')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Trò chuyện với Trợ lý AI Dormio (Platform Assistant)',
+    summary: 'Chat with Dormio AI Assistant (Platform Assistant)',
     description:
-      'Gửi tin nhắn hội thoại để nhận câu trả lời tư vấn nghiệp vụ tìm phòng, đặt cọc giữ chỗ, thanh toán hóa đơn VietQR PayOS, và quy trình quản trị nhà trọ.',
+      'Send conversation messages to receive business consulting for room rental, holding deposits, PayOS VietQR payments, and boarding house management.',
   })
   @ApiOkResponse({
-    description: 'Phản hồi từ trợ lý AI Dormio',
+    description: 'Response from Dormio AI Assistant',
     type: AiChatResponseDto,
   })
   async chat(@Request() req: any, @Body() dto: AiChatDto) {

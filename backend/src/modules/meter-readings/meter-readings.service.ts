@@ -305,7 +305,7 @@ export class MeterReadingsService {
       )
       if (!reading) {
         throw new BadRequestException(
-          `Vui lòng nhập đầy đủ chỉ số cho dịch vụ "${rs.service.name}" trước khi xác nhận`,
+          `Please enter reading values for service "${rs.service.name}" before confirming`,
         )
       }
     }
@@ -335,7 +335,7 @@ export class MeterReadingsService {
     const rentPriceNum = Number(contract.rentPrice)
     lineItemsToCreate.push({
       serviceId: null,
-      title: 'Tiền phòng',
+      title: 'Room rent',
       quantity: 1,
       unitPrice: contract.rentPrice,
       amount: rentPriceNum,
@@ -530,7 +530,7 @@ export class MeterReadingsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại trong nhà trọ này')
+      throw new NotFoundException('Room does not exist in this boarding house')
     }
 
     // Find services specifically linked to room or all metered services in this boarding house
@@ -625,7 +625,7 @@ export class MeterReadingsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại trong nhà trọ này')
+      throw new NotFoundException('Room does not exist in this boarding house')
     }
 
     const readings = await this.prisma.meterReading.findMany({
@@ -684,7 +684,7 @@ export class MeterReadingsService {
       const month = latestInGroup.billingMonth ?? d.getMonth() + 1
       const monthStr = month.toString().padStart(2, '0')
       const yearStr = year.toString()
-      const periodLabel = `Tháng ${monthStr}/${yearStr}`
+      const periodLabel = `Month ${monthStr}/${yearStr}`
 
       const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1)
         .toString()
@@ -721,7 +721,7 @@ export class MeterReadingsService {
             const hCreatedAt = h.createdAt ? new Date(h.createdAt) : new Date()
             allHistories.push({
               id: h.id,
-              serviceName: r.service?.name || 'Dịch vụ',
+              serviceName: r.service?.name || 'Service',
               oldValue: h.oldValue !== null ? Number(h.oldValue) : null,
               newValue: Number(h.newValue),
               reason: h.reason,
@@ -744,11 +744,11 @@ export class MeterReadingsService {
             }
 
             const existingChange = act.changes.find(
-              c => c.serviceName === (r.service?.name || 'Dịch vụ'),
+              c => c.serviceName === (r.service?.name || 'Service'),
             )
             if (!existingChange) {
               act.changes.push({
-                serviceName: r.service?.name || 'Dịch vụ',
+                serviceName: r.service?.name || 'Service',
                 oldValue: h.oldValue !== null ? Number(h.oldValue) : null,
                 newValue: Number(h.newValue),
                 unit: r.service?.unit || '',
@@ -778,7 +778,7 @@ export class MeterReadingsService {
         serviceItems.push({
           id: r.id,
           serviceId: r.serviceId,
-          serviceName: r.service?.name || 'Dịch vụ',
+          serviceName: r.service?.name || 'Service',
           unit: r.service?.unit || '',
           unitPrice,
           oldReading,
@@ -855,7 +855,7 @@ export class MeterReadingsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại trong nhà trọ này')
+      throw new NotFoundException('Room does not exist in this boarding house')
     }
 
     const fallbackDate = dto.recordedAt ? new Date(dto.recordedAt) : new Date()
@@ -877,7 +877,7 @@ export class MeterReadingsService {
       })
 
       if (!service) {
-        throw new BadRequestException(`Dịch vụ với ID ${item.serviceId} không thuộc nhà trọ này`)
+        throw new BadRequestException(`Service with ID ${item.serviceId} does not belong to this boarding house`)
       }
 
       // Check if a reading already exists for this room, service, in target month/year
@@ -913,7 +913,7 @@ export class MeterReadingsService {
       if (existingReading) {
         if (existingReading.invoice?.status === 'paid') {
           throw new BadRequestException(
-            `Không thể chỉnh sửa chỉ số ${service.name} vì hóa đơn tháng ${targetMonth}/${targetYear} đã thanh toán`,
+            `Cannot edit reading for ${service.name} because invoice for ${targetMonth}/${targetYear} is already paid`,
           )
         }
 
@@ -943,7 +943,7 @@ export class MeterReadingsService {
               newValue: item.readingValue,
               reason:
                 dto.note ||
-                `Chủ trọ cập nhật lại chỉ số ${service.name} tháng ${targetMonth}/${targetYear}`,
+                `Landlord updated reading for ${service.name} month ${targetMonth}/${targetYear}`,
               modifiedBy: landlordId,
             },
           })
@@ -983,7 +983,7 @@ export class MeterReadingsService {
 
     return {
       success: true,
-      message: 'Đã lưu chỉ số điện nước thành công',
+      message: 'Meter readings recorded successfully',
       count: createdReadings.length,
       data: createdReadings.map(r => ({
         id: r.id,
@@ -1023,16 +1023,16 @@ export class MeterReadingsService {
     })
 
     if (!reading) {
-      throw new NotFoundException('Không tìm thấy bản ghi chỉ số điện nước')
+      throw new NotFoundException('Meter reading record not found')
     }
 
     if (reading.room.boardingHouseId !== boardingHouseId) {
-      throw new NotFoundException('Bản ghi không thuộc nhà trọ này')
+      throw new NotFoundException('Record does not belong to this boarding house')
     }
 
     if (reading.invoice?.status === 'paid') {
       throw new BadRequestException(
-        'Không thể chỉnh sửa chỉ số điện nước của hóa đơn đã thanh toán',
+        'Cannot edit meter reading of an already paid invoice',
       )
     }
 
@@ -1080,11 +1080,11 @@ export class MeterReadingsService {
 
     return {
       success: true,
-      message: 'Đã cập nhật chỉ số điện nước thành công',
+      message: 'Meter reading updated successfully',
       data: {
         id: updated.id,
         serviceId: updated.serviceId,
-        serviceName: updated.service?.name || 'Dịch vụ',
+        serviceName: updated.service?.name || 'Service',
         readingValue: updated.readingValue !== null ? Number(updated.readingValue) : 0,
         imageUrl: updated.imageUrl,
         createdAt: updated.createdAt.toISOString(),
@@ -1173,7 +1173,7 @@ export class MeterReadingsService {
     })
 
     if (!tenantContract || !tenantContract.contract) {
-      throw new NotFoundException('Không tìm thấy hợp đồng thuê đang hoạt động cho người dùng này')
+      throw new NotFoundException('No active lease contract found for this user')
     }
 
     return tenantContract

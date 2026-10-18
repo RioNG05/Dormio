@@ -16,7 +16,7 @@ export class RefundDepositDto {
 
   @ApiPropertyOptional({
     description: 'Reason for deducting part or all of deposit',
-    example: 'Khấu trừ tiền vệ sinh và hư hỏng thiết bị',
+    example: 'Deduction for cleaning fee and equipment damage',
   })
   @IsOptional()
   @IsString()
@@ -24,7 +24,7 @@ export class RefundDepositDto {
 
   @ApiPropertyOptional({
     description: 'Additional note on refund',
-    example: 'Đã chuyển khoản hoàn cọc cho khách',
+    example: 'Transferred deposit refund to tenant via bank transfer',
   })
   @IsOptional()
   @IsString()

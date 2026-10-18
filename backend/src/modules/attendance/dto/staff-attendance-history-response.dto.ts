@@ -7,7 +7,7 @@ export class StaffAttendanceWatermarkDto {
   @ApiProperty({ example: 'KTX HOLA (Khu A)' })
   place: string
 
-  @ApiProperty({ example: 'Nguyễn Văn Bảo' })
+  @ApiProperty({ example: 'Nguyen Van Bao' })
   staffName: string
 
   @ApiPropertyOptional({ example: '21.0132° N, 105.5273° E', nullable: true })
@@ -27,7 +27,7 @@ export class StaffAttendanceHistoryItemDto {
   @ApiProperty({ example: 'KTX HOLA (Khu A)' })
   boardingHouseName: string
 
-  @ApiProperty({ example: 'Ca Sáng' })
+  @ApiProperty({ example: 'Morning Shift' })
   shiftName: string
 
   @ApiProperty({ example: '07:00 - 15:00' })
@@ -57,7 +57,7 @@ export class StaffAttendanceHistoryItemDto {
   @ApiPropertyOptional({ type: StaffAttendanceWatermarkDto, nullable: true })
   checkInWatermark?: StaffAttendanceWatermarkDto | null
 
-  @ApiPropertyOptional({ example: 'Tắc đường do mưa ngập', nullable: true })
+  @ApiPropertyOptional({ example: 'Traffic congestion due to flooding', nullable: true })
   checkInExplanation?: string | null
 
   @ApiPropertyOptional({ example: 'https://images.example.com/checkout.jpg', nullable: true })
@@ -66,7 +66,7 @@ export class StaffAttendanceHistoryItemDto {
   @ApiPropertyOptional({ type: StaffAttendanceWatermarkDto, nullable: true })
   checkOutWatermark?: StaffAttendanceWatermarkDto | null
 
-  @ApiPropertyOptional({ example: 'Bàn giao ca cho anh Hùng', nullable: true })
+  @ApiPropertyOptional({ example: 'Handed over shift to Hung', nullable: true })
   checkOutExplanation?: string | null
 
   @ApiPropertyOptional({ example: false })

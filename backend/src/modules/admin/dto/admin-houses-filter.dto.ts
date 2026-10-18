@@ -14,7 +14,7 @@ export class AdminHousesFilterDto {
 
   @ApiPropertyOptional({
     description: 'Search string matching landlord contact name, phone number, or email',
-    example: 'Tuấn',
+    example: 'Tuan',
   })
   @IsOptional()
   @IsString()

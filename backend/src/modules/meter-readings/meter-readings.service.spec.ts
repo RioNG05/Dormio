@@ -33,6 +33,7 @@ describe('MeterReadingsService', () => {
     },
     invoice: {
       create: jest.fn(),
+      findFirst: jest.fn(),
     },
     invoiceItem: {
       create: jest.fn(),
@@ -540,7 +541,7 @@ describe('MeterReadingsService', () => {
       const result = await service.getRoomMeterHistory('house-1', 'room-1')
 
       expect(result.history).toHaveLength(1)
-      expect(result.history[0].period).toBe('Tháng 09/2026')
+      expect(result.history[0].period).toBe('Month 09/2026')
       expect(result.history[0].isPaid).toBe(true)
       expect(result.history[0].canEdit).toBe(false)
       expect(result.history[0].services[0].consumption).toBe(102)

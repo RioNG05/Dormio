@@ -6,7 +6,7 @@ import { UserRole, UserStatus } from '@prisma'
 export class AdminUsersFilterDto {
   @ApiPropertyOptional({
     description: 'Search string matching username, phone number, email, or full name',
-    example: 'Tuấn',
+    example: 'Tuan',
   })
   @IsOptional()
   @IsString()

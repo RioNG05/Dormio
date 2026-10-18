@@ -3,10 +3,16 @@ import { GrievancesService } from './grievances.service'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { NotFoundException, BadRequestException } from '@nestjs/common'
 import { GrievanceStatusFilter, GrievancePriorityFilter } from './dto/admin-grievance.dto'
+import { UploadService } from '../upload/upload.service'
 
 describe('AdminGrievancesService (UC-A-04)', () => {
   let service: GrievancesService
   let prisma: any
+
+  const mockUploadService = {
+    ensureCloudinaryUrl: jest.fn((url: string) => Promise.resolve(url)),
+    uploadImage: jest.fn(),
+  }
 
   const mockPrismaService = {
     grievance: {
@@ -31,6 +37,10 @@ describe('AdminGrievancesService (UC-A-04)', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: UploadService,
+          useValue: mockUploadService,
         },
       ],
     }).compile()

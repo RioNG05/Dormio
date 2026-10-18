@@ -54,7 +54,7 @@ export class QueryDepositsDto {
 
   @ApiPropertyOptional({
     description:
-      'Filter by deposit category: "hold" (cọc giữ chỗ, contractId is null) or "contract" (cọc hợp đồng, contractId is not null)',
+      'Filter by deposit category: "hold" (holding deposit, contractId is null) or "contract" (contract deposit, contractId is not null)',
     enum: ['hold', 'contract'],
     example: 'hold',
   })

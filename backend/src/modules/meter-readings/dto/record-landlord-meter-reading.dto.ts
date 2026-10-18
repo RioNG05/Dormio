@@ -16,7 +16,7 @@ import { Type } from 'class-transformer'
 
 export class RecordLandlordMeterReadingItemDto {
   @ApiProperty({
-    description: 'UUID of the metered Service (e.g. Điện or Nước)',
+    description: 'UUID of the metered Service (e.g. Electricity or Water)',
     example: 'd9b2d63d-a233-4123-847e-2972986422b4',
   })
   @IsUUID()
@@ -86,7 +86,7 @@ export class RecordLandlordMeterReadingDto {
 
   @ApiPropertyOptional({
     description: 'Optional note or reason for recording/adjusting meter readings',
-    example: 'Chốt số điện nước định kỳ đầu tháng',
+    example: 'Periodic monthly meter reading recording',
   })
   @IsOptional()
   @IsString()

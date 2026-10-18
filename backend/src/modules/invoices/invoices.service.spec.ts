@@ -270,12 +270,12 @@ describe('InvoicesService', () => {
 
       const inv1 = result.data[0]
       expect(inv1.id).toBe('inv-1')
-      expect(inv1.period).toBe('Tháng 08/2026')
+      expect(inv1.period).toBe('Month 08/2026')
       expect(inv1.status).toBe('paid')
       expect(inv1.amount).toBe(5125000)
       expect(inv1.details).toHaveLength(4)
-      expect(inv1.details[0].name).toBe('Tiền phòng')
-      expect(inv1.details[1].name).toBe('Tiền điện')
+      expect(inv1.details[0].name).toBe('Room rent')
+      expect(inv1.details[1].name).toBe('Electricity')
       expect(inv1.details[1].quantity).toBe(120)
       expect(inv1.details[1].unit).toBe('kWh')
       expect(inv1.meterReadings).toHaveLength(1)
@@ -283,8 +283,8 @@ describe('InvoicesService', () => {
 
       const inv2 = result.data[1]
       expect(inv2.id).toBe('inv-2')
-      expect(inv2.period).toBe('Tháng 09/2026')
-      expect(inv2.status).toBe('unpaid')
+      expect(inv2.period).toBe('Month 09/2026')
+      expect(inv2.status).toBe('overdue')
     })
   })
 
@@ -431,7 +431,7 @@ describe('InvoicesService', () => {
       const invRecord = result.data.find(r => r.id === 'inv-1')
       expect(invRecord).toBeDefined()
       expect(invRecord?.source).toBe('monthly_invoice')
-      expect(invRecord?.breakdown[0].label).toBe('Tiền thuê phòng')
+      expect(invRecord?.breakdown[0].label).toBe('Room rent')
       expect(invRecord?.paymentMethod).toBe('banking')
     })
   })

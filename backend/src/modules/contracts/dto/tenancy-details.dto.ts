@@ -86,13 +86,13 @@ export class TenancyServiceDto {
   @ApiProperty({ description: 'Service ID' })
   id: string
 
-  @ApiProperty({ description: 'Service name (e.g. Điện, Nước, Rác, Wifi)' })
+  @ApiProperty({ description: 'Service name (e.g. Electricity, Water, Waste, Wifi)' })
   name: string
 
   @ApiProperty({ description: 'Service price' })
   price: number
 
-  @ApiProperty({ description: 'Service unit (e.g. kWh, m³, tháng)' })
+  @ApiProperty({ description: 'Service unit (e.g. kWh, m³, month)' })
   unit: string
 
   @ApiProperty({ description: 'Whether this is a metered service' })

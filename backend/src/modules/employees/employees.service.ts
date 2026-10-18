@@ -29,20 +29,20 @@ const BCRYPT_ROUNDS = 10
 /** Default seed positions for any boarding house that doesn't have positions yet */
 const DEFAULT_POSITIONS = [
   {
-    name: 'Quản lý tòa nhà',
-    description: 'Quản lý vận hành tổng thể, tiếp đón khách và kiểm tra tòa nhà',
+    name: 'Building Manager',
+    description: 'Overall operations management, guest reception, and building inspection',
   },
   {
-    name: 'Bảo vệ',
-    description: 'Đảm bảo an ninh trật tự, giám sát camera và trông giữ phương tiện',
+    name: 'Security',
+    description: 'Ensuring order and security, monitoring surveillance cameras, and managing vehicles',
   },
   {
-    name: 'Vệ sinh / Tạp vụ',
-    description: 'Dọn dẹp khu vực sinh hoạt chung, hành lang, cầu thang và sân phơi',
+    name: 'Janitor / Cleaning',
+    description: 'Cleaning common areas, hallways, staircases, and drying areas',
   },
   {
-    name: 'Kỹ thuật / Bảo trì',
-    description: 'Sửa chữa và bảo dưỡng hệ thống điện nước, thiết bị phòng trọ',
+    name: 'Technical / Maintenance',
+    description: 'Repairing and maintaining electricity, water systems, and room equipment',
   },
 ]
 
@@ -98,7 +98,7 @@ export class EmployeesService {
       found: true,
       user: {
         id: user.id,
-        fullName: user.username || 'Chưa cập nhật tên',
+        fullName: user.username || 'Name not updated',
         phoneNumber: user.phoneNumber,
         email: user.email,
         avatarUrl: user.avatarUrl,
@@ -169,7 +169,7 @@ export class EmployeesService {
   ): Promise<JobPositionDto> {
     const trimmedName = dto.name.trim()
     if (!trimmedName) {
-      throw new BadRequestException('Tên vị trí công việc không được để trống')
+      throw new BadRequestException('Job position name cannot be empty')
     }
 
     const existing = await this.prisma.jobPosition.findFirst({
@@ -180,7 +180,7 @@ export class EmployeesService {
     })
 
     if (existing) {
-      throw new ConflictException(`Vị trí công việc "${trimmedName}" đã tồn tại tại nhà trọ này`)
+      throw new ConflictException(`Job position "${trimmedName}" already exists in this boarding house`)
     }
 
     const created = await this.prisma.jobPosition.create({
@@ -306,7 +306,7 @@ export class EmployeesService {
       assignmentId: a.id,
       employeeId: a.employeeId,
       userId: a.employee.user.id,
-      fullName: a.employee.user.username || 'Chưa cập nhật tên',
+      fullName: a.employee.user.username || 'Name not updated',
       phoneNumber: a.employee.user.phoneNumber,
       email: a.employee.user.email,
       avatarUrl: a.employee.user.avatarUrl,
@@ -364,7 +364,7 @@ export class EmployeesService {
       where: { id: positionId, boardingHouseId },
     })
     if (!targetPosition) {
-      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này')
+      throw new BadRequestException('Invalid job position for this boarding house')
     }
 
     // 2. Check if user already exists
@@ -389,14 +389,14 @@ export class EmployeesService {
 
         if (existingActiveAssignment) {
           throw new ConflictException(
-            `Nhân viên có số điện thoại ${normalizedPhone} đã đang làm việc tại nhà trọ này.`,
+            `An employee with phone number ${normalizedPhone} is already working at this boarding house.`,
           )
         }
       }
     } else {
       // User doesn't exist yet -> generate random password per UC-AUTH-03
       if (!dto.fullName?.trim()) {
-        throw new BadRequestException('Vui lòng nhập họ và tên cho nhân viên mới')
+        throw new BadRequestException('Please provide full name for the new employee')
       }
 
       isNewUser = true
@@ -491,7 +491,7 @@ export class EmployeesService {
       assignmentId: assignment.id,
       employeeId: assignment.employeeId,
       userId: assignment.employee.user.id,
-      fullName: assignment.employee.user.username || 'Chưa cập nhật tên',
+      fullName: assignment.employee.user.username || 'Name not updated',
       phoneNumber: assignment.employee.user.phoneNumber,
       email: assignment.employee.user.email,
       avatarUrl: assignment.employee.user.avatarUrl,
@@ -512,8 +512,8 @@ export class EmployeesService {
       isNewUser,
       generatedPassword,
       message: isNewUser
-        ? 'Tạo tài khoản và thêm nhân viên mới thành công'
-        : 'Thêm nhân viên vào nhà trọ thành công',
+        ? 'Account created and new employee onboarded successfully'
+        : 'Employee added to boarding house successfully',
     }
   }
 
@@ -543,7 +543,7 @@ export class EmployeesService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên')
+      throw new NotFoundException('Employee assignment not found')
     }
 
     if (dto.positionId && dto.positionId !== existing.positionId) {
@@ -551,7 +551,7 @@ export class EmployeesService {
         where: { id: dto.positionId, boardingHouseId },
       })
       if (!pos) {
-        throw new BadRequestException('Vị trí công việc không tồn tại tại nhà trọ này')
+        throw new BadRequestException('Job position does not exist in this boarding house')
       }
     }
 
@@ -627,7 +627,7 @@ export class EmployeesService {
       assignmentId: updated.id,
       employeeId: updated.employeeId,
       userId: updated.employee.user.id,
-      fullName: updated.employee.user.username || 'Chưa cập nhật tên',
+      fullName: updated.employee.user.username || 'Name not updated',
       phoneNumber: updated.employee.user.phoneNumber,
       email: updated.employee.user.email,
       avatarUrl: updated.employee.user.avatarUrl,
@@ -673,14 +673,14 @@ export class EmployeesService {
     })
 
     if (!assignment) {
-      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên')
+      throw new NotFoundException('Employee assignment not found')
     }
 
     return {
       assignmentId: assignment.id,
       employeeId: assignment.employeeId,
       userId: assignment.employee.user.id,
-      fullName: assignment.employee.user.username || 'Chưa cập nhật tên',
+      fullName: assignment.employee.user.username || 'Name not updated',
       phoneNumber: assignment.employee.user.phoneNumber,
       email: assignment.employee.user.email,
       avatarUrl: assignment.employee.user.avatarUrl,
@@ -717,7 +717,7 @@ export class EmployeesService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy thông tin phân công nhân viên')
+      throw new NotFoundException('Employee assignment not found')
     }
 
     let targetPositionId = dto.positionId
@@ -732,7 +732,7 @@ export class EmployeesService {
     }
 
     if (!targetPositionId) {
-      throw new BadRequestException('Vui lòng chọn hoặc nhập tên vị trí công việc mới')
+      throw new BadRequestException('Please select or enter a new job position name')
     }
 
     const targetPosition = await this.prisma.jobPosition.findFirst({
@@ -743,7 +743,7 @@ export class EmployeesService {
     })
 
     if (!targetPosition) {
-      throw new BadRequestException('Vị trí công việc không hợp lệ cho nhà trọ này')
+      throw new BadRequestException('Invalid job position for this boarding house')
     }
 
     const updated = await this.prisma.$transaction(async tx => {
@@ -793,7 +793,7 @@ export class EmployeesService {
       assignmentId: updated.id,
       employeeId: updated.employeeId,
       userId: updated.employee.user.id,
-      fullName: updated.employee.user.username || 'Chưa cập nhật tên',
+      fullName: updated.employee.user.username || 'Name not updated',
       phoneNumber: updated.employee.user.phoneNumber,
       email: updated.employee.user.email,
       avatarUrl: updated.employee.user.avatarUrl,
@@ -825,7 +825,7 @@ export class EmployeesService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy vị trí công việc này')
+      throw new NotFoundException('Job position not found')
     }
 
     if (dto.name && dto.name.trim() !== existing.name) {
@@ -838,7 +838,7 @@ export class EmployeesService {
       })
       if (duplicate) {
         throw new ConflictException(
-          `Vị trí công việc "${dto.name.trim()}" đã tồn tại tại nhà trọ này`,
+          `Job position "${dto.name.trim()}" already exists in this boarding house`,
         )
       }
     }
@@ -896,12 +896,12 @@ export class EmployeesService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy vị trí công việc này')
+      throw new NotFoundException('Job position not found')
     }
 
     if (existing._count.employeeAssignments > 0) {
       throw new BadRequestException(
-        `Không thể xóa vị trí "${existing.name}" vì đang có ${existing._count.employeeAssignments} nhân viên đảm nhận. Vui lòng chuyển vị trí của nhân viên trước.`,
+        `Cannot delete position "${existing.name}" because it is currently assigned to ${existing._count.employeeAssignments} employee(s). Please reassign the employees first.`,
       )
     }
 
@@ -913,7 +913,7 @@ export class EmployeesService {
 
     return {
       success: true,
-      message: `Đã xóa vị trí công việc "${existing.name}" thành công`,
+      message: `Job position "${existing.name}" deleted successfully`,
     }
   }
 }

@@ -14,7 +14,7 @@ export class AttendanceRecordDto {
   @ApiProperty({ example: 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f' })
   employeeId: string
 
-  @ApiProperty({ example: 'Nguyễn Văn A' })
+  @ApiProperty({ example: 'Nguyen Van A' })
   employeeName: string
 
   @ApiProperty({ example: '0912345678' })
@@ -26,13 +26,13 @@ export class AttendanceRecordDto {
   })
   employeeAvatar: string | null
 
-  @ApiPropertyOptional({ example: 'Bảo vệ', nullable: true })
+  @ApiPropertyOptional({ example: 'Security', nullable: true })
   positionName: string | null
 
   @ApiProperty({ example: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a' })
   shiftId: string
 
-  @ApiProperty({ example: 'Ca sáng' })
+  @ApiProperty({ example: 'Morning Shift' })
   shiftName: string
 
   @ApiProperty({ example: '06:00' })
@@ -68,7 +68,7 @@ export class AttendanceRecordDto {
   })
   editedBy: string | null
 
-  @ApiPropertyOptional({ example: 'Chủ nhà trọ (Quản trị)', nullable: true })
+  @ApiPropertyOptional({ example: 'Landlord (Admin)', nullable: true })
   editedByName: string | null
 
   @ApiPropertyOptional({

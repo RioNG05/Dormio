@@ -24,21 +24,21 @@ export class InvoicesController {
 
   @Get('invoices')
   @ApiOperation({
-    summary: 'Lấy danh sách tất cả hóa đơn của khách thuê (UC-T-05)',
+    summary: 'Get all tenant invoices (UC-T-05)',
     description:
-      'Truy vấn lịch sử hóa đơn, trạng thái thanh toán, chi tiết các mục phòng/điện/nước và ảnh chỉ số đã chốt.',
+      'Query invoice history, payment status, breakdown of room/electricity/water items, and final meter reading photos.',
   })
   @ApiOkResponse({
-    description: 'Danh sách hóa đơn của phòng khách thuê hiện tại',
+    description: 'List of invoices for tenant room',
     type: TenantInvoicesListResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    description: 'Unauthorized or invalid token',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Không tìm thấy hợp đồng thuê phòng của người dùng',
+    description: 'User lease contract not found',
   })
   async getTenantInvoices(@Request() req: any): Promise<TenantInvoicesListResponseDto> {
     const userId = req.user?.id || req.user?.sub
@@ -48,18 +48,18 @@ export class InvoicesController {
 
   @Get('invoices/:id')
   @ApiOperation({
-    summary: 'Lấy chi tiết một hóa đơn của khách thuê theo ID (UC-T-05)',
+    summary: 'Get tenant invoice details by ID (UC-T-05)',
     description:
-      'Truy vấn chi tiết hóa đơn, các khoản mục dịch vụ, chỉ số công tơ điện nước phục vụ thanh toán.',
+      'Query invoice details, line items, and meter reading indices for payment.',
   })
-  @ApiParam({ name: 'id', description: 'Mã định danh hóa đơn (UUID)' })
+  @ApiParam({ name: 'id', description: 'Invoice UUID' })
   @ApiOkResponse({
-    description: 'Thông tin chi tiết hóa đơn',
+    description: 'Invoice details',
     type: TenantInvoiceDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Không tìm thấy hóa đơn',
+    description: 'Invoice not found',
   })
   async getTenantInvoiceById(
     @Request() req: any,
@@ -72,21 +72,21 @@ export class InvoicesController {
 
   @Get('analytics/usage')
   @ApiOperation({
-    summary: 'Lấy dữ liệu thống kê tiêu thụ điện nước & chi phí (UC-T-05)',
+    summary: 'Get utility consumption & spend analytics (UC-T-05)',
     description:
-      'Truy vấn chuỗi thời gian tiêu thụ điện (kWh), nước (m3), tiền phòng và dịch vụ qua các kỳ, tính toán xu hướng tăng/giảm MoM.',
+      'Query time series of electricity (kWh), water (m3), rent, and services across cycles, computing MoM trends.',
   })
   @ApiOkResponse({
-    description: 'Báo cáo thống kê và biểu đồ tiêu thụ cho khách thuê',
+    description: 'Usage analytics report and consumption chart for tenant',
     type: TenantUsageAnalyticsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    description: 'Unauthorized or invalid token',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Không tìm thấy hợp đồng thuê phòng của người dùng',
+    description: 'User lease contract not found',
   })
   async getTenantUsageAnalytics(@Request() req: any): Promise<TenantUsageAnalyticsResponseDto> {
     const userId = req.user?.id || req.user?.sub
@@ -96,17 +96,17 @@ export class InvoicesController {
 
   @Get('payments/history')
   @ApiOperation({
-    summary: 'Lấy lịch sử thanh toán trọn đời của khách thuê (UC-T-08)',
+    summary: 'Get lifetime payment history for tenant (UC-T-08)',
     description:
-      'Truy vấn tất cả các giao dịch thanh toán và hóa đơn qua mọi hợp đồng (kể cả hợp đồng đã kết thúc), chi tiết các khoản mục (tiền phòng, điện, nước, dịch vụ) và biên nhận.',
+      'Query all payment transactions and invoices across all contracts (including terminated), line item breakdown, and receipts.',
   })
   @ApiOkResponse({
-    description: 'Lịch sử thanh toán và thống kê tổng tiền đã thanh toán',
+    description: 'Payment history and summary of total paid amount',
     type: PaymentHistoryResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    description: 'Unauthorized or invalid token',
   })
   async getTenantPaymentHistory(@Request() req: any): Promise<PaymentHistoryResponseDto> {
     const userId = req.user?.id || req.user?.sub

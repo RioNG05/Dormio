@@ -24,13 +24,13 @@ export class ExpenseItemDto {
   })
   code: string
 
-  @ApiProperty({ description: 'Expense title / name', example: 'Bảo trì thang máy' })
+  @ApiProperty({ description: 'Expense title / name', example: 'Elevator maintenance' })
   name: string
 
   @ApiPropertyOptional({ description: 'Detailed description', nullable: true })
   description: string | null
 
-  @ApiProperty({ description: 'Category', example: 'Bảo trì & Sửa chữa' })
+  @ApiProperty({ description: 'Category', example: 'Maintenance & Repairs' })
   category: string
 
   @ApiProperty({ description: 'Expense amount in VND', example: 1500000 })
@@ -52,8 +52,8 @@ export class ExpenseItemDto {
   roomId: string | null
 
   @ApiProperty({
-    description: 'Room display name (e.g. "Phòng 102" or "Toàn tòa nhà")',
-    example: 'Toàn tòa nhà',
+    description: 'Room display name (e.g. "Room 102" or "Whole Building")',
+    example: 'Whole Building',
   })
   roomName: string
 
