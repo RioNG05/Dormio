@@ -73,6 +73,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: dormio-backend:dev
     container_name: dormio_backend_dev
     restart: unless-stopped
     ports:
@@ -107,6 +108,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: dormio-frontend:dev
     container_name: dormio_frontend_dev
     restart: unless-stopped
     ports:
