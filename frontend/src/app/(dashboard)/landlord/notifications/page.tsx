@@ -29,7 +29,16 @@ import {
   LandlordAnnouncementItem,
   LandlordAnnouncementsSummary,
 } from '@/services/announcement.service'
-import { Button, TextInput, SelectInput, TextareaInput, NumberInput, SearchInput } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  NumberInput,
+  SearchInput,
+  Text,
+  ChipGroup,
+} from '@/components/ui'
 
 export default function NotificationsPage() {
   const { activeBuilding } = useAuth()
@@ -292,11 +301,10 @@ export default function NotificationsPage() {
       {toast && (
         <div className="fixed top-6 right-6 z-70 animate-in slide-in-from-top-3 duration-200">
           <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${
-              toast.type === 'success'
-                ? 'bg-emerald-50/95 text-emerald-800 border-emerald-200'
-                : 'bg-rose-50/95 text-rose-800 border-rose-200'
-            }`}
+            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${toast.type === 'success'
+              ? 'bg-emerald-50/95 text-emerald-800 border-emerald-200'
+              : 'bg-rose-50/95 text-rose-800 border-rose-200'
+              }`}
           >
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -482,9 +490,7 @@ export default function NotificationsPage() {
           </Button>
 
           {/* Broadcast New Notice Button */}
-          <Button size="xs" variant="dark"
-            onClick={() => setIsNotifModalOpen(true)}
-          >
+          <Button onClick={() => setIsNotifModalOpen(true)}>
             <Plus className="w-4 h-4" />
             <span>{t('landlordNotificationsBtnBroadcast')}</span>
           </Button>
@@ -509,7 +515,7 @@ export default function NotificationsPage() {
             <p className="text-xs text-zinc-500 mt-1 max-w-sm">
               {t('landlordNotificationsEmptyDesc')}
             </p>
-            <Button size="icon-sm"
+            <Button
               onClick={() => setIsNotifModalOpen(true)}
               className="mt-4"
             >
@@ -537,15 +543,14 @@ export default function NotificationsPage() {
                     {/* Header: Category Badge + Sent Time */}
                     <div className="flex items-center justify-between gap-2 pb-3 border-b border-zinc-100">
                       <span
-                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${
-                          isEmergency
-                            ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
-                            : isUtilities
-                              ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
-                              : isRent
-                                ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
-                                : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
-                        }`}
+                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
+                          ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+                          : isUtilities
+                            ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                            : isRent
+                              ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
+                              : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
+                          }`}
                       >
                         {getCategoryLabel(notif.category)}
                       </span>
@@ -671,15 +676,14 @@ export default function NotificationsPage() {
                         <td className="px-4 py-4 max-w-sm">
                           <div className="flex items-center gap-2 mb-1">
                             <span
-                              className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${
-                                isEmergency
-                                  ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
-                                  : isUtilities
-                                    ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
-                                    : isRent
-                                      ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
-                                      : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
-                              }`}
+                              className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
+                                ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+                                : isUtilities
+                                  ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                                  : isRent
+                                    ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
+                                    : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
+                                }`}
                             >
                               {getCategoryLabel(notif.category)}
                             </span>
@@ -856,12 +860,12 @@ export default function NotificationsPage() {
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-white">
+                  <Text as="h2" variant="heading" size="lg" weight="black" color="white" className="tracking-tight">
                     {t('landlordNotificationsModalTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  </Text>
+                  <Text size="xs" color="subtle" className="text-zinc-400 mt-0.5">
                     {t('landlordNotificationsModalSubtitle')}
-                  </p>
+                  </Text>
                 </div>
               </div>
               <Button rounded="full"
@@ -881,9 +885,11 @@ export default function NotificationsPage() {
             >
               {/* Quick Templates */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1">
+                <label className="flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{t('landlordNotificationsTemplatesLabel')}</span>
+                  <Text as="span" size="xs" weight="bold" className="text-zinc-700 uppercase tracking-wider">
+                    {t('landlordNotificationsTemplatesLabel')}
+                  </Text>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {notificationTemplates.map(tmpl => (
@@ -898,12 +904,12 @@ export default function NotificationsPage() {
                       }}
                       className="group flex-col items-start justify-start whitespace-normal"
                     >
-                      <div className="text-xs font-bold text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full">
+                      <Text size="xs" weight="bold" className="text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full text-left">
                         {tmpl.title}
-                      </div>
-                      <div className="text-[10px] text-zinc-500 mt-0.5 font-medium">
+                      </Text>
+                      <Text size="3xs" weight="medium" color="subtle" className="text-zinc-500 mt-0.5 text-left">
                         {getCategoryLabel(tmpl.category)}
-                      </div>
+                      </Text>
                     </Button>
                   ))}
                 </div>
@@ -976,21 +982,18 @@ export default function NotificationsPage() {
                 >
                   {t('landlordNotificationsBtnCancel')}
                 </Button>
-                <Button size="xs"
+                <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmitting}
+                  isLoading={isSubmitting}
+                  leftIcon={!isSubmitting ? <Send className="w-4 h-4" /> : undefined}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{t('landlordNotificationsBroadcasting')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      <span>{t('landlordNotificationsBtnBroadcastNow')}</span>
-                    </>
-                  )}
+                  <span>
+                    {isSubmitting
+                      ? t('landlordNotificationsBroadcasting')
+                      : t('landlordNotificationsBtnBroadcastNow')}
+                  </span>
                 </Button>
               </div>
             </form>
@@ -1010,12 +1013,14 @@ export default function NotificationsPage() {
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-900 text-white">
               <div className="flex items-center gap-2.5">
-                <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase">
-                  {getCategoryLabel(selectedNotifDetail.category)}
+                <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-full">
+                  <Text as="span" variant="badge" size="3xs" weight="black" color="brand">
+                    {getCategoryLabel(selectedNotifDetail.category)}
+                  </Text>
                 </span>
-                <h3 className="text-sm font-bold text-white">
+                <Text as="h3" size="sm" weight="bold" color="white">
                   {t('landlordNotificationsDetailTitle')}
-                </h3>
+                </Text>
               </div>
               <Button rounded="full"
                 type="button"
@@ -1028,40 +1033,44 @@ export default function NotificationsPage() {
             </div>
 
             {/* Body */}
-            <div className="p-6 space-y-4 text-xs font-medium">
+            <div className="p-6 space-y-4">
               <div>
-                <h2 className="text-base font-black text-zinc-900 leading-snug mb-1">
+                <Text as="h2" size="base" weight="black" className="text-zinc-900 leading-snug mb-1">
                   {selectedNotifDetail.title}
-                </h2>
-                <div className="flex items-center gap-3 text-zinc-400 text-[11px] font-bold">
-                  <span>
+                </Text>
+                <div className="flex items-center gap-3">
+                  <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
                     {t('landlordNotificationsDetailSentAt', { time: selectedNotifDetail.sentAt })}
-                  </span>
-                  <span>•</span>
-                  <span>
+                  </Text>
+                  <Text as="span" size="2xs" color="subtle" className="text-zinc-400">
+                    •
+                  </Text>
+                  <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
                     {t('landlordNotificationsDetailChannel', {
                       channel: getChannelLabel(selectedNotifDetail.channel),
                     })}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
-              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/80 text-zinc-800 leading-relaxed whitespace-pre-line">
-                {selectedNotifDetail.content}
+              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/80">
+                <Text size="xs" weight="medium" className="text-zinc-800 leading-relaxed whitespace-pre-line">
+                  {selectedNotifDetail.content}
+                </Text>
               </div>
 
               <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-600" />
-                  <span className="text-zinc-700 font-bold">
+                  <Text as="span" size="xs" weight="bold" className="text-zinc-700">
                     {t('landlordNotificationsDetailTargetReach')}
-                  </span>
+                  </Text>
                 </div>
-                <span className="font-black text-blue-600 text-sm">
+                <Text as="span" size="sm" weight="black" className="text-blue-600">
                   {t('landlordNotificationsDetailResidentsUnit', {
                     count: selectedNotifDetail.totalTarget,
                   })}
-                </span>
+                </Text>
               </div>
             </div>
 
@@ -1075,8 +1084,8 @@ export default function NotificationsPage() {
                   setDeletingNotifId(selectedNotifDetail.id)
                   setSelectedNotifDetail(null)
                 }}
+                leftIcon={<Trash2 className="w-4 h-4" />}
               >
-                <Trash2 className="w-4 h-4" />
                 <span>{t('landlordNotificationsDetailDelete')}</span>
               </Button>
 
@@ -1107,12 +1116,12 @@ export default function NotificationsPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight">
+              <Text as="h3" variant="heading" size="xl" weight="black" className="text-zinc-900 tracking-tight">
                 {t('landlordNotificationsConfirmDeleteTitle')}
-              </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+              </Text>
+              <Text size="sm" weight="medium" color="subtle" align="center" className="text-zinc-500 leading-relaxed max-w-xs mx-auto">
                 {t('landlordNotificationsConfirmDeleteDesc')}
-              </p>
+              </Text>
             </div>
 
             <div className="flex items-center justify-center gap-3 pt-2">
@@ -1131,14 +1140,11 @@ export default function NotificationsPage() {
                 variant="danger"
                 size="sm"
                 disabled={isDeleting}
+                isLoading={isDeleting}
+                leftIcon={!isDeleting ? <Trash2 className="w-4 h-4" /> : undefined}
                 onClick={() => handleDeleteAnnouncement(deletingNotifId)}
                 className="flex-1"
               >
-                {isDeleting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
                 <span>{t('landlordNotificationsConfirmDeleteBtn')}</span>
               </Button>
             </div>
