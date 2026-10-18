@@ -454,7 +454,7 @@ export default function NotificationsPage() {
             <Button
               type="button"
               variant="ghost"
-              size="sm"
+              size="xs"
               onClick={() => {
                 setViewMode('grid')
                 if (itemsPerPage === 10) setItemsPerPage(6)
@@ -466,7 +466,7 @@ export default function NotificationsPage() {
             <Button
               type="button"
               variant="ghost"
-              size="sm"
+              size="xs"
               onClick={() => {
                 setViewMode('list')
                 if (itemsPerPage === 6) setItemsPerPage(10)
@@ -490,7 +490,7 @@ export default function NotificationsPage() {
           </Button>
 
           {/* Broadcast New Notice Button */}
-          <Button onClick={() => setIsNotifModalOpen(true)}>
+          <Button size='sm' onClick={() => setIsNotifModalOpen(true)}>
             <Plus className="w-4 h-4" />
             <span>{t('landlordNotificationsBtnBroadcast')}</span>
           </Button>
@@ -516,6 +516,7 @@ export default function NotificationsPage() {
               {t('landlordNotificationsEmptyDesc')}
             </p>
             <Button
+              size='sm'
               onClick={() => setIsNotifModalOpen(true)}
               className="mt-4"
             >

@@ -767,7 +767,7 @@ export default function RoomsPage() {
               <Button
                 type="button"
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
+                size="xs"
                 onClick={() => handleViewModeChange('grid')}
                 leftIcon={<Grid  />}
                 className={
@@ -784,7 +784,7 @@ export default function RoomsPage() {
               <Button
                 type="button"
                 variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="sm"
+                size="xs"
                 onClick={() => handleViewModeChange('table')}
                 leftIcon={<List  />}
                 className={
@@ -925,7 +925,7 @@ export default function RoomsPage() {
                               e.stopPropagation()
                               handleOpenEditModal(room)
                             }}
-                            className="absolute top-2 right-2 opacity-80 hover:opacity-100 z-10"
+                            className="absolute h-6 w-6 p-1 top-0 right-0 opacity-80 hover:opacity-100 z-10"
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
                             <Edit className="w-3.5 h-3.5" />
