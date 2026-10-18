@@ -17,6 +17,7 @@ import {
   EyeOff,
 } from 'lucide-react'
 import { useAuth, DemoPreset } from '@/context/AuthContext'
+import { Button, Text } from '@/components/ui'
 
 export default function DemoControlBar() {
   const router = useRouter()
@@ -26,14 +27,19 @@ export default function DemoControlBar() {
 
   if (isDismissed) {
     return (
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        rounded="full"
         onClick={() => setIsDismissed(false)}
-        className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-[#2AC1BC] rounded-full border border-zinc-700 shadow-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:bg-zinc-800 transition-all"
+        className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-[#2AC1BC] border border-zinc-700 shadow-lg text-[10px] font-bold hover:bg-zinc-800"
         title="Mở lại bảng thử nghiệm"
       >
         <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" />
-        <span>Thử nghiệm</span>
-      </button>
+        <Text as="span" size="3xs" weight="bold" color="inherit">
+          Thử nghiệm
+        </Text>
+      </Button>
     )
   }
 
@@ -86,35 +92,43 @@ export default function DemoControlBar() {
                 <Sparkles className="w-4 h-4 fill-white" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-white">Bảng Thử Nghiệm Project</h4>
-                <p className="text-[10px] text-zinc-400 font-medium">
+                <Text as="h4" size="xs" weight="black" color="white">
+                  Bảng Thử Nghiệm Project
+                </Text>
+                <Text as="p" size="3xs" color="subtle" weight="medium">
                   Chuyển đổi vai trò & kiểm thử các luồng 1-click
-                </p>
+                </Text>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded="full"
                 onClick={() => setIsDismissed(true)}
                 title="Ẩn nút thử nghiệm"
-                className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+                className="!h-7 !w-7 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800"
               >
                 <EyeOff className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded="full"
                 onClick={() => setIsOpen(false)}
-                className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+                className="!h-7 !w-7 text-zinc-400 hover:text-white hover:bg-zinc-800"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* 1-Click Role Presets */}
           <div className="space-y-2">
-            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+            <Text as="span" size="3xs" weight="extrabold" color="subtle" uppercase className="tracking-wider block">
               CHỌN VAI TRÒ KIỂM THỬ:
-            </span>
+            </Text>
 
             <div className="grid grid-cols-1 gap-2">
               {/* Guest */}
@@ -126,7 +140,9 @@ export default function DemoControlBar() {
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>🌐 1. Khách Vãng Lai (Chưa đăng nhập)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  🌐 1. Khách Vãng Lai (Chưa đăng nhập)
+                </Text>
                 {activePreset === 'guest' && <Check className="w-4 h-4 text-zinc-950 stroke-[3]" />}
               </button>
 
@@ -139,7 +155,9 @@ export default function DemoControlBar() {
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>👤 2. Khách Thuê </span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  👤 2. Khách Thuê
+                </Text>
                 {activePreset === 'tenant' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
@@ -152,7 +170,9 @@ export default function DemoControlBar() {
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>👷 3. Nhân Viên Vận Hành (Staff)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  👷 3. Nhân Viên Vận Hành (Staff)
+                </Text>
                 {activePreset === 'staff' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
@@ -165,7 +185,9 @@ export default function DemoControlBar() {
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>🏠 4. Chủ Trọ Mới (Dashboard Trống Trơn)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  🏠 4. Chủ Trọ Mới (Dashboard Trống Trơn)
+                </Text>
                 {activePreset === 'landlord_empty' && (
                   <Check className="w-4 h-4 text-white stroke-[3]" />
                 )}
@@ -180,7 +202,9 @@ export default function DemoControlBar() {
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>📊 5. Chủ Trọ Đang Vận Hành</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  📊 5. Chủ Trọ Đang Vận Hành
+                </Text>
                 {activePreset === 'landlord_active' && (
                   <Check className="w-4 h-4 text-white stroke-[3]" />
                 )}
@@ -195,7 +219,9 @@ export default function DemoControlBar() {
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>👑 6. Admin Nền Tảng (System)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  👑 6. Admin Nền Tảng (System)
+                </Text>
                 {activePreset === 'admin' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
             </div>
@@ -213,8 +239,12 @@ export default function DemoControlBar() {
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2AC1BC]"></span>
         </span>
 
-        <span className="text-xs font-black text-[#2AC1BC]">🧪 Test Suite:</span>
-        <span className="text-xs font-extrabold text-zinc-200">{getPresetLabel(activePreset)}</span>
+        <Text as="span" size="xs" weight="black" color="brand">
+          🧪 Test Suite:
+        </Text>
+        <Text as="span" size="xs" weight="extrabold" color="inherit" className="text-zinc-200">
+          {getPresetLabel(activePreset)}
+        </Text>
 
         {isOpen ? (
           <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />

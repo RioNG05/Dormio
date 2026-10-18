@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
 import { UploadCloud, Camera, Trash2, Loader2, AlertCircle, Eye, Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button, Text } from '@/components/ui'
 import { uploadImageToBackend } from '@/services/upload.service'
 import { useTranslations } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -184,9 +184,9 @@ export function ImageUpload({
   return (
     <div className={cn('space-y-1.5 w-full', containerClassName)}>
       {label && (
-        <label className="block text-xs font-bold text-zinc-700 select-none">
-          {label} {required && <span className="text-rose-500">*</span>}
-        </label>
+        <Text as="label" size="xs" weight="bold" color="default" className="block select-none">
+          {label} {required && <Text as="span" color="danger">*</Text>}
+        </Text>
       )}
 
       {/* Hidden file input for drag & drop or click */}
@@ -244,12 +244,12 @@ export function ImageUpload({
                 <Loader2 className="w-12 h-12 text-[#2AC1BC] animate-spin absolute inset-0 opacity-80" />
               </div>
               <div className="text-center px-4 space-y-0.5">
-                <span className="text-xs font-black text-white tracking-wide block">
+                <Text as="span" size="xs" weight="black" color="white" className="tracking-wide block">
                   {loadingText || tGuest('guestDepositUploading') || 'AI đang xử lý...'}
-                </span>
-                <span className="text-[10px] text-zinc-300 font-medium block">
+                </Text>
+                <Text as="span" size="3xs" weight="medium" className="text-zinc-300 block">
                   Vui lòng chờ trong giây lát
-                </span>
+                </Text>
               </div>
             </div>
           )}
@@ -262,18 +262,22 @@ export function ImageUpload({
                 size="sm"
                 variant="secondary"
                 onClick={() => fileInputRef.current?.click()}
+                leftIcon={<Camera className="w-3.5 h-3.5" />}
               >
-                <Camera className="w-3.5 h-3.5 mr-1" />
-                {tGuest('guestDepositChangeImage') || 'Đổi ảnh'}
+                <Text as="span" size="xs" weight="medium" color="inherit">
+                  {tGuest('guestDepositChangeImage') || 'Đổi ảnh'}
+                </Text>
               </Button>
               <Button
                 type="button"
                 size="sm"
                 variant="danger"
                 onClick={handleRemove}
+                leftIcon={<Trash2 className="w-3.5 h-3.5" />}
               >
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
-                {tGuest('guestDepositRemoveImage') || 'Xóa ảnh'}
+                <Text as="span" size="xs" weight="medium" color="inherit">
+                  {tGuest('guestDepositRemoveImage') || 'Xóa ảnh'}
+                </Text>
               </Button>
             </div>
           )}
@@ -308,9 +312,9 @@ export function ImageUpload({
               <div className="relative">
                 <Loader2 className="w-8 h-8 animate-spin" />
               </div>
-              <span className="text-xs font-bold">
+              <Text as="span" size="xs" weight="bold" color="brand">
                 {loadingText || tGuest('guestDepositUploading') || 'Đang tải ảnh...'}
-              </span>
+              </Text>
             </div>
           ) : emptyPlaceholder ? (
             emptyPlaceholder
@@ -319,10 +323,10 @@ export function ImageUpload({
               <div className="w-10 h-10 rounded-2xl bg-white shadow-xs border border-zinc-200/60 flex items-center justify-center text-zinc-500 group-hover:text-[#2AC1BC]">
                 <Camera className="w-5 h-5 text-zinc-400 group-hover:text-[#2AC1BC]" />
               </div>
-              <p className="text-xs font-bold text-zinc-700 leading-tight">
+              <Text size="xs" weight="bold" color="default" className="leading-tight">
                 {tGuest('guestDepositUploadClickOrDrag') || 'Chụp hoặc chọn ảnh'}
-              </p>
-              <p className="text-[10px] text-zinc-400 font-medium">JPG, PNG, WEBP</p>
+              </Text>
+              <Text size="3xs" weight="medium" color="subtle">JPG, PNG, WEBP</Text>
             </div>
           )}
         </div>
@@ -330,13 +334,13 @@ export function ImageUpload({
 
       {/* Error / Helper text */}
       {activeError && (
-        <p className="text-[11px] text-rose-500 font-semibold flex items-center gap-1 mt-1">
+        <Text size="2xs" weight="semibold" color="danger" className="flex items-center gap-1 mt-1">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-          <span>{activeError}</span>
-        </p>
+          <Text as="span" color="inherit">{activeError}</Text>
+        </Text>
       )}
       {!activeError && helperText && (
-        <p className="text-[10px] text-zinc-400 font-medium mt-1">{helperText}</p>
+        <Text size="3xs" weight="medium" color="subtle" className="mt-1">{helperText}</Text>
       )}
     </div>
   )

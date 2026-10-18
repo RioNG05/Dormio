@@ -20,6 +20,7 @@ import {
   Info,
   CheckCircle2,
 } from 'lucide-react'
+import { Button, Text, Chip } from '@/components/ui'
 
 interface NotificationBellProps {
   align?: 'left' | 'right'
@@ -184,23 +185,25 @@ export default function NotificationBell({
   return (
     <div ref={containerRef} className={`relative inline-block ${className}`}>
       {/* Bell Trigger Button */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => {
           setIsOpen(!isOpen)
           if (!isOpen) loadNotifications()
         }}
-        className="relative p-2 rounded-xl text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-all cursor-pointer focus:outline-none"
+        className="relative text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
         aria-label={t('notifications')}
         title={t('notifications')}
       >
         <Bell className="w-5 h-5 transition-transform duration-200 active:scale-90" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse">
+          <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
-      </button>
+      </Button>
 
       {/* Floating Popover Panel */}
       {isOpen && (
@@ -212,25 +215,29 @@ export default function NotificationBell({
           {/* Popover Header */}
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-100 bg-zinc-50/70">
             <div className="flex items-center gap-2">
-              <h3 className="font-black text-xs text-zinc-900 uppercase tracking-wider">
+              <Text as="h3" size="xs" weight="black" color="default" uppercase className="tracking-wider">
                 {t('notifications')}
-              </h3>
+              </Text>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">
+                <Chip variant="warning" size="sm" className="font-bold text-[10px]">
                   {unreadCount} {t('notificationsNew')}
-                </span>
+                </Chip>
               )}
             </div>
 
             {unreadCount > 0 && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={handleMarkAllAsRead}
-                className="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer transition-colors"
+                className="!h-auto !p-0 text-orange-600 hover:text-orange-700 hover:bg-transparent"
+                leftIcon={<CheckCheck className="w-3.5 h-3.5 text-orange-600" />}
               >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>{t('notificationsMarkAllRead')}</span>
-              </button>
+                <Text as="span" size="2xs" weight="bold" color="orange">
+                  {t('notificationsMarkAllRead')}
+                </Text>
+              </Button>
             )}
           </div>
 
@@ -239,15 +246,21 @@ export default function NotificationBell({
             {loading ? (
               <div className="py-8 text-center text-xs text-zinc-400 flex items-center justify-center gap-2">
                 <div className="w-4 h-4 rounded-full border-2 border-orange-500/20 border-t-orange-600 animate-spin" />
-                <span>{t('notificationsLoading')}</span>
+                <Text as="span" size="xs" color="subtle">
+                  {t('notificationsLoading')}
+                </Text>
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 px-4 text-center space-y-2">
                 <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
                   <Bell className="w-5 h-5" />
                 </div>
-                <p className="text-xs font-bold text-zinc-700">{t('notificationsEmptyTitle')}</p>
-                <p className="text-[11px] text-zinc-400">{t('notificationsEmptyDesc')}</p>
+                <Text size="xs" weight="bold" color="default">
+                  {t('notificationsEmptyTitle')}
+                </Text>
+                <Text size="2xs" color="subtle">
+                  {t('notificationsEmptyDesc')}
+                </Text>
               </div>
             ) : (
               notifications.map(item => {
@@ -268,37 +281,51 @@ export default function NotificationBell({
 
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-start justify-between gap-1">
-                        <h4
-                          className={`text-xs leading-snug line-clamp-1 ${
-                            item.isRead ? 'font-bold text-zinc-800' : 'font-black text-zinc-900'
-                          }`}
+                        <Text
+                          as="h4"
+                          size="xs"
+                          weight={item.isRead ? 'bold' : 'black'}
+                          color={item.isRead ? 'secondary' : 'default'}
+                          className="leading-snug line-clamp-1"
                         >
                           {item.title || item.content}
-                        </h4>
+                        </Text>
                         {!item.isRead && (
                           <span className="w-2 h-2 rounded-full bg-orange-600 shrink-0 mt-1" />
                         )}
                       </div>
 
-                      <p className="text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">
+                      <Text size="2xs" color="secondary" clamp={2} className="leading-relaxed">
                         {item.content}
-                      </p>
+                      </Text>
 
                       <div className="flex items-center justify-between text-[10px] pt-1">
-                        <span className="text-zinc-400 font-mono">
+                        <Text as="span" size="3xs" color="subtle" mono>
                           {formatTimeAgo(item.createdAt)}
-                        </span>
+                        </Text>
 
                         {hasRedirect ? (
-                          <span className="font-bold text-orange-600 hover:underline flex items-center gap-0.5">
-                            <span>{t('viewDetail')}</span>
+                          <Text
+                            as="span"
+                            size="3xs"
+                            weight="bold"
+                            color="orange"
+                            className="hover:underline flex items-center gap-0.5"
+                          >
+                            <Text as="span">{t('viewDetail')}</Text>
                             <ChevronRight className="w-3 h-3" />
-                          </span>
+                          </Text>
                         ) : (
-                          <span className="text-zinc-400 flex items-center gap-1 font-medium">
+                          <Text
+                            as="span"
+                            size="3xs"
+                            color="subtle"
+                            weight="medium"
+                            className="flex items-center gap-1"
+                          >
                             <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            <span>{t('notificationsSystemAnnouncement')}</span>
-                          </span>
+                            <Text as="span">{t('notificationsSystemAnnouncement')}</Text>
+                          </Text>
                         )}
                       </div>
                     </div>
@@ -309,14 +336,18 @@ export default function NotificationBell({
           </div>
 
           {/* Footer */}
-          <div className="p-2.5 border-t border-zinc-100 bg-zinc-50/50 text-center">
-            <button
+          <div className="p-2 border-t border-zinc-100 bg-zinc-50/50 text-center">
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setIsOpen(false)}
-              className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
+              className="w-full text-zinc-500 hover:text-zinc-800"
             >
-              {t('close')}
-            </button>
+              <Text as="span" size="2xs" weight="bold" color="inherit">
+                {t('close')}
+              </Text>
+            </Button>
           </div>
         </div>
       )}

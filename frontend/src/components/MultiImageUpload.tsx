@@ -14,7 +14,7 @@ import {
   RotateCcw,
   Sparkles,
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button, Text, Modal } from '@/components/ui'
 import { uploadImageToBackend } from '@/services/upload.service'
 import { useTranslations } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -338,13 +338,13 @@ export function MultiImageUpload({
       {/* Label & Counter */}
       {label && (
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-bold text-zinc-700 select-none">{label}</label>
-          <span className="text-[11px] font-semibold text-zinc-400">
+          <Text as="label" size="xs" weight="bold" color="default" className="block select-none">{label}</Text>
+          <Text as="span" size="2xs" weight="semibold" color="subtle">
             {t('guestPostsCreateImageCount', {
               count: values.length,
               max: maxImages,
             }) || `Đã chọn: ${values.length}/${maxImages} ảnh`}
-          </span>
+          </Text>
         </div>
       )}
 
@@ -376,9 +376,11 @@ export function MultiImageUpload({
           size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={() => deviceInputRef.current?.click()}
+          leftIcon={<UploadCloud className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
         >
-          <UploadCloud className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-          <span>{t('guestPostsCreateUploadDevice') || 'Tải ảnh từ máy'}</span>
+          <Text as="span" size="xs" weight="medium" color="inherit">
+            {t('guestPostsCreateUploadDevice') || 'Tải ảnh từ máy'}
+          </Text>
         </Button>
 
         <Button
@@ -387,17 +389,21 @@ export function MultiImageUpload({
           size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={openCamera}
+          leftIcon={<Camera className="w-4 h-4 text-[#FF6B35] shrink-0" />}
         >
-          <Camera className="w-4 h-4 text-[#FF6B35] shrink-0" />
-          <span>{t('guestPostsCreateCaptureCamera') || 'Chụp ảnh camera'}</span>
+          <Text as="span" size="xs" weight="medium" color="inherit">
+            {t('guestPostsCreateCaptureCamera') || 'Chụp ảnh camera'}
+          </Text>
         </Button>
 
         {isAtMaxImages && (
-          <span className="text-xs text-amber-600 font-medium ml-auto flex items-center gap-1">
+          <Text as="span" size="xs" weight="medium" color="warning" className="ml-auto flex items-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
-            {t('guestPostsCreateMaxImagesReached', { max: maxImages }) ||
-              `Đã đạt giới hạn tối đa ${maxImages} ảnh`}
-          </span>
+            <Text as="span" color="inherit">
+              {t('guestPostsCreateMaxImagesReached', { max: maxImages }) ||
+                `Đã đạt giới hạn tối đa ${maxImages} ảnh`}
+            </Text>
+          </Text>
         )}
       </div>
 
@@ -424,13 +430,13 @@ export function MultiImageUpload({
             <UploadCloud className="w-6 h-6 text-[#2AC1BC]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-zinc-800">
+            <Text size="xs" weight="bold" color="default">
               {t('guestPostsCreateDropzonePrompt') || 'Kéo thả ảnh vào đây hoặc nhấp để tải từ máy'}
-            </p>
-            <p className="text-[11px] text-zinc-400 font-medium mt-0.5">
+            </Text>
+            <Text size="2xs" color="subtle" weight="medium" className="mt-0.5">
               {t('guestPostsCreateDropzoneSub', { max: maxImages, size: maxSizeMb }) ||
                 `Hỗ trợ JPG, PNG, WEBP (tối đa ${maxImages} ảnh, mỗi ảnh tối đa ${maxSizeMb}MB)`}
-            </p>
+            </Text>
           </div>
         </div>
       </div>
@@ -520,14 +526,14 @@ export function MultiImageUpload({
                 {item.isUploading ? (
                   <>
                     <Loader2 className="w-6 h-6 text-[#2AC1BC] animate-spin" />
-                    <span className="text-[10px] font-bold tracking-wide">
+                    <Text as="span" size="3xs" weight="bold" color="white" className="tracking-wide">
                       {t('guestPostsCreateUploadingText') || 'Đang tải ảnh...'}
-                    </span>
+                    </Text>
                   </>
                 ) : item.error ? (
                   <>
                     <AlertCircle className="w-5 h-5 text-rose-400" />
-                    <span className="text-[10px] font-bold text-rose-300">{item.error}</span>
+                    <Text as="span" size="3xs" weight="bold" color="danger">{item.error}</Text>
                     <Button
                       type="button"
                       variant="danger"
@@ -535,7 +541,9 @@ export function MultiImageUpload({
                       onClick={() => handleRemoveUploadingItem(item.id)}
                       className="mt-1"
                     >
-                      {t('guestPostsCreateUploadRetry') || 'Bỏ qua'}
+                      <Text as="span" size="xs" weight="medium" color="inherit">
+                        {t('guestPostsCreateUploadRetry') || 'Bỏ qua'}
+                      </Text>
                     </Button>
                   </>
                 ) : null}
@@ -547,145 +555,133 @@ export function MultiImageUpload({
 
       {/* Error or Helper text */}
       {activeError && (
-        <p className="text-[11px] text-rose-500 font-semibold flex items-center gap-1.5">
+        <Text size="2xs" weight="semibold" color="danger" className="flex items-center gap-1.5">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-          <span>{activeError}</span>
-        </p>
+          <Text as="span" color="inherit">{activeError}</Text>
+        </Text>
       )}
       {!activeError && helperText && (
-        <p className="text-[11px] text-zinc-400 font-medium">{helperText}</p>
+        <Text size="2xs" color="subtle" weight="medium">{helperText}</Text>
       )}
 
       {/* ─── Webcam Modal for Desktop Direct Capture ─────────────────────────── */}
-      {isCameraModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-zinc-200 space-y-5 animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
-                  <Camera className="w-4 h-4" />
-                </div>
-                <h3 className="text-sm font-bold text-zinc-900">
-                  {t('guestPostsCreateCameraModalTitle') || 'Chụp ảnh từ Camera'}
-                </h3>
+      <Modal
+        isOpen={isCameraModalOpen}
+        onClose={closeCamera}
+        size="lg"
+        header={
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+              <Camera className="w-4 h-4" />
+            </div>
+            <Text as="h3" size="sm" weight="bold" color="default">
+              {t('guestPostsCreateCameraModalTitle') || 'Chụp ảnh từ Camera'}
+            </Text>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* Video Viewport */}
+          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-zinc-800">
+            {cameraLoading && (
+              <div className="flex flex-col items-center space-y-2 text-zinc-300">
+                <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
+                <Text as="span" size="xs" weight="semibold" className="text-zinc-300">Đang kết nối camera...</Text>
               </div>
+            )}
+
+            {cameraError ? (
+              <div className="p-4 text-center space-y-2 text-rose-400">
+                <AlertCircle className="w-8 h-8 mx-auto text-rose-500" />
+                <Text size="xs" weight="medium" color="danger">{cameraError}</Text>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    closeCamera()
+                    cameraInputRef.current?.click()
+                  }}
+                  className="mt-2"
+                >
+                  <Text as="span" size="xs" weight="medium" color="inherit">
+                    Dùng tệp ảnh thay thế
+                  </Text>
+                </Button>
+              </div>
+            ) : (
+              <video
+                ref={videoRef}
+                playsInline
+                autoPlay
+                muted
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          {/* Modal Actions */}
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleToggleFacingMode}
+              leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+              title="Đổi camera trước/sau"
+            >
+              <Text as="span" size="xs" weight="medium" color="inherit">
+                {t('guestPostsCreateCameraModalSwitch') || 'Đổi camera'}
+              </Text>
+            </Button>
+
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="sm"
                 onClick={closeCamera}
               >
-                <X className="w-4 h-4" />
+                <Text as="span" size="xs" weight="medium" color="inherit">
+                  {t('guestPostsCreateCameraModalClose') || 'Đóng'}
+                </Text>
               </Button>
-            </div>
-
-            {/* Video Viewport */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-zinc-800">
-              {cameraLoading && (
-                <div className="flex flex-col items-center space-y-2 text-zinc-300">
-                  <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
-                  <span className="text-xs font-semibold">Đang kết nối camera...</span>
-                </div>
-              )}
-
-              {cameraError ? (
-                <div className="p-4 text-center space-y-2 text-rose-400">
-                  <AlertCircle className="w-8 h-8 mx-auto text-rose-500" />
-                  <p className="text-xs font-medium">{cameraError}</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      closeCamera()
-                      cameraInputRef.current?.click()
-                    }}
-                    className="mt-2"
-                  >
-                    Dùng tệp ảnh thay thế
-                  </Button>
-                </div>
-              ) : (
-                <video
-                  ref={videoRef}
-                  playsInline
-                  autoPlay
-                  muted
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="primary"
                 size="sm"
-                onClick={handleToggleFacingMode}
-                title="Đổi camera trước/sau"
+                disabled={cameraLoading || !!cameraError}
+                onClick={handleSnapPhoto}
+                leftIcon={<Camera className="w-4 h-4" />}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t('guestPostsCreateCameraModalSwitch') || 'Đổi camera'}</span>
+                <Text as="span" size="xs" weight="medium" color="white">
+                  {t('guestPostsCreateCameraModalSnap') || 'Chụp ảnh'}
+                </Text>
               </Button>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={closeCamera}
-                >
-                  {t('guestPostsCreateCameraModalClose') || 'Đóng'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  disabled={cameraLoading || !!cameraError}
-                  onClick={handleSnapPhoto}
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>{t('guestPostsCreateCameraModalSnap') || 'Chụp ảnh'}</span>
-                </Button>
-              </div>
             </div>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* ─── Zoom Image Lightbox Modal ────────────────────────────────────────── */}
-      {inspectedImageUrl && (
-        <div
-          onClick={() => setInspectedImageUrl(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xs animate-in fade-in duration-200 cursor-zoom-out"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="relative max-w-3xl w-full max-h-[85vh] rounded-3xl overflow-hidden bg-black shadow-2xl border border-zinc-800"
-          >
-            <div className="relative w-full aspect-video">
-              <Image
-                src={inspectedImageUrl}
-                alt="Enlarged photo"
-                fill
-                unoptimized
-                className="object-contain"
-              />
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="icon"
-              onClick={() => setInspectedImageUrl(null)}
-              className="absolute top-4 right-4"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+      <Modal
+        isOpen={Boolean(inspectedImageUrl)}
+        onClose={() => setInspectedImageUrl(null)}
+        size="3xl"
+        className="bg-black border-zinc-800 p-0 overflow-hidden"
+      >
+        <div className="relative w-full aspect-video flex items-center justify-center">
+          {inspectedImageUrl && (
+            <Image
+              src={inspectedImageUrl}
+              alt="Enlarged photo"
+              fill
+              unoptimized
+              className="object-contain"
+            />
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

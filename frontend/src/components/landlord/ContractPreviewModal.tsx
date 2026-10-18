@@ -180,9 +180,9 @@ export default function ContractPreviewModal({
               </Text>
               <Text size="xs" color="subtle" weight="medium">
                 {tenantName ? `${t('landlordContractsExportRep', { tenantName })} • ` : ''}
-                <span className="font-mono font-bold text-zinc-700">
+                <Text as="span" mono weight="bold" color="default">
                   {contractId.substring(0, 12)}...
-                </span>
+                </Text>
               </Text>
             </div>
           </div>
@@ -196,7 +196,9 @@ export default function ContractPreviewModal({
               leftIcon={<Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />}
               title={t('landlordContractsExportPrintTooltip')}
             >
-              <span className="hidden sm:inline">{t('landlordContractsExportPrintBtn')}</span>
+              <Text as="span" size="sm" weight="semibold" color="inherit" className="hidden sm:inline">
+                {t('landlordContractsExportPrintBtn')}
+              </Text>
             </Button>
 
             <Button
@@ -208,11 +210,11 @@ export default function ContractPreviewModal({
               leftIcon={<FileDown className="w-3.5 h-3.5" />}
               title={t('landlordContractsExportExportTooltip')}
             >
-              <span>
+              <Text as="span" size="sm" weight="semibold" color="inherit">
                 {isExporting
                   ? t('landlordContractsExportExporting')
                   : t('landlordContractsExportExportBtn')}
-              </span>
+              </Text>
             </Button>
           </div>
         </div>
@@ -233,14 +235,18 @@ export default function ContractPreviewModal({
               disabled={isLoading || !htmlContent}
               className="underline"
             >
-              {t('landlordContractsExportDownloadHtml')}
+              <Text as="span" size="xs" weight="medium" color="inherit">
+                {t('landlordContractsExportDownloadHtml')}
+              </Text>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={onClose}
             >
-              {t('landlordContractsExportCloseBtn')}
+              <Text as="span" size="xs" weight="medium" color="inherit">
+                {t('landlordContractsExportCloseBtn')}
+              </Text>
             </Button>
           </div>
         </div>
@@ -271,14 +277,18 @@ export default function ContractPreviewModal({
               onClick={fetchContractHtml}
               leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
             >
-              Thử lại
+              <Text as="span" size="sm" weight="semibold" color="inherit">
+                Thử lại
+              </Text>
             </Button>
             <Button
               variant="primary"
               size="sm"
               onClick={onClose}
             >
-              {t('landlordContractsExportCloseBtn')}
+              <Text as="span" size="sm" weight="semibold" color="inherit">
+                {t('landlordContractsExportCloseBtn')}
+              </Text>
             </Button>
           </div>
         </div>

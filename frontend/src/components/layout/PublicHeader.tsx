@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 import { usePathname } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import { Button, Text } from '@/components/ui'
 import { useAuth } from '@/context/AuthContext'
 import {
   Menu,
@@ -15,13 +15,10 @@ import {
   BookOpen,
   Mail,
   User,
-  ShieldCheck,
   ChevronDown,
-  Sparkles,
   LogOut,
   FileText,
   CreditCard,
-  UserCheck,
   Heart,
 } from 'lucide-react'
 
@@ -32,7 +29,7 @@ export function PublicHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
 
-  const { isLoggedIn, user, logout, toggleLoginDemo } = useAuth()
+  const { isLoggedIn, user, logout } = useAuth()
 
   const navLinks = [
     { href: '/', label: 'Trang chủ', icon: Home },
@@ -57,11 +54,13 @@ export function PublicHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-xs lg:text-sm font-bold transition-colors ${
+                className={`transition-colors ${
                   isActive ? 'text-[#2AC1BC]' : 'text-zinc-600 hover:text-[#2AC1BC]'
                 }`}
               >
-                {link.label}
+                <Text as="span" size="xs" weight="bold" color="inherit" className="lg:text-sm">
+                  {link.label}
+                </Text>
               </Link>
             )
           })}
@@ -73,17 +72,16 @@ export function PublicHeader() {
             <>
               {/* Prominent "Đăng ký trở thành chủ trọ" or "Bảng điều khiển" Button next to Avatar */}
               <Link href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}>
-                <Button size="xs" variant="orange"
-                >
+                <Button size="xs" variant="orange">
                   <Building2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">
+                  <Text as="span" size="xs" weight="bold" color="inherit" className="hidden sm:inline">
                     {user?.role === 'landlord'
                       ? 'Bảng điều khiển Chủ trọ'
                       : 'Đăng ký trở thành chủ trọ'}
-                  </span>
-                  <span className="sm:hidden">
+                  </Text>
+                  <Text as="span" size="xs" weight="bold" color="inherit" className="sm:hidden">
                     {user?.role === 'landlord' ? 'Chủ trọ' : 'Làm Chủ trọ'}
-                  </span>
+                  </Text>
                 </Button>
               </Link>
 
@@ -91,7 +89,7 @@ export function PublicHeader() {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-zinc-100 transition-colors border border-zinc-200/80 bg-white"
+                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-zinc-100 transition-colors border border-zinc-200/80 bg-white cursor-pointer"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -102,9 +100,9 @@ export function PublicHeader() {
                     alt={user?.name || 'User Avatar'}
                     className="w-8 h-8 rounded-xl object-cover border border-[#2AC1BC]/30"
                   />
-                  <span className="hidden lg:inline text-xs font-bold text-zinc-800">
+                  <Text as="span" size="xs" weight="bold" color="default" className="hidden lg:inline">
                     {user?.name || 'Tài khoản'}
-                  </span>
+                  </Text>
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
                 </button>
 
@@ -113,15 +111,15 @@ export function PublicHeader() {
                   <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-3 shadow-2xl border border-zinc-200/80 z-50 flex flex-col gap-2 text-xs">
                     {/* User Info Header */}
                     <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex flex-col">
-                      <span className="font-bold text-zinc-900 text-sm">
+                      <Text size="sm" weight="bold" color="default">
                         {user?.name || 'Tài khoản'}
-                      </span>
-                      <span className="text-zinc-500 text-[11px]">
+                      </Text>
+                      <Text size="2xs" color="subtle">
                         {user?.email || 'user@example.com'}
-                      </span>
-                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-[#2AC1BC] uppercase">
+                      </Text>
+                      <Text as="span" size="3xs" weight="bold" color="brand" uppercase className="inline-flex items-center gap-1 mt-1">
                         ● Khách thuê trọ
-                      </span>
+                      </Text>
                     </div>
 
                     {/* Quick Landlord Action */}
@@ -135,11 +133,11 @@ export function PublicHeader() {
                       }`}
                     >
                       <Building2 className="w-4 h-4 shrink-0" />
-                      <span>
+                      <Text as="span" size="xs" weight="bold" color="inherit">
                         {user?.role === 'landlord'
                           ? 'Bảng điều khiển Chủ trọ →'
                           : 'Đăng ký trở thành chủ trọ →'}
-                      </span>
+                      </Text>
                     </Link>
 
                     {/* Menu links */}
@@ -148,34 +146,48 @@ export function PublicHeader() {
                         <Link
                           href="/saved-posts"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
+                          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100"
                         >
-                          <Heart className="w-4 h-4 text-zinc-400" /> Phòng trọ đã lưu
+                          <Heart className="w-4 h-4 text-zinc-400" />
+                          <Text as="span" size="xs" weight="semibold" color="inherit">
+                            Phòng trọ đã lưu
+                          </Text>
                         </Link>
                       )}
                       <Link
                         href="/tenant/contracts"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100"
                       >
-                        <FileText className="w-4 h-4 text-zinc-400" /> Hợp đồng của tôi
+                        <FileText className="w-4 h-4 text-zinc-400" />
+                        <Text as="span" size="xs" weight="semibold" color="inherit">
+                          Hợp đồng của tôi
+                        </Text>
                       </Link>
                       <Link
                         href="/tenant/invoices"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100"
                       >
-                        <CreditCard className="w-4 h-4 text-zinc-400" /> Hóa đơn tiền phòng
+                        <CreditCard className="w-4 h-4 text-zinc-400" />
+                        <Text as="span" size="xs" weight="semibold" color="inherit">
+                          Hóa đơn tiền phòng
+                        </Text>
                       </Link>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           logout()
                           setUserDropdownOpen(false)
                         }}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 font-semibold text-left transition-colors mt-1 border-t border-zinc-100 w-full"
+                        leftIcon={<LogOut className="w-4 h-4 text-rose-600" />}
+                        className="!justify-start text-rose-600 hover:text-rose-700 hover:bg-rose-50 mt-1 border-t border-zinc-100 pt-2 w-full"
                       >
-                        <LogOut className="w-4 h-4" /> Đăng xuất tài khoản
-                      </button>
+                        <Text as="span" size="xs" weight="semibold" color="danger">
+                          Đăng xuất tài khoản
+                        </Text>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -185,26 +197,32 @@ export function PublicHeader() {
             <>
               <Link
                 href="/login"
-                className="hidden sm:inline-flex text-xs md:text-sm font-bold text-zinc-700 hover:text-[#2AC1BC] transition-colors px-2.5 py-1.5"
+                className="hidden sm:inline-flex px-2.5 py-1.5 transition-colors"
               >
-                Đăng nhập
+                <Text as="span" size="xs" weight="bold" color="default" className="hover:text-[#2AC1BC] md:text-sm">
+                  Đăng nhập
+                </Text>
               </Link>
               <Link href="/register">
-                <Button size="xs" className="sm:px-5 sm:py-2.5 md:text-sm">
-                  Đăng ký tài khoản
+                <Button size="xs" className="sm:px-5 sm:py-2.5">
+                  <Text as="span" size="xs" weight="bold" color="white" className="md:text-sm">
+                    Đăng ký tài khoản
+                  </Text>
                 </Button>
               </Link>
             </>
           )}
 
           {/* Mobile Hamburger Toggle Button */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors"
+            className="md:hidden text-zinc-700 hover:bg-zinc-100"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -221,12 +239,14 @@ export function PublicHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                     isActive ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]' : 'text-zinc-700 hover:bg-zinc-100'
                   }`}
                 >
                   <Icon className="w-4 h-4 text-[#2AC1BC]" />
-                  {link.label}
+                  <Text as="span" size="sm" weight="bold" color="inherit">
+                    {link.label}
+                  </Text>
                 </Link>
               )
             })}
@@ -236,31 +256,47 @@ export function PublicHeader() {
             <Link
               href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-sm font-bold shadow-md ${
+              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl shadow-md ${
                 user?.role === 'landlord' ? 'bg-[#2AC1BC]' : 'bg-[#FF6B35]'
               }`}
             >
-              <Building2 className="w-4 h-4" />{' '}
-              {user?.role === 'landlord' ? 'Bảng điều khiển Chủ trọ' : 'Đăng ký trở thành chủ trọ'}
+              <Building2 className="w-4 h-4 text-white" />
+              <Text as="span" size="sm" weight="bold" color="white">
+                {user?.role === 'landlord' ? 'Bảng điều khiển Chủ trọ' : 'Đăng ký trở thành chủ trọ'}
+              </Text>
             </Link>
 
             {isLoggedIn ? (
-              <button
+              <Button
+                variant="outline"
+                size="md"
                 onClick={() => {
                   logout()
                   setMobileMenuOpen(false)
                 }}
-                className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 mt-1"
+                leftIcon={<LogOut className="w-4 h-4 text-rose-600" />}
+                className="w-full border-rose-200 hover:bg-rose-50 mt-1"
               >
-                <LogOut className="w-4 h-4" /> Đăng xuất ({user?.name})
-              </button>
+                <Text as="span" size="sm" weight="bold" color="danger">
+                  Đăng xuất ({user?.name})
+                </Text>
+              </Button>
             ) : (
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-800 hover:bg-zinc-50"
+                className="w-full"
               >
-                <User className="w-4 h-4" /> Đăng nhập tài khoản
+                <Button
+                  variant="outline"
+                  size="md"
+                  leftIcon={<User className="w-4 h-4 text-zinc-700" />}
+                  className="w-full"
+                >
+                  <Text as="span" size="sm" weight="bold" color="default">
+                    Đăng nhập tài khoản
+                  </Text>
+                </Button>
               </Link>
             )}
           </div>

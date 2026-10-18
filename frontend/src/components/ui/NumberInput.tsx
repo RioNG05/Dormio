@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { Text } from './Text'
 
 export interface NumberInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -46,15 +47,23 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
               labelClassName,
             )}
           >
-            <span>{label}</span>
-            {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {label}
+            </Text>
+            {required && (
+              <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                *
+              </Text>
+            )}
           </label>
         )}
 
         <div className="relative flex items-center">
           {prefixText && (
-            <div className="absolute left-3 flex items-center pointer-events-none text-zinc-400 font-bold text-xs shrink-0">
-              {prefixText}
+            <div className="absolute left-3 flex items-center pointer-events-none shrink-0">
+              <Text as="span" size="xs" weight="bold" color="subtle">
+                {prefixText}
+              </Text>
             </div>
           )}
 
@@ -79,16 +88,22 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           />
 
           {suffixText && (
-            <div className="absolute right-3 flex items-center pointer-events-none text-zinc-400 font-medium text-xs shrink-0">
-              {suffixText}
+            <div className="absolute right-3 flex items-center pointer-events-none shrink-0">
+              <Text as="span" size="xs" weight="medium" color="subtle">
+                {suffixText}
+              </Text>
             </div>
           )}
         </div>
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in">
+            {error}
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )

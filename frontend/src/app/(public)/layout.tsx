@@ -31,6 +31,7 @@ import NotificationBell from '@/components/NotificationBell'
 import Logo from '@/components/Logo'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
+import { Button, Text, Modal, TextInput, NumberInput } from '@/components/ui'
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -197,7 +198,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                       : 'text-zinc-700 hover:text-[#2AC1BC]'
                   }`}
                 >
-                  {item.label}
+                  <Text as="span" size="xs" weight={isActive ? 'extrabold' : 'bold'} color="inherit">
+                    {item.label}
+                  </Text>
                 </Link>
               )
             })}
@@ -206,13 +209,16 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           {/* Desktop Right Action Buttons & User Menu */}
           <div className="hidden lg:flex items-center gap-3">
             {/* Nút Quản lý nhà trọ của bạn */}
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              rounded="full"
               onClick={handleManageBoardingHouse}
-              className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs font-black rounded-full shadow-md shadow-[#2AC1BC]/20 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+              leftIcon={<Building2 className="w-3.5 h-3.5" />}
+              className="shadow-md shadow-[#2AC1BC]/20 hover:scale-105"
             >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>{tNav('manageYourHouse')}</span>
-            </button>
+              {tNav('manageYourHouse')}
+            </Button>
 
             {/* Auth Actions Conditional Rendering */}
             {isLoggedIn && user ? (
@@ -229,9 +235,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                       className="w-8 h-8 rounded-full object-cover border border-zinc-200 shadow-xs"
                     />
                     <div className="hidden sm:block text-left">
-                      <span className="text-xs font-black text-zinc-900 block leading-tight truncate max-w-[100px]">
+                      <Text as="span" size="xs" weight="black" color="default" className="block leading-tight truncate max-w-[100px]">
                         {user.name}
-                      </span>
+                      </Text>
                     </div>
                     <ChevronDown
                       className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
@@ -242,10 +248,12 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   {isUserMenuOpen && (
                     <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-zinc-200 shadow-2xl p-2 z-50 animate-in fade-in duration-200 space-y-1">
                       <div className="px-3 py-2 border-b border-zinc-100">
-                        <p className="text-xs font-black text-zinc-900 truncate">{user.name}</p>
-                        <p className="text-[10px] text-zinc-400 font-medium truncate">
+                        <Text as="p" size="xs" weight="black" color="default" className="truncate">
+                          {user.name}
+                        </Text>
+                        <Text as="p" size="3xs" color="subtle" weight="medium" className="truncate">
                           {user.email}
-                        </p>
+                        </Text>
                       </div>
 
                       {/* Staff Portal Link */}
@@ -256,7 +264,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                           className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-xl transition-all"
                         >
                           <Clock className="w-4 h-4 text-[#2AC1BC]" />
-                          <span>{tNav('staffPortalLink')}</span>
+                          <Text as="span" size="xs" weight="bold" color="inherit">
+                            {tNav('staffPortalLink')}
+                          </Text>
                         </Link>
                       )}
 
@@ -267,7 +277,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
-                        <span>{tNav('myProfile')}</span>
+                        <Text as="span" size="xs" weight="bold" color="inherit">
+                          {tNav('myProfile')}
+                        </Text>
                       </Link>
 
                       {/* Gửi đơn */}
@@ -277,7 +289,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <FileText className="w-4 h-4 text-amber-500" />
-                        <span>{tNav('sendApplication')}</span>
+                        <Text as="span" size="xs" weight="bold" color="inherit">
+                          {tNav('sendApplication')}
+                        </Text>
                       </Link>
 
                       {/* 2. Phòng trọ đã thuê / Quản lý trọ */}
@@ -293,13 +307,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                       >
                         <Building className="w-4 h-4 text-blue-500" />
-                        <span>
+                        <Text as="span" size="xs" weight="bold" color="inherit">
                           {user.role === 'landlord'
                             ? tNav('manageHouses')
                             : user.role === 'employee'
                               ? tNav('myShifts')
                               : tNav('myRentedRooms')}
-                        </span>
+                        </Text>
                       </Link>
 
                       {/* 3. Phòng trọ đã lưu (Chỉ hiện khi bật sàn BHRP) */}
@@ -310,7 +324,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                           className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                         >
                           <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                          <span>{tNav('mySavedRooms')}</span>
+                          <Text as="span" size="xs" weight="bold" color="inherit">
+                            {tNav('mySavedRooms')}
+                          </Text>
                         </Link>
                       )}
 
@@ -323,7 +339,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                             className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                           >
                             <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                            <span>{tNav('postListing')}</span>
+                            <Text as="span" size="xs" weight="bold" color="inherit">
+                              {tNav('postListing')}
+                            </Text>
                           </Link>
 
                           <Link
@@ -332,7 +350,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                             className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
                           >
                             <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                            <span>{tNav('postAnalytics')}</span>
+                            <Text as="span" size="xs" weight="bold" color="inherit">
+                              {tNav('postAnalytics')}
+                            </Text>
                           </Link>
                         </div>
                       )}
@@ -347,7 +367,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all text-left cursor-pointer"
                         >
                           <LogOut className="w-4 h-4 text-rose-500" />
-                          <span>{tNav('logout')}</span>
+                          <Text as="span" size="xs" weight="bold" color="danger">
+                            {tNav('logout')}
+                          </Text>
                         </button>
                       </div>
                     </div>
@@ -356,11 +378,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="text-xs font-bold text-zinc-700 hover:text-zinc-900 transition-colors px-2"
-                >
-                  {tNav('login')}
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" rounded="full">
+                    {tNav('login')}
+                  </Button>
                 </Link>
               </div>
             )}
@@ -400,7 +421,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   href={item.href}
                   className="px-4 py-3 rounded-2xl text-sm font-extrabold text-zinc-800 hover:bg-zinc-100 transition-all flex items-center justify-between"
                 >
-                  <span>{item.label}</span>
+                  <Text as="span" size="sm" weight="extrabold" color="inherit">
+                    {item.label}
+                  </Text>
                   <ArrowRight className="w-4 h-4 text-zinc-300" />
                 </Link>
               ))}
@@ -417,23 +440,28 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                       className="w-10 h-10 rounded-full object-cover border border-zinc-200"
                     />
                     <div>
-                      <h4 className="text-xs font-black text-zinc-900">{user.name}</h4>
-                      <p className="text-[10px] text-zinc-400 font-semibold">
+                      <Text as="h4" size="xs" weight="black" color="default">
+                        {user.name}
+                      </Text>
+                      <Text as="p" size="3xs" color="subtle" weight="semibold">
                         {user.role === 'landlord' ? tNav('landlordRole') : tNav('tenantRole')}
-                      </p>
+                      </Text>
                     </div>
                   </div>
 
-                  <button
+                  <Button
+                    variant="primary"
+                    size="md"
+                    rounded="full"
                     onClick={() => {
                       setIsMobileMenuOpen(false)
                       handleManageBoardingHouse()
                     }}
-                    className="w-full py-3 bg-[#2AC1BC] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full shadow-md justify-center"
+                    leftIcon={<Building2 className="w-4 h-4" />}
                   >
-                    <Building2 className="w-4 h-4" />
-                    <span>{tNav('manageYourHouse')}</span>
-                  </button>
+                    {tNav('manageYourHouse')}
+                  </Button>
 
                   {/* 4 Inner Profile Links for Mobile/Tablet */}
                   <div className="bg-zinc-50 rounded-2xl p-2 border border-zinc-200 space-y-1">
@@ -445,7 +473,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     >
                       <div className="flex items-center gap-2.5">
                         <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
-                        <span>{tNav('myProfile')}</span>
+                        <Text as="span" size="xs" weight="bold" color="inherit">
+                          {tNav('myProfile')}
+                        </Text>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -458,7 +488,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     >
                       <div className="flex items-center gap-2.5">
                         <FileText className="w-4 h-4 text-amber-500" />
-                        <span>{tNav('sendApplication')}</span>
+                        <Text as="span" size="xs" weight="bold" color="inherit">
+                          {tNav('sendApplication')}
+                        </Text>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -471,7 +503,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     >
                       <div className="flex items-center gap-2.5">
                         <Building className="w-4 h-4 text-blue-500" />
-                        <span>{tNav('myRentedRooms')}</span>
+                        <Text as="span" size="xs" weight="bold" color="inherit">
+                          {user.role === 'landlord'
+                            ? tNav('manageHouses')
+                            : user.role === 'employee'
+                              ? tNav('myShifts')
+                              : tNav('myRentedRooms')}
+                        </Text>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                     </Link>
@@ -485,7 +523,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                       >
                         <div className="flex items-center gap-2.5">
                           <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                          <span>{tNav('mySavedRooms')}</span>
+                          <Text as="span" size="xs" weight="bold" color="inherit">
+                            {tNav('mySavedRooms')}
+                          </Text>
                         </div>
                         <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                       </Link>
@@ -501,7 +541,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         >
                           <div className="flex items-center gap-2.5">
                             <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                            <span>{tNav('postListing')}</span>
+                            <Text as="span" size="xs" weight="bold" color="inherit">
+                              {tNav('postListing')}
+                            </Text>
                           </div>
                           <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                         </Link>
@@ -513,7 +555,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         >
                           <div className="flex items-center gap-2.5">
                             <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                            <span>{tNav('postAnalytics')}</span>
+                            <Text as="span" size="xs" weight="bold" color="inherit">
+                              {tNav('postAnalytics')}
+                            </Text>
                           </div>
                           <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
                         </Link>
@@ -530,27 +574,37 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                     >
                       <div className="flex items-center gap-2.5">
                         <LogOut className="w-4 h-4 text-rose-500" />
-                        <span>{tNav('logout')}</span>
+                        <Text as="span" size="xs" weight="bold" color="danger">
+                          {tNav('logout')}
+                        </Text>
                       </div>
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <button
+                  <Button
+                    variant="primary"
+                    size="md"
+                    rounded="full"
                     onClick={() => {
                       setIsMobileMenuOpen(false)
                       handleManageBoardingHouse()
                     }}
-                    className="w-full py-3 bg-[#2AC1BC] text-white font-black text-xs rounded-2xl shadow-md text-center flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full shadow-md justify-center"
+                    leftIcon={<Building2 className="w-4 h-4" />}
                   >
-                    <Building2 className="w-4 h-4" />
-                    <span>{tNav('manageYourHouse')}</span>
-                  </button>
+                    {tNav('manageYourHouse')}
+                  </Button>
                   <Link href="/login" className="block w-full">
-                    <button className="w-full py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-extrabold text-xs rounded-2xl transition-all text-center">
+                    <Button
+                      variant="outline"
+                      size="md"
+                      rounded="full"
+                      className="w-full justify-center"
+                    >
                       {tNav('login')}
-                    </button>
+                    </Button>
                   </Link>
                 </div>
               )}
@@ -560,103 +614,82 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </header>
 
       {/* 🏠 LANDLORD UPGRADE FORM MODAL (Khi người dùng bấm Đăng ký trở thành chủ trọ) */}
-      {isLandlordModalOpen && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setIsLandlordModalOpen(false)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 border border-zinc-200 cursor-default relative">
-            <button
-              onClick={() => setIsLandlordModalOpen(false)}
-              className="absolute right-5 top-5 p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {upgradeSuccess ? (
-              <div className="text-center py-8 space-y-4 animate-in fade-in duration-300">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl font-black text-zinc-900">{tUpgrade('congratsTitle')}</h3>
-                <p className="text-xs text-zinc-500 font-medium max-w-xs mx-auto">
-                  {tUpgrade('congratsDesc')}
-                </p>
+      <Modal
+        isOpen={isLandlordModalOpen}
+        onClose={() => setIsLandlordModalOpen(false)}
+        size="md"
+        className="rounded-3xl"
+      >
+        <Modal.Body className="p-6 sm:p-8 space-y-6">
+          {upgradeSuccess ? (
+            <div className="text-center py-8 space-y-4 animate-in fade-in duration-300">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-10 h-10" />
               </div>
-            ) : (
-              <form onSubmit={handleUpgradeSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[10px] font-black rounded-full uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3 fill-[#FF6B35]" /> {tUpgrade('badge')}
-                  </span>
-                  <h3 className="text-xl font-black text-zinc-900">{tUpgrade('title')}</h3>
-                  <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                    {tUpgrade('desc')}
-                  </p>
-                </div>
+              <Text as="h3" size="xl" weight="black" color="default">
+                {tUpgrade('congratsTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" weight="medium" className="max-w-xs mx-auto">
+                {tUpgrade('congratsDesc')}
+              </Text>
+            </div>
+          ) : (
+            <form onSubmit={handleUpgradeSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[10px] font-black rounded-full uppercase tracking-wider">
+                  <Sparkles className="w-3 h-3 fill-[#FF6B35]" />
+                  <Text as="span" size="3xs" weight="black" color="orange">
+                    {tUpgrade('badge')}
+                  </Text>
+                </span>
+                <Text as="h3" size="xl" weight="black" color="default">
+                  {tUpgrade('title')}
+                </Text>
+                <Text as="p" size="xs" color="secondary" weight="medium" className="leading-relaxed">
+                  {tUpgrade('desc')}
+                </Text>
+              </div>
 
-                <div className="space-y-4 pt-1">
-                  <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-zinc-700">
-                      {tUpgrade('houseNameLabel')}
-                    </label>
-                    <div className="relative">
-                      <Building2 className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder={tUpgrade('houseNamePlaceholder')}
-                        value={houseName}
-                        onChange={e => setHouseName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#FF6B35]"
-                      />
-                    </div>
-                  </div>
+              <div className="space-y-4 pt-1">
+                <TextInput
+                  label={tUpgrade('houseNameLabel')}
+                  required
+                  placeholder={tUpgrade('houseNamePlaceholder')}
+                  value={houseName}
+                  onChange={e => setHouseName(e.target.value)}
+                  leftIcon={<Building2 className="w-4 h-4" />}
+                />
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-zinc-700">
-                      {tUpgrade('houseAddressLabel')}
-                    </label>
-                    <div className="relative">
-                      <MapPin className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        required
-                        placeholder={tUpgrade('houseAddressPlaceholder')}
-                        value={houseAddress}
-                        onChange={e => setHouseAddress(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#FF6B35]"
-                      />
-                    </div>
-                  </div>
+                <TextInput
+                  label={tUpgrade('houseAddressLabel')}
+                  required
+                  placeholder={tUpgrade('houseAddressPlaceholder')}
+                  value={houseAddress}
+                  onChange={e => setHouseAddress(e.target.value)}
+                  leftIcon={<MapPin className="w-4 h-4" />}
+                />
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-extrabold text-zinc-700">
-                      {tUpgrade('roomCountLabel')}
-                    </label>
-                    <input
-                      type="number"
-                      placeholder={tUpgrade('roomCountPlaceholder')}
-                      value={roomCount}
-                      onChange={e => setRoomCount(e.target.value)}
-                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#FF6B35]"
-                    />
-                  </div>
-                </div>
+                <NumberInput
+                  label={tUpgrade('roomCountLabel')}
+                  placeholder={tUpgrade('roomCountPlaceholder')}
+                  value={roomCount}
+                  onChange={e => setRoomCount(e.target.value)}
+                />
+              </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#FF6B35]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
-                >
-                  <span>{tUpgrade('confirmBtn')}</span>
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                rounded="full"
+                className="w-full bg-[#FF6B35] hover:bg-[#ff5518] shadow-lg shadow-[#FF6B35]/25 border-none justify-center"
+              >
+                {tUpgrade('confirmBtn')}
+              </Button>
+            </form>
+          )}
+        </Modal.Body>
+      </Modal>
 
       {/* Search Command Palette Modal */}
       {isCommandOpen && (
@@ -677,23 +710,27 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 onChange={e => setCommandQuery(e.target.value)}
                 className="w-full pl-10 pr-10 py-2 text-sm font-bold text-zinc-900 focus:outline-none"
               />
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded="full"
                 onClick={() => setIsCommandOpen(false)}
-                className="absolute right-2 p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
+                className="absolute right-2 !h-7 !w-7"
+                aria-label="Đóng tìm kiếm"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto space-y-2">
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block px-3">
+              <Text as="span" size="3xs" weight="black" color="subtle" uppercase className="tracking-wider block px-3">
                 {tUpgrade('instantSearchTitle', { count: searchResults.length })}
-              </span>
+              </Text>
 
               {searchResults.length === 0 ? (
-                <div className="p-8 text-center text-xs font-semibold text-zinc-400">
+                <Text as="div" size="xs" weight="semibold" color="subtle" align="center" className="p-8">
                   {tNav('noSearchResults', { query: commandQuery })}
-                </div>
+                </Text>
               ) : (
                 searchResults.map((item, idx) => (
                   <Link
@@ -711,16 +748,18 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                         )}
                       </div>
                       <div>
-                        <h4 className="text-xs font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                        <Text as="h4" size="xs" weight="extrabold" color="default" className="group-hover:text-[#2AC1BC] transition-colors">
                           {item.title}
-                        </h4>
-                        <span className="text-[10px] text-zinc-400 font-medium">
+                        </Text>
+                        <Text as="span" size="3xs" color="subtle" weight="medium">
                           {item.location || item.category}
-                        </span>
+                        </Text>
                       </div>
                     </div>
                     {item.price && (
-                      <span className="text-xs font-black text-rose-500">{item.price}</span>
+                      <Text as="span" size="xs" weight="black" color="danger">
+                        {item.price}
+                      </Text>
                     )}
                   </Link>
                 ))
@@ -738,79 +777,101 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
             <Logo size="md" priority={false} />
-            <p className="text-xs text-zinc-400 leading-relaxed font-medium">{tFooter('desc')}</p>
+            <Text as="p" size="xs" color="subtle" weight="medium" className="leading-relaxed">
+              {tFooter('desc')}
+            </Text>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">
+            <Text as="h4" size="xs" weight="black" color="inherit" uppercase className="tracking-wider text-zinc-300">
               {tFooter('systemModules')}
-            </h4>
+            </Text>
             <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  {tFooter('bhms')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('bhms')}
+                  </Text>
                 </Link>
               </li>
               {FEATURE_FLAGS.ENABLE_BHRP && (
                 <li>
                   <Link href="/pricing" className="hover:text-white transition-colors">
-                    {tFooter('bhrp')}
+                    <Text as="span" size="xs" color="inherit">
+                      {tFooter('bhrp')}
+                    </Text>
                   </Link>
                 </li>
               )}
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  {tFooter('vietqr')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('vietqr')}
+                  </Text>
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  {tFooter('aiOcr')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('aiOcr')}
+                  </Text>
                 </Link>
               </li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">
+            <Text as="h4" size="xs" weight="black" color="inherit" uppercase className="tracking-wider text-zinc-300">
               {tFooter('customerSupport')}
-            </h4>
+            </Text>
             <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  {tFooter('pricing')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('pricing')}
+                  </Text>
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-white transition-colors">
-                  {tFooter('contact')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('contact')}
+                  </Text>
                 </Link>
               </li>
               <li>
                 <Link href="/blog" className="hover:text-white transition-colors">
-                  {tFooter('blog')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('blog')}
+                  </Text>
                 </Link>
               </li>
               <li>
                 <Link href="/terms" className="hover:text-white transition-colors">
-                  {tFooter('terms')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('terms')}
+                  </Text>
                 </Link>
               </li>
               <li>
                 <Link href="/privacy" className="hover:text-white transition-colors">
-                  {tFooter('privacy')}
+                  <Text as="span" size="xs" color="inherit">
+                    {tFooter('privacy')}
+                  </Text>
                 </Link>
               </li>
             </ul>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider">
+            <Text as="h4" size="xs" weight="black" color="inherit" uppercase className="tracking-wider text-zinc-300">
               {tFooter('contactTitle')}
-            </h4>
+            </Text>
             <p className="text-xs text-zinc-400 font-medium">
               <a href="tel:0344265925" className="hover:text-[#2AC1BC] transition-colors">
-                {tFooter('hotline')}
+                <Text as="span" size="xs" color="inherit">
+                  {tFooter('hotline')}
+                </Text>
               </a>
             </p>
             <p className="text-xs text-zinc-400 font-medium">
@@ -818,16 +879,20 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 href="mailto:contact@dormio.site"
                 className="hover:text-[#2AC1BC] transition-colors"
               >
-                {tFooter('email')}
+                <Text as="span" size="xs" color="inherit">
+                  {tFooter('email')}
+                </Text>
               </a>
             </p>
-            <p className="text-xs text-zinc-400 font-medium">{tFooter('address')}</p>
+            <Text as="p" size="xs" color="subtle" weight="medium">
+              {tFooter('address')}
+            </Text>
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl border-t border-zinc-800 mt-8 pt-6 text-center text-[11px] text-zinc-500 font-medium">
+        <Text as="div" size="2xs" color="subtle" weight="medium" align="center" className="mx-auto max-w-7xl border-t border-zinc-800 mt-8 pt-6">
           {tFooter('rights')}
-        </div>
+        </Text>
       </footer>
     </div>
   )

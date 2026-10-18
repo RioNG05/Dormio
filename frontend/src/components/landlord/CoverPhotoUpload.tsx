@@ -5,13 +5,12 @@ import {
   UploadCloud,
   ImageIcon,
   X,
-  CheckCircle2,
   AlertCircle,
   Loader2,
   RefreshCw,
 } from 'lucide-react'
 import { uploadImageToBackend } from '@/services/upload.service'
-import { Button, TextInput } from '@/components/ui'
+import { Button, TextInput, Text } from '@/components/ui'
 
 interface CoverPhotoUploadProps {
   value?: string
@@ -132,8 +131,10 @@ export function CoverPhotoUpload({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-bold text-zinc-700 tracking-wide uppercase">{label}</label>
-        {hint && <span className="text-[11px] text-zinc-400">{hint}</span>}
+        <Text as="label" size="xs" weight="bold" color="default" uppercase className="tracking-wide">
+          {label}
+        </Text>
+        {hint && <Text as="span" size="2xs" color="subtle">{hint}</Text>}
       </div>
 
       <TextInput
@@ -155,7 +156,9 @@ export function CoverPhotoUpload({
             {isUploading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white backdrop-blur-xs">
                 <Loader2 className="h-7 w-7 animate-spin text-[#2AC1BC]" />
-                <span className="mt-2 text-xs font-semibold">Đang tải ảnh lên đám mây...</span>
+                <Text as="span" size="xs" weight="semibold" color="white" className="mt-2">
+                  Đang tải ảnh lên đám mây...
+                </Text>
               </div>
             )}
           </div>
@@ -166,10 +169,10 @@ export function CoverPhotoUpload({
                 <ImageIcon className="h-4 w-4" />
               </div>
               <div className="truncate text-xs">
-                <p className="font-semibold text-zinc-800 truncate">
+                <Text size="xs" weight="semibold" color="default" truncate>
                   {fileName || 'Ảnh đại diện đã chọn'}
-                </p>
-                {fileSize && <p className="text-zinc-400 text-[11px]">{fileSize}</p>}
+                </Text>
+                {fileSize && <Text size="2xs" color="subtle">{fileSize}</Text>}
               </div>
             </div>
 
@@ -182,7 +185,9 @@ export function CoverPhotoUpload({
                 disabled={isUploading}
                 leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
               >
-                Đổi ảnh
+                <Text as="span" size="xs" weight="medium" color="inherit">
+                  Đổi ảnh
+                </Text>
               </Button>
 
               <Button
@@ -193,7 +198,9 @@ export function CoverPhotoUpload({
                 disabled={isUploading}
                 leftIcon={<X className="h-3.5 w-3.5" />}
               >
-                Xóa
+                <Text as="span" size="xs" weight="medium" color="inherit">
+                  Xóa
+                </Text>
               </Button>
             </div>
           </div>
@@ -216,21 +223,25 @@ export function CoverPhotoUpload({
           </div>
 
           <div className="mt-3 space-y-1">
-            <p className="text-sm font-bold text-zinc-800">
+            <Text size="sm" weight="bold" color="default">
               Kéo thả ảnh vào đây hoặc{' '}
-              <span className="text-[#2AC1BC] hover:underline">chọn tệp từ máy</span>
-            </p>
-            <p className="text-xs text-zinc-400">
+              <Text as="span" color="brand" className="hover:underline">
+                chọn tệp từ máy
+              </Text>
+            </Text>
+            <Text size="xs" color="subtle">
               Hỗ trợ định dạng PNG, JPG, WEBP (dung lượng tối đa 5MB)
-            </p>
+            </Text>
           </div>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-1.5 text-xs font-medium text-red-600 pt-1">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-rose-600 pt-1">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-          <span>{errorMessage}</span>
+          <Text as="span" size="xs" weight="medium" color="danger">
+            {errorMessage}
+          </Text>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { AlertTriangle, CheckCircle2, AlertCircle, Info, ChevronDown, X } from 'lucide-react'
 import { Button } from './Button'
+import { Text } from './Text'
 
 /* -------------------------------------------------------------------------- */
 /*                               Form Context                                 */
@@ -154,14 +155,22 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
           </div>
         )}
         <div className="space-y-0.5">
-          {title && (
-            <h3 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
-              {title}
-            </h3>
-          )}
-          {description && (
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">{description}</p>
-          )}
+          {title &&
+            (typeof title === 'string' ? (
+              <Text as="h3" size="base" weight="black" color="default" className="sm:text-lg tracking-tight">
+                {title}
+              </Text>
+            ) : (
+              title
+            ))}
+          {description &&
+            (typeof description === 'string' ? (
+              <Text as="p" size="xs" color="secondary" weight="medium" className="leading-relaxed">
+                {description}
+              </Text>
+            ) : (
+              description
+            ))}
           {children}
         </div>
       </div>
@@ -224,14 +233,22 @@ export const FormSection: React.FC<FormSectionProps> = ({
           <div className="flex items-center gap-2.5">
             {icon && <div className="text-zinc-500 shrink-0 flex items-center">{icon}</div>}
             <div>
-              {title && (
-                <h4 className="text-xs sm:text-sm font-extrabold text-zinc-800 tracking-tight">
-                  {title}
-                </h4>
-              )}
-              {description && (
-                <p className="text-[11px] text-zinc-400 font-normal">{description}</p>
-              )}
+              {title &&
+                (typeof title === 'string' ? (
+                  <Text as="h4" size="xs" weight="extrabold" color="default" className="sm:text-sm tracking-tight text-zinc-800">
+                    {title}
+                  </Text>
+                ) : (
+                  title
+                ))}
+              {description &&
+                (typeof description === 'string' ? (
+                  <Text as="p" size="2xs" color="subtle" weight="normal">
+                    {description}
+                  </Text>
+                ) : (
+                  description
+                ))}
             </div>
           </div>
 
@@ -359,8 +376,14 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
               <label
                 className={cn('block text-xs font-bold text-zinc-700 select-none', labelClassName)}
               >
-                <span>{label}</span>
-                {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  {label}
+                </Text>
+                {required && (
+                  <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                    *
+                  </Text>
+                )}
               </label>
             )}
             {labelRight && <div className="shrink-0">{labelRight}</div>}
@@ -370,9 +393,13 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
         {children}
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in">
+            {error}
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )
@@ -499,11 +526,18 @@ export const FormAlert: React.FC<FormAlertProps> = ({
       <div className="flex items-start gap-2.5 min-w-0">
         <IconComponent className={cn('w-4 h-4 shrink-0 mt-0.5', styles.icon)} />
         <div className="space-y-0.5">
-          {title && <p className="font-extrabold tracking-tight">{title}</p>}
+          {title &&
+            (typeof title === 'string' ? (
+              <Text as="p" size="xs" weight="extrabold" color="inherit" className="tracking-tight">
+                {title}
+              </Text>
+            ) : (
+              title
+            ))}
           {(message || children) && (
-            <div className="text-[11px] font-medium leading-relaxed opacity-90">
+            <Text as="div" size="2xs" weight="medium" color="inherit" className="leading-relaxed opacity-90">
               {message || children}
-            </div>
+            </Text>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { Text } from './Text'
 
 export interface TextareaInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string
@@ -41,8 +42,14 @@ export const TextareaInput = React.forwardRef<HTMLTextAreaElement, TextareaInput
               labelClassName,
             )}
           >
-            <span>{label}</span>
-            {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {label}
+            </Text>
+            {required && (
+              <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                *
+              </Text>
+            )}
           </label>
         )}
 
@@ -66,9 +73,13 @@ export const TextareaInput = React.forwardRef<HTMLTextAreaElement, TextareaInput
         />
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in">
+            {error}
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )

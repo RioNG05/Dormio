@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { Text } from './Text'
+import { Button } from './Button'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -168,28 +170,40 @@ export function ToastCard({ toast, onDismiss }: ToastCardProps) {
       {/* Content */}
       <div className="flex-1 min-w-0 pr-1">
         {displayTitle && (
-          <h4 className={`text-sm font-extrabold leading-snug tracking-tight ${config.titleColor}`}>
+          <Text
+            as="h4"
+            size="sm"
+            weight="extrabold"
+            color="inherit"
+            className={`leading-snug tracking-tight ${config.titleColor}`}
+          >
             {displayTitle}
-          </h4>
+          </Text>
         )}
-        <p
-          className={`text-xs font-medium leading-relaxed ${
+        <Text
+          as="p"
+          size="xs"
+          weight="medium"
+          color="inherit"
+          className={`leading-relaxed ${
             displayTitle ? `mt-0.5 ${config.descColor}` : config.titleColor
           }`}
         >
           {displayBody}
-        </p>
+        </Text>
       </div>
 
       {/* Dismiss Button */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={() => onDismiss(id)}
         aria-label="Dismiss toast"
-        className={`p-1 -mr-1 -mt-1 rounded-lg transition-colors cursor-pointer shrink-0 ${config.closeColor} hover:bg-black/5 dark:hover:bg-white/10`}
+        className={`!h-6 !w-6 -mr-1 -mt-1 rounded-lg shrink-0 ${config.closeColor} hover:bg-black/5 dark:hover:bg-white/10`}
       >
         <X className="w-4 h-4" />
-      </button>
+      </Button>
     </div>
   )
 }

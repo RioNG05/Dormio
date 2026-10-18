@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { ChevronDown, Check, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Text } from './Text'
 
 function normalizeVi(str: string): string {
   return str
@@ -331,8 +332,14 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
               labelClassName,
             )}
           >
-            <span>{label}</span>
-            {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {label}
+            </Text>
+            {required && (
+              <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                *
+              </Text>
+            )}
           </label>
         )}
 
@@ -356,14 +363,15 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
           >
             <div className="flex items-center gap-2 min-w-0 pr-2">
               {leftIcon && <span className="shrink-0 text-zinc-400">{leftIcon}</span>}
-              <span
-                className={cn(
-                  'truncate',
-                  !selectedOption && placeholder ? 'text-zinc-400 font-normal' : 'text-zinc-900',
-                )}
+              <Text
+                as="span"
+                size="xs"
+                weight={!selectedOption && placeholder ? 'normal' : 'semibold'}
+                color={!selectedOption && placeholder ? 'subtle' : 'inherit'}
+                className="truncate"
               >
                 {displayLabel}
-              </span>
+              </Text>
             </div>
 
             <ChevronDown
@@ -423,9 +431,9 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                 className="max-h-56 overflow-y-auto custom-scrollbar flex flex-col gap-0.5 pt-1"
               >
                 {filteredOptions.length === 0 ? (
-                  <div className="px-3 py-3 text-center text-xs text-zinc-400 font-medium">
+                  <Text as="div" size="xs" color="subtle" weight="medium" align="center" className="px-3 py-3">
                     {searchQuery ? 'Không tìm thấy kết quả' : placeholder || 'Không có tùy chọn'}
-                  </div>
+                  </Text>
                 ) : (
                   filteredOptions.map((opt, index) => {
                     const isSelected = String(opt.value) === String(currentValue)
@@ -447,7 +455,9 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                       >
                         <div className="flex items-center gap-2 truncate pr-2">
                           {opt.icon && <span className="shrink-0">{opt.icon}</span>}
-                          <span className="truncate">{opt.label}</span>
+                          <Text as="span" size="xs" color="inherit" className="truncate">
+                            {opt.label}
+                          </Text>
                         </div>
                         {isSelected && (
                           <Check className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0 ml-1.5 animate-in zoom-in-75 duration-100" />
@@ -462,9 +472,13 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
         </div>
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in">
+            {error}
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )

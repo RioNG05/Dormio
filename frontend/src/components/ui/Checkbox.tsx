@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Check, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Text } from './Text'
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
@@ -205,28 +206,31 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           {(label || description) && (
             <div className="flex flex-col text-left flex-1 min-w-0">
               {label && (
-                <span
-                  className={cn(
-                    'font-medium text-zinc-700 leading-snug break-words',
-                    sizeConfig.text,
-                    disabled && 'text-zinc-400',
-                    hasError && 'text-rose-700',
-                  )}
+                <Text
+                  as="span"
+                  size={size === 'sm' ? 'xs' : 'sm'}
+                  weight="medium"
+                  color={disabled ? 'subtle' : hasError ? 'danger' : 'secondary'}
+                  className={cn('leading-snug break-words', sizeConfig.text)}
                 >
                   {label}
-                  {required && <span className="text-rose-500 font-bold ml-1">*</span>}
-                </span>
+                  {required && (
+                    <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                      *
+                    </Text>
+                  )}
+                </Text>
               )}
               {description && (
-                <span
-                  className={cn(
-                    'text-zinc-400 leading-relaxed font-normal mt-0.5 break-words',
-                    sizeConfig.desc,
-                    disabled && 'text-zinc-300',
-                  )}
+                <Text
+                  as="span"
+                  size="2xs"
+                  color={disabled ? 'subtle' : 'subtle'}
+                  weight="normal"
+                  className={cn('leading-relaxed mt-0.5 break-words', sizeConfig.desc)}
                 >
                   {description}
-                </span>
+                </Text>
               )}
             </div>
           )}
@@ -234,11 +238,13 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 
         {/* Validation error message or explanatory helper text */}
         {errorMessage ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in pl-7">
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in pl-7">
             {errorMessage}
-          </p>
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400 pl-7">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle" className="pl-7">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )
