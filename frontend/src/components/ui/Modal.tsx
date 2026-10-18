@@ -83,16 +83,16 @@ const ModalContext = React.createContext<ModalContextValue | null>(null)
 /* -------------------------------------------------------------------------- */
 
 const sizeClasses: Record<ModalSize, string> = {
-  xs: 'max-w-xs',
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
-  '3xl': 'max-w-3xl',
-  '4xl': 'max-w-4xl',
-  '5xl': 'max-w-5xl',
-  full: 'max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]',
+  xs: 'w-full max-w-xs',
+  sm: 'w-full max-w-sm',
+  md: 'w-full max-w-md',
+  lg: 'w-full max-w-lg',
+  xl: 'w-full max-w-xl',
+  '2xl': 'w-full max-w-2xl',
+  '3xl': 'w-full max-w-3xl',
+  '4xl': 'w-full max-w-4xl',
+  '5xl': 'w-full max-w-5xl',
+  full: 'w-full max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-2rem)] h-[calc(100dvh-1.5rem)] sm:h-[calc(100dvh-2rem)]',
 }
 
 /* -------------------------------------------------------------------------- */
@@ -117,7 +117,7 @@ export function ModalHeader({
     return (
       <div
         className={cn(
-          'flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800',
+          'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-900',
           className,
         )}
       >
@@ -130,7 +130,7 @@ export function ModalHeader({
             rounded="full"
             onClick={handleClose}
             aria-label="Đóng"
-            className="shrink-0 ml-3"
+            className="shrink-0 ml-2 sm:ml-3"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -142,11 +142,11 @@ export function ModalHeader({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800',
+        'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-900',
         className,
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         {icon && <div className="shrink-0">{icon}</div>}
         <div className="min-w-0">
           {title &&
@@ -175,7 +175,7 @@ export function ModalHeader({
           rounded="full"
           onClick={handleClose}
           aria-label="Đóng"
-          className="shrink-0 ml-3"
+          className="shrink-0 ml-2 sm:ml-3"
         >
           <X className="w-5 h-5" />
         </Button>
@@ -185,14 +185,23 @@ export function ModalHeader({
 }
 
 export function ModalBody({ className, children }: ModalBodyProps) {
-  return <div className={cn('p-6 space-y-4', className)}>{children}</div>
+  return (
+    <div
+      className={cn(
+        'p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0 overscroll-contain',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
 }
 
 export function ModalFooter({ className, children }: ModalFooterProps) {
   return (
     <div
       className={cn(
-        'p-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end items-center gap-3 bg-zinc-50/50 dark:bg-zinc-800/20',
+        'p-3.5 sm:p-4 border-t border-zinc-100 dark:border-zinc-800 flex flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3 bg-zinc-50/50 dark:bg-zinc-800/20 shrink-0',
         className,
       )}
     >
@@ -288,7 +297,7 @@ function ModalRoot({
       aria-modal="true"
       onClick={e => e.stopPropagation()}
       className={cn(
-        'bg-white dark:bg-zinc-900 rounded-2xl w-full shadow-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800 transition-all duration-200 ease-out',
+        'bg-white dark:bg-zinc-900 rounded-2xl w-full shadow-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800 transition-all duration-200 ease-out max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col',
         sizeClasses[size],
         isVisible
           ? 'opacity-100 scale-100 translate-y-0'
@@ -299,7 +308,7 @@ function ModalRoot({
       {header ? (
         <div
           className={cn(
-            'p-5 sm:p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-zinc-900 z-10',
+            'p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-zinc-900 shrink-0 z-10',
             headerClassName,
           )}
         >
@@ -312,7 +321,7 @@ function ModalRoot({
               rounded="full"
               onClick={onClose}
               aria-label="Đóng"
-              className="shrink-0 ml-3"
+              className="shrink-0 ml-2 sm:ml-3"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -343,7 +352,7 @@ function ModalRoot({
       <div
         style={zIndex !== undefined ? { zIndex } : undefined}
         className={cn(
-          'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity duration-200 ease-out',
+          'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs transition-opacity duration-200 ease-out overflow-y-auto',
           isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none',
           overlayClassName,
         )}
@@ -356,7 +365,7 @@ function ModalRoot({
         {asForm || onSubmit ? (
           <form
             onSubmit={onSubmit}
-            className={cn('w-full flex items-center justify-center', sizeClasses[size])}
+            className={cn('w-full max-h-full flex flex-col items-center justify-center', sizeClasses[size])}
             onClick={e => e.stopPropagation()}
           >
             {modalDialog}
