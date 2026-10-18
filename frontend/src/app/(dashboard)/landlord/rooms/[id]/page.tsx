@@ -1179,7 +1179,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               size="sm"
               variant="primary"
-              onClick={() => setIsMeterModalOpen(true)}
+              onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
               leftIcon={<Gauge className="w-4 h-4" />}
               className="flex-1 md:flex-initial"
             >
@@ -1803,7 +1803,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 size="sm"
                 variant="primary"
                 leftIcon={<Gauge className="w-4 h-4" />}
-                onClick={() => setIsMeterModalOpen(true)}
+                onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {t('landlordRoomDetailMeterLogBtn')}
