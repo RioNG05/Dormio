@@ -312,6 +312,17 @@ export const viTenant = {
     tenantUnitPriceLabel: "Đơn giá:",
     tenantValidReadingBadge: "Chỉ số hợp lệ ✓",
     tenantViewInvoicesListBtn: "Xem danh sách hóa đơn",
+    tenantNoActiveTenancyTitle: "Chưa có hợp đồng thuê hoạt động",
+    tenantNoActiveTenancyDesc: "Bạn hiện không có hợp đồng thuê phòng nào đang có hiệu lực để ghi nhận chỉ số điện nước.",
+    tenantMeterLoadErrorTitle: "Không thể tải dữ liệu chỉ số",
+    tenantMeterLoadErrorDesc: "Đã xảy ra sự cố khi tải thông tin dịch vụ điện nước. Vui lòng thử lại sau.",
+    tenantBtnRetry: "Thử lại",
+    tenantBtnBackToDashboard: "Quay về trang tổng quan",
+    tenantOcrExtractFailed: "Không thể nhận diện chỉ số từ ảnh. Vui lòng nhập số thủ công.",
+    tenantConfirmInvoiceError: "Lỗi khi xác nhận chỉ số và tạo hóa đơn",
+    tenantReadingSavedSuccess: "Đã lưu chỉ số {service} thành công!",
+    tenantReadingSaveError: "Lỗi khi lưu chỉ số",
+    tenantAnomalyWarning: "Chỉ số mới nhỏ hơn chỉ số kỳ trước ({old})! Vui lòng kiểm tra lại.",
 
     // --- Complaints page additions (app/(dashboard)/tenant/complaints/page.tsx) ---
     tenantAddPhotoBtn: "Thêm ảnh",

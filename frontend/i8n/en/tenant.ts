@@ -312,6 +312,17 @@ export const enTenant = {
     tenantUnitPriceLabel: "Unit price:",
     tenantValidReadingBadge: "Valid reading ✓",
     tenantViewInvoicesListBtn: "View Invoices List",
+    tenantNoActiveTenancyTitle: "No Active Lease Agreement",
+    tenantNoActiveTenancyDesc: "You currently do not have an active lease contract to record utility meter readings.",
+    tenantMeterLoadErrorTitle: "Failed to Load Meter Readings",
+    tenantMeterLoadErrorDesc: "An error occurred while loading utility services. Please try again later.",
+    tenantBtnRetry: "Retry",
+    tenantBtnBackToDashboard: "Back to Dashboard",
+    tenantOcrExtractFailed: "Could not extract reading from image. Please enter the value manually.",
+    tenantConfirmInvoiceError: "Failed to confirm readings and generate invoice",
+    tenantReadingSavedSuccess: "Successfully saved meter reading for {service}!",
+    tenantReadingSaveError: "Failed to save meter reading",
+    tenantAnomalyWarning: "New reading is lower than previous reading ({old})! Please verify.",
 
     // --- Complaints page additions (app/(dashboard)/tenant/complaints/page.tsx) ---
     tenantAddPhotoBtn: "Add photo",
