@@ -350,7 +350,6 @@ export default function AssetsPage() {
             variant="primary"
             size="sm"
             onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 h-auto px-4 py-2 text-xs sm:text-sm font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" /> {t('landlordAssetsAddBtn')}
           </Button>
