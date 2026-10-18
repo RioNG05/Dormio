@@ -38,6 +38,7 @@ import {
   SearchInput,
   Text,
   ChipGroup,
+  Modal,
 } from '@/components/ui'
 
 export default function NotificationsPage() {
@@ -846,237 +847,169 @@ export default function NotificationsPage() {
       </div>
 
       {/* 5. MODAL: Create Broadcast Announcement Modal */}
-      {isNotifModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) requestCloseNotifModal()
-          }}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-900 text-white">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/20 text-[#2AC1BC] rounded-xl border border-[#2AC1BC]/30">
-                  <Send className="w-5 h-5" />
-                </div>
-                <div>
-                  <Text as="h2" variant="heading" size="lg" weight="black" color="white" className="tracking-tight">
-                    {t('landlordNotificationsModalTitle')}
-                  </Text>
-                  <Text size="xs" color="subtle" className="text-zinc-400 mt-0.5">
-                    {t('landlordNotificationsModalSubtitle')}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
+      <Modal
+        isOpen={isNotifModalOpen}
+        onClose={requestCloseNotifModal}
+        size="2xl"
+        asForm
+        onSubmit={handleBroadcastAnnouncement}
+        headerClassName="bg-zinc-900 text-white border-zinc-800"
+        header={
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#2AC1BC]/20 text-[#2AC1BC] rounded-xl border border-[#2AC1BC]/30">
+              <Send className="w-5 h-5" />
+            </div>
+            <div>
+              <Text as="h2" variant="heading" size="lg" weight="black" color="white" className="tracking-tight">
+                {t('landlordNotificationsModalTitle')}
+              </Text>
+              <Text size="xs" color="subtle" className="text-zinc-400 mt-0.5">
+                {t('landlordNotificationsModalSubtitle')}
+              </Text>
+            </div>
+          </div>
+        }
+        bodyClassName="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar bg-zinc-50/50"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={requestCloseNotifModal}
+              disabled={isSubmitting}
+            >
+              {t('landlordNotificationsBtnCancel')}
+            </Button>
+            <Button
+              size="xs"
+              type="submit"
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
+              leftIcon={!isSubmitting ? <Send className="w-4 h-4" /> : undefined}
+            >
+              <span>
+                {isSubmitting
+                  ? t('landlordNotificationsBroadcasting')
+                  : t('landlordNotificationsBtnBroadcastNow')}
+              </span>
+            </Button>
+          </div>
+        }
+      >
+        {/* Quick Templates */}
+        <div className="space-y-1.5">
+          <label className="flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
+            <Text as="span" size="xs" weight="bold" className="text-zinc-700 uppercase tracking-wider">
+              {t('landlordNotificationsTemplatesLabel')}
+            </Text>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {notificationTemplates.map(tmpl => (
+              <Button fullWidth size="icon"
+                key={tmpl.title}
                 type="button"
                 variant="ghost"
-                size="sm"
-                onClick={requestCloseNotifModal}
+                onClick={() => {
+                  setNotifTitle(tmpl.title)
+                  setNotifContent(tmpl.content)
+                  setNotifCategory(tmpl.category)
+                }}
+                className="group flex-col items-start justify-start whitespace-normal"
               >
-                <X className="w-5 h-5" />
+                <Text size="xs" weight="bold" className="text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full text-left">
+                  {tmpl.title}
+                </Text>
+                <Text size="3xs" weight="medium" color="subtle" className="text-zinc-500 mt-0.5 text-left">
+                  {getCategoryLabel(tmpl.category)}
+                </Text>
               </Button>
-            </div>
-
-            {/* Modal Body Form */}
-            <form
-              onSubmit={handleBroadcastAnnouncement}
-              className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar bg-zinc-50/50"
-            >
-              {/* Quick Templates */}
-              <div className="space-y-1.5">
-                <label className="flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <Text as="span" size="xs" weight="bold" className="text-zinc-700 uppercase tracking-wider">
-                    {t('landlordNotificationsTemplatesLabel')}
-                  </Text>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {notificationTemplates.map(tmpl => (
-                    <Button fullWidth size="icon"
-                      key={tmpl.title}
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        setNotifTitle(tmpl.title)
-                        setNotifContent(tmpl.content)
-                        setNotifCategory(tmpl.category)
-                      }}
-                      className="group flex-col items-start justify-start whitespace-normal"
-                    >
-                      <Text size="xs" weight="bold" className="text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full text-left">
-                        {tmpl.title}
-                      </Text>
-                      <Text size="3xs" weight="medium" color="subtle" className="text-zinc-500 mt-0.5 text-left">
-                        {getCategoryLabel(tmpl.category)}
-                      </Text>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Title */}
-              <TextInput
-                label={t('landlordNotificationsFieldTitle')}
-                required
-                placeholder={t('landlordNotificationsFieldTitlePlaceholder')}
-                value={notifTitle}
-                onChange={e => setNotifTitle(e.target.value)}
-              />
-
-              {/* Target & Channel */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <TextInput
-                  label={t('landlordNotificationsFieldTargetScope')}
-                  value={notifTargetScope}
-                  onChange={e => setNotifTargetScope(e.target.value)}
-                  placeholder={t('landlordNotificationsFieldTargetScopePlaceholder')}
-                />
-
-                <SelectInput
-                  label={t('landlordNotificationsFieldChannel')}
-                  value={notifChannel}
-                  onChange={e => setNotifChannel(e.target.value)}
-                  options={[
-                    {
-                      value: 'Thông báo hệ thống',
-                      label: t('landlordNotificationsChannelInAppFull'),
-                    },
-                    { value: 'Zalo OA', label: t('landlordNotificationsChannelZalo') },
-                    { value: 'SMS', label: t('landlordNotificationsChannelSmsDirect') },
-                  ]}
-                />
-              </div>
-
-              {/* Category */}
-              <SelectInput
-                label={t('landlordNotificationsFieldCategory')}
-                value={notifCategory}
-                onChange={e => setNotifCategory(e.target.value)}
-                options={[
-                  { value: 'Điện nước', label: t('landlordNotificationsCatUtilities') },
-                  { value: 'Tiền nhà', label: t('landlordNotificationsCatRent') },
-                  { value: 'Nội quy', label: t('landlordNotificationsCatRules') },
-                  { value: 'Khẩn cấp', label: t('landlordNotificationsCatEmergency') },
-                ]}
-              />
-
-              {/* Content */}
-              <TextareaInput
-                label={t('landlordNotificationsFieldContent')}
-                required
-                rows={5}
-                placeholder={t('landlordNotificationsFieldContentPlaceholder')}
-                value={notifContent}
-                onChange={e => setNotifContent(e.target.value)}
-              />
-
-              {/* Submit Footer */}
-              <div className="pt-4 border-t border-zinc-200 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={requestCloseNotifModal}
-                  disabled={isSubmitting}
-                >
-                  {t('landlordNotificationsBtnCancel')}
-                </Button>
-                <Button
-                  size="xs"
-                  type="submit"
-                  disabled={isSubmitting}
-                  isLoading={isSubmitting}
-                  leftIcon={!isSubmitting ? <Send className="w-4 h-4" /> : undefined}
-                >
-                  <span>
-                    {isSubmitting
-                      ? t('landlordNotificationsBroadcasting')
-                      : t('landlordNotificationsBtnBroadcastNow')}
-                  </span>
-                </Button>
-              </div>
-            </form>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Title */}
+        <TextInput
+          label={t('landlordNotificationsFieldTitle')}
+          required
+          placeholder={t('landlordNotificationsFieldTitlePlaceholder')}
+          value={notifTitle}
+          onChange={e => setNotifTitle(e.target.value)}
+        />
+
+        {/* Target & Channel */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <TextInput
+            label={t('landlordNotificationsFieldTargetScope')}
+            value={notifTargetScope}
+            onChange={e => setNotifTargetScope(e.target.value)}
+            placeholder={t('landlordNotificationsFieldTargetScopePlaceholder')}
+          />
+
+          <SelectInput
+            label={t('landlordNotificationsFieldChannel')}
+            value={notifChannel}
+            onChange={e => setNotifChannel(e.target.value)}
+            options={[
+              {
+                value: 'Thông báo hệ thống',
+                label: t('landlordNotificationsChannelInAppFull'),
+              },
+              { value: 'Zalo OA', label: t('landlordNotificationsChannelZalo') },
+              { value: 'SMS', label: t('landlordNotificationsChannelSmsDirect') },
+            ]}
+          />
+        </div>
+
+        {/* Category */}
+        <SelectInput
+          label={t('landlordNotificationsFieldCategory')}
+          value={notifCategory}
+          onChange={e => setNotifCategory(e.target.value)}
+          options={[
+            { value: 'Điện nước', label: t('landlordNotificationsCatUtilities') },
+            { value: 'Tiền nhà', label: t('landlordNotificationsCatRent') },
+            { value: 'Nội quy', label: t('landlordNotificationsCatRules') },
+            { value: 'Khẩn cấp', label: t('landlordNotificationsCatEmergency') },
+          ]}
+        />
+
+        {/* Content */}
+        <TextareaInput
+          label={t('landlordNotificationsFieldContent')}
+          required
+          rows={5}
+          placeholder={t('landlordNotificationsFieldContentPlaceholder')}
+          value={notifContent}
+          onChange={e => setNotifContent(e.target.value)}
+        />
+      </Modal>
 
       {/* 6. MODAL: View Announcement Details */}
-      {selectedNotifDetail && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setSelectedNotifDetail(null)
-          }}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-900 text-white">
-              <div className="flex items-center gap-2.5">
-                <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-full">
-                  <Text as="span" variant="badge" size="3xs" weight="black" color="brand">
-                    {getCategoryLabel(selectedNotifDetail.category)}
-                  </Text>
-                </span>
-                <Text as="h3" size="sm" weight="bold" color="white">
-                  {t('landlordNotificationsDetailTitle')}
+      <Modal
+        isOpen={Boolean(selectedNotifDetail)}
+        onClose={() => setSelectedNotifDetail(null)}
+        size="lg"
+        headerClassName="bg-zinc-900 text-white border-zinc-800"
+        header={
+          selectedNotifDetail ? (
+            <div className="flex items-center gap-2.5">
+              <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-full">
+                <Text as="span" variant="badge" size="3xs" weight="black" color="brand">
+                  {getCategoryLabel(selectedNotifDetail.category)}
                 </Text>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedNotifDetail(null)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+              </span>
+              <Text as="h3" size="sm" weight="bold" color="white">
+                {t('landlordNotificationsDetailTitle')}
+              </Text>
             </div>
-
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              <div>
-                <Text as="h2" size="base" weight="black" className="text-zinc-900 leading-snug mb-1">
-                  {selectedNotifDetail.title}
-                </Text>
-                <div className="flex items-center gap-3">
-                  <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
-                    {t('landlordNotificationsDetailSentAt', { time: selectedNotifDetail.sentAt })}
-                  </Text>
-                  <Text as="span" size="2xs" color="subtle" className="text-zinc-400">
-                    •
-                  </Text>
-                  <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
-                    {t('landlordNotificationsDetailChannel', {
-                      channel: getChannelLabel(selectedNotifDetail.channel),
-                    })}
-                  </Text>
-                </div>
-              </div>
-
-              <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/80">
-                <Text size="xs" weight="medium" className="text-zinc-800 leading-relaxed whitespace-pre-line">
-                  {selectedNotifDetail.content}
-                </Text>
-              </div>
-
-              <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-blue-600" />
-                  <Text as="span" size="xs" weight="bold" className="text-zinc-700">
-                    {t('landlordNotificationsDetailTargetReach')}
-                  </Text>
-                </div>
-                <Text as="span" size="sm" weight="black" className="text-blue-600">
-                  {t('landlordNotificationsDetailResidentsUnit', {
-                    count: selectedNotifDetail.totalTarget,
-                  })}
-                </Text>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50 flex items-center justify-between">
+          ) : null
+        }
+        bodyClassName="p-6 space-y-4"
+        footer={
+          selectedNotifDetail ? (
+            <div className="flex items-center justify-between w-full">
               <Button
                 type="button"
                 variant="ghost"
@@ -1099,59 +1032,102 @@ export default function NotificationsPage() {
                 {t('landlordNotificationsDetailClose')}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          ) : null
+        }
+      >
+        {selectedNotifDetail && (
+          <>
+            <div>
+              <Text as="h2" size="base" weight="black" className="text-zinc-900 leading-snug mb-1">
+                {selectedNotifDetail.title}
+              </Text>
+              <div className="flex items-center gap-3">
+                <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
+                  {t('landlordNotificationsDetailSentAt', { time: selectedNotifDetail.sentAt })}
+                </Text>
+                <Text as="span" size="2xs" color="subtle" className="text-zinc-400">
+                  •
+                </Text>
+                <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
+                  {t('landlordNotificationsDetailChannel', {
+                    channel: getChannelLabel(selectedNotifDetail.channel),
+                  })}
+                </Text>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/80">
+              <Text size="xs" weight="medium" className="text-zinc-800 leading-relaxed whitespace-pre-line">
+                {selectedNotifDetail.content}
+              </Text>
+            </div>
+
+            <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-600" />
+                <Text as="span" size="xs" weight="bold" className="text-zinc-700">
+                  {t('landlordNotificationsDetailTargetReach')}
+                </Text>
+              </div>
+              <Text as="span" size="sm" weight="black" className="text-blue-600">
+                {t('landlordNotificationsDetailResidentsUnit', {
+                  count: selectedNotifDetail.totalTarget,
+                })}
+              </Text>
+            </div>
+          </>
+        )}
+      </Modal>
 
       {/* 7. MODAL: Confirm Delete Modal */}
-      {deletingNotifId && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setDeletingNotifId(null)
-          }}
-        >
-          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-            <div className="w-14 h-14 bg-rose-50 border border-rose-200/80 rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
-              <Trash2 className="w-7 h-7" />
-            </div>
+      <Modal
+        isOpen={Boolean(deletingNotifId)}
+        onClose={() => setDeletingNotifId(null)}
+        size="sm"
+        zIndex={60}
+        showCloseButton={false}
+        footer={
+          <div className="flex items-center justify-center gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isDeleting}
+              onClick={() => setDeletingNotifId(null)}
+              className="flex-1"
+            >
+              {t('landlordNotificationsBtnCancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              disabled={isDeleting}
+              isLoading={isDeleting}
+              leftIcon={!isDeleting ? <Trash2 className="w-4 h-4" /> : undefined}
+              onClick={() => deletingNotifId && handleDeleteAnnouncement(deletingNotifId)}
+              className="flex-1"
+            >
+              <span>{t('landlordNotificationsConfirmDeleteBtn')}</span>
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-5 text-center">
+          <div className="w-14 h-14 bg-rose-50 border border-rose-200/80 rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
+            <Trash2 className="w-7 h-7" />
+          </div>
 
-            <div className="space-y-2">
-              <Text as="h3" variant="heading" size="xl" weight="black" className="text-zinc-900 tracking-tight">
-                {t('landlordNotificationsConfirmDeleteTitle')}
-              </Text>
-              <Text size="sm" weight="medium" color="subtle" align="center" className="text-zinc-500 leading-relaxed max-w-xs mx-auto">
-                {t('landlordNotificationsConfirmDeleteDesc')}
-              </Text>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isDeleting}
-                onClick={() => setDeletingNotifId(null)}
-                className="flex-1"
-              >
-                {t('landlordNotificationsBtnCancel')}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                disabled={isDeleting}
-                isLoading={isDeleting}
-                leftIcon={!isDeleting ? <Trash2 className="w-4 h-4" /> : undefined}
-                onClick={() => handleDeleteAnnouncement(deletingNotifId)}
-                className="flex-1"
-              >
-                <span>{t('landlordNotificationsConfirmDeleteBtn')}</span>
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Text as="h3" variant="heading" size="xl" weight="black" className="text-zinc-900 tracking-tight">
+              {t('landlordNotificationsConfirmDeleteTitle')}
+            </Text>
+            <Text size="sm" weight="medium" color="subtle" align="center" className="text-zinc-500 leading-relaxed max-w-xs mx-auto">
+              {t('landlordNotificationsConfirmDeleteDesc')}
+            </Text>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }

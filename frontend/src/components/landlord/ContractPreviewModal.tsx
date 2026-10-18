@@ -13,7 +13,7 @@ import {
 import { getContractPrintHtml, exportContract } from '@/services/contract.service'
 import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
-import { Button } from '@/components/ui'
+import { Button, Modal, Text } from '@/components/ui'
 
 interface ContractPreviewModalProps {
   isOpen: boolean
@@ -163,24 +163,27 @@ export default function ContractPreviewModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 bg-zinc-50/80 shrink-0">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="5xl"
+      className="h-[90vh] flex flex-col"
+      header={
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 flex items-center justify-center text-[#2AC1BC]">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-zinc-900 leading-tight">
+              <Text as="h2" size="lg" weight="black" className="text-zinc-900 leading-tight">
                 {t('landlordContractsExportTitle', { roomNumber })}
-              </h2>
-              <p className="text-xs text-zinc-500 font-medium">
+              </Text>
+              <Text size="xs" color="subtle" weight="medium">
                 {tenantName ? `${t('landlordContractsExportRep', { tenantName })} • ` : ''}
                 <span className="font-mono font-bold text-zinc-700">
                   {contractId.substring(0, 12)}...
                 </span>
-              </p>
+              </Text>
             </div>
           </div>
 
@@ -211,77 +214,16 @@ export default function ContractPreviewModal({
                   : t('landlordContractsExportExportBtn')}
               </span>
             </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="ml-1"
-              title={t('landlordContractsExportCloseTooltip')}
-            >
-              <X className="w-5 h-5" />
-            </Button>
           </div>
         </div>
-
-        {/* Modal Body: Document Preview */}
-        <div className="flex-1 bg-zinc-100/70 p-2 sm:p-4 overflow-hidden relative">
-          {isLoading && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-xs">
-              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-              <p className="text-sm font-semibold text-zinc-600">
-                {t('landlordContractsExportPreparing')}
-              </p>
-            </div>
-          )}
-
-          {error && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white p-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <p className="text-base font-bold text-rose-600">{error}</p>
-              <p className="text-xs text-zinc-500 max-w-md">
-                {t('landlordContractsExportErrorTitle')}
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchContractHtml}
-                  leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-                >
-                  Thử lại
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={onClose}
-                >
-                  {t('landlordContractsExportCloseBtn')}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {!isLoading && !error && htmlContent && (
-            <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white">
-              <iframe
-                ref={iframeRef}
-                srcDoc={htmlContent}
-                title={t('landlordContractsExportIframeTitle')}
-                className="w-full h-full border-0"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-200 bg-white text-xs text-zinc-500 font-medium shrink-0">
+      }
+      bodyClassName="flex-1 bg-zinc-100/70 p-2 sm:p-4 overflow-hidden relative min-h-0"
+      footer={
+        <div className="flex items-center justify-between w-full text-xs text-zinc-500 font-medium">
           <div>
-            <span className="font-bold text-zinc-700">
+            <Text as="span" size="xs" weight="bold" className="text-zinc-700">
               {t('landlordContractsExportFormatStandard')}
-            </span>
+            </Text>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -302,7 +244,56 @@ export default function ContractPreviewModal({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      }
+    >
+      {isLoading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-xs">
+          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Text size="sm" weight="semibold" className="text-zinc-600">
+            {t('landlordContractsExportPreparing')}
+          </Text>
+        </div>
+      )}
+
+      {error && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <Text size="base" weight="bold" className="text-rose-600">{error}</Text>
+          <Text size="xs" color="secondary" className="max-w-md mx-auto">
+            {t('landlordContractsExportErrorTitle')}
+          </Text>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchContractHtml}
+              leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+            >
+              Thử lại
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onClose}
+            >
+              {t('landlordContractsExportCloseBtn')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {!isLoading && !error && htmlContent && (
+        <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white">
+          <iframe
+            ref={iframeRef}
+            srcDoc={htmlContent}
+            title={t('landlordContractsExportIframeTitle')}
+            className="w-full h-full border-0"
+          />
+        </div>
+      )}
+    </Modal>
   )
 }

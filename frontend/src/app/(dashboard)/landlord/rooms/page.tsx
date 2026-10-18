@@ -33,6 +33,7 @@ import {
   Form,
   SearchInput,
   Text,
+  Modal,
 } from '@/components/ui'
 import { formatCurrency } from '@/utils'
 import {
@@ -1145,52 +1146,59 @@ export default function RoomsPage() {
       {/* ========================================================================= */}
       {/* BULK GENERATE ROOMS MODAL */}
       {/* ========================================================================= */}
-      {isBulkModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseBulkModal()
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 border border-zinc-100">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-zinc-100 bg-white z-10">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-amber-100 text-amber-700 rounded-2xl">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div>
-                  <Text as="h2" variant="heading" size="xl" weight="black" className="tracking-tight text-zinc-900">
-                    {t('landlordRoomsBulkModalTitle')}
-                  </Text>
-                  <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
-                    {t('landlordRoomsBulkModalSubtitle')}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseBulkModal}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isBulkModalOpen}
+        onClose={handleCloseBulkModal}
+        size="3xl"
+        asForm
+        onSubmit={handleBulkGenerateSubmit}
+        header={
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-amber-100 text-amber-700 rounded-2xl">
+              <Sparkles className="w-6 h-6" />
             </div>
-
-            {/* Modal Body Form */}
-            <form
-              onSubmit={handleBulkGenerateSubmit}
-              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-zinc-50/40"
+            <div>
+              <Text as="h2" variant="heading" size="xl" weight="black" className="tracking-tight text-zinc-900">
+                {t('landlordRoomsBulkModalTitle')}
+              </Text>
+              <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
+                {t('landlordRoomsBulkModalSubtitle')}
+              </Text>
+            </div>
+          </div>
+        }
+        bodyClassName="p-6 space-y-6 bg-zinc-50/40 custom-scrollbar"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseBulkModal}
             >
-              {bulkError && (
-                <Form.Alert
-                  variant="error"
-                  title={t('landlordRoomsBulkErrorHeader')}
-                  message={bulkError}
-                  onClose={() => setBulkError(null)}
-                />
-              )}
+              {t('landlordRoomsBulkBtnCancel')}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isBulkSubmitting || isOverQuota}
+              isLoading={isBulkSubmitting}
+              leftIcon={<Sparkles className="w-4 h-4" />}
+            >
+              {isBulkSubmitting
+                ? t('landlordRoomsBulkBtnSubmitting')
+                : t('landlordRoomsBulkBtnConfirm', { count: totalGeneratedCount })}
+            </Button>
+          </div>
+        }
+      >
+        {bulkError && (
+          <Form.Alert
+            variant="error"
+            title={t('landlordRoomsBulkErrorHeader')}
+            message={bulkError}
+            onClose={() => setBulkError(null)}
+          />
+        )}
 
               {/* Quota Info Banner */}
               <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-2">
@@ -1438,90 +1446,78 @@ export default function RoomsPage() {
                 </div>
               </div>
 
-              {/* Modal Action Buttons */}
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseBulkModal}
-                >
-                  {t('landlordRoomsBulkBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isBulkSubmitting || isOverQuota}
-                  isLoading={isBulkSubmitting}
-                  leftIcon={<Sparkles className="w-4 h-4" />}
-                >
-                  {isBulkSubmitting
-                    ? t('landlordRoomsBulkBtnSubmitting')
-                    : t('landlordRoomsBulkBtnConfirm', { count: totalGeneratedCount })}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* SINGLE ROOM ADD/EDIT MODAL */}
       {/* ========================================================================= */}
-      {isSingleModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseSingleModal()
-          }}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
-            onInput={() => setIsSingleDirty(true)}
-            onChange={() => setIsSingleDirty(true)}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white z-10">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
-                  {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-                </div>
-                <div>
-                  <Text as="h2" variant="heading" size="xl" weight="black" className="text-zinc-900">
-                    {selectedRoomId
-                      ? t('landlordRoomsSingleTitleEdit')
-                      : t('landlordRoomsSingleTitleCreate')}
-                  </Text>
-                  <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
-                    {selectedRoomId
-                      ? t('landlordRoomsSingleDescEdit')
-                      : t('landlordRoomsSingleDescCreate')}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseSingleModal}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isSingleModalOpen}
+        onClose={handleCloseSingleModal}
+        size="4xl"
+        asForm
+        onSubmit={handleSingleRoomSubmit}
+        header={
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+              {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
             </div>
-
-            {/* Modal Content */}
-            <form
-              onSubmit={handleSingleRoomSubmit}
-              className="flex-1 flex flex-col min-h-0 overflow-hidden"
+            <div>
+              <Text as="h2" variant="heading" size="xl" weight="black" className="text-zinc-900">
+                {selectedRoomId
+                  ? t('landlordRoomsSingleTitleEdit')
+                  : t('landlordRoomsSingleTitleCreate')}
+              </Text>
+              <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
+                {selectedRoomId
+                  ? t('landlordRoomsSingleDescEdit')
+                  : t('landlordRoomsSingleDescCreate')}
+              </Text>
+            </div>
+          </div>
+        }
+        bodyClassName="p-6 bg-zinc-50/50 space-y-6 custom-scrollbar"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseSingleModal}
+              disabled={isSingleSubmitting}
             >
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-50/50 space-y-6">
-                {/* Error Banner */}
-                {singleError && (
-                  <Form.Alert
-                    variant="error"
-                    message={singleError}
-                    onClose={() => setSingleError(null)}
-                  />
-                )}
+              {t('landlordRoomsSingleBtnCancel')}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSingleSubmitting}
+              isLoading={isSingleSubmitting}
+              leftIcon={
+                selectedRoomId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />
+              }
+            >
+              {isSingleSubmitting
+                ? t('landlordRoomsSingleBtnSaving')
+                : selectedRoomId
+                  ? t('landlordRoomsSingleBtnSaveEdit')
+                  : t('landlordRoomsSingleBtnSaveCreate')}
+            </Button>
+          </div>
+        }
+      >
+        <div
+          onInput={() => setIsSingleDirty(true)}
+          onChange={() => setIsSingleDirty(true)}
+          className="space-y-6"
+        >
+          {/* Error Banner */}
+          {singleError && (
+            <Form.Alert
+              variant="error"
+              message={singleError}
+              onClose={() => setSingleError(null)}
+            />
+          )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Left Column: Basic Details */}
@@ -1785,41 +1781,11 @@ export default function RoomsPage() {
                         }}
                         placeholder={t('landlordRoomsSingleNotesPlaceholder')}
                       />
-                    </div>
-                  </div>
-                </div>
               </div>
-
-              {/* Modal Actions */}
-              <div className="p-5 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseSingleModal}
-                  disabled={isSingleSubmitting}
-                >
-                  {t('landlordRoomsSingleBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isSingleSubmitting}
-                  isLoading={isSingleSubmitting}
-                  leftIcon={
-                    selectedRoomId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />
-                  }
-                >
-                  {isSingleSubmitting
-                    ? t('landlordRoomsSingleBtnSaving')
-                    : selectedRoomId
-                      ? t('landlordRoomsSingleBtnSaveEdit')
-                      : t('landlordRoomsSingleBtnSaveCreate')}
-                </Button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Confirmation Modal (Rule 10) */}
       <ConfirmModal
@@ -1847,29 +1813,15 @@ function ConfirmModal({
   onCancel: () => void
 }) {
   const t = useTranslations('landlord')
-  if (!isOpen) return null
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onCancel()
-      }}
-    >
-      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-
-        <div className="space-y-2">
-          <Text as="h3" variant="heading" size="lg" weight="black" className="tracking-tight text-zinc-900">
-            {title}
-          </Text>
-          <Text variant="body" size="xs" weight="medium" color="secondary" className="leading-relaxed max-w-xs mx-auto">
-            {message}
-          </Text>
-        </div>
-
-        <div className="flex items-center justify-center gap-3 pt-2">
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      size="sm"
+      zIndex={60}
+      showCloseButton={false}
+      footer={
+        <div className="flex items-center justify-center gap-3 w-full">
           <Button
             type="button"
             variant="outline"
@@ -1887,7 +1839,22 @@ function ConfirmModal({
             {t('landlordRoomsDiscardAndClose')}
           </Button>
         </div>
+      }
+    >
+      <div className="space-y-5 text-center">
+        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
+          <AlertTriangle className="w-7 h-7" />
+        </div>
+
+        <div className="space-y-2">
+          <Text as="h3" variant="heading" size="lg" weight="black" className="tracking-tight text-zinc-900">
+            {title}
+          </Text>
+          <Text variant="body" size="xs" weight="medium" color="secondary" className="leading-relaxed max-w-xs mx-auto">
+            {message}
+          </Text>
+        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

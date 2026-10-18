@@ -44,6 +44,8 @@ import {
   ToastContainer,
   ToastItem,
   ToastType,
+  Modal,
+  Text,
 } from '@/components/ui'
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -858,239 +860,222 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* MODAL 1: GIA HẠN HỢP ĐỒNG */}
-      {isExtendModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) requestCloseModal(() => setIsExtendModalOpen(false))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <CalendarDays className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-zinc-900">
-                    {t('landlordContractDetailModalExtendTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordContractDetailExtendDesc').replace('{room}', contract.room)}
-                  </p>
-                </div>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isExtendModalOpen}
+        onClose={() => requestCloseModal(() => setIsExtendModalOpen(false))}
+        size="md"
+        header={
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+              <CalendarDays className="w-5 h-5" />
             </div>
-
-            <div className="p-6 space-y-4">
-              <TextInput
-                label={t('landlordContractDetailCurrentEndDate')}
-                value={contract.endDate}
-                disabled
-              />
-
-              <DateInput
-                label={t('landlordContractDetailNewEndDate')}
-                required
-                value={extendEndDate}
-                onChange={e => {
-                  setExtendEndDate(e.target.value)
-                  setIsDirty(true)
-                }}
-              />
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-              >
-                {t('landlordContractsCreateCancelBtn')}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSaveExtension}
-              >
-                {t('landlordContractDetailModalExtendSubmit')}
-              </Button>
+            <div>
+              <Text as="h2" size="base" weight="black" className="text-zinc-900">
+                {t('landlordContractDetailModalExtendTitle')}
+              </Text>
+              <Text size="xs" color="subtle" weight="medium">
+                {t('landlordContractDetailExtendDesc').replace('{room}', contract.room)}
+              </Text>
             </div>
           </div>
-        </div>
-      )}
+        }
+        bodyClassName="p-6 space-y-4"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
+            >
+              {t('landlordContractsCreateCancelBtn')}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleSaveExtension}
+            >
+              {t('landlordContractDetailModalExtendSubmit')}
+            </Button>
+          </div>
+        }
+      >
+        <TextInput
+          label={t('landlordContractDetailCurrentEndDate')}
+          value={contract.endDate}
+          disabled
+        />
+
+        <DateInput
+          label={t('landlordContractDetailNewEndDate')}
+          required
+          value={extendEndDate}
+          onChange={e => {
+            setExtendEndDate(e.target.value)
+            setIsDirty(true)
+          }}
+        />
+      </Modal>
 
       {/* MODAL 2: SỬA HỢP ĐỒNG */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) requestCloseModal(() => setIsEditModalOpen(false))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Edit2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-zinc-900">
-                    {t('landlordContractDetailModalEditTitle')} {contract.id}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordContractDetailEditDesc')}
-                  </p>
-                </div>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => requestCloseModal(() => setIsEditModalOpen(false))}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => requestCloseModal(() => setIsEditModalOpen(false))}
+        size="lg"
+        header={
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+              <Edit2 className="w-5 h-5" />
             </div>
-
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <NumberInput
-                  label={t('landlordContractDetailRentPriceMonthly')}
-                  required
-                  suffixText="₫"
-                  value={editPrice}
-                  onChange={e => {
-                    setEditPrice(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
-
-                <NumberInput
-                  label={t('landlordContractDetailDepositAmount')}
-                  required
-                  suffixText="₫"
-                  value={editDeposit}
-                  onChange={e => {
-                    setEditDeposit(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
-              </div>
-
-              <SelectInput
-                label={t('landlordContractDetailPaymentDayOfMonth')}
-                value={editPaymentDate}
-                onChange={e => {
-                  setEditPaymentDate(e.target.value)
-                  setIsDirty(true)
-                }}
-                options={Array.from({ length: 31 }, (_, i) => ({
-                  value: String(i + 1),
-                  label: t('landlordContractsPaymentDateEveryMonth').replace('{day}', String(i + 1)),
-                }))}
-              />
-
-              <TextareaInput
-                label={t('landlordContractDetailEditReasonHint')}
-                required
-                rows={3}
-                placeholder={t('landlordContractDetailModalEditReasonPh')}
-                value={editReason}
-                onChange={e => {
-                  setEditReason(e.target.value)
-                  setIsDirty(true)
-                }}
-              />
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => requestCloseModal(() => setIsEditModalOpen(false))}
-              >
-                {t('landlordContractsCreateCancelBtn')}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSaveContractEdit}
-              >
-                {t('landlordContractDetailModalEditSubmit')}
-              </Button>
+            <div>
+              <Text as="h2" size="base" weight="black" className="text-zinc-900">
+                {t('landlordContractDetailModalEditTitle')} {contract.id}
+              </Text>
+              <Text size="xs" color="subtle" weight="medium">
+                {t('landlordContractDetailEditDesc')}
+              </Text>
             </div>
           </div>
+        }
+        bodyClassName="p-6 space-y-4"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => requestCloseModal(() => setIsEditModalOpen(false))}
+            >
+              {t('landlordContractsCreateCancelBtn')}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleSaveContractEdit}
+            >
+              {t('landlordContractDetailModalEditSubmit')}
+            </Button>
+          </div>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <NumberInput
+            label={t('landlordContractDetailRentPriceMonthly')}
+            required
+            suffixText="₫"
+            value={editPrice}
+            onChange={e => {
+              setEditPrice(e.target.value)
+              setIsDirty(true)
+            }}
+          />
+
+          <NumberInput
+            label={t('landlordContractDetailDepositAmount')}
+            required
+            suffixText="₫"
+            value={editDeposit}
+            onChange={e => {
+              setEditDeposit(e.target.value)
+              setIsDirty(true)
+            }}
+          />
         </div>
-      )}
+
+        <SelectInput
+          label={t('landlordContractDetailPaymentDayOfMonth')}
+          value={editPaymentDate}
+          onChange={e => {
+            setEditPaymentDate(e.target.value)
+            setIsDirty(true)
+          }}
+          options={Array.from({ length: 31 }, (_, i) => ({
+            value: String(i + 1),
+            label: t('landlordContractsPaymentDateEveryMonth').replace('{day}', String(i + 1)),
+          }))}
+        />
+
+        <TextareaInput
+          label={t('landlordContractDetailEditReasonHint')}
+          required
+          rows={3}
+          placeholder={t('landlordContractDetailModalEditReasonPh')}
+          value={editReason}
+          onChange={e => {
+            setEditReason(e.target.value)
+            setIsDirty(true)
+          }}
+        />
+      </Modal>
 
       {/* MODAL 3: THÊM THÀNH VIÊN Ở CÙNG */}
-      {isAddMemberModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) requestCloseModal(() => setIsAddMemberModalOpen(false))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-zinc-900">
-                    {t('landlordContractDetailModalAddMemberTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordContractDetailAddMemberDesc').replace('{room}', contract.room)}
-                  </p>
-                </div>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isAddMemberModalOpen}
+        onClose={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
+        size="lg"
+        header={
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+              <Users className="w-5 h-5" />
             </div>
-
-            {/* Mode Switcher Tabs */}
-            <div className="grid grid-cols-2 p-2 bg-zinc-100/70 border-b border-zinc-200/60 text-xs font-bold gap-1">
-              <Button
-                type="button"
-                size="sm"
-                variant={addMemberTab === 'select' ? 'primary' : 'ghost'}
-                onClick={() => setAddMemberTab('select')}
-              >
-                {t('landlordContractDetailTabSelectExisting')}
-              </Button>
-
-              <Button
-                type="button"
-                size="sm"
-                variant={addMemberTab === 'create' ? 'primary' : 'ghost'}
-                onClick={() => setAddMemberTab('create')}
-              >
-                {t('landlordContractDetailTabCreateNew')}
-              </Button>
+            <div>
+              <Text as="h2" size="base" weight="black" className="text-zinc-900">
+                {t('landlordContractDetailModalAddMemberTitle')}
+              </Text>
+              <Text size="xs" color="subtle" weight="medium">
+                {t('landlordContractDetailAddMemberDesc').replace('{room}', contract.room)}
+              </Text>
             </div>
+          </div>
+        }
+        bodyClassName="p-0 overflow-hidden flex flex-col"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
+            >
+              {t('landlordContractsCreateCancelBtn')}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleAddMember}
+            >
+              {addMemberTab === 'select'
+                ? t('landlordContractDetailModalAddMemberSubmit')
+                : t('landlordContractDetailAddNewMemberBtn')}
+            </Button>
+          </div>
+        }
+      >
+        {/* Mode Switcher Tabs */}
+        <div className="grid grid-cols-2 p-2 bg-zinc-100/70 border-b border-zinc-200/60 text-xs font-bold gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={addMemberTab === 'select' ? 'primary' : 'ghost'}
+            onClick={() => setAddMemberTab('select')}
+          >
+            {t('landlordContractDetailTabSelectExisting')}
+          </Button>
 
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <Button
+            type="button"
+            size="sm"
+            variant={addMemberTab === 'create' ? 'primary' : 'ghost'}
+            onClick={() => setAddMemberTab('create')}
+          >
+            {t('landlordContractDetailTabCreateNew')}
+          </Button>
+        </div>
+
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
               {addMemberTab === 'select' ? (
                 /* CÁCH 1: CHỌN KHÁCH THUÊ CÓ SẴN TRONG DATA */
                 <div className="space-y-4">
@@ -1303,109 +1288,90 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </div>
               )}
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
-              >
-                {t('landlordContractsCreateCancelBtn')}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleAddMember}
-              >
-                {addMemberTab === 'select'
-                  ? t('landlordContractDetailModalAddMemberSubmit')
-                  : t('landlordContractDetailAddNewMemberBtn')}
-              </Button>
-            </div>
-          </div>
         </div>
-      )}
+      </Modal>
 
       {/* MODAL 4: TERMINATE CONTRACT CONFIRMATION */}
-      {isTerminateModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsTerminateModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="p-3 bg-rose-100 rounded-full">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-zinc-900">
-                {t('landlordContractDetailModalTerminateTitle')}
-              </h3>
+      <Modal
+        isOpen={isTerminateModalOpen}
+        onClose={() => setIsTerminateModalOpen(false)}
+        size="md"
+        header={
+          <div className="flex items-center gap-3 text-rose-600">
+            <div className="p-3 bg-rose-100 rounded-full">
+              <AlertTriangle className="w-6 h-6" />
             </div>
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-              {t('landlordContractDetailTerminateConfirmDesc')
-                .replace('{id}', contract.id)
-                .replace('{room}', contract.room)}
-            </p>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsTerminateModalOpen(false)}
-              >
-                {t('landlordContractsCreateCancelBtn')}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={handleTerminate}
-              >
-                {t('landlordContractDetailTerminateConfirmBtn')}
-              </Button>
-            </div>
+            <Text as="h3" size="lg" weight="black" className="text-zinc-900">
+              {t('landlordContractDetailModalTerminateTitle')}
+            </Text>
           </div>
-        </div>
-      )}
+        }
+        bodyClassName="p-6 space-y-4"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTerminateModalOpen(false)}
+            >
+              {t('landlordContractsCreateCancelBtn')}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={handleTerminate}
+            >
+              {t('landlordContractDetailTerminateConfirmBtn')}
+            </Button>
+          </div>
+        }
+      >
+        <Text size="xs" color="subtle" weight="medium" className="leading-relaxed">
+          {t('landlordContractDetailTerminateConfirmDesc')
+            .replace('{id}', contract.id)
+            .replace('{room}', contract.room)}
+        </Text>
+      </Modal>
 
       {/* Rule 10: Custom Pop-up Confirmation Modal */}
-      {showConfirmClose && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <h3 className="text-base font-bold text-zinc-900 mb-2">
-                {t('landlordContractDetailConfirmCloseTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                {t('landlordContractDetailConfirmCloseDesc')}
-              </p>
-              <div className="flex items-center gap-3 pt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setShowConfirmClose(false)}
-                >
-                  {t('landlordContractDetailConfirmCloseKeep')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="danger"
-                  className="flex-1"
-                  onClick={handleConfirmDiscard}
-                >
-                  {t('landlordContractDetailConfirmCloseDiscard')}
-                </Button>
-              </div>
-            </div>
+      <Modal
+        isOpen={showConfirmClose}
+        onClose={() => setShowConfirmClose(false)}
+        size="sm"
+        zIndex={200}
+        showCloseButton={false}
+        footer={
+          <div className="flex items-center gap-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowConfirmClose(false)}
+            >
+              {t('landlordContractDetailConfirmCloseKeep')}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              className="flex-1"
+              onClick={handleConfirmDiscard}
+            >
+              {t('landlordContractDetailConfirmCloseDiscard')}
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-2">
+          <Text as="h3" size="base" weight="bold" className="text-zinc-900">
+            {t('landlordContractDetailConfirmCloseTitle')}
+          </Text>
+          <Text size="xs" color="subtle" className="leading-relaxed">
+            {t('landlordContractDetailConfirmCloseDesc')}
+          </Text>
         </div>
-      )}
+      </Modal>
 
       {/* Contract Preview & Export Modal */}
       {isPreviewModalOpen && activeBuilding?.id && contract && (

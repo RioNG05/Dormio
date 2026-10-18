@@ -39,6 +39,7 @@ import {
   ToastItem,
   ChipGroup,
   Text,
+  Modal,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -407,36 +408,40 @@ export default function ContractsPage() {
   return (
     <div className="space-y-6 relative min-h-screen">
       {/* Rule #10: Custom Confirm-Close Modal */}
-      {showCloseConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <Text as="h3" size="base" weight="bold" color="default" className="mb-2">
-                {t('landlordContractsConfirmCloseTitle')}
-              </Text>
-              <Text size="sm" color="secondary">
-                {t('landlordContractsConfirmCloseDesc')}
-              </Text>
-            </div>
-            <div className="flex items-center gap-3 px-6 pb-6">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowCloseConfirm(false)}
-              >
-                {t('landlordContractsConfirmCloseContinue')}
-              </Button>
-              <Button
-                variant="danger"
-                className="flex-1"
-                onClick={handleConfirmDiscard}
-              >
-                {t('landlordContractsConfirmCloseDiscard')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={showCloseConfirm}
+        onClose={() => setShowCloseConfirm(false)}
+        size="sm"
+        zIndex={200}
+        showCloseButton={false}
+        footer={
+          <div className="flex items-center gap-3 w-full">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowCloseConfirm(false)}
+            >
+              {t('landlordContractsConfirmCloseContinue')}
+            </Button>
+            <Button
+              variant="danger"
+              className="flex-1"
+              onClick={handleConfirmDiscard}
+            >
+              {t('landlordContractsConfirmCloseDiscard')}
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-2">
+          <Text as="h3" size="base" weight="bold" color="default">
+            {t('landlordContractsConfirmCloseTitle')}
+          </Text>
+          <Text size="sm" color="secondary">
+            {t('landlordContractsConfirmCloseDesc')}
+          </Text>
         </div>
-      )}
+      </Modal>
 
       <div className="space-y-6 animate-in fade-in duration-500 pb-12">
         {/* Top Page Header */}
@@ -1160,180 +1165,156 @@ export default function ContractsPage() {
       </div>
 
       {/* Extend Contract Modal */}
-      {isExtendModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) requestCloseModal(() => setIsExtendModalOpen(false))
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <Text as="h2" size="xl" weight="bold" color="default">
-                {t('landlordContractsExtendModalTitle')}
-              </Text>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            <div className="p-6 space-y-5">
-              <DateInput
-                label={t('landlordContractsExtendEndDateLabel')}
-                required
-                value={extendEndDate}
-                onChange={e => {
-                  setExtendEndDate(e.target.value)
-                  setIsDirty(true)
-                }}
-              />
-              <NumberInput
-                label={t('landlordContractsExtendNewRentLabel')}
-                placeholder="3000000"
-                suffixText={t('landlordContractsCurrencyVnd')}
-                helperText={t('landlordContractsExtendNewRentHint')}
-                value={extendRent}
-                onChange={e => {
-                  setExtendRent(e.target.value)
-                  setIsDirty(true)
-                }}
-              />
-            </div>
-            <div className="p-6 pt-2 flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-              >
-                {t('landlordContractsBtnCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleExtendContract}
-              >
-                {t('landlordContractsBtnExtend')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={isExtendModalOpen}
+        onClose={() => requestCloseModal(() => setIsExtendModalOpen(false))}
+        size="md"
+        zIndex={100}
+        title={t('landlordContractsExtendModalTitle')}
+        bodyClassName="p-6 space-y-5"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              variant="outline"
+              onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
+            >
+              {t('landlordContractsBtnCancel')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleExtendContract}
+            >
+              {t('landlordContractsBtnExtend')}
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <DateInput
+          label={t('landlordContractsExtendEndDateLabel')}
+          required
+          value={extendEndDate}
+          onChange={e => {
+            setExtendEndDate(e.target.value)
+            setIsDirty(true)
+          }}
+        />
+        <NumberInput
+          label={t('landlordContractsExtendNewRentLabel')}
+          placeholder="3000000"
+          suffixText={t('landlordContractsCurrencyVnd')}
+          helperText={t('landlordContractsExtendNewRentHint')}
+          value={extendRent}
+          onChange={e => {
+            setExtendRent(e.target.value)
+            setIsDirty(true)
+          }}
+        />
+      </Modal>
 
       {/* Terminate Contract Modal */}
-      {isTerminateModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-md animate-in fade-in duration-300"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) requestCloseModal(() => setIsTerminateModalOpen(false))
+      <Modal
+        isOpen={isTerminateModalOpen}
+        onClose={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
+        size="md"
+        zIndex={100}
+        header={
+          <Text as="h2" size="xl" weight="bold" color="danger">
+            {t('landlordContractsTerminateModalTitle')}
+          </Text>
+        }
+        bodyClassName="p-6 space-y-5"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              variant="outline"
+              onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
+            >
+              {t('landlordContractsBtnCancel')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleTerminateContract}
+            >
+              {t('landlordContractsBtnTerminate')}
+            </Button>
+          </div>
+        }
+      >
+        <DateInput
+          label={t('landlordContractsTerminatedDateLabel')}
+          required
+          value={terminateDate}
+          onChange={e => {
+            setTerminateDate(e.target.value)
+            setIsDirty(true)
           }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <Text as="h2" size="xl" weight="bold" color="danger">
-                {t('landlordContractsTerminateModalTitle')}
+        />
+
+        <SelectInput
+          label={t('landlordContractsTerminateReasonLabel')}
+          required
+          value={terminateReason}
+          onChange={e => {
+            setTerminateReason(e.target.value)
+            setIsDirty(true)
+          }}
+          options={terminateReasonOptions}
+        />
+
+        <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-4">
+          <div className="flex items-center gap-2">
+            <Gauge className="w-4 h-4 text-[#2AC1BC]" />
+            <Text as="span" size="sm" weight="medium" color="brand">
+              {t('landlordContractsTerminateEndIndexTitle')}
+            </Text>
+          </div>
+          <Text size="xs" color="secondary">
+            {t('landlordContractsTerminateEndIndexHint')}
+          </Text>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
+                {t('landlordContractsTerminateLastElec')}
               </Text>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-            <div className="p-6 space-y-5">
-              <DateInput
-                label={t('landlordContractsTerminatedDateLabel')}
-                required
-                value={terminateDate}
-                onChange={e => {
-                  setTerminateDate(e.target.value)
-                  setIsDirty(true)
-                }}
-              />
-
-              <SelectInput
-                label={t('landlordContractsTerminateReasonLabel')}
-                required
-                value={terminateReason}
-                onChange={e => {
-                  setTerminateReason(e.target.value)
-                  setIsDirty(true)
-                }}
-                options={terminateReasonOptions}
-              />
-
-              <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Gauge className="w-4 h-4 text-[#2AC1BC]" />
-                  <Text as="span" size="sm" weight="medium" color="brand">
-                    {t('landlordContractsTerminateEndIndexTitle')}
-                  </Text>
-                </div>
-                <Text size="xs" color="secondary">
-                  {t('landlordContractsTerminateEndIndexHint')}
-                </Text>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
-                      {t('landlordContractsTerminateLastElec')}
-                    </Text>
-                    <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
-                      {t('landlordContractsTerminateLastOldPrefix')} 11
-                    </Text>
-                    <div className="flex-1">
-                      <NumberInput
-                        placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
-                        suffixText="kWh"
-                        value={finalElecIndex}
-                        onChange={e => {
-                          setFinalElecIndex(e.target.value)
-                          setIsDirty(true)
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
-                      {t('landlordContractsTerminateLastWater')}
-                    </Text>
-                    <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
-                      {t('landlordContractsTerminateLastOldPrefix')} 12
-                    </Text>
-                    <div className="flex-1">
-                      <NumberInput
-                        placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
-                        suffixText="m³"
-                        value={finalWaterIndex}
-                        onChange={e => {
-                          setFinalWaterIndex(e.target.value)
-                          setIsDirty(true)
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
+              <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
+                {t('landlordContractsTerminateLastOldPrefix')} 11
+              </Text>
+              <div className="flex-1">
+                <NumberInput
+                  placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
+                  suffixText="kWh"
+                  value={finalElecIndex}
+                  onChange={e => {
+                    setFinalElecIndex(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
               </div>
             </div>
-            <div className="p-6 pt-2 flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
-              >
-                {t('landlordContractsBtnCancel')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleTerminateContract}
-              >
-                {t('landlordContractsBtnTerminate')}
-              </Button>
+
+            <div className="flex items-center gap-3">
+              <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
+                {t('landlordContractsTerminateLastWater')}
+              </Text>
+              <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
+                {t('landlordContractsTerminateLastOldPrefix')} 12
+              </Text>
+              <div className="flex-1">
+                <NumberInput
+                  placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
+                  suffixText="m³"
+                  value={finalWaterIndex}
+                  onChange={e => {
+                    setFinalWaterIndex(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Contract Print / Preview Modal */}
       {previewModal.isOpen && (

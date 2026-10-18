@@ -17,7 +17,7 @@ import {
   Info,
   Calendar,
 } from 'lucide-react'
-import { Button, TextInput } from '@/components/ui'
+import { Button, TextInput, Modal, Text } from '@/components/ui'
 import {
   meterReadingService,
   ActiveMeteredServicesResponse,
@@ -750,168 +750,168 @@ export default function TenantMeterReadingsPage() {
       )}
 
       {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-                  <FileCheck className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">{t('confirmMeterModalTitle')}</h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        size="lg"
+      >
+        <Modal.Header
+          title={t('confirmMeterModalTitle')}
+          icon={
+            <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+              <FileCheck className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <p className="text-sm text-slate-600">
-              {t('confirmMeterModalDesc', { room: data?.roomNumber || '' })}
-            </p>
+        <Modal.Body className="space-y-5">
+          <Text size="sm" color="secondary">
+            {t('confirmMeterModalDesc', { room: data?.roomNumber || '' })}
+          </Text>
 
-            {/* Summary Table */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-100/80 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="px-3.5 py-2.5">{t('tableHeaderService')}</th>
-                    <th className="px-3 py-2.5 text-center">{t('tableHeaderOldReading')}</th>
-                    <th className="px-3 py-2.5 text-center">{t('tableHeaderNewReading')}</th>
-                    <th className="px-3.5 py-2.5 text-right">{t('tableHeaderConsumption')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {servicesList.map(service => {
-                    const current = readingsState[service.serviceId]?.readingValue ?? 0
-                    const prev = service.previousReading?.readingValue ?? 0
-                    const diff = Math.max(0, current - prev) || current
+          {/* Summary Table */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-100/80 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th className="px-3.5 py-2.5">{t('tableHeaderService')}</th>
+                  <th className="px-3 py-2.5 text-center">{t('tableHeaderOldReading')}</th>
+                  <th className="px-3 py-2.5 text-center">{t('tableHeaderNewReading')}</th>
+                  <th className="px-3.5 py-2.5 text-right">{t('tableHeaderConsumption')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {servicesList.map(service => {
+                  const current = readingsState[service.serviceId]?.readingValue ?? 0
+                  const prev = service.previousReading?.readingValue ?? 0
+                  const diff = Math.max(0, current - prev) || current
 
-                    return (
-                      <tr key={service.serviceId}>
-                        <td className="px-3.5 py-2.5 font-medium text-slate-800">
-                          {service.serviceName}
-                        </td>
-                        <td className="px-3 py-2.5 text-center text-slate-500">{prev}</td>
-                        <td className="px-3 py-2.5 text-center font-bold text-teal-700">
-                          {current}
-                        </td>
-                        <td className="px-3.5 py-2.5 text-right font-bold text-slate-900">
-                          {diff} {service.unit}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmModal(false)}
-                disabled={isSubmitting}
-              >
-                {t('btnContinueEditing')}
-              </Button>
-
-              <Button
-                onClick={handleConfirmSubmit}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>{t('generatingInvoice')}</span>
-                  </div>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-1.5" />
-                    {t('btnConfirmAndGenerate')}
-                  </>
-                )}
-              </Button>
-            </div>
+                  return (
+                    <tr key={service.serviceId}>
+                      <td className="px-3.5 py-2.5 font-medium text-slate-800">
+                        {service.serviceName}
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-slate-500">{prev}</td>
+                      <td className="px-3 py-2.5 text-center font-bold text-teal-700">
+                        {current}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right font-bold text-slate-900">
+                        {diff} {service.unit}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            onClick={() => setShowConfirmModal(false)}
+            disabled={isSubmitting}
+          >
+            {t('btnContinueEditing')}
+          </Button>
+
+          <Button
+            onClick={handleConfirmSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>{t('generatingInvoice')}</span>
+              </div>
+            ) : (
+              <>
+                <Check className="w-4 h-4 mr-1.5" />
+                {t('btnConfirmAndGenerate')}
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Generated Invoice Success Modal */}
-      {generatedInvoice && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="text-center space-y-2">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                <Receipt className="w-7 h-7" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">
-                {t('invoiceGeneratedSuccessTitle')}
-              </h3>
-              <p className="text-xs text-slate-500">
-                {t('invoiceGeneratedSuccessDesc', { id: generatedInvoice.invoiceId })}
-              </p>
+      <Modal
+        isOpen={Boolean(generatedInvoice)}
+        onClose={() => setGeneratedInvoice(null)}
+        size="lg"
+      >
+        <Modal.Body className="space-y-5 max-h-[85vh] overflow-y-auto">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+              <Receipt className="w-7 h-7" />
             </div>
-
-            {/* Total Amount Box */}
-            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4 text-center">
-              <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
-                {t('totalAmountDue')}
-              </span>
-              <div className="text-3xl font-black text-teal-800 mt-1">
-                {formatCurrency(generatedInvoice.totalAmount, locale)}
-              </div>
-              <span className="text-xs text-slate-500 mt-1 block">
-                {t('invoiceDueDateLabel', {
-                  date: new Date(generatedInvoice.dueDate).toLocaleDateString(
-                    locale === 'en' ? 'en-US' : 'vi-VN',
-                  ),
-                })}
-              </span>
-            </div>
-
-            {/* Invoice Line Items */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
-              <div className="bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                {t('invoiceLineItemsTitle')}
-              </div>
-              <div className="divide-y divide-slate-100">
-                {generatedInvoice.items.map(item => (
-                  <div
-                    key={item.id}
-                    className="px-4 py-2.5 flex items-center justify-between text-xs"
-                  >
-                    <span className="text-slate-700 font-medium">{item.title}</span>
-                    <span className="font-bold text-slate-900">
-                      {formatCurrency(item.amount, locale)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-              <Link
-                href="/tenant/invoices"
-                className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-xs text-center transition-all"
-              >
-                {t('viewInvoicesListBtn')}
-              </Link>
-
-              <Link
-                href="/tenant/invoices"
-                className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs text-center transition-all shadow"
-              >
-                {t('payNowVietQrBtn')}
-              </Link>
-            </div>
+            <Text as="h3" weight="bold" size="xl" color="default">
+              {t('invoiceGeneratedSuccessTitle')}
+            </Text>
+            <Text size="xs" color="subtle">
+              {t('invoiceGeneratedSuccessDesc', { id: generatedInvoice?.invoiceId || '' })}
+            </Text>
           </div>
-        </div>
-      )}
+
+          {/* Total Amount Box */}
+          {generatedInvoice && (
+            <>
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4 text-center">
+                <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider">
+                  {t('totalAmountDue')}
+                </span>
+                <div className="text-3xl font-black text-teal-800 mt-1">
+                  {formatCurrency(generatedInvoice.totalAmount, locale)}
+                </div>
+                <span className="text-xs text-slate-500 mt-1 block">
+                  {t('invoiceDueDateLabel', {
+                    date: new Date(generatedInvoice.dueDate).toLocaleDateString(
+                      locale === 'en' ? 'en-US' : 'vi-VN',
+                    ),
+                  })}
+                </span>
+              </div>
+
+              {/* Invoice Line Items */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  {t('invoiceLineItemsTitle')}
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {generatedInvoice.items.map(item => (
+                    <div
+                      key={item.id}
+                      className="px-4 py-2.5 flex items-center justify-between text-xs"
+                    >
+                      <span className="text-slate-700 font-medium">{item.title}</span>
+                      <span className="font-bold text-slate-900">
+                        {formatCurrency(item.amount, locale)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                <Link
+                  href="/tenant/invoices"
+                  className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-xs text-center transition-all"
+                >
+                  {t('viewInvoicesListBtn')}
+                </Link>
+
+                <Link
+                  href="/tenant/invoices"
+                  className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs text-center transition-all shadow"
+                >
+                  {t('payNowVietQrBtn')}
+                </Link>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }

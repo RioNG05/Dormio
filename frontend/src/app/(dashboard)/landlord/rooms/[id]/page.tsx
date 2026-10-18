@@ -45,6 +45,7 @@ import {
   Checkbox,
   Form,
   Text,
+  Modal,
 } from '@/components/ui'
 import {
   getRoomDashboard,
@@ -2517,713 +2518,636 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       </div>
 
       {/* MODAL 1: CHỈNH SỬA SỐ ĐIỆN NƯỚC (CÓ YÊU CẦU NHẬP LÝ DO BẮT BUỘC) */}
-      {correctModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setCorrectModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-amber-50/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 text-amber-600 rounded-xl">
-                  <Edit className="w-5 h-5" />
-                </div>
-                <div>
-                  <Text as="h2" weight="black" color="default" size="base">
-                    {t('landlordRoomDetailModalCorrectTitle').replace(
-                      '{period}',
-                      correctModal.period,
-                    )}
-                  </Text>
-                  <Text size="xs" color="secondary" weight="medium">
-                    {t('landlordRoomDetailModalCorrectDesc')}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="icon"
-                onClick={() => setCorrectModal(prev => ({ ...prev, isOpen: false }))}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={correctModal.isOpen}
+        onClose={handleCloseCorrectionModal}
+        size="lg"
+      >
+        <Modal.Header
+          title={t('landlordRoomDetailModalCorrectTitle').replace(
+            '{period}',
+            correctModal.period,
+          )}
+          description={t('landlordRoomDetailModalCorrectDesc')}
+          icon={
+            <div className="p-2 bg-amber-500/10 text-amber-600 rounded-xl">
+              <Edit className="w-5 h-5" />
+            </div>
+          }
+          className="bg-amber-50/50"
+        />
+
+        <Modal.Body className="space-y-4">
+          {correctModal.error && (
+            <Form.Alert variant="error" message={correctModal.error} />
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
+              <NumberInput
+                label={t('landlordRoomDetailNewElecLabel')}
+                helperText={t('landlordRoomDetailOldIndexLabel').replace(
+                  '{index}',
+                  String(correctModal.oldElec),
+                )}
+                value={correctModal.newElec}
+                onChange={e =>
+                  setCorrectModal(prev => ({
+                    ...prev,
+                    newElec: parseInt(e.target.value) || 0,
+                    error: '',
+                  }))
+                }
+              />
             </div>
 
-            <div className="p-6 space-y-4">
-              {correctModal.error && (
-                <Form.Alert variant="error" message={correctModal.error} />
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
-                  <NumberInput
-                    label={t('landlordRoomDetailNewElecLabel')}
-                    helperText={t('landlordRoomDetailOldIndexLabel').replace(
-                      '{index}',
-                      String(correctModal.oldElec),
-                    )}
-                    value={correctModal.newElec}
-                    onChange={e =>
-                      setCorrectModal(prev => ({
-                        ...prev,
-                        newElec: parseInt(e.target.value) || 0,
-                        error: '',
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
-                  <NumberInput
-                    label={t('landlordRoomDetailNewWaterLabel')}
-                    helperText={t('landlordRoomDetailOldIndexLabel').replace(
-                      '{index}',
-                      String(correctModal.oldWater),
-                    )}
-                    value={correctModal.newWater}
-                    onChange={e =>
-                      setCorrectModal(prev => ({
-                        ...prev,
-                        newWater: parseInt(e.target.value) || 0,
-                        error: '',
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <TextareaInput
-                  label={t('landlordRoomDetailReasonRequiredLabel')}
-                  required
-                  rows={3}
-                  value={correctModal.reason}
-                  onChange={e =>
-                    setCorrectModal(prev => ({ ...prev, reason: e.target.value, error: '' }))
-                  }
-                  placeholder={t('landlordRoomDetailReasonPlaceholder')}
-                />
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCloseCorrectionModal}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailModalCancelBtn')}
-                </Text>
-              </Button>
-              <Button variant="orange"
-                size="sm"
-                onClick={handleSaveCorrection}
-                isLoading={isSubmittingCorrection}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailSaveAndUpdateInvoice')}
-                </Text>
-              </Button>
+            <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
+              <NumberInput
+                label={t('landlordRoomDetailNewWaterLabel')}
+                helperText={t('landlordRoomDetailOldIndexLabel').replace(
+                  '{index}',
+                  String(correctModal.oldWater),
+                )}
+                value={correctModal.newWater}
+                onChange={e =>
+                  setCorrectModal(prev => ({
+                    ...prev,
+                    newWater: parseInt(e.target.value) || 0,
+                    error: '',
+                  }))
+                }
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <TextareaInput
+              label={t('landlordRoomDetailReasonRequiredLabel')}
+              required
+              rows={3}
+              value={correctModal.reason}
+              onChange={e =>
+                setCorrectModal(prev => ({ ...prev, reason: e.target.value, error: '' }))
+              }
+              placeholder={t('landlordRoomDetailReasonPlaceholder')}
+            />
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCloseCorrectionModal}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailModalCancelBtn')}
+            </Text>
+          </Button>
+          <Button variant="orange"
+            size="sm"
+            onClick={handleSaveCorrection}
+            isLoading={isSubmittingCorrection}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailSaveAndUpdateInvoice')}
+            </Text>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI */}
-      {isMeterModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseMeterModal()
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Gauge className="w-5 h-5" />
-                </div>
-                <div>
-                  <Text as="h2" weight="black" color="default" size="base">
-                    {t('landlordRoomDetailModalLogMeterTitle')}
-                  </Text>
-                  <Text size="xs" color="secondary" weight="medium">
-                    {t('landlordRoomDetailModalLogMeterDesc').replace(
-                      '{roomNumber}',
-                      room.roomNumber,
-                    )}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="icon"
-                onClick={handleCloseMeterModal}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isMeterModalOpen}
+        onClose={handleCloseMeterModal}
+        size="lg"
+      >
+        <Modal.Header
+          title={t('landlordRoomDetailModalLogMeterTitle')}
+          description={t('landlordRoomDetailModalLogMeterDesc').replace(
+            '{roomNumber}',
+            room.roomNumber,
+          )}
+          icon={
+            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+              <Gauge className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <SelectInput
-                  label={t('landlordRoomDetailMonthLabel')}
-                  value={selectedMonth}
-                  onChange={e => setSelectedMonth(e.target.value)}
-                  options={getAvailableMeterPeriods().monthOptions}
-                />
-                <SelectInput
-                  label={t('landlordRoomDetailYearLabel')}
-                  value={selectedYear}
-                  onChange={e => setSelectedYear(e.target.value)}
-                  options={getAvailableMeterPeriods().yearOptions.map(y => ({ value: y, label: String(y) }))}
-                />
-              </div>
+        <Modal.Body className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <SelectInput
+              label={t('landlordRoomDetailMonthLabel')}
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(e.target.value)}
+              options={getAvailableMeterPeriods().monthOptions}
+            />
+            <SelectInput
+              label={t('landlordRoomDetailYearLabel')}
+              value={selectedYear}
+              onChange={e => setSelectedYear(e.target.value)}
+              options={getAvailableMeterPeriods().yearOptions.map(y => ({ value: y, label: String(y) }))}
+            />
+          </div>
 
-              {/* AI OCR UPLOAD BOX */}
-              <div className="p-4 bg-gradient-to-br from-[#2AC1BC]/10 to-teal-500/5 rounded-2xl border border-[#2AC1BC]/30 space-y-2 text-center">
-                <div className="flex justify-center">
-                  <div className="w-10 h-10 rounded-full bg-white shadow-xs text-[#2AC1BC] flex items-center justify-center">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                </div>
-                <Text as="h3" weight="black" color="default" size="xs">
-                  {t('landlordRoomDetailOcrTitle')}
-                </Text>
-                <Text size="2xs" color="secondary" weight="semibold">
-                  {t('landlordRoomDetailOcrDesc')}
-                </Text>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="primary"
-                  onClick={handleSimulateAiOcr}
-                  isLoading={isOcrScanning}
-                  leftIcon={!isOcrScanning ? <Upload className="w-3.5 h-3.5" /> : undefined}
-                >
-                  <Text as="span" size="xs" weight="bold" color="inherit">
-                    {isOcrScanning
-                      ? t('landlordRoomDetailOcrScanning')
-                      : t('landlordRoomDetailOcrUploadBtn')}
-                  </Text>
-                </Button>
-                {ocrSuccessMsg && (
-                  <div className="bg-white/80 p-2 rounded-xl border border-emerald-200 animate-in fade-in">
-                    <Text size="xs" weight="bold" color="success">
-                      {ocrSuccessMsg}
-                    </Text>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
-                  <NumberInput
-                    label={t('landlordRoomDetailNewElecLabel')}
-                    helperText={
-                      roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))
-                        ?.lastReading
-                        ? `${t('landlordRoomDetailOldReadingPrefix')} ${
-                            roomMeteredServices.find(s =>
-                              s.serviceName.toLowerCase().includes('điện'),
-                            )?.lastReading?.readingValue
-                          }`
-                        : undefined
-                    }
-                    value={formElec}
-                    placeholder={t('landlordRoomDetailElecPlaceholder')}
-                    onChange={e => setFormElec(e.target.value)}
-                  />
-                </div>
-                <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
-                  <NumberInput
-                    label={t('landlordRoomDetailNewWaterLabel')}
-                    helperText={
-                      roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))
-                        ?.lastReading
-                        ? `${t('landlordRoomDetailOldReadingPrefix')} ${
-                            roomMeteredServices.find(s =>
-                              s.serviceName.toLowerCase().includes('nước'),
-                            )?.lastReading?.readingValue
-                          }`
-                        : undefined
-                    }
-                    value={formWater}
-                    placeholder={t('landlordRoomDetailWaterPlaceholder')}
-                    onChange={e => setFormWater(e.target.value)}
-                  />
-                </div>
+          {/* AI OCR UPLOAD BOX */}
+          <div className="p-4 bg-gradient-to-br from-[#2AC1BC]/10 to-teal-500/5 rounded-2xl border border-[#2AC1BC]/30 space-y-2 text-center">
+            <div className="flex justify-center">
+              <div className="w-10 h-10 rounded-full bg-white shadow-xs text-[#2AC1BC] flex items-center justify-center">
+                <Sparkles className="w-5 h-5" />
               </div>
             </div>
+            <Text as="h3" weight="black" color="default" size="xs">
+              {t('landlordRoomDetailOcrTitle')}
+            </Text>
+            <Text size="2xs" color="secondary" weight="semibold">
+              {t('landlordRoomDetailOcrDesc')}
+            </Text>
+            <Button
+              type="button"
+              size="sm"
+              variant="primary"
+              onClick={handleSimulateAiOcr}
+              isLoading={isOcrScanning}
+              leftIcon={!isOcrScanning ? <Upload className="w-3.5 h-3.5" /> : undefined}
+            >
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {isOcrScanning
+                  ? t('landlordRoomDetailOcrScanning')
+                  : t('landlordRoomDetailOcrUploadBtn')}
+              </Text>
+            </Button>
+            {ocrSuccessMsg && (
+              <div className="bg-white/80 p-2 rounded-xl border border-emerald-200 animate-in fade-in">
+                <Text size="xs" weight="bold" color="success">
+                  {ocrSuccessMsg}
+                </Text>
+              </div>
+            )}
+          </div>
 
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCloseMeterModal}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailModalCancelBtn')}
-                </Text>
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveNewMeterReading}
-                isLoading={isSubmittingMeter}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailSaveAndLogMeter')}
-                </Text>
-              </Button>
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
+              <NumberInput
+                label={t('landlordRoomDetailNewElecLabel')}
+                helperText={
+                  roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))
+                    ?.lastReading
+                    ? `${t('landlordRoomDetailOldReadingPrefix')} ${
+                        roomMeteredServices.find(s =>
+                          s.serviceName.toLowerCase().includes('điện'),
+                        )?.lastReading?.readingValue
+                      }`
+                    : undefined
+                }
+                value={formElec}
+                placeholder={t('landlordRoomDetailElecPlaceholder')}
+                onChange={e => setFormElec(e.target.value)}
+              />
+            </div>
+            <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
+              <NumberInput
+                label={t('landlordRoomDetailNewWaterLabel')}
+                helperText={
+                  roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))
+                    ?.lastReading
+                    ? `${t('landlordRoomDetailOldReadingPrefix')} ${
+                        roomMeteredServices.find(s =>
+                          s.serviceName.toLowerCase().includes('nước'),
+                        )?.lastReading?.readingValue
+                      }`
+                    : undefined
+                }
+                value={formWater}
+                placeholder={t('landlordRoomDetailWaterPlaceholder')}
+                onChange={e => setFormWater(e.target.value)}
+              />
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCloseMeterModal}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailModalCancelBtn')}
+            </Text>
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSaveNewMeterReading}
+            isLoading={isSubmittingMeter}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailSaveAndLogMeter')}
+            </Text>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* MODAL 3: EDIT ROOM INFO MODAL */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseEditModal()
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Edit className="w-5 h-5" />
-                </div>
-                <div>
-                  <Text as="h2" weight="black" color="default" size="lg">
-                    {t('landlordRoomDetailModalEditRoomTitle').replace(
-                      '{roomNumber}',
-                      room.roomNumber,
-                    )}
-                  </Text>
-                  <Text size="xs" color="secondary" weight="medium">
-                    {t('landlordRoomDetailModalEditRoomDesc')}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="icon"
-                onClick={handleCloseEditModal}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        size="2xl"
+      >
+        <Modal.Header
+          title={t('landlordRoomDetailModalEditRoomTitle').replace(
+            '{roomNumber}',
+            room.roomNumber,
+          )}
+          description={t('landlordRoomDetailModalEditRoomDesc')}
+          icon={
+            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+              <Edit className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <div className="p-6 overflow-y-auto max-h-[75vh] space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput
-                  label={t('landlordRoomDetailRoomNumberLabel')}
-                  value={editRoomNumber}
-                  onChange={e => setEditRoomNumber(e.target.value)}
-                />
-                <TextInput
-                  label={t('landlordRoomDetailRentMonthlyLabel')}
-                  value={editPrice}
-                  onChange={e => setEditPrice(e.target.value)}
-                />
-                <TextInput
-                  label={t('landlordRoomDetailAreaLabel')}
-                  value={editArea}
-                  onChange={e => setEditArea(e.target.value)}
-                />
-                <TextInput
-                  label={t('landlordRoomDetailFloorLabel')}
-                  value={editFloor}
-                  onChange={e => setEditFloor(e.target.value)}
-                />
-              </div>
+        <Modal.Body className="overflow-y-auto max-h-[75vh] space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextInput
+              label={t('landlordRoomDetailRoomNumberLabel')}
+              value={editRoomNumber}
+              onChange={e => setEditRoomNumber(e.target.value)}
+            />
+            <TextInput
+              label={t('landlordRoomDetailRentMonthlyLabel')}
+              value={editPrice}
+              onChange={e => setEditPrice(e.target.value)}
+            />
+            <TextInput
+              label={t('landlordRoomDetailAreaLabel')}
+              value={editArea}
+              onChange={e => setEditArea(e.target.value)}
+            />
+            <TextInput
+              label={t('landlordRoomDetailFloorLabel')}
+              value={editFloor}
+              onChange={e => setEditFloor(e.target.value)}
+            />
+          </div>
 
-              <div>
-                <Text as="label" size="xs" weight="bold" color="default" className="block mb-2">
-                  {t('landlordRoomDetailAmenitiesListLabel')}
-                </Text>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    'WiFi',
-                    'Điều hòa',
-                    'Nóng lạnh',
-                    'Tủ quần áo',
-                    'Giường',
-                    'Kệ bếp',
-                    'Ban công',
-                    'WC riêng',
-                    'Máy giặt',
-                    'Tivi',
-                    'Tủ lạnh',
-                    'Bảo vệ',
-                  ].map(item => (
-                    <Button
-                      key={item}
-                      type="button"
-                      size="sm"
-                      variant={editAmenities.includes(item) ? 'primary' : 'outline'}
-                      className={
-                        editAmenities.includes(item)
-                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/40 hover:bg-[#2AC1BC]/20 text-xs'
-                          : 'bg-white text-zinc-600 hover:bg-zinc-50 text-xs'
-                      }
-                      onClick={() =>
-                        setEditAmenities(prev =>
-                          prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item],
-                        )
-                      }
-                    >
-                      <Text as="span" size="xs" weight="bold" color="inherit">
-                        {getAmenityLabel(item, t)}
-                      </Text>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Cấu hình dịch vụ phòng */}
-              <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-3">
-                <div className="flex justify-between items-center mb-1">
-                  <Text as="h3" weight="bold" color="default" size="xs" className="uppercase tracking-wider flex items-center gap-1.5">
-                    <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                    {t('landlordRoomDetailRecurringServicesTitle')}
-                  </Text>
-                  <Text as="span" size="2xs" color="secondary" weight="medium">
-                    {t('landlordRoomDetailCustomPriceHint')}
-                  </Text>
-                </div>
-
-                <div className="space-y-2.5">
-                  {editServices.map(service => (
-                    <div
-                      key={service.id}
-                      className="border border-zinc-200/80 rounded-xl p-3 bg-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shadow-2xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        {!service.isRemovable ? (
-                          <Text as="span" weight="bold" size="xs" color="default">{service.name}</Text>
-                        ) : (
-                          <TextInput
-                            containerClassName="w-28 space-y-0"
-                            className="py-1 text-xs"
-                            value={service.name}
-                            onChange={e =>
-                              setEditServices(prev =>
-                                prev.map(s =>
-                                  s.id === service.id ? { ...s, name: e.target.value } : s,
-                                ),
-                              )
-                            }
-                            placeholder={t('landlordRoomDetailServiceNamePlaceholder')}
-                          />
-                        )}
-                        <Text as="span" size="2xs" color="subtle" weight="medium">
-                          ({service.unit})
-                        </Text>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <Text as="span" size="2xs" weight="bold" color="secondary">
-                            {t('landlordRoomDetailCustomToggle')}
-                          </Text>
-                          <Button rounded="full"
-                            variant="ghost"
-                            size="sm"
-                            type="button"
-                            onClick={() =>
-                              setEditServices(prev =>
-                                prev.map(s =>
-                                  s.id === service.id ? { ...s, isCustom: !s.isCustom } : s,
-                                ),
-                              )
-                            }
-                          >
-                            <div
-                              className={`w-3.5 h-3.5 bg-white rounded-full absolute transition-transform ${service.isCustom ? 'translate-x-4' : 'translate-x-0.5'}`}
-                            ></div>
-                          </Button>
-                        </div>
-
-                        <div className="relative w-28 flex items-center">
-                          <TextInput
-                            containerClassName="w-full space-y-0"
-                            className="py-1 text-xs"
-                            value={service.isCustom ? service.customPrice : service.defaultPrice}
-                            onChange={e =>
-                              setEditServices(prev =>
-                                prev.map(s =>
-                                  s.id === service.id ? { ...s, customPrice: e.target.value } : s,
-                                ),
-                              )
-                            }
-                            disabled={!service.isCustom}
-                          />
-                        </div>
-
-                        {service.isRemovable && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              setEditServices(prev => prev.filter(s => s.id !== service.id))
-                            }
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Button fullWidth
+          <div>
+            <Text as="label" size="xs" weight="bold" color="default" className="block mb-2">
+              {t('landlordRoomDetailAmenitiesListLabel')}
+            </Text>
+            <div className="flex flex-wrap gap-2">
+              {[
+                'WiFi',
+                'Điều hòa',
+                'Nóng lạnh',
+                'Tủ quần áo',
+                'Giường',
+                'Kệ bếp',
+                'Ban công',
+                'WC riêng',
+                'Máy giặt',
+                'Tivi',
+                'Tủ lạnh',
+                'Bảo vệ',
+              ].map(item => (
+                <Button
+                  key={item}
                   type="button"
-                  variant="outline"
                   size="sm"
-                  leftIcon={<Plus  />}
+                  variant={editAmenities.includes(item) ? 'primary' : 'outline'}
+                  className={
+                    editAmenities.includes(item)
+                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/40 hover:bg-[#2AC1BC]/20 text-xs'
+                      : 'bg-white text-zinc-600 hover:bg-zinc-50 text-xs'
+                  }
                   onClick={() =>
-                    setEditServices(prev => [
-                      ...prev,
-                      {
-                        id: `custom_${Date.now()}`,
-                        name: '',
-                        defaultPrice: '0',
-                        customPrice: '0',
-                        unit: 'đ/tháng',
-                        isCustom: true,
-                        isRemovable: true,
-                      },
-                    ])
+                    setEditAmenities(prev =>
+                      prev.includes(item) ? prev.filter(a => a !== item) : [...prev, item],
+                    )
                   }
                 >
                   <Text as="span" size="xs" weight="bold" color="inherit">
-                    {t('landlordRoomDetailAddCustomService')}
+                    {getAmenityLabel(item, t)}
                   </Text>
                 </Button>
-              </div>
-
-              <div>
-                <TextareaInput
-                  label={t('landlordRoomDetailNotesLabel')}
-                  rows={3}
-                  value={editNotes}
-                  onChange={e => setEditNotes(e.target.value)}
-                  placeholder={t('landlordRoomDetailNotesPlaceholder')}
-                />
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCloseEditModal}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailModalCancelBtn')}
-                </Text>
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveRoomDetails}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailSaveChangesBtn')}
-                </Text>
-              </Button>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+
+          {/* Cấu hình dịch vụ phòng */}
+          <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-3">
+            <div className="flex justify-between items-center mb-1">
+              <Text as="h3" weight="bold" color="default" size="xs" className="uppercase tracking-wider flex items-center gap-1.5">
+                <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                {t('landlordRoomDetailRecurringServicesTitle')}
+              </Text>
+              <Text as="span" size="2xs" color="secondary" weight="medium">
+                {t('landlordRoomDetailCustomPriceHint')}
+              </Text>
+            </div>
+
+            <div className="space-y-2.5">
+              {editServices.map(service => (
+                <div
+                  key={service.id}
+                  className="border border-zinc-200/80 rounded-xl p-3 bg-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shadow-2xs"
+                >
+                  <div className="flex items-center gap-2">
+                    {!service.isRemovable ? (
+                      <Text as="span" weight="bold" size="xs" color="default">{service.name}</Text>
+                    ) : (
+                      <TextInput
+                        containerClassName="w-28 space-y-0"
+                        className="py-1 text-xs"
+                        value={service.name}
+                        onChange={e =>
+                          setEditServices(prev =>
+                            prev.map(s =>
+                              s.id === service.id ? { ...s, name: e.target.value } : s,
+                            ),
+                          )
+                        }
+                        placeholder={t('landlordRoomDetailServiceNamePlaceholder')}
+                      />
+                    )}
+                    <Text as="span" size="2xs" color="subtle" weight="medium">
+                      ({service.unit})
+                    </Text>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <Text as="span" size="2xs" weight="bold" color="secondary">
+                        {t('landlordRoomDetailCustomToggle')}
+                      </Text>
+                      <Button rounded="full"
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        onClick={() =>
+                          setEditServices(prev =>
+                            prev.map(s =>
+                              s.id === service.id ? { ...s, isCustom: !s.isCustom } : s,
+                            ),
+                          )
+                        }
+                      >
+                        <div
+                          className={`w-3.5 h-3.5 bg-white rounded-full absolute transition-transform ${service.isCustom ? 'translate-x-4' : 'translate-x-0.5'}`}
+                        ></div>
+                      </Button>
+                    </div>
+
+                    <div className="relative w-28 flex items-center">
+                      <TextInput
+                        containerClassName="w-full space-y-0"
+                        className="py-1 text-xs"
+                        value={service.isCustom ? service.customPrice : service.defaultPrice}
+                        onChange={e =>
+                          setEditServices(prev =>
+                            prev.map(s =>
+                              s.id === service.id ? { ...s, customPrice: e.target.value } : s,
+                            ),
+                          )
+                        }
+                        disabled={!service.isCustom}
+                      />
+                    </div>
+
+                    {service.isRemovable && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setEditServices(prev => prev.filter(s => s.id !== service.id))
+                        }
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button fullWidth
+              type="button"
+              variant="outline"
+              size="sm"
+              leftIcon={<Plus  />}
+              onClick={() =>
+                setEditServices(prev => [
+                  ...prev,
+                  {
+                    id: `custom_${Date.now()}`,
+                    name: '',
+                    defaultPrice: '0',
+                    customPrice: '0',
+                    unit: 'đ/tháng',
+                    isCustom: true,
+                    isRemovable: true,
+                  },
+                ])
+              }
+            >
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordRoomDetailAddCustomService')}
+              </Text>
+            </Button>
+          </div>
+
+          <div>
+            <TextareaInput
+              label={t('landlordRoomDetailNotesLabel')}
+              rows={3}
+              value={editNotes}
+              onChange={e => setEditNotes(e.target.value)}
+              placeholder={t('landlordRoomDetailNotesPlaceholder')}
+            />
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCloseEditModal}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailModalCancelBtn')}
+            </Text>
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSaveRoomDetails}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailSaveChangesBtn')}
+            </Text>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* MODAL BÁO SỰ CỐ BẢO TRÌ */}
-      {isIncidentModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsIncidentModalOpen(false)
-          }}
-        >
-          <form
-            onSubmit={handleCreateIncidentSubmit}
-            className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200"
+      <Modal
+        isOpen={isIncidentModalOpen}
+        onClose={() => setIsIncidentModalOpen(false)}
+        size="md"
+        asForm
+        onSubmit={handleCreateIncidentSubmit}
+      >
+        <Modal.Header
+          title={t('landlordRoomDetailModalIncidentTitle')}
+          description={t('landlordRoomDetailModalIncidentDesc').replace(
+            '{roomNumber}',
+            room.roomNumber,
+          )}
+          icon={
+            <div className="p-2 bg-[#FF6B35] text-white rounded-xl">
+              <Wrench className="w-5 h-5" />
+            </div>
+          }
+          className="bg-[#FF6B35]/10"
+        />
+
+        <Modal.Body className="space-y-4">
+          <TextInput
+            label={t('landlordRoomDetailIncidentNameLabel')}
+            required
+            value={incidentTitleInput}
+            onChange={e => setIncidentTitleInput(e.target.value)}
+            placeholder={t('landlordRoomDetailIncidentNamePlaceholder')}
+          />
+
+          <TextareaInput
+            label={t('landlordRoomDetailIncidentDescLabel')}
+            rows={3}
+            value={incidentDescInput}
+            onChange={e => setIncidentDescInput(e.target.value)}
+            placeholder={t('landlordRoomDetailIncidentDescPlaceholder')}
+          />
+
+          <SelectInput
+            label={t('landlordRoomDetailPriorityLabel')}
+            value={incidentPriorityInput}
+            onChange={e => setIncidentPriorityInput(e.target.value as any)}
+            options={[
+              { value: 'Mức độ nhẹ', label: t('landlordRoomDetailPriorityLow') },
+              { value: 'Mức độ trung bình', label: t('landlordRoomDetailPriorityMedium') },
+              { value: 'Mức độ cao', label: t('landlordRoomDetailPriorityHighUrgent') },
+            ]}
+          />
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsIncidentModalOpen(false)}
           >
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-[#FF6B35]/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#FF6B35] text-white rounded-xl">
-                  <Wrench className="w-5 h-5" />
-                </div>
-                <div>
-                  <Text as="h2" weight="black" color="default" size="base">
-                    {t('landlordRoomDetailModalIncidentTitle')}
-                  </Text>
-                  <Text size="xs" color="secondary" weight="medium">
-                    {t('landlordRoomDetailModalIncidentDesc').replace(
-                      '{roomNumber}',
-                      room.roomNumber,
-                    )}
-                  </Text>
-                </div>
-              </div>
-              <Button rounded="full"
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsIncidentModalOpen(false)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <TextInput
-                label={t('landlordRoomDetailIncidentNameLabel')}
-                required
-                value={incidentTitleInput}
-                onChange={e => setIncidentTitleInput(e.target.value)}
-                placeholder={t('landlordRoomDetailIncidentNamePlaceholder')}
-              />
-
-              <TextareaInput
-                label={t('landlordRoomDetailIncidentDescLabel')}
-                rows={3}
-                value={incidentDescInput}
-                onChange={e => setIncidentDescInput(e.target.value)}
-                placeholder={t('landlordRoomDetailIncidentDescPlaceholder')}
-              />
-
-              <SelectInput
-                label={t('landlordRoomDetailPriorityLabel')}
-                value={incidentPriorityInput}
-                onChange={e => setIncidentPriorityInput(e.target.value as any)}
-                options={[
-                  { value: 'Mức độ nhẹ', label: t('landlordRoomDetailPriorityLow') },
-                  { value: 'Mức độ trung bình', label: t('landlordRoomDetailPriorityMedium') },
-                  { value: 'Mức độ cao', label: t('landlordRoomDetailPriorityHighUrgent') },
-                ]}
-              />
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsIncidentModalOpen(false)}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailModalCancelBtn')}
-                </Text>
-              </Button>
-              <Button variant="orange"
-                type="submit"
-                size="sm"
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailSendIncidentBtn')}
-                </Text>
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailModalCancelBtn')}
+            </Text>
+          </Button>
+          <Button variant="orange"
+            type="submit"
+            size="sm"
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('landlordRoomDetailSendIncidentBtn')}
+            </Text>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* CONFIRM DELETE MODAL */}
-      {confirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setConfirmModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="p-3 bg-rose-100 rounded-full">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <Text as="h3" weight="black" color="default" size="lg">{confirmModal.title}</Text>
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4">
+          <div className="flex items-center gap-3 text-rose-600">
+            <div className="p-3 bg-rose-100 rounded-full">
+              <AlertTriangle className="w-6 h-6" />
             </div>
-            <Text size="xs" color="secondary" weight="medium">{confirmModal.message}</Text>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailModalCancelBtn')}
-                </Text>
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={confirmModal.onConfirm}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailDeleteBtnConfirm')}
-                </Text>
-              </Button>
-            </div>
+            <Text as="h3" weight="black" color="default" size="lg">{confirmModal.title}</Text>
           </div>
-        </div>
-      )}
+          <Text size="xs" color="secondary" weight="medium">{confirmModal.message}</Text>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            >
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordRoomDetailModalCancelBtn')}
+              </Text>
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={confirmModal.onConfirm}
+            >
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordRoomDetailDeleteBtnConfirm')}
+              </Text>
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       {/* UNSAVED CHANGES CONFIRMATION MODAL (RULE 10) */}
-      {discardConfirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget)
-              setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden p-6 space-y-4 border border-zinc-200">
-            <div className="flex items-center gap-3 text-amber-600">
-              <div className="p-3 bg-amber-100 rounded-full shrink-0">
-                <AlertTriangle className="w-6 h-6 text-amber-600" />
-              </div>
-              <div>
-                <Text as="h3" weight="black" color="default" size="base">
-                  {t('landlordRoomDetailConfirmCloseTitle')}
-                </Text>
-                <Text size="xs" color="secondary" weight="medium">
-                  {t('landlordRoomDetailConfirmCloseDesc')}
-                </Text>
-              </div>
+      <Modal
+        isOpen={discardConfirmModal.isOpen}
+        onClose={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4">
+          <div className="flex items-center gap-3 text-amber-600">
+            <div className="p-3 bg-amber-100 rounded-full shrink-0">
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
             </div>
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-zinc-100">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailConfirmCloseContinue')}
-                </Text>
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={discardConfirmModal.onConfirm}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailConfirmCloseDiscard')}
-                </Text>
-              </Button>
+            <div>
+              <Text as="h3" weight="black" color="default" size="base">
+                {t('landlordRoomDetailConfirmCloseTitle')}
+              </Text>
+              <Text size="xs" color="secondary" weight="medium">
+                {t('landlordRoomDetailConfirmCloseDesc')}
+              </Text>
             </div>
           </div>
-        </div>
-      )}
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-zinc-100">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            >
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordRoomDetailConfirmCloseContinue')}
+              </Text>
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={discardConfirmModal.onConfirm}
+            >
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordRoomDetailConfirmCloseDiscard')}
+              </Text>
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       {/* TOAST NOTIFICATION HANDLED BY GLOBAL TOAST PROVIDER */}
     </div>
