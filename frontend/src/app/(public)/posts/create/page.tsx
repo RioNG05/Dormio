@@ -353,7 +353,6 @@ export default function PublicCreatePostPage() {
             type="button"
             variant="ghost"
             onClick={handleCancelClick}
-            className="text-zinc-600 hover:text-zinc-900"
           >
             {t('guestPostsCreateBtnCancel')}
           </Button>
@@ -367,11 +366,10 @@ export default function PublicCreatePostPage() {
             >
               {t('guestPostsCreateBtnDraft')}
             </Button>
-            <Button
+            <Button size="lg"
               type="submit"
               variant="primary"
               disabled={isSubmitting}
-              className="bg-[#FF6B35] hover:bg-[#ff5518] text-white shadow-md shadow-[#FF6B35]/25 gap-2 px-6"
             >
               {isSubmitting ? (
                 <>

@@ -277,7 +277,6 @@ export default function AdminBoardingHouseDetailPage() {
             variant="secondary"
             size="sm"
             onClick={fetchHouseData}
-            className="h-auto px-3 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>{t('adminHouseDetailBtnRefresh')}</span>
@@ -288,7 +287,6 @@ export default function AdminBoardingHouseDetailPage() {
               variant="primary"
               size="sm"
               onClick={() => setShowUnlockModal(true)}
-              className="h-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Unlock className="w-3.5 h-3.5" />
               <span>{t('adminHouseDetailBtnUnlock')}</span>
@@ -298,7 +296,6 @@ export default function AdminBoardingHouseDetailPage() {
               variant="danger"
               size="sm"
               onClick={() => setShowLockModal(true)}
-              className="h-auto px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>{t('adminHouseDetailBtnLock')}</span>
@@ -464,7 +461,7 @@ export default function AdminBoardingHouseDetailPage() {
                 size="sm"
                 type="button"
                 onClick={() => setSelectedOwner(house.owner)}
-                className="h-auto p-0 relative group shrink-0 cursor-pointer focus:outline-none"
+                className="relative group shrink-0"
                 title={t('adminHouseDetailOwnerProfileTooltip')}
               >
                 <img
@@ -483,7 +480,7 @@ export default function AdminBoardingHouseDetailPage() {
                   size="sm"
                   type="button"
                   onClick={() => setSelectedOwner(house.owner)}
-                  className="h-auto p-0 font-black text-sm text-zinc-900 hover:text-orange-600 transition-colors text-left truncate block cursor-pointer"
+                  className="truncate block"
                 >
                   {house.owner.name}
                 </Button>
@@ -527,11 +524,10 @@ export default function AdminBoardingHouseDetailPage() {
               </div>
             </div>
 
-            <Button
+            <Button fullWidth
               variant="primary"
               size="sm"
               onClick={() => setSelectedOwner(house.owner)}
-              className="h-auto w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5 shadow-2xs"
             >
               <User className="w-3.5 h-3.5" />
               <span>{t('adminHouseDetailBtnViewFullProfile')}</span>
@@ -700,7 +696,7 @@ export default function AdminBoardingHouseDetailPage() {
                           size="sm"
                           type="button"
                           onClick={() => setSelectedSender(g.sender)}
-                          className="h-auto p-0 relative group shrink-0 cursor-pointer focus:outline-none"
+                          className="relative group shrink-0"
                           title={t('adminHouseDetailTenantProfileTooltip')}
                         >
                           <img
@@ -718,7 +714,7 @@ export default function AdminBoardingHouseDetailPage() {
                             size="sm"
                             type="button"
                             onClick={() => setSelectedSender(g.sender)}
-                            className="h-auto p-0 font-bold text-zinc-900 hover:text-orange-600 transition-colors text-left block cursor-pointer"
+                            className="block"
                           >
                             {g.sender.name}
                           </Button>
@@ -840,7 +836,6 @@ export default function AdminBoardingHouseDetailPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedOwner(null)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -900,11 +895,10 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
 
             <div className="pt-2">
-              <Button
+              <Button fullWidth
                 variant="secondary"
                 size="sm"
                 onClick={() => setSelectedOwner(null)}
-                className="h-auto w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 {t('adminHouseDetailBtnClose')}
               </Button>
@@ -942,7 +936,6 @@ export default function AdminBoardingHouseDetailPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedSender(null)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1000,11 +993,10 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
 
             <div className="pt-2">
-              <Button
+              <Button fullWidth
                 variant="secondary"
                 size="sm"
                 onClick={() => setSelectedSender(null)}
-                className="h-auto w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 {t('adminHouseDetailBtnClose')}
               </Button>
@@ -1067,7 +1059,6 @@ export default function AdminBoardingHouseDetailPage() {
                 variant="secondary"
                 size="sm"
                 onClick={handleCloseLockModal}
-                className="h-auto px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 {t('adminHouseDetailBtnCancel')}
               </Button>
@@ -1078,7 +1069,6 @@ export default function AdminBoardingHouseDetailPage() {
                 disabled={isSubmittingLock}
                 isLoading={isSubmittingLock}
                 onClick={handleConfirmLock}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
               >
                 {!isSubmittingLock && <Lock className="w-3.5 h-3.5" />}
                 <span>{t('adminHouseDetailBtnConfirmLock')}</span>
@@ -1122,7 +1112,6 @@ export default function AdminBoardingHouseDetailPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowUnlockModal(false)}
-                className="h-auto px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 {t('adminHouseDetailBtnCancel')}
               </Button>
@@ -1133,7 +1122,6 @@ export default function AdminBoardingHouseDetailPage() {
                 disabled={isSubmittingUnlock}
                 isLoading={isSubmittingUnlock}
                 onClick={handleConfirmUnlock}
-                className="h-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
               >
                 {!isSubmittingUnlock && <Unlock className="w-3.5 h-3.5" />}
                 <span>{t('adminHouseDetailBtnConfirmUnlock')}</span>
@@ -1164,7 +1152,6 @@ export default function AdminBoardingHouseDetailPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setConfirmDiscardModal({ isOpen: false, onDiscard: () => {} })}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
               >
                 {t('adminHouseDetailBtnKeepEditing')}
               </Button>
@@ -1173,7 +1160,6 @@ export default function AdminBoardingHouseDetailPage() {
                 variant="danger"
                 size="sm"
                 onClick={confirmDiscardModal.onDiscard}
-                className="h-auto px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer"
               >
                 {t('adminHouseDetailBtnDiscardAndClose')}
               </Button>

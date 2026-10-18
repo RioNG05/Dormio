@@ -388,11 +388,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           const isOpen = openGroups[block.key!]
           return (
             <div key={idx} className="mb-1">
-              <Button
+              <Button fullWidth
                 type="button"
                 variant="ghost"
                 onClick={() => toggleGroup(block.key!)}
-                className="flex items-center justify-between w-full px-3 py-1.5 h-auto hover:bg-transparent rounded-lg text-left"
+                className="justify-between"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Text
@@ -558,12 +558,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Text>
       </div>
 
-      <Button
+      <Button fullWidth
         type="button"
         variant="ghost"
         size="sm"
         onClick={() => setBuildingDropdownOpen(prev => !prev)}
-        className="w-full bg-white border border-zinc-200 hover:border-[#2AC1BC] hover:bg-white rounded-xl px-2.5 py-2 text-left text-xs font-black text-zinc-900 focus:outline-none cursor-pointer shadow-2xs flex items-center justify-between transition-all h-auto"
+        className="justify-between"
         title={tNav('switchPropertyTooltip')}
       >
         <div className="min-w-0 flex-1 pr-1.5">
@@ -599,7 +599,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {buildings.map(b => {
                 const isActive = b.id === activeBuildingId
                 return (
-                  <Button
+                  <Button fullWidth
                     key={b.id}
                     type="button"
                     variant="ghost"
@@ -608,11 +608,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       selectBuilding(b.id)
                       setBuildingDropdownOpen(false)
                     }}
-                    className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer h-auto border-0 ${
-                      isActive
-                        ? 'bg-[#2AC1BC]/10 text-[#138e89] font-black shadow-2xs hover:bg-[#2AC1BC]/15'
-                        : 'hover:bg-zinc-50 text-zinc-700 font-bold'
-                    }`}
                   >
                     <div className="min-w-0 flex-1 pr-2">
                       <div className="flex items-center gap-1.5">
@@ -822,11 +817,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Logout */}
               <div className="mx-3 my-1 h-px bg-zinc-100" />
               <div className="px-2 py-1.5">
-                <Button
+                <Button fullWidth
                   type="button"
                   variant="ghost"
                   onClick={handleLogout}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors w-full justify-start h-auto"
+                  className="justify-start"
                 >
                   <LogOut className="w-4 h-4 shrink-0" />
                   <Text as="span" size="sm" weight="semibold" color="danger">
@@ -838,11 +833,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
 
           {/* Clickable Profile Card (trigger) */}
-          <Button
+          <Button fullWidth size="xs"
             type="button"
             variant="ghost"
             onClick={() => setUserMenuOpen(prev => !prev)}
-            className="group flex items-center gap-3 w-full px-2 py-2 mb-2 rounded-xl hover:bg-zinc-100 transition-colors text-left justify-start h-auto"
+            className="group mb-2 justify-start"
             title={tNav('viewProfileTooltip')}
           >
             <div
@@ -934,7 +929,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     variant="ghost"
                     size="icon"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg h-9 w-9"
                   >
                     <X className="w-5 h-5" />
                   </Button>
@@ -960,7 +954,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-lg h-9 w-9"
+                className="-ml-1"
               >
                 <Menu className="w-5 h-5" />
               </Button>

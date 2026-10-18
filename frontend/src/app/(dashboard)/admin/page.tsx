@@ -218,8 +218,7 @@ export default function AdminDashboardPage() {
               size="sm"
               onClick={() => fetchDashboardData(true)}
               disabled={isRefreshing}
-              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
+              leftIcon={<RefreshCw  />}
             >
               {t('adminRefresh')}
             </Button>
@@ -227,8 +226,7 @@ export default function AdminDashboardPage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/admin/notifications')}
-              leftIcon={<Megaphone className="w-4 h-4 text-orange-400" />}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
+              leftIcon={<Megaphone  />}
             >
               {t('adminActionSendBroadcast')}
             </Button>
@@ -236,8 +234,7 @@ export default function AdminDashboardPage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/admin/blogs')}
-              leftIcon={<Newspaper className="w-4 h-4 text-amber-400" />}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold"
+              leftIcon={<Newspaper  />}
             >
               {t('adminActionNewBlog')}
             </Button>
@@ -245,8 +242,7 @@ export default function AdminDashboardPage() {
               variant="primary"
               size="sm"
               onClick={() => router.push('/admin/analytics')}
-              leftIcon={<TrendingUp className="w-4 h-4" />}
-              className="bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-md shadow-orange-600/30"
+              leftIcon={<TrendingUp  />}
             >
               {t('adminActionFullAnalytics')}
             </Button>
@@ -491,7 +487,7 @@ export default function AdminDashboardPage() {
                       onClick={() =>
                         router.push(`/admin/grievances?search=${encodeURIComponent(item.id)}`)
                       }
-                      className="shrink-0 bg-white hover:bg-orange-600 text-orange-700 hover:text-white border-orange-200/90 hover:border-orange-600 text-xs font-bold transition-all shadow-2xs whitespace-nowrap"
+                      className="shrink-0 whitespace-nowrap"
                     >
                       {t('adminResolveNow')}
                     </Button>
@@ -608,7 +604,7 @@ export default function AdminDashboardPage() {
                       onClick={() =>
                         router.push(`/admin/blogs?search=${encodeURIComponent(item.id)}`)
                       }
-                      className="shrink-0 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-md whitespace-nowrap"
+                      className="shrink-0 hover:shadow-md whitespace-nowrap"
                     >
                       {t('adminInspectAndLock')}
                     </Button>

@@ -61,7 +61,6 @@ export default function ForgotPasswordPage() {
             variant="secondary"
             size="md"
             onClick={() => setSubmitted(false)}
-            className="px-6 py-2.5 rounded-xl font-extrabold text-xs"
           >
             {t('authForgotPassResendBtn')}
           </Button>
@@ -75,12 +74,8 @@ export default function ForgotPasswordPage() {
               variant={method === 'phone' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => setMethod('phone')}
-              leftIcon={<Phone className="w-3.5 h-3.5" />}
-              className={`flex-1 rounded-xl text-xs font-extrabold ${
-                method === 'phone'
-                  ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-                  : 'text-zinc-500 hover:text-zinc-800'
-              }`}
+              leftIcon={<Phone  />}
+              className="flex-1"
             >
               {t('authLoginMethodPhone')}
             </Button>
@@ -89,12 +84,8 @@ export default function ForgotPasswordPage() {
               variant={method === 'email' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => setMethod('email')}
-              leftIcon={<Mail className="w-3.5 h-3.5" />}
-              className={`flex-1 rounded-xl text-xs font-extrabold ${
-                method === 'email'
-                  ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-                  : 'text-zinc-500 hover:text-zinc-800'
-              }`}
+              leftIcon={<Mail  />}
+              className="flex-1"
             >
               {t('authLoginMethodEmail')}
             </Button>
@@ -124,12 +115,12 @@ export default function ForgotPasswordPage() {
 
             {/* Submit Button using Base Form.Actions & Button */}
             <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
-              <Button
+              <Button fullWidth
                 type="submit"
                 variant="primary"
                 size="lg"
-                rightIcon={<ArrowRight className="w-4 h-4" />}
-                className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+                rightIcon={<ArrowRight  />}
+                className="sm:text-sm"
               >
                 {t('authForgotPassSubmitBtn')}
               </Button>

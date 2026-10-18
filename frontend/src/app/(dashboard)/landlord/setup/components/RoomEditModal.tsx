@@ -84,7 +84,6 @@ export function RoomEditModal({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 w-8 h-8 rounded-lg"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -201,7 +200,6 @@ export function RoomEditModal({
                 variant="ghost"
                 size="sm"
                 onClick={onResetToDefault}
-                className="text-xs font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-8 px-2.5"
               >
                 {t('landlordSetupRoomModalResetToDefault')}
               </Button>
@@ -213,11 +211,10 @@ export function RoomEditModal({
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="h-9 px-4"
             >
               {t('landlordSetupRoomModalCancel')}
             </Button>
-            <Button type="button" variant="primary" size="sm" onClick={onSave} className="h-9 px-5">
+            <Button type="button" variant="primary" size="sm" onClick={onSave} >
               {t('landlordSetupRoomModalSave')}
             </Button>
           </div>

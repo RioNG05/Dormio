@@ -34,7 +34,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="text-xs font-bold text-zinc-700 hover:bg-zinc-50 border-zinc-200 px-3 py-1.5 rounded-xl h-auto"
                   >
                     {t('authLegalBackToRegister')}
                   </Button>
@@ -44,7 +43,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     type="button"
                     variant="primary"
                     size="sm"
-                    className="text-xs font-bold px-3.5 py-1.5 rounded-xl h-auto shadow-xs"
                   >
                     {t('authLoginBtn')}
                   </Button>

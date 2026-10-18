@@ -555,7 +555,7 @@ export default function AdminNotificationsPage() {
             variant="primary"
             size="sm"
             onClick={() => setIsComposeOpen(true)}
-            leftIcon={<Plus className="w-4 h-4" />}
+            leftIcon={<Plus  />}
             className="self-start sm:self-auto"
           >
             {t('adminNotifyComposeCampaign')}
@@ -584,7 +584,6 @@ export default function AdminNotificationsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSearchQuery('')}
-                    className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </Button>
@@ -612,11 +611,6 @@ export default function AdminNotificationsPage() {
                   setStatusFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  statusFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
               >
                 {chip.label}
               </Button>
@@ -659,11 +653,6 @@ export default function AdminNotificationsPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleViewModeChange('grid')}
-              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
-                  : 'text-zinc-400 hover:text-zinc-700'
-              }`}
               title={t('adminNotifyGridViewTooltip')}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -672,11 +661,6 @@ export default function AdminNotificationsPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleViewModeChange('table')}
-              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                viewMode === 'table'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
-                  : 'text-zinc-400 hover:text-zinc-700'
-              }`}
               title={t('adminNotifyTableViewTooltip')}
             >
               <TableIcon className="w-4 h-4" />
@@ -982,11 +966,6 @@ export default function AdminNotificationsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentPage(num)}
-                className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
-                  safeCurrentPage === num
-                    ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
-                    : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-                }`}
               >
                 {num}
               </Button>
@@ -1031,7 +1010,6 @@ export default function AdminNotificationsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleRequestCloseComposer}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1094,7 +1072,7 @@ export default function AdminNotificationsPage() {
                     const isSelected = composeChannels.includes(ch.id)
                     const Icon = ch.icon
                     return (
-                      <Button
+                      <Button size="icon-sm"
                         key={ch.id}
                         type="button"
                         variant="ghost"
@@ -1103,11 +1081,6 @@ export default function AdminNotificationsPage() {
                           if (fieldErrors.channels)
                             setFieldErrors(prev => ({ ...prev, channels: undefined }))
                         }}
-                        className={`p-3 h-auto rounded-xl border text-left font-bold transition-all cursor-pointer flex flex-col gap-1.5 items-stretch justify-start ${
-                          isSelected
-                            ? 'border-orange-500 bg-orange-50/50 text-orange-700 shadow-2xs hover:bg-orange-50/50 hover:text-orange-700'
-                            : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100'
-                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <Icon className="w-4 h-4" />
@@ -1149,7 +1122,7 @@ export default function AdminNotificationsPage() {
                     { id: 'all_admins' as const, label: t('adminNotifyTargetAllAdmins') },
                     { id: 'specific_user' as const, label: t('adminNotifyTargetSpecificUser') },
                   ].map(tgt => (
-                    <Button
+                    <Button size="xs"
                       key={tgt.id}
                       type="button"
                       variant="ghost"
@@ -1159,11 +1132,6 @@ export default function AdminNotificationsPage() {
                           setFieldErrors(prev => ({ ...prev, targetId: undefined }))
                         }
                       }}
-                      className={`px-3 py-2 h-auto rounded-xl border text-center font-bold text-xs transition-all cursor-pointer ${
-                        composeTarget === tgt.id
-                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-2xs hover:bg-orange-50 hover:text-orange-700'
-                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:bg-zinc-100'
-                      }`}
                     >
                       {tgt.label}
                     </Button>
@@ -1325,7 +1293,6 @@ export default function AdminNotificationsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setInspectCampaign(null)}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>

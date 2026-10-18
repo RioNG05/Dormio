@@ -291,8 +291,7 @@ export default function AdminBoardingHouseModerationPage() {
             size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="rounded-2xl bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs shadow-2xs"
-            leftIcon={<RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />}
+            leftIcon={<RefreshCw  />}
             title={t('adminHouseModRefresh')}
           >
             <span className="hidden sm:inline">{t('adminHouseModRefresh')}</span>
@@ -321,7 +320,6 @@ export default function AdminBoardingHouseModerationPage() {
             variant="ghost"
             size="sm"
             onClick={() => setFeedbackMsg(null)}
-            className="p-1 h-auto cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </Button>
@@ -339,7 +337,7 @@ export default function AdminBoardingHouseModerationPage() {
             variant="danger"
             size="sm"
             onClick={() => fetchHouses()}
-            className="px-3 py-1.5 h-auto text-xs shrink-0"
+            className="shrink-0"
           >
             {t('adminBlogsRetry') || 'Thử lại'}
           </Button>
@@ -389,7 +387,6 @@ export default function AdminBoardingHouseModerationPage() {
                             setPropertyQuery('')
                             setCurrentPage(1)
                           }}
-                          className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
                           title={t('adminHouseModFilterClearTooltip')}
                         >
                           <X className="w-3 h-3" />
@@ -423,7 +420,6 @@ export default function AdminBoardingHouseModerationPage() {
                             setLandlordQuery('')
                             setCurrentPage(1)
                           }}
-                          className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
                           title={t('adminHouseModFilterClearTooltip')}
                         >
                           <X className="w-3 h-3" />
@@ -469,7 +465,6 @@ export default function AdminBoardingHouseModerationPage() {
                         setMaxRooms('')
                         setCurrentPage(1)
                       }}
-                      className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
                       title={t('adminHouseModFilterClearRoomsTooltip')}
                     >
                       <X className="w-3 h-3" />
@@ -515,7 +510,6 @@ export default function AdminBoardingHouseModerationPage() {
                         setMaxOccupancy('')
                         setCurrentPage(1)
                       }}
-                      className="text-zinc-400 hover:text-zinc-600 cursor-pointer p-0.5 h-auto"
                       title={t('adminHouseModFilterClearOccupancyTooltip')}
                     >
                       <X className="w-3 h-3" />
@@ -527,16 +521,11 @@ export default function AdminBoardingHouseModerationPage() {
               {/* 5. Status multi-filter dropdown */}
               <th className="p-2 relative">
                 <div className="relative">
-                  <Button
+                  <Button fullWidth
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setTableStatusDropdownOpen(!tableStatusDropdownOpen)}
-                    className={`w-full px-2.5 py-1.5 h-auto bg-white border rounded-lg text-[11px] font-bold flex items-center justify-between gap-1 transition-all cursor-pointer ${
-                      statusFilters.length > 0
-                        ? 'border-orange-500 text-orange-700 bg-orange-50/50 hover:bg-orange-50/50 hover:text-orange-700'
-                        : 'border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                    }`}
                   >
                     <span className="truncate">
                       {statusFilters.length === 0
@@ -563,7 +552,6 @@ export default function AdminBoardingHouseModerationPage() {
                                 setStatusFilters([])
                                 setCurrentPage(1)
                               }}
-                              className="p-0 h-auto text-orange-600 hover:text-orange-700 cursor-pointer text-[10px]"
                             >
                               {t('adminHouseModFilterDeselect')}
                             </Button>
@@ -603,7 +591,6 @@ export default function AdminBoardingHouseModerationPage() {
                     variant="ghost"
                     size="sm"
                     onClick={resetAllFilters}
-                    className="p-1.5 h-auto rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                     title={t('adminHouseModFilterClearAll')}
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -663,8 +650,8 @@ export default function AdminBoardingHouseModerationPage() {
                         variant="primary"
                         size="sm"
                         onClick={resetAllFilters}
-                        className="mt-2 bg-orange-600 hover:bg-orange-700 text-white shadow-2xs"
-                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                        className="mt-2"
+                        leftIcon={<RotateCcw  />}
                       >
                         <span>{t('adminHouseModFilterClearAll')}</span>
                       </Button>
@@ -736,7 +723,6 @@ export default function AdminBoardingHouseModerationPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpenUnlock(item)}
-                          className="p-1.5 h-auto rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
                           title={t('adminHouseModUnlockHouse')}
                         >
                           <Unlock className="w-4 h-4" />
@@ -746,7 +732,6 @@ export default function AdminBoardingHouseModerationPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpenLock(item)}
-                          className="p-1.5 h-auto rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
                           title={t('adminHouseModLockHouse')}
                         >
                           <Lock className="w-4 h-4" />
@@ -816,11 +801,6 @@ export default function AdminBoardingHouseModerationPage() {
               variant="ghost"
               size="sm"
               onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
-                safeCurrentPage === num
-                  ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
-                  : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-              }`}
             >
               {num}
             </Button>
@@ -944,7 +924,6 @@ export default function AdminBoardingHouseModerationPage() {
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
                 isLoading={isUnlocking}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs"
               >
                 <span>{t('adminHouseModUnlockHouse')}</span>
               </Button>

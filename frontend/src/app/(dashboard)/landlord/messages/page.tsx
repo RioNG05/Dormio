@@ -689,7 +689,7 @@ function MessagesContent() {
               variant="primary"
               onClick={() => setShowNewChatModal(true)}
               title={t('landlordMessagesTooltipNewChat')}
-              className="h-9 w-9 rounded-xl shrink-0"
+              className="shrink-0"
             >
               <Plus className="w-4 h-4" />
             </Button>
@@ -754,8 +754,8 @@ function MessagesContent() {
                   size="sm"
                   variant="outline"
                   onClick={() => setShowNewChatModal(true)}
-                  leftIcon={<Plus className="w-3.5 h-3.5" />}
-                  className="mt-2 border-[#2AC1BC]/30 text-[#2AC1BC] hover:bg-[#2AC1BC] hover:text-white"
+                  leftIcon={<Plus  />}
+                  className="mt-2"
                 >
                   {t('landlordMessagesBtnStartChat')}
                 </Button>
@@ -863,7 +863,7 @@ function MessagesContent() {
                     setMobileShowChat(false)
                     router.replace('/landlord/messages', { scroll: false })
                   }}
-                  className="lg:hidden h-auto p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer shrink-0"
+                  className="lg:hidden -ml-1 shrink-0"
                   title={t('landlordMessagesTooltipBackToList')}
                 >
                   <ArrowLeft className="w-5 h-5 text-zinc-700" />
@@ -922,8 +922,8 @@ function MessagesContent() {
                       const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
                       router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
                     }}
-                    leftIcon={<FileText className="w-3.5 h-3.5" />}
-                    className="hidden md:inline-flex rounded-xl font-bold hover:bg-[#2AC1BC] hover:text-white"
+                    leftIcon={<FileText  />}
+                    className="hidden md:inline-flex"
                   >
                     {t('landlordMessagesBtnContract')}
                   </Button>
@@ -933,11 +933,6 @@ function MessagesContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowRightDrawer(!showRightDrawer)}
-                  className={`h-auto p-1.5 sm:p-2 rounded-xl transition-all cursor-pointer ${
-                    showRightDrawer
-                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20 hover:text-[#2AC1BC]'
-                      : 'hover:bg-zinc-100 text-zinc-600'
-                  }`}
                   title={t('landlordMessagesTooltipInfo')}
                 >
                   <Info className="w-4.5 h-4.5" />
@@ -1087,7 +1082,7 @@ function MessagesContent() {
                   size="sm"
                   onClick={() => handleSendMessage(reply)}
                   disabled={isSending}
-                  className="h-auto px-2.5 py-1 text-xs font-bold bg-white hover:bg-[#2AC1BC] hover:text-white text-zinc-700 border border-zinc-200 rounded-xl transition-all shrink-0 cursor-pointer shadow-2xs disabled:opacity-50"
+                  className="shrink-0"
                 >
                   {reply}
                 </Button>
@@ -1127,7 +1122,6 @@ function MessagesContent() {
                       onClick={() =>
                         setPendingAttachments(prev => prev.filter((_, i) => i !== index))
                       }
-                      className="h-auto text-zinc-400 hover:text-rose-500 p-0.5 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </Button>
@@ -1167,7 +1161,6 @@ function MessagesContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                   title={t('landlordMessagesTooltipAttachFile')}
                 >
                   <Paperclip className="w-4.5 h-4.5" />
@@ -1177,7 +1170,6 @@ function MessagesContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => imageInputRef.current?.click()}
-                  className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                   title={t('landlordMessagesTooltipSendImage')}
                 >
                   <ImageIcon className="w-4.5 h-4.5" />
@@ -1198,7 +1190,6 @@ function MessagesContent() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
                     >
                       <Smile className="w-4 h-4" />
                     </Button>
@@ -1211,8 +1202,8 @@ function MessagesContent() {
                   size="md"
                   disabled={isSending || (!inputMessage.trim() && pendingAttachments.length === 0)}
                   isLoading={isSending}
-                  rightIcon={<Send className="w-3.5 h-3.5" />}
-                  className="px-4 py-2.5 rounded-xl shrink-0"
+                  rightIcon={<Send  />}
+                  className="shrink-0"
                 >
                   {t('landlordMessagesSendBtn')}
                 </Button>
@@ -1247,7 +1238,6 @@ function MessagesContent() {
               variant="ghost"
               size="sm"
               onClick={() => setShowRightDrawer(false)}
-              className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded-lg cursor-pointer"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -1310,14 +1300,14 @@ function MessagesContent() {
             {/* Action Buttons */}
             {activeChat.participant.roomName && (
               <div className="space-y-2 pt-1">
-                <Button
+                <Button fullWidth size="icon"
                   type="button"
                   variant="ghost"
                   onClick={() => {
                     const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
                     router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`)
                   }}
-                  className="w-full h-auto p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
+                  className="justify-between group"
                 >
                   <span className="flex items-center gap-2">
                     <DoorOpen className="w-4 h-4 text-[#2AC1BC]" />{' '}
@@ -1329,14 +1319,14 @@ function MessagesContent() {
                   <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
                 </Button>
 
-                <Button
+                <Button fullWidth size="icon"
                   type="button"
                   variant="ghost"
                   onClick={() => {
                     const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
                     router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
                   }}
-                  className="w-full h-auto p-2.5 bg-white hover:bg-[#2AC1BC]/10 hover:border-[#2AC1BC]/40 text-zinc-800 hover:text-[#2AC1BC] border border-zinc-200 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-between shadow-2xs group"
+                  className="justify-between group"
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
@@ -1450,7 +1440,6 @@ function MessagesContent() {
                 variant="ghost"
                 size="sm"
                 onClick={handleCloseNewChatModal}
-                className="h-auto p-1.5 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1514,7 +1503,7 @@ function MessagesContent() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-auto p-2 text-zinc-400 group-hover:text-[#2AC1BC] group-hover:bg-[#2AC1BC]/10 rounded-xl transition-all shrink-0 cursor-pointer"
+                      className="group-hover:text-[#2AC1BC] group-hover:bg-[#2AC1BC]/10 shrink-0"
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -1546,7 +1535,6 @@ function MessagesContent() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setShowCloseModalConfirm(false)}
-                className="rounded-xl font-bold"
               >
                 {t('landlordMessagesConfirmCloseKeep')}
               </Button>
@@ -1558,7 +1546,6 @@ function MessagesContent() {
                   setShowNewChatModal(false)
                   setNewChatSearch('')
                 }}
-                className="rounded-xl font-bold"
               >
                 {t('landlordMessagesConfirmCloseDiscard')}
               </Button>
@@ -1576,12 +1563,12 @@ function MessagesContent() {
           }}
         >
           <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
-            <Button
+            <Button rounded="full"
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setPreviewImage(null)}
-              className="h-auto absolute -top-10 right-0 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              className="absolute -top-10 right-0"
             >
               <X className="w-6 h-6" />
             </Button>

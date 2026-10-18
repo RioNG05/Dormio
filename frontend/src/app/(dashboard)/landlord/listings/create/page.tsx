@@ -338,12 +338,11 @@ function CreateListingForm() {
       {/* Header */}
       <div className="flex items-center justify-between bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <Button
+          <Button rounded="full"
             type="button"
             variant="ghost"
             size="sm"
             onClick={handleCancelClick}
-            className="h-auto w-auto p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
             title={t('landlordListingsCreateBackBtn')}
           >
             <ChevronLeft className="w-5 h-5" />
@@ -577,7 +576,7 @@ function CreateListingForm() {
               variant="outline"
               size="sm"
               onClick={handleOpenAiModal}
-              className="h-auto flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 rounded-xl transition-all shadow-xs cursor-pointer active:scale-95 border-none"
+              className="from-teal-600 to-[#2AC1BC] hover:opacity-95"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>{t('landlordListingsCreateAiSuggestBtn')}</span>
@@ -621,7 +620,6 @@ function CreateListingForm() {
               variant="primary"
               size="sm"
               onClick={handleAddImage}
-              className="h-10 flex items-center gap-1.5 px-4 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" /> {t('landlordListingsCreateAddImageBtn')}
             </Button>
@@ -645,12 +643,11 @@ function CreateListingForm() {
                     }}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button
+                    <Button rounded="full"
                       type="button"
                       variant="danger"
                       size="sm"
                       onClick={() => handleRemoveImage(idx)}
-                      className="h-auto w-auto p-2 bg-rose-600 text-white rounded-full hover:bg-rose-700 transition-colors shadow-md cursor-pointer"
                       title={t('landlordListingsCreateDeleteImage')}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -678,7 +675,6 @@ function CreateListingForm() {
             size="sm"
             onClick={handleCancelClick}
             disabled={isSubmitting}
-            className="h-auto px-6 py-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
             {t('landlordListingsCreateCancelBtn')}
           </Button>
@@ -688,7 +684,6 @@ function CreateListingForm() {
             size="sm"
             onClick={() => handleSubmit('draft')}
             disabled={isSubmitting}
-            className="h-auto px-6 py-3 text-xs font-bold text-zinc-900 bg-white border border-zinc-300 hover:bg-zinc-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
             {t('landlordListingsCreateSaveDraftBtn')}
           </Button>
@@ -698,7 +693,7 @@ function CreateListingForm() {
             size="sm"
             onClick={() => handleSubmit('posted')}
             disabled={isSubmitting}
-            className="h-auto flex items-center gap-2 px-8 py-3 text-xs font-bold text-white bg-linear-to-r from-[#FF6B35] to-orange-600 hover:opacity-95 rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50 active:scale-95 border-none"
+            className="from-[#FF6B35] to-orange-600 hover:opacity-95"
           >
             {isSubmitting ? (
               <>
@@ -744,7 +739,6 @@ function CreateListingForm() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsAiModalOpen(false)}
-                className="h-auto w-auto p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -803,16 +797,11 @@ function CreateListingForm() {
                         icon: '💰',
                       },
                     ].map(t => (
-                      <Button
+                      <Button fullWidth
                         key={t.id}
                         type="button"
                         variant="ghost"
                         onClick={() => setAiTone(t.id as any)}
-                        className={`h-auto p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col items-start justify-start w-full whitespace-normal ${
-                          aiTone === t.id
-                            ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#138e89] shadow-xs'
-                            : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                        }`}
                       >
                         <div className="text-sm font-bold flex items-center gap-1.5 w-full">
                           <span>{t.icon}</span>
@@ -840,12 +829,12 @@ function CreateListingForm() {
                 )}
 
                 {/* Generate Button */}
-                <Button
+                <Button fullWidth size="icon"
                   type="button"
                   variant="primary"
                   disabled={isGeneratingAi}
                   onClick={handleGenerateAi}
-                  className="w-full h-auto py-3 bg-linear-to-r from-teal-600 to-[#2AC1BC] hover:opacity-95 text-white text-xs font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 border-none"
+                  className="from-teal-600 to-[#2AC1BC] hover:opacity-95"
                 >
                   {isGeneratingAi ? (
                     <>
@@ -938,7 +927,6 @@ function CreateListingForm() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsAiModalOpen(false)}
-                className="h-auto px-4 py-2.5 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordListingsCreateAiCloseBtn')}
               </Button>
@@ -948,7 +936,6 @@ function CreateListingForm() {
                   variant="primary"
                   size="sm"
                   onClick={handleApplyAiDraft}
-                  className="h-auto px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>{t('landlordListingsCreateAiApplyBtn')}</span>
@@ -987,7 +974,6 @@ function CreateListingForm() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsConfirmCloseModalOpen(false)}
-                className="h-auto px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
               >
                 {t('landlordListingsCreateConfirmCloseKeep')}
               </Button>
@@ -1000,7 +986,6 @@ function CreateListingForm() {
                   setIsDirty(false)
                   router.push('/landlord/listings')
                 }}
-                className="h-auto px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordListingsCreateConfirmCloseDiscard')}
               </Button>

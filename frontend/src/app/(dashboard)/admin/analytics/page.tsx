@@ -242,11 +242,6 @@ export default function AdminAnalyticsPage() {
           variant="ghost"
           size="sm"
           onClick={() => setActiveTab('revenue')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'revenue'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
         >
           <Wallet className="w-4 h-4" />
           <span>{t('adminAnalyticsTabRevenue')}</span>
@@ -256,11 +251,6 @@ export default function AdminAnalyticsPage() {
           variant="ghost"
           size="sm"
           onClick={() => setActiveTab('users')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'users'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
         >
           <Users className="w-4 h-4" />
           <span>{t('adminAnalyticsTabUsers')}</span>
@@ -270,11 +260,6 @@ export default function AdminAnalyticsPage() {
           variant="ghost"
           size="sm"
           onClick={() => setActiveTab('properties')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'properties'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
         >
           <Building2 className="w-4 h-4" />
           <span>{t('adminAnalyticsTabProperties')}</span>
@@ -284,11 +269,6 @@ export default function AdminAnalyticsPage() {
           variant="ghost"
           size="sm"
           onClick={() => setActiveTab('listings')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'listings'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
         >
           <Layers className="w-4 h-4" />
           <span>{t('adminAnalyticsTabListings')}</span>
@@ -324,11 +304,6 @@ export default function AdminAnalyticsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setRevenuePeriod(p.id)}
-                  className={`px-3 py-1 h-auto text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    revenuePeriod === p.id
-                      ? 'bg-white text-orange-600 shadow-xs hover:bg-white hover:text-orange-600'
-                      : 'text-zinc-600 hover:text-zinc-900'
-                  }`}
                 >
                   {p.label}
                 </Button>

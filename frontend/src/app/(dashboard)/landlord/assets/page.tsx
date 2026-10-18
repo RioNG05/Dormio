@@ -491,36 +491,26 @@ export default function AssetsPage() {
           <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
+              variant={viewMode === 'grid' ? 'white' : 'ghost'}
+              size="icon-sm"
               onClick={() => {
                 setViewMode('grid')
                 setItemsPerPage(6)
                 setCurrentPage(1)
               }}
-              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-2xs'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              }`}
               title={t('landlordAssetsViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
             </Button>
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
+              variant={viewMode === 'list' ? 'white' : 'ghost'}
+              size="icon-sm"
               onClick={() => {
                 setViewMode('list')
                 setItemsPerPage(10)
                 setCurrentPage(1)
               }}
-              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'list'
-                  ? 'bg-white text-zinc-900 shadow-2xs'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              }`}
               title={t('landlordAssetsViewTable')}
             >
               <List className="w-4 h-4" />
@@ -662,20 +652,18 @@ export default function AssetsPage() {
                       <div className="flex items-center gap-1">
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="sm"
+                          variant="secondary"
+                          size="xs"
                           onClick={e => handleOpenEditModal(asset, e)}
-                          className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                          leftIcon={<Edit3 className="w-3.5 h-3.5 text-[#2AC1BC]" />}
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
                           {t('landlordAssetsBtnEditSku')}
                         </Button>
                         <Button
                           type="button"
                           variant="ghost"
-                          size="sm"
+                          size="icon-xs"
                           onClick={e => handleDeleteAsset(asset, e)}
-                          className="h-auto w-auto p-1.5 text-zinc-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
                           title={t('landlordAssetsBtnDelete')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -785,20 +773,18 @@ export default function AssetsPage() {
                           >
                             <Button
                               type="button"
-                              variant="ghost"
-                              size="sm"
+                              variant="secondary"
+                              size="xs"
                               onClick={e => handleOpenEditModal(asset, e)}
-                              className="h-auto px-2.5 py-1 bg-zinc-100 text-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-200 transition-colors flex items-center gap-1 cursor-pointer"
+                              leftIcon={<Edit3 className="w-3 h-3 text-[#2AC1BC]" />}
                             >
-                              <Edit3 className="w-3 h-3 text-[#2AC1BC]" />{' '}
                               {t('landlordAssetsBtnEdit')}
                             </Button>
                             <Button
                               type="button"
                               variant="ghost"
-                              size="sm"
+                              size="icon-xs"
                               onClick={e => handleDeleteAsset(asset, e)}
-                              className="h-auto w-auto p-1.5 text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
                               title={t('landlordAssetsBtnDelete')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -871,10 +857,9 @@ export default function AssetsPage() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="xs"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 &larr; {t('landlordAssetsPrev')}
               </Button>
@@ -882,14 +867,9 @@ export default function AssetsPage() {
                 <Button
                   type="button"
                   variant={currentPage === page ? 'primary' : 'outline'}
-                  size="sm"
+                  size="icon-sm"
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                    currentPage === page
-                      ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 border-transparent'
-                      : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                  }`}
                 >
                   {page}
                 </Button>
@@ -897,10 +877,9 @@ export default function AssetsPage() {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="xs"
                 disabled={currentPage >= totalPages || windowStart + windowSize > totalPages}
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
                 {t('landlordAssetsNext')} &rarr;
               </Button>
@@ -935,9 +914,8 @@ export default function AssetsPage() {
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleCloseModal}
-                className="h-auto w-auto p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <Plus className="w-5 h-5 rotate-45" />
               </Button>
@@ -1087,7 +1065,6 @@ export default function AssetsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleCloseModal}
-                className="h-auto px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
               >
                 {t('landlordAssetsBtnCancel')}
               </Button>
@@ -1097,9 +1074,8 @@ export default function AssetsPage() {
                 size="sm"
                 onClick={handleSaveAsset}
                 disabled={isSubmitting}
-                className="h-auto px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] disabled:opacity-50 rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all flex items-center gap-1.5"
+                isLoading={isSubmitting}
               >
-                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {t('landlordAssetsModalBtnSave')}
               </Button>
             </div>

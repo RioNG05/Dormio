@@ -227,7 +227,7 @@ export function ImageUpload({
                 e.stopPropagation()
                 onInspect(value)
               }}
-              className="absolute top-2.5 right-2.5 h-8 w-8 bg-black/60 text-white hover:bg-black/80 rounded-xl cursor-pointer shadow-md z-10"
+              className="absolute top-2.5 right-2.5 z-10"
               title="Xem ảnh"
             >
               <Eye className="w-4 h-4" />
@@ -262,7 +262,6 @@ export function ImageUpload({
                 size="sm"
                 variant="secondary"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-8 px-2.5 text-xs font-bold bg-white/90 hover:bg-white text-zinc-900 rounded-lg shadow-sm"
               >
                 <Camera className="w-3.5 h-3.5 mr-1" />
                 {tGuest('guestDepositChangeImage') || 'Đổi ảnh'}
@@ -272,7 +271,6 @@ export function ImageUpload({
                 size="sm"
                 variant="danger"
                 onClick={handleRemove}
-                className="h-8 px-2.5 text-xs font-bold rounded-lg shadow-sm"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1" />
                 {tGuest('guestDepositRemoveImage') || 'Xóa ảnh'}

@@ -446,7 +446,6 @@ export default function AdminPostDetailPage() {
               size="sm"
               onClick={() => setIsUnlockModalOpen(true)}
               disabled={actionLoading}
-              className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               title={t('adminModActionUnlock')}
             >
               <Unlock className="w-3.5 h-3.5" />
@@ -462,7 +461,6 @@ export default function AdminPostDetailPage() {
                 setIsLockModalOpen(true)
               }}
               disabled={actionLoading}
-              className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               title={t('adminModActionLock')}
             >
               <Lock className="w-3.5 h-3.5" />
@@ -478,7 +476,6 @@ export default function AdminPostDetailPage() {
                 size="sm"
                 onClick={handleRevertToDraft}
                 disabled={actionLoading}
-                className="h-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                 title={t('adminBlogsDetailRevertTitle')}
               >
                 <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
@@ -490,7 +487,6 @@ export default function AdminPostDetailPage() {
                 size="sm"
                 onClick={handlePublishPost}
                 disabled={actionLoading}
-                className="h-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                 title={t('adminBlogsDetailPublishTitle')}
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -503,7 +499,6 @@ export default function AdminPostDetailPage() {
             variant="secondary"
             size="sm"
             onClick={handleOpenEdit}
-            className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailEditBtn')}</span>
@@ -518,7 +513,6 @@ export default function AdminPostDetailPage() {
               setDeleteError('')
               setIsDeleteModalOpen(true)
             }}
-            className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailDeleteBtn')}</span>
@@ -530,7 +524,6 @@ export default function AdminPostDetailPage() {
             size="sm"
             onClick={() => fetchPostDetail(true)}
             disabled={loading}
-            className="h-auto p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors shadow-2xs cursor-pointer"
             title={t('adminModRefresh')}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -559,7 +552,6 @@ export default function AdminPostDetailPage() {
             variant="ghost"
             size="sm"
             onClick={() => setFeedbackMsg(null)}
-            className="h-auto p-1 hover:bg-black/5 rounded-lg text-zinc-500 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </Button>
@@ -589,7 +581,7 @@ export default function AdminPostDetailPage() {
             variant="danger"
             size="sm"
             onClick={() => setIsUnlockModalOpen(true)}
-            className="h-auto px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            className="shrink-0"
           >
             <Unlock className="w-3.5 h-3.5" />
             <span>{t('adminModActionUnlock')}</span>
@@ -675,7 +667,7 @@ export default function AdminPostDetailPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleCopyId}
-                  className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded transition-colors cursor-pointer"
+                  className="rounded"
                   title={t('adminBlogsDetailCopyUuid')}
                 >
                   {copied ? (
@@ -763,11 +755,7 @@ export default function AdminPostDetailPage() {
                     size="sm"
                     key={img.id || idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`h-auto p-0 relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
-                      activeImageIndex === idx
-                        ? 'border-orange-600 ring-2 ring-orange-500/20 shadow-xs'
-                        : 'border-zinc-200 hover:border-zinc-300 opacity-70 hover:opacity-100'
-                    }`}
+                    className="shrink-0"
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
                   </Button>
@@ -909,7 +897,6 @@ export default function AdminPostDetailPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleRequestCloseEdit}
-                className="h-auto p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -982,7 +969,6 @@ export default function AdminPostDetailPage() {
                 size="sm"
                 onClick={handleRequestCloseEdit}
                 disabled={isSaving}
-                className="h-auto px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -992,7 +978,6 @@ export default function AdminPostDetailPage() {
                 onClick={handleSaveEdit}
                 disabled={isSaving}
                 isLoading={isSaving}
-                className="h-auto px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
               >
                 <span>{t('adminBlogsDetailSaveChanges')}</span>
               </Button>
@@ -1045,11 +1030,6 @@ export default function AdminPostDetailPage() {
                       setLockReason(preset)
                       setLockReasonError('')
                     }}
-                    className={`h-auto px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
-                      lockReason === preset
-                        ? 'bg-red-50 border-red-300 text-red-700'
-                        : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                    }`}
                   >
                     {preset}
                   </Button>
@@ -1075,7 +1055,6 @@ export default function AdminPostDetailPage() {
                 size="sm"
                 onClick={handleRequestCloseLock}
                 disabled={isLocking}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -1085,7 +1064,6 @@ export default function AdminPostDetailPage() {
                 onClick={handleConfirmLock}
                 disabled={isLocking}
                 isLoading={isLocking}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
                 <span>{t('adminModLockConfirmBtn')}</span>
               </Button>
@@ -1118,7 +1096,6 @@ export default function AdminPostDetailPage() {
                 size="sm"
                 onClick={() => setIsUnlockModalOpen(false)}
                 disabled={isUnlocking}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -1128,7 +1105,6 @@ export default function AdminPostDetailPage() {
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
                 isLoading={isUnlocking}
-                className="h-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
                 <span>{t('adminModUnlockConfirmBtn')}</span>
               </Button>
@@ -1190,7 +1166,6 @@ export default function AdminPostDetailPage() {
                 size="sm"
                 onClick={handleRequestCloseDelete}
                 disabled={isDeleting}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -1200,7 +1175,6 @@ export default function AdminPostDetailPage() {
                 onClick={handleConfirmDelete}
                 disabled={isDeleting || !deleteReason.trim()}
                 isLoading={isDeleting}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>{t('adminBlogsDetailConfirmDeleteAndDispatch')}</span>
               </Button>
@@ -1229,7 +1203,6 @@ export default function AdminPostDetailPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsContinueEditing')}
               </Button>
@@ -1237,7 +1210,6 @@ export default function AdminPostDetailPage() {
                 variant="primary"
                 size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="h-auto px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
               >
                 {t('adminBlogsDiscardAndClose')}
               </Button>

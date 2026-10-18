@@ -341,11 +341,6 @@ export default function ReportsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setReportMode('portfolio')}
-              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                reportMode === 'portfolio'
-                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
             >
               <Layers className="w-3.5 h-3.5 text-[#2AC1BC]" />
               <span>{t('landlordReportsTabPortfolio')}</span>
@@ -355,11 +350,6 @@ export default function ReportsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setReportMode('single')}
-              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                reportMode === 'single'
-                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
             >
               <Building2 className="w-3.5 h-3.5 text-blue-500" />
               <span>{t('landlordReportsTabSingle')}</span>
@@ -383,11 +373,11 @@ export default function ReportsPage() {
 
           {/* AI Strategy Generation Button */}
           {reportMode === 'portfolio' && (
-            <Button
+            <Button size="xs"
               type="button"
               disabled={isAiGenerating}
               onClick={handleGenerateAiStrategy}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-linear-to-r from-[#2AC1BC] to-teal-600 hover:opacity-95 rounded-xl transition-all cursor-pointer shadow-md active:scale-95 disabled:opacity-60"
+              className="from-[#2AC1BC] to-teal-600 hover:opacity-95"
             >
               {isAiGenerating ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -401,11 +391,10 @@ export default function ReportsPage() {
           )}
 
           {/* Export Excel / CSV Button */}
-          <Button
+          <Button size="xs"
             type="button"
             variant="ghost"
             onClick={handleExportCsv}
-            className="h-auto flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#138e89] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 hover:text-[#138e89] border border-[#2AC1BC]/30 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#2AC1BC]" />
             <span>{t('landlordReportsExportCsv')}</span>
@@ -447,11 +436,11 @@ export default function ReportsPage() {
                       })}
                     </p>
                   </div>
-                  <Button
+                  <Button size="xs" variant="dark"
                     type="button"
                     disabled={isAiGenerating}
                     onClick={handleGenerateAiStrategy}
-                    className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 text-xs font-bold rounded-2xl shadow-lg transition-all cursor-pointer active:scale-95 disabled:opacity-60"
+                    className="shrink-0"
                   >
                     {isAiGenerating ? (
                       <>
@@ -757,11 +746,6 @@ export default function ReportsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleViewModeChange('grid')}
-                      className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        viewMode === 'grid'
-                          ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                          : 'text-zinc-400 hover:text-zinc-700'
-                      }`}
                       title={t('landlordReportsTooltipGrid')}
                     >
                       <LayoutGrid className="w-4 h-4" />
@@ -771,11 +755,6 @@ export default function ReportsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleViewModeChange('table')}
-                      className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        viewMode === 'table'
-                          ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                          : 'text-zinc-400 hover:text-zinc-700'
-                      }`}
                       title={t('landlordReportsTooltipTable')}
                     >
                       <List className="w-4 h-4" />
@@ -1001,7 +980,6 @@ export default function ReportsPage() {
                         size="sm"
                         disabled={page === 1}
                         onClick={() => setPage(1)}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationFirst')}
                       >
                         <ChevronsLeft className="w-3.5 h-3.5" />
@@ -1012,7 +990,6 @@ export default function ReportsPage() {
                         size="sm"
                         disabled={page === 1}
                         onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationPrev')}
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
@@ -1027,11 +1004,6 @@ export default function ReportsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setPage(pNum)}
-                            className={`h-8 w-8 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              page === pNum
-                                ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]/90 hover:text-white'
-                                : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                            }`}
                           >
                             {pNum}
                           </Button>
@@ -1044,7 +1016,6 @@ export default function ReportsPage() {
                         size="sm"
                         disabled={page === totalPages}
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationNext')}
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -1055,7 +1026,6 @@ export default function ReportsPage() {
                         size="sm"
                         disabled={page === totalPages}
                         onClick={() => setPage(totalPages)}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
                         title={t('landlordReportsPaginationLast')}
                       >
                         <ChevronsRight className="w-3.5 h-3.5" />
@@ -1395,7 +1365,6 @@ export default function ReportsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAiModal(false)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1484,21 +1453,19 @@ export default function ReportsPage() {
 
             {/* Modal Footer */}
             <div className="p-4 sm:p-5 border-t border-zinc-100 flex items-center justify-end gap-2.5 bg-zinc-50/50">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="ghost"
                 onClick={() => setShowAiModal(false)}
-                className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordReportsAiCloseBtn')}
               </Button>
-              <Button
+              <Button size="xs"
                 type="button"
                 onClick={() => {
                   setShowAiModal(false)
                   showToast(t('landlordReportsToastAiPlanSaved'))
                 }}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 {t('landlordReportsAiSavePlanBtn')}
               </Button>

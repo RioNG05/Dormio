@@ -410,7 +410,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             size="sm"
             type="button"
             onClick={handleOpenChat}
-            className="h-auto flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            className="flex-1 sm:flex-initial whitespace-nowrap"
           >
             <MessageCircle className="w-3.5 h-3.5" /> {t('landlordCustomersMessageBtn')}
           </Button>
@@ -418,7 +418,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             variant="outline"
             size="sm"
             onClick={() => setIsEditModalOpen(true)}
-            className="flex-1 sm:flex-initial gap-1.5 text-zinc-700 bg-white border-zinc-200 hover:bg-zinc-50 whitespace-nowrap"
+            className="flex-1 sm:flex-initial whitespace-nowrap"
           >
             <Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t('landlordCustomersEditInfo')}
           </Button>
@@ -438,7 +438,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 },
               })
             }}
-            className="flex-1 sm:flex-initial gap-1.5 text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 shadow-none whitespace-nowrap"
+            className="flex-1 sm:flex-initial whitespace-nowrap"
           >
             <Trash2 className="w-3.5 h-3.5" /> {t('landlordCustomersDeleteBtn')}
           </Button>
@@ -788,11 +788,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -880,7 +879,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-50"
               >
                 {t('landlordCustomersCancelBtn')}
               </Button>
@@ -888,7 +886,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 variant="primary"
                 size="sm"
                 onClick={handleSaveCustomer}
-                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20"
               >
                 {t('landlordCustomersSaveChangesBtn')}
               </Button>
@@ -906,11 +903,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           }}
         >
           <div className="relative max-w-3xl w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl p-2 flex flex-col items-center">
-            <Button
+            <Button rounded="full"
               variant="ghost"
               size="sm"
               onClick={() => setIsImagePreviewOpen(null)}
-              className="h-auto absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer z-10"
+              className="absolute top-4 right-4 z-10"
             >
               <X className="w-6 h-6" />
             </Button>
@@ -944,7 +941,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 variant="outline"
                 size="sm"
                 onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl"
               >
                 {t('landlordCustomersCancelBtn')}
               </Button>
@@ -952,7 +948,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 variant="danger"
                 size="sm"
                 onClick={confirmModal.onConfirm}
-                className="px-5 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs"
               >
                 {t('landlordCustomersConfirmDeleteBtn')}
               </Button>
@@ -981,9 +976,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               </p>
             </div>
 
-            <Button
+            <Button fullWidth size="xs" variant="dark"
               onClick={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
-              className="w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-[#2AC1BC]/20"
             >
               {t('landlordCustomersUnderstood')}
             </Button>

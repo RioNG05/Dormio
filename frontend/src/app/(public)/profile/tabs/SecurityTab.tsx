@@ -115,7 +115,6 @@ export default function SecurityTab() {
               variant="ghost"
               size="icon"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              className="w-7 h-7 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent rounded-md"
               tabIndex={-1}
             >
               {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -139,7 +138,6 @@ export default function SecurityTab() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="w-7 h-7 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent rounded-md"
                 tabIndex={-1}
               >
                 {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -187,7 +185,6 @@ export default function SecurityTab() {
               variant="ghost"
               size="icon"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="w-7 h-7 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent rounded-md"
               tabIndex={-1}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -196,11 +193,10 @@ export default function SecurityTab() {
         />
 
         <Form.Actions>
-          <Button
+          <Button fullWidth size="xs"
             type="submit"
             disabled={isSubmitting}
             isLoading={isSubmitting}
-            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25"
             rightIcon={<span>&rarr;</span>}
           >
             {t('guestProfilePasswordBtnSave')}

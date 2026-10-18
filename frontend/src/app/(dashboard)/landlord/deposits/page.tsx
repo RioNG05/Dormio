@@ -506,8 +506,8 @@ function DepositsContent() {
               setIsFormDirty(false)
               fetchAvailableRooms()
             }}
-            className="w-full sm:w-auto text-xs"
-            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
+            className="sm:w-auto"
+            leftIcon={<Plus className="shrink-0" />}
           >
             {t('landlordDepositsAddNew')}
           </Button>
@@ -640,7 +640,7 @@ function DepositsContent() {
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
           {/* 2 Deposit Types Segment Switcher */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-zinc-100 p-1 rounded-2xl sm:rounded-full border border-zinc-200/80 w-full md:w-auto">
-            <Button
+            <Button rounded="full"
               variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => {
@@ -654,7 +654,7 @@ function DepositsContent() {
                   ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
                   : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50',
               )}
-              leftIcon={<Clock className="w-3.5 h-3.5 shrink-0" />}
+              leftIcon={<Clock className="shrink-0" />}
             >
               <span className="whitespace-nowrap">{t('landlordDepositsTabHoldingButton')}</span>
               <span
@@ -669,7 +669,7 @@ function DepositsContent() {
               </span>
             </Button>
 
-            <Button
+            <Button rounded="full"
               variant={selectedDepositTypeTab === 'contract' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => {
@@ -683,7 +683,7 @@ function DepositsContent() {
                   ? 'bg-[#2AC1BC] text-white shadow-xs'
                   : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50',
               )}
-              leftIcon={<FileText className="w-3.5 h-3.5 shrink-0" />}
+              leftIcon={<FileText className="shrink-0" />}
             >
               <span className="whitespace-nowrap">{t('landlordDepositsTabContractButton')}</span>
               <span
@@ -933,14 +933,14 @@ function DepositsContent() {
                       variant="secondary"
                       size="sm"
                       onClick={() => setSelectedDeposit(dep)}
-                      className="flex-1 text-xs"
-                      leftIcon={<Eye className="w-3.5 h-3.5 text-zinc-500" />}
+                      className="flex-1"
+                      leftIcon={<Eye  />}
                     >
                       {t('landlordDepositsBtnDetail')}
                     </Button>
 
                     {isHoldType && isHolding && (
-                      <Button
+                      <Button variant="orange"
                         size="sm"
                         onClick={() => {
                           setShowUpgradeModal(dep)
@@ -951,9 +951,8 @@ function DepositsContent() {
                           })
                           setIsFormDirty(false)
                         }}
-                        className="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3"
                         title={t('landlordDepositsTooltipUpgrade')}
-                        leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                        leftIcon={<Sparkles  />}
                       >
                         {t('landlordDepositsBtnUpgradeShort')}
                       </Button>
@@ -967,9 +966,8 @@ function DepositsContent() {
                           setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
                           setIsFormDirty(false)
                         }}
-                        className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3"
                         title={t('landlordDepositsTooltipRefundDeduct')}
-                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                        leftIcon={<RotateCcw  />}
                       >
                         {t('landlordDepositsBtnRefundShort')}
                       </Button>
@@ -1046,7 +1044,6 @@ function DepositsContent() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setSelectedDeposit(dep)}
-                            className="h-7 w-7 text-zinc-500 hover:text-zinc-900"
                             title={t('landlordDepositsBtnDetail')}
                           >
                             <Eye className="w-4 h-4" />
@@ -1065,7 +1062,6 @@ function DepositsContent() {
                                 })
                                 setIsFormDirty(false)
                               }}
-                              className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                               title={t('landlordDepositsBtnUpgrade')}
                             >
                               <Sparkles className="w-4 h-4" />
@@ -1085,7 +1081,6 @@ function DepositsContent() {
                                 })
                                 setIsFormDirty(false)
                               }}
-                              className="h-7 w-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                               title={t('landlordDepositsBtnRefundDeduct')}
                             >
                               <RotateCcw className="w-4 h-4" />
@@ -1133,7 +1128,6 @@ function DepositsContent() {
               size="icon"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="h-8 w-8"
               title={t('landlordDepositsTooltipPrevPage')}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -1156,7 +1150,6 @@ function DepositsContent() {
               size="icon"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="h-8 w-8"
               title={t('landlordDepositsTooltipNextPage')}
             >
               <ChevronRight className="w-4 h-4" />
@@ -1192,11 +1185,10 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedDeposit(null)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1337,7 +1329,7 @@ function DepositsContent() {
               <div className="flex items-center gap-2">
                 {selectedDeposit.depositCategory === 'hold' &&
                   selectedDeposit.status === 'paid' && (
-                    <Button
+                    <Button variant="orange"
                       size="sm"
                       onClick={() => {
                         setShowUpgradeModal(selectedDeposit)
@@ -1349,15 +1341,14 @@ function DepositsContent() {
                         setSelectedDeposit(null)
                         setIsFormDirty(false)
                       }}
-                      className="bg-amber-500 hover:bg-amber-600 text-white font-black"
-                      leftIcon={<Sparkles className="w-4 h-4" />}
+                      leftIcon={<Sparkles  />}
                     >
                       {t('landlordDepositsBtnUpgrade')}
                     </Button>
                   )}
 
                 {selectedDeposit.status === 'paid' && (
-                  <Button
+                  <Button variant="dark"
                     size="sm"
                     onClick={() => {
                       setShowRefundModal(selectedDeposit)
@@ -1365,8 +1356,7 @@ function DepositsContent() {
                       setSelectedDeposit(null)
                       setIsFormDirty(false)
                     }}
-                    className="bg-purple-600 hover:bg-purple-700 text-white font-black"
-                    leftIcon={<RotateCcw className="w-4 h-4" />}
+                    leftIcon={<RotateCcw  />}
                   >
                     {t('landlordDepositsBtnRefundDeduct')}
                   </Button>
@@ -1401,11 +1391,10 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => requestCloseModal('create')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1551,12 +1540,11 @@ function DepositsContent() {
               >
                 {t('landlordDepositsCancelBtn')}
               </Button>
-              <Button
+              <Button variant="dark"
                 size="sm"
                 onClick={handleCreateDeposit}
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
-                className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
               >
                 {t('landlordDepositsSaveDepositAction')}
               </Button>
@@ -1594,11 +1582,10 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => requestCloseModal('refund')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1739,12 +1726,11 @@ function DepositsContent() {
               >
                 {t('landlordDepositsCancelBtn')}
               </Button>
-              <Button
+              <Button variant="dark"
                 size="sm"
                 onClick={handleRefundDeposit}
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-black"
               >
                 {t('landlordDepositsConfirmRefundAction')}
               </Button>
@@ -1782,11 +1768,10 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => requestCloseModal('upgrade')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1845,11 +1830,10 @@ function DepositsContent() {
               >
                 {t('landlordDepositsCancelBtn')}
               </Button>
-              <Button
+              <Button variant="orange"
                 size="sm"
                 onClick={handleConfirmUpgradeToContract}
-                className="bg-amber-500 hover:bg-amber-600 text-white font-black"
-                leftIcon={<FileText className="w-4 h-4" />}
+                leftIcon={<FileText  />}
               >
                 {t('landlordDepositsSignContractAndTransfer')}
               </Button>

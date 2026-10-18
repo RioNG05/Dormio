@@ -73,12 +73,7 @@ export function PublicHeader() {
             <>
               {/* Prominent "Đăng ký trở thành chủ trọ" or "Bảng điều khiển" Button next to Avatar */}
               <Link href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}>
-                <Button
-                  className={`rounded-xl px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5 transition-all hover:scale-105 ${
-                    user?.role === 'landlord'
-                      ? 'bg-[#2AC1BC] hover:bg-[#25aca7] shadow-[#2AC1BC]/25'
-                      : 'bg-[#FF6B35] hover:bg-[#d55e23] shadow-[#FF6B35]/25'
-                  }`}
+                <Button size="xs" variant="orange"
                 >
                   <Building2 className="w-4 h-4" />
                   <span className="hidden sm:inline">
@@ -195,7 +190,7 @@ export function PublicHeader() {
                 Đăng nhập
               </Link>
               <Link href="/register">
-                <Button className="rounded-xl px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs md:text-sm font-bold shadow-md shadow-[#2AC1BC]/25">
+                <Button size="xs" className="sm:px-5 sm:py-2.5 md:text-sm">
                   Đăng ký tài khoản
                 </Button>
               </Link>

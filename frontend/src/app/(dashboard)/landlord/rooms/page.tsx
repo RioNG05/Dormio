@@ -606,8 +606,7 @@ export default function RoomsPage() {
               resetBulkForm()
               setIsBulkModalOpen(true)
             }}
-            leftIcon={<Sparkles className="w-4 h-4 text-amber-700" />}
-            className="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-zinc-800"
+            leftIcon={<Sparkles  />}
             title={t('landlordRoomsBulkGenerateTooltip')}
           >
             <Text as="span" size="sm" weight="semibold">
@@ -620,8 +619,8 @@ export default function RoomsPage() {
             type="button"
             variant="primary"
             onClick={handleOpenCreateModal}
-            leftIcon={<Plus className="w-4 h-4" />}
-            className="w-full sm:w-auto"
+            leftIcon={<Plus  />}
+            className="sm:w-auto"
           >
             {t('landlordRoomsAddRoomBtn')}
           </Button>
@@ -770,7 +769,7 @@ export default function RoomsPage() {
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => handleViewModeChange('grid')}
-                leftIcon={<Grid className="w-3.5 h-3.5" />}
+                leftIcon={<Grid  />}
                 className={
                   viewMode === 'grid'
                     ? 'bg-white text-zinc-900 shadow-sm'
@@ -787,7 +786,7 @@ export default function RoomsPage() {
                 variant={viewMode === 'table' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => handleViewModeChange('table')}
-                leftIcon={<List className="w-3.5 h-3.5" />}
+                leftIcon={<List  />}
                 className={
                   viewMode === 'table'
                     ? 'bg-white text-zinc-900 shadow-sm'
@@ -926,7 +925,7 @@ export default function RoomsPage() {
                               e.stopPropagation()
                               handleOpenEditModal(room)
                             }}
-                            className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-800 hover:bg-white/80 rounded-md transition-all cursor-pointer opacity-80 hover:opacity-100 h-auto w-auto z-10"
+                            className="absolute top-2 right-2 opacity-80 hover:opacity-100 z-10"
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
                             <Edit className="w-3.5 h-3.5" />
@@ -1106,7 +1105,6 @@ export default function RoomsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpenEditModal(room)}
-                          className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
                           title={t('landlordRoomsEditRoomTooltip')}
                         >
                           <Edit className="w-4 h-4" />
@@ -1115,7 +1113,6 @@ export default function RoomsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                          className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
                           title={t('landlordRoomsViewDetailTooltip')}
                         >
                           <Eye className="w-4 h-4" />
@@ -1171,12 +1168,11 @@ export default function RoomsPage() {
                   </Text>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleCloseBulkModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1291,7 +1287,7 @@ export default function RoomsPage() {
                         setBulkNameFormat('P{floor}0{index}')
                         setIsBulkDirty(true)
                       }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
+                      className="rounded"
                     >
                       P&#123;floor&#125;0&#123;index&#125;
                     </Button>
@@ -1303,7 +1299,7 @@ export default function RoomsPage() {
                         setBulkNameFormat('{floor}0{index}')
                         setIsBulkDirty(true)
                       }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
+                      className="rounded"
                     >
                       &#123;floor&#125;0&#123;index&#125;
                     </Button>
@@ -1315,7 +1311,7 @@ export default function RoomsPage() {
                         setBulkNameFormat('P{floor}{index:02}')
                         setIsBulkDirty(true)
                       }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
+                      className="rounded"
                     >
                       P&#123;floor&#125;&#123;index:02&#125;
                     </Button>
@@ -1502,12 +1498,11 @@ export default function RoomsPage() {
                   </Text>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleCloseSingleModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1767,10 +1762,6 @@ export default function RoomsPage() {
                               )
                               setIsSingleDirty(true)
                             }}
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer h-auto ${selectedAmenities.includes(item)
-                                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20'
-                                : 'text-zinc-600 bg-white border-zinc-200 hover:bg-zinc-50'
-                              }`}
                           >
                             <Text as="span" size="xs" weight="semibold">
                               {item}
@@ -1891,7 +1882,7 @@ function ConfirmModal({
             type="button"
             variant="danger"
             onClick={onConfirm}
-            className="flex-1 bg-amber-500 hover:bg-amber-600 border-amber-500 text-white"
+            className="flex-1"
           >
             {t('landlordRoomsDiscardAndClose')}
           </Button>

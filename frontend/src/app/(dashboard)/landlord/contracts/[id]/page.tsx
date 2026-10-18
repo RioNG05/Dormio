@@ -499,7 +499,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   navigator.clipboard.writeText(contract.id)
                   showToast(t('landlordContractsToastCodeCopied'), 'success')
                 }}
-                className="h-auto p-1 hover:bg-zinc-100 rounded-md transition-colors text-zinc-400 hover:text-zinc-700 cursor-pointer"
                 title={t('landlordContractsCopyCodeTitle')}
               >
                 <Copy className="w-3.5 h-3.5" />
@@ -545,8 +544,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             variant="outline"
             size="sm"
             onClick={() => setIsTerminateModalOpen(true)}
-            className="bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200"
-            leftIcon={<Ban className="w-3.5 h-3.5" />}
+            leftIcon={<Ban  />}
           >
             {t('landlordContractDetailBtnTerminate')}
           </Button>
@@ -568,8 +566,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 variant="ghost"
                 size="sm"
                 onClick={openEditModal}
-                className="text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
-                leftIcon={<Edit2 className="w-3.5 h-3.5" />}
+                leftIcon={<Edit2  />}
               >
                 {t('landlordContractDetailBtnEdit')}
               </Button>
@@ -702,8 +699,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 variant="outline"
                 size="sm"
                 onClick={openAddMemberModal}
-                className="bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20 border-transparent text-xs font-bold"
-                leftIcon={<Plus className="w-3.5 h-3.5" />}
+                leftIcon={<Plus  />}
               >
                 {t('landlordContractDetailAddMemberBtn')}
               </Button>
@@ -742,7 +738,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                             : null,
                         )
                       }
-                      className="p-1 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-lg"
                       title={t('landlordContractsCreateConfirmCloseDiscard')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -885,12 +880,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -959,12 +953,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => requestCloseModal(() => setIsEditModalOpen(false))}
-                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1066,12 +1059,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
-                className="p-2 text-zinc-400 hover:text-zinc-600 rounded-full"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1084,7 +1076,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 size="sm"
                 variant={addMemberTab === 'select' ? 'primary' : 'ghost'}
                 onClick={() => setAddMemberTab('select')}
-                className="rounded-xl"
               >
                 {t('landlordContractDetailTabSelectExisting')}
               </Button>
@@ -1094,7 +1085,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 size="sm"
                 variant={addMemberTab === 'create' ? 'primary' : 'ghost'}
                 onClick={() => setAddMemberTab('create')}
-                className="rounded-xl"
               >
                 {t('landlordContractDetailTabCreateNew')}
               </Button>

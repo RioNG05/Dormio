@@ -376,7 +376,6 @@ export function MultiImageUpload({
           size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={() => deviceInputRef.current?.click()}
-          className="h-9 px-3.5 text-xs font-bold rounded-xl flex items-center gap-2 border border-zinc-200 hover:bg-zinc-100 transition-colors"
         >
           <UploadCloud className="w-4 h-4 text-[#2AC1BC] shrink-0" />
           <span>{t('guestPostsCreateUploadDevice') || 'Tải ảnh từ máy'}</span>
@@ -388,7 +387,6 @@ export function MultiImageUpload({
           size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={openCamera}
-          className="h-9 px-3.5 text-xs font-bold rounded-xl flex items-center gap-2 border border-zinc-200 hover:bg-zinc-100 transition-colors"
         >
           <Camera className="w-4 h-4 text-[#FF6B35] shrink-0" />
           <span>{t('guestPostsCreateCaptureCamera') || 'Chụp ảnh camera'}</span>
@@ -470,7 +468,6 @@ export function MultiImageUpload({
                   variant="secondary"
                   size="icon"
                   onClick={() => setInspectedImageUrl(url)}
-                  className="h-8 w-8 bg-white/90 hover:bg-white text-zinc-800 rounded-xl shadow-sm"
                   title="Xem ảnh phóng to"
                 >
                   <Eye className="w-4 h-4" />
@@ -483,7 +480,6 @@ export function MultiImageUpload({
                     variant="secondary"
                     size="icon"
                     onClick={() => handleSetCoverPhoto(idx)}
-                    className="h-8 w-8 bg-white/90 hover:bg-white text-amber-500 rounded-xl shadow-sm"
                     title={t('guestPostsCreateSetCoverTooltip') || 'Đặt làm ảnh bìa'}
                   >
                     <Star className="w-4 h-4" />
@@ -497,7 +493,6 @@ export function MultiImageUpload({
                     variant="danger"
                     size="icon"
                     onClick={() => handleRemoveImage(idx)}
-                    className="h-8 w-8 rounded-xl shadow-sm"
                     title="Xóa ảnh"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -538,7 +533,7 @@ export function MultiImageUpload({
                       variant="danger"
                       size="sm"
                       onClick={() => handleRemoveUploadingItem(item.id)}
-                      className="h-6 px-2 text-[10px] font-bold rounded-lg mt-1"
+                      className="mt-1"
                     >
                       {t('guestPostsCreateUploadRetry') || 'Bỏ qua'}
                     </Button>
@@ -580,7 +575,6 @@ export function MultiImageUpload({
                 variant="ghost"
                 size="icon"
                 onClick={closeCamera}
-                className="h-8 w-8 rounded-xl text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -607,7 +601,7 @@ export function MultiImageUpload({
                       closeCamera()
                       cameraInputRef.current?.click()
                     }}
-                    className="mt-2 text-xs border-zinc-600 text-white hover:bg-zinc-800"
+                    className="mt-2"
                   >
                     Dùng tệp ảnh thay thế
                   </Button>
@@ -630,7 +624,6 @@ export function MultiImageUpload({
                 variant="outline"
                 size="sm"
                 onClick={handleToggleFacingMode}
-                className="h-9 px-3 text-xs font-bold rounded-xl flex items-center gap-1.5"
                 title="Đổi camera trước/sau"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -643,7 +636,6 @@ export function MultiImageUpload({
                   variant="ghost"
                   size="sm"
                   onClick={closeCamera}
-                  className="h-9 px-4 text-xs font-bold rounded-xl text-zinc-600 hover:bg-zinc-100"
                 >
                   {t('guestPostsCreateCameraModalClose') || 'Đóng'}
                 </Button>
@@ -653,7 +645,6 @@ export function MultiImageUpload({
                   size="sm"
                   disabled={cameraLoading || !!cameraError}
                   onClick={handleSnapPhoto}
-                  className="h-9 px-5 text-xs font-bold rounded-xl bg-[#FF6B35] hover:bg-[#ff5518] text-white flex items-center gap-1.5 shadow-md shadow-[#FF6B35]/25"
                 >
                   <Camera className="w-4 h-4" />
                   <span>{t('guestPostsCreateCameraModalSnap') || 'Chụp ảnh'}</span>
@@ -688,7 +679,7 @@ export function MultiImageUpload({
               variant="secondary"
               size="icon"
               onClick={() => setInspectedImageUrl(null)}
-              className="absolute top-4 right-4 h-9 w-9 bg-black/60 hover:bg-black/80 text-white rounded-xl shadow-md cursor-pointer"
+              className="absolute top-4 right-4"
             >
               <X className="w-5 h-5" />
             </Button>

@@ -705,49 +705,33 @@ function CreateContractPage() {
 
       {/* Progress Wizard */}
       <div className="flex items-center justify-center gap-2 sm:gap-3 bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-2xs">
-        <Button
+        <Button variant="dark"
           type="button"
           onClick={() => setStep(1)}
           size="sm"
-          leftIcon={step > 1 ? <Check className="w-3.5 h-3.5" /> : <Home className="w-3.5 h-3.5" />}
-          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all ${step === 1
-              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
-              : step > 1
-                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20'
-                : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
-            }`}
+          leftIcon={step > 1 ? <Check  /> : <Home  />}
         >
           {t('landlordContractsCreateStep1Btn')}
         </Button>
 
         <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
 
-        <Button
+        <Button variant="dark"
           type="button"
           onClick={() => step > 1 && setStep(2)}
           size="sm"
-          leftIcon={step > 2 ? <Check className="w-3.5 h-3.5" /> : <DollarSign className="w-3.5 h-3.5" />}
-          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all ${step === 2
-              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
-              : step > 2
-                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20'
-                : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'
-            }`}
+          leftIcon={step > 2 ? <Check  /> : <DollarSign  />}
         >
           {t('landlordContractsCreateStep2Btn')}
         </Button>
 
         <ChevronRight className="w-4 h-4 text-zinc-300 shrink-0" />
 
-        <Button
+        <Button variant="dark"
           type="button"
           onClick={() => step > 2 && setStep(3)}
           size="sm"
-          leftIcon={<FileSignature className="w-3.5 h-3.5" />}
-          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-black transition-all ${step === 3
-              ? 'bg-[#2AC1BC] text-white shadow-sm shadow-[#2AC1BC]/30 hover:bg-[#25ad87]'
-              : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'
-            }`}
+          leftIcon={<FileSignature  />}
         >
           {t('landlordContractsCreateStep3Header')}
         </Button>
@@ -880,8 +864,8 @@ function CreateContractPage() {
                       isLoading={isSearchingPhone}
                       onClick={() => handleSearchPhone(tenantPhone)}
                       size="sm"
-                      leftIcon={<Search className="w-3 h-3" />}
-                      className="absolute right-1.5 bottom-1.5 h-7 px-3 text-[11px] font-bold bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-lg shadow-2xs"
+                      leftIcon={<Search  />}
+                      className="absolute right-1.5 bottom-1.5"
                     >
                       {t('landlordContractsCreateTenantSearchBtn')}
                     </Button>
@@ -1207,8 +1191,7 @@ function CreateContractPage() {
                             title: t('landlordContractsCreateCccdFrontUrlLabel'),
                           })
                         }
-                        leftIcon={<Eye className="w-3 h-3 text-[#2AC1BC]" />}
-                        className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
+                        leftIcon={<Eye  />}
                       >
                         {t('landlordContractsCreateCccdViewPhoto')}
                       </Button>
@@ -1221,8 +1204,7 @@ function CreateContractPage() {
                             size="sm"
                             disabled={uploadingFront}
                             onClick={() => document.getElementById('cccd-front-file')?.click()}
-                            leftIcon={<RefreshCw className="w-3 h-3" />}
-                            className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
+                            leftIcon={<RefreshCw  />}
                           >
                             {t('landlordContractsCreateCccdChangePhoto')}
                           </Button>
@@ -1235,7 +1217,6 @@ function CreateContractPage() {
                               setCardFrontUrl('')
                               setIsDirty(true)
                             }}
-                            className="h-7 px-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
                             title={t('landlordContractsCreateCccdRemovePhoto')}
                           >
                             <Trash2 className="w-3 h-3" />
@@ -1360,8 +1341,7 @@ function CreateContractPage() {
                             title: t('landlordContractsCreateCccdBackUrlLabel'),
                           })
                         }
-                        leftIcon={<Eye className="w-3 h-3 text-[#2AC1BC]" />}
-                        className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
+                        leftIcon={<Eye  />}
                       >
                         {t('landlordContractsCreateCccdViewPhoto')}
                       </Button>
@@ -1374,8 +1354,7 @@ function CreateContractPage() {
                             size="sm"
                             disabled={uploadingBack}
                             onClick={() => document.getElementById('cccd-back-file')?.click()}
-                            leftIcon={<RefreshCw className="w-3 h-3" />}
-                            className="h-7 px-2.5 text-[11px] font-bold text-zinc-700 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-100"
+                            leftIcon={<RefreshCw  />}
                           >
                             {t('landlordContractsCreateCccdChangePhoto')}
                           </Button>
@@ -1388,7 +1367,6 @@ function CreateContractPage() {
                               setCardBackUrl('')
                               setIsDirty(true)
                             }}
-                            className="h-7 px-2 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100"
                             title={t('landlordContractsCreateCccdRemovePhoto')}
                           >
                             <Trash2 className="w-3 h-3" />
@@ -1473,7 +1451,7 @@ function CreateContractPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setErrorMessage(null)}
-                className="ml-auto text-rose-400 hover:text-rose-700 p-1 h-6 w-6"
+                className="ml-auto"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -1487,7 +1465,6 @@ function CreateContractPage() {
               variant="outline"
               size="sm"
               onClick={handleAttemptClose}
-              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50"
             >
               {t('landlordContractsCreateCancelBtn')}
             </Button>
@@ -1496,8 +1473,7 @@ function CreateContractPage() {
               variant="primary"
               size="sm"
               onClick={handleStep1Next}
-              rightIcon={<ChevronRight className="w-4 h-4" />}
-              className="px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20"
+              rightIcon={<ChevronRight  />}
             >
               {t('landlordContractsCreateNextStep')}
             </Button>
@@ -1631,8 +1607,7 @@ function CreateContractPage() {
               variant="outline"
               size="sm"
               onClick={() => setStep(1)}
-              leftIcon={<ChevronLeft className="w-4 h-4" />}
-              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50"
+              leftIcon={<ChevronLeft  />}
             >
               {t('landlordContractsCreatePrevStep')}
             </Button>
@@ -1641,8 +1616,7 @@ function CreateContractPage() {
               variant="primary"
               size="sm"
               onClick={handleStep2Next}
-              rightIcon={<ChevronRight className="w-4 h-4" />}
-              className="px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20"
+              rightIcon={<ChevronRight  />}
             >
               {t('landlordContractsCreateNextStep')}
             </Button>
@@ -1761,8 +1735,7 @@ function CreateContractPage() {
               size="sm"
               disabled={isPending}
               onClick={() => setStep(2)}
-              leftIcon={<ChevronLeft className="w-4 h-4" />}
-              className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 disabled:opacity-50"
+              leftIcon={<ChevronLeft  />}
             >
               {t('landlordContractsCreatePrevStep')}
             </Button>
@@ -1774,8 +1747,7 @@ function CreateContractPage() {
               disabled={isPending}
               isLoading={isPending}
               onClick={handleSubmitContract}
-              leftIcon={<Check className="w-4 h-4" />}
-              className="px-6 py-2.5 text-xs font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 disabled:opacity-50"
+              leftIcon={<Check  />}
             >
               {isPending
                 ? t('landlordContractsCreateSubmitting')
@@ -1808,19 +1780,19 @@ function CreateContractPage() {
             </div>
 
             <div className="flex items-center gap-3 pt-2">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="secondary"
                 onClick={() => setShowConfirmClose(false)}
-                className="flex-1 py-2.5 px-4 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl"
+                className="flex-1"
               >
                 {t('landlordContractsCreateConfirmCloseKeep')}
               </Button>
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="danger"
                 onClick={handleConfirmClose}
-                className="flex-1 py-2.5 px-4 text-xs font-black text-white bg-rose-500 hover:bg-rose-600 rounded-xl shadow-sm shadow-rose-500/20"
+                className="flex-1"
               >
                 {t('landlordContractsCreateConfirmCloseDiscard')}
               </Button>
@@ -1849,7 +1821,6 @@ function CreateContractPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setPreviewModalImg(null)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
               >
                 <X className="w-5 h-5" />
               </Button>

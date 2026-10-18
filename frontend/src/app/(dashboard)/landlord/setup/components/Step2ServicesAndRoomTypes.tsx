@@ -133,7 +133,6 @@ export function Step2ServicesAndRoomTypes({
                       size="icon"
                       onClick={() => onRemoveService(service.id)}
                       title={t('landlordSetupDeleteService')}
-                      className="text-zinc-400 hover:text-red-500 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -219,7 +218,6 @@ export function Step2ServicesAndRoomTypes({
                       size="icon"
                       onClick={() => onRemoveRoomType(rt.id)}
                       title={t('landlordSetupDeleteRoomType')}
-                      className="text-zinc-400 hover:text-red-500 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

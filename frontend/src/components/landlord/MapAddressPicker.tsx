@@ -402,8 +402,7 @@ export function MapAddressPicker({
             variant="outline"
             size="sm"
             onClick={openGoogleMapsDirectly}
-            rightIcon={<ExternalLink className="h-3.5 w-3.5" />}
-            className="border-[#2AC1BC]/30 bg-[#2AC1BC]/5 text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
+            rightIcon={<ExternalLink  />}
           >
             Mở trên Google Maps
           </Button>
@@ -433,7 +432,7 @@ export function MapAddressPicker({
           onClick={handleSearchOSM}
           disabled={isSearching || !searchQuery.trim()}
           isLoading={isSearching}
-          leftIcon={!isSearching ? <Navigation className="h-3.5 w-3.5" /> : undefined}
+          leftIcon={!isSearching ? <Navigation  /> : undefined}
           className="shrink-0"
         >
           {isSearching ? 'Đang tìm...' : 'Tìm vị trí'}
@@ -502,12 +501,8 @@ export function MapAddressPicker({
               type="button"
               variant="primary"
               onClick={handleApply}
-              leftIcon={<Check className="h-4 w-4" />}
-              className={`shrink-0 shadow-xs ${
-                isApplied
-                  ? '!bg-emerald-600 hover:!bg-emerald-700 text-white'
-                  : 'bg-[#2AC1BC] hover:bg-[#25aca7] text-white'
-              }`}
+              leftIcon={<Check  />}
+              className="shrink-0"
             >
               {isApplied ? 'Đã áp dụng vào form!' : 'Áp dụng vào form'}
             </Button>

@@ -605,10 +605,6 @@ export default function ContractsPage() {
                     setRowsPerPage(6)
                     setCurrentPage(1)
                   }}
-                  className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid'
-                    ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                    }`}
                   title={t('landlordContractsGridView')}
                 >
                   <LayoutGrid className="w-4 h-4" />
@@ -621,10 +617,6 @@ export default function ContractsPage() {
                     setRowsPerPage(10)
                     setCurrentPage(1)
                   }}
-                  className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list'
-                    ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                    }`}
                   title={t('landlordContractsListView')}
                 >
                   <List className="w-4 h-4" />
@@ -700,7 +692,7 @@ export default function ContractsPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={e => copyToClipboard(e, c.id)}
-                                  className="h-auto p-0.5 hover:text-[#2AC1BC] transition-colors rounded cursor-pointer"
+                                  className="rounded"
                                   title={t('landlordContractsCopyCodeTitle')}
                                 >
                                   <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
@@ -812,12 +804,11 @@ export default function ContractsPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border-[#2AC1BC]/30 text-xs font-extrabold"
                             onClick={e => {
                               e.stopPropagation()
                               router.push(`/landlord/contracts/${c.id}`)
                             }}
-                            leftIcon={<Eye className="w-3.5 h-3.5" />}
+                            leftIcon={<Eye  />}
                           >
                             {t('landlordContractsBtnDetail')}
                           </Button>
@@ -825,7 +816,6 @@ export default function ContractsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl"
                               onClick={e => {
                                 e.stopPropagation()
                                 handlePrintContract(c)
@@ -837,26 +827,24 @@ export default function ContractsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border-emerald-200 text-xs font-bold"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
                                 setIsExtendModalOpen(true)
                               }}
-                              leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
+                              leftIcon={<CalendarDays  />}
                             >
                               {t('landlordContractsBtnExtend')}
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border-rose-200 text-xs font-bold"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
                                 setIsTerminateModalOpen(true)
                               }}
-                              leftIcon={<Ban className="w-3.5 h-3.5" />}
+                              leftIcon={<Ban  />}
                             >
                               {t('landlordContractsBtnTerminate')}
                             </Button>
@@ -944,7 +932,7 @@ export default function ContractsPage() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={e => copyToClipboard(e, c.id)}
-                                      className="h-auto p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded cursor-pointer"
+                                      className="rounded"
                                       title={t('landlordContractsCopyCodeTitle')}
                                     >
                                       <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
@@ -1026,7 +1014,6 @@ export default function ContractsPage() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-zinc-400 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
                                     onClick={e => {
                                       e.stopPropagation()
                                       router.push(`/landlord/contracts/${c.id}`)
@@ -1038,7 +1025,6 @@ export default function ContractsPage() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-zinc-400 hover:text-primary hover:bg-primary/10"
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedContract(c)
@@ -1051,7 +1037,6 @@ export default function ContractsPage() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
                                     onClick={e => {
                                       e.stopPropagation()
                                       handlePrintContract(c)
@@ -1063,7 +1048,6 @@ export default function ContractsPage() {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedContract(c)
@@ -1151,10 +1135,6 @@ export default function ContractsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 hover:bg-[#2AC1BC]/90 hover:text-white'
-                          : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                          }`}
                       >
                         {page}
                       </Button>
@@ -1192,11 +1172,10 @@ export default function ContractsPage() {
               <Text as="h2" size="xl" weight="bold" color="default">
                 {t('landlordContractsExtendModalTitle')}
               </Text>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1254,11 +1233,10 @@ export default function ContractsPage() {
               <Text as="h2" size="xl" weight="bold" color="danger">
                 {t('landlordContractsTerminateModalTitle')}
               </Text>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => requestCloseModal(() => setIsTerminateModalOpen(false))}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>

@@ -430,11 +430,6 @@ function PaymentsContent() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
                 title="Dạng Lưới (Grid - Mặc định)"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -444,11 +439,6 @@ function PaymentsContent() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode('table')}
-                className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  viewMode === 'table'
-                    ? 'bg-white text-zinc-900 shadow-2xs'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
                 title="Dạng Bảng (Table)"
               >
                 <List className="w-3.5 h-3.5" />
@@ -467,11 +457,7 @@ function PaymentsContent() {
               setActiveTab('all')
               setCurrentPage(1)
             }}
-            className={`h-auto px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 ${
-              activeTab === 'all'
-                ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#25ad87]'
-                : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
-            }`}
+            className="shrink-0"
           >
             Tất cả giao dịch ({summary.totalTransactions})
           </Button>
@@ -484,11 +470,7 @@ function PaymentsContent() {
               setActiveTab('banking')
               setCurrentPage(1)
             }}
-            className={`h-auto px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-              activeTab === 'banking'
-                ? 'bg-indigo-600 text-white shadow-2xs hover:bg-indigo-700'
-                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-            }`}
+            className="shrink-0"
           >
             <span className="w-2 h-2 rounded-full bg-indigo-400" />
             VietQR / Ngân hàng ({formatLargeMoney(summary.bankingRevenue)})
@@ -502,11 +484,7 @@ function PaymentsContent() {
               setActiveTab('cash')
               setCurrentPage(1)
             }}
-            className={`h-auto px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-              activeTab === 'cash'
-                ? 'bg-amber-600 text-white shadow-2xs hover:bg-amber-700'
-                : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-            }`}
+            className="shrink-0"
           >
             <span className="w-2 h-2 rounded-full bg-amber-400" />
             Tiền mặt ({formatLargeMoney(summary.cashRevenue)})
@@ -547,7 +525,6 @@ function PaymentsContent() {
                 setSelectedYear('all')
                 setActiveTab('all')
               }}
-              className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer border-0 h-auto"
             >
               Đặt lại bộ lọc
             </Button>
@@ -679,7 +656,7 @@ function PaymentsContent() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setPreviewImageUrl(photo.imageUrl)}
-                            className="h-7 w-7 p-0 rounded-lg overflow-hidden border border-zinc-200 hover:border-[#2AC1BC] transition-all cursor-pointer relative group/thumb"
+                            className="overflow-hidden relative group/thumb"
                             title={`Xem ảnh ${photo.serviceName}: ${photo.readingValue}`}
                           >
                             <img
@@ -708,7 +685,6 @@ function PaymentsContent() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedPayment(p)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-black rounded-xl transition-all cursor-pointer h-auto"
                   >
                     <Eye className="w-3.5 h-3.5" /> Xem Biên Nhận
                   </Button>
@@ -800,7 +776,7 @@ function PaymentsContent() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setPreviewImageUrl(photo.imageUrl)}
-                                className="h-6 w-6 p-0 rounded overflow-hidden border border-zinc-200 hover:border-[#2AC1BC] cursor-pointer"
+                                className="rounded overflow-hidden"
                                 title={`Xem ${photo.serviceName}: ${photo.readingValue}`}
                               >
                                 <img
@@ -827,7 +803,6 @@ function PaymentsContent() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setSelectedPayment(p)}
-                          className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 font-black rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
                         >
                           <Eye className="w-3.5 h-3.5" /> Biên Nhận
                         </Button>
@@ -880,7 +855,6 @@ function PaymentsContent() {
               size="sm"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Về trang đầu"
             >
               <ChevronsLeft className="w-4 h-4" />
@@ -893,7 +867,6 @@ function PaymentsContent() {
               size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
               disabled={currentPage <= 5}
-              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Lùi 5 trang"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -907,11 +880,6 @@ function PaymentsContent() {
                 variant={currentPage === pageNum ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setCurrentPage(pageNum)}
-                className={`h-8 w-8 p-0 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                  currentPage === pageNum
-                    ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#25ad87]'
-                    : 'border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700'
-                }`}
               >
                 {pageNum}
               </Button>
@@ -924,7 +892,6 @@ function PaymentsContent() {
               size="sm"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
               disabled={currentPage + 5 > totalPages}
-              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Tiến 5 trang"
             >
               <ChevronRight className="w-4 h-4" />
@@ -937,7 +904,6 @@ function PaymentsContent() {
               size="sm"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 rounded-lg border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title="Đến trang cuối"
             >
               <ChevronsRight className="w-4 h-4" />
@@ -978,7 +944,6 @@ function PaymentsContent() {
                   variant="ghost"
                   size="sm"
                   onClick={handlePrintReceipt}
-                  className="h-9 w-9 p-0 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
                   title="In biên nhận"
                 >
                   <Printer className="w-5 h-5" />
@@ -988,7 +953,6 @@ function PaymentsContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedPayment(null)}
-                  className="h-9 w-9 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
                   title="Đóng modal"
                 >
                   <X className="w-5 h-5" />
@@ -1126,7 +1090,7 @@ function PaymentsContent() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setPreviewImageUrl(mr.imageUrl)}
-                          className="h-16 w-16 p-0 rounded-xl overflow-hidden border border-amber-300/80 shrink-0 relative group/photo cursor-pointer"
+                          className="overflow-hidden shrink-0 relative group/photo"
                         >
                           <img
                             src={mr.imageUrl}
@@ -1156,7 +1120,7 @@ function PaymentsContent() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setPreviewImageUrl(mr.imageUrl)}
-                            className="h-auto p-0 text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer flex items-center gap-1 hover:bg-transparent"
+                            className="hover:underline"
                           >
                             <span>Xem ảnh phóng to</span> &rarr;
                           </Button>
@@ -1177,7 +1141,6 @@ function PaymentsContent() {
                   variant="outline"
                   size="sm"
                   onClick={handlePrintReceipt}
-                  className="h-auto px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 border-0"
                 >
                   <Printer className="w-3.5 h-3.5" /> In Biên Nhận
                 </Button>
@@ -1186,7 +1149,6 @@ function PaymentsContent() {
                   variant="primary"
                   size="sm"
                   onClick={() => setSelectedPayment(null)}
-                  className="h-auto px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-black rounded-xl shadow-sm transition-all cursor-pointer"
                 >
                   Đóng
                 </Button>
@@ -1200,12 +1162,12 @@ function PaymentsContent() {
       {previewImageUrl && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="relative max-w-3xl w-full max-h-[90vh] flex flex-col items-center">
-            <Button
+            <Button rounded="full"
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setPreviewImageUrl(null)}
-              className="absolute -top-12 right-0 h-10 w-10 p-0 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer"
+              className="absolute -top-12 right-0"
               title="Đóng ảnh"
             >
               <X className="w-6 h-6" />

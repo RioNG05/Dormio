@@ -237,7 +237,6 @@ export function Step3BulkRoomsAndPreview({
                         nameFormat: preset.value,
                       }))
                     }
-                    className="h-7 px-2.5 text-[11px]"
                   >
                     {preset.label}
                   </Button>
@@ -304,7 +303,7 @@ export function Step3BulkRoomsAndPreview({
                   .map((service, idx) => {
                     const isSelected = roomsConfig.serviceIndices.includes(idx)
                     return (
-                      <Button
+                      <Button rounded="full"
                         key={service.id}
                         type="button"
                         size="sm"
@@ -411,7 +410,7 @@ export function Step3BulkRoomsAndPreview({
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {group.rooms.map(room => (
-                      <Button
+                      <Button rounded="full"
                         key={room.index}
                         type="button"
                         size="sm"
@@ -427,7 +426,6 @@ export function Step3BulkRoomsAndPreview({
                         rightIcon={
                           room.isCustomized ? (
                             <span
-                              className="w-1.5 h-1.5 rounded-full bg-[#2AC1BC]"
                               title={t('landlordSetupPreviewCustomBadge')}
                             />
                           ) : undefined

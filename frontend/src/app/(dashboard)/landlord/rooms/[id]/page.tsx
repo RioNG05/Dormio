@@ -1166,7 +1166,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               size="sm"
               variant="primary"
               onClick={() => setIsMeterModalOpen(true)}
-              leftIcon={<Gauge className="w-3.5 h-3.5" />}
+              leftIcon={<Gauge  />}
               className="flex-1 md:flex-initial"
             >
               {t('landlordRoomDetailBtnLogMeter')}
@@ -1182,11 +1182,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               }
               className="flex-1 md:flex-initial"
             >
-              <Button
+              <Button fullWidth
                 size="sm"
                 variant="outline"
-                leftIcon={<Eye className="w-3.5 h-3.5 text-purple-600" />}
-                className="w-full"
+                leftIcon={<Eye  />}
               >
                 {t('landlordRoomDetailBtnViewContract')}
               </Button>
@@ -1196,11 +1195,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               href={`/landlord/contracts/create?roomId=${dashboardData?.room?.id || room?.id || resolvedParams.id}`}
               className="flex-1 md:flex-initial"
             >
-              <Button
+              <Button fullWidth
                 size="sm"
                 variant="outline"
-                leftIcon={<FileSignature className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-                className="w-full"
+                leftIcon={<FileSignature  />}
               >
                 {t('landlordRoomDetailBtnCreateContract')}
               </Button>
@@ -1211,7 +1209,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             size="sm"
             variant="outline"
             onClick={() => setIsEditModalOpen(true)}
-            leftIcon={<Edit className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+            leftIcon={<Edit  />}
             className="flex-1 md:flex-initial"
           >
             {t('landlordRoomDetailBtnEdit')}
@@ -1234,7 +1232,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 },
               })
             }}
-            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+            leftIcon={<Trash2  />}
             className="flex-1 md:flex-initial"
           >
             {t('landlordRoomDetailBtnDelete')}
@@ -1485,7 +1483,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           </span>
                           {isUnpaid ? (
                             <div className="flex items-center gap-2 shrink-0">
-                              <Button size="sm" variant="primary" className="py-1 px-3">
+                              <Button size="sm" variant="primary" >
                                 VietQR
                               </Button>
                               <a
@@ -1602,7 +1600,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         size="sm"
                         variant={invoicePage === idx + 1 ? 'primary' : 'secondary'}
                         onClick={() => setInvoicePage(idx + 1)}
-                        className="w-7 h-7 p-0"
                       >
                         {idx + 1}
                       </Button>
@@ -1794,8 +1791,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                 e.stopPropagation()
                                 handleOpenCorrectionModal(item)
                               }}
-                              leftIcon={<Edit className="w-3 h-3 text-amber-600" />}
-                              className="px-2.5 py-1 text-[10px] text-amber-700 border-amber-200 hover:bg-amber-50"
+                              leftIcon={<Edit  />}
                             >
                               {t('landlordRoomDetailEditMeterBtn')}
                             </Button>
@@ -1981,7 +1977,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         size="sm"
                         variant={meterPage === idx + 1 ? 'primary' : 'secondary'}
                         onClick={() => setMeterPage(idx + 1)}
-                        className="w-7 h-7 p-0"
                       >
                         {idx + 1}
                       </Button>
@@ -2016,7 +2011,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-0"
                     onClick={() => setIsIncidentModalOpen(true)}
                   >
                     {t('landlordRoomDetailReportIncidentBtn')}
@@ -2105,7 +2099,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       variant="secondary"
                       onClick={() => setMaintPage(prev => Math.max(1, prev - 1))}
                       disabled={maintPage === 1}
-                      className="px-2.5 py-1 text-[10px]"
                     >
                       {t('landlordRoomDetailPaginationPrev')}
                     </Button>
@@ -2118,7 +2111,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         )
                       }
                       disabled={maintPage === Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE)}
-                      className="px-2.5 py-1 text-[10px]"
                     >
                       {t('landlordRoomDetailPaginationNext')}
                     </Button>
@@ -2187,12 +2179,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="space-y-2 pt-1">
-                <Button
+                <Button fullWidth
                   size="md"
                   variant="primary"
                   onClick={() => showToast(t('landlordRoomDetailRefundToast'), 'success')}
-                  leftIcon={<Wallet className="w-4 h-4" />}
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md shadow-purple-600/20"
+                  leftIcon={<Wallet  />}
+                  className="from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                 >
                   {t('landlordRoomDetailRefundDepositBtn')}
                 </Button>
@@ -2422,11 +2414,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={() => setCorrectModal(prev => ({ ...prev, isOpen: false }))}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -2497,9 +2488,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               >
                 {t('landlordRoomDetailModalCancelBtn')}
               </Button>
-              <Button
+              <Button variant="orange"
                 size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20"
                 onClick={handleSaveCorrection}
                 isLoading={isSubmittingCorrection}
               >
@@ -2536,11 +2526,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={handleCloseMeterModal}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -2681,11 +2670,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={handleCloseEditModal}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -2802,7 +2790,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           <span className="text-[10px] font-bold text-zinc-500">
                             {t('landlordRoomDetailCustomToggle')}
                           </span>
-                          <Button
+                          <Button rounded="full"
                             variant="ghost"
                             size="sm"
                             type="button"
@@ -2813,7 +2801,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                 ),
                               )
                             }
-                            className={`p-0 w-9 h-5 rounded-full relative transition-colors cursor-pointer flex items-center ${service.isCustom ? 'bg-[#2AC1BC]' : 'bg-zinc-200'}`}
                           >
                             <div
                               className={`w-3.5 h-3.5 bg-white rounded-full absolute transition-transform ${service.isCustom ? 'translate-x-4' : 'translate-x-0.5'}`}
@@ -2845,7 +2832,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             onClick={() =>
                               setEditServices(prev => prev.filter(s => s.id !== service.id))
                             }
-                            className="h-7 w-7 text-rose-500 hover:bg-rose-50"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
@@ -2855,12 +2841,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   ))}
                 </div>
 
-                <Button
+                <Button fullWidth
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="w-full border-dashed border-zinc-300 text-zinc-600 hover:border-[#2AC1BC] hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/5"
-                  leftIcon={<Plus className="w-3.5 h-3.5" />}
+                  leftIcon={<Plus  />}
                   onClick={() =>
                     setEditServices(prev => [
                       ...prev,
@@ -2940,12 +2925,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsIncidentModalOpen(false)}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -2989,10 +2973,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               >
                 {t('landlordRoomDetailModalCancelBtn')}
               </Button>
-              <Button
+              <Button variant="orange"
                 type="submit"
                 size="sm"
-                className="bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-md shadow-[#FF6B35]/20"
               >
                 {t('landlordRoomDetailSendIncidentBtn')}
               </Button>

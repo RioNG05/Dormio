@@ -216,7 +216,7 @@ export default function ContractPreviewModal({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="p-2 ml-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60"
+              className="ml-1"
               title={t('landlordContractsExportCloseTooltip')}
             >
               <X className="w-5 h-5" />
@@ -289,7 +289,7 @@ export default function ContractPreviewModal({
               size="sm"
               onClick={() => handleDownloadHtml()}
               disabled={isLoading || !htmlContent}
-              className="text-zinc-600 hover:text-[#2AC1BC] underline font-semibold cursor-pointer h-auto p-0"
+              className="underline"
             >
               {t('landlordContractsExportDownloadHtml')}
             </Button>

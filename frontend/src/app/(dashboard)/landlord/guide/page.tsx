@@ -354,7 +354,7 @@ export default function GuidePage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setSelectedGuideId(null)}
-                className="rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 shrink-0"
+                className="shrink-0"
               >
                 <X className="w-5 h-5" />
               </Button>

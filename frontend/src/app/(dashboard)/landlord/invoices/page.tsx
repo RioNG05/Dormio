@@ -412,8 +412,8 @@ function InvoicesContent() {
             variant="outline"
             size="sm"
             onClick={handleOpenOcrModal}
-            className="flex-1 sm:flex-none border-amber-200/80 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs"
-            leftIcon={<Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />}
+            className="flex-1 sm:flex-none"
+            leftIcon={<Sparkles className="fill-amber-500 shrink-0" />}
           >
             {t('landlordInvoicesBtnOcrScan')}
           </Button>
@@ -421,8 +421,8 @@ function InvoicesContent() {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none border-zinc-200/80 bg-white text-zinc-700 hover:bg-zinc-50 text-xs"
-            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />}
+            className="flex-1 sm:flex-none"
+            leftIcon={<FileSpreadsheet className="shrink-0" />}
           >
             {t('landlordInvoicesBtnExportExcel')}
           </Button>
@@ -431,8 +431,8 @@ function InvoicesContent() {
             variant="primary"
             size="sm"
             onClick={handleOpenCreateModal}
-            className="w-full sm:w-auto text-xs"
-            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
+            className="sm:w-auto"
+            leftIcon={<Plus className="shrink-0" />}
           >
             {t('landlordInvoicesBtnCreateInvoice')}
           </Button>
@@ -811,18 +811,17 @@ function InvoicesContent() {
                       variant="secondary"
                       size="sm"
                       onClick={() => setSelectedInvoice(inv)}
-                      className="flex-1 text-xs"
-                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                      className="flex-1"
+                      leftIcon={<Eye  />}
                     >
                       {t('landlordInvoicesBtnViewDetail')}
                     </Button>
                     {!isPaid && (
-                      <Button
+                      <Button variant="success"
                         size="sm"
                         onClick={() => handleMarkAsPaid(inv.id)}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3"
                         title={t('landlordInvoicesTooltipMarkPaid')}
-                        leftIcon={<Check className="w-3.5 h-3.5" />}
+                        leftIcon={<Check  />}
                       >
                         {t('landlordInvoicesBtnCollect')}
                       </Button>
@@ -888,8 +887,7 @@ function InvoicesContent() {
                         variant="secondary"
                         size="sm"
                         onClick={() => setSelectedInvoice(inv)}
-                        className="text-xs"
-                        leftIcon={<Eye className="w-3.5 h-3.5" />}
+                        leftIcon={<Eye  />}
                       >
                         {t('landlordInvoicesBtnViewDetail')}
                       </Button>
@@ -935,7 +933,6 @@ function InvoicesContent() {
               size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              className="h-8 w-8"
             >
               <ChevronLeft className="w-4 h-4 text-zinc-600" />
             </Button>
@@ -945,7 +942,6 @@ function InvoicesContent() {
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="h-8 px-2 text-xs"
                 title={t('landlordInvoicesTooltipPrev5')}
               >
                 &laquo;
@@ -969,7 +965,6 @@ function InvoicesContent() {
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="h-8 px-2 text-xs"
                 title={t('landlordInvoicesTooltipNext5')}
               >
                 &raquo;
@@ -981,7 +976,6 @@ function InvoicesContent() {
               size="icon"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              className="h-8 w-8"
             >
               <ChevronRight className="w-4 h-4 text-zinc-600" />
             </Button>
@@ -1030,11 +1024,10 @@ function InvoicesContent() {
                 </div>
               </div>
 
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={() => setSelectedInvoice(null)}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1248,8 +1241,7 @@ function InvoicesContent() {
                       `/landlord/messages?room=${encodeURIComponent(roomNum)}&tenant=${encodeURIComponent(tenantName)}&invId=${encodeURIComponent(selectedInvoice.id)}&amount=${selectedInvoice.totalAmount}&period=${encodeURIComponent(selectedInvoice.period)}&autoSend=true`,
                     )
                   }}
-                  className="bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs"
-                  leftIcon={<Send className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                  leftIcon={<Send  />}
                 >
                   {t('landlordInvoicesBtnRemindChat')}
                 </Button>
@@ -1268,13 +1260,12 @@ function InvoicesContent() {
               <div className="flex items-center gap-2">
                 {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
                 {selectedInvoice.status !== 'Đã thu' && (
-                  <Button
+                  <Button variant="success"
                     size="sm"
                     onClick={() =>
                       handleMarkAsPaid(selectedInvoice.id, t('landlordInvoicesPaymentMethodManual'))
                     }
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs"
-                    leftIcon={<Check className="w-4 h-4" />}
+                    leftIcon={<Check  />}
                   >
                     {t('landlordInvoicesBtnConfirmPaid')}
                   </Button>
@@ -1309,11 +1300,10 @@ function InvoicesContent() {
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={handleRequestCloseCreate}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1504,11 +1494,10 @@ function InvoicesContent() {
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={handleRequestCloseOcr}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
               >
                 <X className="w-5 h-5" />
               </Button>

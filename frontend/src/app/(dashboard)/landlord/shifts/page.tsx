@@ -230,9 +230,9 @@ export default function ShiftsPage() {
           </p>
         </div>
 
-        <Button
+        <Button size="xs"
           onClick={openCreateModal}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
+          className="shrink-0"
         >
           <Plus className="w-4 h-4" /> {t('landlordShiftsAddNewBtn')}
         </Button>
@@ -320,9 +320,8 @@ export default function ShiftsPage() {
             </p>
           </div>
           {!searchQuery && (
-            <Button
+            <Button size="xs"
               onClick={openCreateModal}
-              className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl transition-all shadow-sm cursor-pointer"
             >
               {t('landlordShiftsAddNow')}
             </Button>
@@ -390,7 +389,7 @@ export default function ShiftsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => openEditModal(shift)}
-                    className="h-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer flex-1 justify-center"
+                    className="flex-1"
                   >
                     <Edit3 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnEdit')}
                   </Button>
@@ -398,7 +397,7 @@ export default function ShiftsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(shift)}
-                    className="h-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-700 rounded-xl transition-colors cursor-pointer flex-1 justify-center border border-rose-200"
+                    className="flex-1"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnDelete')}
                   </Button>
@@ -435,7 +434,6 @@ export default function ShiftsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleAttemptClose}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -495,18 +493,18 @@ export default function ShiftsPage() {
               )}
 
               <div className="flex gap-2.5 pt-2">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="outline"
                   onClick={handleAttemptClose}
-                  className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
+                  className="flex-1"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button
+                <Button size="icon"
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-60 rounded-xl transition-all shadow-sm shadow-[#2AC1BC]/20 cursor-pointer"
+                  className="flex-1"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -531,17 +529,17 @@ export default function ShiftsPage() {
             </h3>
             <p className="text-xs text-zinc-500 mb-5">{t('landlordShiftsConfirmCloseDesc')}</p>
             <div className="flex gap-2.5">
-              <Button
+              <Button size="xs"
                 variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
-              <Button
+              <Button size="xs"
                 variant="ghost"
                 onClick={handleConfirmClose}
-                className="flex-1 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseDiscard')}
               </Button>

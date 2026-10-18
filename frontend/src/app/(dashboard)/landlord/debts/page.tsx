@@ -403,7 +403,6 @@ export default function LandlordDebtsPage() {
             size="sm"
             onClick={handleTriggerFlip}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50 h-auto"
             title={t('landlordDebtsSyncTooltip')}
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-600' : ''}`} />
@@ -415,7 +414,6 @@ export default function LandlordDebtsPage() {
             variant="outline"
             size="sm"
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 h-auto"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
             <span>{t('landlordDebtsExportExcel')}</span>
@@ -570,11 +568,6 @@ export default function LandlordDebtsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 h-auto w-auto rounded-lg transition-all ${
-                viewMode === 'grid'
-                  ? 'bg-white text-teal-600 shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              }`}
               title={t('landlordDebtsViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -584,11 +577,6 @@ export default function LandlordDebtsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setViewMode('table')}
-              className={`p-1.5 h-auto w-auto rounded-lg transition-all ${
-                viewMode === 'table'
-                  ? 'bg-white text-teal-600 shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              }`}
               title={t('landlordDebtsViewTable')}
             >
               <List className="w-4 h-4" />
@@ -626,7 +614,7 @@ export default function LandlordDebtsPage() {
                 setSearchTerm('')
                 setDurationFilter('all')
               }}
-              className="mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-xs font-bold text-zinc-700 transition-all border-0 h-auto"
+              className="mt-4"
             >
               {t('landlordDebtsClearFilter')}
             </Button>
@@ -776,7 +764,7 @@ export default function LandlordDebtsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setInvoicesModalRoom(room)}
-                    className="flex-1 py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm h-auto"
+                    className="flex-1"
                   >
                     <Eye className="w-3.5 h-3.5 text-zinc-500" />
                     <span>{t('landlordDebtsBtnViewInvoices')}</span>
@@ -792,7 +780,7 @@ export default function LandlordDebtsPage() {
                       setIsReminderDirty(false)
                       setReminderCopied(false)
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm shadow-teal-500/20 h-auto border-0"
+                    className="flex-1 from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{t('landlordDebtsBtnSendReminder')}</span>
@@ -934,7 +922,6 @@ export default function LandlordDebtsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setInvoicesModalRoom(room)}
-                            className="h-8 w-8 p-0 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all"
                             title={t('landlordDebtsBtnViewInvoices')}
                           >
                             <Eye className="w-4 h-4" />
@@ -949,7 +936,6 @@ export default function LandlordDebtsPage() {
                               setIsReminderDirty(false)
                               setReminderCopied(false)
                             }}
-                            className="h-8 w-8 p-0 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-all font-bold"
                             title={t('landlordDebtsBtnSendReminder')}
                           >
                             <Send className="w-4 h-4" />
@@ -998,7 +984,6 @@ export default function LandlordDebtsPage() {
               size="sm"
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="h-9 w-9 p-0 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title={t('landlordDebtsPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -1014,11 +999,6 @@ export default function LandlordDebtsPage() {
                 style={{
                   backgroundColor: pageNum === currentPage ? '#2AC1BC' : undefined,
                 }}
-                className={`min-w-[36px] h-9 px-3 rounded-xl text-xs font-bold transition-all ${
-                  pageNum === currentPage
-                    ? 'text-white shadow-sm shadow-[#2AC1BC]/30'
-                    : 'text-zinc-600 hover:bg-zinc-100 border border-zinc-200'
-                }`}
               >
                 {pageNum}
               </Button>
@@ -1030,7 +1010,6 @@ export default function LandlordDebtsPage() {
               size="sm"
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="h-9 w-9 p-0 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               title={t('landlordDebtsPaginationNext')}
             >
               <ChevronRight className="w-4 h-4" />
@@ -1068,7 +1047,6 @@ export default function LandlordDebtsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setInvoicesModalRoom(null)}
-                className="h-9 w-9 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200/60 rounded-xl transition-all"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1147,7 +1125,6 @@ export default function LandlordDebtsPage() {
                           setPaymentNote('')
                           setIsPaymentDirty(false)
                         }}
-                        className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all border border-emerald-200 flex items-center gap-1 active:scale-95 h-auto"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
                         <span>{t('landlordDebtsModalCollectNow')}</span>
@@ -1165,7 +1142,6 @@ export default function LandlordDebtsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setInvoicesModalRoom(null)}
-                className="px-5 py-2.5 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalClose')}
               </Button>
@@ -1195,7 +1171,6 @@ export default function LandlordDebtsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleRequestCloseReminder}
-                className="h-8 w-8 p-0 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1275,7 +1250,6 @@ export default function LandlordDebtsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleCopyReminder(reminderModalRoom)}
-                    className="h-auto p-0 text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1 hover:bg-transparent"
                   >
                     {reminderCopied ? (
                       <>
@@ -1303,7 +1277,6 @@ export default function LandlordDebtsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleRequestCloseReminder}
-                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalCancelBtn')}
               </Button>
@@ -1314,7 +1287,6 @@ export default function LandlordDebtsPage() {
                 size="sm"
                 disabled={isSendingReminder}
                 onClick={() => handleSendInAppReminder(reminderModalRoom)}
-                className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-teal-600/20 disabled:opacity-50 h-auto border-0"
               >
                 {isSendingReminder ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1344,7 +1316,6 @@ export default function LandlordDebtsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleRequestClosePayment}
-                className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-600 rounded-xl"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1373,11 +1344,6 @@ export default function LandlordDebtsPage() {
                       setPaymentMethod('cash')
                       setIsPaymentDirty(true)
                     }}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all h-auto ${
-                      paymentMethod === 'cash'
-                        ? 'bg-teal-50 border-teal-500 text-teal-700'
-                        : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                    }`}
                   >
                     {t('landlordDebtsModalMethodCash')}
                   </Button>
@@ -1389,11 +1355,6 @@ export default function LandlordDebtsPage() {
                       setPaymentMethod('banking')
                       setIsPaymentDirty(true)
                     }}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all h-auto ${
-                      paymentMethod === 'banking'
-                        ? 'bg-teal-50 border-teal-500 text-teal-700'
-                        : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                    }`}
                   >
                     {t('landlordDebtsModalMethodBanking')}
                   </Button>
@@ -1422,7 +1383,6 @@ export default function LandlordDebtsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleRequestClosePayment}
-                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalCancelBtn')}
               </Button>
@@ -1433,7 +1393,6 @@ export default function LandlordDebtsPage() {
                 size="sm"
                 disabled={isSubmittingPayment}
                 onClick={handleRecordPayment}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 disabled:opacity-50 h-auto border-0"
               >
                 {isSubmittingPayment ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1468,7 +1427,6 @@ export default function LandlordDebtsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setConfirmCloseTarget(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all h-auto border-0"
               >
                 {t('landlordDebtsModalKeepEditing')}
               </Button>
@@ -1477,7 +1435,6 @@ export default function LandlordDebtsPage() {
                 variant="danger"
                 size="sm"
                 onClick={handleConfirmDiscard}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20 h-auto border-0"
               >
                 {t('landlordDebtsModalDiscardAndClose')}
               </Button>

@@ -797,8 +797,7 @@ export default function StaffOverviewPage() {
                     fetchOverview()
                     fetchMonthlySummary()
                   }}
-                  leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-                  className="py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs h-auto border-0"
+                  leftIcon={<RefreshCw  />}
                 >
                   <span>{t('btnRefreshData')}</span>
                 </Button>
@@ -1022,8 +1021,8 @@ export default function StaffOverviewPage() {
                               ),
                             })
                           }
-                          leftIcon={<Eye className="w-3 h-3" />}
-                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer p-0 h-auto border-0 hover:bg-transparent"
+                          leftIcon={<Eye  />}
+                          className="hover:underline"
                         >
                           <span>{t('viewPhoto')}</span>
                         </Button>
@@ -1159,8 +1158,8 @@ export default function StaffOverviewPage() {
                               ),
                             })
                           }
-                          leftIcon={<Eye className="w-3 h-3" />}
-                          className="text-[10px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-0.5 cursor-pointer p-0 h-auto border-0 hover:bg-transparent"
+                          leftIcon={<Eye  />}
+                          className="hover:underline"
                         >
                           <span>{t('viewPhoto')}</span>
                         </Button>
@@ -1213,8 +1212,8 @@ export default function StaffOverviewPage() {
                           ),
                         })
                       }
-                      leftIcon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs h-auto"
+                      leftIcon={<CheckCircle2  />}
+                      className="sm:text-sm"
                     >
                       <span>{t('btnCheckInLocked')}</span>
                     </Button>
@@ -1225,12 +1224,7 @@ export default function StaffOverviewPage() {
                       size="sm"
                       disabled={!checkInEval.allowed}
                       onClick={handleOpenCheckIn}
-                      leftIcon={<Camera className="w-4 h-4" />}
-                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer h-auto border-0 ${
-                        checkInEval.allowed
-                          ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25'
-                          : 'bg-zinc-200 text-zinc-400 cursor-not-allowed hover:bg-zinc-200'
-                      }`}
+                      leftIcon={<Camera  />}
                     >
                       <span>
                         {checkInEval.isLate ? t('btnCheckInLate') : t('btnCheckInOnTime')}
@@ -1268,8 +1262,8 @@ export default function StaffOverviewPage() {
                           ),
                         })
                       }
-                      leftIcon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      className="py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 transition-all cursor-pointer shadow-2xs h-auto"
+                      leftIcon={<CheckCircle2  />}
+                      className="sm:text-sm"
                     >
                       <span>{t('btnCheckOutLocked')}</span>
                     </Button>
@@ -1280,12 +1274,7 @@ export default function StaffOverviewPage() {
                       size="sm"
                       disabled={!checkOutEval.allowed}
                       onClick={handleOpenCheckOut}
-                      leftIcon={<LogOut className="w-4 h-4" />}
-                      className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer h-auto border-0 ${
-                        checkOutEval.allowed
-                          ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-md shadow-[#2AC1BC]/25'
-                          : 'bg-zinc-200 text-zinc-400 cursor-not-allowed hover:bg-zinc-200'
-                      }`}
+                      leftIcon={<LogOut  />}
                     >
                       <span>
                         {checkOutEval.isEarly ? t('btnCheckOutEarly') : t('btnCheckOutNormal')}
@@ -1456,8 +1445,8 @@ export default function StaffOverviewPage() {
                                 setSelectedDutyForProof(duty)
                                 setActiveModal('duty_proof')
                               }}
-                              leftIcon={<FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-                              className="px-3 py-1.5 rounded-xl text-xs font-bold text-zinc-700 hover:text-zinc-900 bg-white hover:bg-zinc-50 border border-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs shrink-0 h-auto"
+                              leftIcon={<FileText  />}
+                              className="shrink-0"
                             >
                               <span>{t('btnUpdateDetails')}</span>
                             </Button>
@@ -1697,7 +1686,6 @@ export default function StaffOverviewPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setPreviewImageModal(null)}
-                className="p-1.5 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer h-auto w-auto border-0"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1772,7 +1760,6 @@ export default function StaffOverviewPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setPreviewImageModal(null)}
-                className="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer h-auto border-0"
               >
                 {t('btnClose')}
               </Button>
@@ -1806,7 +1793,6 @@ export default function StaffOverviewPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowConfirmClose(false)}
-                className="py-2.5 px-3 rounded-xl border border-zinc-200 text-zinc-700 font-bold text-xs hover:bg-zinc-100 transition-colors cursor-pointer h-auto"
               >
                 {t('btnContinueEditing')}
               </Button>
@@ -1815,7 +1801,6 @@ export default function StaffOverviewPage() {
                 variant="danger"
                 size="sm"
                 onClick={handleConfirmDiscardClose}
-                className="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm h-auto border-0"
               >
                 {t('btnDiscardAndClose')}
               </Button>
@@ -2406,7 +2391,6 @@ function CheckInOutCameraModal({
               stopCamera()
               onClose()
             }}
-            className="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer h-auto w-auto border-0"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -2466,7 +2450,7 @@ function CheckInOutCameraModal({
                       variant="ghost"
                       size="sm"
                       onClick={locateUser}
-                      className="text-[#2AC1BC] hover:underline ml-1 cursor-pointer font-bold p-0 h-auto border-0 hover:bg-transparent inline"
+                      className="hover:underline ml-1 inline"
                     >
                       {t('gpsRetry')}
                     </Button>
@@ -2524,7 +2508,6 @@ function CheckInOutCameraModal({
                           variant="ghost"
                           size="sm"
                           onClick={() => startCamera(facingMode)}
-                          className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold transition-colors cursor-pointer h-auto border-0"
                         >
                           {t('retryCamera')}
                         </Button>
@@ -2533,8 +2516,7 @@ function CheckInOutCameraModal({
                           variant="ghost"
                           size="sm"
                           onClick={() => fallbackFileInputRef.current?.click()}
-                          leftIcon={<Upload className="w-3.5 h-3.5" />}
-                          className="px-3 py-1.5 rounded-xl bg-[#2AC1BC]/20 hover:bg-[#2AC1BC]/30 text-[#2AC1BC] border border-[#2AC1BC]/40 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs h-auto"
+                          leftIcon={<Upload  />}
                         >
                           <span>{t('btnUploadDuty')}</span>
                         </Button>
@@ -2547,8 +2529,8 @@ function CheckInOutCameraModal({
                       variant="ghost"
                       size="sm"
                       onClick={handleToggleFacingMode}
-                      leftIcon={<RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-                      className="absolute top-3 right-3 z-20 p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer h-auto"
+                      leftIcon={<RefreshCw  />}
+                      className="absolute top-3 right-3 z-20 backdrop-blur-md"
                     >
                       {facingMode === 'user' ? t('cameraRear') : t('cameraFront')}
                     </Button>
@@ -2605,7 +2587,7 @@ function CheckInOutCameraModal({
             {/* Snap Button */}
             <div className="flex items-center justify-center gap-3 pt-1">
               {!capturedPhoto ? (
-                <Button
+                <Button fullWidth
                   type="button"
                   variant="primary"
                   size="sm"
@@ -2613,29 +2595,23 @@ function CheckInOutCameraModal({
                   onClick={handleCaptureRealFrame}
                   leftIcon={
                     geoState.status === 'locating' ? (
-                      <RefreshCw className="w-4 h-4 animate-spin text-[#2AC1BC]" />
+                      <RefreshCw  />
                     ) : (
-                      <Camera className="w-4 h-4" />
+                      <Camera  />
                     )
                   }
-                  className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md h-auto border-0 ${
-                    cameraStatus === 'ready' && geoState.status !== 'locating'
-                      ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-[#2AC1BC]/25'
-                      : 'bg-zinc-200 text-zinc-500 cursor-not-allowed hover:bg-zinc-200'
-                  }`}
                 >
                   <span>
                     {geoState.status === 'locating' ? t('waitingGps') : t('btnCaptureNow')}
                   </span>
                 </Button>
               ) : (
-                <Button
+                <Button fullWidth
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleRetakePhoto}
-                  leftIcon={<RefreshCw className="w-3.5 h-3.5 text-zinc-600" />}
-                  className="w-full py-2.5 px-4 rounded-xl border border-zinc-300 hover:bg-zinc-100 text-zinc-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer h-auto"
+                  leftIcon={<RefreshCw  />}
                 >
                   <span>{t('btnRetake')}</span>
                 </Button>
@@ -2683,11 +2659,6 @@ function CheckInOutCameraModal({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleSelectChip(chip)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer h-auto border-0 ${
-                        selectedQuickReason === chip
-                          ? 'bg-amber-600 text-white shadow-2xs hover:bg-amber-700'
-                          : 'bg-white border border-amber-300 text-amber-900 hover:bg-amber-100/80 shadow-2xs'
-                      }`}
                     >
                       {chip}
                     </Button>
@@ -2740,7 +2711,6 @@ function CheckInOutCameraModal({
               stopCamera()
               onClose()
             }}
-            className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer h-auto"
           >
             {t('btnCancel')}
           </Button>
@@ -2761,11 +2731,6 @@ function CheckInOutCameraModal({
                 })
               }
             }}
-            className={`py-2.5 px-5 rounded-xl font-bold text-xs text-white transition-all cursor-pointer flex items-center gap-1.5 h-auto border-0 ${
-              isFormValid
-                ? 'bg-[#2AC1BC] hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/25'
-                : 'bg-zinc-300 text-zinc-500 cursor-not-allowed hover:bg-zinc-300'
-            }`}
           >
             <Check className="w-4 h-4" />
             <span>{mode === 'checkin' ? t('btnConfirmCheckIn') : t('btnConfirmCheckOut')}</span>
@@ -2860,7 +2825,6 @@ function DutyProofModal({
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer h-auto w-auto border-0"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -2937,8 +2901,8 @@ function DutyProofModal({
               variant="primary"
               size="sm"
               onClick={() => cameraRef.current?.click()}
-              leftIcon={<Camera className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-              className="flex-1 py-2 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer h-auto border-0"
+              leftIcon={<Camera  />}
+              className="flex-1"
             >
               <span>{t('btnCaptureNewDuty')}</span>
             </Button>
@@ -2947,8 +2911,7 @@ function DutyProofModal({
               variant="outline"
               size="sm"
               onClick={() => fileRef.current?.click()}
-              leftIcon={<Upload className="w-3.5 h-3.5 text-zinc-500" />}
-              className="py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer h-auto"
+              leftIcon={<Upload  />}
             >
               <span>{t('btnUploadDuty')}</span>
             </Button>
@@ -2983,7 +2946,6 @@ function DutyProofModal({
             variant="outline"
             size="sm"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer h-auto"
           >
             {t('btnCancel')}
           </Button>
@@ -3002,8 +2964,7 @@ function DutyProofModal({
                   markCompleted: false,
                 })
               }}
-              leftIcon={<FileText className="w-3.5 h-3.5 text-zinc-500" />}
-              className="py-2.5 px-3.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs h-auto"
+              leftIcon={<FileText  />}
             >
               <span>{t('btnUpdateProgress')}</span>
             </Button>
@@ -3025,8 +2986,7 @@ function DutyProofModal({
                   markCompleted: true,
                 })
               }}
-              leftIcon={<Check className="w-4 h-4" />}
-              className="py-2.5 px-4.5 rounded-xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-bold text-xs transition-all shadow-md shadow-[#2AC1BC]/25 flex items-center gap-1.5 cursor-pointer h-auto border-0"
+              leftIcon={<Check  />}
             >
               <span>{t('btnCompleteDuty')}</span>
             </Button>

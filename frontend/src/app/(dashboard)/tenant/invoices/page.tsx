@@ -265,9 +265,9 @@ export default function TenantInvoicesPage() {
             </div>
           </div>
 
-          <Button
+          <Button size="xs" variant="orange"
             onClick={() => router.push(`/tenant/invoices/${currentUnpaid.id}`)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs shadow-[#FF6B35]/20 cursor-pointer transition-all"
+            className="sm:w-auto"
           >
             <span>{t('payNow')}</span>
             <ArrowRight className="w-4 h-4" />
@@ -293,11 +293,6 @@ export default function TenantInvoicesPage() {
                 size="sm"
                 type="button"
                 onClick={() => setActiveChartTab('cost')}
-                className={`px-3 py-1 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeChartTab === 'cost'
-                    ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
               >
                 {t('chartTabCost')}
               </Button>
@@ -306,11 +301,6 @@ export default function TenantInvoicesPage() {
                 size="sm"
                 type="button"
                 onClick={() => setActiveChartTab('consumption')}
-                className={`px-3 py-1 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeChartTab === 'consumption'
-                    ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
               >
                 {t('chartTabConsumption')}
               </Button>
@@ -324,11 +314,6 @@ export default function TenantInvoicesPage() {
                   size="sm"
                   type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, electricity: !p.electricity }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.electricity
-                      ? 'bg-amber-50 border-amber-300 text-amber-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                   {t('electricityFee')}
@@ -338,11 +323,6 @@ export default function TenantInvoicesPage() {
                   size="sm"
                   type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, water: !p.water }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.water
-                      ? 'bg-sky-50 border-sky-300 text-sky-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
                   {t('waterFee')}
@@ -352,11 +332,6 @@ export default function TenantInvoicesPage() {
                   size="sm"
                   type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, services: !p.services }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.services
-                      ? 'bg-purple-50 border-purple-300 text-purple-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
                   {t('otherServices')}
@@ -366,11 +341,6 @@ export default function TenantInvoicesPage() {
                   size="sm"
                   type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, roomRent: !p.roomRent }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.roomRent
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   {t('roomRent')}
@@ -505,11 +475,6 @@ export default function TenantInvoicesPage() {
                 setStatusFilter('all')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                statusFilter === 'all'
-                  ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {t('allInvoices')}
             </Button>
@@ -521,11 +486,6 @@ export default function TenantInvoicesPage() {
                 setStatusFilter('unpaid')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                statusFilter === 'unpaid'
-                  ? 'bg-[#FF6B35] text-white shadow-xs hover:bg-[#FF6B35] hover:text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {t('unpaid')}
             </Button>
@@ -537,11 +497,6 @@ export default function TenantInvoicesPage() {
                 setStatusFilter('paid')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                statusFilter === 'paid'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {t('paid')}
             </Button>
@@ -555,11 +510,6 @@ export default function TenantInvoicesPage() {
                 size="sm"
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
                 title={t('gridView')}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -569,11 +519,6 @@ export default function TenantInvoicesPage() {
                 size="sm"
                 type="button"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
                 title={t('tableView')}
               >
                 <List className="w-4 h-4" />
@@ -654,12 +599,12 @@ export default function TenantInvoicesPage() {
 
                 {/* Line Items Accordion */}
                 <div className="space-y-1.5 border-t border-zinc-100 pt-3">
-                  <Button
+                  <Button fullWidth
                     variant="ghost"
                     size="sm"
                     type="button"
                     onClick={() => toggleRow(inv.id)}
-                    className="w-full h-auto p-0 flex items-center justify-between text-xs font-bold text-zinc-500 hover:text-zinc-900 hover:bg-transparent cursor-pointer"
+                    className="justify-between"
                   >
                     <span>{t('viewDetails')}</span>
                     {expandedRows[inv.id] ? (
@@ -695,7 +640,7 @@ export default function TenantInvoicesPage() {
                                   size="sm"
                                   type="button"
                                   onClick={() => setPreviewImage(mr.imageUrl)}
-                                  className="px-2 py-0.5 h-auto bg-zinc-100 hover:bg-zinc-200 rounded text-[10px] font-bold text-zinc-600 flex items-center gap-1 cursor-pointer"
+                                  className="rounded"
                                 >
                                   <Eye className="w-3 h-3" />
                                   <span>{mr.serviceName}</span>
@@ -711,9 +656,8 @@ export default function TenantInvoicesPage() {
                 {/* Card Action Footer */}
                 <div className="border-t border-zinc-100 pt-3 flex items-center justify-end">
                   {inv.status !== 'paid' ? (
-                    <Button
+                    <Button fullWidth size="icon" variant="orange"
                       onClick={() => router.push(`/tenant/invoices/${inv.id}`)}
-                      className="w-full py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs shadow-[#FF6B35]/20 cursor-pointer transition-all flex items-center justify-center gap-2"
                     >
                       <CreditCard className="w-4 h-4" />
                       <span>{t('payNow')}</span>
@@ -771,7 +715,6 @@ export default function TenantInvoicesPage() {
                             size="sm"
                             type="button"
                             onClick={() => toggleRow(inv.id)}
-                            className="p-1.5 h-auto text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg cursor-pointer transition-colors"
                             title={t('viewDetails')}
                           >
                             {expandedRows[inv.id] ? (
@@ -782,10 +725,9 @@ export default function TenantInvoicesPage() {
                           </Button>
 
                           {inv.status !== 'paid' && (
-                            <Button
+                            <Button variant="orange"
                               onClick={() => router.push(`/tenant/invoices/${inv.id}`)}
                               size="sm"
-                              className="px-3 py-1.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold cursor-pointer transition-all"
                             >
                               {t('payNow')}
                             </Button>
@@ -837,7 +779,7 @@ export default function TenantInvoicesPage() {
                                         size="sm"
                                         type="button"
                                         onClick={() => setPreviewImage(mr.imageUrl)}
-                                        className="text-[#2AC1BC] hover:underline font-bold text-xs flex items-center gap-1 p-0 h-auto hover:bg-transparent"
+                                        className="hover:underline"
                                       >
                                         <Eye className="w-3 h-3" /> {t('viewPhoto')}
                                       </Button>
@@ -874,7 +816,6 @@ export default function TenantInvoicesPage() {
                 size="sm"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -886,11 +827,6 @@ export default function TenantInvoicesPage() {
                   size="sm"
                   type="button"
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    currentPage === i + 1
-                      ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
-                      : 'text-zinc-600 hover:bg-zinc-100'
-                  }`}
                 >
                   {i + 1}
                 </Button>
@@ -901,7 +837,6 @@ export default function TenantInvoicesPage() {
                 size="sm"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -922,12 +857,11 @@ export default function TenantInvoicesPage() {
           >
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h3 className="text-sm font-black text-zinc-900">{t('meterReadingPhotoTitle')}</h3>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -940,9 +874,8 @@ export default function TenantInvoicesPage() {
               />
             </div>
             <div className="flex justify-end">
-              <Button
+              <Button size="xs"
                 onClick={() => setPreviewImage(null)}
-                className="px-4 py-2 text-xs font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl"
               >
                 {t('btnClose')}
               </Button>

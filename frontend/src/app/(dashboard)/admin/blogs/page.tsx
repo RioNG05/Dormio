@@ -494,8 +494,7 @@ export default function AdminPostModerationPage() {
             size="sm"
             onClick={handleRefresh}
             disabled={refreshing || loading}
-            className="p-2.5 h-auto rounded-2xl bg-white hover:bg-zinc-50 text-zinc-600 font-bold text-xs shadow-2xs"
-            leftIcon={<RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-orange-600' : ''}`} />}
+            leftIcon={<RefreshCw  />}
             title={t('adminModRefresh')}
           />
 
@@ -503,8 +502,7 @@ export default function AdminPostModerationPage() {
             variant="primary"
             size="sm"
             onClick={handleOpenCreate}
-            className="rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-sm"
-            leftIcon={<Plus className="w-4 h-4" />}
+            leftIcon={<Plus  />}
           >
             <span>{t('adminModNewPost')}</span>
           </Button>
@@ -528,7 +526,6 @@ export default function AdminPostModerationPage() {
             variant="ghost"
             size="sm"
             onClick={() => setFeedbackMsg(null)}
-            className="p-1 h-auto"
           >
             <X className="w-3.5 h-3.5" />
           </Button>
@@ -546,7 +543,6 @@ export default function AdminPostModerationPage() {
             variant="danger"
             size="sm"
             onClick={() => fetchPosts()}
-            className="px-3 py-1 h-auto text-xs"
           >
             {t('adminBlogsRetry')}
           </Button>
@@ -610,7 +606,6 @@ export default function AdminPostModerationPage() {
                               setFilterArticle('')
                               setCurrentPage(1)
                             }}
-                            className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
                           >
                             <X className="w-3 h-3" />
                           </Button>
@@ -689,9 +684,8 @@ export default function AdminPostModerationPage() {
                       variant="ghost"
                       size="sm"
                       onClick={handleResetFilters}
-                      className="px-2.5 py-1 h-auto rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
                       title={t('adminBlogsFilterResetTooltip')}
-                      leftIcon={<RotateCcw className="w-3 h-3" />}
+                      leftIcon={<RotateCcw  />}
                     >
                       <span>{t('adminBlogsFilterReset')}</span>
                     </Button>
@@ -723,8 +717,7 @@ export default function AdminPostModerationPage() {
                           variant="secondary"
                           size="sm"
                           onClick={handleResetFilters}
-                          className="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs"
-                          leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                          leftIcon={<RotateCcw  />}
                         >
                           <span>{t('adminBlogsFilterReset')}</span>
                         </Button>
@@ -733,8 +726,7 @@ export default function AdminPostModerationPage() {
                           variant="primary"
                           size="sm"
                           onClick={handleOpenCreate}
-                          className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs"
-                          leftIcon={<Plus className="w-4 h-4" />}
+                          leftIcon={<Plus  />}
                         >
                           <span>{t('adminBlogsCreateFirst')}</span>
                         </Button>
@@ -852,7 +844,6 @@ export default function AdminPostModerationPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleOpenUnlock(item)}
-                              className="h-auto p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer text-xs font-bold"
                               title={t('adminModActionUnlock')}
                             >
                               <Unlock className="w-4 h-4" />
@@ -862,7 +853,6 @@ export default function AdminPostModerationPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleOpenLock(item)}
-                              className="h-auto p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
                               title={t('adminModActionLock')}
                             >
                               <Lock className="w-4 h-4" />
@@ -875,7 +865,6 @@ export default function AdminPostModerationPage() {
                               variant="secondary"
                               size="sm"
                               onClick={() => handleTogglePublish(item)}
-                              className="h-auto p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer text-xs font-semibold"
                               title={
                                 item.status === 'posted'
                                   ? t('adminBlogsUnpublish')
@@ -893,7 +882,6 @@ export default function AdminPostModerationPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenDelete(item)}
-                            className="h-auto p-1.5 rounded-lg bg-zinc-100 hover:bg-red-100 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
                             title={t('adminModActionDelete')}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -944,7 +932,6 @@ export default function AdminPostModerationPage() {
             size="sm"
             onClick={() => setCurrentPage(1)}
             disabled={currentPage === 1}
-            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsFirstPage')}
           >
             <ChevronsLeft className="w-4 h-4" />
@@ -954,7 +941,6 @@ export default function AdminPostModerationPage() {
             size="sm"
             onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
             disabled={currentPage <= 1}
-            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsPrev5Pages')}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -966,11 +952,6 @@ export default function AdminPostModerationPage() {
               variant={currentPage === num ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setCurrentPage(num)}
-              className={`h-auto w-8 h-8 rounded-lg font-bold transition-all cursor-pointer ${
-                currentPage === num
-                  ? 'bg-orange-600 text-white shadow-2xs'
-                  : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-              }`}
             >
               {num}
             </Button>
@@ -981,7 +962,6 @@ export default function AdminPostModerationPage() {
             size="sm"
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
             disabled={currentPage >= totalPages}
-            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsNext5Pages')}
           >
             <ChevronRight className="w-4 h-4" />
@@ -991,7 +971,6 @@ export default function AdminPostModerationPage() {
             size="sm"
             onClick={() => setCurrentPage(totalPages)}
             disabled={currentPage === totalPages}
-            className="h-auto p-1.5 rounded-lg border border-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 text-zinc-600 cursor-pointer"
             title={t('adminBlogsLastPage')}
           >
             <ChevronsRight className="w-4 h-4" />
@@ -1034,7 +1013,6 @@ export default function AdminPostModerationPage() {
                     size="sm"
                     key={idx}
                     onClick={() => setLockReason(preset.label)}
-                    className="h-auto px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-semibold transition-colors cursor-pointer"
                   >
                     {preset.label}
                   </Button>
@@ -1069,7 +1047,6 @@ export default function AdminPostModerationPage() {
                 size="sm"
                 onClick={() => setLockTarget(null)}
                 disabled={isLocking}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -1079,7 +1056,6 @@ export default function AdminPostModerationPage() {
                 onClick={handleConfirmLock}
                 disabled={isLocking || !lockReason.trim()}
                 isLoading={isLocking}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
                 <span>{t('adminModLockConfirmBtn')}</span>
               </Button>
@@ -1114,7 +1090,6 @@ export default function AdminPostModerationPage() {
                 size="sm"
                 onClick={() => setUnlockTarget(null)}
                 disabled={isUnlocking}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -1124,7 +1099,6 @@ export default function AdminPostModerationPage() {
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
                 isLoading={isUnlocking}
-                className="h-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
                 <span>{t('adminModUnlockConfirmBtn')}</span>
               </Button>
@@ -1159,7 +1133,6 @@ export default function AdminPostModerationPage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleRequestCloseCreate}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1231,7 +1204,6 @@ export default function AdminPostModerationPage() {
                   size="sm"
                   onClick={handleRequestCloseCreate}
                   disabled={isSavingCreate}
-                  className="h-auto px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
                 >
                   {t('adminBlogsCancel')}
                 </Button>
@@ -1241,7 +1213,6 @@ export default function AdminPostModerationPage() {
                   size="sm"
                   disabled={isSavingCreate}
                   isLoading={isSavingCreate}
-                  className="h-auto px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <span>
                     {isSavingCreate ? t('adminBlogsSubmitting') : t('adminBlogsSubmitCreate')}
@@ -1299,7 +1270,6 @@ export default function AdminPostModerationPage() {
                 size="sm"
                 onClick={() => setDeleteTarget(null)}
                 disabled={isDeleting}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsCancel')}
               </Button>
@@ -1309,7 +1279,6 @@ export default function AdminPostModerationPage() {
                 onClick={handleConfirmDelete}
                 disabled={isDeleting || !deleteReason.trim()}
                 isLoading={isDeleting}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 disabled:bg-red-300 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
               >
                 <span>{t('adminBlogsDeleteSubmit')}</span>
               </Button>
@@ -1338,7 +1307,6 @@ export default function AdminPostModerationPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
               >
                 {t('adminBlogsContinueEditing')}
               </Button>
@@ -1346,7 +1314,6 @@ export default function AdminPostModerationPage() {
                 variant="primary"
                 size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="h-auto px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
               >
                 {t('adminBlogsDiscardAndClose')}
               </Button>

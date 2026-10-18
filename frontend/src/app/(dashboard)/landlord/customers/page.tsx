@@ -284,7 +284,7 @@ export default function CustomersPage() {
           variant="primary"
           size="sm"
           onClick={() => router.push('/landlord/contracts/create')}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-xl"
+          className="sm:w-auto sm:text-sm"
         >
           <Plus className="w-4 h-4" />
           <span>{t('landlordCustomersBtnAddContract')}</span>
@@ -460,10 +460,6 @@ export default function CustomersPage() {
                 setItemsPerPage(6)
                 setCurrentPage(1)
               }}
-              className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid'
-                ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                : 'text-zinc-500 hover:text-zinc-900'
-                }`}
               title={t('landlordCustomersViewGrid')}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -476,10 +472,6 @@ export default function CustomersPage() {
                 setItemsPerPage(10)
                 setCurrentPage(1)
               }}
-              className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list'
-                ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                : 'text-zinc-500 hover:text-zinc-900'
-                }`}
               title={t('landlordCustomersViewList')}
             >
               <List className="w-4 h-4" />
@@ -509,7 +501,7 @@ export default function CustomersPage() {
                     variant="primary"
                     size="sm"
                     onClick={() => router.push('/landlord/contracts/create')}
-                    className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs"
+                    className="mt-2"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>{t('landlordCustomersBtnCreateContract')}</span>
@@ -606,7 +598,7 @@ export default function CustomersPage() {
                       e.stopPropagation()
                       handleOpenChat(customer)
                     }}
-                    className="h-auto py-1.5 bg-[#2AC1BC] text-white rounded-xl text-[11px] font-extrabold hover:bg-[#25ad87] hover:text-white transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
+                    className="whitespace-nowrap"
                   >
                     <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
                   </Button>
@@ -721,7 +713,6 @@ export default function CustomersPage() {
                             size="sm"
                             onClick={() => handleOpenChat(customer)}
                             title={t('landlordCustomersMessageBtn')}
-                            className="h-auto px-2.5 py-1 bg-[#2AC1BC] text-white rounded-lg text-xs font-bold hover:bg-[#25ad87] hover:text-white transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
                           >
                             <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
                           </Button>
@@ -793,7 +784,6 @@ export default function CustomersPage() {
                 size="sm"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 &larr; {t('landlordCustomersPaginationPrev')}
               </Button>
@@ -803,10 +793,6 @@ export default function CustomersPage() {
                   variant={currentPage === page ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-xs font-extrabold rounded-xl transition-all p-0 ${currentPage === page
-                    ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30'
-                    : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                    }`}
                 >
                   {page}
                 </Button>
@@ -816,7 +802,6 @@ export default function CustomersPage() {
                 size="sm"
                 disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
                 onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 {t('landlordCustomersPaginationNext')} &rarr;
               </Button>
@@ -894,9 +879,8 @@ function AlertModal({
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
 
-        <Button
+        <Button fullWidth size="xs" variant="dark"
           onClick={onClose}
-          className={`w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer ${config.btnColor}`}
         >
           {t('landlordCustomersUnderstood')}
         </Button>

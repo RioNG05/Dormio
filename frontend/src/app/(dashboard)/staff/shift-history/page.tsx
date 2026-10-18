@@ -390,7 +390,6 @@ function StaffShiftHistoryContent() {
             size="sm"
             type="button"
             onClick={handleOpenFilterModal}
-            className="px-4 py-2 h-auto rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
             title={t('titleFilterOpen')}
           >
             <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
@@ -424,7 +423,7 @@ function StaffShiftHistoryContent() {
                       setCurrentPage(1)
                       setWindowStart(1)
                     }}
-                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
+                    className="ml-0.5"
                     title={t('titleRemoveDateFilter')}
                   >
                     <X className="w-3 h-3" />
@@ -446,7 +445,7 @@ function StaffShiftHistoryContent() {
                       setCurrentPage(1)
                       setWindowStart(1)
                     }}
-                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
+                    className="ml-0.5"
                     title={t('titleRemoveShiftFilter')}
                   >
                     <X className="w-3 h-3" />
@@ -472,7 +471,7 @@ function StaffShiftHistoryContent() {
                       setCurrentPage(1)
                       setWindowStart(1)
                     }}
-                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
+                    className="ml-0.5"
                     title={t('titleRemoveStatusFilter')}
                   >
                     <X className="w-3 h-3" />
@@ -486,7 +485,7 @@ function StaffShiftHistoryContent() {
                 size="sm"
                 type="button"
                 onClick={handleClearAllFilters}
-                className="h-auto p-0 text-xs text-red-600 hover:text-red-700 hover:bg-transparent font-bold ml-1 hover:underline cursor-pointer"
+                className="ml-1 hover:underline"
               >
                 {t('btnClearAll')}
               </Button>
@@ -586,7 +585,6 @@ function StaffShiftHistoryContent() {
                                 note: getLocalizedExplanation(item.checkInExplanation, locale),
                               })
                             }
-                            className="p-1 h-auto rounded-md text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
                             title={t('viewWatermarkCheckIn')}
                           >
                             <Camera className="w-3.5 h-3.5" />
@@ -620,7 +618,6 @@ function StaffShiftHistoryContent() {
                                 note: getLocalizedExplanation(item.checkOutExplanation, locale),
                               })
                             }
-                            className="p-1 h-auto rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
                             title={t('viewWatermarkCheckOut')}
                           >
                             <Camera className="w-3.5 h-3.5" />
@@ -703,7 +700,6 @@ function StaffShiftHistoryContent() {
                               ),
                             })
                           }
-                          className="p-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
                           title={t('viewPhotoProof')}
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -735,7 +731,6 @@ function StaffShiftHistoryContent() {
                 size="sm"
                 type="button"
                 onClick={handleClearAllFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
                 <span>{t('btnResetFilters')}</span>
@@ -781,7 +776,6 @@ function StaffShiftHistoryContent() {
             type="button"
             onClick={handlePrevWindow}
             disabled={windowStart === 1}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationJumpBack5')}
           >
             <ChevronsLeft className="w-4 h-4 text-zinc-600" />
@@ -793,7 +787,6 @@ function StaffShiftHistoryContent() {
             type="button"
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={safeCurrentPage === 1}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationPrev')}
           >
             <ChevronLeft className="w-4 h-4 text-zinc-600" />
@@ -806,11 +799,6 @@ function StaffShiftHistoryContent() {
               size="sm"
               type="button"
               onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 p-0 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                safeCurrentPage === num
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC]'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {num}
             </Button>
@@ -822,7 +810,6 @@ function StaffShiftHistoryContent() {
             type="button"
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={safeCurrentPage >= totalPages}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationNext')}
           >
             <ChevronRight className="w-4 h-4 text-zinc-600" />
@@ -834,7 +821,6 @@ function StaffShiftHistoryContent() {
             type="button"
             onClick={handleNextWindow}
             disabled={windowStart + 5 > totalPages}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
             title={t('paginationJumpForward5')}
           >
             <ChevronsRight className="w-4 h-4 text-zinc-600" />
@@ -864,7 +850,6 @@ function StaffShiftHistoryContent() {
                 size="sm"
                 type="button"
                 onClick={() => setPreviewImageModal(null)}
-                className="p-1 h-auto rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -909,11 +894,10 @@ function StaffShiftHistoryContent() {
             )}
 
             <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
-              <Button
+              <Button size="xs"
                 variant="secondary"
                 type="button"
                 onClick={() => setPreviewImageModal(null)}
-                className="px-4 py-2 h-auto bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
               >
                 {t('btnClose')}
               </Button>
@@ -948,7 +932,6 @@ function StaffShiftHistoryContent() {
                 size="sm"
                 type="button"
                 onClick={handleRequestCloseFilterModal}
-                className="p-1.5 h-auto rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
                 title={t('btnClose')}
               >
                 <X className="w-4 h-4" />
@@ -973,7 +956,6 @@ function StaffShiftHistoryContent() {
                         setModalStartDate('')
                         setModalEndDate('')
                       }}
-                      className="text-[11px] h-auto p-0 text-zinc-400 hover:text-red-500 hover:bg-transparent font-semibold cursor-pointer"
                     >
                       {t('filterClearDates')}
                     </Button>
@@ -1065,7 +1047,6 @@ function StaffShiftHistoryContent() {
                 size="sm"
                 type="button"
                 onClick={handleResetModalDrafts}
-                className="px-3 py-2 h-auto text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                 title={t('titleResetDialog')}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1078,7 +1059,6 @@ function StaffShiftHistoryContent() {
                   size="sm"
                   type="button"
                   onClick={handleRequestCloseFilterModal}
-                  className="px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
                 >
                   {t('btnCancel')}
                 </Button>
@@ -1087,7 +1067,6 @@ function StaffShiftHistoryContent() {
                   size="sm"
                   type="button"
                   onClick={handleApplyModalFilter}
-                  className="px-4 py-2 h-auto text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
                 >
                   {t('btnApplyFilters')}
                 </Button>
@@ -1112,19 +1091,19 @@ function StaffShiftHistoryContent() {
               <p className="text-xs text-zinc-600 leading-relaxed">{t('filterConfirmCloseDesc')}</p>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
-              <Button
+              <Button size="xs"
                 variant="secondary"
                 type="button"
                 onClick={() => setShowConfirmCloseModal(false)}
-                className="flex-1 px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
+                className="flex-1"
               >
                 {t('btnContinueEditing')}
               </Button>
-              <Button
+              <Button size="xs"
                 variant="danger"
                 type="button"
                 onClick={handleConfirmDiscardAndClose}
-                className="flex-1 px-4 py-2 h-auto text-xs font-bold text-white rounded-xl transition-colors cursor-pointer shadow-2xs"
+                className="flex-1"
               >
                 {t('btnDiscardAndClose')}
               </Button>

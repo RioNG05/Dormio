@@ -161,11 +161,10 @@ export default function LandlordDashboardPage() {
 
         <div className="flex items-center gap-2.5">
           <Button
-            variant="outline"
+            variant="primary"
             size="sm"
             onClick={() => router.push('/landlord/setup')}
-            leftIcon={<Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-            className="text-xs font-bold"
+            leftIcon={<Plus  />}
           >
             {t('landlordOverviewBtnCreateHouse')}
           </Button>
@@ -291,11 +290,6 @@ export default function LandlordDashboardPage() {
                         variant={rangeMode === '6m' ? 'primary' : 'ghost'}
                         size="sm"
                         onClick={() => setRangeMode('6m')}
-                        className={`h-6 px-2 text-[9px] font-black rounded-md ${
-                          rangeMode === '6m'
-                            ? 'bg-[#2AC1BC] text-white shadow-xs'
-                            : 'text-zinc-500 hover:text-zinc-900'
-                        }`}
                       >
                         {t('landlordOverviewRange6m')}
                       </Button>
@@ -304,11 +298,6 @@ export default function LandlordDashboardPage() {
                         variant={rangeMode === '12m' ? 'primary' : 'ghost'}
                         size="sm"
                         onClick={() => setRangeMode('12m')}
-                        className={`h-6 px-2 text-[9px] font-black rounded-md ${
-                          rangeMode === '12m'
-                            ? 'bg-[#2AC1BC] text-white shadow-xs'
-                            : 'text-zinc-500 hover:text-zinc-900'
-                        }`}
                       >
                         {t('landlordOverviewRange12m')}
                       </Button>
@@ -707,12 +696,12 @@ export default function LandlordDashboardPage() {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {speedDialOpen && (
           <div className="flex flex-col items-end gap-2 animate-in fade-in slide-in-from-bottom-5 duration-200">
-            <Button
+            <Button rounded="full"
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => router.push('/landlord/rooms')}
-              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="group"
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordOverviewAddRoomBtn')}
@@ -722,12 +711,12 @@ export default function LandlordDashboardPage() {
               </span>
             </Button>
 
-            <Button
+            <Button rounded="full"
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => router.push('/landlord/contracts')}
-              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="group"
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordOverviewCreatePdfContractBtn')}
@@ -737,12 +726,12 @@ export default function LandlordDashboardPage() {
               </span>
             </Button>
 
-            <Button
+            <Button rounded="full"
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => router.push('/landlord/invoices')}
-              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="group"
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordOverviewCreateVietqrInvoiceBtn')}
@@ -756,14 +745,11 @@ export default function LandlordDashboardPage() {
 
         <Button
           type="button"
-          variant="ghost"
-          size="sm"
+          variant={speedDialOpen ? 'dark' : 'primary'}
+          size="icon-lg"
+          rounded="full"
           onClick={() => setSpeedDialOpen(!speedDialOpen)}
-          className={`h-auto p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${
-            speedDialOpen
-              ? 'bg-zinc-900 text-white border-zinc-800 rotate-45 hover:bg-zinc-900 hover:text-white'
-              : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105 hover:bg-[#2AC1BC] hover:text-white'
-          }`}
+          className={speedDialOpen ? 'rotate-45' : ''}
           title={t('landlordOverviewQuickActions')}
         >
           <Plus className="w-6 h-6" />

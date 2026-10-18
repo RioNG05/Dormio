@@ -549,10 +549,9 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           <p className="text-xs text-zinc-400 max-w-md mx-auto">{t('loadInvoiceError')}</p>
         </div>
         <div>
-          <Button
+          <Button size="xs"
             variant="primary"
             onClick={() => router.push('/tenant/invoices')}
-            className="rounded-xl px-5 py-2.5 text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             <span>{t('backToInvoices')}</span>
@@ -573,7 +572,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             variant="secondary"
             size="icon"
             onClick={handleBackClick}
-            className="rounded-xl border border-zinc-200"
             title={t('backToInvoices')}
           >
             <ArrowLeft className="w-5 h-5 text-zinc-700" />
@@ -755,7 +753,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         size="sm"
                         type="button"
                         onClick={() => deviceUploadRefs.current[sId]?.click()}
-                        className="h-9 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 border border-zinc-200 hover:bg-zinc-100"
                       >
                         <UploadCloud className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('btnUploadFromDevice')}</span>
@@ -765,7 +762,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         size="sm"
                         type="button"
                         onClick={() => cameraUploadRefs.current[sId]?.click()}
-                        className="h-9 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white"
                       >
                         <Camera className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('btnCaptureNow')}</span>
@@ -957,19 +953,19 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
 
         {/* CTA: Complete and Generate PayOS QR */}
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-          <Button
+          <Button size="xs"
             variant="ghost"
             onClick={handleBackClick}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-zinc-600 hover:text-zinc-900 text-xs font-bold cursor-pointer"
+            className="sm:w-auto"
           >
             {t('btnClose')}
           </Button>
 
-          <Button
+          <Button size="icon"
             variant="primary"
             onClick={handleCompleteAndPay}
             disabled={isCreatingCheckout}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs sm:text-sm font-black shadow-md shadow-[#FF6B35]/25 cursor-pointer transition-all flex items-center justify-center gap-2"
+            className="sm:w-auto sm:text-sm"
           >
             {isCreatingCheckout ? (
               <>
@@ -1069,10 +1065,9 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </div>
 
               {isExpired ? (
-                <Button
+                <Button fullWidth size="icon"
                   variant="primary"
                   onClick={handleCompleteAndPay}
-                  className="w-full py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>{t('btnRegenerateQr')}</span>
@@ -1114,7 +1109,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   size="icon"
                   type="button"
                   onClick={() => handleCopy(payOsData.accountNumber, 'acc')}
-                  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer"
                   title="Sao chép số tài khoản"
                 >
                   {copiedKey === 'acc' ? (
@@ -1154,7 +1148,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   size="icon"
                   type="button"
                   onClick={() => handleCopy(payOsData.amount.toString(), 'amount')}
-                  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer"
                   title="Sao chép số tiền"
                 >
                   {copiedKey === 'amount' ? (
@@ -1186,7 +1179,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   size="icon"
                   type="button"
                   onClick={() => handleCopy(payOsData.description, 'syntax')}
-                  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg cursor-pointer"
                   title="Sao chép cú pháp"
                 >
                   {copiedKey === 'syntax' ? (
@@ -1213,11 +1205,10 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           >
             <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
               <h3 className="text-sm font-black text-zinc-900">{t('meterReadingPhotoTitle')}</h3>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="icon"
                 onClick={() => setInspectImage(null)}
-                className="h-8 w-8 rounded-full"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -1234,7 +1225,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 variant="secondary"
                 size="sm"
                 onClick={() => setInspectImage(null)}
-                className="rounded-xl font-bold"
               >
                 {t('btnClose')}
               </Button>
@@ -1265,20 +1255,18 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </p>
             </div>
             <div className="flex items-center justify-end gap-2.5 pt-2">
-              <Button
+              <Button size="xs"
                 variant="ghost"
                 onClick={() => setShowDiscardModal(false)}
-                className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 rounded-xl cursor-pointer"
               >
                 {t('btnStay')}
               </Button>
-              <Button
+              <Button size="xs"
                 variant="danger"
                 onClick={() => {
                   setShowDiscardModal(false)
                   router.push('/tenant/invoices')
                 }}
-                className="px-4 py-2 text-xs font-bold rounded-xl cursor-pointer shadow-xs"
               >
                 {t('btnDiscard')}
               </Button>

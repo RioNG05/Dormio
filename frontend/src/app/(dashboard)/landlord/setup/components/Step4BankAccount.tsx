@@ -65,7 +65,6 @@ export function Step4BankAccount({
                       size="sm"
                       variant={bankInfo.bankName === bName ? 'primary' : 'outline'}
                       onClick={() => onChangeBankInfo(prev => ({ ...prev, bankName: bName }))}
-                      className="h-7 px-2.5 text-[11px]"
                     >
                       {bName}
                     </Button>

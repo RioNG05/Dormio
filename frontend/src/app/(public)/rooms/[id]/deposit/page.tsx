@@ -491,7 +491,6 @@ function DepositPageInner() {
           <Button
             variant="primary"
             size="sm"
-            className="bg-[#2AC1BC] hover:bg-[#23a9a4] text-white rounded-xl shadow-md"
           >
             {tGuest('guestRoomDetailBackToList')}
           </Button>
@@ -687,9 +686,9 @@ function DepositPageInner() {
                   </div>
 
                   <div className="pt-2 space-y-2">
-                    <Button
+                    <Button fullWidth size="icon"
                       onClick={() => setDepositStep('confirm_amount')}
-                      className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-[#2AC1BC]/25 flex items-center justify-center gap-2"
+                      className="sm:text-sm"
                     >
                       <span>{tGuest('guestDepositIdentityPassedBtn')}</span>
                       <ArrowRight className="w-4 h-4" />
@@ -745,9 +744,9 @@ function DepositPageInner() {
                   </div>
 
                   <div className="pt-2">
-                    <Button
+                    <Button fullWidth size="icon"
                       onClick={() => setDepositStep('identity_gate')}
-                      className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-[#2AC1BC]/25 flex items-center justify-center gap-2"
+                      className="sm:text-sm"
                     >
                       <span>{tGuest('guestDepositIdentityMissingBtn')}</span>
                       <ArrowRight className="w-4 h-4" />
@@ -874,12 +873,12 @@ function DepositPageInner() {
                 </div>
               </div>
 
-              <Button
+              <Button fullWidth size="icon"
                 type="submit"
                 disabled={
                   isSavingIdentity || idNumber.length !== 12 || !idFullName.trim() || !idDob
                 }
-                className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#22a9a4] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 mt-2"
+                className="mt-2"
               >
                 {isSavingIdentity ? (
                   <>
@@ -1001,7 +1000,7 @@ function DepositPageInner() {
                 </div>
               )}
 
-              <Button
+              <Button fullWidth size="icon" variant="orange"
                 onClick={handleInitiateDeposit}
                 disabled={
                   isSubmittingDeposit ||
@@ -1010,7 +1009,7 @@ function DepositPageInner() {
                   !!phoneError ||
                   !isPhoneValid(tenantPhone)
                 }
-                className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] disabled:opacity-50 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 mt-2"
+                className="from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] mt-2"
               >
                 {isSubmittingDeposit ? (
                   <>
@@ -1088,7 +1087,6 @@ function DepositPageInner() {
                       onClick={handleInitiateDeposit}
                       disabled={isSubmittingDeposit}
                       size="sm"
-                      className="bg-[#2AC1BC] hover:bg-[#23a9a4] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5"
                     >
                       <RefreshCw
                         className={`w-3.5 h-3.5 ${isSubmittingDeposit ? 'animate-spin' : ''}`}
@@ -1244,18 +1242,16 @@ function DepositPageInner() {
 
               <div className="space-y-2 pt-2">
                 {post.poster && (
-                  <Button
+                  <Button fullWidth size="icon"
                     onClick={handleStartChat}
-                    className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>{tGuest('guestDepositChatWithLandlord')}</span>
                   </Button>
                 )}
-                <Button
+                <Button fullWidth size="xs"
                   variant="secondary"
                   onClick={() => router.push(`/rooms/${id}`)}
-                  className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-extrabold text-xs rounded-xl transition-all"
                 >
                   {tGuest('guestRoomDetailBackToList')}
                 </Button>
@@ -1286,20 +1282,18 @@ function DepositPageInner() {
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <Button
+              <Button size="xs"
                 variant="secondary"
                 onClick={() => setIsDiscardConfirmOpen(false)}
-                className="py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold text-xs rounded-xl"
               >
                 {tGuest('guestDepositContinueEditing')}
               </Button>
-              <Button
+              <Button size="xs"
                 variant="danger"
                 onClick={() => {
                   setIsDiscardConfirmOpen(false)
                   router.push(`/rooms/${id}`)
                 }}
-                className="py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl shadow-md"
               >
                 {tGuest('guestDepositDiscardAndClose')}
               </Button>

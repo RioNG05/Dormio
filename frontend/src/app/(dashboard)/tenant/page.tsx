@@ -316,9 +316,9 @@ export default function TenantOverviewPage() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           {roomInfo && (
-            <Button
+            <Button size="xs"
               onClick={() => setIsContractOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all"
+              className="sm:text-sm"
             >
               <FileSignature className="w-4 h-4 text-[#2AC1BC]" />
               <span>{t('viewContract')}</span>
@@ -326,7 +326,7 @@ export default function TenantOverviewPage() {
           )}
 
           <Link href="/tenant/messages">
-            <Button className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
+            <Button size="xs" className="relative sm:text-sm">
               <MessageCircle className="w-4 h-4" />
               <span>{t('chatWithLandlord')}</span>
               {unreadMessagesCount > 0 && (
@@ -365,7 +365,7 @@ export default function TenantOverviewPage() {
           </div>
 
           <Link href={`/tenant/invoices/${latestInvoice.id}`} className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs cursor-pointer transition-all">
+            <Button size="xs" variant="orange" className="sm:w-auto">
               <span>{t('payNow')}</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
@@ -475,7 +475,6 @@ export default function TenantOverviewPage() {
                           size="sm"
                           type="button"
                           onClick={handleCopyBank}
-                          className="px-2 py-0.5 h-auto rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
                           title={t('stkLabel')}
                         >
                           {copiedBank ? (
@@ -549,7 +548,7 @@ export default function TenantOverviewPage() {
               {FEATURE_FLAGS.ENABLE_BHRP && (
                 <div className="flex items-center justify-center gap-3 pt-2">
                   <Link href="/rooms">
-                    <Button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">
+                    <Button size="xs" >
                       {t('exploreHousesBtn')}
                     </Button>
                   </Link>
@@ -670,7 +669,6 @@ export default function TenantOverviewPage() {
                       size="sm"
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </Button>
@@ -682,11 +680,6 @@ export default function TenantOverviewPage() {
                         size="sm"
                         type="button"
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          currentPage === i + 1
-                            ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
-                            : 'text-zinc-600 hover:bg-zinc-100'
-                        }`}
                       >
                         {i + 1}
                       </Button>
@@ -697,7 +690,6 @@ export default function TenantOverviewPage() {
                       size="sm"
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </Button>
@@ -733,12 +725,11 @@ export default function TenantOverviewPage() {
                   {t('sentByManagement')}
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={() => setSelectedNotice(null)}
-                className="p-2 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -749,9 +740,8 @@ export default function TenantOverviewPage() {
             </div>
 
             <div className="pt-4 flex justify-end">
-              <Button
+              <Button size="xs"
                 onClick={() => setSelectedNotice(null)}
-                className="px-5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold cursor-pointer"
               >
                 {t('btnClose')}
               </Button>
@@ -784,12 +774,11 @@ export default function TenantOverviewPage() {
                   </div>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={() => setIsContractOpen(false)}
-                className="p-2 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -911,7 +900,6 @@ export default function TenantOverviewPage() {
                 size="sm"
                 type="button"
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-2 px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl cursor-pointer transition-colors shadow-2xs"
               >
                 <Printer className="w-4 h-4" />
                 <span>{t('btnPrintContract')}</span>
@@ -922,7 +910,6 @@ export default function TenantOverviewPage() {
                 size="sm"
                 type="button"
                 onClick={() => setIsContractOpen(false)}
-                className="px-5 py-2 h-auto text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a8a3] rounded-xl cursor-pointer transition-all shadow-sm shadow-[#2AC1BC]/20"
               >
                 {t('btnClose')}
               </Button>

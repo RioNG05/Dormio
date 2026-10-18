@@ -192,11 +192,10 @@ export default function RegisterPage() {
           onChange={e => setPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <Button
+            <Button size="icon"
               type="button"
               variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
-              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -216,11 +215,10 @@ export default function RegisterPage() {
           onChange={e => setConfirmPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <Button
+            <Button size="icon"
               type="button"
               variant="ghost"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -273,14 +271,14 @@ export default function RegisterPage() {
 
         {/* Submit Button using Base Form.Actions & Button Component */}
         <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
-          <Button
+          <Button fullWidth
             type="submit"
             variant="primary"
             size="lg"
             disabled={!agreed || isLoading}
             isLoading={isLoading}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+            rightIcon={<ArrowRight  />}
+            className="sm:text-sm"
           >
             {t('authRegisterSubmitBtn')}
           </Button>

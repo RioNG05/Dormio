@@ -104,12 +104,8 @@ export default function LoginPage() {
             setAccountIdentifier('')
             setError(null)
           }}
-          leftIcon={<Phone className="w-3.5 h-3.5" />}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${
-            method === 'phone'
-              ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-800'
-          }`}
+          leftIcon={<Phone  />}
+          className="flex-1"
         >
           {t('authLoginMethodPhone')}
         </Button>
@@ -122,12 +118,8 @@ export default function LoginPage() {
             setAccountIdentifier('')
             setError(null)
           }}
-          leftIcon={<Mail className="w-3.5 h-3.5" />}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${
-            method === 'email'
-              ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-800'
-          }`}
+          leftIcon={<Mail  />}
+          className="flex-1"
         >
           {t('authLoginMethodEmail')}
         </Button>
@@ -180,11 +172,10 @@ export default function LoginPage() {
           onChange={e => setPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
           rightIcon={
-            <Button
+            <Button size="icon"
               type="button"
               variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
-              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -213,13 +204,13 @@ export default function LoginPage() {
 
         {/* Submit Button reusing Base Form.Actions & Button */}
         <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
-          <Button
+          <Button fullWidth
             type="submit"
             variant="primary"
             size="lg"
             isLoading={isLoading}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+            rightIcon={<ArrowRight  />}
+            className="sm:text-sm"
           >
             {t('authLoginSubmitBtn')}
           </Button>

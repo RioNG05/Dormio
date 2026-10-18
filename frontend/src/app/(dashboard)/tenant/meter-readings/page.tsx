@@ -598,7 +598,7 @@ export default function TenantMeterReadingsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                            className="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white text-xs px-3 py-1.5 h-auto rounded-lg flex items-center gap-1.5 backdrop-blur-md transition-all opacity-90 hover:opacity-100 shadow"
+                            className="absolute bottom-2 right-2 backdrop-blur-md opacity-90 hover:opacity-100"
                           >
                             <Camera className="w-3.5 h-3.5" />
                             {t('retakePhoto')}
@@ -606,11 +606,11 @@ export default function TenantMeterReadingsPage() {
                         )}
                       </div>
                     ) : (
-                      <Button
+                      <Button fullWidth
                         variant="ghost"
                         size="sm"
                         onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                        className="w-full aspect-video md:aspect-[4/3] h-auto rounded-xl border-2 border-dashed border-slate-300 hover:border-teal-500 bg-slate-50/50 hover:bg-teal-50/30 transition-all flex flex-col items-center justify-center p-4 text-center group cursor-pointer"
+                        className="aspect-video md:aspect-[4/3] flex-col group"
                       >
                         <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
                           <Camera className="w-6 h-6" />
@@ -647,7 +647,7 @@ export default function TenantMeterReadingsPage() {
                                 },
                               }))
                             }
-                            className="p-0 h-auto text-xs text-teal-600 hover:text-teal-700 font-semibold hover:underline"
+                            className="hover:underline"
                           >
                             {t('manualEditBtn')}
                           </Button>
@@ -681,7 +681,6 @@ export default function TenantMeterReadingsPage() {
 
                           <Button
                             onClick={() => handleSaveCorrection(service.serviceId)}
-                            className="bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm px-4 py-2.5 h-auto rounded-lg"
                           >
                             {t('btnSaveReading')}
                           </Button>
@@ -739,14 +738,10 @@ export default function TenantMeterReadingsPage() {
             <span>{t('confirmWarningNotice')}</span>
           </div>
 
-          <Button
+          <Button size="lg"
             onClick={() => setShowConfirmModal(true)}
             disabled={!isReadyToConfirm}
-            className={`w-full sm:w-auto px-6 py-3 h-auto font-semibold rounded-xl transition-all shadow ${
-              isReadyToConfirm
-                ? 'bg-teal-600 hover:bg-teal-700 text-white hover:shadow-teal-500/20'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-            }`}
+            className="sm:w-auto"
           >
             {t('confirmAndViewInvoiceBtn')}
             <ArrowRight className="w-4 h-4 ml-2" />
@@ -769,7 +764,6 @@ export default function TenantMeterReadingsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowConfirmModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 h-auto rounded-lg hover:bg-slate-100"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -821,7 +815,6 @@ export default function TenantMeterReadingsPage() {
                 variant="outline"
                 onClick={() => setShowConfirmModal(false)}
                 disabled={isSubmitting}
-                className="border-slate-300 text-slate-700 hover:bg-slate-100"
               >
                 {t('btnContinueEditing')}
               </Button>
@@ -829,7 +822,6 @@ export default function TenantMeterReadingsPage() {
               <Button
                 onClick={handleConfirmSubmit}
                 disabled={isSubmitting}
-                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold"
               >
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">

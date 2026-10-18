@@ -405,34 +405,32 @@ export default function AssetDetailPage() {
         {/* Quick Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
           <Button
-            variant="secondary"
+            variant="warning"
             size="sm"
             onClick={() =>
               handleStatusChange(asset.status === 'Bảo trì' ? 'Đang sử dụng' : 'Bảo trì')
             }
-            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            leftIcon={<Wrench className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-600" />}
           >
-            <Wrench className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-600" />{' '}
             {asset.status === 'Bảo trì'
               ? t('landlordAssetsDetailBtnFinishMaintenance')
               : t('landlordAssetsDetailBtnSendMaintenance')}
           </Button>
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             onClick={handleOpenEditModal}
-            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            leftIcon={<Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" />}
           >
-            <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" />{' '}
             {t('landlordAssetsBtnEdit')}
           </Button>
           <Button
             variant="danger"
             size="sm"
             onClick={handleDeleteAsset}
-            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            leftIcon={<Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
           >
-            <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> {t('landlordAssetsBtnDelete')}
+            {t('landlordAssetsBtnDelete')}
           </Button>
         </div>
       </div>
@@ -584,9 +582,9 @@ export default function AssetDetailPage() {
                   variant="primary"
                   size="sm"
                   onClick={() => setIsLogModalOpen(true)}
-                  className="h-auto px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
                 >
-                  <Plus className="w-3.5 h-3.5" /> {t('landlordAssetsDetailAddMaintenanceBtn')}
+                  {t('landlordAssetsDetailAddMaintenanceBtn')}
                 </Button>
               </div>
 
@@ -668,9 +666,8 @@ export default function AssetDetailPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors"
               >
                 <Plus className="w-5 h-5 rotate-45" />
               </Button>
@@ -821,10 +818,9 @@ export default function AssetDetailPage() {
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
               <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 onClick={() => setIsEditModalOpen(false)}
-                className="h-auto px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
               >
                 {t('landlordAssetsBtnCancel')}
               </Button>
@@ -832,7 +828,6 @@ export default function AssetDetailPage() {
                 variant="primary"
                 size="sm"
                 onClick={handleSaveEditAsset}
-                className="h-auto px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
               >
                 {t('landlordAssetsBtnSave')}
               </Button>
@@ -856,9 +851,8 @@ export default function AssetDetailPage() {
               </h3>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setIsLogModalOpen(false)}
-                className="h-auto text-zinc-400 hover:text-zinc-600 p-1"
               >
                 <Plus className="w-5 h-5 rotate-45" />
               </Button>
@@ -908,10 +902,9 @@ export default function AssetDetailPage() {
 
             <div className="pt-2 flex justify-end gap-2">
               <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 onClick={() => setIsLogModalOpen(false)}
-                className="h-auto px-4 py-2 font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl cursor-pointer"
               >
                 {t('landlordAssetsBtnCancel')}
               </Button>
@@ -919,7 +912,6 @@ export default function AssetDetailPage() {
                 variant="primary"
                 size="sm"
                 onClick={handleAddMaintenanceLog}
-                className="h-auto px-4 py-2 font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
               >
                 {t('landlordAssetsDetailLogSaveBtn')}
               </Button>
@@ -980,18 +972,16 @@ function ConfirmModal({
         </div>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             onClick={onCancel}
-            className="h-auto px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
           >
             Cancel
           </Button>
           <Button
-            variant="primary"
+            variant="warning"
             size="sm"
             onClick={onConfirm}
-            className="h-auto px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20"
           >
             OK
           </Button>
@@ -1057,10 +1047,18 @@ function AlertModal({
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
         </div>
         <Button
-          variant="primary"
+          variant={
+            type === 'warning'
+              ? 'warning'
+              : type === 'error'
+                ? 'danger'
+                : type === 'success'
+                  ? 'success'
+                  : 'orange'
+          }
           size="sm"
+          fullWidth
           onClick={onClose}
-          className={`h-auto w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md ${config.btnColor}`}
         >
           {t('landlordAssetsBtnUnderstood')}
         </Button>

@@ -154,9 +154,8 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
           variant={activeTab === 'terms' ? 'primary' : 'ghost'}
           size="sm"
           onClick={() => setActiveTab('terms')}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${activeTab === 'terms' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
-            }`}
-          leftIcon={<Scale className="w-3.5 h-3.5" />}
+          className="flex-1"
+          leftIcon={<Scale  />}
         >
           {t('authLegalTabTerms')}
         </Button>
@@ -165,9 +164,8 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
           variant={activeTab === 'privacy' ? 'primary' : 'ghost'}
           size="sm"
           onClick={() => setActiveTab('privacy')}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${activeTab === 'privacy' ? 'shadow-xs' : 'text-zinc-600 hover:text-zinc-900'
-            }`}
-          leftIcon={<ShieldCheck className="w-3.5 h-3.5" />}
+          className="flex-1"
+          leftIcon={<ShieldCheck  />}
         >
           {t('authLegalTabPrivacy')}
         </Button>

@@ -429,7 +429,7 @@ export default function AdminGrievancesPage() {
             variant="ghost"
             size="sm"
             onClick={() => setToastMsg(null)}
-            className="p-1 h-auto hover:bg-black/5 rounded-lg ml-2 cursor-pointer"
+            className="ml-2"
           >
             <X className="w-3.5 h-3.5" />
           </Button>
@@ -565,7 +565,6 @@ export default function AdminGrievancesPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSearchQuery('')}
-                    className="text-zinc-400 hover:text-zinc-600 p-0.5 h-auto cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </Button>
@@ -593,11 +592,6 @@ export default function AdminGrievancesPage() {
                   setPriorityFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  priorityFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
               >
                 {chip.label}
               </Button>
@@ -623,11 +617,6 @@ export default function AdminGrievancesPage() {
                   setStatusFilter(chip.id)
                   setCurrentPage(1)
                 }}
-                className={`px-3 py-1.5 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  statusFilter === chip.id
-                    ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
               >
                 {chip.label}
               </Button>
@@ -653,11 +642,6 @@ export default function AdminGrievancesPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleViewModeChange('grid')}
-              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
-                  : 'text-zinc-400 hover:text-zinc-700'
-              }`}
               title={t('adminGrievancesGridViewTooltip')}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -666,11 +650,6 @@ export default function AdminGrievancesPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleViewModeChange('table')}
-              className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                viewMode === 'table'
-                  ? 'bg-white text-orange-600 shadow-2xs font-extrabold hover:bg-white hover:text-orange-600'
-                  : 'text-zinc-400 hover:text-zinc-700'
-              }`}
               title={t('adminGrievancesTableViewTooltip')}
             >
               <TableIcon className="w-4 h-4" />
@@ -795,7 +774,7 @@ export default function AdminGrievancesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setPreviewImage(img)}
-                            className="w-8 h-8 p-0 h-auto rounded-lg overflow-hidden border border-zinc-200 hover:scale-105 transition-transform cursor-pointer"
+                            className="overflow-hidden"
                           >
                             <img src={img} alt="" className="w-full h-full object-cover" />
                           </Button>
@@ -851,7 +830,7 @@ export default function AdminGrievancesPage() {
                     size="sm"
                     className="flex-1"
                     onClick={() => setInspectItem(item)}
-                    leftIcon={<Eye className="w-3.5 h-3.5 text-zinc-500" />}
+                    leftIcon={<Eye  />}
                   >
                     <span>{t('adminGrievancesDetailsBtn')}</span>
                   </Button>
@@ -870,8 +849,7 @@ export default function AdminGrievancesPage() {
                         variant="primary"
                         size="sm"
                         onClick={() => handleOpenResolveModal(item, 'resolve')}
-                        leftIcon={<Check className="w-3.5 h-3.5" />}
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        leftIcon={<Check  />}
                       >
                         <span>{t('adminGrievancesResolveBtn')}</span>
                       </Button>
@@ -960,7 +938,6 @@ export default function AdminGrievancesPage() {
                           variant="primary"
                           size="sm"
                           onClick={() => handleOpenResolveModal(item, 'resolve')}
-                          className="bg-emerald-600 hover:bg-emerald-700"
                         >
                           {t('adminGrievancesResolveBtn')}
                         </Button>
@@ -1043,11 +1020,6 @@ export default function AdminGrievancesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setCurrentPage(num)}
-                className={`w-8 h-8 p-0 h-auto rounded-lg font-bold transition-all cursor-pointer ${
-                  safeCurrentPage === num
-                    ? 'bg-orange-600 text-white shadow-2xs hover:bg-orange-600 hover:text-white'
-                    : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
-                }`}
               >
                 {num}
               </Button>
@@ -1099,7 +1071,6 @@ export default function AdminGrievancesPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setInspectItem(null)}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1214,8 +1185,7 @@ export default function AdminGrievancesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleMarkInProgress(inspectItem)}
-                  leftIcon={<Eye className="w-3.5 h-3.5 text-blue-600" />}
-                  className="text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                  leftIcon={<Eye  />}
                 >
                   <span>{t('adminGrievancesModalInvestigating')}</span>
                 </Button>
@@ -1230,8 +1200,7 @@ export default function AdminGrievancesPage() {
                     setInspectItem(null)
                     handleOpenResolveModal(target, 'resolve')
                   }}
-                  leftIcon={<Check className="w-3.5 h-3.5" />}
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  leftIcon={<Check  />}
                 >
                   <span>{t('adminGrievancesModalTakeAction')}</span>
                 </Button>
@@ -1282,7 +1251,6 @@ export default function AdminGrievancesPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleRequestCloseResolveModal}
-                  className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -1295,11 +1263,7 @@ export default function AdminGrievancesPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setActionType('resolve')}
-                  className={`flex-1 py-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                    actionType === 'resolve'
-                      ? 'bg-white text-emerald-700 shadow-2xs hover:bg-white hover:text-emerald-700'
-                      : 'text-zinc-500'
-                  }`}
+                  className="flex-1"
                 >
                   {t('adminGrievancesTabApprove')}
                 </Button>
@@ -1308,9 +1272,7 @@ export default function AdminGrievancesPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setActionType('reject')}
-                  className={`flex-1 py-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                    actionType === 'reject' ? 'bg-white text-zinc-900 shadow-2xs hover:bg-white hover:text-zinc-900' : 'text-zinc-500'
-                  }`}
+                  className="flex-1"
                 >
                   {t('adminGrievancesTabReject')}
                 </Button>
@@ -1365,7 +1327,7 @@ export default function AdminGrievancesPage() {
                 size="sm"
                 onClick={handleConfirmResolution}
                 isLoading={isSubmittingResolution}
-                leftIcon={<Check className="w-3.5 h-3.5" />}
+                leftIcon={<Check  />}
                 className={
                   actionType === 'resolve'
                     ? 'bg-emerald-600 hover:bg-emerald-700'
@@ -1395,11 +1357,11 @@ export default function AdminGrievancesPage() {
               alt="Evidence"
               className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain"
             />
-            <Button
+            <Button rounded="full"
               variant="ghost"
               size="sm"
               onClick={() => setPreviewImage(null)}
-              className="absolute top-3 right-3 w-8 h-8 p-0 h-auto rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black cursor-pointer"
+              className="absolute top-3 right-3"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -1440,7 +1402,6 @@ export default function AdminGrievancesPage() {
                 variant="danger"
                 size="sm"
                 onClick={confirmCloseModal.onDiscard}
-                className="bg-orange-600 hover:bg-orange-700"
               >
                 {t('adminGrievancesDiscardAndClose')}
               </Button>

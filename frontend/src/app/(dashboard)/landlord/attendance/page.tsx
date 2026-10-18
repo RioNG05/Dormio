@@ -459,9 +459,9 @@ export default function AttendancePage() {
             variant="outline"
             size="sm"
             onClick={handleExportData}
-            leftIcon={<Download className="w-4 h-4 text-zinc-500" />}
-            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer h-auto"
-          >
+            leftIcon={<Download  />}
+            
+ >
             <span>{t('landlordAttendanceBtnExport')} (CSV)</span>
           </Button>
         </div>
@@ -550,12 +550,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'today' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => handleDatePresetChange('today')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'today'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
-              >
+                
+ >
                 {isEn ? 'Today' : 'Hôm nay'}
               </Button>
               <Button
@@ -563,12 +559,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'week' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => handleDatePresetChange('week')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'week'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
-              >
+                
+ >
                 {isEn ? 'This Week' : 'Tuần này'}
               </Button>
               <Button
@@ -576,12 +568,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'month' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => handleDatePresetChange('month')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'month'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
-              >
+                
+ >
                 {isEn ? 'This Month' : 'Tháng này'}
               </Button>
               <Button
@@ -589,12 +577,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'custom' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setDatePreset('custom')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'custom'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
-              >
+                
+ >
                 {isEn ? 'Custom' : 'Tùy chọn'}
               </Button>
             </div>
@@ -634,13 +618,9 @@ export default function AttendancePage() {
               variant={viewMode === 'grid' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => handleViewModeChange('grid')}
-              leftIcon={<LayoutGrid className="w-3.5 h-3.5" />}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-              }`}
-            >
+              leftIcon={<LayoutGrid  />}
+              
+ >
               <span>{isEn ? 'Grid' : 'Lưới'}</span>
             </Button>
             <Button
@@ -648,13 +628,9 @@ export default function AttendancePage() {
               variant={viewMode === 'table' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => handleViewModeChange('table')}
-              leftIcon={<List className="w-3.5 h-3.5" />}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                viewMode === 'table'
-                  ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-              }`}
-            >
+              leftIcon={<List  />}
+              
+ >
               <span>{isEn ? 'Table' : 'Bảng'}</span>
             </Button>
           </div>
@@ -757,8 +733,8 @@ export default function AttendancePage() {
             variant="ghost"
             size="sm"
             onClick={() => handleDatePresetChange('month')}
-            className="px-4 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 rounded-xl hover:bg-[#2AC1BC]/20 transition-colors cursor-pointer h-auto border-0"
-          >
+            
+ >
             {isEn ? 'View Entire Month' : 'Xem toàn bộ tháng này'}
           </Button>
         </div>
@@ -847,14 +823,14 @@ export default function AttendancePage() {
                 </div>
 
                 {/* Bottom Action Button */}
-                <Button
+                <Button fullWidth
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpenOverride(item)}
-                  leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                  className="w-full mt-2 py-2 px-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer h-auto border-0"
-                >
+                  leftIcon={<Edit3  />}
+                  className="mt-2"
+ >
                   <span>{t('landlordAttendanceBtnEdit')}</span>
                 </Button>
               </div>
@@ -891,9 +867,9 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={windowStart <= 1}
                 onClick={() => handlePageJump(-5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
+                
                 title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
-              >
+ >
                 «
               </Button>
               <Button
@@ -902,8 +878,8 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
+                
+ >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
 
@@ -914,12 +890,8 @@ export default function AttendancePage() {
                   variant={currentPage === p ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 border-0 ${
-                    currentPage === p
-                      ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6]'
-                      : 'text-zinc-600 hover:bg-zinc-200'
-                  }`}
-                >
+                  
+ >
                   {p}
                 </Button>
               ))}
@@ -930,8 +902,8 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
+                
+ >
                 <ChevronRight className="w-4 h-4" />
               </Button>
               <Button
@@ -940,9 +912,9 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={windowStart + 5 > totalPages}
                 onClick={() => handlePageJump(5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
+                
                 title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
-              >
+ >
                 »
               </Button>
             </div>
@@ -1002,9 +974,9 @@ export default function AttendancePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenOverride(item)}
-                        className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto border-0"
+                        
                         title={t('landlordAttendanceBtnEdit')}
-                      >
+ >
                         <Edit3 className="w-4 h-4" />
                       </Button>
                     </td>
@@ -1044,9 +1016,9 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={windowStart <= 1}
                 onClick={() => handlePageJump(-5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
+                
                 title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
-              >
+ >
                 «
               </Button>
               <Button
@@ -1055,8 +1027,8 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
+                
+ >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
 
@@ -1067,12 +1039,8 @@ export default function AttendancePage() {
                   variant={currentPage === p ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 border-0 ${
-                    currentPage === p
-                      ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6]'
-                      : 'text-zinc-600 hover:bg-zinc-200'
-                  }`}
-                >
+                  
+ >
                   {p}
                 </Button>
               ))}
@@ -1083,8 +1051,8 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
+                
+ >
                 <ChevronRight className="w-4 h-4" />
               </Button>
               <Button
@@ -1093,9 +1061,9 @@ export default function AttendancePage() {
                 size="sm"
                 disabled={windowStart + 5 > totalPages}
                 onClick={() => handlePageJump(5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
+                
                 title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
-              >
+ >
                 »
               </Button>
             </div>
@@ -1140,8 +1108,8 @@ export default function AttendancePage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleAttemptCloseOverride}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto border-0"
-              >
+                
+ >
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -1185,12 +1153,7 @@ export default function AttendancePage() {
                       setOverrideStatus('on_time')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'on_time'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
-                  >
+ >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                         overrideStatus === 'on_time'
@@ -1213,12 +1176,7 @@ export default function AttendancePage() {
                       setOverrideStatus('late')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'late'
-                        ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
-                  >
+ >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                         overrideStatus === 'late'
@@ -1241,12 +1199,7 @@ export default function AttendancePage() {
                       setOverrideStatus('absent')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'absent'
-                        ? 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
-                  >
+ >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                         overrideStatus === 'absent'
@@ -1269,12 +1222,7 @@ export default function AttendancePage() {
                       setOverrideStatus('not_yet')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'not_yet'
-                        ? 'bg-zinc-100 text-zinc-800 border-zinc-300 hover:bg-zinc-200 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
-                  >
+ >
                     <div
                       className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
                         overrideStatus === 'not_yet'
@@ -1363,8 +1311,8 @@ export default function AttendancePage() {
                   variant="outline"
                   size="sm"
                   onClick={handleAttemptCloseOverride}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer h-auto"
-                >
+                  
+ >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
                 <Button
@@ -1372,8 +1320,8 @@ export default function AttendancePage() {
                   variant="primary"
                   size="sm"
                   disabled={isSubmittingOverride}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50 h-auto border-0"
-                >
+                  
+ >
                   {isSubmittingOverride ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1421,8 +1369,8 @@ export default function AttendancePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer h-auto border-0"
-              >
+                className="flex-1"
+ >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
               <Button
@@ -1433,8 +1381,8 @@ export default function AttendancePage() {
                   setIsConfirmCloseOpen(false)
                   performCloseOverride()
                 }}
-                className="flex-1 py-2.5 px-4 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20 h-auto"
-              >
+                className="flex-1"
+ >
                 {t('landlordShiftsConfirmCloseDiscard')}
               </Button>
             </div>

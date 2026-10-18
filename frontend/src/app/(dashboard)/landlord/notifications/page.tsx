@@ -309,7 +309,7 @@ export default function NotificationsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setToast(null)}
-              className="h-auto ml-2 text-zinc-400 hover:text-zinc-600 p-0.5 cursor-pointer"
+              className="ml-2"
             >
               <X className="w-3.5 h-3.5" />
             </Button>
@@ -452,11 +452,6 @@ export default function NotificationsPage() {
                 if (itemsPerPage === 10) setItemsPerPage(6)
               }}
               title={t('landlordNotificationsViewGrid')}
-              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-2xs'
-                  : 'text-zinc-400 hover:text-zinc-700'
-              }`}
             >
               <LayoutGrid className="w-4 h-4" />
             </Button>
@@ -469,11 +464,6 @@ export default function NotificationsPage() {
                 if (itemsPerPage === 6) setItemsPerPage(10)
               }}
               title={t('landlordNotificationsViewList')}
-              className={`h-auto p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'list'
-                  ? 'bg-white text-zinc-900 shadow-2xs'
-                  : 'text-zinc-400 hover:text-zinc-700'
-              }`}
             >
               <List className="w-4 h-4" />
             </Button>
@@ -487,15 +477,13 @@ export default function NotificationsPage() {
             onClick={() => fetchAnnouncements()}
             disabled={isLoading}
             title={t('landlordNotificationsRefreshList')}
-            className="h-9 w-9 p-0 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-600 hover:text-zinc-900 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#2AC1BC]' : ''}`} />
           </Button>
 
           {/* Broadcast New Notice Button */}
-          <Button
+          <Button size="xs" variant="dark"
             onClick={() => setIsNotifModalOpen(true)}
-            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm shadow-[#2AC1BC]/20 flex items-center gap-1.5 py-2 px-4"
           >
             <Plus className="w-4 h-4" />
             <span>{t('landlordNotificationsBtnBroadcast')}</span>
@@ -521,9 +509,9 @@ export default function NotificationsPage() {
             <p className="text-xs text-zinc-500 mt-1 max-w-sm">
               {t('landlordNotificationsEmptyDesc')}
             </p>
-            <Button
+            <Button size="icon-sm"
               onClick={() => setIsNotifModalOpen(true)}
-              className="mt-4 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl shadow-sm shadow-[#2AC1BC]/20 flex items-center gap-1.5"
+              className="mt-4"
             >
               <Plus className="w-4 h-4" />
               <span>{t('landlordNotificationsCreateFirstNotif')}</span>
@@ -573,7 +561,6 @@ export default function NotificationsPage() {
                             e.stopPropagation()
                             setDeletingNotifId(notif.id)
                           }}
-                          className="h-auto w-auto text-zinc-300 hover:text-rose-500 transition-colors p-1 cursor-pointer"
                           title={t('landlordNotificationsDeleteAction')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -623,7 +610,7 @@ export default function NotificationsPage() {
 
                   {/* Footer Details Button */}
                   <div className="pt-3 mt-3 border-t border-zinc-100 flex items-center justify-end">
-                    <Button
+                    <Button fullWidth
                       type="button"
                       variant="outline"
                       size="sm"
@@ -631,7 +618,6 @@ export default function NotificationsPage() {
                         e.stopPropagation()
                         setSelectedNotifDetail(notif)
                       }}
-                      className="w-full h-8 px-3 py-1.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border border-[#2AC1BC]/30 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>{t('landlordNotificationsViewDetails')}</span>
@@ -747,7 +733,6 @@ export default function NotificationsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setSelectedNotifDetail(notif)}
-                              className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white text-zinc-700 text-xs font-bold rounded-xl transition-colors cursor-pointer inline-flex items-center gap-1"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>{t('landlordNotificationsBtnDetails')}</span>
@@ -757,7 +742,6 @@ export default function NotificationsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setDeletingNotifId(notif.id)}
-                              className="h-auto w-auto p-1.5 text-zinc-400 hover:text-rose-500 transition-colors cursor-pointer"
                               title={t('landlordNotificationsBtnDelete')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -827,7 +811,6 @@ export default function NotificationsPage() {
                   size="sm"
                   disabled={page === 1}
                   onClick={() => setPage(Math.max(windowStart - windowSize, 1))}
-                  className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   &larr; {t('landlordNotificationsPaginationPrev')}
                 </Button>
@@ -838,11 +821,6 @@ export default function NotificationsPage() {
                     size="sm"
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                      page === p
-                        ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 border-transparent'
-                        : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                    }`}
                   >
                     {p}
                   </Button>
@@ -853,7 +831,6 @@ export default function NotificationsPage() {
                   size="sm"
                   disabled={page === totalPages || windowStart + windowSize > totalPages}
                   onClick={() => setPage(Math.min(windowStart + windowSize, totalPages))}
-                  className="h-8 px-3 py-1.5 text-xs font-bold bg-white border border-zinc-200 text-zinc-700 rounded-xl hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   {t('landlordNotificationsPaginationNext')} &rarr;
                 </Button>
@@ -887,12 +864,11 @@ export default function NotificationsPage() {
                   </p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={requestCloseNotifModal}
-                className="h-auto w-auto p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -911,7 +887,7 @@ export default function NotificationsPage() {
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {notificationTemplates.map(tmpl => (
-                    <Button
+                    <Button fullWidth size="icon"
                       key={tmpl.title}
                       type="button"
                       variant="ghost"
@@ -920,7 +896,7 @@ export default function NotificationsPage() {
                         setNotifContent(tmpl.content)
                         setNotifCategory(tmpl.category)
                       }}
-                      className="h-auto p-2.5 text-left border border-zinc-200 hover:border-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-xl transition-all bg-white cursor-pointer group flex flex-col items-start justify-start w-full whitespace-normal"
+                      className="group flex-col items-start justify-start whitespace-normal"
                     >
                       <div className="text-xs font-bold text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full">
                         {tmpl.title}
@@ -997,14 +973,12 @@ export default function NotificationsPage() {
                   size="sm"
                   onClick={requestCloseNotifModal}
                   disabled={isSubmitting}
-                  className="h-auto px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {t('landlordNotificationsBtnCancel')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl shadow-sm shadow-[#2AC1BC]/20 flex items-center gap-1.5 py-2.5 px-5 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -1043,12 +1017,11 @@ export default function NotificationsPage() {
                   {t('landlordNotificationsDetailTitle')}
                 </h3>
               </div>
-              <Button
+              <Button rounded="full"
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedNotifDetail(null)}
-                className="h-auto w-auto p-1.5 text-zinc-400 hover:text-white rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1102,7 +1075,6 @@ export default function NotificationsPage() {
                   setDeletingNotifId(selectedNotifDetail.id)
                   setSelectedNotifDetail(null)
                 }}
-                className="h-auto px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>{t('landlordNotificationsDetailDelete')}</span>
@@ -1113,7 +1085,6 @@ export default function NotificationsPage() {
                 variant="primary"
                 size="sm"
                 onClick={() => setSelectedNotifDetail(null)}
-                className="h-auto px-5 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordNotificationsDetailClose')}
               </Button>
@@ -1151,7 +1122,7 @@ export default function NotificationsPage() {
                 size="sm"
                 disabled={isDeleting}
                 onClick={() => setDeletingNotifId(null)}
-                className="flex-1 h-auto py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl border border-zinc-300 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                className="flex-1"
               >
                 {t('landlordNotificationsBtnCancel')}
               </Button>
@@ -1161,7 +1132,7 @@ export default function NotificationsPage() {
                 size="sm"
                 disabled={isDeleting}
                 onClick={() => handleDeleteAnnouncement(deletingNotifId)}
-                className="flex-1 h-auto py-2.5 px-4 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="flex-1"
               >
                 {isDeleting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -329,7 +329,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
           </h2>
           <p className="text-sm text-zinc-500 mb-6">{t('guestPricingCheckoutNotFoundDesc')}</p>
           <Link href="/pricing">
-            <Button className="px-5 py-2.5 rounded-xl bg-zinc-900 text-white text-xs font-bold hover:bg-zinc-800 transition h-auto">
+            <Button size="xs" variant="dark" >
               {t('guestPricingCheckoutBackToPlansBtn')}
             </Button>
           </Link>
@@ -455,15 +455,10 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
 
               {/* Action Button */}
               <div className="pt-4 border-t border-zinc-100">
-                <Button
+                <Button fullWidth size="lg" variant="success"
                   type="button"
                   disabled={isGeneratingQr || isSuccess}
                   onClick={() => handleGenerateCheckout(selectedCycle)}
-                  className={`w-full py-4 px-6 rounded-2xl font-black text-sm tracking-wide flex items-center justify-center gap-2.5 shadow-lg transition-all active:scale-[0.99] h-auto ${
-                    isSuccess
-                      ? 'bg-emerald-600 text-white cursor-default hover:bg-emerald-600'
-                      : 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-teal-500/25 cursor-pointer'
-                  }`}
                 >
                   {isGeneratingQr ? (
                     <>
@@ -533,7 +528,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
 
                   <div className="pt-2">
                     <Link href="/landlord/reports">
-                      <Button className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl font-black text-sm bg-zinc-900 text-white hover:bg-zinc-800 transition shadow-lg shadow-zinc-900/20 active:scale-95 h-auto">
+                      <Button size="icon" variant="dark" >
                         <span>{t('guestPricingCheckoutGoToDashboard')}</span>
                         <ArrowRight className="w-4 h-4" />
                       </Button>
@@ -591,10 +586,9 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                         <p className="text-xs text-zinc-500 mt-1 mb-4">
                           {t('guestPricingCheckoutQrExpiredDesc')}
                         </p>
-                        <Button
+                        <Button size="xs" variant="dark"
                           type="button"
                           onClick={() => handleGenerateCheckout(selectedCycle)}
-                          className="px-4 py-2 rounded-xl bg-zinc-900 text-white text-xs font-bold hover:bg-zinc-800 transition flex items-center gap-2 cursor-pointer h-auto"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           <span>{t('guestPricingCheckoutGenerateNewQr')}</span>
@@ -624,7 +618,6 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleCopy(checkoutData.accountNumber, 'acc')}
-                          className="w-7 h-7 p-1 rounded-md text-zinc-400 hover:text-zinc-800 hover:bg-zinc-200/60 transition cursor-pointer"
                           title="Copy"
                         >
                           {isCopiedAcc ? (
@@ -663,7 +656,6 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleCopy(checkoutData.description, 'syntax')}
-                          className="w-7 h-7 p-1 rounded-md text-amber-600 hover:text-amber-950 hover:bg-amber-100 transition cursor-pointer"
                           title="Copy"
                         >
                           {isCopiedSyntax ? (

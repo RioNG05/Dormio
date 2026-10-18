@@ -629,36 +629,33 @@ export default function WorkforceSchedulePage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <Button
+          <Button size="xs"
             variant="outline"
             onClick={() => {
               setIsDirty(false)
               setIsShiftsModalOpen(true)
             }}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5 text-zinc-500" />
             <span>{t('landlordScheduleBtnShiftTemplates')}</span>
           </Button>
 
-          <Button
+          <Button size="xs"
             variant="secondary"
             onClick={() => {
               setIsDirty(false)
               setIsAdhocModalOpen(true)
             }}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t('landlordScheduleBtnAssign')}</span>
           </Button>
 
-          <Button
+          <Button size="xs"
             onClick={() => {
               setIsDirty(false)
               setIsRecurringModalOpen(true)
             }}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
           >
             <Repeat className="w-3.5 h-3.5" />
             <span>{t('landlordScheduleBtnRecurring')}</span>
@@ -736,7 +733,6 @@ export default function WorkforceSchedulePage() {
               variant="outline"
               size="sm"
               onClick={handlePrevWeek}
-              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto w-auto"
               title={t('landlordScheduleBtnPrevWeek')}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -746,7 +742,6 @@ export default function WorkforceSchedulePage() {
               variant="outline"
               size="sm"
               onClick={handleCurrentWeek}
-              className="px-3 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto"
             >
               {t('landlordScheduleBtnToday')}
             </Button>
@@ -755,7 +750,6 @@ export default function WorkforceSchedulePage() {
               variant="outline"
               size="sm"
               onClick={handleNextWeek}
-              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto w-auto"
               title={t('landlordScheduleBtnNextWeek')}
             >
               <ChevronRight className="w-4 h-4" />
@@ -774,11 +768,6 @@ export default function WorkforceSchedulePage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode('calendar')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto ${
-                  viewMode === 'calendar'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
                 <span>{t('landlordScheduleViewCalendar')}</span>
@@ -787,11 +776,6 @@ export default function WorkforceSchedulePage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto ${
-                  viewMode === 'list'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
               >
                 <List className="w-3.5 h-3.5" />
                 <span>{t('landlordScheduleViewList')}</span>
@@ -963,7 +947,6 @@ export default function WorkforceSchedulePage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenEditModal(schedule)}
-                            className="p-1 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                             title={t('landlordScheduleEditShiftTitle')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -973,7 +956,6 @@ export default function WorkforceSchedulePage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteSchedule(schedule)}
-                              className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                               title={t('landlordScheduleCancelShiftTitle')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1004,12 +986,12 @@ export default function WorkforceSchedulePage() {
               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
                 {t('landlordScheduleEmptyDesc')}
               </p>
-              <Button
+              <Button size="xs"
                 onClick={() => {
                   setIsDirty(false)
                   setIsRecurringModalOpen(true)
                 }}
-                className="mt-4 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer"
+                className="mt-4"
               >
                 {t('landlordScheduleBtnRecurring')}
               </Button>
@@ -1083,7 +1065,6 @@ export default function WorkforceSchedulePage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenEditModal(item)}
-                            className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                             title={t('landlordShiftsBtnEdit')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -1093,7 +1074,6 @@ export default function WorkforceSchedulePage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteSchedule(item)}
-                              className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                               title={t('landlordScheduleCancelShiftAction')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1136,7 +1116,6 @@ export default function WorkforceSchedulePage() {
                     size="sm"
                     disabled={windowStart <= 1}
                     onClick={() => handlePageJump(-5)}
-                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto"
                     title={t('landlordScheduleBack5Pages')}
                   >
                     «
@@ -1146,7 +1125,6 @@ export default function WorkforceSchedulePage() {
                     size="sm"
                     disabled={listPage <= 1}
                     onClick={() => setListPage(p => Math.max(p - 1, 1))}
-                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -1157,11 +1135,6 @@ export default function WorkforceSchedulePage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setListPage(p)}
-                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 ${
-                        listPage === p
-                          ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6] hover:text-white'
-                          : 'text-zinc-600 hover:bg-zinc-200'
-                      }`}
                     >
                       {p}
                     </Button>
@@ -1172,7 +1145,6 @@ export default function WorkforceSchedulePage() {
                     size="sm"
                     disabled={listPage >= totalListPages}
                     onClick={() => setListPage(p => Math.min(p + 1, totalListPages))}
-                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -1181,7 +1153,6 @@ export default function WorkforceSchedulePage() {
                     size="sm"
                     disabled={windowStart + 5 > totalListPages}
                     onClick={() => handlePageJump(5)}
-                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto"
                     title={t('landlordScheduleForward5Pages')}
                   >
                     »
@@ -1227,7 +1198,6 @@ export default function WorkforceSchedulePage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleAttemptCloseModal('recurring')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1245,7 +1215,7 @@ export default function WorkforceSchedulePage() {
                     <span>{t('landlordScheduleModalStaffLabel')}</span>
                     <span className="text-rose-500">*</span>
                   </label>
-                  <Button
+                  <Button size="xs"
                     type="button"
                     variant="ghost"
                     onClick={() => {
@@ -1256,7 +1226,7 @@ export default function WorkforceSchedulePage() {
                       }
                       setIsDirty(true)
                     }}
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer p-0 h-auto"
+                    className="hover:underline"
                   >
                     {recurringEmployeeIds.length === staffList.length
                       ? t('landlordScheduleDeselectAll')
@@ -1340,38 +1310,35 @@ export default function WorkforceSchedulePage() {
                     <span className="text-rose-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <Button
+                    <Button size="xs"
                       type="button"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '3', '4', '5', '6'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T2 - T6
                     </Button>
                     <span className="text-zinc-300">·</span>
-                    <Button
+                    <Button size="xs"
                       type="button"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '4', '6'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T2, 4, 6
                     </Button>
                     <span className="text-zinc-300">·</span>
-                    <Button
+                    <Button size="xs"
                       type="button"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['3', '5', '7'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T3, 5, 7
                     </Button>
@@ -1395,11 +1362,6 @@ export default function WorkforceSchedulePage() {
                           }
                           setIsDirty(true)
                         }}
-                        className={`py-2 px-1 text-center rounded-xl border text-xs font-extrabold transition-all cursor-pointer h-auto ${
-                          isSelected
-                            ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-sm shadow-[#2AC1BC]/20'
-                            : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                        }`}
                       >
                         {t(d.shortKey as any)}
                       </Button>
@@ -1455,18 +1417,16 @@ export default function WorkforceSchedulePage() {
 
               {/* Modal Footer */}
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('recurring')}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isSubmittingRecurring}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmittingRecurring ? (
                     <>
@@ -1516,7 +1476,6 @@ export default function WorkforceSchedulePage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleAttemptCloseModal('adhoc')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1593,18 +1552,16 @@ export default function WorkforceSchedulePage() {
               </div>
 
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('adhoc')}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isSubmittingAdhoc}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmittingAdhoc ? (
                     <>
@@ -1654,7 +1611,6 @@ export default function WorkforceSchedulePage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleAttemptCloseModal('shifts')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1699,10 +1655,9 @@ export default function WorkforceSchedulePage() {
                 </div>
 
                 <div className="flex justify-end pt-1">
-                  <Button
+                  <Button size="xs"
                     type="submit"
                     disabled={isCreatingShift}
-                    className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer disabled:opacity-50"
                   >
                     {isCreatingShift
                       ? t('landlordScheduleCreating')
@@ -1742,7 +1697,6 @@ export default function WorkforceSchedulePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteShift(s.id, s.name)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                         title={t('landlordShiftsBtnDelete')}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1754,11 +1708,10 @@ export default function WorkforceSchedulePage() {
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('shifts')}
-                className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 {t('landlordScheduleClose')}
               </Button>
@@ -1801,7 +1754,6 @@ export default function WorkforceSchedulePage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleAttemptCloseModal('edit')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1920,18 +1872,16 @@ export default function WorkforceSchedulePage() {
               )}
 
               <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('edit')}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isSubmittingEdit}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmittingEdit ? (
                     <>
@@ -1973,22 +1923,22 @@ export default function WorkforceSchedulePage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="danger"
                 onClick={() => {
                   setIsConfirmCloseOpen(false)
                   performCloseModal(pendingModalToClose)
                 }}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
+                className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseDiscard')}
               </Button>

@@ -318,12 +318,12 @@ export default function TenantAdminComplaintsPage() {
           </p>
         </div>
 
-        <Button
+        <Button size="xs"
           onClick={() => {
             resetForm()
             setIsModalOpen(true)
           }}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#2AC1BC] to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#2AC1BC]/20 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] shrink-0"
+          className="sm:w-auto from-[#2AC1BC] to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] sm:text-sm shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>{t('tenantBtnNewComplaint')}</span>
@@ -344,11 +344,7 @@ export default function TenantAdminComplaintsPage() {
                 setStatusFilter('all')
                 setCurrentPage(1)
               }}
-              className={`px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
-                statusFilter === 'all'
-                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-transparent'
-              }`}
+              className="shrink-0"
             >
               <span>{t('tenantTabAllIssues')}</span>
               <span
@@ -367,11 +363,7 @@ export default function TenantAdminComplaintsPage() {
                 setStatusFilter('pending')
                 setCurrentPage(1)
               }}
-              className={`px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
-                statusFilter === 'pending'
-                  ? 'bg-amber-500 text-white shadow-xs hover:bg-amber-500'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-transparent'
-              }`}
+              className="shrink-0"
             >
               <div className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
@@ -395,11 +387,7 @@ export default function TenantAdminComplaintsPage() {
                 setStatusFilter('resolved')
                 setCurrentPage(1)
               }}
-              className={`px-3.5 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all shrink-0 flex items-center gap-2 ${
-                statusFilter === 'resolved'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-transparent'
-              }`}
+              className="shrink-0"
             >
               <div className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -429,11 +417,6 @@ export default function TenantAdminComplaintsPage() {
                 size="sm"
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
                 title={t('tenantGridView')}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -443,11 +426,6 @@ export default function TenantAdminComplaintsPage() {
                 size="sm"
                 type="button"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
                 title={t('tenantTableView')}
               >
                 <List className="w-4 h-4" />
@@ -569,7 +547,6 @@ export default function TenantAdminComplaintsPage() {
                           variant="ghost"
                           size="sm"
                           type="button"
-                          className="p-1 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -598,7 +575,6 @@ export default function TenantAdminComplaintsPage() {
               size="sm"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -610,11 +586,6 @@ export default function TenantAdminComplaintsPage() {
                 size="sm"
                 type="button"
                 onClick={() => setCurrentPage(i + 1)}
-                className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  currentPage === i + 1
-                    ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
-                    : 'text-zinc-600 hover:bg-zinc-100'
-                }`}
               >
                 {i + 1}
               </Button>
@@ -625,7 +596,6 @@ export default function TenantAdminComplaintsPage() {
               size="sm"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -655,12 +625,11 @@ export default function TenantAdminComplaintsPage() {
                   <p className="text-xs text-zinc-400">{t('tenantCreateGrievanceModalSubtitle')}</p>
                 </div>
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={handleCloseModal}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -698,13 +667,6 @@ export default function TenantAdminComplaintsPage() {
                       size="sm"
                       type="button"
                       onClick={() => setPriority(p.key as GrievancePriority)}
-                      className={`p-2.5 h-auto rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                        priority === p.key
-                          ? p.key === 'high'
-                            ? 'bg-rose-50 border-rose-500 text-rose-700 shadow-xs hover:bg-rose-50'
-                            : 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#2AC1BC] shadow-xs hover:bg-[#2AC1BC]/10'
-                          : 'bg-white text-zinc-600 hover:bg-zinc-50'
-                      }`}
                     >
                       {p.label}
                     </Button>
@@ -761,7 +723,7 @@ export default function TenantAdminComplaintsPage() {
                         size="sm"
                         type="button"
                         onClick={() => removeUploadedImage(idx)}
-                        className="absolute top-1 right-1 p-1 h-auto bg-black/60 hover:bg-black/80 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100"
                       >
                         <X className="w-3.5 h-3.5" />
                       </Button>
@@ -769,11 +731,11 @@ export default function TenantAdminComplaintsPage() {
                   ))}
 
                   {uploadedImages.length < 5 && (
-                    <Button
+                    <Button fullWidth
                       variant="ghost"
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-20 w-full rounded-xl border border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50 flex flex-col items-center justify-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer"
+                      className="flex-col"
                     >
                       <UploadCloud className="w-5 h-5 mb-1" />
                       <span className="text-[10px] font-bold">{t('tenantAddPhotoBtn')}</span>
@@ -792,18 +754,16 @@ export default function TenantAdminComplaintsPage() {
               </div>
 
               <div className="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="ghost"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 text-xs font-bold text-zinc-600"
                 >
                   {t('tenantBtnCancel')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#20a8a3] rounded-xl cursor-pointer shadow-sm shadow-[#2AC1BC]/25"
                 >
                   {isSubmitting ? t('tenantSubmitting') : t('tenantBtnSubmitOfficial')}
                 </Button>
@@ -830,12 +790,11 @@ export default function TenantAdminComplaintsPage() {
                 </span>
                 {getStatusBadge(selectedGrievance.status)}
               </div>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={() => setSelectedGrievance(null)}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -922,9 +881,8 @@ export default function TenantAdminComplaintsPage() {
             </div>
 
             <div className="p-4 border-t border-zinc-100 flex justify-end bg-zinc-50/50">
-              <Button
+              <Button size="xs"
                 onClick={() => setSelectedGrievance(null)}
-                className="px-5 py-2 text-xs font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl"
               >
                 {t('tenantBtnClose')}
               </Button>
@@ -953,20 +911,20 @@ export default function TenantAdminComplaintsPage() {
               <p className="text-xs text-zinc-500">{t('tenantConfirmCloseFormDesc')}</p>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <Button
+              <Button size="xs"
                 variant="ghost"
                 onClick={() => setShowExitConfirm(false)}
-                className="flex-1 py-2 text-xs font-bold text-zinc-700"
+                className="flex-1"
               >
                 {t('tenantBtnKeepEditing')}
               </Button>
-              <Button
+              <Button size="xs" variant="danger"
                 onClick={() => {
                   setShowExitConfirm(false)
                   setIsModalOpen(false)
                   resetForm()
                 }}
-                className="flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+                className="flex-1"
               >
                 {t('tenantBtnDiscardAndClose')}
               </Button>
@@ -989,12 +947,11 @@ export default function TenantAdminComplaintsPage() {
               <span className="text-xs font-bold text-zinc-700">
                 {t('tenantEvidencePhotoTitle')}
               </span>
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 type="button"
                 onClick={() => setPreviewImage(null)}
-                className="p-1 h-auto hover:bg-zinc-100 rounded-full cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </Button>

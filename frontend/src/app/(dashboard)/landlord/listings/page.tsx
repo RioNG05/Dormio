@@ -372,11 +372,6 @@ export default function ListingsPage() {
                 setPageSize(6)
                 setPage(1)
               }}
-              className={`h-auto flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === 'grid'
-                  ? 'bg-white text-[#FF6B35] shadow-sm hover:bg-white hover:text-[#FF6B35]'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" /> {t('landlordListingsViewGrid')}
             </Button>
@@ -389,11 +384,6 @@ export default function ListingsPage() {
                 setPageSize(10)
                 setPage(1)
               }}
-              className={`h-auto flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                viewMode === 'table'
-                  ? 'bg-white text-[#FF6B35] shadow-sm hover:bg-white hover:text-[#FF6B35]'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
             >
               <List className="w-3.5 h-3.5" /> {t('landlordListingsViewList')}
             </Button>
@@ -529,11 +519,6 @@ export default function ListingsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStatus(item)}
-                        className={`h-auto flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                          item.status === 'posted'
-                            ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
-                            : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                        }`}
                         title={
                           item.status === 'posted'
                             ? t('landlordListingsTitleHide')
@@ -624,7 +609,6 @@ export default function ListingsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStatus(item)}
-                        className="h-auto px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold transition-colors cursor-pointer"
                       >
                         {item.status === 'posted'
                           ? t('landlordListingsBtnToggleHide')
@@ -672,7 +656,6 @@ export default function ListingsPage() {
               size="sm"
               disabled={page <= 1}
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              className="h-8 w-8 p-0 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title={t('landlordListingsPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -685,7 +668,6 @@ export default function ListingsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setPage(1)}
-                  className="h-8 w-8 p-0 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
                 >
                   1
                 </Button>
@@ -700,11 +682,6 @@ export default function ListingsPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setPage(num)}
-                className={`h-8 w-8 p-0 font-bold rounded-xl transition-colors cursor-pointer ${
-                  page === num
-                    ? 'bg-[#FF6B35] text-white shadow-sm shadow-[#FF6B35]/20 hover:bg-[#FF6B35]/90 hover:text-white'
-                    : 'border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                }`}
               >
                 {num}
               </Button>
@@ -718,7 +695,6 @@ export default function ListingsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setPage(totalPages)}
-                  className="h-8 w-8 p-0 font-bold border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors"
                 >
                   {totalPages}
                 </Button>
@@ -731,7 +707,6 @@ export default function ListingsPage() {
               size="sm"
               disabled={page >= totalPages}
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              className="h-8 w-8 p-0 rounded-xl hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               title={t('landlordListingsPaginationNext')}
             >
               <ChevronRight className="w-4 h-4" />

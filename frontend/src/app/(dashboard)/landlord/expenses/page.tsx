@@ -485,14 +485,13 @@ export default function ExpensesPage() {
             {t('landlordExpensesExportExcel')}
           </Button>
 
-          <Button
+          <Button variant="dark"
             size="sm"
             onClick={() => {
               resetForm()
               setShowCreateModal(true)
             }}
-            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
-            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
+            leftIcon={<Plus className="shrink-0" />}
           >
             {t('landlordExpensesAddNew')}
           </Button>
@@ -612,29 +611,17 @@ export default function ExpensesPage() {
           {/* View Switcher (Grid vs Table) per Rule #9 */}
           <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
             <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="sm"
+              variant={viewMode === 'grid' ? 'white' : 'ghost'}
+              size="icon-sm"
               onClick={() => setViewMode('grid')}
-              className={cn(
-                'p-1.5 h-auto rounded-lg text-xs font-bold transition-all',
-                viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900',
-              )}
               title={t('landlordExpensesViewGrid')}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
             </Button>
             <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
+              variant={viewMode === 'table' ? 'white' : 'ghost'}
+              size="icon-sm"
               onClick={() => setViewMode('table')}
-              className={cn(
-                'p-1.5 h-auto rounded-lg text-xs font-bold transition-all',
-                viewMode === 'table'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900',
-              )}
               title={t('landlordExpensesViewTable')}
             >
               <List className="w-3.5 h-3.5" />
@@ -688,14 +675,13 @@ export default function ExpensesPage() {
           <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
           <h3 className="font-extrabold text-sm text-zinc-800">{t('landlordExpensesNotFound')}</h3>
           <p className="text-xs text-zinc-400">{t('landlordExpensesNotFoundDesc')}</p>
-          <Button
+          <Button variant="dark"
             size="sm"
             onClick={() => {
               resetForm()
               setShowCreateModal(true)
             }}
-            leftIcon={<Plus className="w-4 h-4" />}
-            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
+            leftIcon={<Plus  />}
           >
             {t('landlordExpensesAddNew')}
           </Button>
@@ -756,16 +742,16 @@ export default function ExpensesPage() {
                   variant="secondary"
                   size="sm"
                   onClick={() => setSelectedExpense(exp)}
-                  className="flex-1 text-center"
+                  className="flex-1"
                 >
                   {t('landlordExpensesViewDetail')}
                 </Button>
 
                 {exp.status === 'pending' && (
-                  <Button
+                  <Button variant="dark"
                     size="sm"
                     onClick={() => handleMarkAsPaid(exp.id)}
-                    className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black whitespace-nowrap shadow-sm"
+                    className="whitespace-nowrap"
                     title={t('landlordExpensesMarkPaid')}
                   >
                     {t('landlordExpensesMarkPaid')}
@@ -778,7 +764,6 @@ export default function ExpensesPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => openEditModal(exp)}
-                      className="p-1.5 h-auto text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                       title={t('landlordExpensesLockedTooltip')}
                     >
                       <Lock className="w-4 h-4 text-amber-500" />
@@ -788,7 +773,6 @@ export default function ExpensesPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => openEditModal(exp)}
-                      className="p-1.5 h-auto text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100"
                       title={t('landlordExpensesEditTooltip')}
                     >
                       <Edit3 className="w-4 h-4" />
@@ -798,7 +782,6 @@ export default function ExpensesPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeleteExpense(exp)}
-                    className="p-1.5 h-auto text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
                     title={t('landlordExpensesDeleteTooltip')}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -877,7 +860,6 @@ export default function ExpensesPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => setSelectedExpense(exp)}
-                          className="px-2.5 py-1 h-auto text-[11px] font-bold rounded-lg"
                         >
                           {t('landlordExpensesDetailBtn')}
                         </Button>
@@ -886,7 +868,6 @@ export default function ExpensesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditModal(exp)}
-                            className="p-1 h-auto text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                             title={t('landlordExpensesLockedTooltip')}
                           >
                             <Lock className="w-3.5 h-3.5 text-amber-500" />
@@ -896,7 +877,6 @@ export default function ExpensesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditModal(exp)}
-                            className="p-1 h-auto text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100"
                             title={t('landlordExpensesEditTooltip')}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -907,7 +887,6 @@ export default function ExpensesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditModal(exp)}
-                            className="p-1 h-auto text-zinc-300 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                             title={t('landlordExpensesLockedDeleteTooltip')}
                           >
                             <Trash2 className="w-3.5 h-3.5 text-zinc-300 hover:text-amber-500" />
@@ -917,7 +896,6 @@ export default function ExpensesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteExpense(exp)}
-                            className="p-1 h-auto text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
                             title={t('landlordExpensesDeleteTooltip')}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -966,7 +944,6 @@ export default function ExpensesPage() {
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage <= 1}
-              className="p-2 h-auto rounded-xl"
               title={t('landlordExpensesPaginationPrev')}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -975,15 +952,9 @@ export default function ExpensesPage() {
             {visiblePages.map(pageNum => (
               <Button
                 key={pageNum}
-                variant={pageNum === currentPage ? 'primary' : 'secondary'}
-                size="sm"
+                variant={pageNum === currentPage ? 'primary' : 'outline'}
+                size="icon-sm"
                 onClick={() => setCurrentPage(pageNum)}
-                className={cn(
-                  'min-w-[36px] h-9 px-3 rounded-xl text-xs font-bold transition-all',
-                  pageNum === currentPage
-                    ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-sm shadow-[#2AC1BC]/30'
-                    : 'bg-zinc-50 text-zinc-700 hover:bg-zinc-100 border border-zinc-200',
-                )}
               >
                 {pageNum}
               </Button>
@@ -994,7 +965,6 @@ export default function ExpensesPage() {
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage >= totalPages}
-              className="p-2 h-auto rounded-xl"
               title={t('landlordExpensesPaginationNext')}
             >
               <ChevronRight className="w-4 h-4" />
@@ -1029,10 +999,10 @@ export default function ExpensesPage() {
               </div>
 
               <Button
+                rounded="full"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setSelectedExpense(null)}
-                className="p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 shrink-0"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1103,18 +1073,18 @@ export default function ExpensesPage() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setSelectedExpense(null)}
-                className="w-full sm:w-auto"
+                className="sm:w-auto"
               >
                 {t('landlordExpensesCloseBtn')}
               </Button>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {selectedExpense.status === 'pending' && (
-                  <Button
+                  <Button variant="dark"
                     size="sm"
                     onClick={() => handleMarkAsPaid(selectedExpense.id)}
-                    className="w-full sm:w-auto bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black whitespace-nowrap shadow-md"
-                    leftIcon={<Check className="w-4 h-4 shrink-0" />}
+                    className="sm:w-auto whitespace-nowrap"
+                    leftIcon={<Check className="shrink-0" />}
                   >
                     {t('landlordExpensesStatusPaid')}
                   </Button>
@@ -1125,22 +1095,22 @@ export default function ExpensesPage() {
                     variant="secondary"
                     size="sm"
                     onClick={() => openEditModal(selectedExpense)}
-                    className="w-full sm:w-auto bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 border-amber-200 font-bold whitespace-nowrap"
+                    className="sm:w-auto whitespace-nowrap"
                     title={t('landlordExpensesLockedTooltip')}
-                    leftIcon={<Lock className="w-4 h-4 text-amber-600 shrink-0" />}
+                    leftIcon={<Lock className="shrink-0" />}
                   >
                     {t('landlordExpensesLockedBtn')}
                   </Button>
                 ) : (
-                  <Button
+                  <Button variant="dark"
                     size="sm"
                     onClick={() => {
                       const expToEdit = selectedExpense
                       setSelectedExpense(null)
                       openEditModal(expToEdit)
                     }}
-                    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white font-black whitespace-nowrap shadow-md"
-                    leftIcon={<Edit3 className="w-4 h-4 shrink-0" />}
+                    className="sm:w-auto whitespace-nowrap"
+                    leftIcon={<Edit3 className="shrink-0" />}
                   >
                     {t('landlordExpensesEditBtn')}
                   </Button>
@@ -1180,11 +1150,10 @@ export default function ExpensesPage() {
                 </div>
               </div>
 
-              <Button
+              <Button rounded="full"
                 variant="ghost"
                 size="sm"
                 onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1349,13 +1318,12 @@ export default function ExpensesPage() {
               >
                 {t('landlordExpensesCancelBtn')}
               </Button>
-              <Button
+              <Button variant="dark"
                 size="sm"
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
                 onClick={showCreateModal ? handleCreateExpense : handleUpdateExpense}
-                leftIcon={!isSubmitting ? <Check className="w-4 h-4" /> : undefined}
-                className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black shadow-md"
+                leftIcon={!isSubmitting ? <Check  /> : undefined}
               >
                 {showCreateModal
                   ? t('landlordExpensesSaveExpense')
@@ -1393,7 +1361,7 @@ export default function ExpensesPage() {
               <Button
                 variant="danger"
                 onClick={handleConfirmCloseModal}
-                className="flex-1 font-black shadow-md"
+                className="flex-1"
               >
                 {t('landlordExpensesDiscardAndClose')}
               </Button>
@@ -1437,7 +1405,7 @@ export default function ExpensesPage() {
               <Button
                 variant="danger"
                 onClick={confirmDeleteExpense}
-                className="flex-1 font-black shadow-md"
+                className="flex-1"
               >
                 {t('landlordExpensesDeleteBtn')}
               </Button>
@@ -1470,9 +1438,8 @@ export default function ExpensesPage() {
               </p>
             </div>
             <div className="pt-2">
-              <Button
+              <Button fullWidth variant="dark"
                 onClick={() => setLockedExpenseTarget(null)}
-                className="w-full bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black shadow-md"
               >
                 {t('landlordExpensesUnderstand')}
               </Button>

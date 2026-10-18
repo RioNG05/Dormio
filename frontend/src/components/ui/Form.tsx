@@ -514,7 +514,7 @@ export const FormAlert: React.FC<FormAlertProps> = ({
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="w-6 h-6 p-0 hover:bg-black/5 rounded-lg shrink-0 -mt-1 -mr-1"
+          className="shrink-0 -mt-1 -mr-1"
         >
           <X className="w-3.5 h-3.5" />
         </Button>

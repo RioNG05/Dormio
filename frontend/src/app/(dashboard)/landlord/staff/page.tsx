@@ -523,8 +523,7 @@ export default function StaffPage() {
               resetOnboardForm()
               setIsOnboardModalOpen(true)
             }}
-            leftIcon={<Plus className="w-4 h-4" />}
-            className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold"
+            leftIcon={<Plus  />}
           >
             {t('landlordStaffAddNew')}
           </Button>
@@ -730,7 +729,6 @@ export default function StaffPage() {
               resetOnboardForm()
               setIsOnboardModalOpen(true)
             }}
-            className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold"
           >
             {t('landlordStaffAddNow')}
           </Button>
@@ -824,7 +822,6 @@ export default function StaffPage() {
                         setSelectedStaff(staff)
                         setIsDetailModalOpen(true)
                       }}
-                      className="text-xs font-bold text-zinc-600 hover:text-zinc-900"
                     >
                       {t('landlordStaffBtnDetail')}
                     </Button>
@@ -832,9 +829,8 @@ export default function StaffPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenAssignRoleModal(staff)}
-                      className="text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
                       title={t('landlordStaffBtnAssignRoleTooltip')}
-                      leftIcon={<Edit3 className="w-3 h-3" />}
+                      leftIcon={<Edit3  />}
                     >
                       {t('landlordStaffBtnAssignRole')}
                     </Button>
@@ -850,7 +846,7 @@ export default function StaffPage() {
                         ? 'text-rose-600 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/60'
                         : 'text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30',
                     )}
-                    leftIcon={<Power className="w-3 h-3" />}
+                    leftIcon={<Power  />}
                   >
                     {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
                   </Button>
@@ -927,7 +923,6 @@ export default function StaffPage() {
                             size="sm"
                             variant="secondary"
                             onClick={() => handleOpenAssignRoleModal(staff)}
-                            className="px-2.5 py-1 h-auto text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-lg"
                             title={t('landlordStaffBtnAssignRoleTooltip')}
                           >
                             {t('landlordStaffBtnAssignRole')}
@@ -939,7 +934,6 @@ export default function StaffPage() {
                               setSelectedStaff(staff)
                               setIsDetailModalOpen(true)
                             }}
-                            className="px-2.5 py-1 h-auto text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg"
                           >
                             {t('landlordStaffBtnDetail')}
                           </Button>
@@ -1076,7 +1070,6 @@ export default function StaffPage() {
                 size="sm"
                 type="button"
                 onClick={() => handleAttemptCloseModal('onboard')}
-                className="p-1.5 rounded-xl hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-600"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1119,12 +1112,12 @@ export default function StaffPage() {
                         leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
                       />
                     </div>
-                    <Button
+                    <Button variant="dark"
                       type="button"
                       onClick={() => handleSearchPhone(lookupPhone)}
                       disabled={isSearchingUser || !lookupPhone.trim()}
                       isLoading={isSearchingUser}
-                      className="bg-zinc-900 hover:bg-zinc-800 text-white shrink-0"
+                      className="shrink-0"
                     >
                       {t('landlordStaffOnboardBtnCheck')}
                     </Button>
@@ -1206,7 +1199,7 @@ export default function StaffPage() {
                       size="sm"
                       type="button"
                       onClick={() => setIsCreatingNewPosition(!isCreatingNewPosition)}
-                      className="text-[11px] font-bold text-[#2AC1BC] hover:underline h-auto p-0"
+                      className="hover:underline"
                     >
                       {isCreatingNewPosition
                         ? t('landlordStaffOnboardSelectExistingPos')
@@ -1292,7 +1285,6 @@ export default function StaffPage() {
                   type="submit"
                   disabled={isSubmitting || (foundUser?.isAlreadyStaffAtThisHouse ?? false)}
                   isLoading={isSubmitting}
-                  className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold shadow-md shadow-[#2AC1BC]/20"
                 >
                   {t('landlordStaffOnboardBtnSave')}
                 </Button>
@@ -1336,7 +1328,6 @@ export default function StaffPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleAttemptCloseModal('assignRole')}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1371,11 +1362,11 @@ export default function StaffPage() {
                     {t('landlordStaffAssignSelectRoleLabel')}{' '}
                     <span className="text-rose-500">*</span>
                   </label>
-                  <Button
+                  <Button size="xs"
                     type="button"
                     variant="ghost"
                     onClick={() => setIsAssignCreatingNew(!isAssignCreatingNew)}
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer p-0 h-auto"
+                    className="hover:underline"
                   >
                     {isAssignCreatingNew
                       ? t('landlordStaffOnboardSelectExistingPos')
@@ -1439,18 +1430,16 @@ export default function StaffPage() {
 
               {/* Modal Actions */}
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('assignRole')}
-                  className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
                 >
                   {t('landlordStaffAssignBtnCancel')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isAssignSubmitting}
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-50 rounded-xl transition-all shadow-md shadow-[#2AC1BC]/20 cursor-pointer flex items-center gap-2"
                 >
                   {isAssignSubmitting ? (
                     <>
@@ -1501,7 +1490,6 @@ export default function StaffPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleAttemptCloseModal('positions')}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1527,14 +1515,13 @@ export default function StaffPage() {
                         ? t('landlordStaffPositionsEditTitle')
                         : t('landlordStaffPositionsAddTitle')}
                     </h4>
-                    <Button
+                    <Button size="xs"
                       type="button"
                       variant="ghost"
                       onClick={() => {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
                       }}
-                      className="text-[11px] text-zinc-400 hover:text-zinc-700 font-bold p-0 h-auto"
                     >
                       {t('landlordStaffPositionsBtnCloseForm')}
                     </Button>
@@ -1571,7 +1558,6 @@ export default function StaffPage() {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
                       }}
-                      className="px-3 py-1.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
                     >
                       {t('landlordStaffPositionsBtnCancel')}
                     </Button>
@@ -1579,7 +1565,6 @@ export default function StaffPage() {
                       type="submit"
                       disabled={isPosSubmitting}
                       size="sm"
-                      className="px-4 py-1.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-xs"
                     >
                       {isPosSubmitting
                         ? t('landlordStaffPositionsBtnSaving')
@@ -1596,7 +1581,7 @@ export default function StaffPage() {
                     {t('landlordStaffPositionsListTitle', { count: positions.length })}
                   </span>
                   {!isAddingPositionInline && !editingPosition && (
-                    <Button
+                    <Button size="icon"
                       type="button"
                       variant="ghost"
                       onClick={() => {
@@ -1605,7 +1590,7 @@ export default function StaffPage() {
                         setPosFormName('')
                         setPosFormDesc('')
                       }}
-                      className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer p-0 h-auto"
+                      className="hover:underline"
                     >
                       <Plus className="w-3.5 h-3.5" /> {t('landlordStaffPositionsBtnAddNew')}
                     </Button>
@@ -1643,7 +1628,6 @@ export default function StaffPage() {
                             setPosFormName(pos.name)
                             setPosFormDesc(pos.description || '')
                           }}
-                          className="p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                           title={t('landlordStaffPositionsEditTooltip')}
                         >
                           <Edit3 className="w-4 h-4" />
@@ -1654,7 +1638,6 @@ export default function StaffPage() {
                           size="sm"
                           onClick={() => handleDeletePosition(pos)}
                           disabled={(pos.staffCount || 0) > 0}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer h-auto w-auto"
                           title={
                             (pos.staffCount || 0) > 0
                               ? t('landlordStaffPositionsCannotDeleteTooltip')
@@ -1671,11 +1654,10 @@ export default function StaffPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('positions')}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffPositionsBtnClose')}
               </Button>
@@ -1727,7 +1709,7 @@ export default function StaffPage() {
               </div>
             </div>
 
-            <Button
+            <Button fullWidth size="xs" variant="dark"
               onClick={() =>
                 copyToClipboard(
                   t('landlordStaffCredShareMessage', {
@@ -1736,7 +1718,6 @@ export default function StaffPage() {
                   }),
                 )
               }
-              className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {copiedPassword ? (
                 <>
@@ -1751,10 +1732,9 @@ export default function StaffPage() {
               )}
             </Button>
 
-            <Button
+            <Button size="xs"
               variant="ghost"
               onClick={() => setCredentialModal(prev => ({ ...prev, isOpen: false }))}
-              className="text-xs font-bold text-zinc-500 hover:text-zinc-800 transition-colors p-0 h-auto"
             >
               {t('landlordStaffCredCloseBtn')}
             </Button>
@@ -1790,7 +1770,6 @@ export default function StaffPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsDetailModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors h-auto w-auto"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -1856,30 +1835,27 @@ export default function StaffPage() {
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
+              <Button size="xs"
                 onClick={() => {
                   handleOpenAssignRoleModal(selectedStaff)
                   setIsDetailModalOpen(false)
                 }}
-                className="px-3.5 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffBtnAssignRole')}
               </Button>
-              <Button
+              <Button size="xs"
                 variant="secondary"
                 onClick={() => {
                   handleToggleStatus(selectedStaff)
                   setIsDetailModalOpen(false)
                 }}
-                className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
               >
                 {selectedStaff.status === 'active'
                   ? t('landlordStaffBtnDeactivate')
                   : t('landlordStaffBtnActivate')}
               </Button>
-              <Button
+              <Button size="xs" variant="dark"
                 onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffDetailBtnClose')}
               </Button>
@@ -1913,19 +1889,19 @@ export default function StaffPage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordStaffConfirmCloseKeep')}
               </Button>
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="danger"
                 onClick={handleConfirmClose}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
+                className="flex-1"
               >
                 {t('landlordStaffConfirmCloseDiscard')}
               </Button>

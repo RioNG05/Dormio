@@ -421,19 +421,19 @@ export default function SendApplicationPage() {
 
           <div>
             {isLoggedIn ? (
-              <Button
+              <Button size="xs"
                 onClick={() => {
                   resetForm()
                   setIsModalOpen(true)
                 }}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs sm:text-sm font-bold shadow-lg shadow-[#2AC1BC]/25 cursor-pointer transition-all hover:scale-105 active:scale-95"
+                className="sm:w-auto sm:text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span>{t('btnNewApplication')}</span>
               </Button>
             ) : (
               <Link href="/login?from=/send-application">
-                <Button className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs sm:text-sm font-bold shadow-lg shadow-[#2AC1BC]/25 cursor-pointer">
+                <Button size="xs" className="sm:w-auto sm:text-sm">
                   <LogIn className="w-4 h-4" />
                   <span>{t('loginBtn')}</span>
                 </Button>
@@ -457,7 +457,7 @@ export default function SendApplicationPage() {
             </p>
             <div className="pt-2">
               <Link href="/login?from=/send-application">
-                <Button className="px-6 py-2.5 rounded-2xl bg-[#2AC1BC] hover:bg-[#23B3AE] text-white text-xs font-bold shadow-md cursor-pointer">
+                <Button size="xs" >
                   <LogIn className="w-4 h-4 mr-2" />
                   <span>{t('loginBtn')}</span>
                 </Button>
@@ -634,12 +634,11 @@ export default function SendApplicationPage() {
                   {t('emptyListDesc')}
                 </p>
                 <div className="pt-2">
-                  <Button
+                  <Button size="xs"
                     onClick={() => {
                       resetForm()
                       setIsModalOpen(true)
                     }}
-                    className="px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5 mr-1.5" />
                     <span>{t('btnNewApplication')}</span>
@@ -765,7 +764,6 @@ export default function SendApplicationPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-[11px] font-bold rounded-xl"
                               >
                                 <Eye className="w-3.5 h-3.5 mr-1" />
                                 <span>{t('viewDetailBtn')}</span>
@@ -1038,18 +1036,16 @@ export default function SendApplicationPage() {
 
               {/* Action Buttons */}
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-zinc-100">
-                <Button
+                <Button size="xs"
                   type="button"
                   variant="outline"
                   onClick={handleCloseModal}
-                  className="rounded-2xl px-5 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 cursor-pointer"
                 >
                   {t('cancelBtn')}
                 </Button>
-                <Button
+                <Button size="xs"
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-2xl px-6 py-2.5 text-xs font-bold bg-[#2AC1BC] hover:bg-[#23B3AE] text-white shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? t('submittingBtn') : t('submitBtn')}
                 </Button>
@@ -1078,22 +1074,20 @@ export default function SendApplicationPage() {
               </p>
             </div>
             <div className="flex items-center justify-center gap-3 pt-2">
-              <Button
+              <Button size="xs"
                 type="button"
                 variant="outline"
                 onClick={() => setShowExitConfirm(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-zinc-700"
               >
                 {t('continueEditingBtn')}
               </Button>
-              <Button
+              <Button size="xs" variant="danger"
                 type="button"
                 onClick={() => {
                   setShowExitConfirm(false)
                   setIsModalOpen(false)
                   resetForm()
                 }}
-                className="rounded-xl px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white"
               >
                 {t('discardAndCloseBtn')}
               </Button>
@@ -1212,10 +1206,9 @@ export default function SendApplicationPage() {
             </div>
 
             <div className="pt-2 flex justify-end">
-              <Button
+              <Button size="xs"
                 variant="outline"
                 onClick={() => setSelectedApplication(null)}
-                className="rounded-xl px-5 py-2 text-xs font-bold text-zinc-700"
               >
                 {t('closeBtn')}
               </Button>

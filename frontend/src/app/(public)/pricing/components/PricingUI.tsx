@@ -262,28 +262,20 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
         {FEATURE_FLAGS.ENABLE_BHRP && (
           <div className="flex justify-center w-full">
             <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-zinc-100 rounded-3xl border border-zinc-200/80 max-w-xl w-full gap-2 sm:gap-0">
-              <Button
+              <Button size="xs"
                 id="tab-bhms"
                 variant="ghost"
                 onClick={() => router.push('/pricing/management-system', { scroll: false })}
-                className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
-                  isBhms
-                    ? 'bg-[#2AC1BC] text-white shadow-lg shadow-[#2AC1BC]/30 hover:bg-[#25aba6] hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className="flex-1 whitespace-nowrap"
               >
                 <Building2 className="w-4 h-4" /> {t('guestFeaturesBhmsTab')}
               </Button>
 
-              <Button
+              <Button size="xs"
                 id="tab-bhrp"
                 variant="ghost"
                 onClick={() => router.push('/pricing/rental-platform', { scroll: false })}
-                className={`flex-1 py-3 px-4 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap h-auto ${
-                  !isBhms
-                    ? 'bg-[#FF6B35] text-white shadow-lg shadow-[#FF6B35]/30 hover:bg-[#e85a26] hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className="flex-1 whitespace-nowrap"
               >
                 <QrCode className="w-4 h-4" /> {t('guestFeaturesBhrpTab')}
               </Button>
@@ -338,11 +330,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                   id="billing-monthly"
                   variant="ghost"
                   onClick={() => setBillingCycle('monthly')}
-                  className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer h-auto ${
-                    billingCycle === 'monthly'
-                      ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
-                      : 'text-zinc-500 hover:text-zinc-900'
-                  }`}
+                  className="sm:w-auto"
                 >
                   {t('guestPricingPayMonthly')}
                 </Button>
@@ -350,11 +338,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                   id="billing-yearly"
                   variant="ghost"
                   onClick={() => setBillingCycle('yearly')}
-                  className={`w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 h-auto ${
-                    billingCycle === 'yearly'
-                      ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-800 hover:text-white'
-                      : 'text-zinc-500 hover:text-zinc-900'
-                  }`}
+                  className="sm:w-auto"
                 >
                   <span>{t('guestPricingPayYearly')}</span>
                   <span className="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase">
@@ -499,8 +483,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                     }
                     className="pt-4"
                   >
-                    <Button
-                      className="w-full py-3.5 rounded-2xl text-xs font-black transition-all cursor-pointer shadow-md text-white h-auto"
+                    <Button fullWidth size="xs" variant="dark"
                       style={
                         plan.popular
                           ? { backgroundColor: accentColor }
@@ -659,7 +642,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
           </p>
           <div className="flex justify-center">
             <Link href="/register">
-              <Button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105 h-auto">
+              <Button size="xs" >
                 {t('guestPricingCtaBtn')} &rarr;
               </Button>
             </Link>
