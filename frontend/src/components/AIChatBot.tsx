@@ -95,6 +95,7 @@ export default function AIChatBot() {
       ])
     } finally {
       setIsLoading(false)
+      messagesEndRef.current?.focus()
     }
   }
 
@@ -107,7 +108,7 @@ export default function AIChatBot() {
           rounded="full"
           size="icon"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 !w-14 !h-14 shadow-lg hover:scale-105 z-[100] group relative"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 !w-14 !h-14 shadow-lg hover:scale-105 z-[100] group"
           title={t('aiChatBotTitle')}
           aria-label={t('aiChatBotTitle')}
         >
@@ -155,16 +156,14 @@ export default function AIChatBot() {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`flex gap-2 max-w-[85%] ${
-                    msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                  }`}
+                  className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      msg.role === 'user'
-                        ? 'bg-zinc-200 text-zinc-600'
-                        : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
+                      ? 'bg-zinc-200 text-zinc-600'
+                      : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
+                      }`}
                   >
                     {msg.role === 'user' ? (
                       <User className="w-4 h-4" />
@@ -173,11 +172,10 @@ export default function AIChatBot() {
                     )}
                   </div>
                   <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${
-                      msg.role === 'user'
-                        ? 'bg-[#2AC1BC] text-white rounded-tr-sm prose-invert'
-                        : 'bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
-                    }`}
+                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${msg.role === 'user'
+                      ? 'bg-[#2AC1BC] text-white rounded-tr-sm prose-invert'
+                      : 'bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
+                      }`}
                   >
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}

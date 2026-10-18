@@ -66,7 +66,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
       !requireTier(
         'plus',
         t('landlordContractDetailTierRequiredMsg') ||
-          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+        'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
       )
     ) {
       return
@@ -285,18 +285,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     setContract(prev =>
       prev
         ? {
-            ...prev,
-            price: formattedPrice,
-            priceNumber: Number(editPrice.replace(/[^\d]/g, '') || 0),
-            deposit: formattedDeposit,
-            depositNumber: Number(editDeposit.replace(/[^\d]/g, '') || 0),
-            paymentDate: editPaymentDate,
-            endDate: editEndDate || prev.endDate,
-            history: [
-              { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
-              ...(prev.history || []),
-            ],
-          }
+          ...prev,
+          price: formattedPrice,
+          priceNumber: Number(editPrice.replace(/[^\d]/g, '') || 0),
+          deposit: formattedDeposit,
+          depositNumber: Number(editDeposit.replace(/[^\d]/g, '') || 0),
+          paymentDate: editPaymentDate,
+          endDate: editEndDate || prev.endDate,
+          history: [
+            { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+            ...(prev.history || []),
+          ],
+        }
         : null,
     )
 
@@ -316,18 +316,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     setContract(prev =>
       prev
         ? {
-            ...prev,
-            endDate: extendEndDate,
-            status: 'Đang hiệu lực',
-            history: [
-              {
-                date: todayStr,
-                user: 'Admin (Chủ trọ)',
-                content: `Gia hạn hợp đồng tới ngày ${extendEndDate}`,
-              },
-              ...(prev.history || []),
-            ],
-          }
+          ...prev,
+          endDate: extendEndDate,
+          status: 'Đang hiệu lực',
+          history: [
+            {
+              date: todayStr,
+              user: 'Admin (Chủ trọ)',
+              content: `Gia hạn hợp đồng tới ngày ${extendEndDate}`,
+            },
+            ...(prev.history || []),
+          ],
+        }
         : null,
     )
 
@@ -353,9 +353,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     setContract(prev =>
       prev
         ? {
-            ...prev,
-            members: [...(prev.members || []), newMem],
-          }
+          ...prev,
+          members: [...(prev.members || []), newMem],
+        }
         : null,
     )
 
@@ -409,13 +409,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     setContract(prev =>
       prev
         ? {
-            ...prev,
-            status: 'Đã chấm dứt',
-            history: [
-              { date: todayStr, user: 'Admin (Chủ trọ)', content: 'Chấm dứt hợp đồng thuê phòng' },
-              ...(prev.history || []),
-            ],
-          }
+          ...prev,
+          status: 'Đã chấm dứt',
+          history: [
+            { date: todayStr, user: 'Admin (Chủ trọ)', content: 'Chấm dứt hợp đồng thuê phòng' },
+            ...(prev.history || []),
+          ],
+        }
         : null,
     )
 
@@ -476,15 +476,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 {t('landlordContractDetailRoomPrefix')} {contract.room}
               </h1>
               <span
-                className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${
-                  contract.status === 'Đang hiệu lực'
+                className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${contract.status === 'Đang hiệu lực'
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : contract.status === 'Quá hạn'
                       ? 'bg-rose-50 text-rose-700 border-rose-200'
                       : contract.status === 'Sắp hết hạn'
                         ? 'bg-amber-50 text-amber-700 border-amber-200'
                         : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                }`}
+                  }`}
               >
                 {contract.status}
               </span>
@@ -514,7 +513,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="primary"
-            size="sm"
             onClick={openExtendModal}
             leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
           >
@@ -524,7 +522,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={openEditModal}
             leftIcon={<Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" />}
           >
@@ -534,7 +531,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={handlePrintContract}
             leftIcon={<Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />}
           >
@@ -544,9 +540,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={() => setIsTerminateModalOpen(true)}
-            leftIcon={<Ban  />}
+            leftIcon={<Ban className="w-3.5 h-3.5" />}
           >
             {t('landlordContractDetailBtnTerminate')}
           </Button>
@@ -568,7 +563,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 variant="ghost"
                 size="sm"
                 onClick={openEditModal}
-                leftIcon={<Edit2  />}
+                leftIcon={<Edit2 />}
               >
                 {t('landlordContractDetailBtnEdit')}
               </Button>
@@ -701,7 +696,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 variant="outline"
                 size="sm"
                 onClick={openAddMemberModal}
-                leftIcon={<Plus  />}
+                leftIcon={<Plus />}
               >
                 {t('landlordContractDetailAddMemberBtn')}
               </Button>
@@ -1076,218 +1071,218 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              {addMemberTab === 'select' ? (
-                /* CÁCH 1: CHỌN KHÁCH THUÊ CÓ SẴN TRONG DATA */
-                <div className="space-y-4">
-                  <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-xs text-blue-700 font-semibold">
-                    {t('landlordContractDetailSearchMemberHint')}
-                  </div>
+          {addMemberTab === 'select' ? (
+            /* CÁCH 1: CHỌN KHÁCH THUÊ CÓ SẴN TRONG DATA */
+            <div className="space-y-4">
+              <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-xs text-blue-700 font-semibold">
+                {t('landlordContractDetailSearchMemberHint')}
+              </div>
 
-                  {/* Thanh Tìm Kiếm Khách Thuê */}
-                  <SearchInput
-                    label={t('landlordContractDetailSearchMemberLabel')}
-                    placeholder={t('landlordContractDetailSearchMemberPh')}
-                    value={memberSearchQuery}
-                    onChange={setMemberSearchQuery}
-                  />
+              {/* Thanh Tìm Kiếm Khách Thuê */}
+              <SearchInput
+                label={t('landlordContractDetailSearchMemberLabel')}
+                placeholder={t('landlordContractDetailSearchMemberPh')}
+                value={memberSearchQuery}
+                onChange={setMemberSearchQuery}
+              />
 
-                  {/* Dropdown danh sách kết quả tìm kiếm */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-xs font-bold text-zinc-700">
-                        {t('landlordContractDetailSelectMemberLabel')}
-                      </label>
-                      <span className="text-[10px] text-zinc-400 font-bold">
-                        {t('landlordContractDetailSelectMemberCount')
-                          .replace('{filtered}', String(filteredCustomers.length))
-                          .replace('{total}', String(existingCustomers.length))}
-                      </span>
-                    </div>
-                    <SelectInput
-                      value={selectedCustomerId}
-                      onChange={e => handleSelectExistingCustomer(e.target.value)}
-                    >
-                      <option value="">{t('landlordContractDetailSelectExistingPh')}</option>
-                      {filteredCustomers.map((cust, idx) => (
-                        <option key={`${cust.id}-${idx}`} value={cust.id}>
-                          {cust.name} — SĐT: {cust.phone} (CCCD: {cust.cccd})
-                        </option>
-                      ))}
-                    </SelectInput>
-                  </div>
+              {/* Dropdown danh sách kết quả tìm kiếm */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-zinc-700">
+                    {t('landlordContractDetailSelectMemberLabel')}
+                  </label>
+                  <span className="text-[10px] text-zinc-400 font-bold">
+                    {t('landlordContractDetailSelectMemberCount')
+                      .replace('{filtered}', String(filteredCustomers.length))
+                      .replace('{total}', String(existingCustomers.length))}
+                  </span>
+                </div>
+                <SelectInput
+                  value={selectedCustomerId}
+                  onChange={e => handleSelectExistingCustomer(e.target.value)}
+                >
+                  <option value="">{t('landlordContractDetailSelectExistingPh')}</option>
+                  {filteredCustomers.map((cust, idx) => (
+                    <option key={`${cust.id}-${idx}`} value={cust.id}>
+                      {cust.name} — SĐT: {cust.phone} (CCCD: {cust.cccd})
+                    </option>
+                  ))}
+                </SelectInput>
+              </div>
 
-                  {/* Preview Khách Thuê Đã Chọn */}
-                  {newMemberName ? (
-                    <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-200/80 space-y-1 text-xs">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                        {t('landlordContractDetailSelectedMemberTitle')}
-                      </span>
-                      <p className="font-extrabold text-zinc-900 text-sm">{newMemberName}</p>
-                      <p className="text-zinc-500 font-medium">
-                        {t('landlordContractDetailMemberPhoneLabel')}{' '}
-                        <strong className="text-zinc-800">{newMemberPhone}</strong> •{' '}
-                        {t('landlordContractDetailMemberCccdLabel')}{' '}
-                        <strong className="text-zinc-800">{newMemberCccd}</strong>
-                      </p>
-                    </div>
-                  ) : (
-                    memberSearchQuery && (
-                      /* Danh Sách Kết Quả Nhanh Click-to-Select */
-                      <div className="border border-zinc-200 rounded-xl divide-y divide-zinc-100 max-h-40 overflow-y-auto custom-scrollbar">
-                        {filteredCustomers.slice(0, 5).map((cust, idx) => (
-                          <div
-                            key={`quick-${cust.id}-${idx}`}
-                            onClick={() => handleSelectExistingCustomer(cust.id)}
-                            className="p-2.5 hover:bg-[#2AC1BC]/10 cursor-pointer transition-colors flex items-center justify-between text-xs"
-                          >
-                            <div>
-                              <span className="font-bold text-zinc-900 block">{cust.name}</span>
-                              <span className="text-[10px] text-zinc-500">
-                                {t('landlordContractDetailMemberPhoneLabel')} {cust.phone} •{' '}
-                                {t('landlordContractDetailMemberCccdLabel')} {cust.cccd}
-                              </span>
-                            </div>
-                            <span className="text-[10px] font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md">
-                              {t('landlordContractDetailSelectAction')}
-                            </span>
-                          </div>
-                        ))}
-                        {filteredCustomers.length === 0 && (
-                          <div className="p-3 text-center text-xs text-zinc-400">
-                            {t('landlordContractDetailNotFoundForQuery').replace(
-                              '{query}',
-                              memberSearchQuery,
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  )}
-
-                  <SelectInput
-                    label={t('landlordContractDetailMemberRelationLabel2')}
-                    value={newMemberRelation}
-                    onChange={e => {
-                      setNewMemberRelation(e.target.value)
-                      setIsDirty(true)
-                    }}
-                    options={[
-                      { value: 'Gia đình', label: t('landlordContractDetailRelationFamily') },
-                      { value: 'Bạn bè', label: t('landlordContractDetailRelationFriend') },
-                      { value: 'Đồng nghiệp', label: t('landlordContractDetailRelationColleague') },
-                      { value: 'Khác', label: t('landlordContractDetailRelationOther') },
-                    ]}
-                  />
+              {/* Preview Khách Thuê Đã Chọn */}
+              {newMemberName ? (
+                <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-200/80 space-y-1 text-xs">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                    {t('landlordContractDetailSelectedMemberTitle')}
+                  </span>
+                  <p className="font-extrabold text-zinc-900 text-sm">{newMemberName}</p>
+                  <p className="text-zinc-500 font-medium">
+                    {t('landlordContractDetailMemberPhoneLabel')}{' '}
+                    <strong className="text-zinc-800">{newMemberPhone}</strong> •{' '}
+                    {t('landlordContractDetailMemberCccdLabel')}{' '}
+                    <strong className="text-zinc-800">{newMemberCccd}</strong>
+                  </p>
                 </div>
               ) : (
-                /* CÁCH 2: TẠO MỚI TRONG HỢP ĐỒNG -> TỰ ĐỘNG ĐỒNG BỘ */
-                <div className="space-y-4">
-                  <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold">
-                    {t('landlordContractDetailCreateMemberHint').replace('{room}', contract.room)}
+                memberSearchQuery && (
+                  /* Danh Sách Kết Quả Nhanh Click-to-Select */
+                  <div className="border border-zinc-200 rounded-xl divide-y divide-zinc-100 max-h-40 overflow-y-auto custom-scrollbar">
+                    {filteredCustomers.slice(0, 5).map((cust, idx) => (
+                      <div
+                        key={`quick-${cust.id}-${idx}`}
+                        onClick={() => handleSelectExistingCustomer(cust.id)}
+                        className="p-2.5 hover:bg-[#2AC1BC]/10 cursor-pointer transition-colors flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <span className="font-bold text-zinc-900 block">{cust.name}</span>
+                          <span className="text-[10px] text-zinc-500">
+                            {t('landlordContractDetailMemberPhoneLabel')} {cust.phone} •{' '}
+                            {t('landlordContractDetailMemberCccdLabel')} {cust.cccd}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md">
+                          {t('landlordContractDetailSelectAction')}
+                        </span>
+                      </div>
+                    ))}
+                    {filteredCustomers.length === 0 && (
+                      <div className="p-3 text-center text-xs text-zinc-400">
+                        {t('landlordContractDetailNotFoundForQuery').replace(
+                          '{query}',
+                          memberSearchQuery,
+                        )}
+                      </div>
+                    )}
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TextInput
-                      label={t('landlordContractDetailMemberNameLabel')}
-                      required
-                      placeholder={t('landlordContractDetailMemberNamePh')}
-                      value={newMemberName}
-                      onChange={e => {
-                        setNewMemberName(e.target.value)
-                        setIsDirty(true)
-                      }}
-                    />
-
-                    <TextInput
-                      label={t('landlordContractDetailMemberPhoneLabel2')}
-                      required
-                      placeholder={t('landlordContractDetailMemberPhonePh')}
-                      value={newMemberPhone}
-                      onChange={e => {
-                        setNewMemberPhone(e.target.value)
-                        setIsDirty(true)
-                      }}
-                    />
-
-                    <TextInput
-                      label={t('landlordContractDetailMemberCccdLabel2')}
-                      required
-                      placeholder={t('landlordContractDetailMemberCccdPh')}
-                      value={newMemberCccd}
-                      onChange={e => {
-                        setNewMemberCccd(e.target.value)
-                        setIsDirty(true)
-                      }}
-                    />
-
-                    <DateInput
-                      label={t('landlordContractDetailMemberDobLabel')}
-                      value={newMemberDob}
-                      onChange={e => {
-                        setNewMemberDob(e.target.value)
-                        setIsDirty(true)
-                      }}
-                    />
-
-                    <SelectInput
-                      label={t('landlordContractDetailMemberGenderLabel')}
-                      value={newMemberGender}
-                      onChange={e => {
-                        setNewMemberGender(e.target.value as 'nam' | 'nu')
-                        setIsDirty(true)
-                      }}
-                      options={[
-                        { value: 'nam', label: t('landlordContractDetailGenderMale') },
-                        { value: 'nu', label: t('landlordContractDetailGenderFemale') },
-                      ]}
-                    />
-
-                    <SelectInput
-                      label={t('landlordContractDetailMemberRelationLabel2')}
-                      value={newMemberRelation}
-                      onChange={e => {
-                        setNewMemberRelation(e.target.value)
-                        setIsDirty(true)
-                      }}
-                      options={[
-                        { value: 'Gia đình', label: t('landlordContractDetailRelationFamily') },
-                        { value: 'Bạn bè', label: t('landlordContractDetailRelationFriend') },
-                        { value: 'Đồng nghiệp', label: t('landlordContractDetailRelationColleague') },
-                        { value: 'Khác', label: t('landlordContractDetailRelationOther') },
-                      ]}
-                    />
-
-                    <div className="sm:col-span-2">
-                      <TextInput
-                        label={t('landlordContractDetailMemberAddressLabel')}
-                        value={newMemberAddress}
-                        onChange={e => {
-                          setNewMemberAddress(e.target.value)
-                          setIsDirty(true)
-                        }}
-                      />
-                    </div>
-
-                    <TextInput
-                      label={t('landlordContractDetailMemberJobLabel')}
-                      value={newMemberJob}
-                      onChange={e => {
-                        setNewMemberJob(e.target.value)
-                        setIsDirty(true)
-                      }}
-                    />
-
-                    <TextInput
-                      label={t('landlordContractDetailMemberWorkplaceLabel')}
-                      value={newMemberWorkplace}
-                      onChange={e => {
-                        setNewMemberWorkplace(e.target.value)
-                        setIsDirty(true)
-                      }}
-                    />
-                  </div>
-                </div>
+                )
               )}
+
+              <SelectInput
+                label={t('landlordContractDetailMemberRelationLabel2')}
+                value={newMemberRelation}
+                onChange={e => {
+                  setNewMemberRelation(e.target.value)
+                  setIsDirty(true)
+                }}
+                options={[
+                  { value: 'Gia đình', label: t('landlordContractDetailRelationFamily') },
+                  { value: 'Bạn bè', label: t('landlordContractDetailRelationFriend') },
+                  { value: 'Đồng nghiệp', label: t('landlordContractDetailRelationColleague') },
+                  { value: 'Khác', label: t('landlordContractDetailRelationOther') },
+                ]}
+              />
+            </div>
+          ) : (
+            /* CÁCH 2: TẠO MỚI TRONG HỢP ĐỒNG -> TỰ ĐỘNG ĐỒNG BỘ */
+            <div className="space-y-4">
+              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold">
+                {t('landlordContractDetailCreateMemberHint').replace('{room}', contract.room)}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <TextInput
+                  label={t('landlordContractDetailMemberNameLabel')}
+                  required
+                  placeholder={t('landlordContractDetailMemberNamePh')}
+                  value={newMemberName}
+                  onChange={e => {
+                    setNewMemberName(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+
+                <TextInput
+                  label={t('landlordContractDetailMemberPhoneLabel2')}
+                  required
+                  placeholder={t('landlordContractDetailMemberPhonePh')}
+                  value={newMemberPhone}
+                  onChange={e => {
+                    setNewMemberPhone(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+
+                <TextInput
+                  label={t('landlordContractDetailMemberCccdLabel2')}
+                  required
+                  placeholder={t('landlordContractDetailMemberCccdPh')}
+                  value={newMemberCccd}
+                  onChange={e => {
+                    setNewMemberCccd(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+
+                <DateInput
+                  label={t('landlordContractDetailMemberDobLabel')}
+                  value={newMemberDob}
+                  onChange={e => {
+                    setNewMemberDob(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+
+                <SelectInput
+                  label={t('landlordContractDetailMemberGenderLabel')}
+                  value={newMemberGender}
+                  onChange={e => {
+                    setNewMemberGender(e.target.value as 'nam' | 'nu')
+                    setIsDirty(true)
+                  }}
+                  options={[
+                    { value: 'nam', label: t('landlordContractDetailGenderMale') },
+                    { value: 'nu', label: t('landlordContractDetailGenderFemale') },
+                  ]}
+                />
+
+                <SelectInput
+                  label={t('landlordContractDetailMemberRelationLabel2')}
+                  value={newMemberRelation}
+                  onChange={e => {
+                    setNewMemberRelation(e.target.value)
+                    setIsDirty(true)
+                  }}
+                  options={[
+                    { value: 'Gia đình', label: t('landlordContractDetailRelationFamily') },
+                    { value: 'Bạn bè', label: t('landlordContractDetailRelationFriend') },
+                    { value: 'Đồng nghiệp', label: t('landlordContractDetailRelationColleague') },
+                    { value: 'Khác', label: t('landlordContractDetailRelationOther') },
+                  ]}
+                />
+
+                <div className="sm:col-span-2">
+                  <TextInput
+                    label={t('landlordContractDetailMemberAddressLabel')}
+                    value={newMemberAddress}
+                    onChange={e => {
+                      setNewMemberAddress(e.target.value)
+                      setIsDirty(true)
+                    }}
+                  />
+                </div>
+
+                <TextInput
+                  label={t('landlordContractDetailMemberJobLabel')}
+                  value={newMemberJob}
+                  onChange={e => {
+                    setNewMemberJob(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+
+                <TextInput
+                  label={t('landlordContractDetailMemberWorkplaceLabel')}
+                  value={newMemberWorkplace}
+                  onChange={e => {
+                    setNewMemberWorkplace(e.target.value)
+                    setIsDirty(true)
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
 
