@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { BusinessErrorCode } from '../enums/business-error-code.enum'
 
 /**
  * Generic success response wrapper — mirrors TransformInterceptor output.
@@ -68,9 +69,16 @@ export class ApiErrorResponse {
   statusCode: number
 
   @ApiProperty({
+    enum: BusinessErrorCode,
+    example: BusinessErrorCode.AUTH_INVALID_CREDENTIALS,
+    description: 'Unique business error code for client-side handling and i18n translation',
+  })
+  code: BusinessErrorCode
+
+  @ApiProperty({
     description: 'Error code string or array of validation messages',
     oneOf: [
-      { type: 'string', example: 'phone_number_already_exists' },
+      { type: 'string', example: 'Invalid credentials provided' },
       { type: 'array', items: { type: 'string' }, example: ['field must not be empty'] },
     ],
   })
@@ -82,3 +90,4 @@ export class ApiErrorResponse {
   @ApiProperty({ example: '2026-01-01T00:00:00.000Z', description: 'ISO 8601 timestamp' })
   timestamp: string
 }
+

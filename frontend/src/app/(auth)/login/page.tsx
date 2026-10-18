@@ -7,11 +7,12 @@ import { Phone, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
-import { getHighestRoleRedirect } from '@/utils'
+import { getHighestRoleRedirect, resolveErrorMessage } from '@/utils'
 import { TextInput, Button, Checkbox, Form, Text } from '@/components/ui'
 
 export default function LoginPage() {
   const t = useTranslations('auth')
+  const tErrors = useTranslations('errors')
   const router = useRouter()
   const { loginWithToken } = useAuth()
 
@@ -70,12 +71,8 @@ export default function LoginPage() {
         router.push(targetUrl)
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : t('authLoginErrGeneric')
-      if (message.includes('invalid_credentials') || message.includes('401')) {
-        setError(t('authLoginErrInvalidCredentials'))
-      } else {
-        setError(message)
-      }
+      const message = resolveErrorMessage(err, tErrors, t('authLoginErrGeneric'))
+      setError(message)
     } finally {
       setIsLoading(false)
     }

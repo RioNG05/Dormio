@@ -196,6 +196,17 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 4. **Namespaces**: Place strings in their appropriate namespace: `common`, `nav`, `footer`, `auth`, `guest`, `landlord`, `tenant`, `employee`, `admin`. Keep `vi.ts` and `en.ts` strictly synchronized with matching key names.
 5. **No hardcoded user-facing strings**: Every user-visible string (labels, buttons, placeholders, headings, toast/error messages, aria-labels) **MUST** use the translation function `t(...)`.
 
+### Standardized Business Error Codes & Client i18n Mapping (MANDATORY)
+
+1. **Backend Error Codes**: All domain/business logic rejections MUST throw `BusinessException` with a defined code from `BusinessErrorCode` enum (`src/common/enums/business-error-code.enum.ts`):
+   - Prefixes by domain: `AUTH_*`, `TIER_*`, `HOUSE_*`, `ROOM_*`, `CONTRACT_*`, `INVOICE_*`, `PAYMENT_*`, `METER_*`, `ATTEND_*`, `COMMON_*`.
+   - Never throw plain ad-hoc error strings without a typed error code.
+   - All codes and exception messages must be strictly in English.
+2. **Frontend Translation**:
+   - Every `BusinessErrorCode` MUST have matching localization strings in `frontend/i8n/vi/errors.ts` and `frontend/i8n/en/errors.ts`.
+   - Never inspect error messages on the client using `message.includes(...)` or regex matching.
+   - Always use `resolveErrorMessage(err, tErrors, fallbackMessage)` from `@/utils` to guarantee fully localized display strings.
+
 ---
 
 ## Language Rules
@@ -220,4 +231,5 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 - Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.
 - Do NOT handle i18n messages directly on pages/components using inline ternary operators (e.g., `isEn ? ... : ...`) or hardcoded strings — all translations MUST be defined in `frontend/i8n/` (`vi.ts`, `en.ts`) and accessed via `useTranslations`.
 - Do NOT bypass the platform's central payOS gateway for financial transactions — all monetary payments (invoices, platform deposits, subscriptions, post purchases) MUST go through payOS.
+- Do NOT throw ad-hoc domain errors without a typed `BusinessErrorCode` in backend, and do NOT parse client error strings with `.includes(...)` in frontend — always use `BusinessException` and `resolveErrorMessage()`.
 

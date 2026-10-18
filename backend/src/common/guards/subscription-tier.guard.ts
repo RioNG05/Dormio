@@ -12,6 +12,8 @@ import { SubscriptionPackage, SubscriptionStatus } from '@prisma'
 import { PrismaService } from '../prisma/prisma.service'
 import { REQUIRE_TIER_KEY } from '../decorators/require-tier.decorator'
 import { JwtPayload } from '../../modules/auth/types/jwt-payload.type'
+import { BusinessForbiddenException } from '../exceptions/business.exception'
+import { BusinessErrorCode } from '../enums/business-error-code.enum'
 
 export const TIER_WEIGHTS: Record<SubscriptionPackage, number> = {
   [SubscriptionPackage.free]: 0,
@@ -118,15 +120,15 @@ export class SubscriptionTierGuard implements CanActivate {
       const requiredName = TIER_DISPLAY_NAMES[requiredTier] ?? requiredTier
       const currentName = TIER_DISPLAY_NAMES[currentTier] ?? currentTier
 
-      throw new ForbiddenException({
-        statusCode: HttpStatus.FORBIDDEN,
-        error: 'Forbidden',
-        code: 'SUBSCRIPTION_TIER_REQUIRED',
-        message: `This feature requires the ${requiredName} plan or higher. Your current plan is ${currentName}. Please upgrade your subscription to access this feature.`,
-        requiredTier,
-        currentTier,
-        upgradeUrl: '/pricing',
-      })
+      throw new BusinessForbiddenException(
+        BusinessErrorCode.TIER_SUBSCRIPTION_REQUIRED,
+        `This feature requires the ${requiredName} plan or higher. Your current plan is ${currentName}. Please upgrade your subscription to access this feature.`,
+        {
+          requiredTier,
+          currentTier,
+          upgradeUrl: '/pricing',
+        },
+      )
     }
 
     req.subscriptionTier = currentTier

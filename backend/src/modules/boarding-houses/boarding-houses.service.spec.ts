@@ -349,7 +349,7 @@ describe('BoardingHousesService', () => {
       }
 
       await expect(service.setupBoardingHouse('user-1', overLimitDto)).rejects.toThrow(
-        'Gói đăng ký hiện tại chỉ cho phép tối đa 10 phòng',
+        'Current subscription plan allows a maximum of 10 rooms',
       )
 
       expect(mockPrisma.$transaction).not.toHaveBeenCalled()

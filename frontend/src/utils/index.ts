@@ -265,3 +265,6 @@ export function getHighestRoleRedirect(user: any): RoleRedirectInfo {
     rank: best.rank,
   }
 }
+
+export * from './error-resolver'
+

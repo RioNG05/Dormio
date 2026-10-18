@@ -7,11 +7,12 @@ import { User, Phone, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
-import { getHighestRoleRedirect } from '@/utils'
+import { getHighestRoleRedirect, resolveErrorMessage } from '@/utils'
 import { TextInput, Button, Checkbox, Form, Text } from '@/components/ui'
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
+  const tErrors = useTranslations('errors')
   const router = useRouter()
   const { loginWithToken } = useAuth()
 
@@ -112,17 +113,8 @@ export default function RegisterPage() {
 
       router.push(redirectPath)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : t('authLoginErrGeneric')
-      if (message.includes('phone') && (message.includes('exist') || message.includes('409'))) {
-        setError(t('authRegisterErrPhoneExists'))
-      } else if (
-        message.includes('email') &&
-        (message.includes('exist') || message.includes('409'))
-      ) {
-        setError(t('authRegisterErrEmailExists'))
-      } else {
-        setError(message)
-      }
+      const message = resolveErrorMessage(err, tErrors, t('authLoginErrGeneric'))
+      setError(message)
     } finally {
       setIsLoading(false)
     }

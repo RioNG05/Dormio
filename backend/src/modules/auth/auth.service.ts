@@ -1,11 +1,15 @@
 import {
   Injectable,
-  UnauthorizedException,
-  ConflictException,
-  BadRequestException,
+  HttpStatus,
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { PrismaService } from '../../common/prisma/prisma.service'
+import {
+  BusinessConflictException,
+  BusinessUnauthorizedException,
+  BusinessBadRequestException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import { RegisterDto } from './dto/register.dto'
 import { LoginDto } from './dto/login.dto'
 import { ChangePasswordDto } from './dto/change-password.dto'
@@ -32,7 +36,10 @@ export class AuthService {
       where: { phoneNumber },
     })
     if (existingByPhone) {
-      throw new ConflictException('phone_number_already_exists')
+      throw new BusinessConflictException(
+        BusinessErrorCode.AUTH_PHONE_ALREADY_EXISTS,
+        'This phone number is already registered in the system',
+      )
     }
 
     const email = dto.email?.trim() || null
@@ -42,7 +49,10 @@ export class AuthService {
         where: { email },
       })
       if (existingByEmail) {
-        throw new ConflictException('email_already_exists')
+        throw new BusinessConflictException(
+          BusinessErrorCode.AUTH_EMAIL_ALREADY_EXISTS,
+          'This email address is already in use by another account',
+        )
       }
     }
 
@@ -89,7 +99,10 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new UnauthorizedException('invalid_credentials')
+      throw new BusinessUnauthorizedException(
+        BusinessErrorCode.AUTH_INVALID_CREDENTIALS,
+        'Invalid credentials provided',
+      )
     }
 
     let isValid = false
@@ -107,7 +120,10 @@ export class AuthService {
     }
 
     if (!isValid) {
-      throw new UnauthorizedException('invalid_credentials')
+      throw new BusinessUnauthorizedException(
+        BusinessErrorCode.AUTH_INVALID_CREDENTIALS,
+        'Invalid credentials provided',
+      )
     }
 
     return {
@@ -126,11 +142,17 @@ export class AuthService {
 
     const isValid = await bcrypt.compare(dto.currentPassword, user.hashedPassword)
     if (!isValid) {
-      throw new BadRequestException('current_password_incorrect')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.AUTH_CURRENT_PASSWORD_INCORRECT,
+        'Current password is incorrect',
+      )
     }
 
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('new_password_must_differ')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.AUTH_NEW_PASSWORD_MUST_DIFFER,
+        'New password must be different from current password',
+      )
     }
 
     const hashedPassword = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS)

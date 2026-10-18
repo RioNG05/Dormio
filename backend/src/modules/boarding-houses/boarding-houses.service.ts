@@ -6,6 +6,11 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common'
+import {
+  BusinessNotFoundException,
+  BusinessForbiddenException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import { Prisma, SubscriptionPackage, SubscriptionStatus, UserRole } from '@prisma'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { CreateBoardingHouseDto } from './dto/create-boarding-house.dto'
@@ -61,7 +66,7 @@ export class BoardingHousesService {
 
     if (roomsToCreate > maxRoom) {
       throw new UnprocessableEntityException(
-        `Gói đăng ký hiện tại chỉ cho phép tối đa ${maxRoom} phòng. Bạn đang cố tạo ${roomsToCreate} phòng. Vui lòng nâng cấp gói hoặc giảm số phòng.`,
+        `Current subscription plan allows a maximum of ${maxRoom} rooms. You are attempting to create ${roomsToCreate} rooms. Please upgrade your plan or reduce the room count.`,
       )
     }
 
@@ -432,7 +437,8 @@ export class BoardingHousesService {
     })
 
     if (!house) {
-      throw new NotFoundException(
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.HOUSE_NOT_FOUND,
         'Boarding house not found or you do not have permission to access it',
       )
     }
@@ -454,7 +460,8 @@ export class BoardingHousesService {
     })
 
     if (!existing) {
-      throw new NotFoundException(
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.HOUSE_NOT_FOUND,
         'Boarding house not found or you do not have permission to access it',
       )
     }
@@ -532,7 +539,10 @@ export class BoardingHousesService {
     })
 
     if (!house) {
-      throw new NotFoundException('Boarding house not found or unauthorized')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.HOUSE_NOT_FOUND,
+        'Boarding house not found or unauthorized',
+      )
     }
 
     // 1. Room statistics (UC-L-08: Occupancy = COUNT(Room occupied) / COUNT(Room))
@@ -650,7 +660,7 @@ export class BoardingHousesService {
       return {
         id: c.id,
         room: `P.${c.room.roomNumber}`,
-        tenant: tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+        tenant: tenant?.username || tenant?.phoneNumber || 'Tenant',
         phone: tenant?.phoneNumber || '',
         daysLeft,
         endDate: c.endDate.toLocaleDateString('vi-VN'),
@@ -681,10 +691,10 @@ export class BoardingHousesService {
       return {
         id: d.id,
         room: `P.${d.room.roomNumber}`,
-        tenant: tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+        tenant: tenant?.username || tenant?.phoneNumber || 'Tenant',
         amount: Number(d.amount),
         date: d.createdAt.toLocaleDateString('vi-VN'),
-        type: d.type === 'platform' ? 'Cọc Escrow Dormio' : 'Cọc giữ phòng',
+        type: d.type === 'platform' ? 'Dormio Escrow Deposit' : 'Room Holding Deposit',
         status: d.status,
       }
     })
@@ -705,10 +715,10 @@ export class BoardingHousesService {
 
     const maintenanceRequests = grievancesRaw.map(g => ({
       id: g.id,
-      room: g.room ? `P.${g.room.roomNumber}` : 'Chung',
+      room: g.room ? `P.${g.room.roomNumber}` : 'Common',
       issue: g.title,
       priority: g.priority,
-      reporter: g.tenant?.username || g.tenant?.phoneNumber || 'Người thuê',
+      reporter: g.tenant?.username || g.tenant?.phoneNumber || 'Tenant',
       date: g.createdAt.toLocaleDateString('vi-VN'),
       status: g.status,
     }))
@@ -987,7 +997,7 @@ export class BoardingHousesService {
         id: c.id,
         propertyName: c.room.boardingHouse.name,
         room: `P.${c.room.roomNumber}`,
-        tenant: tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+        tenant: tenant?.username || tenant?.phoneNumber || 'Tenant',
         phone: tenant?.phoneNumber || '',
         daysLeft,
         endDate: c.endDate.toLocaleDateString('vi-VN'),
@@ -1152,7 +1162,7 @@ export class BoardingHousesService {
     })
 
     if (!firstHouse) {
-      throw new BadRequestException('Bạn chưa có nhà trọ nào để tạo chiến lược tiếp thị')
+      throw new BadRequestException('You do not have any boarding houses to generate a marketing strategy')
     }
 
     const underperforming = propertiesBreakdown.filter(
@@ -1164,52 +1174,52 @@ export class BoardingHousesService {
 
     const executiveSummary =
       portfolioSummary.totalProperties > 1
-        ? `Hệ thống đang vận hành ${portfolioSummary.totalProperties} cơ sở với tổng cộng ${portfolioSummary.totalRooms} phòng. Tỷ lệ lấp đầy đạt ${occRate}, hiện còn ${vacantTotal} phòng trống cần khai thác. Doanh thu thuần tháng này ước đạt ${portfolioSummary.netProfit} VNĐ sau khi trừ chi phí vận hành.`
-        : `Cơ sở hiện có ${portfolioSummary.totalRooms} phòng, đạt tỷ lệ lấp đầy ${occRate} với ${vacantTotal} phòng trống. Cần đẩy mạnh tiếp thị để đạt tỷ lệ tối ưu trên 90%.`
+        ? `System is operating ${portfolioSummary.totalProperties} properties with a total of ${portfolioSummary.totalRooms} rooms. Occupancy rate is ${occRate}, with ${vacantTotal} vacant rooms to optimize. Estimated net profit this month is ${portfolioSummary.netProfit} VND after operational expenses.`
+        : `Property currently has ${portfolioSummary.totalRooms} rooms, achieving an occupancy rate of ${occRate} with ${vacantTotal} vacant rooms. Boost marketing to reach optimal occupancy rate above 90%.`
 
     const pricingRecommendations = [
       vacantTotal > 0
-        ? `Áp dụng chính sách giá linh hoạt: Giảm 5% – 8% giá thuê tháng đầu tiên cho khách ký hợp đồng từ 6 tháng trở lên cho ${vacantTotal} phòng đang trống.`
-        : 'Tỷ lệ phòng trống thấp: Cân nhắc tăng nhẹ 3% – 5% giá thuê đối với các hợp đồng ký mới hoặc khi gia hạn để tối đa hóa biên lợi nhuận.',
-      'Cơ cấu lại phí dịch vụ (xe máy, wifi, vệ sinh) thành gói combo trọn gói nhằm gia tăng giá trị cảm nhận cho khách thuê trẻ tuổi.',
+        ? `Apply flexible pricing: Offer 5% – 8% off first month's rent for tenants signing contracts of 6 months or longer for ${vacantTotal} vacant rooms.`
+        : 'Low vacancy: Consider slightly increasing rent by 3% – 5% for new contracts or renewals to maximize margins.',
+      'Restructure service fees (parking, wifi, cleaning) into all-inclusive packages to enhance value perception for younger tenants.',
     ]
 
     const marketingCampaigns = [
-      'Đẩy mạnh tin đăng nổi bật trên nền tảng tìm trọ Dormio BHRP vào khung giờ vàng (11:00 - 13:00 và 19:00 - 21:00).',
+      'Promote featured listings on the Dormio BHRP platform during peak hours (11:00 - 13:00 and 19:00 - 21:00).',
       underperforming.length > 0
-        ? `Tập trung chiến dịch thu hút khách cho cơ sở "${underperforming[0].name}" qua nhóm sinh viên và cư dân văn phòng trong bán kính 3km.`
-        : 'Triển khai chương trình giới thiệu: Tặng 200.000đ trừ vào tiền phòng tháng kế tiếp cho người thuê hiện tại khi giới thiệu bạn bè thành công.',
-      'Chụp lại ảnh phòng với góc rộng, ánh sáng tự nhiên và bổ sung video ngắn 360 độ khu vực hành lang, tiện ích chung.',
+        ? `Target customer attraction campaigns for property "${underperforming[0].name}" towards student groups and office workers within a 3km radius.`
+        : 'Deploy referral program: Reward 200,000 VND credit on next month rent for existing tenants upon successful friend referrals.',
+      'Retake room photos with wide angles and natural light, and add short 360-degree videos of corridors and common amenities.',
     ]
 
     const operationalOptimizations = [
-      `Kiểm soát chi phí: Chi phí vận hành tháng này chiếm tỷ trọng đáng kể (${portfolioSummary.currentMonthExpenses} VNĐ). Cần rà soát các khoản điện nước chung và vật tư bảo trì.`,
-      `Công nợ tồn đọng: Tổng tiền chưa thu là ${portfolioSummary.unpaidDebt} VNĐ trên ${portfolioSummary.unpaidInvoicesCount} hóa đơn. Nên gửi thông báo nhắc lịch tự động trước 3 ngày qua Zalo/SMS.`,
+      `Cost control: Operating expenses this month represent a significant portion (${portfolioSummary.currentMonthExpenses} VND). Review shared utility bills and maintenance supplies.`,
+      `Outstanding receivables: Total uncollected revenue is ${portfolioSummary.unpaidDebt} VND across ${portfolioSummary.unpaidInvoicesCount} invoices. Schedule automated reminder notices 3 days before due date.`,
     ]
 
     const actionPlan30Days = [
       {
-        dayRange: 'Tuần 1 (Ngày 1 - 7)',
-        title: 'Rà soát danh mục phòng trống & Chụp ảnh chuẩn hóa',
-        description: `Kiểm tra hiện trạng ${vacantTotal} phòng trống, hoàn tất dọn dẹp và chụp ảnh mới với góc sáng đẹp để cập nhật lên tin đăng Dormio.`,
+        dayRange: 'Week 1 (Days 1 - 7)',
+        title: 'Review Vacant Room Portfolio & Standardize Photos',
+        description: `Inspect condition of ${vacantTotal} vacant rooms, complete cleaning, and take bright photos for Dormio listings.`,
       },
       {
-        dayRange: 'Tuần 2 (Ngày 8 - 15)',
-        title: 'Kích hoạt chính sách ưu đãi cọc & Đăng tin tiếp thị',
+        dayRange: 'Week 2 (Days 8 - 15)',
+        title: 'Activate Deposit Promotion & Launch Marketing Posts',
         description:
-          'Bật chiến dịch ưu đãi cọc linh hoạt 0.5 tháng và chia sẻ bài đăng vào các hội đồng hương sinh viên.',
+          'Enable flexible 0.5 month deposit promotion and share listings across student community groups.',
       },
       {
-        dayRange: 'Tuần 3 (Ngày 16 - 23)',
-        title: 'Chăm sóc khách thuê hiện tại & Thu hồi công nợ',
+        dayRange: 'Week 3 (Days 16 - 23)',
+        title: 'Engage Existing Tenants & Debt Collection',
         description:
-          'Gửi khảo sát nhanh về chất lượng phòng và đôn đốc xử lý các hóa đơn trễ hạn theo quy trình tự động.',
+          'Send quick surveys on room quality and follow up on overdue invoices via automated workflows.',
       },
       {
-        dayRange: 'Tuần 4 (Ngày 24 - 30)',
-        title: 'Đánh giá tỷ lệ chuyển đổi & Tái cân bằng ngân sách',
+        dayRange: 'Week 4 (Days 24 - 30)',
+        title: 'Evaluate Conversion Rates & Rebalance Budget',
         description:
-          'Tổng kết số lượng khách đã chốt cọc trong tháng, điều chỉnh giá cho các phòng còn lại và lập dự trù chi phí tháng tới.',
+          'Summarize monthly signed deposits, adjust pricing for remaining rooms, and plan next month expenses.',
       },
     ]
 
@@ -1232,7 +1242,7 @@ export class BoardingHousesService {
         data: {
           aiConversationId: conversation.id,
           role: 'user',
-          content: `Yêu cầu phân tích hiệu quả kinh doanh ${portfolioSummary.totalProperties} cơ sở, tỷ lệ lấp đầy ${occRate}, doanh thu ${portfolioSummary.currentMonthRevenue} VNĐ.`,
+          content: `Analyze operational performance for ${portfolioSummary.totalProperties} properties, occupancy rate ${occRate}, revenue ${portfolioSummary.currentMonthRevenue} VND.`,
           model: 'dormio-gpt-pro',
         },
       })
@@ -1250,7 +1260,7 @@ export class BoardingHousesService {
     }
 
     return {
-      title: `Chiến lược tiếp thị & Tối ưu kinh doanh toàn hệ thống (${portfolioSummary.totalProperties} cơ sở)`,
+      title: `Marketing Strategy & Business Optimization across system (${portfolioSummary.totalProperties} properties)`,
       executiveSummary,
       pricingRecommendations,
       marketingCampaigns,
@@ -1296,16 +1306,16 @@ export class BoardingHousesService {
     })
 
     if (existingCount >= maxHouses) {
-      throw new ForbiddenException({
-        statusCode: 403,
-        error: 'Forbidden',
-        code: 'BOARDING_HOUSE_LIMIT_REACHED',
-        message: `Your ${tier} plan allows a maximum of ${maxHouses} boarding house(s). You currently have ${existingCount}. Please upgrade your plan to add more properties.`,
-        currentTier: tier,
-        maxAllowed: maxHouses,
-        currentCount: existingCount,
-        upgradeUrl: '/pricing',
-      })
+      throw new BusinessForbiddenException(
+        BusinessErrorCode.TIER_BOARDING_HOUSE_LIMIT_REACHED,
+        `Your ${tier} plan allows a maximum of ${maxHouses} boarding house(s). You currently have ${existingCount}. Please upgrade your plan to add more properties.`,
+        {
+          currentTier: tier,
+          maxAllowed: maxHouses,
+          currentCount: existingCount,
+          upgradeUrl: '/pricing',
+        },
+      )
     }
   }
 
@@ -1571,7 +1581,7 @@ export class BoardingHousesService {
                 ? 'Tòa Nhà Cho Thuê Bình Thạnh 18'
                 : 'Dormio Eco House Tân Bình',
       description:
-        'Tòa nhà căn hộ dịch vụ cao cấp, đầy đủ tiện nghi, camera an ninh 24/7, thang máy tốc độ cao, bãi đỗ xe rộng rãi có bảo vệ quản lý.',
+        'High-end serviced apartment building with complete amenities, 24/7 security cameras, high-speed elevator, and spacious parking monitored by security staff.',
       address:
         id === 'BH-1001'
           ? '128 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM'
@@ -1589,12 +1599,12 @@ export class BoardingHousesService {
         district: 'Quận 1',
         city: 'TP. Hồ Chí Minh',
         province: 'Hồ Chí Minh',
-        country: 'Việt Nam',
+        country: 'Vietnam',
       },
       builtAt: '2023-05-15T00:00:00.000Z',
       totalFloor: 6,
       status: isLocked ? 'locked' : isReported ? 'reported' : 'active',
-      lockReason: isLocked ? 'Vi phạm an toàn PCCC & khiếu nại chiếm dụng tiền cọc' : undefined,
+      lockReason: isLocked ? 'Fire safety violations & complaints regarding deposit withholding' : undefined,
       lockedAt: isLocked ? '2026-09-01T10:00:00.000Z' : undefined,
       thumbnail: '/house-placeholder.jpg',
       stats: {
@@ -1630,7 +1640,7 @@ export class BoardingHousesService {
       services: [
         {
           id: 'srv-1',
-          name: 'Điện sinh hoạt',
+          name: 'Electricity',
           price: 3500,
           unit: 'kWh',
           autoApplied: true,
@@ -1638,33 +1648,33 @@ export class BoardingHousesService {
         },
         {
           id: 'srv-2',
-          name: 'Nước máy sinh hoạt',
+          name: 'Running Water',
           price: 20000,
-          unit: 'khối',
+          unit: 'm³',
           autoApplied: true,
           isMetered: true,
         },
         {
           id: 'srv-3',
-          name: 'Internet WiFi tốc độ cao',
+          name: 'High-Speed Internet WiFi',
           price: 100000,
-          unit: 'phòng/tháng',
+          unit: 'room/month',
           autoApplied: true,
           isMetered: false,
         },
         {
           id: 'srv-4',
-          name: 'Vệ sinh hành lang & rác thải',
+          name: 'Corridor Cleaning & Waste Disposal',
           price: 50000,
-          unit: 'phòng/tháng',
+          unit: 'room/month',
           autoApplied: true,
           isMetered: false,
         },
         {
           id: 'srv-5',
-          name: 'Giữ xe máy có thẻ từ',
+          name: 'Motorbike Parking with RFID Card',
           price: 120000,
-          unit: 'xe/tháng',
+          unit: 'vehicle/month',
           autoApplied: false,
           isMetered: false,
         },
@@ -1672,27 +1682,27 @@ export class BoardingHousesService {
       roomTypes: [
         {
           id: 'rt-1',
-          name: 'Phòng Duplex Ban Công Riêng',
+          name: 'Duplex Room with Private Balcony',
           description:
-            'Gác lửng đúc kiên cố, ban công thoáng mát đón nắng, bếp riêng, máy giặt riêng.',
+            'Solid concrete mezzanine, sunny and breezy private balcony, private kitchen, private washing machine.',
           area: 35,
           basePrice: 6500000,
           roomsCount: 8,
         },
         {
           id: 'rt-2',
-          name: 'Phòng Studio Full Nội Thất',
+          name: 'Studio Room Fully Furnished',
           description:
-            'Không gian mở hiện đại, giường nệm cao cấp, tủ lạnh inverter, điều hòa 1.5HP.',
+            'Modern open space, premium bed and mattress, inverter refrigerator, 1.5HP air conditioner.',
           area: 28,
           basePrice: 5200000,
           roomsCount: 7,
         },
         {
           id: 'rt-3',
-          name: 'Phòng Gác Lửng Hiện Đại',
+          name: 'Modern Mezzanine Room',
           description:
-            'Tiết kiệm diện tích, bàn học làm việc tiện lợi, nhà vệ sinh khép kín sạch sẽ.',
+            'Space-saving layout, convenient study desk, clean private en-suite bathroom.',
           area: 22,
           basePrice: 4000000,
           roomsCount: 5,
@@ -1701,9 +1711,9 @@ export class BoardingHousesService {
       grievances: [
         {
           id: 'grv-1',
-          title: 'Tự ý thu tiền điện 5.000đ/kWh trái thỏa thuận hợp đồng',
+          title: 'Arbitrary electricity fee increase to 5,000 VND/kWh in violation of contract',
           description:
-            'Hợp đồng thuê ký rõ tiền điện là 3.500đ/kWh, tuy nhiên tháng này chủ trọ đơn phương xuất hóa đơn tính 5.000đ/kWh và đe dọa cắt điện nếu không đóng đúng hạn.',
+            'The lease contract clearly states electricity at 3,500 VND/kWh, but this month the landlord unilaterally billed 5,000 VND/kWh and threatened power disconnection.',
           priority: 'high',
           status: 'pending',
           createdAt: '2026-09-10T14:30:00.000Z',
@@ -1724,13 +1734,13 @@ export class BoardingHousesService {
         },
         {
           id: 'grv-2',
-          title: 'Thấm dột nhà vệ sinh kéo dài không khắc phục',
+          title: 'Persistent bathroom leak not resolved',
           description:
-            'Nhà vệ sinh phòng 205 bị rò rỉ nước từ tầng trên xuống suốt 2 tuần qua, sàn nhà luôn ẩm ướt gây trơn trượt nguy hiểm. Đã báo quản lý 3 lần nhưng không có người sửa.',
+            'Bathroom in room 205 has had a water leak from upstairs for 2 weeks, making the floor slippery and hazardous. Reported 3 times without repairs.',
           priority: 'medium',
           status: 'in_progress',
           createdAt: '2026-09-08T09:15:00.000Z',
-          resolutionNote: 'Đã nhắc nhở chủ nhà và hẹn thợ kiểm tra đường ống vào ngày 12/09/2026.',
+          resolutionNote: 'Reminded landlord and scheduled plumber pipe inspection for September 12, 2026.',
           images: ['/house-placeholder.jpg'],
           sender: {
             id: 'tenant-uuid-202',
@@ -1748,14 +1758,14 @@ export class BoardingHousesService {
         },
         {
           id: 'grv-3',
-          title: 'Mất nước sinh hoạt đột ngột không thông báo trước',
+          title: 'Sudden water outage without prior notice',
           description:
-            'Tòa nhà cúp nước liên tục vào khung giờ cao điểm sáng sớm 6h-8h khiến người thuê không thể sinh hoạt, không hề có thông báo trước trong nhóm cư dân.',
+            'Building experienced recurring water outages during morning peak hours (6am-8am) without prior announcement in the resident group.',
           priority: 'high',
           status: 'resolved',
           createdAt: '2026-09-02T07:45:00.000Z',
           resolvedAt: '2026-09-03T16:00:00.000Z',
-          resolutionNote: 'Chủ nhà đã thay máy bơm tăng áp mới và lắp bồn dự phòng 2.000L.',
+          resolutionNote: 'Landlord installed new booster pump and 2,000L backup water tank.',
           images: [],
           sender: {
             id: 'tenant-uuid-203',

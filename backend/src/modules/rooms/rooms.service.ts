@@ -1,10 +1,16 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common'
+import {
+  BusinessBadRequestException,
+  BusinessNotFoundException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import {
   ContractStatus,
   Prisma,
@@ -83,8 +89,14 @@ export class RoomsService {
 
     const totalToGenerate = dto.floorCount * dto.roomsPerFloor
     if (currentRoomCount + totalToGenerate > maxRoom) {
-      throw new BadRequestException(
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.TIER_ROOM_LIMIT_REACHED,
         `Cannot generate ${totalToGenerate} rooms. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
+        {
+          maxAllowed: maxRoom,
+          currentCount: currentRoomCount,
+          requiredCount: totalToGenerate,
+        },
       )
     }
 
@@ -284,8 +296,13 @@ export class RoomsService {
     })
 
     if (currentRoomCount + 1 > maxRoom) {
-      throw new BadRequestException(
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.TIER_ROOM_LIMIT_REACHED,
         `Cannot create room. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
+        {
+          maxAllowed: maxRoom,
+          currentCount: currentRoomCount,
+        },
       )
     }
 
@@ -294,7 +311,8 @@ export class RoomsService {
       where: { id: dto.roomTypeId, boardingHouseId },
     })
     if (!roomType) {
-      throw new NotFoundException(
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_TYPE_NOT_FOUND,
         `RoomType with ID ${dto.roomTypeId} was not found for this property`,
       )
     }

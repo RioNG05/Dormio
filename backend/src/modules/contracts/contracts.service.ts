@@ -3,7 +3,14 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  HttpStatus,
 } from '@nestjs/common'
+import {
+  BusinessNotFoundException,
+  BusinessBadRequestException,
+  BusinessConflictException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { AuthService } from '../auth/auth.service'
@@ -50,7 +57,10 @@ export class ContractsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc nhà trọ này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_NOT_FOUND,
+        'Room does not exist or does not belong to this boarding house.',
+      )
     }
 
     const deposit = await this.prisma.deposit.findFirst({
@@ -127,7 +137,7 @@ export class ContractsService {
       tenant: tenant
         ? {
             id: tenant.id,
-            fullName: tenant.username || 'Khách đặt cọc',
+            fullName: tenant.username || 'Deposit Tenant',
             phoneNumber: tenant.phoneNumber,
             email: tenant.email,
             userIdentification: (tenant as any).userIdentification || null,
@@ -191,7 +201,10 @@ export class ContractsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_NOT_FOUND,
+        'Room does not exist or does not belong to this property.',
+      )
     }
 
     // Guard: deposit must exist, type=platform, contractId=null, status=paid
@@ -209,14 +222,16 @@ export class ContractsService {
     })
 
     if (!deposit) {
-      throw new BadRequestException(
-        'Phòng không có tiền đặt cọc giữ chỗ nền tảng nào đang chờ lập hợp đồng.',
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_INVALID_STATUS,
+        'The room does not have any pending platform reservation deposit for contract creation.',
       )
     }
 
     if (deposit.status !== 'paid') {
-      throw new BadRequestException(
-        `Không thể lập hợp đồng từ khoản cọc có trạng thái: ${deposit.status}. Khoản cọc phải có trạng thái 'paid'.`,
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_INVALID_STATUS,
+        `Cannot create contract from deposit with status: ${deposit.status}. Deposit status must be 'paid'.`,
       )
     }
 
@@ -224,7 +239,10 @@ export class ContractsService {
     const tenantId = deposit.payment?.payerId || deposit.post?.postedBy || deposit.recordedBy
 
     if (!tenantId) {
-      throw new BadRequestException('Không xác định được danh tính khách thuê đã đặt cọc.')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_MISSING_TENANT,
+        'Cannot identify the prospective tenant who placed the deposit.',
+      )
     }
 
     // Execute in atomic transaction
@@ -355,7 +373,10 @@ export class ContractsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_NOT_FOUND,
+        'Room does not exist or does not belong to this property.',
+      )
     }
 
     // Routing check: if room has unconverted platform deposit, landlord should use Flow A
@@ -369,8 +390,9 @@ export class ContractsService {
     })
 
     if (pendingPlatformDeposit) {
-      throw new ConflictException(
-        'Phòng này đang có khoản đặt cọc nền tảng chưa lập hợp đồng. Vui lòng sử dụng tính năng lập hợp đồng từ cọc nền tảng (Flow A).',
+      throw new BusinessConflictException(
+        BusinessErrorCode.ROOM_HAS_ACTIVE_CONTRACT,
+        'This room currently has an unassigned platform deposit. Please create the contract from the platform deposit (Flow A).',
       )
     }
 
@@ -410,7 +432,7 @@ export class ContractsService {
           fullName: dto.identification.fullName || dto.tenantFullName,
           dateOfBirth: new Date(dto.identification.dateOfBirth),
           gender: dto.identification.gender,
-          nationnality: dto.identification.nationality || 'Việt Nam',
+          nationnality: dto.identification.nationality || 'Vietnam',
           placeOfOrigin: dto.identification.placeOfOrigin || {},
           placeOfResidence: dto.identification.placeOfResidence || {},
           issueDate: dto.identification.issueDate
@@ -638,7 +660,7 @@ export class ContractsService {
                 fullName:
                   primaryTenant.userIdentification?.fullName ||
                   primaryTenant.username ||
-                  'Khách thuê',
+                  'Tenant',
                 phoneNumber: primaryTenant.phoneNumber,
                 email: primaryTenant.email,
                 userIdentification: primaryTenant.userIdentification,
@@ -650,7 +672,7 @@ export class ContractsService {
             tenant: {
               id: tc.tenant.id,
               fullName:
-                tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
+                tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
               phoneNumber: tc.tenant.phoneNumber,
               email: tc.tenant.email,
               userIdentification: tc.tenant.userIdentification,
@@ -710,7 +732,7 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new NotFoundException('Contract does not exist or does not belong to this property.')
     }
 
     const primaryTenant =
@@ -741,7 +763,7 @@ export class ContractsService {
         ? {
             id: primaryTenant.id,
             fullName:
-              primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê',
+              primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Tenant',
             phoneNumber: primaryTenant.phoneNumber,
             email: primaryTenant.email,
             userIdentification: primaryTenant.userIdentification,
@@ -752,7 +774,7 @@ export class ContractsService {
         isPrimary: tc.isPrimary,
         tenant: {
           id: tc.tenant.id,
-          fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
+          fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
           phoneNumber: tc.tenant.phoneNumber,
           email: tc.tenant.email,
           userIdentification: tc.tenant.userIdentification,
@@ -869,7 +891,7 @@ export class ContractsService {
 
     const formattedAddress = this.formatAddress(boardingHouse)
     const landlordName =
-      boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Chủ nhà'
+      boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Landlord'
 
     return {
       contract: {
@@ -1012,14 +1034,14 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new NotFoundException('Contract does not exist or does not belong to this property.')
     }
 
     const primaryTenantContract =
       contract.tenantContracts.find(tc => tc.isPrimary) || contract.tenantContracts[0]
 
     if (!primaryTenantContract) {
-      throw new BadRequestException('Hợp đồng chưa có thông tin đại diện người thuê.')
+      throw new BadRequestException('Contract lacks primary tenant representation information.')
     }
 
     const primaryTenant = primaryTenantContract.tenant
@@ -1027,7 +1049,7 @@ export class ContractsService {
       .filter(tc => tc.id !== primaryTenantContract.id)
       .map(tc => ({
         id: tc.tenant.id,
-        fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Người ở cùng',
+        fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Co-tenant',
         phoneNumber: tc.tenant.phoneNumber,
       }))
 
@@ -1052,7 +1074,7 @@ export class ContractsService {
         address: formattedAddress,
         owner: {
           id: bh.owner.id,
-          fullName: bh.owner.username || 'Chủ nhà trọ',
+          fullName: bh.owner.username || 'Landlord',
           phoneNumber: bh.owner.phoneNumber || '',
           email: bh.owner.email,
         },
@@ -1074,7 +1096,7 @@ export class ContractsService {
       primaryTenant: {
         id: primaryTenant.id,
         fullName:
-          primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê',
+          primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Tenant',
         phoneNumber: primaryTenant.phoneNumber,
         email: primaryTenant.email,
         identification: primaryTenant.userIdentification
@@ -1219,7 +1241,7 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new NotFoundException('Contract does not exist or does not belong to this property.')
     }
 
     const docs = await this.prisma.contractDocument.findMany({
@@ -1259,7 +1281,7 @@ export class ContractsService {
     })
 
     if (!doc) {
-      throw new NotFoundException('Tài liệu hợp đồng không tồn tại.')
+      throw new NotFoundException('Contract document does not exist.')
     }
 
     const renderedHtml = ContractTemplateRenderer.render({
