@@ -38,7 +38,9 @@ import {
   ToastContainer,
   ToastItem,
   ChipGroup,
+  Text,
 } from '@/components/ui'
+import { cn } from '@/lib/utils'
 
 function mapContractStatus(rawStatus: string): string {
   switch (rawStatus) {
@@ -285,7 +287,7 @@ export default function ContractsPage() {
       !requireTier(
         'plus',
         t('landlordContractDetailTierRequiredMsg') ||
-          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+        'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
       )
     ) {
       return
@@ -304,7 +306,7 @@ export default function ContractsPage() {
       !requireTier(
         'plus',
         t('landlordContractDetailTierRequiredMsg') ||
-          'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
+        'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
       )
     ) {
       return
@@ -409,12 +411,12 @@ export default function ContractsPage() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6">
-              <h3 className="text-base font-bold text-zinc-900 mb-2">
+              <Text as="h3" size="base" weight="bold" color="default" className="mb-2">
                 {t('landlordContractsConfirmCloseTitle')}
-              </h3>
-              <p className="text-sm text-zinc-600">
+              </Text>
+              <Text size="sm" color="secondary">
                 {t('landlordContractsConfirmCloseDesc')}
-              </p>
+              </Text>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
               <Button
@@ -437,699 +439,745 @@ export default function ContractsPage() {
       )}
 
       <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-          {/* Top Page Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-zinc-900">{t('landlordContractsTitle')}</h1>
-              <p className="text-sm text-zinc-500">{t('landlordContractsSubtitle')}</p>
-            </div>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => router.push('/landlord/contracts/create')}
-                leftIcon={<Plus className="w-4 h-4" />}
-              >
-                {t('landlordContractsCreateBtn')}
-              </Button>
+        {/* Top Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-zinc-900">
+              {t('landlordContractsTitle')}
+            </Text>
+            <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5">
+              {t('landlordContractsSubtitle')}
+            </Text>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => router.push('/landlord/contracts/create')}
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            {t('landlordContractsCreateBtn')}
+          </Button>
+        </div>
+
+        {/* Building Overview Banner Card */}
+        <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
+            <FileSignature className="w-64 h-64" />
           </div>
 
-          {/* Building Overview Banner Card */}
-          <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-              <FileSignature className="w-64 h-64" />
-            </div>
-
-            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
-              <div className="space-y-3 max-w-xl w-full">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                    {activeBuilding?.name || 'Dormio Building'}
-                  </h2>
-                  <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                    {t('landlordContractsBannerOperating')}
-                  </span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                    <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                      {activeBuilding?.address || ''}
-                    </span>
-                  </div>
-                  {activeBuilding?.address && (
-                    <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                    >
-                      <span>{t('landlordOverviewViewMap')}</span> &rarr;
-                    </a>
-                  )}
-                </div>
-
-                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-                  {t('landlordContractsBannerDesc')}
-                </p>
+          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+            <div className="space-y-3 max-w-xl w-full">
+              <div className="flex flex-wrap items-center gap-2">
+                <Text as="h2" weight="black" color="white" className="text-xl sm:text-2xl md:text-3xl tracking-tight">
+                  {activeBuilding?.name || 'Dormio Building'}
+                </Text>
+                <Text as="span" variant="overline" size="3xs" weight="black" className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-full tracking-wider shrink-0">
+                  {t('landlordContractsBannerOperating')}
+                </Text>
               </div>
 
-              {/* 4 Stat Chips */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                  <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
-                      {t('landlordContractsStatTotal')}
-                    </span>
-                    <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
-                      {contracts.length}
-                    </span>
-                  </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                  <Text as="span" size="xs" weight="bold" className="text-zinc-200 truncate sm:whitespace-normal">
+                    {activeBuilding?.address || ''}
+                  </Text>
                 </div>
-
-                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                      {t('landlordContractsStatActive')}
-                    </span>
-                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                      {
-                        contracts.filter(
-                          c => c.status === 'Còn hiệu lực' || c.status === 'Đang hiệu lực',
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
-                      {t('landlordContractsStatExpiring')}
-                    </span>
-                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                      {
-                        contracts.filter(c => c.status === 'Sắp hết hạn' || c.status === 'Quá hạn')
-                          .length
-                      }
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                      {t('landlordContractsStatEnded')}
-                    </span>
-                    <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                      {
-                        contracts.filter(c => c.status === 'Chấm dứt' || c.status === 'Đã chấm dứt')
-                          .length
-                      }
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Single Row Toolbar (Filter Pills + Search Bar + View Mode) */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              {/* Status Filter Pills */}
-              <ChipGroup
-                value={statusFilter}
-                onChange={val => {
-                  setStatusFilter(val)
-                  setCurrentPage(1)
-                }}
-                className="flex-1 min-w-0"
-                options={[
-                  { label: t('landlordContractsFilterAll'), value: '' },
-                  { label: t('landlordContractsFilterActive'), value: 'Đang hiệu lực' },
-                  { label: t('landlordContractsFilterExpiring'), value: 'Sắp hết hạn', variant: 'warning' },
-                  { label: t('landlordContractsFilterOverdue'), value: 'Quá hạn', variant: 'danger' },
-                  { label: t('landlordContractsFilterEnded'), value: 'Đã chấm dứt', variant: 'neutral' },
-                ]}
-              />
-
-              {/* Search & View Mode */}
-              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                <div className="w-full sm:w-64">
-                  <SearchInput
-                    placeholder={t('landlordContractsSearchPlaceholder')}
-                    value={searchQuery}
-                    onChange={val => {
-                      setSearchQuery(val)
-                      setCurrentPage(1)
-                    }}
-                    className="bg-zinc-50 focus:bg-white text-xs"
-                  />
-                </div>
-
-                <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setViewMode('grid')
-                      setRowsPerPage(6)
-                      setCurrentPage(1)
-                    }}
-                    className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${
-                      viewMode === 'grid'
-                        ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                        : 'text-zinc-500 hover:text-zinc-900'
-                    }`}
-                    title={t('landlordContractsGridView')}
+                {activeBuilding?.address && (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
                   >
-                    <LayoutGrid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setViewMode('list')
-                      setRowsPerPage(10)
-                      setCurrentPage(1)
-                    }}
-                    className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${
-                      viewMode === 'list'
-                        ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
-                        : 'text-zinc-500 hover:text-zinc-900'
-                    }`}
-                    title={t('landlordContractsListView')}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+                    <Text as="span" size="3xs" weight="black">{t('landlordOverviewViewMap')}</Text> &rarr;
+                  </a>
+                )}
+              </div>
+
+              <Text variant="body" size="sm" color="subtle" className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                {t('landlordContractsBannerDesc')}
+              </Text>
+            </div>
+
+            {/* 4 Stat Chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
+                <div className="flex flex-col">
+                  <Text as="span" variant="overline" size="3xs" weight="bold" className="text-rose-400 tracking-wider">
+                    {t('landlordContractsStatTotal')}
+                  </Text>
+                  <Text as="span" size="lg" weight="black" className="text-rose-500 leading-none mt-1">
+                    {contracts.length}
+                  </Text>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+                <div className="flex flex-col">
+                  <Text as="span" variant="overline" size="3xs" weight="bold" color="brand" className="tracking-wider">
+                    {t('landlordContractsStatActive')}
+                  </Text>
+                  <Text as="span" size="lg" weight="black" color="white" className="leading-none mt-1">
+                    {
+                      contracts.filter(
+                        c => c.status === 'Còn hiệu lực' || c.status === 'Đang hiệu lực',
+                      ).length
+                    }
+                  </Text>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+                <div className="flex flex-col">
+                  <Text as="span" variant="overline" size="3xs" weight="bold" className="text-[#FF6B35] tracking-wider">
+                    {t('landlordContractsStatExpiring')}
+                  </Text>
+                  <Text as="span" size="lg" weight="black" color="white" className="leading-none mt-1">
+                    {
+                      contracts.filter(c => c.status === 'Sắp hết hạn' || c.status === 'Quá hạn')
+                        .length
+                    }
+                  </Text>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+                <div className="flex flex-col">
+                  <Text as="span" variant="overline" size="3xs" weight="bold" className="text-blue-400 tracking-wider">
+                    {t('landlordContractsStatEnded')}
+                  </Text>
+                  <Text as="span" size="lg" weight="black" color="white" className="leading-none mt-1">
+                    {
+                      contracts.filter(c => c.status === 'Chấm dứt' || c.status === 'Đã chấm dứt').length
+                    }
+                  </Text>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
-              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-              <p className="text-sm font-semibold text-zinc-500">
-                {t('landlordContractsLoading')}
-              </p>
+        {/* Single Row Toolbar (Filter Pills + Search Bar + View Mode) */}
+        <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Status Filter Pills */}
+            <ChipGroup
+              value={statusFilter}
+              onChange={val => {
+                setStatusFilter(val)
+                setCurrentPage(1)
+              }}
+              className="flex-1 min-w-0"
+              options={[
+                { label: t('landlordContractsFilterAll'), value: '' },
+                { label: t('landlordContractsFilterActive'), value: 'Đang hiệu lực' },
+                { label: t('landlordContractsFilterExpiring'), value: 'Sắp hết hạn', variant: 'warning' },
+                { label: t('landlordContractsFilterOverdue'), value: 'Quá hạn', variant: 'danger' },
+                { label: t('landlordContractsFilterEnded'), value: 'Đã chấm dứt', variant: 'neutral' },
+              ]}
+            />
+
+            {/* Search & View Mode */}
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <div className="w-full sm:w-64">
+                <SearchInput
+                  placeholder={t('landlordContractsSearchPlaceholder')}
+                  value={searchQuery}
+                  onChange={val => {
+                    setSearchQuery(val)
+                    setCurrentPage(1)
+                  }}
+                  className="bg-zinc-50 focus:bg-white text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setViewMode('grid')
+                    setRowsPerPage(6)
+                    setCurrentPage(1)
+                  }}
+                  className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'grid'
+                    ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
+                    : 'text-zinc-500 hover:text-zinc-900'
+                    }`}
+                  title={t('landlordContractsGridView')}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setViewMode('list')
+                    setRowsPerPage(10)
+                    setCurrentPage(1)
+                  }}
+                  className={`h-auto p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list'
+                    ? 'bg-white text-[#2AC1BC] shadow-2xs font-extrabold'
+                    : 'text-zinc-500 hover:text-zinc-900'
+                    }`}
+                  title={t('landlordContractsListView')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* Error State */}
-          {!isLoading && loadError && (
-            <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
-              <AlertTriangle className="w-8 h-8 text-rose-500" />
-              <p className="text-sm font-semibold text-rose-600">{loadError}</p>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={fetchContracts}
-              >
-                {t('landlordContractsRetry')}
-              </Button>
-            </div>
-          )}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
+            <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+            <Text size="sm" weight="semibold" color="secondary">
+              {t('landlordContractsLoading')}
+            </Text>
+          </div>
+        )}
 
-          {/* Grid / Table View */}
-          {!isLoading && !loadError && (
-            <>
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {paginatedContracts.length === 0 ? (
-                    <div className="col-span-full p-8 text-center text-zinc-400 font-bold bg-white border border-zinc-200/80 rounded-2xl">
+        {/* Error State */}
+        {!isLoading && loadError && (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
+            <AlertTriangle className="w-8 h-8 text-rose-500" />
+            <Text size="sm" weight="semibold" color="danger">
+              {loadError}
+            </Text>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={fetchContracts}
+            >
+              {t('landlordContractsRetry')}
+            </Button>
+          </div>
+        )}
+
+        {/* Grid / Table View */}
+        {!isLoading && !loadError && (
+          <>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {paginatedContracts.length === 0 ? (
+                  <div className="col-span-full p-8 text-center bg-white border border-zinc-200/80 rounded-2xl">
+                    <Text weight="bold" color="subtle">
                       {t('landlordContractsNoContractsFound')}
-                    </div>
-                  ) : (
-                    paginatedContracts.map((c, idx) => {
-                      return (
-                        <div
-                          key={c.id || idx}
-                          onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                          className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
-                        >
-                          <div>
-                            {/* Card Header: Room & Status */}
-                            <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-black text-base text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                                    {t('landlordRoomDetailRoomPrefix')} {c.room}
-                                  </h3>
-                                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                    {activeBuilding?.name || 'Dormio'}
-                                  </span>
-                                </div>
-                                <div className="text-[11px] text-zinc-400 font-bold flex items-center gap-1 mt-0.5">
-                                  <span>
-                                    {t('landlordContractsContractCodeShort')} {c.id}
-                                  </span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={e => copyToClipboard(e, c.id)}
-                                    className="h-auto p-0.5 hover:text-[#2AC1BC] transition-colors rounded cursor-pointer"
-                                    title={t('landlordContractsCopyCodeTitle')}
-                                  >
-                                    <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                  </Button>
-                                </div>
+                    </Text>
+                  </div>
+                ) : (
+                  paginatedContracts.map((c, idx) => {
+                    return (
+                      <div
+                        key={c.id || idx}
+                        onClick={() => router.push(`/landlord/contracts/${c.id}`)}
+                        className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                      >
+                        <div>
+                          {/* Card Header: Room & Status */}
+                          <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-[#2AC1BC] transition-colors">
+                                  {t('landlordRoomDetailRoomPrefix')} {c.room}
+                                </Text>
+                                <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                  {activeBuilding?.name || 'Dormio'}
+                                </Text>
                               </div>
-
-                              <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border shrink-0 ${
-                                  c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                      : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                                }`}
-                              >
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full ${
-                                    c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                      ? 'bg-emerald-500'
-                                      : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                        ? 'bg-amber-500'
-                                        : 'bg-zinc-400'
-                                  }`}
-                                />
-                                {getContractStatusLabel(c.status)}
-                              </span>
-                            </div>
-
-                            {/* Card Body */}
-                            <div className="py-3 space-y-2.5">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <User className="w-3.5 h-3.5 text-zinc-400" />
-                                  {t('landlordContractsRepresentative')}
-                                </span>
-                                <div className="flex flex-col items-end">
-                                  <span className="font-extrabold text-zinc-900">{c.tenant}</span>
-                                  {c.members && c.members.length > 0 && (
-                                    <span className="text-[10px] font-bold text-zinc-500 flex items-center gap-1">
-                                      <Users className="w-3 h-3 text-zinc-400" />
-                                      {t('landlordContractsRoommatesCount').replace(
-                                        '{count}',
-                                        String(c.members.length),
-                                      )}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
-                                  {t('landlordContractsRentPriceLabel')}:
-                                </span>
-                                <span className="font-black text-sm text-[#2AC1BC]">
-                                  {c.price} {t('landlordContractsPerMonth')}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
-                                  {t('landlordContractsDurationLabel')}
-                                </span>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-bold text-zinc-800">
-                                    {c.startDate} - {c.endDate}
-                                  </span>
-                                  {c.isOverdue && (
-                                    <span className="px-1.5 py-0.5 text-[9px] font-black rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                                      {t('landlordContractsDueExpired')}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
-                                <span className="text-zinc-500 font-semibold flex items-center gap-1.5">
-                                  <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
-                                  {t('landlordContractsPaymentLabel')}
-                                </span>
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${
-                                    c.paymentStatus === 'Đã thu đủ'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                      : 'bg-rose-50 text-rose-700 border-rose-200'
-                                  }`}
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <Text as="span" variant="caption" size="2xs" weight="bold" color="subtle">
+                                  {t('landlordContractsContractCodeShort')} {c.id}
+                                </Text>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={e => copyToClipboard(e, c.id)}
+                                  className="h-auto p-0.5 hover:text-[#2AC1BC] transition-colors rounded cursor-pointer"
+                                  title={t('landlordContractsCopyCodeTitle')}
                                 >
-                                  {getPaymentStatusLabel(c.paymentStatus)}
-                                </span>
+                                  <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                </Button>
                               </div>
                             </div>
+
+                            <Text
+                              as="span"
+                              size="2xs"
+                              weight="extrabold"
+                              className={cn(
+                                'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border shrink-0',
+                                c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : 'bg-zinc-100 text-zinc-600 border-zinc-200',
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  'w-1.5 h-1.5 rounded-full',
+                                  c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
+                                    ? 'bg-emerald-500'
+                                    : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
+                                      ? 'bg-amber-500'
+                                      : 'bg-zinc-400',
+                                )}
+                              />
+                              {getContractStatusLabel(c.status)}
+                            </Text>
                           </div>
 
-                          {/* Card Footer Actions */}
-                          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border-[#2AC1BC]/30 text-xs font-extrabold"
-                              onClick={e => {
-                                e.stopPropagation()
-                                router.push(`/landlord/contracts/${c.id}`)
-                              }}
-                              leftIcon={<Eye className="w-3.5 h-3.5" />}
-                            >
-                              {t('landlordContractsBtnDetail')}
-                            </Button>
-                            <div className="flex items-center gap-1.5">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  handlePrintContract(c)
-                                }}
-                                title={t('landlordContractsPrintExportTitle')}
+                          {/* Card Body */}
+                          <div className="py-3 space-y-2.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                                <User className="w-3.5 h-3.5 text-zinc-400" />
+                                {t('landlordContractsRepresentative')}
+                              </Text>
+                              <div className="flex flex-col items-end">
+                                <Text as="span" size="xs" weight="extrabold" color="default">
+                                  {c.tenant}
+                                </Text>
+                                {c.members && c.members.length > 0 && (
+                                  <Text as="span" size="3xs" weight="bold" color="secondary" className="flex items-center gap-1">
+                                    <Users className="w-3 h-3 text-zinc-400" />
+                                    {t('landlordContractsRoommatesCount').replace(
+                                      '{count}',
+                                      String(c.members.length),
+                                    )}
+                                  </Text>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs">
+                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                                <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
+                                {t('landlordContractsRentPriceLabel')}:
+                              </Text>
+                              <Text as="span" size="sm" weight="black" color="brand">
+                                {c.price} {t('landlordContractsPerMonth')}
+                              </Text>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs">
+                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                                <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
+                                {t('landlordContractsDurationLabel')}
+                              </Text>
+                              <div className="flex items-center gap-1.5">
+                                <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                                  {c.startDate} - {c.endDate}
+                                </Text>
+                                {c.isOverdue && (
+                                  <Text as="span" size="3xs" weight="black" className="px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                    {t('landlordContractsDueExpired')}
+                                  </Text>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
+                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                                <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
+                                {t('landlordContractsPaymentLabel')}
+                              </Text>
+                              <Text
+                                as="span"
+                                size="2xs"
+                                weight="extrabold"
+                                className={cn(
+                                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
+                                  c.paymentStatus === 'Đã thu đủ'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-rose-50 text-rose-700 border-rose-200',
+                                )}
                               >
-                                <Printer className="w-3.5 h-3.5 text-zinc-700" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border-emerald-200 text-xs font-bold"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  setSelectedContract(c)
-                                  setIsExtendModalOpen(true)
-                                }}
-                                leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
-                              >
-                                {t('landlordContractsBtnExtend')}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border-rose-200 text-xs font-bold"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  setSelectedContract(c)
-                                  setIsTerminateModalOpen(true)
-                                }}
-                                leftIcon={<Ban className="w-3.5 h-3.5" />}
-                              >
-                                {t('landlordContractsBtnTerminate')}
-                              </Button>
+                                {getPaymentStatusLabel(c.paymentStatus)}
+                              </Text>
                             </div>
                           </div>
                         </div>
-                      )
-                    })
-                  )}
-                </div>
-              ) : (
-                /* Table View */
-                <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
-                  <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-                    <table className="w-full min-w-[850px] text-xs text-left border-collapse">
-                      <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
-                        <tr>
-                          <th className="px-5 py-3.5 whitespace-nowrap">
+
+                        {/* Card Footer Actions */}
+                        <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-[#2AC1BC]/10 hover:bg-[#2AC1BC] text-[#2AC1BC] hover:text-white border-[#2AC1BC]/30 text-xs font-extrabold"
+                            onClick={e => {
+                              e.stopPropagation()
+                              router.push(`/landlord/contracts/${c.id}`)
+                            }}
+                            leftIcon={<Eye className="w-3.5 h-3.5" />}
+                          >
+                            {t('landlordContractsBtnDetail')}
+                          </Button>
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 bg-zinc-50 hover:bg-zinc-200 text-zinc-600 rounded-xl"
+                              onClick={e => {
+                                e.stopPropagation()
+                                handlePrintContract(c)
+                              }}
+                              title={t('landlordContractsPrintExportTitle')}
+                            >
+                              <Printer className="w-3.5 h-3.5 text-zinc-700" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border-emerald-200 text-xs font-bold"
+                              onClick={e => {
+                                e.stopPropagation()
+                                setSelectedContract(c)
+                                setIsExtendModalOpen(true)
+                              }}
+                              leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
+                            >
+                              {t('landlordContractsBtnExtend')}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border-rose-200 text-xs font-bold"
+                              onClick={e => {
+                                e.stopPropagation()
+                                setSelectedContract(c)
+                                setIsTerminateModalOpen(true)
+                              }}
+                              leftIcon={<Ban className="w-3.5 h-3.5" />}
+                            >
+                              {t('landlordContractsBtnTerminate')}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            ) : (
+              /* Table View */
+              <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
+                <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
+                  <table className="w-full min-w-[850px] text-xs text-left border-collapse">
+                    <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
+                      <tr>
+                        <th className="px-5 py-3.5 whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderRoomCode')}
-                          </th>
-                          <th className="px-5 py-3.5 whitespace-nowrap">
+                          </Text>
+                        </th>
+                        <th className="px-5 py-3.5 whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderTenant')}
-                          </th>
-                          <th className="px-5 py-3.5 whitespace-nowrap">
+                          </Text>
+                        </th>
+                        <th className="px-5 py-3.5 whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderDuration')}
-                          </th>
-                          <th className="px-5 py-3.5 whitespace-nowrap">
+                          </Text>
+                        </th>
+                        <th className="px-5 py-3.5 whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderPrice')}
-                          </th>
-                          <th className="px-5 py-3.5 whitespace-nowrap">
+                          </Text>
+                        </th>
+                        <th className="px-5 py-3.5 whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderPayment')}
-                          </th>
-                          <th className="px-5 py-3.5 whitespace-nowrap">
+                          </Text>
+                        </th>
+                        <th className="px-5 py-3.5 whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderStatus')}
-                          </th>
-                          <th className="px-5 py-3.5 text-right whitespace-nowrap">
+                          </Text>
+                        </th>
+                        <th className="px-5 py-3.5 text-right whitespace-nowrap">
+                          <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
                             {t('landlordContractsTableHeaderAction')}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-100 bg-white">
-                        {paginatedContracts.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="p-8 text-center text-zinc-400 font-bold">
+                          </Text>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 bg-white">
+                      {paginatedContracts.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="p-8 text-center">
+                            <Text weight="bold" color="subtle">
                               {t('landlordContractsNoContractsFound')}
-                            </td>
-                          </tr>
-                        ) : (
-                          paginatedContracts.map((c, idx) => {
-                            return (
-                              <tr
-                                key={c.id || idx}
-                                onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                                className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
-                              >
-                                <td className="px-5 py-4 whitespace-nowrap">
-                                  <div className="flex flex-col gap-0.5">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-black text-sm text-[#2AC1BC]">
-                                        {t('landlordRoomDetailRoomPrefix')} {c.room}
-                                      </span>
-                                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                        {activeBuilding?.name || 'Dormio'}
-                                      </span>
-                                    </div>
-                                    <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 font-bold">
-                                      <span>{c.id}</span>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={e => copyToClipboard(e, c.id)}
-                                        className="h-auto p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded cursor-pointer"
-                                        title={t('landlordContractsCopyCodeTitle')}
-                                      >
-                                        <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
-                                      </Button>
-                                    </div>
+                            </Text>
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedContracts.map((c, idx) => {
+                          return (
+                            <tr
+                              key={c.id || idx}
+                              onClick={() => router.push(`/landlord/contracts/${c.id}`)}
+                              className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
+                            >
+                              <td className="px-5 py-4 whitespace-nowrap">
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <Text as="span" size="sm" weight="black" color="brand">
+                                      {t('landlordRoomDetailRoomPrefix')} {c.room}
+                                    </Text>
+                                    <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                      {activeBuilding?.name || 'Dormio'}
+                                    </Text>
                                   </div>
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap">
-                                  <div className="flex flex-col">
-                                    <span className="font-extrabold text-zinc-900 text-sm">
-                                      {c.tenant}
-                                    </span>
-                                    <span className="text-[11px] text-zinc-400 font-bold">
-                                      {c.tenantPhone || '---'}
-                                    </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <Text as="span" size="2xs" weight="bold" color="subtle">{c.id}</Text>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={e => copyToClipboard(e, c.id)}
+                                      className="h-auto p-1 hover:text-[#2AC1BC] transition-colors hover:bg-zinc-100 rounded cursor-pointer"
+                                      title={t('landlordContractsCopyCodeTitle')}
+                                    >
+                                      <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                    </Button>
                                   </div>
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap">
-                                  <div className="flex flex-col">
-                                    <span className="font-bold text-zinc-800">
-                                      {c.startDate} - {c.endDate}
-                                    </span>
-                                    {c.isOverdue && (
-                                      <span className="text-[10px] font-black text-rose-600">
-                                        {t('landlordContractsDueExpired')}
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap">
-                                  <span className="font-black text-sm text-[#2AC1BC]">
-                                    {c.price}
-                                  </span>
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap">
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 whitespace-nowrap">
+                                <div className="flex flex-col">
+                                  <Text as="span" size="sm" weight="extrabold" color="default">
+                                    {c.tenant}
+                                  </Text>
+                                  <Text as="span" size="2xs" weight="bold" color="subtle">
+                                    {c.tenantPhone || '---'}
+                                  </Text>
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 whitespace-nowrap">
+                                <div className="flex flex-col">
+                                  <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                                    {c.startDate} - {c.endDate}
+                                  </Text>
+                                  {c.isOverdue && (
+                                    <Text as="span" size="3xs" weight="black" color="danger">
+                                      {t('landlordContractsDueExpired')}
+                                    </Text>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 whitespace-nowrap">
+                                <Text as="span" size="sm" weight="black" color="brand">
+                                  {c.price}
+                                </Text>
+                              </td>
+                              <td className="px-5 py-4 whitespace-nowrap">
+                                <Text
+                                  as="span"
+                                  size="2xs"
+                                  weight="extrabold"
+                                  className={cn(
+                                    'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
+                                    c.paymentStatus === 'Đã thu đủ'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-rose-50 text-rose-700 border-rose-200',
+                                  )}
+                                >
+                                  {getPaymentStatusLabel(c.paymentStatus)}
+                                </Text>
+                              </td>
+                              <td className="px-5 py-4 whitespace-nowrap">
+                                <Text
+                                  as="span"
+                                  size="2xs"
+                                  weight="extrabold"
+                                  className={cn(
+                                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border',
+                                    c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
+                                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                        : 'bg-zinc-100 text-zinc-600 border-zinc-200',
+                                  )}
+                                >
                                   <span
-                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-extrabold rounded-full border ${
-                                      c.paymentStatus === 'Đã thu đủ'
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                        : 'bg-rose-50 text-rose-700 border-rose-200'
-                                    }`}
-                                  >
-                                    {getPaymentStatusLabel(c.paymentStatus)}
-                                  </span>
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap">
-                                  <span
-                                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold rounded-full border ${
+                                    className={cn(
+                                      'w-1.5 h-1.5 rounded-full',
                                       c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        ? 'bg-emerald-500'
                                         : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                          : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                                    }`}
+                                          ? 'bg-amber-500'
+                                          : 'bg-zinc-400',
+                                    )}
+                                  />
+                                  {getContractStatusLabel(c.status)}
+                                </Text>
+                              </td>
+                              <td className="px-5 py-4 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1 text-zinc-400">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-zinc-400 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      router.push(`/landlord/contracts/${c.id}`)
+                                    }}
+                                    title={t('landlordContractsBtnDetail')}
                                   >
-                                    <span
-                                      className={`w-1.5 h-1.5 rounded-full ${
-                                        c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                          ? 'bg-emerald-500'
-                                          : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                            ? 'bg-amber-500'
-                                            : 'bg-zinc-400'
-                                      }`}
-                                    />
-                                    {getContractStatusLabel(c.status)}
-                                  </span>
-                                </td>
-                                <td className="px-5 py-4 text-right whitespace-nowrap">
-                                  <div className="flex items-center justify-end gap-1 text-zinc-400">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-zinc-400 hover:text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
-                                      onClick={e => {
-                                        e.stopPropagation()
-                                        router.push(`/landlord/contracts/${c.id}`)
-                                      }}
-                                      title={t('landlordContractsBtnDetail')}
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-zinc-400 hover:text-primary hover:bg-primary/10"
-                                      onClick={e => {
-                                        e.stopPropagation()
-                                        setSelectedContract(c)
-                                        setIsExtendModalOpen(true)
-                                      }}
-                                      title={t('landlordContractsBtnExtend')}
-                                    >
-                                      <CalendarDays className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
-                                      onClick={e => {
-                                        e.stopPropagation()
-                                        handlePrintContract(c)
-                                      }}
-                                      title={t('landlordContractsPrintExportTitle')}
-                                    >
-                                      <Printer className="w-4 h-4 text-[#2AC1BC]" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
-                                      onClick={e => {
-                                        e.stopPropagation()
-                                        setSelectedContract(c)
-                                        setIsTerminateModalOpen(true)
-                                      }}
-                                      title={t('landlordContractsBtnTerminate')}
-                                    >
-                                      <Ban className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            )
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-zinc-400 hover:text-primary hover:bg-primary/10"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setSelectedContract(c)
+                                      setIsExtendModalOpen(true)
+                                    }}
+                                    title={t('landlordContractsBtnExtend')}
+                                  >
+                                    <CalendarDays className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      handlePrintContract(c)
+                                    }}
+                                    title={t('landlordContractsPrintExportTitle')}
+                                  >
+                                    <Printer className="w-4 h-4 text-[#2AC1BC]" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setSelectedContract(c)
+                                      setIsTerminateModalOpen(true)
+                                    }}
+                                    title={t('landlordContractsBtnTerminate')}
+                                  >
+                                    <Ban className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Standardized Pagination Footer (Rule #9) */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
-                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
-                    <span>{t('landlordContractsPaginationShowing')}</span>
-                    <NumberInput
-                      min={1}
-                      max={500}
-                      value={rowsPerPage || 1}
-                      onChange={e => {
-                        const val = parseInt(e.target.value)
-                        setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val)
-                        setCurrentPage(1)
-                      }}
-                      className="w-14 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs"
-                    />
-                    <span>{t('landlordContractsPaginationPerPage')}</span>
-                  </div>
-
-                  <span className="hidden sm:inline text-zinc-300">|</span>
-
-                  <div>
-                    <span className="font-extrabold text-zinc-800">
-                      {totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}
-                    </span>{' '}
-                    -{' '}
-                    <span className="font-extrabold text-zinc-800">
-                      {Math.min(currentPage * rowsPerPage, totalItems)}
-                    </span>{' '}
-                    {t('landlordContractsPaginationOf')}{' '}
-                    <span className="font-extrabold text-zinc-800">{totalItems}</span>{' '}
-                    {t('landlordContractsPaginationTotalContracts')}
-                  </div>
+            {/* Standardized Pagination Footer (Rule #9) */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
+              <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
+                <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+                  <Text as="span" size="xs" weight="semibold" color="secondary">
+                    {t('landlordContractsPaginationShowing')}
+                  </Text>
+                  <NumberInput
+                    min={1}
+                    max={500}
+                    value={rowsPerPage || 1}
+                    onChange={e => {
+                      const val = parseInt(e.target.value)
+                      setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val)
+                      setCurrentPage(1)
+                    }}
+                    className="w-14 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs"
+                  />
+                  <Text as="span" size="xs" weight="semibold" color="secondary">
+                    {t('landlordContractsPaginationPerPage')}
+                  </Text>
                 </div>
 
-                {(() => {
-                  const windowSize = 5
-                  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-                  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-                  const visiblePages = Array.from(
-                    { length: windowEnd - windowStart + 1 },
-                    (_, i) => windowStart + i,
-                  )
+                <span className="hidden sm:inline text-zinc-300">|</span>
 
-                  return (
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                      >
-                        &larr; {t('landlordContractsPaginationPrev')}
-                      </Button>
-                      {visiblePages.map(page => (
-                        <Button
-                          key={page}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setCurrentPage(page)}
-                          className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
-                            currentPage === page
-                              ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 hover:bg-[#2AC1BC]/90 hover:text-white'
-                              : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                          }`}
-                        >
-                          {page}
-                        </Button>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-                        onClick={() =>
-                          setCurrentPage(Math.min(windowStart + windowSize, totalPages))
-                        }
-                      >
-                        {t('landlordContractsPaginationNext')} &rarr;
-                      </Button>
-                    </div>
-                  )
-                })()}
+                <div className="text-xs font-semibold text-zinc-500">
+                  <Text as="span" weight="extrabold" color="default">
+                    {totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}
+                  </Text>{' '}
+                  -{' '}
+                  <Text as="span" weight="extrabold" color="default">
+                    {Math.min(currentPage * rowsPerPage, totalItems)}
+                  </Text>{' '}
+                  {t('landlordContractsPaginationOf')}{' '}
+                  <Text as="span" weight="extrabold" color="default">
+                    {totalItems}
+                  </Text>{' '}
+                  {t('landlordContractsPaginationTotalContracts')}
+                </div>
               </div>
 
+              {(() => {
+                const windowSize = 5
+                const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
+                const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
+                const visiblePages = Array.from(
+                  { length: windowEnd - windowStart + 1 },
+                  (_, i) => windowStart + i,
+                )
 
-            </>
-          )}
-        </div>
+                return (
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
+                    >
+                      &larr; {t('landlordContractsPaginationPrev')}
+                    </Button>
+                    {visiblePages.map(page => (
+                      <Button
+                        key={page}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 p-0 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${currentPage === page
+                          ? 'bg-[#2AC1BC] text-white shadow-2xs shadow-[#2AC1BC]/30 hover:bg-[#2AC1BC]/90 hover:text-white'
+                          : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                          }`}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
+                      onClick={() =>
+                        setCurrentPage(Math.min(windowStart + windowSize, totalPages))
+                      }
+                    >
+                      {t('landlordContractsPaginationNext')} &rarr;
+                    </Button>
+                  </div>
+                )
+              })()}
+            </div>
+
+
+          </>
+        )}
+      </div>
 
       {/* Extend Contract Modal */}
       {isExtendModalOpen && (
@@ -1141,9 +1189,9 @@ export default function ContractsPage() {
         >
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-xl font-bold text-zinc-900">
+              <Text as="h2" size="xl" weight="bold" color="default">
                 {t('landlordContractsExtendModalTitle')}
-              </h2>
+              </Text>
               <Button
                 variant="ghost"
                 size="sm"
@@ -1203,9 +1251,9 @@ export default function ContractsPage() {
         >
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <h2 className="text-xl font-bold text-rose-600">
+              <Text as="h2" size="xl" weight="bold" color="danger">
                 {t('landlordContractsTerminateModalTitle')}
-              </h2>
+              </Text>
               <Button
                 variant="ghost"
                 size="sm"
@@ -1238,22 +1286,24 @@ export default function ContractsPage() {
               />
 
               <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-4">
-                <div className="flex items-center gap-2 text-primary font-medium">
-                  <Gauge className="w-4 h-4" />
-                  <span>{t('landlordContractsTerminateEndIndexTitle')}</span>
+                <div className="flex items-center gap-2">
+                  <Gauge className="w-4 h-4 text-[#2AC1BC]" />
+                  <Text as="span" size="sm" weight="medium" color="brand">
+                    {t('landlordContractsTerminateEndIndexTitle')}
+                  </Text>
                 </div>
-                <p className="text-xs text-zinc-500">
+                <Text size="xs" color="secondary">
                   {t('landlordContractsTerminateEndIndexHint')}
-                </p>
+                </Text>
 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold w-12 text-zinc-800">
+                    <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
                       {t('landlordContractsTerminateLastElec')}
-                    </span>
-                    <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">
+                    </Text>
+                    <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
                       {t('landlordContractsTerminateLastOldPrefix')} 11
-                    </span>
+                    </Text>
                     <div className="flex-1">
                       <NumberInput
                         placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
@@ -1268,12 +1318,12 @@ export default function ContractsPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold w-12 text-zinc-800">
+                    <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
                       {t('landlordContractsTerminateLastWater')}
-                    </span>
-                    <span className="text-sm text-zinc-500 whitespace-nowrap min-w-[50px]">
+                    </Text>
+                    <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
                       {t('landlordContractsTerminateLastOldPrefix')} 12
-                    </span>
+                    </Text>
                     <div className="flex-1">
                       <NumberInput
                         placeholder={t('landlordContractsTerminateNewIndexPlaceholder')}
