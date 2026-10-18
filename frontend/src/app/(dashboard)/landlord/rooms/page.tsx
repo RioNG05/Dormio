@@ -4,32 +4,20 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Plus,
   Search,
-  MoreHorizontal,
   X,
   Home,
   Building2,
   Target,
   FileSignature,
   Receipt,
-  ChevronDown,
   Eye,
-  Trash2,
   Edit,
   AlertTriangle,
   Sparkles,
   MapPin,
-  UploadCloud,
-  FileSpreadsheet,
   Grid,
   List,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Loader2,
-  CheckCircle2,
-  ShieldAlert,
-  AlertCircle,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -44,6 +32,7 @@ import {
   Checkbox,
   Form,
   SearchInput,
+  Text,
 } from '@/components/ui'
 import { formatCurrency } from '@/utils'
 import {
@@ -77,12 +66,8 @@ export default function RoomsPage() {
   const { currentLocale } = useLanguage()
   const [isMounted, setIsMounted] = useState(false)
 
-  // View mode & pagination according to Rule 9
+  // View mode (Grid view by default)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(6) // Default 6 for grid, 10 for table
-  const [windowStart, setWindowStart] = useState(1)
-  const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([])
 
   // Metadata from backend
   const [metadata, setMetadata] = useState<RoomMetadata | null>(null)
@@ -152,13 +137,8 @@ export default function RoomsPage() {
     setIsMounted(true)
   }, [])
 
-  // Sync default pageSize when viewMode changes (Rule 9: default Grid=6, Table=10)
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    setPageSize(mode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
-    setWindowStart(1)
-    setSelectedRoomIds([])
   }
 
   // Ensure buildings are loaded from backend on mount
@@ -566,10 +546,6 @@ export default function RoomsPage() {
     }
   }
 
-  if (!isMounted) {
-    return null
-  }
-
   // Filter rooms
   const filteredRooms = rooms.filter(room => {
     const matchSearch = room.id.toLowerCase().includes(searchQuery.toLowerCase())
@@ -581,65 +557,24 @@ export default function RoomsPage() {
     return matchSearch && matchBuilding && matchStatus && matchContract && matchInvoice
   })
 
-  // Standardized Pagination calculations (Rule 9)
-  const totalItems = filteredRooms.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const safeCurrentPage = Math.min(currentPage, totalPages)
-  const startIndex = (safeCurrentPage - 1) * pageSize
-  const endIndex = Math.min(startIndex + pageSize, totalItems)
-  const paginatedRooms = filteredRooms.slice(startIndex, endIndex)
-
-  // Group paginated rooms by floor for Grid View
-  const groupedRooms = paginatedRooms.reduce(
-    (acc, room) => {
-      if (!acc[room.floor]) acc[room.floor] = []
-      acc[room.floor].push(room)
-      return acc
-    },
-    {} as Record<string, typeof rooms>,
-  )
-
-  const floors = Object.keys(groupedRooms).sort((a, b) => Number(b) - Number(a))
-
-  // 5-page window jumping according to Rule 9
-  const pageNumbers = Array.from(
-    { length: Math.min(5, totalPages - windowStart + 1) },
-    (_, i) => windowStart + i,
-  )
-
-  const handlePrevWindow = () => {
-    const newStart = Math.max(1, windowStart - 5)
-    setWindowStart(newStart)
-    setCurrentPage(newStart)
-  }
-
-  const handleNextWindow = () => {
-    if (windowStart + 5 <= totalPages) {
-      const newStart = windowStart + 5
-      setWindowStart(newStart)
-      setCurrentPage(newStart)
-    }
-  }
-
-  // Select-All applies to current page only (Rule 9)
-  const currentPageRoomIds = paginatedRooms.map(r => r.fullRoomId || r.id)
-  const isAllCurrentPageSelected =
-    currentPageRoomIds.length > 0 && currentPageRoomIds.every(id => selectedRoomIds.includes(id))
-  const isIndeterminate =
-    currentPageRoomIds.some(id => selectedRoomIds.includes(id)) && !isAllCurrentPageSelected
-
-  const toggleSelectAllCurrentPage = () => {
-    if (isAllCurrentPageSelected) {
-      setSelectedRoomIds(prev => prev.filter(id => !currentPageRoomIds.includes(id)))
-    } else {
-      setSelectedRoomIds(prev => Array.from(new Set([...prev, ...currentPageRoomIds])))
-    }
-  }
-
-  const toggleSelectRoom = (id: string) => {
-    setSelectedRoomIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
+  // Group all filtered rooms by floor for Grid View (defaults to displaying all rooms)
+  const groupedRooms = useMemo(() => {
+    return filteredRooms.reduce(
+      (acc, room) => {
+        if (!acc[room.floor]) acc[room.floor] = []
+        acc[room.floor].push(room)
+        return acc
+      },
+      {} as Record<string, typeof rooms>,
     )
+  }, [filteredRooms])
+
+  const floors = useMemo(() => {
+    return Object.keys(groupedRooms).sort((a, b) => Number(b) - Number(a))
+  }, [groupedRooms])
+
+  if (!isMounted) {
+    return null
   }
 
   const totalRoomsCount = rooms.length
@@ -655,10 +590,12 @@ export default function RoomsPage() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+          <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-zinc-900">
             {t('landlordRoomsPageTitle')}
-          </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">{t('landlordRoomsPageSubtitle')}</p>
+          </Text>
+          <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5">
+            {t('landlordRoomsPageSubtitle')}
+          </Text>
         </div>
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
           {/* Bulk Generate Trigger Button */}
@@ -673,7 +610,9 @@ export default function RoomsPage() {
             className="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-zinc-800"
             title={t('landlordRoomsBulkGenerateTooltip')}
           >
-            <span>{t('landlordRoomsBulkGenerateBtn')}</span>
+            <Text as="span" size="sm" weight="semibold">
+              {t('landlordRoomsBulkGenerateBtn')}
+            </Text>
           </Button>
 
           {/* Single Room Add Button */}
@@ -698,34 +637,36 @@ export default function RoomsPage() {
         <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
           <div className="space-y-3 max-w-xl w-full">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+              <Text as="h2" weight="black" color="white" className="text-xl sm:text-2xl md:text-3xl tracking-tight">
                 {activeBuilding.name}
-              </h2>
-              <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
+              </Text>
+              <Text.Badge color="brand" className="px-2.5 py-0.5 bg-[#2AC1BC]/20 border border-[#2AC1BC]/30 rounded-full shrink-0">
                 {t('landlordRoomsInOperation')}
-              </span>
+              </Text.Badge>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
               <div className="flex items-center gap-2 min-w-0">
                 <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
+                <Text as="span" size="xs" weight="bold" className="text-zinc-200 truncate sm:whitespace-normal">
                   {activeBuilding.address}
-                </span>
+                </Text>
               </div>
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white rounded-lg transition-colors flex items-center gap-1 shrink-0"
               >
-                <span>{t('landlordRoomsViewMap')}</span> &rarr;
+                <Text as="span" size="3xs" weight="black" color="white">
+                  {t('landlordRoomsViewMap')} &rarr;
+                </Text>
               </a>
             </div>
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <Text variant="body" size="sm" color="subtle" className="leading-relaxed">
               {t('landlordRoomsBannerDesc')}
-            </p>
+            </Text>
           </div>
 
           {/* Stat Chips */}
@@ -734,24 +675,24 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md w-full lg:w-[140px]">
                 <Home className="w-5 h-5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">
+                  <Text variant="overline" size="3xs" weight="bold" color="subtle">
                     {t('landlordRoomsStatTotal')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
+                  </Text>
+                  <Text weight="black" color="white" className="text-base sm:text-lg leading-none mt-1">
                     {totalRoomsCount}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[140px]">
                 <Target className="w-5 h-5 text-rose-500 shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
+                  <Text variant="overline" size="3xs" weight="bold" className="text-rose-400">
                     {t('landlordRoomsOccupancy')}
-                  </span>
-                  <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
+                  </Text>
+                  <Text weight="black" color="danger" className="text-base sm:text-lg leading-none mt-1">
                     {occupancyRate}%
-                  </span>
+                  </Text>
                 </div>
               </div>
             </div>
@@ -760,48 +701,48 @@ export default function RoomsPage() {
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
+                  <Text variant="overline" size="3xs" weight="bold" color="brand">
                     {t('landlordRoomsStatusOccupied')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
+                  </Text>
+                  <Text weight="black" color="white" className="text-sm sm:text-base leading-none mt-0.5">
                     {occupiedCount}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-blue-500/10 rounded-2xl border border-blue-500/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
+                  <Text variant="overline" size="3xs" weight="bold" className="text-blue-400">
                     {t('landlordRoomsStatusVacant')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
+                  </Text>
+                  <Text weight="black" color="white" className="text-sm sm:text-base leading-none mt-0.5">
                     {vacantCount}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
+                  <Text variant="overline" size="3xs" weight="bold" className="text-[#FF6B35]">
                     {t('landlordRoomsStatusMaintenance')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
+                  </Text>
+                  <Text weight="black" color="white" className="text-sm sm:text-base leading-none mt-0.5">
                     {maintenanceCount}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-purple-500/10 rounded-2xl border border-purple-500/30 w-full lg:w-[130px]">
                 <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] shrink-0" />
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">
+                  <Text variant="overline" size="3xs" weight="bold" className="text-purple-400">
                     {t('landlordRoomsStatusReserved')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
+                  </Text>
+                  <Text weight="black" color="white" className="text-sm sm:text-base leading-none mt-0.5">
                     {reservedCount}
-                  </span>
+                  </Text>
                 </div>
               </div>
             </div>
@@ -809,7 +750,7 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Main Card with Toolbar & View Switcher (Rule 9) */}
+      {/* Main Card with Toolbar & View Switcher */}
       <div className="bg-white border border-zinc-200/80 rounded-3xl shadow-sm overflow-hidden">
         {/* Toolbar Header */}
         <div className="p-4 border-b border-zinc-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-zinc-50/40">
@@ -818,14 +759,11 @@ export default function RoomsPage() {
             <SearchInput
               placeholder={t('landlordRoomsSearchInputPlaceholder')}
               value={searchQuery}
-              onChange={val => {
-                setSearchQuery(val)
-                setCurrentPage(1)
-              }}
+              onChange={val => setSearchQuery(val)}
               containerClassName="w-full sm:w-72"
             />
 
-            {/* View Switcher: Grid vs Table (Rule 9: Grid default) */}
+            {/* View Switcher: Grid vs Table */}
             <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
               <Button
                 type="button"
@@ -840,7 +778,9 @@ export default function RoomsPage() {
                 }
                 title={t('landlordRoomsViewGridTooltip')}
               >
-                <span className="hidden sm:inline">{t('landlordRoomsViewGrid')}</span>
+                <Text as="span" size="xs" weight="medium" className="hidden sm:inline">
+                  {t('landlordRoomsViewGrid')}
+                </Text>
               </Button>
               <Button
                 type="button"
@@ -855,7 +795,9 @@ export default function RoomsPage() {
                 }
                 title={t('landlordRoomsViewTableTooltip')}
               >
-                <span className="hidden sm:inline">{t('landlordRoomsViewTable')}</span>
+                <Text as="span" size="xs" weight="medium" className="hidden sm:inline">
+                  {t('landlordRoomsViewTable')}
+                </Text>
               </Button>
             </div>
           </div>
@@ -864,10 +806,7 @@ export default function RoomsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <SelectInput
               value={statusFilter}
-              onChange={e => {
-                setStatusFilter(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={e => setStatusFilter(e.target.value)}
               containerClassName="w-auto min-w-[140px]"
               options={[
                 { value: '', label: t('landlordRoomsAllStatuses') },
@@ -880,10 +819,7 @@ export default function RoomsPage() {
 
             <SelectInput
               value={contractFilter}
-              onChange={e => {
-                setContractFilter(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={e => setContractFilter(e.target.value)}
               containerClassName="w-auto min-w-[150px]"
               options={[
                 { value: '', label: t('landlordRoomsAllContracts') },
@@ -900,18 +836,24 @@ export default function RoomsPage() {
           {isLoadingMetadata ? (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
               <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-              <p className="text-sm font-bold text-zinc-700">{t('landlordRoomsLoadingData')}</p>
-              <p className="text-xs text-zinc-400 mt-1">{t('landlordRoomsSyncingInfo')}</p>
+              <Text weight="bold" size="sm" className="text-zinc-700">
+                {t('landlordRoomsLoadingData')}
+              </Text>
+              <Text variant="caption" color="subtle" className="mt-1">
+                {t('landlordRoomsSyncingInfo')}
+              </Text>
             </div>
-          ) : paginatedRooms.length === 0 ? (
+          ) : filteredRooms.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-50/50 rounded-2xl border border-zinc-200 border-dashed text-center">
               <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-zinc-100 flex items-center justify-center mb-4 text-zinc-400">
                 <Search className="w-8 h-8" />
               </div>
-              <h3 className="text-base font-bold text-zinc-900 mb-1">
+              <Text as="h3" weight="bold" size="base" className="text-zinc-900 mb-1">
                 {t('landlordRoomsEmptyTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 max-w-sm">{t('landlordRoomsEmptyDesc')}</p>
+              </Text>
+              <Text variant="subtitle" size="xs" color="secondary" className="max-w-sm">
+                {t('landlordRoomsEmptyDesc')}
+              </Text>
               <div className="flex items-center gap-3 mt-5">
                 <Button
                   variant="outline"
@@ -936,7 +878,7 @@ export default function RoomsPage() {
               </div>
             </div>
           ) : viewMode === 'grid' ? (
-            /* GRID VIEW (Grouped by floor or cards) */
+            /* GRID VIEW (Grouped by floor - all rooms displayed) */
             <div className="space-y-4">
               {floors.map(floor => (
                 <div
@@ -944,12 +886,14 @@ export default function RoomsPage() {
                   className="flex flex-col md:flex-row gap-4 bg-white p-3.5 rounded-2xl border border-zinc-200 shadow-2xs hover:border-zinc-300 transition-all"
                 >
                   <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white">
-                    <span className="text-sm font-black tracking-wider text-white flex items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-bold text-zinc-400">
+                    <div className="flex items-center gap-1.5">
+                      <Text variant="overline" size="3xs" weight="bold" color="subtle">
                         {t('landlordRoomsColFloor')}
-                      </span>
-                      <span className="text-lg font-black">{floor}</span>
-                    </span>
+                      </Text>
+                      <Text size="lg" weight="black" color="white">
+                        {floor}
+                      </Text>
+                    </div>
                   </div>
 
                   <div className="flex-1 flex flex-wrap gap-3 items-center">
@@ -958,14 +902,12 @@ export default function RoomsPage() {
                       const isMaintenance = room.status === 'Bảo trì'
                       const isReserved = room.status === 'Đặt cọc'
                       const isVacant = room.status === 'Trống'
-                      const isSelected = selectedRoomIds.includes(room.fullRoomId || room.id)
 
                       return (
                         <div
                           key={`${room.building}-${room.id}`}
                           onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${isSelected ? 'ring-2 ring-[#2AC1BC] ' : ''
-                            }${isOccupied
+                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${isOccupied
                               ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]'
                               : isMaintenance
                                 ? 'bg-[#FF6B35]/10 border-[#FF6B35]/30 hover:border-[#FF6B35]'
@@ -976,15 +918,6 @@ export default function RoomsPage() {
                                     : 'bg-white border-zinc-200 hover:border-zinc-300'
                             }`}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={e => {
-                              e.stopPropagation()
-                              toggleSelectRoom(room.fullRoomId || room.id)
-                            }}
-                            className="absolute top-2 left-2 cursor-pointer z-10"
-                          />
-
                           <Button
                             type="button"
                             variant="ghost"
@@ -999,8 +932,11 @@ export default function RoomsPage() {
                             <Edit className="w-3.5 h-3.5" />
                           </Button>
 
-                          <span
-                            className={`text-lg font-black mt-1 ${isOccupied
+                          <Text
+                            as="span"
+                            weight="black"
+                            size="lg"
+                            className={`mt-1 ${isOccupied
                                 ? 'text-[#2AC1BC]'
                                 : isMaintenance
                                   ? 'text-[#FF6B35]'
@@ -1012,10 +948,10 @@ export default function RoomsPage() {
                               }`}
                           >
                             {room.id}
-                          </span>
+                          </Text>
 
-                          <span
-                            className={`text-[9px] font-black uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md ${isOccupied
+                          <Text.Badge
+                            className={`mt-1 px-2 py-0.5 rounded-md ${isOccupied
                                 ? 'text-[#2AC1BC] bg-[#2AC1BC]/15'
                                 : isMaintenance
                                   ? 'text-[#FF6B35] bg-[#FF6B35]/15'
@@ -1035,7 +971,7 @@ export default function RoomsPage() {
                                   : room.status === 'Đặt cọc'
                                     ? t('landlordRoomsStatusReserved')
                                     : room.status}
-                          </span>
+                          </Text.Badge>
                         </div>
                       )
                     })}
@@ -1044,222 +980,167 @@ export default function RoomsPage() {
               ))}
             </div>
           ) : (
-            /* TABLE VIEW (Rule 9) */
+            /* TABLE VIEW (All rooms displayed) */
             <div className="overflow-x-auto rounded-2xl border border-zinc-200">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-zinc-100 text-zinc-700 font-bold border-b border-zinc-200 uppercase tracking-wider text-[10px]">
-                    <th className="p-3 w-10 text-center">
-                      <Checkbox
-                        checked={isAllCurrentPageSelected}
-                        indeterminate={isIndeterminate}
-                        onChange={toggleSelectAllCurrentPage}
-                        title={t('landlordRoomsSelectAllTooltip')}
-                        containerClassName="items-center justify-center"
-                      />
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColRoomNumber')}
+                      </Text>
                     </th>
-                    <th className="p-3">{t('landlordRoomsColRoomNumber')}</th>
-                    <th className="p-3">{t('landlordRoomsColFloor')}</th>
-                    <th className="p-3">{t('landlordRoomsColRoomType')}</th>
-                    <th className="p-3">{t('landlordRoomsColArea')}</th>
-                    <th className="p-3">{t('landlordRoomsColStatus')}</th>
-                    <th className="p-3">{t('landlordRoomsColServices')}</th>
-                    <th className="p-3 text-right">{t('landlordRoomsColActions')}</th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColFloor')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColRoomType')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColArea')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColStatus')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColServices')}
+                      </Text>
+                    </th>
+                    <th className="p-3 text-right">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColActions')}
+                      </Text>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200/70">
-                  {paginatedRooms.map(room => {
-                    const isSelected = selectedRoomIds.includes(room.fullRoomId || room.id)
-                    return (
-                      <tr
-                        key={`${room.building}-${room.id}`}
-                        className={`hover:bg-zinc-50/80 transition-colors ${
-                          isSelected ? 'bg-cyan-50/50' : ''
-                        }`}
-                      >
-                        <td className="p-3 text-center">
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => toggleSelectRoom(room.fullRoomId || room.id)}
-                            containerClassName="items-center justify-center"
-                          />
-                        </td>
-                        <td className="p-3 font-black text-zinc-900 text-sm">{room.id}</td>
-                        <td className="p-3 font-semibold text-zinc-600">
+                  {filteredRooms.map(room => (
+                    <tr
+                      key={`${room.building}-${room.id}`}
+                      className="hover:bg-zinc-50/80 transition-colors"
+                    >
+                      <td className="p-3 font-black text-zinc-900 text-sm">
+                        <Text as="span" weight="black" size="sm" className="text-zinc-900">
+                          {room.id}
+                        </Text>
+                      </td>
+                      <td className="p-3 font-semibold text-zinc-600">
+                        <Text as="span" weight="semibold" size="xs" color="secondary">
                           {t('landlordRoomsFloorText', { floor: room.floor })}
-                        </td>
-                        <td className="p-3 font-medium text-zinc-700">
+                        </Text>
+                      </td>
+                      <td className="p-3 font-medium text-zinc-700">
+                        <Text as="span" weight="medium" size="xs" className="text-zinc-700">
                           {room.roomType || 'Studio'}
-                        </td>
-                        <td className="p-3 text-zinc-600">
+                        </Text>
+                      </td>
+                      <td className="p-3 text-zinc-600">
+                        <Text as="span" size="xs" color="secondary">
                           {room.area ? `${room.area} m²` : '25 m²'}
-                        </td>
-                        <td className="p-3">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              room.status === 'Đang thuê'
-                                ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
-                                : room.status === 'Trống'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : room.status === 'Bảo trì'
-                                    ? 'bg-[#FF6B35]/15 text-[#FF6B35]'
-                                    : 'bg-purple-100 text-purple-700'
-                            }`}
-                          >
-                            {room.status === 'Đang thuê'
-                              ? t('landlordRoomsStatusOccupied')
+                        </Text>
+                      </td>
+                      <td className="p-3">
+                        <Text.Badge
+                          className={`px-2.5 py-0.5 rounded-full ${room.status === 'Đang thuê'
+                              ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
                               : room.status === 'Trống'
-                                ? t('landlordRoomsStatusVacant')
+                                ? 'bg-blue-100 text-blue-700'
                                 : room.status === 'Bảo trì'
-                                  ? t('landlordRoomsStatusMaintenance')
-                                  : room.status === 'Đặt cọc'
-                                    ? t('landlordRoomsStatusReserved')
-                                    : room.status}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                            {(room.services || ['Điện', 'Nước']).map((s: string, idx: number) => {
-                              const sLabel =
-                                s === 'Điện'
-                                  ? t('landlordRoomsServiceElectricity')
-                                  : s === 'Nước'
-                                    ? t('landlordRoomsServiceWater')
-                                    : s === 'WiFi'
-                                      ? t('landlordRoomsServiceWifi')
-                                      : s === 'Vệ sinh'
-                                        ? t('landlordRoomsServiceCleaning')
-                                        : s === 'Rác'
-                                          ? t('landlordRoomsServiceTrash')
-                                          : s === 'Bảo vệ'
-                                            ? t('landlordRoomsServiceSecurity')
-                                            : s
-                              return (
-                                <span
-                                  key={idx}
-                                  className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] rounded font-medium"
-                                >
-                                  {sLabel}
-                                </span>
-                              )
-                            })}
-                          </div>
-                        </td>
-                        <td className="p-3 text-right space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEditModal(room)}
-                            className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
-                            title={t('landlordRoomsEditRoomTooltip')}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                            className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
-                            title={t('landlordRoomsViewDetailTooltip')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  })}
+                                  ? 'bg-[#FF6B35]/15 text-[#FF6B35]'
+                                  : 'bg-purple-100 text-purple-700'
+                            }`}
+                        >
+                          {room.status === 'Đang thuê'
+                            ? t('landlordRoomsStatusOccupied')
+                            : room.status === 'Trống'
+                              ? t('landlordRoomsStatusVacant')
+                              : room.status === 'Bảo trì'
+                                ? t('landlordRoomsStatusMaintenance')
+                                : room.status === 'Đặt cọc'
+                                  ? t('landlordRoomsStatusReserved')
+                                  : room.status}
+                        </Text.Badge>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {(room.services || ['Điện', 'Nước']).map((s: string, idx: number) => {
+                            const sLabel =
+                              s === 'Điện'
+                                ? t('landlordRoomsServiceElectricity')
+                                : s === 'Nước'
+                                  ? t('landlordRoomsServiceWater')
+                                  : s === 'WiFi'
+                                    ? t('landlordRoomsServiceWifi')
+                                    : s === 'Vệ sinh'
+                                      ? t('landlordRoomsServiceCleaning')
+                                      : s === 'Rác'
+                                        ? t('landlordRoomsServiceTrash')
+                                        : s === 'Bảo vệ'
+                                          ? t('landlordRoomsServiceSecurity')
+                                          : s
+                            return (
+                              <Text
+                                key={idx}
+                                as="span"
+                                size="3xs"
+                                weight="medium"
+                                className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 rounded"
+                              >
+                                {sLabel}
+                              </Text>
+                            )
+                          })}
+                        </div>
+                      </td>
+                      <td className="p-3 text-right space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenEditModal(room)}
+                          className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
+                          title={t('landlordRoomsEditRoomTooltip')}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
+                          className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
+                          title={t('landlordRoomsViewDetailTooltip')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           )}
         </div>
 
-        {/* Standardized Pagination Bar (Rule 9) */}
-        <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600 font-medium">
-          {/* Left section: Pagination controls */}
+        {/* Rooms Summary Bar (Default displays all rooms) */}
+        <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-600 font-medium">
           <div className="flex items-center gap-2">
-            <span>{t('landlordRoomsPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                if (!isNaN(val) && val > 0) {
-                  setPageSize(val)
-                  setCurrentPage(1)
-                  setWindowStart(1)
-                }
-              }}
-              className="w-14 px-2 py-1 text-center font-bold bg-white border border-zinc-300 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
-            />
-            <span>/ trang</span>
-            <span className="text-zinc-300 mx-1">|</span>
-            <span>
-              {totalItems === 0 ? '0 - 0' : `${startIndex + 1} - ${endIndex}`}{' '}
-              {t('landlordRoomsPaginationOf', { total: totalItems })}
-            </span>
-          </div>
-
-          {/* Right section: 5-page window jumping controls */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrevWindow}
-              disabled={windowStart === 1}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationPrev5')}
-            >
-              <ChevronsLeft className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={safeCurrentPage === 1}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            {pageNumbers.map(num => (
-              <Button
-                key={num}
-                variant={safeCurrentPage === num ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(num)}
-                className={`min-w-8 h-8 px-2 font-bold ${
-                  safeCurrentPage === num ? 'bg-[#2AC1BC] text-white shadow-xs' : ''
-                }`}
-              >
-                {num}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={safeCurrentPage >= totalPages}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNextWindow}
-              disabled={windowStart + 5 > totalPages}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationNext5')}
-            >
-              <ChevronsRight className="w-4 h-4 text-zinc-600" />
-            </Button>
+            <Text as="span" size="xs" color="secondary">
+              {t('landlordRoomsPaginationShowing')}:
+            </Text>
+            <Text as="span" size="xs" weight="black" className="text-zinc-900">
+              {filteredRooms.length}
+            </Text>
+            <Text as="span" size="xs" color="secondary">
+              {t('landlordRoomsPaginationOf', { total: totalRoomsCount })}
+            </Text>
           </div>
         </div>
       </div>
@@ -1282,12 +1163,12 @@ export default function RoomsPage() {
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900 tracking-tight">
+                  <Text as="h2" variant="heading" size="xl" weight="black" className="tracking-tight text-zinc-900">
                     {t('landlordRoomsBulkModalTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
+                  </Text>
+                  <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
                     {t('landlordRoomsBulkModalSubtitle')}
-                  </p>
+                  </Text>
                 </div>
               </div>
               <Button
@@ -1318,22 +1199,21 @@ export default function RoomsPage() {
               {/* Quota Info Banner */}
               <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
-                  <span className="flex items-center gap-1.5">
+                  <Text as="span" size="xs" weight="bold" className="flex items-center gap-1.5 text-zinc-700">
                     <Building2 className="w-4 h-4 text-[#2AC1BC]" />
                     {t('landlordRoomsBulkQuotaLabel')}
-                  </span>
-                  <span className="text-zinc-900 font-black">
+                  </Text>
+                  <Text as="span" size="xs" weight="black" className="text-zinc-900">
                     {t('landlordRoomsBulkQuotaValue', {
                       current: currentTotalRooms,
                       max: maxPlanRoom,
                     })}
-                  </span>
+                  </Text>
                 </div>
                 <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all ${
-                      isOverQuota ? 'bg-red-500' : 'bg-[#2AC1BC]'
-                    }`}
+                    className={`h-full transition-all ${isOverQuota ? 'bg-red-500' : 'bg-[#2AC1BC]'
+                      }`}
                     style={{
                       width: `${Math.min(100, ((currentTotalRooms + totalGeneratedCount) / maxPlanRoom) * 100)}%`,
                     }}
@@ -1387,20 +1267,22 @@ export default function RoomsPage() {
                     }}
                     placeholder={t('landlordRoomsBulkNameFormatPlaceholder')}
                     labelRight={
-                      <span className="text-[11px] text-zinc-400">
+                      <Text as="span" size="2xs" color="subtle">
                         Placeholder:{' '}
-                        <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
+                        <Text.Code className="bg-zinc-100 text-[#2AC1BC]">
                           &#123;floor&#125;
-                        </code>
+                        </Text.Code>
                         ,{' '}
-                        <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
+                        <Text.Code className="bg-zinc-100 text-[#2AC1BC]">
                           &#123;index&#125;
-                        </code>
-                      </span>
+                        </Text.Code>
+                      </Text>
                     }
                   />
                   <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-zinc-500">
-                    <span className="font-bold">{t('landlordRoomsBulkSuggestedPatterns')}</span>
+                    <Text as="span" size="3xs" weight="bold" color="secondary">
+                      {t('landlordRoomsBulkSuggestedPatterns')}
+                    </Text>
                     <Button
                       type="button"
                       variant="ghost"
@@ -1450,14 +1332,14 @@ export default function RoomsPage() {
                   options={
                     metadata?.roomTypes && metadata.roomTypes.length > 0
                       ? metadata.roomTypes.map(rt => ({
-                          value: rt.id,
-                          label: rt.name,
-                        }))
+                        value: rt.id,
+                        label: rt.name,
+                      }))
                       : [
-                          { value: 'studio', label: t('landlordRoomsTypeStudio') },
-                          { value: '1pn', label: t('landlordRoomsType1Bed') },
-                          { value: '2pn', label: t('landlordRoomsType2Bed') },
-                        ]
+                        { value: 'studio', label: t('landlordRoomsTypeStudio') },
+                        { value: '1pn', label: t('landlordRoomsType1Bed') },
+                        { value: '2pn', label: t('landlordRoomsType2Bed') },
+                      ]
                   }
                 />
 
@@ -1476,82 +1358,86 @@ export default function RoomsPage() {
               {/* Service Associations Checkboxes */}
               <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
+                  <Text as="label" size="xs" weight="bold" className="text-zinc-800 flex items-center gap-1.5">
                     <Receipt className="w-4 h-4 text-[#2AC1BC]" />
                     {t('landlordRoomsBulkServicesSection')}
-                  </label>
-                  <span className="text-[11px] text-zinc-400">
+                  </Text>
+                  <Text as="span" size="2xs" color="subtle">
                     {t('landlordRoomsBulkServicesSelected', { count: bulkServiceIds.length })}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
                   {metadata?.services && metadata.services.length > 0
                     ? metadata.services.map(srv => {
-                        const checked = bulkServiceIds.includes(srv.id)
-                        return (
-                          <Checkbox
-                            key={srv.id}
-                            variant="card"
-                            checked={checked}
-                            onChange={() => {
-                              setBulkServiceIds(prev =>
-                                prev.includes(srv.id)
-                                  ? prev.filter(id => id !== srv.id)
-                                  : [...prev, srv.id],
-                              )
-                              setIsBulkDirty(true)
-                            }}
-                            label={srv.name}
-                          />
-                        )
-                      })
+                      const checked = bulkServiceIds.includes(srv.id)
+                      return (
+                        <Checkbox
+                          key={srv.id}
+                          variant="card"
+                          checked={checked}
+                          onChange={() => {
+                            setBulkServiceIds(prev =>
+                              prev.includes(srv.id)
+                                ? prev.filter(id => id !== srv.id)
+                                : [...prev, srv.id],
+                            )
+                            setIsBulkDirty(true)
+                          }}
+                          label={srv.name}
+                        />
+                      )
+                    })
                     : ['Điện', 'Nước', 'WiFi', 'Vệ sinh'].map((item, idx) => {
-                        const itemLabel =
-                          item === 'Điện'
-                            ? t('landlordRoomsServiceElectricity')
-                            : item === 'Nước'
-                              ? t('landlordRoomsServiceWater')
-                              : item === 'WiFi'
-                                ? t('landlordRoomsServiceWifi')
-                                : item === 'Vệ sinh'
-                                  ? t('landlordRoomsServiceCleaning')
-                                  : item
-                        return (
-                          <Checkbox
-                            key={idx}
-                            variant="card"
-                            defaultChecked
-                            label={itemLabel}
-                          />
-                        )
-                      })}
+                      const itemLabel =
+                        item === 'Điện'
+                          ? t('landlordRoomsServiceElectricity')
+                          : item === 'Nước'
+                            ? t('landlordRoomsServiceWater')
+                            : item === 'WiFi'
+                              ? t('landlordRoomsServiceWifi')
+                              : item === 'Vệ sinh'
+                                ? t('landlordRoomsServiceCleaning')
+                                : item
+                      return (
+                        <Checkbox
+                          key={idx}
+                          variant="card"
+                          defaultChecked
+                          label={itemLabel}
+                        />
+                      )
+                    })}
                 </div>
               </div>
 
               {/* Live Preview Card */}
               <div className="bg-zinc-900 rounded-2xl p-4 sm:p-5 text-white shadow-md space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                  <Text as="span" size="xs" weight="bold" className="text-zinc-300 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-amber-400" />
                     {t('landlordRoomsBulkPreviewTitle', { count: previewRoomNumbers.length })}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400">
+                  </Text>
+                  <Text as="span" size="3xs" mono color="subtle">
                     {t('landlordRoomsBulkPreviewSummary', {
                       floors: bulkFloorCount,
                       roomsPerFloor: bulkRoomsPerFloor,
                     })}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-2 bg-white/5 rounded-xl border border-white/10">
                   {previewRoomNumbers.map((code, idx) => (
-                    <span
+                    <Text
                       key={idx}
-                      className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white font-mono text-xs rounded-lg border border-white/10 font-bold"
+                      as="span"
+                      size="xs"
+                      mono
+                      weight="bold"
+                      className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/10"
                     >
                       {code}
-                    </span>
+                    </Text>
                   ))}
                 </div>
               </div>
@@ -1604,16 +1490,16 @@ export default function RoomsPage() {
                   {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900">
+                  <Text as="h2" variant="heading" size="xl" weight="black" className="text-zinc-900">
                     {selectedRoomId
                       ? t('landlordRoomsSingleTitleEdit')
                       : t('landlordRoomsSingleTitleCreate')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
+                  </Text>
+                  <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
                     {selectedRoomId
                       ? t('landlordRoomsSingleDescEdit')
                       : t('landlordRoomsSingleDescCreate')}
-                  </p>
+                  </Text>
                 </div>
               </div>
               <Button
@@ -1646,19 +1532,19 @@ export default function RoomsPage() {
                   {/* Left Column: Basic Details */}
                   <div className="lg:col-span-3 space-y-6">
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                      <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
                         <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionInfo')}
-                      </h3>
+                      </Text>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
+                          <Text as="label" size="xs" weight="bold" className="text-zinc-700">
                             {t('landlordRoomsSingleBuildingLabel')}
-                          </label>
-                          <div className="w-full px-3.5 py-2.5 text-xs border border-zinc-200 bg-zinc-50 rounded-xl font-medium text-zinc-700 truncate">
+                          </Text>
+                          <Text as="div" size="xs" weight="medium" className="w-full px-3.5 py-2.5 border border-zinc-200 bg-zinc-50 rounded-xl text-zinc-700 truncate">
                             {activeBuilding?.name || 'Dormio Boarding House'}
-                          </div>
+                          </Text>
                         </div>
 
                         <TextInput
@@ -1683,14 +1569,14 @@ export default function RoomsPage() {
                           options={
                             metadata?.roomTypes && metadata.roomTypes.length > 0
                               ? metadata.roomTypes.map(rt => ({
-                                  value: rt.id,
-                                  label: rt.name,
-                                }))
+                                value: rt.id,
+                                label: rt.name,
+                              }))
                               : [
-                                  { value: 'studio', label: t('landlordRoomsTypeStudio') },
-                                  { value: '1pn', label: t('landlordRoomsType1Bed') },
-                                  { value: '2pn', label: t('landlordRoomsType2Bed') },
-                                ]
+                                { value: 'studio', label: t('landlordRoomsTypeStudio') },
+                                { value: '1pn', label: t('landlordRoomsType1Bed') },
+                                { value: '2pn', label: t('landlordRoomsType2Bed') },
+                              ]
                           }
                         />
 
@@ -1756,7 +1642,7 @@ export default function RoomsPage() {
                             setIsSingleDirty(true)
                           }}
                           placeholder="3.500.000"
-                          rightIcon={<span className="text-xs font-bold text-[#2AC1BC]">đ</span>}
+                          rightIcon={<Text as="span" size="xs" weight="bold" color="brand">đ</Text>}
                         />
                       </div>
 
@@ -1776,76 +1662,76 @@ export default function RoomsPage() {
                     {/* Room Services Association */}
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                        <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
                           <Receipt className="w-4 h-4 text-[#2AC1BC]" />{' '}
                           {t('landlordRoomsSingleSectionServices')}
-                        </h3>
-                        <span className="text-[11px] font-semibold text-zinc-500">
+                        </Text>
+                        <Text as="span" size="2xs" weight="semibold" color="secondary">
                           {t('landlordRoomsSingleServicesSelected', {
                             count: selectedServiceIds.length,
                           })}
-                        </span>
+                        </Text>
                       </div>
-                      <p className="text-xs text-zinc-500 leading-relaxed">
+                      <Text variant="body" size="xs" color="secondary" className="leading-relaxed">
                         {t('landlordRoomsSingleServicesHint')}
-                      </p>
+                      </Text>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                         {metadata?.services && metadata.services.length > 0
                           ? metadata.services.map(srv => {
-                              const isChecked = selectedServiceIds.includes(srv.id)
-                              return (
-                                <Checkbox
-                                  key={srv.id}
-                                  variant="card"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    setSelectedServiceIds(prev =>
-                                      prev.includes(srv.id)
-                                        ? prev.filter(id => id !== srv.id)
-                                        : [...prev, srv.id],
-                                    )
-                                    setIsSingleDirty(true)
-                                  }}
-                                  label={srv.name}
-                                  description={
-                                    srv.price !== undefined
-                                      ? `${formatCurrency(Number(srv.price) || srv.price, currentLocale)} / ${srv.unit}`
-                                      : undefined
-                                  }
-                                />
-                              )
-                            })
-                          : [
-                              {
-                                id: 'dien',
-                                name: t('landlordRoomsServiceElectricity'),
-                                rate: '3.500 đ/kWh',
-                              },
-                              {
-                                id: 'nuoc',
-                                name: t('landlordRoomsServiceWater'),
-                                rate: '25.000 đ/m³',
-                              },
-                              {
-                                id: 'wifi',
-                                name: t('landlordRoomsServiceWifi'),
-                                rate: '100.000 đ/tháng',
-                              },
-                              {
-                                id: 'rac',
-                                name: t('landlordRoomsServiceTrash'),
-                                rate: '20.000 đ/phòng',
-                              },
-                            ].map((srv, idx) => (
+                            const isChecked = selectedServiceIds.includes(srv.id)
+                            return (
                               <Checkbox
-                                key={idx}
+                                key={srv.id}
                                 variant="card"
-                                defaultChecked
+                                checked={isChecked}
+                                onChange={() => {
+                                  setSelectedServiceIds(prev =>
+                                    prev.includes(srv.id)
+                                      ? prev.filter(id => id !== srv.id)
+                                      : [...prev, srv.id],
+                                  )
+                                  setIsSingleDirty(true)
+                                }}
                                 label={srv.name}
-                                description={srv.rate}
+                                description={
+                                  srv.price !== undefined
+                                    ? `${formatCurrency(Number(srv.price) || srv.price, currentLocale)} / ${srv.unit}`
+                                    : undefined
+                                }
                               />
-                            ))}
+                            )
+                          })
+                          : [
+                            {
+                              id: 'dien',
+                              name: t('landlordRoomsServiceElectricity'),
+                              rate: '3.500 đ/kWh',
+                            },
+                            {
+                              id: 'nuoc',
+                              name: t('landlordRoomsServiceWater'),
+                              rate: '25.000 đ/m³',
+                            },
+                            {
+                              id: 'wifi',
+                              name: t('landlordRoomsServiceWifi'),
+                              rate: '100.000 đ/tháng',
+                            },
+                            {
+                              id: 'rac',
+                              name: t('landlordRoomsServiceTrash'),
+                              rate: '20.000 đ/phòng',
+                            },
+                          ].map((srv, idx) => (
+                            <Checkbox
+                              key={idx}
+                              variant="card"
+                              defaultChecked
+                              label={srv.name}
+                              description={srv.rate}
+                            />
+                          ))}
                       </div>
                     </div>
                   </div>
@@ -1853,10 +1739,10 @@ export default function RoomsPage() {
                   {/* Right Column: Amenities & Notes */}
                   <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                      <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
                         <Target className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionAmenities')}
-                      </h3>
+                      </Text>
                       <div className="flex flex-wrap gap-1.5">
                         {[
                           'WiFi',
@@ -1881,23 +1767,24 @@ export default function RoomsPage() {
                               )
                               setIsSingleDirty(true)
                             }}
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer h-auto ${
-                              selectedAmenities.includes(item)
+                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer h-auto ${selectedAmenities.includes(item)
                                 ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20'
                                 : 'text-zinc-600 bg-white border-zinc-200 hover:bg-zinc-50'
-                            }`}
+                              }`}
                           >
-                            {item}
+                            <Text as="span" size="xs" weight="semibold">
+                              {item}
+                            </Text>
                           </Button>
                         ))}
                       </div>
                     </div>
 
                     <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-2">
-                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                      <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
                         <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionNotes')}
-                      </h3>
+                      </Text>
                       <TextareaInput
                         rows={4}
                         value={formNotes}
@@ -1983,10 +1870,12 @@ function ConfirmModal({
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-lg font-black text-zinc-900 tracking-tight">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+          <Text as="h3" variant="heading" size="lg" weight="black" className="tracking-tight text-zinc-900">
+            {title}
+          </Text>
+          <Text variant="body" size="xs" weight="medium" color="secondary" className="leading-relaxed max-w-xs mx-auto">
             {message}
-          </p>
+          </Text>
         </div>
 
         <div className="flex items-center justify-center gap-3 pt-2">
