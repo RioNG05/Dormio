@@ -1,83 +1,133 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Tắt chế độ dark mode tự động của Tailwind v4, bắt buộc dùng nền trắng */
+/* Enable class-based dark mode via .dark on html element (managed by next-themes) */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
+
   --background: #ffffff;
   --foreground: #18181b;
+  --surface: #f8fafb;
+  --card: #ffffff;
+  --card-hover: #f1f5f9;
+  --input-bg: #ffffff;
 
-  /* Brand */
+  /* Brand — Primary Teal (#2AC1BC) & Secondary Orange (#FF6B35) */
   --primary: #2AC1BC;
-  --primary-hover: #72b3a3;
-  --accent: #FF6B35;
-  --accent-hover: #d55e23;
+  --primary-hover: #22a8a3;
+  --primary-soft: rgba(42, 193, 188, 0.1);
+  --primary-border: rgba(42, 193, 188, 0.3);
 
-  /* Semantic — dùng thống nhất toàn trang */
+  --accent: #FF6B35;
+  --accent-hover: #e55a25;
+  --accent-soft: rgba(255, 107, 53, 0.1);
+  --accent-border: rgba(255, 107, 53, 0.3);
+
+  /* Semantic tokens */
   --danger: #ea580c;
-  /* orange-600: nút xóa / hủy / chấm dứt */
   --danger-hover: #c2410c;
-  /* orange-700 */
   --danger-bg: #fff7ed;
-  /* orange-50 */
   --danger-border: #fed7aa;
-  /* orange-200 */
 
   --deposit: #9333ea;
-  /* purple-600: đặt cọc */
   --deposit-hover: #7e22ce;
-  /* purple-700 */
   --deposit-bg: #faf5ff;
-  /* purple-50 */
   --deposit-border: #e9d5ff;
-  /* purple-200 */
 
   --success: var(--primary);
-  /* dùng màu primary cho trạng thái tốt */
   --success-bg: #f0fcfa;
-  /* primary/10 tương đương */
   --success-border: #b3e0d8;
-  /* primary/30 tương đương */
 
   --vacant: #0ea5e9;
-  /* sky-500: phòng trống */
   --vacant-hover: #0284c7;
-  /* sky-600 */
   --vacant-bg: #f0f9ff;
-  /* sky-50 */
   --vacant-border: #bae6fd;
-  /* sky-200 */
 
   --warning: #d97706;
-  /* amber-600: sắp hết hạn / cảnh báo */
   --warning-bg: #fffbeb;
-  /* amber-50 */
   --warning-border: #fde68a;
-  /* amber-200 */
 
   --info: #2563eb;
-  /* blue-600: thông tin */
   --info-bg: #eff6ff;
-  /* blue-50 */
   --info-border: #bfdbfe;
-  /* blue-200 */
 
-  --muted: #71717a;
-  /* zinc-500: chữ phụ */
-  --border: #e4e4e7;
-  /* zinc-200: border mặc định */
-  --surface: #fafafa;
-  /* zinc-50: nền card phụ */
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Deep Teal-Slate dark surfaces harmonized with #2AC1BC and #FF6B35 */
+  --background: #0b1116;
+  --foreground: #f1f5f9;
+  --surface: #101920;
+  --card: #152028;
+  --card-hover: #1c2b36;
+  --input-bg: #0e161c;
+
+  /* Brand — Luminous Teal & Warm Coral Orange for dark surfaces */
+  --primary: #2AC1BC;
+  --primary-hover: #38d6d0;
+  --primary-soft: rgba(42, 193, 188, 0.16);
+  --primary-border: rgba(42, 193, 188, 0.38);
+
+  --accent: #FF6B35;
+  --accent-hover: #ff8252;
+  --accent-soft: rgba(255, 107, 53, 0.16);
+  --accent-border: rgba(255, 107, 53, 0.38);
+
+  /* Semantic tokens adapted for dark mode */
+  --danger: #fb923c;
+  --danger-hover: #f97316;
+  --danger-bg: rgba(234, 88, 12, 0.15);
+  --danger-border: rgba(251, 146, 60, 0.32);
+
+  --deposit: #c084fc;
+  --deposit-hover: #a855f7;
+  --deposit-bg: rgba(147, 51, 234, 0.15);
+  --deposit-border: rgba(192, 132, 252, 0.32);
+
+  --success: #33cfc9;
+  --success-bg: rgba(42, 193, 188, 0.15);
+  --success-border: rgba(42, 193, 188, 0.35);
+
+  --vacant: #38bdf8;
+  --vacant-hover: #0ea5e9;
+  --vacant-bg: rgba(14, 165, 233, 0.15);
+  --vacant-border: rgba(56, 189, 248, 0.32);
+
+  --warning: #fbbf24;
+  --warning-bg: rgba(217, 119, 6, 0.15);
+  --warning-border: rgba(251, 191, 36, 0.32);
+
+  --info: #60a5fa;
+  --info-bg: rgba(37, 99, 235, 0.15);
+  --info-border: rgba(96, 165, 250, 0.32);
+
+  --muted: #94a3b8;
+  --border: #22323f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-input-bg: var(--input-bg);
+
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-border: var(--primary-border);
+
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
 
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
@@ -108,7 +158,6 @@
 
   --color-muted: var(--muted);
   --color-border: var(--border);
-  --color-surface: var(--surface);
 
   --font-sans: var(--font-be-vietnam-pro);
 }
@@ -119,7 +168,187 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Utility: hide scrollbar nhưng vẫn scroll được */
+/* -------------------------------------------------------------------------- */
+/* Global Dark Mode Adaptation Layer                                          */
+/* Harmonizes existing utility classes across all 80+ routes while respecting */
+/* .theme-preserve-light safe zones (e.g. A4 contracts, QR payment boxes).    */
+/* -------------------------------------------------------------------------- */
+
+.dark :where(.bg-white):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--card) !important;
+}
+
+.dark :where(.bg-white\/95, .bg-white\/90, .bg-white\/80):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: color-mix(in srgb, var(--card) 92%, transparent) !important;
+}
+
+.dark :where(.bg-zinc-50, .bg-slate-50, .bg-gray-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--surface) !important;
+}
+
+.dark :where(.bg-zinc-50\/50, .bg-zinc-50\/60, .bg-zinc-50\/80, .bg-slate-50\/50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: color-mix(in srgb, var(--surface) 75%, transparent) !important;
+}
+
+.dark :where(.bg-zinc-100, .bg-zinc-100\/80, .bg-slate-100, .bg-gray-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--card-hover) !important;
+}
+
+.dark :where(.bg-zinc-200, .bg-zinc-200\/80, .bg-slate-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: #243542 !important;
+}
+
+/* Hover surface states */
+.dark :where(.hover\:bg-white:hover, .hover\:bg-zinc-50:hover, .hover\:bg-slate-50:hover):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--card-hover) !important;
+}
+
+.dark :where(.hover\:bg-zinc-100:hover, .hover\:bg-zinc-200:hover, .hover\:bg-slate-100:hover):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: #243542 !important;
+}
+
+/* Borders & Dividers */
+.dark :where(
+  .border-zinc-100,
+  .border-zinc-200,
+  .border-zinc-200\/80,
+  .border-zinc-200\/90,
+  .border-zinc-200\/60,
+  .border-zinc-300,
+  .border-slate-100,
+  .border-slate-200,
+  .border-gray-100,
+  .border-gray-200
+):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: var(--border) !important;
+}
+
+.dark :where(.divide-zinc-100 > :not(:last-child), .divide-zinc-200 > :not(:last-child), .divide-slate-100 > :not(:last-child)):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: var(--border) !important;
+}
+
+/* Typography hierarchy */
+.dark :where(.text-zinc-950, .text-zinc-900, .text-zinc-800, .text-slate-900, .text-slate-800, .text-gray-900):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: var(--foreground) !important;
+}
+
+.dark :where(.text-zinc-700, .text-slate-700, .text-gray-700):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #cbd5e1 !important;
+}
+
+.dark :where(.text-zinc-600, .text-zinc-500, .text-slate-600, .text-slate-500, .text-gray-600, .text-gray-500):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: var(--muted) !important;
+}
+
+.dark :where(.text-zinc-400, .text-slate-400):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #64748b !important;
+}
+
+/* Pastel status backgrounds & borders harmonized for dark surfaces */
+.dark :where(.bg-emerald-50, .bg-emerald-50\/50, .bg-emerald-100\/50, .bg-green-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+.dark :where(.bg-emerald-100, .bg-green-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(16, 185, 129, 0.22) !important;
+}
+.dark :where(.border-emerald-100, .border-emerald-200, .border-emerald-200\/80, .border-green-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+.dark :where(.text-emerald-700, .text-emerald-800, .text-emerald-900, .text-green-700, .text-green-800):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #34d399 !important;
+}
+
+.dark :where(.bg-teal-50, .bg-cyan-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--primary-soft) !important;
+}
+.dark :where(.bg-teal-100, .bg-cyan-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(42, 193, 188, 0.24) !important;
+}
+.dark :where(.border-teal-100, .border-teal-200, .border-cyan-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: var(--primary-border) !important;
+}
+.dark :where(.text-teal-700, .text-teal-800, .text-teal-900):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #5eead4 !important;
+}
+
+.dark :where(.bg-orange-50, .bg-orange-50\/50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--accent-soft) !important;
+}
+.dark :where(.bg-orange-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(255, 107, 53, 0.24) !important;
+}
+.dark :where(.border-orange-100, .border-orange-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: var(--accent-border) !important;
+}
+.dark :where(.text-orange-700, .text-orange-800, .text-orange-900):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #fb923c !important;
+}
+
+.dark :where(.bg-rose-50, .bg-rose-50\/50, .bg-red-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(244, 63, 94, 0.14) !important;
+}
+.dark :where(.bg-rose-100, .bg-red-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(244, 63, 94, 0.22) !important;
+}
+.dark :where(.border-rose-100, .border-rose-200, .border-red-100, .border-red-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: rgba(251, 113, 133, 0.3) !important;
+}
+.dark :where(.text-rose-700, .text-rose-800, .text-rose-900, .text-red-700, .text-red-800):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #fb7185 !important;
+}
+
+.dark :where(.bg-amber-50, .bg-amber-50\/50, .bg-yellow-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+.dark :where(.bg-amber-100, .bg-yellow-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+}
+.dark :where(.border-amber-100, .border-amber-200, .border-yellow-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+.dark :where(.text-amber-700, .text-amber-800, .text-amber-900, .text-yellow-700, .text-yellow-800):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #fbbf24 !important;
+}
+
+.dark :where(.bg-blue-50, .bg-blue-50\/50, .bg-sky-50, .bg-indigo-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(59, 130, 246, 0.14) !important;
+}
+.dark :where(.bg-blue-100, .bg-sky-100, .bg-indigo-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+}
+.dark :where(.border-blue-100, .border-blue-200, .border-sky-200, .border-indigo-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: rgba(96, 165, 250, 0.3) !important;
+}
+.dark :where(.text-blue-700, .text-blue-800, .text-blue-900, .text-sky-700, .text-indigo-700):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #60a5fa !important;
+}
+
+.dark :where(.bg-purple-50, .bg-violet-50):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(168, 85, 247, 0.14) !important;
+}
+.dark :where(.bg-purple-100, .bg-violet-100):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: rgba(168, 85, 247, 0.22) !important;
+}
+.dark :where(.border-purple-100, .border-purple-200, .border-violet-200):not(.theme-preserve-light, .theme-preserve-light *) {
+  border-color: rgba(192, 132, 252, 0.3) !important;
+}
+.dark :where(.text-purple-700, .text-purple-800, .text-purple-900, .text-violet-700):not(.theme-preserve-light, .theme-preserve-light *) {
+  color: #c084fc !important;
+}
+
+/* Native form controls in pages without custom UI wrappers */
+.dark :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea):not(.theme-preserve-light, .theme-preserve-light *) {
+  background-color: var(--input-bg);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+/* Soften heavy zinc-200 shadows in dark mode */
+.dark :where(.shadow-zinc-200, .shadow-zinc-200\/60, .shadow-zinc-200\/50) {
+  --tw-shadow-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Utility: hide scrollbar while keeping scroll functionality */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -140,20 +369,20 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.35);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(161, 161, 170, 0.65);
+  background: rgba(42, 193, 188, 0.65);
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(161, 161, 170, 0.35) transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
 }
 
-/* Utility: table chuẩn */
+/* Utility: standard data table */
 .data-table {
   width: 100%;
   text-align: left;
@@ -185,7 +414,7 @@ body {
 }
 
 .data-table tbody tr:hover {
-  background: var(--surface);
+  background: var(--card-hover);
 }
 
 .data-table tbody td {

@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { ThemeProvider } from '@/context/ThemeProvider'
 import { ToastProvider } from '@/context/ToastContext'
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -44,8 +45,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="vi" className={`${beVietnamPro.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">
+    <html lang="vi" suppressHydrationWarning className={`${beVietnamPro.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col font-sans bg-background text-foreground transition-colors duration-200">
         {gaId && (
           <>
             <Script
@@ -63,11 +64,13 @@ export default function RootLayout({
             </Script>
           </>
         )}
-        <LanguageProvider>
-          <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </AuthProvider>
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
