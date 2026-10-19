@@ -265,7 +265,7 @@ export function DashboardUserFooter() {
         <Link
           href="/login"
           onClick={logout}
-          className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg opacity-100 hover:opacity-70 transition-colors"
+          className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-soft opacity-100 hover:opacity-70 transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           <Text as="span" size="sm" weight="medium" color="danger">
