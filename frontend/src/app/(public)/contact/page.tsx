@@ -9,6 +9,7 @@ import {
   Send,
   CheckCircle2,
   ExternalLink,
+  PhoneCall
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from '@/context/LanguageContext'
@@ -41,40 +42,25 @@ export default function ContactPage() {
     <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20 overflow-x-hidden">
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
-          <Text
-            as="span"
-            variant="badge"
-            size="xs"
-            weight="black"
-            color="brand"
-            className="px-4 py-1.5 bg-[#2AC1BC]/20 rounded-full border border-[#2AC1BC]/30 shadow-lg"
-          >
-            <Sparkles className="w-4 h-4" />
-            <Text as="span" color="inherit">
-              {t('guestContactBadge')}
-            </Text>
-          </Text>
-
-          <Text
-            as="h1"
-            variant="heading"
-            weight="black"
-            color="white"
-            className="text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md"
-          >
-            <Text as="span" color="inherit">
+          <div>
+            <Text
+              as="h1"
+              weight='extrabold'
+              color="white"
+              className='text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md'>
               {t('guestContactTitle1')}
             </Text>{' '}
             <br className="hidden sm:inline" />
             <Text
-              as="span"
-              className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent"
+              as="h1"
+              weight='extrabold'
+              className="text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent"
             >
               {t('guestContactTitle2')}
             </Text>
-          </Text>
+          </div>
 
           <Text
             variant="subtitle"

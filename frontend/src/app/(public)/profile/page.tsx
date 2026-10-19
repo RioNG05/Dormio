@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { Button, Text } from '@/components/ui'
 
 import PersonalInfoTab from './tabs/PersonalInfoTab'
 import RoleDataTab from './tabs/RoleDataTab'
@@ -64,23 +65,28 @@ function UniversalProfilePage() {
           <Lock className="w-10 h-10" />
         </div>
         <div className="space-y-2 max-w-md">
-          <h2 className="text-2xl font-black text-zinc-900">{t('guestProfileLockTitle')}</h2>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+          <Text as="h2" variant="heading" size="2xl" weight="black">
+            {t('guestProfileLockTitle')}
+          </Text>
+          <Text variant="subtitle" size="xs" weight="medium" className="leading-relaxed">
             {t('guestProfileLockDesc')}
-          </p>
+          </Text>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/login"
-            className="px-6 py-3 bg-[#2AC1BC] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/20 whitespace-nowrap"
-          >
-            {t('guestProfileLockLoginBtn')} &rarr;
+          <Link href="/login">
+            <Button
+              variant="primary"
+              size="md"
+              rightIcon={<span>&rarr;</span>}
+              className="rounded-2xl shadow-lg shadow-[#2AC1BC]/20"
+            >
+              {t('guestProfileLockLoginBtn')}
+            </Button>
           </Link>
-          <Link
-            href="/register"
-            className="px-6 py-3 bg-zinc-900 text-white font-extrabold text-xs rounded-2xl whitespace-nowrap"
-          >
-            {t('guestProfileLockRegisterBtn')}
+          <Link href="/register">
+            <Button variant="dark" size="md" className="rounded-2xl">
+              {t('guestProfileLockRegisterBtn')}
+            </Button>
           </Link>
         </div>
       </div>
@@ -106,22 +112,41 @@ function UniversalProfilePage() {
                   alt={fullName}
                   className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-[#2AC1BC] shadow-xl group-hover:opacity-90 transition-opacity"
                 />
-                <button
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="icon-sm"
                   title={t('guestProfileAvatarChangeTooltip')}
-                  className="absolute bottom-1 right-1 p-2 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white rounded-xl shadow-lg transition-transform hover:scale-110 cursor-pointer"
+                  className="absolute bottom-1 right-1 shadow-lg hover:scale-110"
                 >
                   <Camera className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                  <span className="px-3 py-1 bg-[#2AC1BC]/20 text-[#2AC1BC] text-[10px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider flex items-center gap-1 whitespace-nowrap">
-                    <ShieldCheck className="w-3.5 h-3.5" /> {t('guestProfileEkycVerifiedBadge')}
-                  </span>
+                  <Text
+                    as="span"
+                    variant="badge"
+                    size="3xs"
+                    weight="black"
+                    color="brand"
+                    uppercase
+                    className="px-3 py-1 bg-[#2AC1BC]/20 rounded-full border border-[#2AC1BC]/30 tracking-wider whitespace-nowrap"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <Text as="span" color="inherit">
+                      {t('guestProfileEkycVerifiedBadge')}
+                    </Text>
+                  </Text>
 
-                  <span
-                    className={`px-3 py-1 text-[10px] font-black rounded-full border uppercase tracking-wider whitespace-nowrap ${
+                  <Text
+                    as="span"
+                    variant="badge"
+                    size="3xs"
+                    weight="black"
+                    uppercase
+                    className={`px-3 py-1 rounded-full border tracking-wider whitespace-nowrap ${
                       isLandlord
                         ? 'bg-[#FF6B35]/20 text-[#FF6B35] border-[#FF6B35]/30'
                         : isAdmin
@@ -132,105 +157,152 @@ function UniversalProfilePage() {
                     {isLandlord && t('guestProfileRoleLandlord')}
                     {isTenant && t('guestProfileRoleTenant')}
                     {isAdmin && t('guestProfileRoleAdmin')}
-                  </span>
+                  </Text>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl font-black text-white">{fullName}</h1>
-                <p className="text-xs text-zinc-400 font-medium">{t('guestProfileHeroSubtitle')}</p>
+                <Text
+                  as="h1"
+                  variant="heading"
+                  size="2xl"
+                  weight="black"
+                  color="white"
+                  className="sm:text-3xl"
+                >
+                  {fullName}
+                </Text>
+                <Text variant="subtitle" size="xs" weight="medium" color="subtle">
+                  {t('guestProfileHeroSubtitle')}
+                </Text>
 
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4 pt-1 text-xs text-zinc-300 font-semibold">
-                  <span className="flex items-center gap-1.5 whitespace-nowrap">
-                    <Phone className="w-3.5 h-3.5 text-[#2AC1BC]" /> {phone}
-                  </span>
-                  <span className="hidden sm:inline text-zinc-600">•</span>
-                  <span className="flex items-center gap-1.5 whitespace-nowrap">
-                    <Mail className="w-3.5 h-3.5 text-[#2AC1BC]" /> {email}
-                  </span>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4 pt-1">
+                  <Text
+                    as="span"
+                    size="xs"
+                    weight="semibold"
+                    className="flex items-center gap-1.5 whitespace-nowrap text-zinc-300"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <Text as="span" color="inherit">
+                      {phone}
+                    </Text>
+                  </Text>
+                  <Text as="span" size="xs" className="hidden sm:inline text-zinc-600">
+                    •
+                  </Text>
+                  <Text
+                    as="span"
+                    size="xs"
+                    weight="semibold"
+                    className="flex items-center gap-1.5 whitespace-nowrap text-zinc-300"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <Text as="span" color="inherit">
+                      {email}
+                    </Text>
+                  </Text>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 100% Mobile & Desktop Responsive Tab Navigation Bar (Balanced 2-Line Phrases on Mobile, Single Line on Desktop) */}
+        {/* 100% Mobile & Desktop Responsive Tab Navigation Bar */}
         <div className="w-full border-b border-zinc-200 pb-3">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2 w-full">
             {/* Tab 1 */}
-            <button
+            <Button
+              type="button"
+              variant={activeTab === 'info' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('info')}
-              className={`w-full sm:w-auto px-3 sm:px-4 py-2.5 sm:py-2.5 rounded-2xl font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer inline-flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-center sm:text-left leading-tight ${
-                activeTab === 'info'
-                  ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-              }`}
+              leftIcon={<UserCheck className="w-4 h-4 shrink-0" />}
+              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
             >
-              <UserCheck className="w-4 h-4 shrink-0" />
-              <span>
-                <span className="block sm:inline">{t('guestProfileTabInfo1')}</span>
-                <span className="block sm:inline">{t('guestProfileTabInfo2')}</span>
-              </span>
-            </button>
+              <Text as="span" color="inherit">
+                <Text as="span" color="inherit" className="block sm:inline">
+                  {t('guestProfileTabInfo1')}
+                </Text>
+                <Text as="span" color="inherit" className="block sm:inline">
+                  {t('guestProfileTabInfo2')}
+                </Text>
+              </Text>
+            </Button>
 
             {/* Tab 2 */}
-            <button
+            <Button
+              type="button"
+              variant={activeTab === 'role_data' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('role_data')}
-              className={`w-full sm:w-auto px-3 sm:px-4 py-2.5 sm:py-2.5 rounded-2xl font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer inline-flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-center sm:text-left leading-tight ${
-                activeTab === 'role_data'
-                  ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-              }`}
+              leftIcon={
+                isLandlord ? (
+                  <Building2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <Building className="w-4 h-4 shrink-0" />
+                )
+              }
+              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
             >
-              {isLandlord ? (
-                <Building2 className="w-4 h-4 shrink-0" />
-              ) : (
-                <Building className="w-4 h-4 shrink-0" />
-              )}
-              <span>
+              <Text as="span" color="inherit">
                 {isLandlord ? (
                   <>
-                    <span className="block sm:inline">{t('guestProfileTabLandlordRole1')}</span>
-                    <span className="block sm:inline">{t('guestProfileTabLandlordRole2')}</span>
+                    <Text as="span" color="inherit" className="block sm:inline">
+                      {t('guestProfileTabLandlordRole1')}
+                    </Text>
+                    <Text as="span" color="inherit" className="block sm:inline">
+                      {t('guestProfileTabLandlordRole2')}
+                    </Text>
                   </>
                 ) : (
                   <>
-                    <span className="block sm:inline">{t('guestProfileTabTenantRole1')}</span>
-                    <span className="block sm:inline">{t('guestProfileTabTenantRole2')}</span>
+                    <Text as="span" color="inherit" className="block sm:inline">
+                      {t('guestProfileTabTenantRole1')}
+                    </Text>
+                    <Text as="span" color="inherit" className="block sm:inline">
+                      {t('guestProfileTabTenantRole2')}
+                    </Text>
                   </>
                 )}
-              </span>
-            </button>
+              </Text>
+            </Button>
 
             {/* Tab 3 */}
-            <button
+            <Button
+              type="button"
+              variant={activeTab === 'bank' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('bank')}
-              className={`w-full sm:w-auto px-3 sm:px-4 py-2.5 sm:py-2.5 rounded-2xl font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer inline-flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-center sm:text-left leading-tight ${
-                activeTab === 'bank'
-                  ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-              }`}
+              leftIcon={<CreditCard className="w-4 h-4 shrink-0" />}
+              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
             >
-              <CreditCard className="w-4 h-4 shrink-0" />
-              <span>
-                <span className="block sm:inline">{t('guestProfileTabBank1')}</span>
-                <span className="block sm:inline">{t('guestProfileTabBank2')}</span>
-              </span>
-            </button>
+              <Text as="span" color="inherit">
+                <Text as="span" color="inherit" className="block sm:inline">
+                  {t('guestProfileTabBank1')}
+                </Text>
+                <Text as="span" color="inherit" className="block sm:inline">
+                  {t('guestProfileTabBank2')}
+                </Text>
+              </Text>
+            </Button>
 
             {/* Tab 4 */}
-            <button
+            <Button
+              type="button"
+              variant={activeTab === 'security' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('security')}
-              className={`w-full sm:w-auto px-3 sm:px-4 py-2.5 sm:py-2.5 rounded-2xl font-extrabold text-[11px] sm:text-xs transition-all cursor-pointer inline-flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-center sm:text-left leading-tight ${
-                activeTab === 'security'
-                  ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/20'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-              }`}
+              leftIcon={<Lock className="w-4 h-4 shrink-0" />}
+              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
             >
-              <Lock className="w-4 h-4 shrink-0" />
-              <span>
-                <span className="block sm:inline">{t('guestProfileTabSecurity1')}</span>
-                <span className="block sm:inline">{t('guestProfileTabSecurity2')}</span>
-              </span>
-            </button>
+              <Text as="span" color="inherit">
+                <Text as="span" color="inherit" className="block sm:inline">
+                  {t('guestProfileTabSecurity1')}
+                </Text>
+                <Text as="span" color="inherit" className="block sm:inline">
+                  {t('guestProfileTabSecurity2')}
+                </Text>
+              </Text>
+            </Button>
           </div>
         </div>
 
@@ -248,9 +320,15 @@ export default function ProfilePage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-8 text-xs font-bold text-zinc-400">
+        <Text
+          as="div"
+          size="xs"
+          weight="bold"
+          color="subtle"
+          className="min-h-screen bg-zinc-50 flex items-center justify-center p-8"
+        >
           Loading profile...
-        </div>
+        </Text>
       }
     >
       <UniversalProfilePage />

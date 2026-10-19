@@ -20,7 +20,6 @@ export const enGuest = {
     guestBlogArticle6ReadTime: "4 min read",
     guestBlogArticle6Title: "Top 7 Criteria for Choosing a Safe & Beautiful Balcony Studio Room",
     guestBlogAuthorLabel: "Author:",
-    guestBlogBadge: "BOARDING HOUSE GUIDE & TIPS",
     guestBlogCatAll: "All Articles",
     guestBlogCatLegal: "Rental Law & Legal",
     guestBlogCatMgmt: "Management Tips",
@@ -48,7 +47,6 @@ export const enGuest = {
     guestBlogHotTopic: "Hottest Topic",
     guestBlogNotFoundSub: "Try searching with another keyword or switch category.",
     guestBlogNotFoundTitle: "No matching articles found",
-    guestBlogReadMore: "Read more",
     guestBlogReadNow: "Read article now",
     guestBlogSearchPlaceholder: "Search articles...",
     guestBlogSubtitle: "Stay updated with legal knowledge, property management secrets, and safe rental search tips from Dormio experts.",
@@ -78,7 +76,6 @@ export const enGuest = {
     // --- Contact page (app/(public)/contact) ---
     guestContact247Support: "(24/7 Consultation)",
     guestContactAlwaysReady: "We are always ready to help",
-    guestContactBadge: "24/7 DORMIO ONLINE SUPPORT",
     guestContactCallTooltip: "Click to call for instant consultation",
     guestContactContentLabel: "Detailed Question Content",
     guestContactContentPlaceholder: "Describe your question or issue in detail...",
@@ -241,6 +238,10 @@ export const enGuest = {
     guestHomeUnder3m: "Under 3M VND / month",
     guestHomeVerified: "Verified",
     guestHomeViewDetail: "View Details",
+    guestHomeNoRooms: "No room listings have been posted in this area yet.",
+    guestHomeExploreAllRooms: "Explore all rooms",
+    guestHomeExploreMoreRooms: "Explore more rooms on the platform",
+    guestHomeDefaultCountry: "Vietnam",
 
     // --- Public chat messages (app/(public)/messages) ---
     guestMessagesInputPlaceholder: "Type message to landlord...",
@@ -373,7 +374,6 @@ export const enGuest = {
     guestPostsCreateValidationTitle: "Listing title must be at least 5 characters.",
 
     // --- Service pricing tiers (app/(public)/pricing) ---
-    guestPricingBadge: "TRANSPARENT SERVICE PRICING",
     guestPricingBhmsBadge: "BOARDING HOUSE MANAGEMENT PLANS ",
     guestPricingBhmsTab: "1. Management Pricing ",
     guestPricingBhmsTitle1: "Automate Operations,",

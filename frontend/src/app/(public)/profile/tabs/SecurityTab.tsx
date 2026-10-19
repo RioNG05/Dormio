@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { Eye, EyeOff, ExternalLink } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import { userService } from '@/services/user.service'
-import { TextInput, Button, Form } from '@/components/ui'
+import { TextInput, Button, Form, Text } from '@/components/ui'
+import { resolveErrorMessage } from '@/utils'
 
 export default function SecurityTab() {
   const t = useTranslations('guest')
+  const tErrors = useTranslations('errors')
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -53,17 +55,8 @@ export default function SecurityTab() {
       setNewPassword('')
       setConfirmPassword('')
       setTimeout(() => setPasswordSavedSuccess(false), 4000)
-    } catch (err: any) {
-      const msg = err?.message || ''
-      if (msg.includes('current_password_incorrect')) {
-        setErrorMessage(t('guestProfilePasswordErrorCurrentIncorrect'))
-      } else if (msg.includes('new_password_must_differ')) {
-        setErrorMessage(t('guestProfilePasswordErrorMustDiffer'))
-      } else if (msg.includes('at least 8 characters') || msg.includes('8 ký tự')) {
-        setErrorMessage(t('guestProfilePasswordErrorMinLength'))
-      } else {
-        setErrorMessage(msg || t('guestProfilePasswordErrorGeneral'))
-      }
+    } catch (err) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('guestProfilePasswordErrorGeneral')))
     } finally {
       setIsSubmitting(false)
     }
@@ -93,9 +86,11 @@ export default function SecurityTab() {
           actions={
             <Link
               href="/forgot-password"
-              className="text-xs text-zinc-400 font-bold inline-flex items-center gap-1 underline transition-colors"
+              className="inline-flex items-center gap-1 underline transition-colors text-zinc-400 hover:text-zinc-600"
             >
-              <span>{t('guestProfilePasswordForgotLink')}</span>
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('guestProfilePasswordForgotLink')}
+              </Text>
               <ExternalLink className="w-3 h-3" />
             </Link>
           }
@@ -161,11 +156,18 @@ export default function SecurityTab() {
                   }`}
                 />
               </div>
-              <span className="text-[10px] font-extrabold text-zinc-500 whitespace-nowrap">
+              <Text
+                as="span"
+                variant="caption"
+                size="3xs"
+                weight="extrabold"
+                color="secondary"
+                className="whitespace-nowrap"
+              >
                 {newPassword.length >= 10 && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword)
                   ? t('guestProfilePasswordStrengthStrong')
                   : t('guestProfilePasswordStrengthMedium')}
-              </span>
+              </Text>
             </div>
           )}
         </div>
@@ -193,7 +195,9 @@ export default function SecurityTab() {
         />
 
         <Form.Actions>
-          <Button fullWidth size="xs"
+          <Button
+            fullWidth
+            size="xs"
             type="submit"
             disabled={isSubmitting}
             isLoading={isSubmitting}

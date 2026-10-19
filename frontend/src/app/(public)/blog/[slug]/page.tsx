@@ -5,13 +5,14 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Calendar, Clock, ChevronRight, ArrowLeft, Copy, Check } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
+import { Button, Text } from '@/components/ui'
 
 export default function BlogDetailPage() {
   const tGuest = useTranslations('guest')
   const tNav = useTranslations('nav')
 
   const params = useParams()
-  const slug = params?.slug || 'kinh-nghiem-quan-ly-nha-tro-chong-that-thoat-dien-nuoc'
+  const _slug = params?.slug || 'kinh-nghiem-quan-ly-nha-tro-chong-that-thoat-dien-nuoc'
   const [copied, setCopied] = useState(false)
 
   const handleCopyLink = () => {
@@ -60,16 +61,22 @@ export default function BlogDetailPage() {
     <div className="bg-zinc-50/50 min-h-screen pb-24">
       {/* Breadcrumb Bar */}
       <div className="bg-white border-b border-zinc-200/80 py-3 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl flex items-center gap-2 text-xs font-semibold text-zinc-500 overflow-x-auto whitespace-nowrap">
+        <div className="mx-auto max-w-4xl flex items-center gap-2 text-zinc-500 overflow-x-auto whitespace-nowrap">
           <Link href="/" className="hover:text-[#2AC1BC]">
-            {tNav('home')}
+            <Text as="span" size="xs" weight="semibold" color="inherit">
+              {tNav('home')}
+            </Text>
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
           <Link href="/blog" className="hover:text-[#2AC1BC]">
-            {tNav('blog')}
+            <Text as="span" size="xs" weight="semibold" color="inherit">
+              {tNav('blog')}
+            </Text>
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-          <span className="text-[#2AC1BC] line-clamp-1">{post.title}</span>
+          <Text as="span" size="xs" weight="semibold" color="brand" clamp={1}>
+            {post.title}
+          </Text>
         </div>
       </div>
 
@@ -77,19 +84,35 @@ export default function BlogDetailPage() {
         {/* Back Link */}
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 hover:text-[#2AC1BC] mb-6 transition-colors"
+          className="inline-flex items-center gap-1 text-zinc-500 hover:text-[#2AC1BC] mb-6 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> {tGuest('guestBlogDetailBackToBlog')}
+          <ArrowLeft className="w-4 h-4" />
+          <Text as="span" size="xs" weight="bold" color="inherit">
+            {tGuest('guestBlogDetailBackToBlog')}
+          </Text>
         </Link>
 
         {/* Article Header */}
         <div className="flex flex-col gap-4 mb-8">
-          <span className="px-3.5 py-1 rounded-full bg-[#2ac1bc]/10 text-[#2ac1bc] text-xs font-bold w-fit">
+          <Text
+            as="span"
+            variant="badge"
+            size="xs"
+            weight="bold"
+            color="brand"
+            className="px-3.5 py-1 rounded-full bg-[#2ac1bc]/10 w-fit"
+          >
             {post.category}
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-black text-zinc-900 leading-tight [text-wrap:balance]">
+          </Text>
+          <Text
+            as="h1"
+            variant="heading"
+            size="2xl"
+            weight="black"
+            className="sm:text-4xl leading-tight [text-wrap:balance]"
+          >
             {post.title}
-          </h1>
+          </Text>
 
           {/* Author Card & Meta */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-b border-zinc-200/80 py-4">
@@ -100,31 +123,43 @@ export default function BlogDetailPage() {
                 className="w-10 h-10 rounded-full object-cover border border-zinc-200"
               />
               <div>
-                <span className="text-xs font-bold text-zinc-900 block">{post.author.name}</span>
-                <span className="text-[10px] text-zinc-400 block">{post.author.role}</span>
+                <Text as="span" size="xs" weight="bold" className="block">
+                  {post.author.name}
+                </Text>
+                <Text as="span" variant="caption" size="3xs" color="subtle" className="block">
+                  {post.author.role}
+                </Text>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-zinc-500">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" /> {post.date}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" /> {post.readTime}
-              </span>
-              <button
+            <div className="flex items-center gap-4">
+              <Text as="span" size="xs" color="secondary" className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                <Text as="span" color="inherit">
+                  {post.date}
+                </Text>
+              </Text>
+              <Text as="span" size="xs" color="secondary" className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                <Text as="span" color="inherit">
+                  {post.readTime}
+                </Text>
+              </Text>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
                 onClick={handleCopyLink}
-                className="px-3 py-1.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 font-bold hover:bg-zinc-100 transition-colors flex items-center gap-1 cursor-pointer"
+                leftIcon={
+                  copied ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )
+                }
               >
-                {copied ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {copied ? tGuest('guestBlogDetailCopied') : tGuest('guestBlogDetailShare')}
-                </span>
-              </button>
+                {copied ? tGuest('guestBlogDetailCopied') : tGuest('guestBlogDetailShare')}
+              </Button>
             </div>
           </div>
         </div>
@@ -136,16 +171,22 @@ export default function BlogDetailPage() {
 
         {/* Article Body Content */}
         <div className="bg-white rounded-3xl p-6 sm:p-10 border border-zinc-200/80 shadow-sm mb-12">
-          <div className="prose prose-zinc max-w-none text-xs sm:text-sm text-zinc-700 leading-relaxed whitespace-pre-line font-medium">
+          <Text
+            as="div"
+            variant="body"
+            size="xs"
+            weight="medium"
+            className="prose prose-zinc max-w-none sm:text-sm leading-relaxed whitespace-pre-line"
+          >
             {post.content}
-          </div>
+          </Text>
         </div>
 
         {/* RELATED ARTICLES */}
         <div className="pt-8 border-t border-zinc-200">
-          <h3 className="text-xl font-bold text-zinc-900 mb-6">
+          <Text as="h3" variant="heading" size="xl" weight="bold" className="mb-6">
             {tGuest('guestBlogDetailRelatedPosts')}
-          </h3>
+          </Text>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {relatedPosts.map((item, idx) => (
               <Link
@@ -161,12 +202,28 @@ export default function BlogDetailPage() {
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-zinc-400 flex items-center gap-1 mb-1">
-                    <Calendar className="w-3.5 h-3.5" /> {item.date}
-                  </span>
-                  <h4 className="text-xs font-bold text-zinc-900 group-hover:text-[#2ac1bc] line-clamp-2 leading-snug">
+                  <Text
+                    as="span"
+                    variant="caption"
+                    size="3xs"
+                    color="subtle"
+                    className="flex items-center gap-1 mb-1"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <Text as="span" color="inherit">
+                      {item.date}
+                    </Text>
+                  </Text>
+                  <Text
+                    as="h4"
+                    variant="heading"
+                    size="xs"
+                    weight="bold"
+                    clamp={2}
+                    className="group-hover:text-[#2ac1bc] leading-snug"
+                  >
                     {item.title}
-                  </h4>
+                  </Text>
                 </div>
               </Link>
             ))}

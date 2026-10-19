@@ -20,7 +20,6 @@ export const viGuest = {
     guestBlogArticle6ReadTime: "4 phút đọc",
     guestBlogArticle6Title: "Top 7 Tiêu Chí Chọn Phòng Trọ Studio Ban Công Đẹp & An Ninh",
     guestBlogAuthorLabel: "Tác giả:",
-    guestBlogBadge: "CẨM NANG & KINH NGHIỆM TRỌ",
     guestBlogCatAll: "Tất cả bài viết",
     guestBlogCatLegal: "Pháp lý thuê trọ",
     guestBlogCatMgmt: "Kinh nghiệm quản lý",
@@ -48,7 +47,6 @@ export const viGuest = {
     guestBlogHotTopic: "Chủ đề Hot nhất",
     guestBlogNotFoundSub: "Thử tìm kiếm với từ khóa khác hoặc chuyển danh mục.",
     guestBlogNotFoundTitle: "Không tìm thấy bài viết phù hợp",
-    guestBlogReadMore: "Đọc tiếp",
     guestBlogReadNow: "Đọc bài viết ngay",
     guestBlogSearchPlaceholder: "Tìm kiếm bài viết...",
     guestBlogSubtitle: "Cập nhật kiến thức pháp lý, bí quyết quản lý chuỗi trọ và mẹo tìm phòng an toàn từ các chuyên gia Dormio.",
@@ -78,7 +76,6 @@ export const viGuest = {
     // --- Contact page (app/(public)/contact) ---
     guestContact247Support: "(Tư vấn 24/7)",
     guestContactAlwaysReady: "Chúng tôi luôn sẵn sàng hỗ trợ",
-    guestContactBadge: "HỖ TRỢ TRỰC TUYẾN DORMIO 24/7",
     guestContactCallTooltip: "Bấm để gọi điện tư vấn ngay",
     guestContactContentLabel: "Nội dung chi tiết câu hỏi",
     guestContactContentPlaceholder: "Mô tả chi tiết thắc mắc hoặc câu hỏi của bạn...",
@@ -241,6 +238,10 @@ export const viGuest = {
     guestHomeUnder3m: "Dưới 3 triệu / tháng",
     guestHomeVerified: "Xác thực",
     guestHomeViewDetail: "Xem chi tiết",
+    guestHomeNoRooms: "Hiện chưa có phòng trọ nào được đăng tại khu vực này.",
+    guestHomeExploreAllRooms: "Khám phá tất cả phòng trọ",
+    guestHomeExploreMoreRooms: "Khám phá thêm phòng trọ trên sàn",
+    guestHomeDefaultCountry: "Việt Nam",
 
     // --- Public chat messages (app/(public)/messages) ---
     guestMessagesInputPlaceholder: "Nhập tin nhắn trao đổi với chủ nhà...",
@@ -374,7 +375,6 @@ export const viGuest = {
     guestPostsCreateValidationTitle: "Tiêu đề tin đăng phải có ít nhất 5 ký tự.",
 
     // --- Service pricing tiers (app/(public)/pricing) ---
-    guestPricingBadge: "BẢNG GIÁ DỊCH VỤ MINH BẠCH",
     guestPricingBhmsBadge: "GÓI QUẢN LÝ NHÀ TRỌ  - CHO CHỦ TRỌ",
     guestPricingBhmsTab: "1. Bảng Giá Quản Lý ",
     guestPricingBhmsTitle1: "Tự Động Hóa Vận Hành",
