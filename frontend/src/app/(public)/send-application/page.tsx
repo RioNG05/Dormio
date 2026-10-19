@@ -488,8 +488,12 @@ export default function SendApplicationPage() {
   return (
     <div className="min-h-screen bg-surface/60 pb-16">
       {/* Hero Header */}
-      <section className="bg-gradient-to-b from-white via-zinc-50 to-transparent border-b border-line pt-10 pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-zinc-50/80 to-transparent dark:from-card dark:via-surface/50 dark:to-transparent border-b border-line pt-10 pb-8 px-4 sm:px-6 lg:px-8">
+        {/* Subtle Ambient Decorative Glows for depth in both Light and Dark mode */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl pointer-events-none -z-0" />
+        <div className="absolute -top-10 left-1/3 w-72 h-72 bg-accent/5 dark:bg-accent/10 rounded-full blur-3xl pointer-events-none -z-0" />
+
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <Text
               as="div"
@@ -497,9 +501,9 @@ export default function SendApplicationPage() {
               size="2xs"
               weight="bold"
               color="brand"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 normal-case"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft border border-primary-border normal-case shadow-2xs"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
               <Text as="span" color="inherit">
                 {t('badge')}
               </Text>
@@ -516,7 +520,7 @@ export default function SendApplicationPage() {
               size="xs"
               color="secondary"
               weight="medium"
-              className="sm:text-sm max-w-2xl leading-relaxed"
+              className="sm:text-sm max-w-2xl leading-relaxed text-muted dark:text-slate-400"
             >
               {t('pageSubtitle')}
             </Text>
@@ -525,22 +529,24 @@ export default function SendApplicationPage() {
           <div>
             {isLoggedIn ? (
               <Button
-                size="sm"
+                variant="primary"
+                size="md"
                 leftIcon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   resetForm()
                   setIsModalOpen(true)
                 }}
-                className="sm:w-auto"
+                className="w-full sm:w-auto shadow-md shadow-primary/20"
               >
                 {t('btnNewApplication')}
               </Button>
             ) : (
               <Link href="/login?from=/send-application">
                 <Button
-                  size="sm"
+                  variant="primary"
+                  size="md"
                   leftIcon={<LogIn className="w-4 h-4" />}
-                  className="sm:w-auto"
+                  className="w-full sm:w-auto shadow-md shadow-primary/20"
                 >
                   {t('loginBtn')}
                 </Button>
