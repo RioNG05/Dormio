@@ -41,6 +41,8 @@ import {
   FALLBACK_PROVINCES,
 } from '@/services/vietnam-address.service'
 
+import { Avatar } from '@/components/ui'
+
 const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
 // ─── Helper: build full address string from structured fields ─────────────────
@@ -1158,17 +1160,12 @@ function RoomsContent() {
                               className="flex items-center gap-2 hover:text-[#2AC1BC] transition-colors w-fit z-10 cursor-pointer group/poster"
                               title="Xem hồ sơ người đăng"
                             >
-                              {listing.poster.avatarUrl ? (
-                                <img
-                                  src={listing.poster.avatarUrl}
-                                  alt={listing.poster.username ?? ''}
-                                  className="w-6 h-6 rounded-full object-cover border border-line"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-card-hover flex items-center justify-center border border-line">
-                                  <User className="w-3.5 h-3.5 text-muted" />
-                                </div>
-                              )}
+                              <Avatar
+                                src={listing.poster.avatarUrl}
+                                name={listing.poster.username}
+                                size="2xs"
+                                bordered
+                              />
                               <span className="text-xs text-muted font-semibold group-hover/poster:text-[#2AC1BC] transition-colors">
                                 {listing.poster.username ?? t('guestRoomsDefaultLandlord')}
                               </span>

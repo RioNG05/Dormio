@@ -30,7 +30,7 @@ import NotificationBell from '@/components/NotificationBell'
 import Logo from '@/components/Logo'
 import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
-import { Button, Text, Modal, TextInput, NumberInput } from '@/components/ui'
+import { Button, Text, Modal, TextInput, NumberInput, Avatar } from '@/components/ui'
 
 interface UserMenuItem {
   key: string
@@ -356,10 +356,12 @@ export function PublicHeader() {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-2 p-1 rounded-2xl hover:bg-card-hover text-left h-auto"
                   >
-                    <img
+                    <Avatar
                       src={user.avatar}
-                      alt={user.name}
-                      className="w-8 h-8 rounded-full object-cover border border-line shadow-xs"
+                      name={user.name}
+                      size="sm"
+                      bordered
+                      className="shadow-xs"
                     />
                     <div className="hidden sm:block text-left">
                       <Text
@@ -465,10 +467,11 @@ export function PublicHeader() {
               {isLoggedIn && user ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3.5 bg-surface rounded-2xl border border-line">
-                    <img
+                    <Avatar
                       src={user.avatar}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover border border-line"
+                      name={user.name}
+                      size="md"
+                      bordered
                     />
                     <div>
                       <Text as="h4" size="xs" weight="black" color="default">

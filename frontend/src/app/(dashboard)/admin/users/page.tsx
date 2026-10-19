@@ -48,6 +48,7 @@ import { SelectInput } from '@/components/ui/SelectInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { Avatar } from '@/components/ui/Avatar'
 
 export default function AdminUsersManagementPage() {
   const { locale } = useLanguage()
@@ -804,7 +805,6 @@ export default function AdminUsersManagementPage() {
         /* GRID VIEW (Rule 9: Default view) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {paginatedUsers.map(user => {
-            const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
             return (
               <div
                 key={user.id}
@@ -814,17 +814,14 @@ export default function AdminUsersManagementPage() {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#2AC1BC]/20 to-[#FF6B35]/20 text-[#2AC1BC] flex items-center justify-center font-black text-base shrink-0 border border-line group-hover:scale-105 transition-transform">
-                        {user.avatarUrl ? (
-                          <img
-                            src={user.avatarUrl}
-                            alt=""
-                            className="w-full h-full object-cover rounded-2xl"
-                          />
-                        ) : (
-                          initial
-                        )}
-                      </div>
+                      <Avatar
+                        src={user.avatarUrl}
+                        name={user.fullName || user.username || user.phoneNumber}
+                        size="md"
+                        shape="rounded"
+                        bordered
+                        zoomOnHover
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <Text
@@ -981,18 +978,17 @@ export default function AdminUsersManagementPage() {
               </thead>
               <tbody className="divide-y divide-line text-foreground/90">
                 {paginatedUsers.map(user => {
-                  const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
                   return (
                     <tr key={user.id} className="hover:bg-zinc-50/60 transition-colors group">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2AC1BC]/15 to-[#FF6B35]/15 text-[#2AC1BC] flex items-center justify-center font-bold text-sm shrink-0 border border-line">
-                            {user.avatarUrl ? (
-                              <img src={user.avatarUrl} alt="" className="w-full h-full object-cover rounded-xl" />
-                            ) : (
-                              initial
-                            )}
-                          </div>
+                          <Avatar
+                            src={user.avatarUrl}
+                            name={user.fullName || user.username || user.phoneNumber}
+                            size="sm"
+                            shape="rounded"
+                            bordered
+                          />
                           <div>
                             <div className="flex items-center gap-1.5">
                               <Text as="span" size="xs" weight="extrabold" className="text-foreground">

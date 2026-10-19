@@ -33,6 +33,7 @@ import {
   type PublicPostListing,
 } from '@/services/post.service'
 import { api } from '@/services/api'
+import { Avatar } from '@/components/ui'
 
 const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
@@ -240,18 +241,14 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
               <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                  {profile.avatarUrl ? (
-                    <img
-                      src={profile.avatarUrl}
-                      alt={profile.username ?? 'Poster Avatar'}
-                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-4 border-white shadow-xl shadow-zinc-950/10"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#2AC1BC] to-[#20928e] text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-[#2AC1BC]/20">
-                      {profile.username?.charAt(0)?.toUpperCase() ?? 'P'}
-                    </div>
-                  )}
-                  <span className="absolute -bottom-1.5 -right-1.5 p-1.5 bg-emerald-500 text-white rounded-full shadow-md">
+                  <Avatar
+                    src={profile.avatarUrl}
+                    name={profile.username}
+                    size="3xl"
+                    shape="rounded"
+                    className="border-4 border-card shadow-xl shadow-zinc-950/10"
+                  />
+                  <span className="absolute -bottom-1.5 -right-1.5 p-1.5 bg-emerald-500 text-white rounded-full shadow-md z-10">
                     <ShieldCheck className="w-4 h-4" />
                   </span>
                 </div>

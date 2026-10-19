@@ -18,7 +18,7 @@ import { useAuth } from '@/context/AuthContext'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, Text } from '@/components/ui'
+import { Button, Text, Avatar } from '@/components/ui'
 
 export function DashboardUserFooter() {
   const tNav = useTranslations('nav')
@@ -86,20 +86,6 @@ export function DashboardUserFooter() {
     setUserMenuOpen(false)
     logout()
   }
-
-  const avatarColor = isAdmin
-    ? 'bg-accent-soft text-orange-600'
-    : isStaff
-      ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
-      : 'bg-primary/10 text-primary'
-
-  const avatarInitial = user?.name
-    ? user.name.trim().charAt(0).toUpperCase()
-    : isAdmin
-      ? 'A'
-      : isStaff
-        ? 'S'
-        : 'R'
 
   return (
     <div className="border-t border-zinc-100 dark:border-line p-3">
@@ -224,11 +210,15 @@ export function DashboardUserFooter() {
           className="group mb-2 px-0 justify-start"
           title={tNav('viewProfileTooltip')}
         >
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold shrink-0 transition-transform group-hover:scale-105 ${avatarColor}`}
-          >
-            {avatarInitial}
-          </div>
+          <Avatar
+            src={user?.avatar}
+            name={
+              user?.name ||
+              (isAdmin ? 'Admin' : isStaff ? 'Staff' : isTenant ? 'Tenant' : 'Landlord')
+            }
+            size="sm"
+            zoomOnHover
+          />
           <div className="overflow-hidden flex-1 min-w-0 text-left">
             <Text
               size="sm"

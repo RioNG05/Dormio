@@ -37,6 +37,7 @@ import {
   SelectInput,
   TextareaInput,
   SearchInput,
+  Avatar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { staffService, StaffItem, JobPosition, StaffSummary } from '@/services/staff.service'
@@ -747,9 +748,13 @@ export default function StaffPage() {
                   {/* Card Header: Avatar, Name & Status */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg shrink-0 shadow-xs">
-                        {staff.fullName.charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar
+                        src={staff.avatarUrl}
+                        name={staff.fullName}
+                        size="lg"
+                        shape="rounded"
+                        zoomOnHover
+                      />
                       <div>
                         <h3 className="font-extrabold text-foreground text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
                           {staff.fullName}
@@ -877,9 +882,12 @@ export default function StaffPage() {
                     <tr key={staff.assignmentId} className="hover:bg-zinc-50/80 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                            {staff.fullName.charAt(0).toUpperCase()}
-                          </div>
+                          <Avatar
+                            src={staff.avatarUrl}
+                            name={staff.fullName}
+                            size="sm"
+                            shape="rounded"
+                          />
                           <div>
                             <div className="font-extrabold text-foreground text-sm">
                               {staff.fullName}
@@ -1343,9 +1351,12 @@ export default function StaffPage() {
 
               {/* Staff Member Card Header */}
               <div className="flex items-center gap-3 p-3 bg-surface rounded-2xl border border-line">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
-                  {selectedStaff.fullName.charAt(0).toUpperCase()}
-                </div>
+                <Avatar
+                  src={selectedStaff.avatarUrl}
+                  name={selectedStaff.fullName}
+                  size="md"
+                  shape="rounded"
+                />
                 <div className="flex-1">
                   <h4 className="text-xs font-extrabold text-foreground">{selectedStaff.fullName}</h4>
                   <p className="text-[11px] text-muted">

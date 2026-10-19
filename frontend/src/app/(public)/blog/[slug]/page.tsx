@@ -7,7 +7,7 @@ import { Calendar, Clock, ChevronRight, ArrowLeft, Copy, Check } from 'lucide-re
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, Text } from '@/components/ui'
+import { Button, Text, Avatar } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
 export default function BlogDetailPage() {
@@ -120,10 +120,11 @@ export default function BlogDetailPage() {
           {/* Author Card & Meta */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-b border-line py-4">
             <div className="flex items-center gap-3">
-              <img
+              <Avatar
                 src={post.author.avatar}
-                alt={post.author.name}
-                className="w-10 h-10 rounded-full object-cover border border-line"
+                name={post.author.name}
+                size="md"
+                bordered
               />
               <div>
                 <Text as="span" size="xs" weight="bold" className="block">

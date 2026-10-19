@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, Text } from '@/components/ui'
+import { Button, Text, Avatar } from '@/components/ui'
 
 import PersonalInfoTab from './tabs/PersonalInfoTab'
 import RoleDataTab from './tabs/RoleDataTab'
@@ -104,13 +104,12 @@ function UniversalProfilePage() {
             <div className="flex flex-col sm:flex-row items-center gap-5">
               {/* Avatar Image with Edit Badge */}
               <div className="relative group shrink-0">
-                <img
-                  src={
-                    user?.avatar ||
-                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
-                  }
-                  alt={fullName}
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-[#2AC1BC] shadow-xl group-hover:opacity-90 transition-opacity"
+                <Avatar
+                  src={user?.avatar}
+                  name={fullName}
+                  size="3xl"
+                  shape="rounded"
+                  className="border-2 border-[#2AC1BC] shadow-xl group-hover:opacity-90 transition-opacity"
                 />
                 <Button
                   type="button"

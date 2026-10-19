@@ -42,6 +42,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { postService, type PublicPostListing } from '@/services/post.service'
 import { getOrCreateConversation } from '@/services/message.service'
+import { Avatar } from '@/components/ui'
 
 const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
@@ -338,7 +339,6 @@ export default function RoomDetailPage() {
   }
 
   const address = buildAddressString(post)
-  const posterInitial = post.poster?.username?.charAt(0)?.toUpperCase() ?? 'P'
 
   return (
     <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20">
@@ -737,17 +737,13 @@ export default function RoomDetailPage() {
                     className="flex items-center gap-3 p-2.5 -mx-2.5 rounded-2xl hover:bg-card-hover border border-transparent hover:border-zinc-200/80 transition-all group cursor-pointer"
                     title="Xem hồ sơ người đăng"
                   >
-                    {post.poster.avatarUrl ? (
-                      <img
-                        src={post.poster.avatarUrl}
-                        alt={post.poster.username ?? ''}
-                        className="w-12 h-12 rounded-full object-cover border border-line group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-lg border border-[#2AC1BC]/20 group-hover:scale-105 transition-transform">
-                        {posterInitial}
-                      </div>
-                    )}
+                    <Avatar
+                      src={post.poster.avatarUrl}
+                      name={post.poster.username}
+                      size="lg"
+                      bordered
+                      zoomOnHover
+                    />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-extrabold text-sm text-foreground group-hover:text-[#2AC1BC] transition-colors truncate">
                         {post.poster.username ?? tGuest('guestRoomsDefaultLandlord')}
