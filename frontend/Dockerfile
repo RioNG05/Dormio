@@ -5,7 +5,13 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+ENV CI=true
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME/bin:$PATH"
+
+RUN corepack enable && \
+    corepack prepare pnpm@11.21.0 --activate && \
+    pnpm config set store-dir /root/.local/share/pnpm/store --global
 
 # Copy dependency specifications first for Docker layer caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

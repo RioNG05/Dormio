@@ -82,6 +82,7 @@ services:
       - path: ./backend/.env
         required: false
     environment:
+      - CI=true
       - NODE_ENV=development
       - PORT=3001
       - DATABASE_URL=postgresql://${POSTGRES_USER:-dormio}:${POSTGRES_PASSWORD:-dormio123}@postgres:5432/${POSTGRES_DB:-dormio_db}
@@ -117,6 +118,7 @@ services:
       - path: ./frontend/.env.development
         required: false
     environment:
+      - CI=true
       - NODE_ENV=development
       - PORT=3000
       - HOSTNAME=0.0.0.0
