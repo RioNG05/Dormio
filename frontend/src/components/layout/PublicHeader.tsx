@@ -57,23 +57,32 @@ function MenuItemRenderer({
     if (item.onClick) item.onClick()
   }
 
+  const buttonElement = (
+    <Button
+      onClick={item.href ? undefined : handleClick}
+      variant={item.isDanger ? 'ghost-danger' : 'ghost'}
+      size="md"
+      fullWidth
+      justify={isMobile ? 'between' : 'start'}
+      leftIcon={item.icon}
+      rightIcon={isMobile ? <ArrowRight className="w-3.5 h-3.5 text-zinc-300" /> : undefined}
+    >
+      <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
+        {item.label}
+      </Text>
+    </Button>
+  )
+
   return (
     <>
       {item.dividerAbove && <div className="border-t border-line my-1" />}
-      <Button
-        href={item.href}
-        onClick={handleClick}
-        variant={item.isDanger ? 'ghost-danger' : 'ghost'}
-        size="md"
-        fullWidth
-        justify={isMobile ? 'between' : 'start'}
-        leftIcon={item.icon}
-        rightIcon={isMobile ? <ArrowRight className="w-3.5 h-3.5 text-zinc-300" /> : undefined}
-      >
-        <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
-          {item.label}
-        </Text>
-      </Button>
+      {item.href ? (
+        <Link href={item.href} onClick={handleClick} className="block w-full">
+          {buttonElement}
+        </Link>
+      ) : (
+        buttonElement
+      )}
     </>
   )
 }

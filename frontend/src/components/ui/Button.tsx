@@ -1,5 +1,4 @@
 import * as React from 'react'
-import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 import { Loader2 } from 'lucide-react'
@@ -25,7 +24,6 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   fullWidth?: boolean
   rounded?: 'default' | 'full'
   justify?: 'start' | 'center' | 'between' | 'end'
-  href?: string
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -40,7 +38,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth = false,
       rounded = 'default',
       justify = 'center',
-      href,
       children,
       disabled,
       type = 'button',
@@ -123,20 +120,6 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
       </>
     )
-
-    if (href) {
-      return (
-        <Link
-          href={href}
-          className={buttonClasses}
-          onClick={props.onClick as any}
-          tabIndex={disabled ? -1 : undefined}
-          aria-disabled={disabled || isLoading}
-        >
-          {content}
-        </Link>
-      )
-    }
 
     return (
       <button
