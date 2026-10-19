@@ -231,15 +231,22 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
           <div>
             <Text
-              as="h1" variant='heading' weight='extrabold' color="white"
-              className='text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md'
+              as="h1"
+              variant="heading"
+              weight="extrabold"
+              color="white"
+              size={{ base: '3xl', sm: '5xl', lg: '6xl' }}
+              className="leading-[1.18] drop-shadow-md"
             >
               {t('guestPricingTitle1')}
             </Text>{' '}
             <br className="hidden sm:inline" />
             <Text
-              as="h1" variant='heading' weight='extrabold'
-              className='text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent'
+              as="h1"
+              variant="heading"
+              weight="extrabold"
+              size={{ base: '3xl', sm: '5xl', lg: '6xl' }}
+              className="leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent"
             >
               {t('guestPricingTitle2')}
             </Text>
@@ -247,9 +254,9 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
 
           <Text
             variant="subtitle"
-            size="xs"
+            size={{ base: 'xs', sm: 'sm' }}
             weight="medium"
-            className="sm:text-sm text-zinc-300 leading-relaxed max-w-xl mx-auto text-balance"
+            className="text-zinc-300 leading-relaxed max-w-xl mx-auto text-balance"
           >
             {t('guestPricingSubtitle')}
           </Text>
@@ -309,7 +316,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               >
                 {isBhms ? t('guestPricingBhmsBadge') : t('guestPricingBhrpBadge')}
               </Text>
-              <Text as="h2" variant="heading" size="2xl" weight="black" className="sm:text-3xl leading-snug">
+              <Text as="h2" variant="heading" size={{ base: '2xl', sm: '3xl' }} weight="black" className="leading-snug">
                 {isBhms ? (
                   <>
                     <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
@@ -340,7 +347,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                   size="sm"
                   variant={billingCycle === 'monthly' ? 'dark' : 'ghost'}
                   onClick={() => setBillingCycle('monthly')}
-                  className="w-full sm:w-auto"
+                  fullWidth="responsive"
                 >
                   {t('guestPricingPayMonthly')}
                 </Button>
@@ -349,7 +356,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                   size="sm"
                   variant={billingCycle === 'yearly' ? 'dark' : 'ghost'}
                   onClick={() => setBillingCycle('yearly')}
-                  className="w-full sm:w-auto"
+                  fullWidth="responsive"
                 >
                   <Text as="span" color="inherit">
                     {t('guestPricingPayYearly')}

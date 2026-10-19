@@ -21,7 +21,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   isLoading?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
-  fullWidth?: boolean
+  fullWidth?: boolean | 'responsive'
   rounded?: 'default' | 'full'
   justify?: 'start' | 'center' | 'between' | 'end'
 }
@@ -90,7 +90,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'h-12 w-12 p-0 shrink-0 rounded-2xl': size === 'icon-lg',
 
         // Full width & Pill shape
-        'w-full': fullWidth,
+        'w-full': fullWidth === true,
+        'w-full sm:w-auto': fullWidth === 'responsive',
         'rounded-full': rounded === 'full',
       },
       className,
