@@ -106,7 +106,6 @@ export default function SecurityTab() {
           onChange={e => setCurrentPassword(e.target.value)}
           rightIcon={
             <Button
-              type="button"
               variant="ghost"
               size="icon"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -197,7 +196,7 @@ export default function SecurityTab() {
         <Form.Actions>
           <Button
             fullWidth
-            size="xs"
+            size="md"
             type="submit"
             disabled={isSubmitting}
             isLoading={isSubmitting}

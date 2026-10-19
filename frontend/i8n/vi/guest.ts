@@ -640,7 +640,7 @@ export const viGuest = {
     guestProfileTabBank1: "Tài khoản ngân hàng",
     guestProfileTabInfo1: "Thông tin cá nhân ",
     guestProfileTabLandlordRole1: "Thông tin Nhà Trọ ",
-    guestProfileTabSecurity1: "Bảo mật & ",
+    guestProfileTabSecurity1: "Bảo mật",
     guestProfileTabTenantRole1: "Phòng thuê & ",
     guestProfileTabTenantRole2: "Hợp đồng",
     guestProfileTenantContractDuration: "Thời gian ở: {stayed}/{total} tháng ({percent}%)",

@@ -639,7 +639,7 @@ export const enGuest = {
     guestProfileTabBank1: "Bank Account",
     guestProfileTabInfo1: "Personal Info ",
     guestProfileTabLandlordRole1: "Boarding House ",
-    guestProfileTabSecurity1: "Security & ",
+    guestProfileTabSecurity1: "Security",
     guestProfileTabTenantRole1: "Rented Room & ",
     guestProfileTabTenantRole2: "Contract",
     guestProfileTenantContractDuration: "Duration: {stayed}/{total} months ({percent}%)",

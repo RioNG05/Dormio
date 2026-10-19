@@ -31,7 +31,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     {
       className,
       variant = 'primary',
-      size = 'sm',
+      size = 'md',
       isLoading = false,
       leftIcon,
       rightIcon,
