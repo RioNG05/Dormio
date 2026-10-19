@@ -12,9 +12,13 @@ export type AvatarShape = 'circle' | 'rounded' | 'square'
 export type AvatarStatus = 'online' | 'offline' | 'busy' | 'away'
 export type AvatarFallbackType = 'auto' | 'initials' | 'icon' | 'placeholder'
 
+export const DEFAULT_AVATAR_PLACEHOLDER = '/avatar-placeholder.png'
+
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Avatar image URL */
   src?: string | null
+  /** Custom placeholder image URL when src is missing or fails to load (defaults to /avatar-placeholder.png) */
+  placeholderSrc?: string
   /** Alternative text for accessibility */
   alt?: string | null
   /** User's full name or username for generating initials & hash color */
@@ -29,8 +33,8 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   fallbackType?: AvatarFallbackType
   /** Custom fallback element */
   fallback?: React.ReactNode
-  /** Whether to show a border outline */
-  bordered?: boolean
+  /** Whether to show a border outline (defaults to true) */
+  bordered?: boolean | string
   /** Ring highlight effect around avatar */
   ring?: boolean | 'brand' | 'accent' | 'line'
   /** Slight scale-up animation on parent hover */
@@ -216,6 +220,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   (
     {
       src,
+      placeholderSrc = DEFAULT_AVATAR_PLACEHOLDER,
       alt,
       name,
       size = 'md',
@@ -223,7 +228,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
       status,
       fallbackType = 'auto',
       fallback,
-      bordered = false,
+      bordered = true,
       ring,
       zoomOnHover = false,
       className,
@@ -233,12 +238,12 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
     ref,
   ) => {
     const [hasError, setHasError] = useState(false)
-    const [isLoaded, setIsLoaded] = useState(false)
+    const [placeholderError, setPlaceholderError] = useState(false)
 
-    // Reset error & loaded state whenever src changes
+    // Reset error state whenever src changes
     useEffect(() => {
       setHasError(false)
-      setIsLoaded(false)
+      setPlaceholderError(false)
     }, [src])
 
     const config = sizeStyles[size] || sizeStyles.md
@@ -263,17 +268,39 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             ? 'ring-1 ring-line'
             : ''
 
-    // Border styling
-    const borderClass = bordered ? 'border border-line' : ''
+    // Border styling (defaults to true: border border-line)
+    const borderClass =
+      bordered === false
+        ? ''
+        : typeof bordered === 'string'
+          ? bordered
+          : 'border border-line'
 
-    // Decide if image should be rendered
+    // Decide if primary image should be rendered
     const shouldRenderImage = Boolean(src && !hasError)
 
     // Render fallback element
     const renderFallback = () => {
       if (fallback) return fallback
 
-      if (fallbackType === 'icon' || (fallbackType === 'auto' && !initials)) {
+      // If caller explicitly requested initials fallback and initials exist
+      if (fallbackType === 'initials' && initials) {
+        return (
+          <div
+            className={cn(
+              'w-full h-full flex items-center justify-center select-none shadow-2xs',
+              palette.bg,
+              palette.text,
+              config.text,
+              shapeClass,
+            )}
+          >
+            {initials}
+          </div>
+        )
+      }
+
+      if (fallbackType === 'icon') {
         return (
           <div
             className={cn(
@@ -286,18 +313,29 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         )
       }
 
-      // Default fallback: initials with deterministic background color
+      // Default fallback: static placeholder image (/avatar-placeholder.png)
+      if (!placeholderError && placeholderSrc) {
+        return (
+          <img
+            src={placeholderSrc}
+            alt={alt || name || 'Avatar placeholder'}
+            onError={() => setPlaceholderError(true)}
+            className={cn('w-full h-full object-cover', imageClassName)}
+            loading="lazy"
+            decoding="async"
+          />
+        )
+      }
+
+      // Final fallback if placeholder image fails to load
       return (
         <div
           className={cn(
-            'w-full h-full flex items-center justify-center select-none shadow-2xs',
-            palette.bg,
-            palette.text,
-            config.text,
+            'w-full h-full flex items-center justify-center bg-card-hover text-muted',
             shapeClass,
           )}
         >
-          {initials || <DefaultUserIcon className={config.icon} />}
+          <DefaultUserIcon className={config.icon} />
         </div>
       )
     }
@@ -315,7 +353,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         {/* Main avatar wrapper */}
         <div
           className={cn(
-            'w-full h-full overflow-hidden flex items-center justify-center transition-transform duration-200',
+            'w-full h-full overflow-hidden flex items-center justify-center transition-transform duration-200 bg-card-hover',
             shapeClass,
             borderClass,
             ringClass,
@@ -326,35 +364,15 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             <img
               src={src as string}
               alt={alt || name || 'User avatar'}
-              onLoad={() => setIsLoaded(true)}
               onError={() => setHasError(true)}
-              className={cn(
-                'w-full h-full object-cover transition-opacity duration-200',
-                isLoaded ? 'opacity-100' : 'opacity-0',
-                imageClassName,
-              )}
+              className={cn('w-full h-full object-cover', imageClassName)}
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             renderFallback()
           )}
 
-          {/* Placeholder shimmer / background while image is loading */}
-          {shouldRenderImage && !isLoaded && (
-            <div
-              className={cn(
-                'absolute inset-0 bg-card-hover animate-pulse flex items-center justify-center',
-                shapeClass,
-              )}
-            >
-              {initials ? (
-                <span className={cn(config.text, 'text-muted/60')}>
-                  {initials}
-                </span>
-              ) : (
-                <DefaultUserIcon className={cn(config.icon, 'text-muted/40')} />
-              )}
-            </div>
-          )}
         </div>
 
         {/* Status Indicator */}

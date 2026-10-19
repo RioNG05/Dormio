@@ -109,7 +109,6 @@ function UniversalProfilePage() {
                   name={fullName}
                   size="3xl"
                   shape="rounded"
-                  className="border-2 border-[#2AC1BC] shadow-xl group-hover:opacity-90 transition-opacity"
                 />
                 <Button
                   type="button"
