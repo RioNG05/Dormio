@@ -57,49 +57,23 @@ function MenuItemRenderer({
     if (item.onClick) item.onClick()
   }
 
-  const content = isMobile ? (
-    <>
-      <div className="flex items-center gap-2.5">
-        {item.icon}
-        <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
-          {item.label}
-        </Text>
-      </div>
-      <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-    </>
-  ) : (
-    <>
-      {item.icon}
-      <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
-        {item.label}
-      </Text>
-    </>
-  )
-
-  const className = isMobile
-    ? `flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-all w-full text-left cursor-pointer ${
-        item.isDanger
-          ? 'text-rose-600 hover:bg-rose-100/50'
-          : item.className || 'text-foreground/90 hover:bg-card-hover'
-      }`
-    : `flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all w-full text-left cursor-pointer ${
-        item.isDanger
-          ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20'
-          : item.className || 'text-foreground/90 hover:text-foreground hover:bg-card-hover'
-      }`
-
   return (
     <>
       {item.dividerAbove && <div className="border-t border-line my-1" />}
-      {item.href ? (
-        <Link href={item.href} onClick={handleClick} className={className}>
-          {content}
-        </Link>
-      ) : (
-        <button type="button" onClick={handleClick} className={className}>
-          {content}
-        </button>
-      )}
+      <Button
+        href={item.href}
+        onClick={handleClick}
+        variant={item.isDanger ? 'ghost-danger' : 'ghost'}
+        size="md"
+        fullWidth
+        justify={isMobile ? 'between' : 'start'}
+        leftIcon={item.icon}
+        rightIcon={isMobile ? <ArrowRight className="w-3.5 h-3.5 text-zinc-300" /> : undefined}
+      >
+        <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
+          {item.label}
+        </Text>
+      </Button>
     </>
   )
 }
