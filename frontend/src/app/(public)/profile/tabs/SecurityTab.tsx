@@ -86,7 +86,7 @@ export default function SecurityTab() {
           actions={
             <Link
               href="/forgot-password"
-              className="inline-flex items-center gap-1 underline transition-colors text-zinc-400 hover:text-zinc-600"
+              className="inline-flex items-center gap-1 underline transition-colors text-muted hover:text-foreground"
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('guestProfilePasswordForgotLink')}
@@ -143,7 +143,7 @@ export default function SecurityTab() {
           {/* Password Strength Indicator */}
           {newPassword && (
             <div className="flex items-center gap-2 pt-1">
-              <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-line rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
                     newPassword.length >= 10 &&

@@ -94,7 +94,7 @@ function UniversalProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-surface/50 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 animate-in fade-in duration-500">
       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
         {/* Top Profile Banner Hero Spotlight */}
         <div className="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-950 rounded-3xl p-5 sm:p-8 text-white shadow-2xl border border-zinc-800 relative overflow-hidden">
@@ -186,7 +186,7 @@ function UniversalProfilePage() {
                       {phone}
                     </Text>
                   </Text>
-                  <Text as="span" size="xs" className="hidden sm:inline text-zinc-600">
+                  <Text as="span" size="xs" className="hidden sm:inline text-muted">
                     •
                   </Text>
                   <Text
@@ -207,7 +207,7 @@ function UniversalProfilePage() {
         </div>
 
         {/* 100% Mobile & Desktop Responsive Tab Navigation Bar */}
-        <div className="w-full border-b border-zinc-200 pb-3">
+        <div className="w-full border-b border-line pb-3">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2 w-full">
             {/* Tab 1 */}
             <Button
@@ -325,7 +325,7 @@ export default function ProfilePage() {
           size="xs"
           weight="bold"
           color="subtle"
-          className="min-h-screen bg-zinc-50 flex items-center justify-center p-8"
+          className="min-h-screen bg-surface flex items-center justify-center p-8"
         >
           Loading profile...
         </Text>

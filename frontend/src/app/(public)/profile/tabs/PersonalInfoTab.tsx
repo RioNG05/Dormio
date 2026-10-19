@@ -44,7 +44,7 @@ export default function PersonalInfoTab() {
         />
       )}
 
-      <div className="bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-sm space-y-6">
+      <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-6">
         {/* Card Header with Edit Buttons */}
         <Form.Header
           title={t('guestProfileInfoSectionTitle')}
@@ -93,7 +93,7 @@ export default function PersonalInfoTab() {
             disabled={!isEditingInfo}
             value={fullName}
             onChange={e => setFullName(e.target.value)}
-            className="py-3 bg-zinc-50 rounded-2xl"
+            className="py-3 bg-surface rounded-2xl"
           />
 
           <TextInput
@@ -101,7 +101,7 @@ export default function PersonalInfoTab() {
             disabled={!isEditingInfo}
             value={phone}
             onChange={e => setPhone(e.target.value)}
-            className="py-3 bg-zinc-50 rounded-2xl"
+            className="py-3 bg-surface rounded-2xl"
           />
 
           <TextInput
@@ -110,7 +110,7 @@ export default function PersonalInfoTab() {
             disabled={!isEditingInfo}
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="py-3 bg-zinc-50 rounded-2xl"
+            className="py-3 bg-surface rounded-2xl"
           />
 
           <TextInput
@@ -118,7 +118,7 @@ export default function PersonalInfoTab() {
             disabled={!isEditingInfo}
             value={dob}
             onChange={e => setDob(e.target.value)}
-            className="py-3 bg-zinc-50 rounded-2xl"
+            className="py-3 bg-surface rounded-2xl"
           />
         </Form.Grid>
 
@@ -127,13 +127,13 @@ export default function PersonalInfoTab() {
           disabled={!isEditingInfo}
           value={address}
           onChange={e => setAddress(e.target.value)}
-          className="py-3 bg-zinc-50 rounded-2xl"
+          className="py-3 bg-surface rounded-2xl"
         />
       </div>
 
       {/* Editable eKYC CCCD Card Box */}
-      <div className="bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-sm space-y-5">
-        <div className="border-b border-zinc-100 pb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-5">
+        <div className="border-b border-line pb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="w-5 h-5 text-[#2AC1BC] shrink-0" />
             <Text as="h3" variant="heading" size="base" weight="black">
@@ -164,44 +164,44 @@ export default function PersonalInfoTab() {
         <Form.Grid cols={3}>
           <TextInput
             label={t('guestProfileIdCardNumLabel')}
-            labelClassName="text-[10px] uppercase text-zinc-500"
+            labelClassName="text-[10px] uppercase text-muted"
             disabled={!isEditingInfo}
             value={identityCard}
             onChange={e => {
               setIdentityCard(e.target.value)
               setCccdEdited(true)
             }}
-            className="bg-zinc-50 font-mono font-black"
+            className="bg-surface font-mono font-black"
           />
 
           <TextInput
             label={t('guestProfileIdCardDateLabel')}
-            labelClassName="text-[10px] uppercase text-zinc-500"
+            labelClassName="text-[10px] uppercase text-muted"
             disabled={!isEditingInfo}
             value={idIssueDate}
             onChange={e => {
               setIdIssueDate(e.target.value)
               setCccdEdited(true)
             }}
-            className="bg-zinc-50 font-bold"
+            className="bg-surface font-bold"
           />
 
           <TextInput
             label={t('guestProfileIdCardPlaceLabel')}
-            labelClassName="text-[10px] uppercase text-zinc-500"
+            labelClassName="text-[10px] uppercase text-muted"
             disabled={!isEditingInfo}
             value={idIssuePlace}
             onChange={e => {
               setIdIssuePlace(e.target.value)
               setCccdEdited(true)
             }}
-            className="bg-zinc-50 font-bold"
+            className="bg-surface font-bold"
           />
         </Form.Grid>
 
         {/* Front and Back Upload Simulation */}
         <Form.Grid cols={2} className="pt-2">
-          <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-2 text-center">
+          <div className="p-4 bg-surface rounded-2xl border border-line space-y-2 text-center">
             <div className="flex items-center justify-between">
               <Text as="span" size="xs" weight="extrabold" color="secondary">
                 {t('guestProfileEkycFront')}
@@ -221,7 +221,7 @@ export default function PersonalInfoTab() {
                 </Text>
               )}
             </div>
-            <div className="aspect-[16/10] bg-zinc-200 rounded-xl overflow-hidden relative group border border-zinc-300">
+            <div className="aspect-[16/10] bg-line rounded-xl overflow-hidden relative group border border-line">
               <img
                 src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80"
                 alt={t('guestProfileEkycFront')}
@@ -240,7 +240,7 @@ export default function PersonalInfoTab() {
             </div>
           </div>
 
-          <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-2 text-center">
+          <div className="p-4 bg-surface rounded-2xl border border-line space-y-2 text-center">
             <div className="flex items-center justify-between">
               <Text as="span" size="xs" weight="extrabold" color="secondary">
                 {t('guestProfileEkycBack')}
@@ -260,7 +260,7 @@ export default function PersonalInfoTab() {
                 </Text>
               )}
             </div>
-            <div className="aspect-[16/10] bg-zinc-200 rounded-xl overflow-hidden relative group border border-zinc-300">
+            <div className="aspect-[16/10] bg-line rounded-xl overflow-hidden relative group border border-line">
               <img
                 src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80"
                 alt={t('guestProfileEkycBack')}
@@ -282,7 +282,7 @@ export default function PersonalInfoTab() {
       </div>
 
       {/* Editable Emergency Contact */}
-      <div className="bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-sm space-y-5">
+      <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-5">
         <Form.Header
           title={t('guestProfileEmergencySectionTitle')}
           description={t('guestProfileEmergencySectionSub')}
@@ -294,7 +294,7 @@ export default function PersonalInfoTab() {
             disabled={!isEditingInfo}
             value={emergencyName}
             onChange={e => setEmergencyName(e.target.value)}
-            className="py-3 bg-zinc-50 rounded-2xl"
+            className="py-3 bg-surface rounded-2xl"
           />
 
           <TextInput
@@ -302,7 +302,7 @@ export default function PersonalInfoTab() {
             disabled={!isEditingInfo}
             value={emergencyPhone}
             onChange={e => setEmergencyPhone(e.target.value)}
-            className="py-3 bg-zinc-50 rounded-2xl"
+            className="py-3 bg-surface rounded-2xl"
           />
         </Form.Grid>
       </div>

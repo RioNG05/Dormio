@@ -345,14 +345,14 @@ export default function SendApplicationPage() {
         return {
           label: t('typeInquiry'),
           icon: HelpCircle,
-          badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+          badgeColor: 'bg-info-soft text-info border-info-subtle',
           cardBorder: 'border-blue-500 bg-blue-50/30',
         }
       case 'feedback':
         return {
           label: t('typeFeedback'),
           icon: Sparkles,
-          badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+          badgeColor: 'bg-deposit-soft text-deposit border-deposit-subtle',
           cardBorder: 'border-purple-500 bg-purple-50/30',
         }
       case 'complaint':
@@ -360,7 +360,7 @@ export default function SendApplicationPage() {
         return {
           label: t('typeComplaint'),
           icon: AlertTriangle,
-          badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+          badgeColor: 'bg-danger-soft text-danger border-danger-subtle',
           cardBorder: 'border-rose-500 bg-rose-50/30',
         }
     }
@@ -376,7 +376,7 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 normal-case"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle normal-case"
           >
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
             <Text as="span" color="inherit">
@@ -391,7 +391,7 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 normal-case"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-info-soft text-info border border-info-subtle normal-case"
           >
             <Clock className="w-3 h-3 text-blue-600 animate-spin" />
             <Text as="span" color="inherit">
@@ -405,9 +405,9 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 normal-case"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-card-hover text-muted border border-line normal-case"
           >
-            <XCircle className="w-3 h-3 text-zinc-500" />
+            <XCircle className="w-3 h-3 text-muted" />
             <Text as="span" color="inherit">
               {t('statusRejected')}
             </Text>
@@ -420,7 +420,7 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 normal-case"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle normal-case"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
             <Text as="span" color="inherit">
@@ -440,7 +440,7 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="black"
-            className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200"
+            className="px-2 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle"
           >
             {t('priorityHigh')}
           </Text>
@@ -451,7 +451,7 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="black"
-            className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200"
+            className="px-2 py-0.5 rounded-full bg-card-hover text-muted border border-line"
           >
             {t('priorityLow')}
           </Text>
@@ -463,7 +463,7 @@ export default function SendApplicationPage() {
             as="span"
             variant="badge"
             weight="black"
-            className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
+            className="px-2 py-0.5 rounded-full bg-warning-soft text-warning border border-warning-subtle"
           >
             {t('priorityMedium')}
           </Text>
@@ -486,9 +486,9 @@ export default function SendApplicationPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-zinc-50/60 pb-16">
+    <div className="min-h-screen bg-surface/60 pb-16">
       {/* Hero Header */}
-      <section className="bg-gradient-to-b from-white via-zinc-50 to-transparent border-b border-zinc-200/80 pt-10 pb-8 px-4 sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-b from-white via-zinc-50 to-transparent border-b border-line pt-10 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <Text
@@ -507,7 +507,7 @@ export default function SendApplicationPage() {
             <Text
               as="h1"
               variant="heading"
-              className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-900 tracking-tight"
+              className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground tracking-tight"
             >
               {t('pageTitle')}
             </Text>
@@ -554,7 +554,7 @@ export default function SendApplicationPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {!isLoggedIn ? (
           /* Login Notice Card for unauthenticated visitors */
-          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-zinc-200 shadow-sm text-center max-w-xl mx-auto space-y-4 my-8">
+          <div className="bg-card rounded-3xl p-8 sm:p-12 border border-line shadow-sm text-center max-w-xl mx-auto space-y-4 my-8">
             <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
               <FileText className="w-8 h-8" />
             </div>
@@ -581,7 +581,7 @@ export default function SendApplicationPage() {
         ) : (
           <div className="space-y-6">
             {/* Filter and Control Bar */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-zinc-200/90 shadow-xs space-y-4">
+            <div className="bg-card rounded-3xl p-4 sm:p-5 border border-line shadow-xs space-y-4">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 {/* Main Type Filter Tabs using ChipGroup */}
                 <ChipGroup
@@ -593,7 +593,7 @@ export default function SendApplicationPage() {
                   options={typeChipOptions}
                   size="md"
                   scrollable
-                  className="p-1 bg-zinc-100/80 rounded-2xl"
+                  className="p-1 bg-card-hover/80 rounded-2xl"
                 />
 
                 {/* Search & Status Filter */}
@@ -610,7 +610,7 @@ export default function SendApplicationPage() {
                         setSearchQuery(val)
                         setCurrentPage(1)
                       }}
-                      className="py-2 bg-zinc-50 text-xs font-semibold"
+                      className="py-2 bg-surface text-xs font-semibold"
                     />
                   </div>
 
@@ -622,12 +622,12 @@ export default function SendApplicationPage() {
                         setCurrentPage(1)
                       }}
                       options={statusOptions}
-                      className="py-2 text-xs bg-zinc-50"
+                      className="py-2 text-xs bg-surface"
                     />
                   </div>
 
                   {/* Grid vs Table View Toggle (Rule #9) */}
-                  <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
+                  <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl border border-line shrink-0">
                     <Button
                       type="button"
                       variant={viewMode === 'grid' ? 'white' : 'ghost'}
@@ -653,15 +653,15 @@ export default function SendApplicationPage() {
 
             {/* List / Grid Display */}
             {loading ? (
-              <div className="text-center py-16 bg-white rounded-3xl border border-zinc-200">
+              <div className="text-center py-16 bg-card rounded-3xl border border-line">
                 <Clock className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto mb-2" />
                 <Text variant="caption" size="xs" weight="bold" color="subtle">
                   {tCommon('loading')}
                 </Text>
               </div>
             ) : filteredApplications.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-3xl border border-zinc-200 space-y-3">
-                <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+              <div className="text-center py-16 bg-card rounded-3xl border border-line space-y-3">
+                <div className="w-12 h-12 rounded-full bg-card-hover text-muted flex items-center justify-center mx-auto">
                   <FileText className="w-6 h-6" />
                 </div>
                 <Text as="h3" variant="heading" size="sm">
@@ -700,7 +700,7 @@ export default function SendApplicationPage() {
                     <div
                       key={item.id}
                       onClick={() => setSelectedApplication(item)}
-                      className="bg-white rounded-3xl p-5 border border-zinc-200/90 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group hover:border-[#2AC1BC]"
+                      className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group hover:border-[#2AC1BC]"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2">
@@ -750,7 +750,7 @@ export default function SendApplicationPage() {
                                 key={img.id}
                                 src={img.url}
                                 alt="Evidence"
-                                className="w-12 h-12 rounded-xl object-cover border border-zinc-200"
+                                className="w-12 h-12 rounded-xl object-cover border border-line"
                               />
                             ))}
                             {item.images.length > 3 && (
@@ -759,7 +759,7 @@ export default function SendApplicationPage() {
                                 variant="badge"
                                 weight="black"
                                 color="secondary"
-                                className="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center"
+                                className="w-12 h-12 rounded-xl bg-card-hover border border-line flex items-center justify-center"
                               >
                                 +{item.images.length - 3}
                               </Text>
@@ -768,7 +768,7 @@ export default function SendApplicationPage() {
                         )}
                       </div>
 
-                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between mt-4">
+                      <div className="pt-4 border-t border-line flex items-center justify-between mt-4">
                         <Text
                           as="div"
                           variant="caption"
@@ -796,11 +796,11 @@ export default function SendApplicationPage() {
               </div>
             ) : (
               /* TABLE VIEW */
-              <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs overflow-hidden">
+              <div className="bg-card rounded-3xl border border-line shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-200 bg-zinc-50/70">
+                      <tr className="border-b border-line bg-surface/70">
                         <th className="py-3.5 px-4">
                           <Text as="span" variant="overline" size="2xs">
                             {t('typeLabel')}
@@ -829,7 +829,7 @@ export default function SendApplicationPage() {
                         <th className="py-3.5 px-4 text-right"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100">
+                    <tbody className="divide-y divide-line">
                       {paginatedApplications.map(item => {
                         const typeInfo = getTypeInfo(item.type)
                         const Icon = typeInfo.icon
@@ -859,7 +859,7 @@ export default function SendApplicationPage() {
                                 size="xs"
                                 weight="black"
                                 truncate
-                                className="text-zinc-900 group-hover:text-[#2AC1BC]"
+                                className="text-foreground group-hover:text-[#2AC1BC]"
                               >
                                 {item.title}
                               </Text>
@@ -894,7 +894,7 @@ export default function SendApplicationPage() {
 
             {/* Standardized Pagination Bar (Rule #9) */}
             {filteredApplications.length > 0 && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-white rounded-2xl border border-zinc-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-card rounded-2xl border border-line">
                 {/* Items per page selector & Range indicator */}
                 <div className="flex items-center gap-2">
                   <Text as="span" size="xs" weight="semibold" color="secondary">
@@ -912,7 +912,7 @@ export default function SendApplicationPage() {
                       }
                     }}
                     containerClassName="w-16"
-                    className="px-2 py-1 bg-zinc-50 text-center text-xs"
+                    className="px-2 py-1 bg-surface text-center text-xs"
                   />
                   <Text as="span" size="xs" weight="semibold" color="secondary">
                     {tCommon('perPage')} | {(currentPage - 1) * itemsPerPage + 1}-
@@ -1025,8 +1025,8 @@ export default function SendApplicationPage() {
                 onClick={() => setAppType('complaint')}
                 className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
                   appType === 'complaint'
-                    ? 'border-rose-500 bg-rose-50/50 shadow-xs ring-1 ring-rose-500'
-                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                    ? 'border-rose-500 bg-danger-soft shadow-xs ring-1 ring-rose-500'
+                    : 'border-line hover:border-line bg-card'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -1046,8 +1046,8 @@ export default function SendApplicationPage() {
                 onClick={() => setAppType('inquiry')}
                 className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
                   appType === 'inquiry'
-                    ? 'border-blue-500 bg-blue-50/50 shadow-xs ring-1 ring-blue-500'
-                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                    ? 'border-blue-500 bg-info-soft shadow-xs ring-1 ring-blue-500'
+                    : 'border-line hover:border-line bg-card'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -1067,8 +1067,8 @@ export default function SendApplicationPage() {
                 onClick={() => setAppType('feedback')}
                 className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
                   appType === 'feedback'
-                    ? 'border-purple-500 bg-purple-50/50 shadow-xs ring-1 ring-purple-500'
-                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                    ? 'border-purple-500 bg-deposit-soft shadow-xs ring-1 ring-purple-500'
+                    : 'border-line hover:border-line bg-card'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -1118,7 +1118,7 @@ export default function SendApplicationPage() {
                 {uploadedImages.map((src, idx) => (
                   <div
                     key={idx}
-                    className="relative group rounded-xl overflow-hidden border border-zinc-200 aspect-square"
+                    className="relative group rounded-xl overflow-hidden border border-line aspect-square"
                   >
                     <img src={src} alt="Evidence" className="w-full h-full object-cover" />
                     <Button
@@ -1137,9 +1137,9 @@ export default function SendApplicationPage() {
             {uploadedImages.length < 5 && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-zinc-200 hover:border-[#2AC1BC] rounded-2xl p-4 text-center cursor-pointer transition-colors bg-zinc-50/50 hover:bg-zinc-50"
+                className="border-2 border-dashed border-line hover:border-[#2AC1BC] rounded-2xl p-4 text-center cursor-pointer transition-colors bg-surface/50 hover:bg-card-hover"
               >
-                <UploadCloud className="w-6 h-6 text-zinc-400 mx-auto mb-1" />
+                <UploadCloud className="w-6 h-6 text-muted mx-auto mb-1" />
                 <Text size="xs" weight="bold" color="secondary">
                   {t('uploadGuide')}
                 </Text>
@@ -1176,7 +1176,7 @@ export default function SendApplicationPage() {
         showCloseButton={false}
       >
         <Modal.Body className="text-center space-y-4 p-6">
-          <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
@@ -1270,7 +1270,7 @@ export default function SendApplicationPage() {
         {selectedApplication && (
           <div className="space-y-5">
             {/* Description */}
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text as="span" variant="overline" className="block">
                 {t('detailLabel')}
               </Text>
@@ -1298,7 +1298,7 @@ export default function SendApplicationPage() {
                       href={img.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded-xl overflow-hidden border border-zinc-200 aspect-square hover:opacity-90 transition-opacity"
+                      className="rounded-xl overflow-hidden border border-line aspect-square hover:opacity-90 transition-opacity"
                     >
                       <img src={img.url} alt="Evidence" className="w-full h-full object-cover" />
                     </a>
@@ -1308,13 +1308,13 @@ export default function SendApplicationPage() {
             )}
 
             {/* Admin Resolution Section */}
-            <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2">
+            <div className="p-4 bg-warning-soft border border-warning-subtle rounded-2xl space-y-2">
               <div className="flex items-center justify-between">
                 <Text
                   as="span"
                   size="xs"
                   weight="black"
-                  className="text-amber-900 flex items-center gap-1.5"
+                  className="text-warning flex items-center gap-1.5"
                 >
                   <ShieldCheck className="w-4 h-4 text-amber-600" />
                   <Text as="span" color="inherit">
@@ -1322,7 +1322,7 @@ export default function SendApplicationPage() {
                   </Text>
                 </Text>
                 {selectedApplication.resolvedAt && (
-                  <Text as="span" variant="caption" size="3xs" weight="medium" className="text-amber-700">
+                  <Text as="span" variant="caption" size="3xs" weight="medium" className="text-warning">
                     {new Date(selectedApplication.resolvedAt).toLocaleString()}
                   </Text>
                 )}
@@ -1333,18 +1333,18 @@ export default function SendApplicationPage() {
                   variant="body"
                   size="xs"
                   weight="medium"
-                  className="text-amber-900 whitespace-pre-wrap bg-white/70 p-3 rounded-xl border border-amber-200"
+                  className="text-warning whitespace-pre-wrap bg-card/70 p-3 rounded-xl border border-warning-subtle"
                 >
                   {selectedApplication.resolutionNote}
                 </Text>
               ) : (
-                <Text variant="body" size="xs" weight="medium" italic className="text-amber-700">
+                <Text variant="body" size="xs" weight="medium" italic className="text-warning">
                   {t('noResolutionYet')}
                 </Text>
               )}
 
               {selectedApplication.resolvedByName && (
-                <Text variant="caption" size="3xs" weight="bold" className="text-amber-800">
+                <Text variant="caption" size="3xs" weight="bold" className="text-warning">
                   {t('resolvedBy')}: {selectedApplication.resolvedByName}
                 </Text>
               )}

@@ -224,7 +224,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
   const currentPlans = isBhms ? bhmsPlans : bhrpPlans
 
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20">
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
@@ -261,7 +261,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
         {/* ── Shared Tab Switcher (Chỉ hiển thị khi sàn BHRP được mở) ───────── */}
         {FEATURE_FLAGS.ENABLE_BHRP && (
           <div className="flex justify-center w-full">
-            <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-zinc-100 rounded-3xl border border-zinc-200/80 max-w-xl w-full gap-2 sm:gap-0">
+            <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-card-hover rounded-3xl border border-line max-w-xl w-full gap-2 sm:gap-0">
               <Button
                 id="tab-bhms"
                 size="sm"
@@ -334,7 +334,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
 
             {/* Billing cycle toggle — only shown for BHMS (management system) */}
             {isBhms && (
-              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1.5 p-1.5 bg-zinc-100 rounded-2xl border border-zinc-200/80 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1.5 p-1.5 bg-card-hover rounded-2xl border border-line w-full sm:w-auto">
                 <Button
                   id="billing-monthly"
                   size="sm"
@@ -397,7 +397,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               return (
                 <div
                   key={idx}
-                  className={`bg-white rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${plan.popular ? '-translate-y-2' : 'hover:shadow-md'
+                  className={`bg-card rounded-3xl p-8 border transition-all duration-300 flex flex-col justify-between space-y-6 relative cursor-pointer ${plan.popular ? '-translate-y-2' : 'hover:shadow-md'
                     }`}
                   style={
                     plan.popular
@@ -434,7 +434,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                       </Text>
                     </div>
 
-                    <div className="py-2 border-y border-zinc-100">
+                    <div className="py-2 border-y border-line">
                       {isBhms ? (
                         // BHMS: monthly price with yearly toggle
                         <>
@@ -624,7 +624,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               return (
                 <div
                   key={idx}
-                  className="bg-white rounded-3xl p-7 sm:p-8 border shadow-xs hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group"
+                  className="bg-card rounded-3xl p-7 sm:p-8 border shadow-xs hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group"
                   style={{
                     borderColor: `${accentColor}33`,
                   }}
@@ -673,7 +673,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
         </section>
 
         {/* ── FAQ Accordion ────────────────────────────────────────────────── */}
-        <section className="bg-zinc-50 rounded-3xl p-8 sm:p-12 border border-zinc-200/80 space-y-6">
+        <section className="bg-surface rounded-3xl p-8 sm:p-12 border border-line space-y-6">
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <Text
               as="h3"
@@ -699,14 +699,14 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 <div
                   key={idx}
                   onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  className="bg-white rounded-2xl p-4 sm:p-5 border border-zinc-200/80 shadow-xs cursor-pointer space-y-2 transition-all"
+                  className="bg-card rounded-2xl p-4 sm:p-5 border border-line shadow-xs cursor-pointer space-y-2 transition-all"
                 >
                   <div className="flex items-center justify-between">
                     <Text as="span" size="xs" weight="bold" className="sm:text-sm">
                       {faq.q}
                     </Text>
                     <ChevronDown
-                      className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? 'rotate-180 text-[#2AC1BC]' : ''}`}
+                      className={`w-4 h-4 text-muted transition-transform ${isOpen ? 'rotate-180 text-[#2AC1BC]' : ''}`}
                     />
                   </div>
                   {isOpen && (
@@ -715,7 +715,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                       size="xs"
                       weight="medium"
                       color="secondary"
-                      className="leading-relaxed pt-2 border-t border-zinc-100 animate-in fade-in duration-200"
+                      className="leading-relaxed pt-2 border-t border-line animate-in fade-in duration-200"
                     >
                       {faq.a}
                     </Text>

@@ -124,7 +124,7 @@ export default function RegisterPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header */}
       <div className="space-y-2">
-        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-foreground tracking-tight">
           {t('authRegisterTitle')}
         </Text>
         <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
@@ -137,52 +137,52 @@ export default function RegisterPage() {
         {/* 1. Phone Number (Required) */}
         <TextInput
           label={t('authLoginPhoneLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type="tel"
           required
           placeholder={t('authRegisterPhonePlaceholder')}
           value={phone}
           onChange={e => setPhone(e.target.value)}
-          leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          leftIcon={<Phone className="w-4 h-4 text-muted" />}
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* 2. Full Name (Optional) */}
         <TextInput
           label={t('authRegisterFullNameLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type="text"
           required={false}
           placeholder={t('authRegisterFullNamePlaceholder')}
           value={fullName}
           onChange={e => setFullName(e.target.value)}
-          leftIcon={<User className="w-4 h-4 text-zinc-400" />}
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          leftIcon={<User className="w-4 h-4 text-muted" />}
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* 3. Email (Optional) */}
         <TextInput
           label={t('authRegisterEmailOptionalLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type="email"
           required={false}
           placeholder={t('authRegisterEmailPlaceholder')}
           value={email}
           onChange={e => setEmail(e.target.value)}
-          leftIcon={<Mail className="w-4 h-4 text-zinc-400" />}
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          leftIcon={<Mail className="w-4 h-4 text-muted" />}
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* 4. Password (Required) */}
         <TextInput
           label={t('authLoginPasswordLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type={showPassword ? 'text' : 'password'}
           required
           placeholder={t('authRegisterPassPlaceholder')}
           value={password}
           onChange={e => setPassword(e.target.value)}
-          leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
+          leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
             <Button size="icon"
               type="button"
@@ -193,19 +193,19 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           }
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* 5. Confirm Password (Required) */}
         <TextInput
           label={t('authRegisterConfirmPassLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type={showConfirmPassword ? 'text' : 'password'}
           required
           placeholder={t('authRegisterConfirmPassPlaceholder')}
           value={confirmPassword}
           onChange={e => setConfirmPassword(e.target.value)}
-          leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
+          leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
             <Button size="icon"
               type="button"
@@ -216,7 +216,7 @@ export default function RegisterPage() {
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           }
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* 6. Terms Checkbox using Base Checkbox & Text Component */}

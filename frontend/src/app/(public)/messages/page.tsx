@@ -272,7 +272,7 @@ function GuestMessagesContent() {
   // Auth lock screen
   if (!isLoggedIn) {
     return (
-      <div className="flex flex-col min-h-screen bg-white items-center justify-center p-6 text-center">
+      <div className="flex flex-col min-h-screen bg-card items-center justify-center p-6 text-center">
         <div className="w-20 h-20 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-6 shadow-inner border border-[#2AC1BC]/20">
           <Lock className="w-10 h-10" />
         </div>
@@ -328,22 +328,22 @@ function GuestMessagesContent() {
       </div>
 
       {/* Main Chat Shell */}
-      <div className="bg-white border border-zinc-200/90 rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px] h-[calc(100vh-200px)]">
+      <div className="bg-card border border-line rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px] h-[calc(100vh-200px)]">
         {/* Left Column: Conversations List */}
-        <div className="lg:col-span-4 border-r border-zinc-200 flex flex-col bg-zinc-50/40">
+        <div className="lg:col-span-4 border-r border-line flex flex-col bg-zinc-50/40">
           {/* Search Box using SearchInput */}
-          <div className="p-4 border-b border-zinc-200/80 bg-white">
+          <div className="p-4 border-b border-line bg-card">
             <SearchInput
               value={searchQuery}
               onImmediateChange={setSearchQuery}
               onChange={setSearchQuery}
               placeholder={t('guestMessagesSearchPlaceholder')}
-              className="bg-zinc-50 py-2"
+              className="bg-surface py-2"
             />
           </div>
 
           {/* List Stream */}
-          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100">
+          <div className="flex-1 overflow-y-auto divide-y divide-line">
             {isLoadingConversations ? (
               <div className="p-8 text-center space-y-2">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2AC1BC]" />
@@ -379,7 +379,7 @@ function GuestMessagesContent() {
                     onClick={() => setActiveChat(conv)}
                     className={`w-full text-left p-4 flex gap-3 transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-white shadow-xs border-l-4 border-l-[#2ac1bc]'
+                        ? 'bg-card shadow-xs border-l-4 border-l-[#2ac1bc]'
                         : 'hover:bg-zinc-100/60'
                     }`}
                   >
@@ -387,7 +387,7 @@ function GuestMessagesContent() {
                       <img
                         src={conv.participant.avatarUrl}
                         alt={participantName}
-                        className="w-11 h-11 rounded-2xl object-cover shrink-0 border border-zinc-200"
+                        className="w-11 h-11 rounded-2xl object-cover shrink-0 border border-line"
                       />
                     ) : (
                       <Text
@@ -452,9 +452,9 @@ function GuestMessagesContent() {
         </div>
 
         {/* Right Column: Chat Box */}
-        <div className="lg:col-span-8 flex flex-col bg-white">
+        <div className="lg:col-span-8 flex flex-col bg-card">
           {!activeChat ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted">
               <MessageSquare className="w-12 h-12 text-zinc-300 mb-3" />
               <Text as="h3" variant="heading" size="sm" weight="extrabold" color="secondary">
                 {t('guestMessagesSelectToChat')}
@@ -463,13 +463,13 @@ function GuestMessagesContent() {
           ) : (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-zinc-200/80 flex justify-between items-center bg-white shadow-xs">
+              <div className="p-4 border-b border-line flex justify-between items-center bg-card shadow-xs">
                 <div className="flex items-center gap-3">
                   {activeChat.participant?.avatarUrl ? (
                     <img
                       src={activeChat.participant.avatarUrl}
                       alt={activeChat.participant.fullName || 'User'}
-                      className="w-10 h-10 rounded-xl object-cover border border-zinc-200"
+                      className="w-10 h-10 rounded-xl object-cover border border-line"
                     />
                   ) : (
                     <Text
@@ -509,7 +509,7 @@ function GuestMessagesContent() {
                 {activeChat.participant?.phoneNumber && (
                   <a
                     href={`tel:${activeChat.participant.phoneNumber}`}
-                    className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-600 flex items-center gap-1.5"
+                    className="p-2 hover:bg-card-hover rounded-xl transition-colors text-muted flex items-center gap-1.5"
                   >
                     <Phone className="w-4 h-4 text-[#2AC1BC]" />
                     <Text
@@ -528,7 +528,7 @@ function GuestMessagesContent() {
               {/* Messages Stream */}
               <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-zinc-50/40">
                 {isLoadingMessages ? (
-                  <div className="flex items-center justify-center h-full text-zinc-400">
+                  <div className="flex items-center justify-center h-full text-muted">
                     <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
                   </div>
                 ) : messages.length === 0 ? (
@@ -556,7 +556,7 @@ function GuestMessagesContent() {
                           className={`max-w-md px-4 py-3 rounded-2xl leading-relaxed ${
                             isMe
                               ? 'bg-zinc-900 rounded-br-none shadow-md'
-                              : 'bg-white border border-zinc-200 rounded-bl-none shadow-xs'
+                              : 'bg-card border border-line rounded-bl-none shadow-xs'
                           }`}
                         >
                           {msg.content}
@@ -583,14 +583,14 @@ function GuestMessagesContent() {
               {/* Input Form using Form, TextInput, and Button */}
               <Form
                 onSubmit={handleSendMessage}
-                className="p-4 border-t border-zinc-200 bg-white flex items-center gap-2 space-y-0"
+                className="p-4 border-t border-line bg-card flex items-center gap-2 space-y-0"
               >
                 <TextInput
                   placeholder={t('guestMessagesInputPlaceholder')}
                   value={messageInput}
                   onChange={e => setMessageInput(e.target.value)}
                   containerClassName="flex-1"
-                  className="bg-zinc-50"
+                  className="bg-surface"
                 />
                 <Button
                   type="submit"

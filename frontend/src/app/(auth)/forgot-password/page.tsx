@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
           <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authForgotPassBadge')}
         </Text>
 
-        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-foreground tracking-tight">
           {t('authForgotPassword')}
         </Text>
         <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
@@ -44,12 +44,12 @@ export default function ForgotPasswordPage() {
       </div>
 
       {submitted ? (
-        <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-200 text-center space-y-4 animate-in fade-in duration-300">
+        <div className="bg-surface rounded-3xl p-6 border border-line text-center space-y-4 animate-in fade-in duration-300">
           <div className="w-14 h-14 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <Text as="h3" variant="heading" size="base" className="text-zinc-900">
+            <Text as="h3" variant="heading" size="base" className="text-foreground">
               {t('authForgotPassSuccessTitle')}
             </Text>
             <Text variant="body" size="xs" color="subtle" className="mt-1 leading-relaxed">
@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
       ) : (
         <>
           {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
-          <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60 gap-1">
+          <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
             <Button
               type="button"
               variant={method === 'phone' ? 'primary' : 'ghost'}
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
               label={
                 method === 'phone' ? t('authForgotPassPhoneLabel') : t('authForgotPassEmailLabel')
               }
-              labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+              labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
               type={method === 'phone' ? 'tel' : 'email'}
               required
               placeholder={method === 'phone' ? '0987 654 321' : 'nguyenvana@gmail.com'}
@@ -105,12 +105,12 @@ export default function ForgotPasswordPage() {
               onChange={e => setAccountIdentifier(e.target.value)}
               leftIcon={
                 method === 'phone' ? (
-                  <Phone className="w-4 h-4 text-zinc-400" />
+                  <Phone className="w-4 h-4 text-muted" />
                 ) : (
-                  <Mail className="w-4 h-4 text-zinc-400" />
+                  <Mail className="w-4 h-4 text-muted" />
                 )
               }
-              className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+              className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
             />
 
             {/* Submit Button using Base Form.Actions & Button */}

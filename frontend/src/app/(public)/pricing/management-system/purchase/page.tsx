@@ -290,7 +290,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
             variant="ghost"
             size="xs"
             leftIcon={<ArrowLeft className="w-4 h-4" />}
-            className="text-zinc-500 hover:text-zinc-900 -ml-2.5"
+            className="text-muted hover:text-foreground -ml-2.5"
           >
             {t('guestPricingCheckoutBackToPricing')}
           </Button>
@@ -338,7 +338,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
             size="xs"
             weight="medium"
             color="secondary"
-            className="flex items-center gap-2 bg-zinc-100 border border-zinc-200/80 px-3.5 py-1.5 rounded-full"
+            className="flex items-center gap-2 bg-card-hover border border-line px-3.5 py-1.5 rounded-full"
           >
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <Text as="span" color="inherit">
@@ -349,14 +349,14 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
       </div>
 
       {isLoading ? (
-        <div className="bg-white rounded-3xl border border-zinc-200 p-16 flex flex-col items-center justify-center gap-4">
+        <div className="bg-card rounded-3xl border border-line p-16 flex flex-col items-center justify-center gap-4">
           <RefreshCw className="w-8 h-8 animate-spin text-[#2AC1BC]" />
           <Text variant="body" size="sm" weight="medium" color="subtle">
             {t('guestPricingCheckoutLoading')}
           </Text>
         </div>
       ) : !currentPlan ? (
-        <div className="bg-white rounded-3xl border border-zinc-200 p-12 text-center">
+        <div className="bg-card rounded-3xl border border-line p-12 text-center">
           <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
           <Text as="h2" variant="heading" size="lg" weight="bold" className="mb-1">
             {t('guestPricingCheckoutNotFound')}
@@ -388,7 +388,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
             )}
 
             {/* Plan Card Detail */}
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div className="bg-card rounded-3xl border border-line shadow-sm p-6 sm:p-8 space-y-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <Text as="span" variant="overline" size="xs" weight="bold" color="subtle">
@@ -415,7 +415,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
               {/* Cycle Selector Buttons using Form.Field */}
               <Form.Field
                 label={t('guestPricingCheckoutSelectCycle')}
-                labelClassName="uppercase tracking-wider text-zinc-500 mb-2.5"
+                labelClassName="uppercase tracking-wider text-muted mb-2.5"
               >
                 <div className="grid grid-cols-3 gap-2.5">
                   {(['monthly', 'quarterly', 'yearly'] as const).map(cycle => {
@@ -435,7 +435,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                         className={`relative p-3 sm:p-4 rounded-2xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
                           isSelected
                             ? 'bg-zinc-900 text-white border-zinc-900 shadow-md ring-2 ring-zinc-900/10'
-                            : 'bg-zinc-50/70 hover:bg-zinc-100/80 text-zinc-700 border-zinc-200'
+                            : 'bg-surface/70 hover:bg-card-hover text-foreground/90 border-line'
                         }`}
                       >
                         {savings && (
@@ -473,13 +473,13 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
               </Form.Field>
 
               {/* Feature Checklist */}
-              <div className="pt-2 border-t border-zinc-100">
+              <div className="pt-2 border-t border-line">
                 <Text as="span" variant="overline" size="xs" weight="bold" className="block mb-3">
                   {t('guestPricingCheckoutFeaturesTitle')}
                 </Text>
                 <ul className="space-y-2.5">
                   <li className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-success-soft text-success flex items-center justify-center shrink-0">
                       <Check className="w-3.5 h-3.5" />
                     </div>
                     <Text as="span" variant="body" size="xs" weight="medium" className="sm:text-sm">
@@ -487,7 +487,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                     </Text>
                   </li>
                   <li className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-success-soft text-success flex items-center justify-center shrink-0">
                       <Check className="w-3.5 h-3.5" />
                     </div>
                     <Text as="span" variant="body" size="xs" weight="medium" className="sm:text-sm">
@@ -496,7 +496,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                   </li>
                   {currentPlan.features?.map((f, idx) => (
                     <li key={idx} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-success-soft text-success flex items-center justify-center shrink-0">
                         <Check className="w-3.5 h-3.5" />
                       </div>
                       <Text
@@ -514,7 +514,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
               </div>
 
               {/* Action Button */}
-              <div className="pt-4 border-t border-zinc-100">
+              <div className="pt-4 border-t border-line">
                 <Button
                   fullWidth
                   size="lg"
@@ -546,11 +546,11 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
 
           {/* ─── RIGHT: QR PAYMENT AREA ─── */}
           <div className="lg:col-span-6">
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+            <div className="bg-card rounded-3xl border border-line shadow-sm p-6 sm:p-8 relative overflow-hidden">
               {/* SUCCESS STATE */}
               {isSuccess ? (
                 <div className="py-8 text-center space-y-6 animate-in zoom-in-95 duration-400">
-                  <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+                  <div className="w-20 h-20 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
                     <CheckCircle2 className="w-12 h-12" />
                   </div>
                   <div>
@@ -570,7 +570,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                   </div>
 
                   {checkoutData && (
-                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 max-w-sm mx-auto text-left space-y-1.5">
+                    <div className="p-4 rounded-2xl bg-surface border border-line max-w-sm mx-auto text-left space-y-1.5">
                       <div className="flex justify-between">
                         <Text as="span" size="xs" weight="medium" color="secondary">
                           {t('guestPricingCheckoutLabelPlan')}
@@ -613,12 +613,12 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
               ) : checkoutData ? (
                 /* QR ACTIVE STATE */
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80">
+                  <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-warning-soft border border-warning-subtle">
                     <Text
                       as="div"
                       size="xs"
                       weight="bold"
-                      className="flex items-center gap-2 text-amber-900"
+                      className="flex items-center gap-2 text-warning"
                     >
                       <Clock className="w-4 h-4 text-amber-600" />
                       <Text as="span" color="inherit">
@@ -643,7 +643,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                     </Text>
                   </div>
 
-                  <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 p-3 bg-white rounded-2xl border-2 border-zinc-200/80 shadow-inner flex items-center justify-center">
+                  <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 p-3 bg-white rounded-2xl border-2 border-line shadow-inner flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={getQrImageUrl(checkoutData)}
@@ -665,7 +665,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                     />
 
                     {isExpired && (
-                      <div className="absolute inset-0 bg-white/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
+                      <div className="absolute inset-0 bg-card/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
                         <AlertTriangle className="w-10 h-10 text-rose-500 mb-2" />
                         <Text as="div" variant="heading" size="sm" weight="black">
                           {t('guestPricingCheckoutQrExpired')}
@@ -688,7 +688,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                   </div>
 
                   <div className="space-y-2.5 pt-2">
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                       <Text as="span" size="xs" color="secondary">
                         {t('guestPricingCheckoutBank')}
                       </Text>
@@ -697,7 +697,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       </Text>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                       <Text as="span" size="xs" color="secondary">
                         {t('guestPricingCheckoutAccountNumber')}
                       </Text>
@@ -721,7 +721,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                       <Text as="span" size="xs" color="secondary">
                         {t('guestPricingCheckoutAccountName')}
                       </Text>
@@ -730,7 +730,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       </Text>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                       <Text as="span" size="xs" color="secondary">
                         {t('guestPricingCheckoutAmount')}
                       </Text>
@@ -739,12 +739,12 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       </Text>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200/60">
-                      <Text as="span" size="xs" weight="medium" className="text-amber-800">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-warning-soft border border-warning-subtle">
+                      <Text as="span" size="xs" weight="medium" className="text-warning">
                         {t('guestPricingCheckoutTransferContent')}
                       </Text>
                       <div className="flex items-center gap-2">
-                        <Text as="strong" size="xs" weight="black" mono className="text-amber-950">
+                        <Text as="strong" size="xs" weight="black" mono className="text-warning">
                           {checkoutData.description}
                         </Text>
                         <Button
@@ -764,9 +764,9 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200/60 flex items-center justify-center gap-3">
+                  <div className="p-3.5 rounded-2xl bg-primary-soft border border-primary-subtle flex items-center justify-center gap-3">
                     <RefreshCw className="w-4 h-4 text-[#2AC1BC] animate-spin shrink-0" />
-                    <Text as="span" size="xs" weight="semibold" className="text-teal-800">
+                    <Text as="span" size="xs" weight="semibold" className="text-primary">
                       {t('guestPricingCheckoutWaitingTransfer')}
                     </Text>
                   </div>
@@ -774,7 +774,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
               ) : (
                 /* PLACEHOLDER STATE */
                 <div className="py-14 px-4 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-3xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-3xl bg-card-hover border border-line text-muted flex items-center justify-center mx-auto">
                     <QrCode className="w-8 h-8" />
                   </div>
                   <div>

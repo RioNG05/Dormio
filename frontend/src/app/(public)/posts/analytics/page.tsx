@@ -178,23 +178,23 @@ export default function PublicPostAnalyticsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-20 pt-6 px-4 sm:px-6 animate-in fade-in duration-300">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-6 rounded-3xl border border-line shadow-sm">
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="p-2.5 text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+            className="p-2.5 text-muted hover:text-foreground bg-surface hover:bg-card-hover rounded-full transition-colors cursor-pointer"
             title={t('guestPostsAnalyticsBackHome')}
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+              <h1 className="text-2xl font-black text-foreground tracking-tight">
                 {t('guestPostsAnalyticsTitle')}
               </h1>
               <span className="px-2.5 py-0.5 text-[10px] font-black uppercase rounded-full bg-[#2ac1bc]/10 text-[#2ac1bc]"></span>
             </div>
-            <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+            <p className="text-xs sm:text-sm text-muted mt-0.5">
               {t('guestPostsAnalyticsSubtitle')}
             </p>
           </div>
@@ -202,7 +202,7 @@ export default function PublicPostAnalyticsPage() {
 
         {/* Action Controls & Time Range Filter */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center bg-zinc-100 p-1 rounded-2xl border border-zinc-200">
+          <div className="flex items-center bg-card-hover p-1 rounded-2xl border border-line">
             {timeRangeTabs.map(tab => (
               <button
                 key={tab.val}
@@ -210,8 +210,8 @@ export default function PublicPostAnalyticsPage() {
                 onClick={() => setTimeRange(tab.val)}
                 className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                   timeRange === tab.val
-                    ? 'bg-white text-zinc-900 shadow-sm font-black'
-                    : 'text-zinc-500 hover:text-zinc-900'
+                    ? 'bg-card text-foreground shadow-sm font-black'
+                    : 'text-muted hover:text-foreground'
                 }`}
               >
                 {tab.label}
@@ -231,9 +231,9 @@ export default function PublicPostAnalyticsPage() {
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Views */}
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="bg-card p-6 rounded-3xl border border-line shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardReach')}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600">
@@ -241,17 +241,17 @@ export default function PublicPostAnalyticsPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <span className="text-3xl font-black text-zinc-900 tracking-tight">
+            <span className="text-3xl font-black text-foreground tracking-tight">
               {isLoading ? '...' : (overview?.totalViews ?? 0).toLocaleString()}
             </span>
-            <p className="text-[11px] text-zinc-400">{t('guestPostsAnalyticsCardReachSub')}</p>
+            <p className="text-[11px] text-muted">{t('guestPostsAnalyticsCardReachSub')}</p>
           </div>
         </div>
 
         {/* Saves / Bookmarks */}
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="bg-card p-6 rounded-3xl border border-line shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardBookmarks')}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
@@ -259,17 +259,17 @@ export default function PublicPostAnalyticsPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <span className="text-3xl font-black text-zinc-900 tracking-tight">
+            <span className="text-3xl font-black text-foreground tracking-tight">
               {isLoading ? '...' : (overview?.totalSaved ?? 0).toLocaleString()}
             </span>
-            <p className="text-[11px] text-zinc-400">{t('guestPostsAnalyticsCardBookmarksSub')}</p>
+            <p className="text-[11px] text-muted">{t('guestPostsAnalyticsCardBookmarksSub')}</p>
           </div>
         </div>
 
         {/* Active Posts */}
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="bg-card p-6 rounded-3xl border border-line shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardActive')}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
@@ -277,17 +277,17 @@ export default function PublicPostAnalyticsPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <span className="text-3xl font-black text-zinc-900 tracking-tight">
+            <span className="text-3xl font-black text-foreground tracking-tight">
               {isLoading ? '...' : `${overview?.activePosts ?? 0} / ${overview?.totalPosts ?? 0}`}
             </span>
-            <p className="text-[11px] text-zinc-400">{t('guestPostsAnalyticsCardActiveSub')}</p>
+            <p className="text-[11px] text-muted">{t('guestPostsAnalyticsCardActiveSub')}</p>
           </div>
         </div>
 
         {/* Average Reach */}
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="bg-card p-6 rounded-3xl border border-line shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="flex items-center justify-between pb-3">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardAvg')}
             </span>
             <div className="w-9 h-9 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
@@ -295,25 +295,25 @@ export default function PublicPostAnalyticsPage() {
             </div>
           </div>
           <div className="space-y-1">
-            <span className="text-3xl font-black text-zinc-900 tracking-tight">
+            <span className="text-3xl font-black text-foreground tracking-tight">
               {isLoading ? '...' : `${overview?.averageViewsPerPost ?? 0}`}
             </span>
-            <p className="text-[11px] text-zinc-400">{t('guestPostsAnalyticsCardAvgSub')}</p>
+            <p className="text-[11px] text-muted">{t('guestPostsAnalyticsCardAvgSub')}</p>
           </div>
         </div>
       </div>
 
       {/* Main Continuous Reach Trend Chart */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-zinc-200 shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-zinc-100">
+      <div className="bg-card p-6 sm:p-8 rounded-3xl border border-line shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-line">
           <div>
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-[#2ac1bc]" />
-              <h2 className="text-lg font-black text-zinc-900 tracking-tight">
+              <h2 className="text-lg font-black text-foreground tracking-tight">
                 {t('guestPostsAnalyticsChartTitle')}
               </h2>
             </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               {t('guestPostsAnalyticsChartSub', { timeRange })}
             </p>
           </div>
@@ -321,11 +321,11 @@ export default function PublicPostAnalyticsPage() {
           <div className="flex items-center gap-4 text-xs font-bold">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#2ac1bc]" />
-              <span className="text-zinc-600">{t('guestPostsAnalyticsLegendViews')}</span>
+              <span className="text-muted">{t('guestPostsAnalyticsLegendViews')}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#FF6B35]" />
-              <span className="text-zinc-600">{t('guestPostsAnalyticsLegendUnique')}</span>
+              <span className="text-muted">{t('guestPostsAnalyticsLegendUnique')}</span>
             </div>
           </div>
         </div>
@@ -333,7 +333,7 @@ export default function PublicPostAnalyticsPage() {
         {/* Recharts Area Container */}
         <div className="w-full h-80 pt-2">
           {isLoading ? (
-            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-3">
+            <div className="w-full h-full flex flex-col items-center justify-center text-muted gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-[#2ac1bc]" />
               <span className="text-xs font-bold">{t('guestPostsAnalyticsChartLoading')}</span>
             </div>
@@ -403,9 +403,9 @@ export default function PublicPostAnalyticsPage() {
               </ResponsiveContainer>
             )
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-2 border border-dashed border-zinc-200 rounded-2xl">
+            <div className="w-full h-full flex flex-col items-center justify-center text-muted gap-2 border border-dashed border-line rounded-2xl">
               <BarChart3 className="w-8 h-8 text-zinc-300" />
-              <span className="text-xs font-bold text-zinc-500">
+              <span className="text-xs font-bold text-muted">
                 {t('guestPostsAnalyticsChartEmpty')}
               </span>
             </div>
@@ -414,18 +414,18 @@ export default function PublicPostAnalyticsPage() {
       </div>
 
       {/* Top Performing Listings Table */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-zinc-200 shadow-sm space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
+      <div className="bg-card p-6 sm:p-8 rounded-3xl border border-line shadow-sm space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-line">
           <div>
-            <h2 className="text-base font-black text-zinc-900 tracking-tight">
+            <h2 className="text-base font-black text-foreground tracking-tight">
               {t('guestPostsAnalyticsTableTitle')}
             </h2>
-            <p className="text-xs text-zinc-400 mt-0.5">{t('guestPostsAnalyticsTableSub')}</p>
+            <p className="text-xs text-muted mt-0.5">{t('guestPostsAnalyticsTableSub')}</p>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="p-8 text-center text-zinc-400">
+          <div className="p-8 text-center text-muted">
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2ac1bc] mb-2" />
             <span className="text-xs font-bold">{t('guestPostsAnalyticsTableLoading')}</span>
           </div>
@@ -433,7 +433,7 @@ export default function PublicPostAnalyticsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-zinc-100 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
+                <tr className="border-b border-line text-muted font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4">{t('guestPostsAnalyticsColPost')}</th>
                   <th className="py-3 px-4">{t('guestPostsAnalyticsColDeposit')}</th>
                   <th className="py-3 px-4 text-center">{t('guestPostsAnalyticsColStatus')}</th>
@@ -447,7 +447,7 @@ export default function PublicPostAnalyticsPage() {
                   <tr key={post.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-100 shrink-0 border border-zinc-200">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-card-hover shrink-0 border border-line">
                           {post.thumbnailUrl ? (
                             <img
                               src={post.thumbnailUrl}
@@ -461,8 +461,8 @@ export default function PublicPostAnalyticsPage() {
                           )}
                         </div>
                         <div className="max-w-md">
-                          <p className="font-bold text-zinc-900 text-xs truncate">{post.title}</p>
-                          <p className="text-[11px] text-zinc-400 mt-0.5">
+                          <p className="font-bold text-foreground text-xs truncate">{post.title}</p>
+                          <p className="text-[11px] text-muted mt-0.5">
                             {post.boardingHouseName
                               ? `${post.roomNumber || t('guestPostsAnalyticsRoomPrefix')} · ${post.boardingHouseName}`
                               : t('guestPostsAnalyticsFreePostBadge')}
@@ -470,17 +470,17 @@ export default function PublicPostAnalyticsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 font-bold text-zinc-900">
+                    <td className="py-4 px-4 font-bold text-foreground">
                       {formatCurrency(post.depositAmount, currentLocale)}
                     </td>
                     <td className="py-4 px-4 text-center">
                       <span
                         className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           post.status === 'posted'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            ? 'bg-success-soft text-success border border-success-subtle'
                             : post.status === 'draft'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-zinc-100 text-zinc-500 border border-zinc-200'
+                              ? 'bg-warning-soft text-warning border border-warning-subtle'
+                              : 'bg-card-hover text-muted border border-line'
                         }`}
                       >
                         {post.status === 'posted'
@@ -490,7 +490,7 @@ export default function PublicPostAnalyticsPage() {
                             : t('guestPostsAnalyticsStatusHidden')}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-center font-black text-zinc-900">
+                    <td className="py-4 px-4 text-center font-black text-foreground">
                       {post.viewsCount.toLocaleString()}
                     </td>
                     <td className="py-4 px-4 text-center font-black text-rose-500">
@@ -512,8 +512,8 @@ export default function PublicPostAnalyticsPage() {
             </table>
           </div>
         ) : (
-          <div className="p-8 text-center text-zinc-400 border border-dashed border-zinc-200 rounded-2xl">
-            <p className="text-xs font-bold text-zinc-500">{t('guestPostsAnalyticsEmptyPosts')}</p>
+          <div className="p-8 text-center text-muted border border-dashed border-line rounded-2xl">
+            <p className="text-xs font-bold text-muted">{t('guestPostsAnalyticsEmptyPosts')}</p>
             <Link
               href="/posts/create"
               className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-[#FF6B35] text-white rounded-xl text-xs font-bold"
@@ -527,17 +527,17 @@ export default function PublicPostAnalyticsPage() {
       {/* Drill-down Modal for Single Post */}
       {selectedPostId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-zinc-200 space-y-6 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between gap-4 pb-4 border-b border-zinc-100">
+          <div className="bg-card rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-line space-y-6 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-line">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#2ac1bc]/10 flex items-center justify-center text-[#2ac1bc] shrink-0">
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-zinc-900">
+                  <h3 className="text-base font-black text-foreground">
                     {t('guestPostsAnalyticsModalTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-muted">
                     {singlePostAnalytics?.post.title || t('guestPostsAnalyticsModalLoading')}
                   </p>
                 </div>
@@ -546,14 +546,14 @@ export default function PublicPostAnalyticsPage() {
               <button
                 type="button"
                 onClick={handleCloseDrilldown}
-                className="p-2 text-zinc-400 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+                className="p-2 text-muted hover:text-foreground bg-surface hover:bg-card-hover rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {isLoadingDrilldown ? (
-              <div className="py-16 text-center text-zinc-400">
+              <div className="py-16 text-center text-muted">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2ac1bc] mb-2" />
                 <span className="text-xs font-bold">
                   {t('guestPostsAnalyticsModalChartLoading')}
@@ -563,16 +563,16 @@ export default function PublicPostAnalyticsPage() {
               <div className="space-y-6">
                 {/* Stats Summary in Modal */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  <div className="p-4 bg-surface rounded-2xl border border-line">
+                    <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
                       {t('guestPostsAnalyticsModalTotalViews')}
                     </span>
-                    <p className="text-2xl font-black text-zinc-900 mt-1">
+                    <p className="text-2xl font-black text-foreground mt-1">
                       {singlePostAnalytics.totalViews.toLocaleString()}
                     </p>
                   </div>
-                  <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  <div className="p-4 bg-surface rounded-2xl border border-line">
+                    <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
                       {t('guestPostsAnalyticsModalUniqueViewers')}
                     </span>
                     <p className="text-2xl font-black text-[#FF6B35] mt-1">
@@ -583,7 +583,7 @@ export default function PublicPostAnalyticsPage() {
 
                 {/* Day-by-Day Reach Bar Chart */}
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-zinc-700">
+                  <span className="text-xs font-bold text-foreground/90">
                     {t('guestPostsAnalyticsModalDailyReach')}
                   </span>
                   <div className="w-full h-56 pt-2">
@@ -639,7 +639,7 @@ export default function PublicPostAnalyticsPage() {
               <button
                 type="button"
                 onClick={handleCloseDrilldown}
-                className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl text-xs font-bold cursor-pointer"
+                className="px-5 py-2.5 bg-card-hover hover:bg-line text-foreground/90 rounded-xl text-xs font-bold cursor-pointer"
               >
                 {t('guestPostsAnalyticsModalBtnClose')}
               </button>

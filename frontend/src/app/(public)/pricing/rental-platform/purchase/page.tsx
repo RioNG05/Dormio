@@ -265,7 +265,7 @@ function BuyTurnsPageInner() {
 
   if (isHydrating || (!isLoggedIn && !isSuccess)) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-zinc-500">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-muted">
         <Lock className="w-8 h-8 text-[#FF6B35] animate-pulse" />
         <p className="text-sm font-semibold">{t('guestPricingCheckoutAuthVerifying')}</p>
       </div>
@@ -278,7 +278,7 @@ function BuyTurnsPageInner() {
       <div className="mb-8">
         <Link
           href="/pricing"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-900 transition-colors mb-4 group"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-muted hover:text-foreground transition-colors mb-4 group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           <span>{t('guestPricingCheckoutBackToPricing')}</span>
@@ -290,16 +290,16 @@ function BuyTurnsPageInner() {
               <Sparkles className="w-4 h-4" />
               <span>{isVi ? 'MUA LƯỢT ĐĂNG TIN VIP' : 'BUY VIP LISTING TURNS'}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
               {isVi ? 'Mua lượt đăng tin nổi bật' : 'Purchase VIP Listing Turns'}
             </h1>
-            <p className="text-sm text-zinc-500 font-medium mt-1">
+            <p className="text-sm text-muted font-medium mt-1">
               {isVi
                 ? 'Không đăng ký định kỳ · Mua theo lượt · Sử dụng linh hoạt'
                 : 'No subscription · Pay per pack · Use anytime'}
             </p>
           </div>
-          <div className="flex items-center gap-2 bg-zinc-100 border border-zinc-200/80 px-3.5 py-1.5 rounded-full text-xs font-medium text-zinc-600">
+          <div className="flex items-center gap-2 bg-card-hover border border-line px-3.5 py-1.5 rounded-full text-xs font-medium text-muted">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>{t('guestPricingCheckoutGatewayBadge')}</span>
           </div>
@@ -311,7 +311,7 @@ function BuyTurnsPageInner() {
         <div className="lg:col-span-6 space-y-6">
           {/* Pack selector cards */}
           <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted mb-2">
               {isVi ? 'Chọn gói lượt muốn mua:' : 'Select a pack:'}
             </label>
             {TURN_PACKS.map(p => {
@@ -324,7 +324,7 @@ function BuyTurnsPageInner() {
                   className={`w-full relative text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-4 ${
                     isSelected
                       ? 'border-[#FF6B35] bg-[#FF6B35]/5 shadow-md'
-                      : 'border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50'
+                      : 'border-line bg-card hover:border-line hover:bg-card-hover'
                   }`}
                 >
                   {p.popular && (
@@ -342,7 +342,7 @@ function BuyTurnsPageInner() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                      <span className="font-black text-zinc-900 text-sm">
+                      <span className="font-black text-foreground text-sm">
                         {isVi ? p.name : p.nameEn}
                       </span>
                       <span className="text-lg font-black" style={{ color: p.accentColor }}>
@@ -356,7 +356,7 @@ function BuyTurnsPageInner() {
                       >
                         {p.turns} {isVi ? 'lượt' : 'turns'}
                       </span>
-                      <span className="text-[11px] text-zinc-400 font-medium">
+                      <span className="text-[11px] text-muted font-medium">
                         ≈ {formatVnd(p.pricePerTurn)} / {isVi ? 'lượt' : 'turn'}
                       </span>
                     </div>
@@ -364,7 +364,7 @@ function BuyTurnsPageInner() {
 
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      isSelected ? 'border-[#FF6B35] bg-[#FF6B35]' : 'border-zinc-300 bg-white'
+                      isSelected ? 'border-[#FF6B35] bg-[#FF6B35]' : 'border-line bg-card'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -375,10 +375,10 @@ function BuyTurnsPageInner() {
           </div>
 
           {/* Feature checklist */}
-          <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm p-6 space-y-4">
+          <div className="bg-card rounded-3xl border border-line shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-[#FF6B35]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted">
                 {isVi ? 'Quyền lợi khi dùng lượt' : 'Benefits per turn'}
               </span>
             </div>
@@ -386,7 +386,7 @@ function BuyTurnsPageInner() {
               {(isVi ? pack.features : pack.featuresEn).map((f, i) => (
                 <li
                   key={i}
-                  className="flex items-center gap-3 text-xs sm:text-sm text-zinc-700 font-medium"
+                  className="flex items-center gap-3 text-xs sm:text-sm text-foreground/90 font-medium"
                 >
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
@@ -399,7 +399,7 @@ function BuyTurnsPageInner() {
               ))}
             </ul>
 
-            <div className="pt-4 border-t border-zinc-100">
+            <div className="pt-4 border-t border-line">
               <Button fullWidth size="lg" variant="orange"
                 type="button"
                 disabled={isGeneratingQr || isSuccess}
@@ -433,27 +433,27 @@ function BuyTurnsPageInner() {
 
         {/* ── RIGHT: QR Payment area ──────────────────────────────────── */}
         <div className="lg:col-span-6">
-          <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm p-6 sm:p-8 relative overflow-hidden">
+          <div className="bg-card rounded-3xl border border-line shadow-sm p-6 sm:p-8 relative overflow-hidden">
             {/* SUCCESS STATE */}
             {isSuccess ? (
               <div className="py-8 text-center space-y-6 animate-in zoom-in-95 duration-400">
-                <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+                <div className="w-20 h-20 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
                   <CheckCircle2 className="w-12 h-12" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">
                     {t('guestPricingCheckoutSuccessTitle')}
                   </h2>
-                  <p className="text-sm text-zinc-600 mt-2 max-w-md mx-auto leading-relaxed">
+                  <p className="text-sm text-muted mt-2 max-w-md mx-auto leading-relaxed">
                     {isVi
                       ? `Bạn đã mua thành công ${pack.turns} lượt đăng tin ${pack.name}.`
                       : `You've successfully purchased ${pack.turns} ${pack.nameEn} listing turns.`}
                   </p>
                 </div>
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 max-w-sm mx-auto text-left text-xs space-y-1.5 font-medium text-zinc-600">
+                <div className="p-4 rounded-2xl bg-surface border border-line max-w-sm mx-auto text-left text-xs space-y-1.5 font-medium text-muted">
                   <div className="flex justify-between">
                     <span>{isVi ? 'Gói đã mua:' : 'Pack:'}</span>
-                    <strong className="text-zinc-900">{isVi ? pack.name : pack.nameEn}</strong>
+                    <strong className="text-foreground">{isVi ? pack.name : pack.nameEn}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>{isVi ? 'Số lượt:' : 'Turns:'}</span>
@@ -463,7 +463,7 @@ function BuyTurnsPageInner() {
                   </div>
                   <div className="flex justify-between">
                     <span>{isVi ? 'Số tiền:' : 'Amount:'}</span>
-                    <strong className="text-zinc-900">{formatVnd(pack.price)}</strong>
+                    <strong className="text-foreground">{formatVnd(pack.price)}</strong>
                   </div>
                 </div>
                 <div className="pt-2 flex gap-3 justify-center flex-wrap">
@@ -483,7 +483,7 @@ function BuyTurnsPageInner() {
             ) : checkoutData ? (
               /* QR ACTIVE STATE */
               <div className="space-y-6">
-                <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900">
+                <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-warning-soft border border-warning-subtle text-warning">
                   <div className="flex items-center gap-2 text-xs font-bold">
                     <Clock className="w-4 h-4 text-amber-600" />
                     <span>{t('guestPricingCheckoutQrExpiryCountdown')}</span>
@@ -501,7 +501,7 @@ function BuyTurnsPageInner() {
                   </div>
                 </div>
 
-                <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 p-3 bg-white rounded-2xl border-2 border-zinc-200/80 shadow-inner flex items-center justify-center">
+                <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 p-3 bg-white rounded-2xl border-2 border-line shadow-inner flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={getQrImageUrl(checkoutData.qrCode)}
@@ -516,12 +516,12 @@ function BuyTurnsPageInner() {
                     }}
                   />
                   {isExpired && (
-                    <div className="absolute inset-0 bg-white/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
+                    <div className="absolute inset-0 bg-card/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
                       <AlertTriangle className="w-10 h-10 text-rose-500 mb-2" />
-                      <div className="text-sm font-black text-zinc-900">
+                      <div className="text-sm font-black text-foreground">
                         {t('guestPricingCheckoutQrExpired')}
                       </div>
-                      <p className="text-xs text-zinc-500 mt-1 mb-4">
+                      <p className="text-xs text-muted mt-1 mb-4">
                         {t('guestPricingCheckoutQrExpiredDesc')}
                       </p>
                       <Button size="xs" variant="dark"
@@ -536,16 +536,16 @@ function BuyTurnsPageInner() {
                 </div>
 
                 <div className="space-y-2.5 pt-2 text-xs">
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t('guestPricingCheckoutBank')}</span>
-                    <strong className="text-zinc-900 font-bold">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
+                    <span className="text-muted">{t('guestPricingCheckoutBank')}</span>
+                    <strong className="text-foreground font-bold">
                       {BANK_NAMES[checkoutData.bin] || `Ngân hàng (BIN: ${checkoutData.bin})`}
                     </strong>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t('guestPricingCheckoutAccountNumber')}</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
+                    <span className="text-muted">{t('guestPricingCheckoutAccountNumber')}</span>
                     <div className="flex items-center gap-2">
-                      <strong className="text-zinc-900 font-mono font-bold">
+                      <strong className="text-foreground font-mono font-bold">
                         {checkoutData.accountNumber}
                       </strong>
                       <Button
@@ -563,24 +563,24 @@ function BuyTurnsPageInner() {
                       </Button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t('guestPricingCheckoutAccountName')}</span>
-                    <strong className="text-zinc-900 font-bold uppercase">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
+                    <span className="text-muted">{t('guestPricingCheckoutAccountName')}</span>
+                    <strong className="text-foreground font-bold uppercase">
                       {checkoutData.accountName}
                     </strong>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                    <span className="text-zinc-500">{t('guestPricingCheckoutAmount')}</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
+                    <span className="text-muted">{t('guestPricingCheckoutAmount')}</span>
                     <strong className="text-emerald-600 font-black text-sm">
                       {formatVnd(checkoutData.amount)}
                     </strong>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-200/60">
-                    <span className="text-amber-800 font-medium">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-warning-soft border border-warning-subtle">
+                    <span className="text-warning font-medium">
                       {t('guestPricingCheckoutTransferContent')}
                     </span>
                     <div className="flex items-center gap-2">
-                      <strong className="text-amber-950 font-mono font-black">
+                      <strong className="text-warning font-mono font-black">
                         {checkoutData.description}
                       </strong>
                       <Button
@@ -600,22 +600,22 @@ function BuyTurnsPageInner() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200/60 flex items-center justify-center gap-3 text-xs font-semibold text-orange-800">
+                <div className="p-3.5 rounded-2xl bg-accent-soft border border-accent-subtle flex items-center justify-center gap-3 text-xs font-semibold text-accent">
                   <RefreshCw className="w-4 h-4 text-[#FF6B35] animate-spin shrink-0" />
                   <span>{t('guestPricingCheckoutWaitingTransfer')}</span>
                 </div>
               </div>
             ) : (
               /* PLACEHOLDER STATE */
-              <div className="py-14 px-4 text-center space-y-4 text-zinc-400">
-                <div className="w-16 h-16 rounded-3xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
+              <div className="py-14 px-4 text-center space-y-4 text-muted">
+                <div className="w-16 h-16 rounded-3xl bg-card-hover border border-line text-muted flex items-center justify-center mx-auto">
                   <QrCode className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-zinc-800">
+                  <h3 className="text-base font-bold text-foreground">
                     {t('guestPricingCheckoutReadyTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-relaxed">
+                  <p className="text-xs text-muted mt-1 max-w-sm mx-auto leading-relaxed">
                     {isVi
                       ? "Chọn gói lượt bên trái và nhấn nút 'Thanh toán VietQR' để hiển thị mã QR."
                       : 'Select a pack on the left then click to show your payment QR code.'}
@@ -643,7 +643,7 @@ export default function RentalPlatformPurchasePage() {
     <IdentityGuard>
       <React.Suspense
         fallback={
-          <div className="min-h-screen flex items-center justify-center text-xs font-bold text-zinc-400">
+          <div className="min-h-screen flex items-center justify-center text-xs font-bold text-muted">
             Loading...
           </div>
         }

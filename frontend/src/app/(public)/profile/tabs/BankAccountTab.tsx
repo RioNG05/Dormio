@@ -73,7 +73,7 @@ export default function BankAccountTab() {
     <Form onSubmit={handleSaveBank} isLoading={isSavingBank} className="space-y-6 animate-in fade-in duration-300">
       {/* Loading state */}
       {isBankLoading && (
-        <div className="p-4 bg-zinc-100 border border-zinc-200 rounded-2xl flex items-center gap-3 animate-in fade-in duration-200">
+        <div className="p-4 bg-card-hover border border-line rounded-2xl flex items-center gap-3 animate-in fade-in duration-200">
           <span className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin shrink-0" />
           <Text as="span" size="xs" weight="semibold" color="secondary">
             {t('guestProfileBankLoading')}
@@ -99,7 +99,7 @@ export default function BankAccountTab() {
         />
       )}
 
-      <div className="bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-sm space-y-6">
+      <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-6">
         <Form.Header
           title={t('guestProfileBankSectionTitle')}
           description={t('guestProfileBankSectionSub')}
@@ -152,7 +152,7 @@ export default function BankAccountTab() {
               disabled={!isEditingBank}
               value={bankName}
               onChange={e => setBankName(e.target.value)}
-              className="py-3 bg-zinc-50 rounded-2xl"
+              className="py-3 bg-surface rounded-2xl"
             />
 
             <TextInput
@@ -160,7 +160,7 @@ export default function BankAccountTab() {
               disabled={!isEditingBank}
               value={bankAccount}
               onChange={e => setBankAccount(e.target.value)}
-              className="py-3 bg-zinc-50 rounded-2xl"
+              className="py-3 bg-surface rounded-2xl"
             />
 
             <TextInput
@@ -168,7 +168,7 @@ export default function BankAccountTab() {
               disabled={!isEditingBank}
               value={bankAccountName}
               onChange={e => setBankAccountName(e.target.value.toUpperCase())}
-              className="py-3 bg-zinc-50 rounded-2xl uppercase"
+              className="py-3 bg-surface rounded-2xl uppercase"
             />
           </div>
 

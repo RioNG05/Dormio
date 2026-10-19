@@ -52,22 +52,22 @@ export default function CompareRoomsPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 animate-in fade-in duration-500 pb-16">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/saved-posts">
-          <button className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-500 cursor-pointer">
+          <button className="p-2 hover:bg-card-hover rounded-xl transition-colors text-muted cursor-pointer">
             <ArrowLeft className="w-5 h-5" />
           </button>
         </Link>
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
             {t('guestCompareTitle')}
           </h1>
-          <p className="text-xs text-zinc-500">{t('guestCompareSubtitle')}</p>
+          <p className="text-xs text-muted">{t('guestCompareSubtitle')}</p>
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-3xl shadow-lg overflow-hidden">
+      <div className="bg-card border border-line rounded-3xl shadow-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-zinc-50 text-zinc-500 uppercase font-bold border-b border-zinc-200">
+            <thead className="bg-surface text-muted uppercase font-bold border-b border-line">
               <tr>
                 <th className="px-6 py-4 w-48">{t('guestCompareColCriteria')}</th>
                 {roomsToCompare.map(r => (
@@ -76,7 +76,7 @@ export default function CompareRoomsPage() {
                       <span className="text-[#2ac1bc] font-extrabold text-xs block">
                         {t('guestCompareRoomNumber', { id: r.id })}
                       </span>
-                      <h3 className="font-extrabold text-zinc-900 text-sm normal-case line-clamp-2">
+                      <h3 className="font-extrabold text-foreground text-sm normal-case line-clamp-2">
                         {r.title}
                       </h3>
                     </div>
@@ -84,9 +84,9 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 font-medium">
+            <tbody className="divide-y divide-line font-medium">
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowPrice')}
                 </td>
                 {roomsToCompare.map(r => (
@@ -96,37 +96,37 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowDeposit')}
                 </td>
                 {roomsToCompare.map(r => (
-                  <td key={r.id} className="px-6 py-4 text-zinc-900 font-bold">
+                  <td key={r.id} className="px-6 py-4 text-foreground font-bold">
                     {formatCurrency(r.deposit, currentLocale)}
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowArea')}
                 </td>
                 {roomsToCompare.map(r => (
-                  <td key={r.id} className="px-6 py-4 text-zinc-800 font-bold">
+                  <td key={r.id} className="px-6 py-4 text-foreground font-bold">
                     {r.area} m²
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowAddress')}
                 </td>
                 {roomsToCompare.map(r => (
-                  <td key={r.id} className="px-6 py-4 text-zinc-600 font-semibold">
+                  <td key={r.id} className="px-6 py-4 text-muted font-semibold">
                     {r.address}
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowAc')}
                 </td>
                 {roomsToCompare.map(r => (
@@ -140,7 +140,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowFridge')}
                 </td>
                 {roomsToCompare.map(r => (
@@ -154,7 +154,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowElevator')}
                 </td>
                 {roomsToCompare.map(r => (
@@ -168,7 +168,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowFingerprint')}
                 </td>
                 {roomsToCompare.map(r => (
@@ -182,7 +182,7 @@ export default function CompareRoomsPage() {
                 ))}
               </tr>
               <tr>
-                <td className="px-6 py-4 font-bold text-zinc-700 bg-zinc-50/50">
+                <td className="px-6 py-4 font-bold text-foreground/90 bg-surface/50">
                   {t('guestCompareRowAction')}
                 </td>
                 {roomsToCompare.map(r => (

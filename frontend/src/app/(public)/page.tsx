@@ -149,7 +149,7 @@ export default function HomePage() {
       ]
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-card">
       {/* High-End Professional Hero Section (Fit Screen Height & Seamless Section Transition Divider) */}
       <section className="relative min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center overflow-hidden border-b border-zinc-800">
         {/* Dark Radial Gradient Overlay */}
@@ -218,7 +218,7 @@ export default function HomePage() {
           {/* Hero Content / Actions */}
           {FEATURE_FLAGS.ENABLE_BHRP ? (
             /* Floating Search Card Widget with Premium Shadows */
-            <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-zinc-900 border border-white/80 animate-in fade-in duration-700">
+            <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-card/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-foreground border border-white/80 animate-in fade-in duration-700">
               {/* Category Tabs */}
               <ChipGroup
                 value={activeTab}
@@ -229,7 +229,7 @@ export default function HomePage() {
                   { value: 'studio', label: t('guestHomeTabStudio') },
                   { value: 'nguyencan', label: t('guestHomeTabWhole') },
                 ]}
-                className="justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3"
+                className="justify-center sm:justify-start gap-2 mb-3.5 border-b border-line pb-3"
               />
 
               {/* Inputs Row */}
@@ -239,7 +239,7 @@ export default function HomePage() {
               >
                 <TextInput
                   label={t('guestHomeKeywordLabel')}
-                  labelClassName="text-[10px] font-black text-zinc-400 uppercase tracking-wider"
+                  labelClassName="text-[10px] font-black text-muted uppercase tracking-wider"
                   leftIcon={<Search className="w-4 h-4" />}
                   placeholder={t('guestHomeKeywordPlaceholder')}
                   value={searchQuery}
@@ -251,12 +251,12 @@ export default function HomePage() {
                     }
                   }}
                   containerClassName="sm:col-span-5"
-                  className="h-11 bg-zinc-50/80 border-zinc-200/90 rounded-2xl focus:bg-white"
+                  className="h-11 bg-surface/80 border-line rounded-2xl focus:bg-white"
                 />
 
                 <SelectInput
                   label={t('guestHomePriceLabel')}
-                  labelClassName="text-[10px] font-black text-zinc-400 uppercase tracking-wider"
+                  labelClassName="text-[10px] font-black text-muted uppercase tracking-wider"
                   leftIcon={<Banknote className="w-4 h-4" />}
                   value={priceFilter}
                   onChange={e => setPriceFilter(e.target.value)}
@@ -267,7 +267,7 @@ export default function HomePage() {
                     { value: 'above5', label: t('guestHomeAbove5m') },
                   ]}
                   containerClassName="sm:col-span-4"
-                  className="h-11 bg-zinc-50/80 border-zinc-200/90 rounded-2xl"
+                  className="h-11 bg-surface/80 border-line rounded-2xl"
                 />
 
                 <div className="sm:col-span-3 space-y-1.5">
@@ -367,7 +367,7 @@ export default function HomePage() {
       {/* Process 3 Steps Section */}
       <section
         id="features"
-        className="py-20 bg-zinc-50/50 border-b border-zinc-100 animate-in fade-in duration-500"
+        className="py-20 bg-surface/50 border-b border-line animate-in fade-in duration-500"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           {/* Top Pill Badge */}
@@ -405,14 +405,14 @@ export default function HomePage() {
 
           {/* Interactive Role Switcher Pill Tabs (only when BHRP enabled) */}
           {FEATURE_FLAGS.ENABLE_BHRP && (
-            <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
+            <div className="inline-flex items-center p-1 sm:p-1.5 bg-card border border-line rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
               <Button
                 variant={processTab === 'tenant' ? 'primary' : 'ghost'}
                 rounded="full"
                 onClick={() => setProcessTab('tenant')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'tenant'
                   ? 'shadow-md shadow-[#2AC1BC]/25'
-                  : 'text-zinc-500 hover:text-zinc-900'
+                  : 'text-muted hover:text-foreground'
                   }`}
               >
                 {t('guestHomeForTenant')}
@@ -423,7 +423,7 @@ export default function HomePage() {
                 onClick={() => setProcessTab('landlord')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'landlord'
                   ? 'shadow-md shadow-[#2AC1BC]/25'
-                  : 'text-zinc-500 hover:text-zinc-900'
+                  : 'text-muted hover:text-foreground'
                   }`}
               >
                 {t('guestHomeForLandlord')}
@@ -438,7 +438,7 @@ export default function HomePage() {
             {processSteps.map(step => (
               <div
                 key={step.num}
-                className={`bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${step.accent === 'orange'
+                className={`bg-card rounded-3xl p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${step.accent === 'orange'
                   ? 'hover:border-[#FF6B35]/30'
                   : 'hover:border-[#2AC1BC]/30'
                   }`}
@@ -495,22 +495,22 @@ export default function HomePage() {
                 {[1, 2, 3].map(n => (
                   <div
                     key={n}
-                    className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse"
+                    className="rounded-3xl bg-card shadow-sm border border-line overflow-hidden animate-pulse"
                   >
-                    <div className="aspect-video w-full bg-zinc-200" />
+                    <div className="aspect-video w-full bg-line" />
                     <div className="p-6 space-y-3">
-                      <div className="h-5 bg-zinc-200 rounded w-3/4" />
-                      <div className="h-3 bg-zinc-200 rounded w-1/2" />
-                      <div className="pt-4 border-t border-zinc-100 flex justify-between items-center">
-                        <div className="h-6 w-24 bg-zinc-200 rounded" />
-                        <div className="h-8 w-24 bg-zinc-200 rounded-xl" />
+                      <div className="h-5 bg-line rounded w-3/4" />
+                      <div className="h-3 bg-line rounded w-1/2" />
+                      <div className="pt-4 border-t border-line flex justify-between items-center">
+                        <div className="h-6 w-24 bg-line rounded" />
+                        <div className="h-8 w-24 bg-line rounded-xl" />
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : featuredRooms.length === 0 ? (
-              <div className="rounded-3xl bg-zinc-50 border border-zinc-200 p-12 text-center space-y-3">
+              <div className="rounded-3xl bg-surface border border-line p-12 text-center space-y-3">
                 <Text as="p" size="sm" weight="bold" color="secondary">
                   {t('guestHomeNoRooms')}
                 </Text>
@@ -530,9 +530,9 @@ export default function HomePage() {
                   return (
                     <div
                       key={room.id}
-                      className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
+                      className="group flex flex-col overflow-hidden rounded-3xl bg-card shadow-sm border border-line hover:shadow-xl transition-all duration-300"
                     >
-                      <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
+                      <div className="relative aspect-video w-full overflow-hidden bg-card-hover">
                         <img
                           src={image}
                           alt={room.title}
@@ -549,7 +549,7 @@ export default function HomePage() {
                             as="div"
                             size="2xs"
                             weight="bold"
-                            className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-zinc-700 shadow-sm"
+                            className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-foreground/90 shadow-sm"
                           >
                             {room.room.roomTypeName}
                           </Text>
@@ -568,13 +568,13 @@ export default function HomePage() {
                           {room.title}
                         </Text>
                         <div className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                          <MapPin className="h-3.5 w-3.5 text-muted shrink-0" />
                           <Text as="span" size="xs" weight="semibold" color="secondary" truncate>
                             {address || t('guestHomeDefaultCountry')}
                           </Text>
                         </div>
 
-                        <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
+                        <div className="mt-auto pt-4 border-t border-line flex items-center justify-between">
                           <div>
                             <Text as="span" size="lg" weight="black" color="danger">
                               {formatVND(room.depositAmount)}
@@ -652,7 +652,7 @@ export default function HomePage() {
                 return (
                   <div
                     key={idx}
-                    className={`group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${isOrange ? 'hover:border-[#FF6B35]/40' : 'hover:border-[#2AC1BC]/40'
+                    className={`group rounded-3xl bg-card p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${isOrange ? 'hover:border-[#FF6B35]/40' : 'hover:border-[#2AC1BC]/40'
                       }`}
                   >
                     <div
@@ -710,7 +710,7 @@ export default function HomePage() {
       </section>
 
       {/* Verified Tenant Reviews & Social Proof Section */}
-      <section className="py-20 bg-zinc-50 border-y border-zinc-200/80">
+      <section className="py-20 bg-surface border-y border-line">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 space-y-2">
             <Text as="span" variant="overline" size="xs" weight="extrabold" color="brand" className="block">
@@ -759,7 +759,7 @@ export default function HomePage() {
             ].map((review, idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6"
+                className="bg-card rounded-3xl p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6"
               >
                 <div className="space-y-4">
                   <Text as="div" size="sm" className="flex text-amber-400 tracking-widest">
@@ -777,7 +777,7 @@ export default function HomePage() {
                   </Text>
                 </div>
 
-                <div className="pt-4 border-t border-zinc-100 flex items-center gap-3">
+                <div className="pt-4 border-t border-line flex items-center gap-3">
                   <img
                     src={review.avatar}
                     alt={review.name}

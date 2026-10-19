@@ -58,22 +58,22 @@ export default function BlogDetailPage() {
   ]
 
   return (
-    <div className="bg-zinc-50/50 min-h-screen pb-24">
+    <div className="bg-surface/50 min-h-screen pb-24">
       {/* Breadcrumb Bar */}
-      <div className="bg-white border-b border-zinc-200/80 py-3 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl flex items-center gap-2 text-zinc-500 overflow-x-auto whitespace-nowrap">
+      <div className="bg-card border-b border-line py-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl flex items-center gap-2 text-muted overflow-x-auto whitespace-nowrap">
           <Link href="/" className="hover:text-[#2AC1BC]">
             <Text as="span" size="xs" weight="semibold" color="inherit">
               {tNav('home')}
             </Text>
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-muted shrink-0" />
           <Link href="/blog" className="hover:text-[#2AC1BC]">
             <Text as="span" size="xs" weight="semibold" color="inherit">
               {tNav('blog')}
             </Text>
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-muted shrink-0" />
           <Text as="span" size="xs" weight="semibold" color="brand" clamp={1}>
             {post.title}
           </Text>
@@ -84,7 +84,7 @@ export default function BlogDetailPage() {
         {/* Back Link */}
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1 text-zinc-500 hover:text-[#2AC1BC] mb-6 transition-colors"
+          className="inline-flex items-center gap-1 text-muted hover:text-[#2AC1BC] mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <Text as="span" size="xs" weight="bold" color="inherit">
@@ -115,12 +115,12 @@ export default function BlogDetailPage() {
           </Text>
 
           {/* Author Card & Meta */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-b border-zinc-200/80 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-b border-line py-4">
             <div className="flex items-center gap-3">
               <img
                 src={post.author.avatar}
                 alt={post.author.name}
-                className="w-10 h-10 rounded-full object-cover border border-zinc-200"
+                className="w-10 h-10 rounded-full object-cover border border-line"
               />
               <div>
                 <Text as="span" size="xs" weight="bold" className="block">
@@ -165,12 +165,12 @@ export default function BlogDetailPage() {
         </div>
 
         {/* Featured Cover Image */}
-        <div className="rounded-3xl overflow-hidden aspect-[16/9] bg-zinc-100 mb-10 shadow-md">
+        <div className="rounded-3xl overflow-hidden aspect-[16/9] bg-card-hover mb-10 shadow-md">
           <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
         </div>
 
         {/* Article Body Content */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-zinc-200/80 shadow-sm mb-12">
+        <div className="bg-card rounded-3xl p-6 sm:p-10 border border-line shadow-sm mb-12">
           <Text
             as="div"
             variant="body"
@@ -183,7 +183,7 @@ export default function BlogDetailPage() {
         </div>
 
         {/* RELATED ARTICLES */}
-        <div className="pt-8 border-t border-zinc-200">
+        <div className="pt-8 border-t border-line">
           <Text as="h3" variant="heading" size="xl" weight="bold" className="mb-6">
             {tGuest('guestBlogDetailRelatedPosts')}
           </Text>
@@ -192,9 +192,9 @@ export default function BlogDetailPage() {
               <Link
                 key={idx}
                 href={`/blog/${item.slug}`}
-                className="group flex items-center gap-4 p-4 rounded-2xl bg-white border border-zinc-200/80 hover:border-[#2ac1bc]/40 hover:shadow-md transition-all"
+                className="group flex items-center gap-4 p-4 rounded-2xl bg-card border border-line hover:border-[#2ac1bc]/40 hover:shadow-md transition-all"
               >
-                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-zinc-100">
+                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-card-hover">
                   <img
                     src={item.image}
                     alt={item.title}

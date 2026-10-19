@@ -20,8 +20,8 @@ export default function RoleDataTab() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {isLandlord ? (
-        <div className="bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-100 pb-4 gap-4">
+        <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-line pb-4 gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center shrink-0">
                 <Building2 className="w-5 h-5" />
@@ -50,7 +50,7 @@ export default function RoleDataTab() {
           </div>
 
           <Form.Grid cols={3}>
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text
                 as="span"
                 variant="overline"
@@ -66,7 +66,7 @@ export default function RoleDataTab() {
               </Text>
             </div>
 
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text
                 as="span"
                 variant="overline"
@@ -89,7 +89,7 @@ export default function RoleDataTab() {
               </Text>
             </div>
 
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text
                 as="span"
                 variant="overline"
@@ -114,9 +114,9 @@ export default function RoleDataTab() {
           </Form.Grid>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-sm space-y-6">
+        <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-6">
           {/* Header CTA to Jump to Tenant Dashboard */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-100 pb-5 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-line pb-5 gap-4">
             <div className="space-y-1.5">
               <Text
                 as="span"
@@ -167,7 +167,7 @@ export default function RoleDataTab() {
 
           {/* Lease Details Cards */}
           <Form.Grid cols={3}>
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text
                 as="span"
                 variant="overline"
@@ -191,7 +191,7 @@ export default function RoleDataTab() {
               </Text>
             </div>
 
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text
                 as="span"
                 variant="overline"
@@ -224,7 +224,7 @@ export default function RoleDataTab() {
               </Text>
             </div>
 
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
+            <div className="p-4 bg-surface rounded-2xl border border-line space-y-1">
               <Text
                 as="span"
                 variant="overline"
@@ -252,7 +252,7 @@ export default function RoleDataTab() {
           </Form.Grid>
 
           {/* Lease Progress Bar */}
-          <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-2">
+          <div className="p-4 bg-surface rounded-2xl border border-line space-y-2">
             <div className="flex flex-col sm:flex-row justify-between gap-1">
               <Text as="span" size="xs" weight="bold" color="secondary">
                 {t('guestProfileTenantContractProgress')}
@@ -261,7 +261,7 @@ export default function RoleDataTab() {
                 {t('guestProfileTenantContractRemaining', { percent: 66, months: 4 })}
               </Text>
             </div>
-            <div className="w-full h-3 bg-zinc-200 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-line rounded-full overflow-hidden">
               <div className="h-full bg-[#2AC1BC] rounded-full" style={{ width: '66%' }} />
             </div>
           </div>

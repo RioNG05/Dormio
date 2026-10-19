@@ -82,7 +82,7 @@ export default function LoginPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header */}
       <div className="space-y-2">
-        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-foreground tracking-tight">
           {t('authLoginWelcomeTitle')}
         </Text>
         <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
@@ -91,7 +91,7 @@ export default function LoginPage() {
       </div>
 
       {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
-      <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60 gap-1">
+      <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
         <Button
           type="button"
           variant={method === 'phone' ? 'primary' : 'ghost'}
@@ -127,7 +127,7 @@ export default function LoginPage() {
         {/* Phone or Email input */}
         <TextInput
           label={method === 'phone' ? t('authLoginPhoneLabel') : t('authLoginEmailLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type={method === 'phone' ? 'tel' : 'email'}
           required
           placeholder={
@@ -137,18 +137,18 @@ export default function LoginPage() {
           onChange={e => setAccountIdentifier(e.target.value)}
           leftIcon={
             method === 'phone' ? (
-              <Phone className="w-4 h-4 text-zinc-400" />
+              <Phone className="w-4 h-4 text-muted" />
             ) : (
-              <Mail className="w-4 h-4 text-zinc-400" />
+              <Mail className="w-4 h-4 text-muted" />
             )
           }
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* Password Field & Forgot Link */}
         <TextInput
           label={t('authLoginPasswordLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           labelRight={
             <Link href="/forgot-password">
               <Text
@@ -167,7 +167,7 @@ export default function LoginPage() {
           placeholder={t('authLoginPassPlaceholder')}
           value={password}
           onChange={e => setPassword(e.target.value)}
-          leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
+          leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
             <Button size="icon"
               type="button"
@@ -178,7 +178,7 @@ export default function LoginPage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           }
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
         />
 
         {/* Remember me Checkbox */}

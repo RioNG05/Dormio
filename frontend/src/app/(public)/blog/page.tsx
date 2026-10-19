@@ -105,7 +105,7 @@ export default function BlogPage() {
   })
 
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20 overflow-x-hidden">
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-12 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
@@ -245,7 +245,7 @@ export default function BlogPage() {
         )}
 
         {/* Filter Tabs using ChipGroup & Real-Time Search Bar using SearchInput */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-zinc-100 pb-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-line pb-6">
           <ChipGroup
             value={selectedCategory}
             onChange={setSelectedCategory}
@@ -264,13 +264,13 @@ export default function BlogPage() {
             onChange={setSearchQuery}
             placeholder={t('guestBlogSearchPlaceholder')}
             containerClassName="w-full md:w-72"
-            className="bg-zinc-50 rounded-full"
+            className="bg-surface rounded-full"
           />
         </div>
 
         {/* Articles Grid */}
         {filteredArticles.length === 0 ? (
-          <div className="text-center py-16 bg-zinc-50 rounded-3xl border border-zinc-200 space-y-2">
+          <div className="text-center py-16 bg-surface rounded-3xl border border-line space-y-2">
             <Text as="h3" variant="heading" size="lg" weight="black">
               {t('guestBlogNotFoundTitle')}
             </Text>
@@ -284,10 +284,10 @@ export default function BlogPage() {
               <Link
                 href={`/blog/${article.id}`}
                 key={article.id}
-                className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
+                className="bg-card rounded-3xl border border-line shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer"
               >
                 <div>
-                  <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-card-hover">
                     <img
                       src={article.image}
                       alt={article.title}
@@ -362,7 +362,7 @@ export default function BlogPage() {
                   </div>
                 </div>
 
-                <div className="p-5 sm:p-6 pt-0 border-t border-zinc-100/60 mt-4 flex items-center justify-between text-[#2AC1BC]">
+                <div className="p-5 sm:p-6 pt-0 border-t border-line mt-4 flex items-center justify-between text-[#2AC1BC]">
                   <Text as="span" size="xs" weight="bold" color="brand">
                     {article.readTime}
                   </Text>

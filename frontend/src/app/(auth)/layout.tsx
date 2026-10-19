@@ -60,7 +60,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer Legal Note */}
-        <div className="pt-3 border-t border-zinc-100 text-center sm:text-left shrink-0">
+        <div className="pt-3 border-t border-line text-center sm:text-left shrink-0">
           <Text variant="caption" size="2xs" color="subtle">
             {t('authLayoutFooterLegal', { year: new Date().getFullYear() })}
           </Text>

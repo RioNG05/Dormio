@@ -39,7 +39,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20 overflow-x-hidden">
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-linear-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
@@ -107,7 +107,7 @@ export default function ContactPage() {
               {/* Channel 1: Phone / Zalo */}
               <a
                 href="tel:0344265925"
-                className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#FF6B35] transition-all group shadow-xs cursor-pointer block"
+                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-[#FF6B35] transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactCallTooltip')}
               >
                 <div className="p-3.5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
@@ -142,7 +142,7 @@ export default function ContactPage() {
               {/* Channel 2: Email */}
               <a
                 href="mailto:contact@dormio.site"
-                className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
+                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactEmailTooltip')}
               >
                 <div className="p-3.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
@@ -156,7 +156,7 @@ export default function ContactPage() {
                     variant="body"
                     size="xs"
                     weight="semibold"
-                    className="text-zinc-800 mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline"
+                    className="text-foreground mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline"
                   >
                     contact@dormio.site
                   </Text>
@@ -174,7 +174,7 @@ export default function ContactPage() {
               </a>
 
               {/* Channel 3: Headquarters Address */}
-              <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-zinc-400 transition-all group shadow-xs">
+              <div className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-zinc-400 transition-all group shadow-xs">
                 <div className="p-3.5 bg-zinc-900 text-white rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
                   <MapPin className="w-5 h-5 text-[#2AC1BC]" />
                 </div>
@@ -203,7 +203,7 @@ export default function ContactPage() {
           </div>
 
           {/* Right Column: Contact Form */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/80 shadow-xl space-y-6">
+          <div className="lg:col-span-7 bg-card rounded-3xl p-6 sm:p-8 border border-line shadow-xl space-y-6">
             {submitted ? (
               <div className="text-center py-12 space-y-4">
                 <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
@@ -237,7 +237,7 @@ export default function ContactPage() {
                     { value: 'ky-thuat', label: t('guestContactTopicOpt3') },
                     { value: 'khac', label: t('guestContactTopicOpt4') },
                   ]}
-                  className="py-3 bg-zinc-50 rounded-2xl"
+                  className="py-3 bg-surface rounded-2xl"
                 />
 
                 {/* Dynamic input when topic === "khac" using TextInput */}
@@ -248,7 +248,7 @@ export default function ContactPage() {
                     value={customSubject}
                     onChange={e => setCustomSubject(e.target.value)}
                     containerClassName="animate-in fade-in duration-300"
-                    className="py-3 bg-zinc-50 rounded-2xl"
+                    className="py-3 bg-surface rounded-2xl"
                   />
                 )}
 
@@ -259,7 +259,7 @@ export default function ContactPage() {
                     required
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
-                    className="py-3 bg-zinc-50 rounded-2xl"
+                    className="py-3 bg-surface rounded-2xl"
                   />
 
                   <TextInput
@@ -268,7 +268,7 @@ export default function ContactPage() {
                     required
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
-                    className="py-3 bg-zinc-50 rounded-2xl"
+                    className="py-3 bg-surface rounded-2xl"
                   />
                 </Form.Grid>
 
@@ -279,7 +279,7 @@ export default function ContactPage() {
                   required
                   value={content}
                   onChange={e => setContent(e.target.value)}
-                  className="py-3 bg-zinc-50 rounded-2xl"
+                  className="py-3 bg-surface rounded-2xl"
                 />
 
                 {/* Solid Brand Teal Action Button using Button */}
