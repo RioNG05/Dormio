@@ -59,6 +59,7 @@ export default function AIChatBot() {
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setIsLoading(true)
+    messagesEndRef.current?.focus()
 
     try {
       const response = await api.post<{ reply: string }>(
@@ -95,7 +96,6 @@ export default function AIChatBot() {
       ])
     } finally {
       setIsLoading(false)
-      messagesEndRef.current?.focus()
     }
   }
 
@@ -231,7 +231,7 @@ export default function AIChatBot() {
                 placeholder={t('aiChatInputPlaceholder')}
                 disabled={isLoading}
                 containerClassName="w-full space-y-0"
-                className="pr-12 text-xs sm:text-sm py-2.5 bg-card-hover/80 focus:bg-white"
+                className="pr-12 text-xs sm:text-sm py-2.5 bg-card-hover/80"
                 rightIcon={
                   <Button
                     type="submit"

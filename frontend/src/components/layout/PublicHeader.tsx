@@ -61,7 +61,7 @@ function MenuItemRenderer({
     <Button
       onClick={item.href ? undefined : handleClick}
       variant={item.isDanger ? 'ghost-danger' : 'ghost'}
-      size="md"
+      size="lg"
       fullWidth
       justify={isMobile ? 'between' : 'start'}
       leftIcon={item.icon}
