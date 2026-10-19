@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ShieldOff, Home, LogIn, LogOut, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { Button, Text } from '@/components/ui'
 
 /**
  * Unauthorized page — shown when a logged-in user attempts to access a route
@@ -40,10 +41,16 @@ export default function UnauthorizedPage() {
       {/* Card */}
       <div className="max-w-md w-full text-center bg-white rounded-2xl shadow-sm border border-zinc-100 px-8 py-10 space-y-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-[11px] font-black text-red-500 uppercase tracking-widest">
+        <Text
+          as="div"
+          variant="badge"
+          size="2xs"
+          weight="black"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-500 tracking-widest"
+        >
           <ShieldOff className="w-3.5 h-3.5" />
           {t('unauthorizedTagCode')}
-        </div>
+        </Text>
 
         {/* Icon */}
         <div className="mx-auto w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shadow-sm">
@@ -52,14 +59,18 @@ export default function UnauthorizedPage() {
 
         {/* Heading */}
         <div className="space-y-2">
-          <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
+          <Text as="h1" variant="heading" size="2xl" weight="extrabold">
             {t('unauthorizedTitle')}
-          </h1>
-          <p className="text-sm font-semibold text-zinc-500">{t('unauthorizedSubtitle')}</p>
+          </Text>
+          <Text variant="subtitle" size="sm" weight="semibold">
+            {t('unauthorizedSubtitle')}
+          </Text>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-zinc-400 leading-relaxed">{t('unauthorizedDesc')}</p>
+        <Text variant="body" size="sm" color="subtle">
+          {t('unauthorizedDesc')}
+        </Text>
 
         {/* Divider */}
         <div className="h-px bg-zinc-100" />
@@ -68,49 +79,68 @@ export default function UnauthorizedPage() {
         <div className="flex flex-col gap-3">
           {/* Row: Go Back + Back to Home */}
           <div className="grid grid-cols-2 gap-2.5">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="md"
+              fullWidth
               onClick={handleGoBack}
-              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-semibold shadow-sm hover:bg-[#22a8a4] active:scale-[0.98] transition-all cursor-pointer"
+              leftIcon={<ArrowLeft className="w-4 h-4" strokeWidth={2.5} />}
+              className="font-semibold text-sm"
             >
-              <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
               {t('unauthorizedBtnBack')}
-            </button>
+            </Button>
 
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50 active:scale-[0.98] transition-all"
-            >
-              <Home className="w-4 h-4" strokeWidth={2} />
-              {t('unauthorizedBtnHome')}
+            <Link href="/" className="w-full">
+              <Button
+                type="button"
+                variant="white"
+                size="md"
+                fullWidth
+                leftIcon={<Home className="w-4 h-4" strokeWidth={2} />}
+                className="font-semibold text-sm text-zinc-700"
+              >
+                {t('unauthorizedBtnHome')}
+              </Button>
             </Link>
           </div>
 
           {/* Secondary: Log in (keep session, just navigate) */}
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50 active:scale-[0.98] transition-all"
-          >
-            <LogIn className="w-4 h-4" />
-            {t('unauthorizedBtnLogin')}
+          <Link href="/login" className="w-full">
+            <Button
+              type="button"
+              variant="white"
+              size="md"
+              fullWidth
+              leftIcon={<LogIn className="w-4 h-4" />}
+              className="font-semibold text-sm text-zinc-700"
+            >
+              {t('unauthorizedBtnLogin')}
+            </Button>
           </Link>
 
           {/* Tertiary: Logout and switch account */}
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="md"
+            fullWidth
             onClick={handleSwitchAccount}
-            className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl bg-red-50 border border-red-100 text-red-500 text-sm font-semibold hover:bg-red-100 active:scale-[0.98] transition-all cursor-pointer"
+            leftIcon={<LogOut className="w-4 h-4" />}
+            className="bg-red-50 border border-red-100 text-red-500 font-semibold text-sm hover:bg-red-100 hover:text-red-600"
           >
-            <LogOut className="w-4 h-4" />
             {t('unauthorizedBtnSwitchAcc')}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Footer branding */}
-      <p className="mt-8 text-xs text-zinc-400 font-medium">
-        Dormio<span className="text-[#FF6B35]">.</span>
-      </p>
+      <Text variant="caption" size="xs" weight="medium" color="subtle" className="mt-8">
+        Dormio
+        <Text as="span" variant="caption" size="xs" weight="medium" className="text-[#FF6B35]">
+          .
+        </Text>
+      </Text>
     </div>
   )
 }

@@ -16,7 +16,6 @@ import {
   Sparkles,
   CheckCircle2,
   LogOut,
-  ShieldCheck,
   Heart,
   ChevronDown,
   PlusCircle,
@@ -24,7 +23,6 @@ import {
   Clock,
   FileText,
 } from 'lucide-react'
-import { siteConfig } from '@/config/site'
 import { useAuth } from '@/context/AuthContext'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import NotificationBell from '@/components/NotificationBell'
@@ -36,16 +34,13 @@ import { Button, Text, Modal, TextInput, NumberInput } from '@/components/ui'
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { locale } = useLanguage()
   const tNav = useTranslations('nav')
   const tFooter = useTranslations('footer')
   const tUpgrade = useTranslations('landlordUpgradeModal')
   const {
     isLoggedIn,
     user,
-    login,
     logout,
-    toggleLoginDemo,
     upgradeToLandlord,
     buildings,
     capabilities,
