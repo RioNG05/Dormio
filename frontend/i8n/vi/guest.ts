@@ -255,6 +255,11 @@ export const viGuest = {
     guestMessagesLockTitle: "Yêu Cầu Đăng Nhập Tài Khoản",
     guestMessagesLockDesc: "Tính năng nhắn tin trực tiếp chỉ dành cho thành viên đã đăng nhập. Vui lòng đăng nhập để trao đổi với chủ nhà.",
     guestMessagesLoginBtn: "Đăng nhập ngay",
+    guestMessagesLoadingList: "Đang tải tin nhắn...",
+    guestMessagesDefaultParticipant: "Chủ nhà",
+    guestMessagesRoleLandlord: "Chủ nhà trọ chính chủ",
+    guestMessagesRolePartner: "Đối tác Dormio",
+    guestMessagesEmptyConversation: "Chưa có tin nhắn trong cuộc trò chuyện này. Hãy gửi lời chào đến chủ nhà!",
 
     // --- Public rental post analytics (app/(public)/posts/analytics) ---
     guestPostsAnalyticsBackHome: "Quay lại trang chủ",

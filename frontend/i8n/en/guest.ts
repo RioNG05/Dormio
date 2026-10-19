@@ -255,6 +255,11 @@ export const enGuest = {
     guestMessagesLockTitle: "Account Login Required",
     guestMessagesLockDesc: "Direct messaging is available for logged in members. Please log in to chat with landlords.",
     guestMessagesLoginBtn: "Log in now",
+    guestMessagesLoadingList: "Loading conversations...",
+    guestMessagesDefaultParticipant: "Landlord",
+    guestMessagesRoleLandlord: "Verified Landlord",
+    guestMessagesRolePartner: "Dormio Partner",
+    guestMessagesEmptyConversation: "No messages in this conversation yet. Say hello to the landlord!",
 
     // --- Public rental post analytics (app/(public)/posts/analytics) ---
     guestPostsAnalyticsBackHome: "Back to home",

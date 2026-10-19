@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import {
   Send,
-  Search,
   CheckCheck,
   ChevronLeft,
   ShieldCheck,
@@ -14,7 +13,7 @@ import {
   Loader2,
   MessageSquare,
 } from 'lucide-react'
-import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import {
   ConversationItem,
@@ -25,6 +24,9 @@ import {
   markAsRead,
   initMessagesSocket,
 } from '@/services/message.service'
+import { Button, Form, SearchInput, Text, TextInput } from '@/components/ui'
+import { useToast } from '@/context/ToastContext'
+import { resolveErrorMessage } from '@/utils'
 
 function formatMessageTime(isoString: string): string {
   try {
@@ -62,10 +64,9 @@ function appendOrUpdateMessage(list: MessageItem[], newMsg: MessageItem): Messag
 
 function GuestMessagesContent() {
   const t = useTranslations('guest')
-  const { currentLocale } = useLanguage()
-  const isEn = currentLocale === 'en'
+  const tErrors = useTranslations('errors')
+  const { toast } = useToast()
   const { isLoggedIn, user } = useAuth()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const targetConvId = searchParams.get('conversationId')
 
@@ -261,6 +262,8 @@ function GuestMessagesContent() {
       )
     } catch (err) {
       console.error('Failed to send message:', err)
+      setMessageInput(content)
+      toast.error(resolveErrorMessage(err, tErrors))
     } finally {
       setIsSending(false)
     }
@@ -273,14 +276,26 @@ function GuestMessagesContent() {
         <div className="w-20 h-20 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-6 shadow-inner border border-[#2AC1BC]/20">
           <Lock className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-black text-zinc-900 mb-2">{t('guestMessagesLockTitle')}</h2>
-        <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto mb-6">
+        <Text as="h2" variant="heading" size="2xl" weight="black" className="mb-2">
+          {t('guestMessagesLockTitle')}
+        </Text>
+        <Text
+          variant="subtitle"
+          size="xs"
+          weight="medium"
+          className="leading-relaxed max-w-md mx-auto mb-6"
+        >
           {t('guestMessagesLockDesc')}
-        </p>
+        </Text>
         <Link href="/login?redirect=/messages">
-          <button className="px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all cursor-pointer hover:scale-105">
-            {t('guestMessagesLoginBtn')} &rarr;
-          </button>
+          <Button
+            variant="primary"
+            size="lg"
+            rightIcon={<span>&rarr;</span>}
+            className="rounded-2xl shadow-lg shadow-[#2AC1BC]/25 hover:scale-105"
+          >
+            {t('guestMessagesLoginBtn')}
+          </Button>
         </Link>
       </div>
     )
@@ -298,15 +313,17 @@ function GuestMessagesContent() {
       {/* Top Header Trail */}
       <div className="flex items-center gap-3 mb-6">
         <Link href="/">
-          <button className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-500 cursor-pointer">
+          <Button variant="ghost" size="icon-sm">
             <ChevronLeft className="w-5 h-5" />
-          </button>
+          </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+          <Text as="h1" variant="heading" size="2xl" weight="black">
             {t('guestMessagesTitle')}
-          </h1>
-          <p className="text-xs text-zinc-500">{t('guestMessagesSubtitle')}</p>
+          </Text>
+          <Text variant="subtitle" size="xs">
+            {t('guestMessagesSubtitle')}
+          </Text>
         </div>
       </div>
 
@@ -314,42 +331,43 @@ function GuestMessagesContent() {
       <div className="bg-white border border-zinc-200/90 rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px] h-[calc(100vh-200px)]">
         {/* Left Column: Conversations List */}
         <div className="lg:col-span-4 border-r border-zinc-200 flex flex-col bg-zinc-50/40">
-          {/* Search Box */}
+          {/* Search Box using SearchInput */}
           <div className="p-4 border-b border-zinc-200/80 bg-white">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
-                type="text"
-                placeholder={t('guestMessagesSearchPlaceholder')}
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50"
-              />
-            </div>
+            <SearchInput
+              value={searchQuery}
+              onImmediateChange={setSearchQuery}
+              onChange={setSearchQuery}
+              placeholder={t('guestMessagesSearchPlaceholder')}
+              className="bg-zinc-50 py-2"
+            />
           </div>
 
           {/* List Stream */}
           <div className="flex-1 overflow-y-auto divide-y divide-zinc-100">
             {isLoadingConversations ? (
-              <div className="p-8 text-center text-xs text-zinc-400 font-semibold space-y-2">
+              <div className="p-8 text-center space-y-2">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2AC1BC]" />
-                <p>Đang tải tin nhắn...</p>
+                <Text variant="caption" size="xs" weight="semibold" color="subtle">
+                  {t('guestMessagesLoadingList')}
+                </Text>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center space-y-2">
                 <MessageSquare className="w-8 h-8 text-zinc-300 mx-auto" />
-                <h4 className="text-xs font-extrabold text-zinc-700">
+                <Text as="h4" variant="heading" size="xs" weight="extrabold" color="secondary">
                   {t('guestMessagesEmptyList')}
-                </h4>
-                <p className="text-[11px] text-zinc-400 font-medium">
+                </Text>
+                <Text variant="caption" size="2xs" weight="medium" color="subtle">
                   {t('guestMessagesEmptyListSub')}
-                </p>
+                </Text>
               </div>
             ) : (
               filteredConversations.map(conv => {
                 const isSelected = activeChat?.id === conv.id
                 const participantName =
-                  conv.participant?.fullName || conv.participant?.username || 'Chủ nhà'
+                  conv.participant?.fullName ||
+                  conv.participant?.username ||
+                  t('guestMessagesDefaultParticipant')
                 const initial = participantName.charAt(0).toUpperCase()
                 const lastMsg = conv.lastMessage?.content || ''
                 const timeStr = formatConversationTime(conv.lastMessage?.sentAt || conv.updatedAt)
@@ -357,6 +375,7 @@ function GuestMessagesContent() {
                 return (
                   <button
                     key={conv.id}
+                    type="button"
                     onClick={() => setActiveChat(conv)}
                     className={`w-full text-left p-4 flex gap-3 transition-all cursor-pointer ${
                       isSelected
@@ -371,28 +390,59 @@ function GuestMessagesContent() {
                         className="w-11 h-11 rounded-2xl object-cover shrink-0 border border-zinc-200"
                       />
                     ) : (
-                      <div className="w-11 h-11 rounded-2xl bg-zinc-900 text-white font-black flex items-center justify-center shrink-0 text-sm">
+                      <Text
+                        as="div"
+                        size="sm"
+                        weight="black"
+                        color="white"
+                        className="w-11 h-11 rounded-2xl bg-zinc-900 flex items-center justify-center shrink-0"
+                      >
                         {initial}
-                      </div>
+                      </Text>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <h3 className="font-extrabold text-zinc-900 text-xs truncate">
+                      <div className="flex justify-between items-baseline mb-1 gap-2">
+                        <Text as="h3" variant="heading" size="xs" weight="extrabold" truncate>
                           {participantName}
-                        </h3>
-                        <span className="text-[10px] text-zinc-400 font-semibold">{timeStr}</span>
+                        </Text>
+                        <Text
+                          as="span"
+                          variant="caption"
+                          size="3xs"
+                          weight="semibold"
+                          color="subtle"
+                          className="shrink-0"
+                        >
+                          {timeStr}
+                        </Text>
                       </div>
                       {conv.participant?.boardingHouseName && (
-                        <p className="text-[11px] text-[#2ac1bc] font-bold truncate mb-0.5">
+                        <Text
+                          variant="caption"
+                          size="2xs"
+                          weight="bold"
+                          color="brand"
+                          truncate
+                          className="mb-0.5"
+                        >
                           {conv.participant.boardingHouseName}
-                        </p>
+                        </Text>
                       )}
-                      <p className="text-xs text-zinc-500 truncate">{lastMsg}</p>
+                      <Text variant="body" size="xs" color="secondary" truncate>
+                        {lastMsg}
+                      </Text>
                     </div>
                     {conv.unreadCount > 0 && (
-                      <span className="self-center px-1.5 py-0.5 bg-[#2AC1BC] text-white text-[10px] font-black rounded-full">
+                      <Text
+                        as="span"
+                        variant="badge"
+                        size="3xs"
+                        weight="black"
+                        color="white"
+                        className="self-center px-1.5 py-0.5 bg-[#2AC1BC] rounded-full"
+                      >
                         {conv.unreadCount}
-                      </span>
+                      </Text>
                     )}
                   </button>
                 )
@@ -406,9 +456,9 @@ function GuestMessagesContent() {
           {!activeChat ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-400">
               <MessageSquare className="w-12 h-12 text-zinc-300 mb-3" />
-              <h3 className="font-extrabold text-sm text-zinc-700">
+              <Text as="h3" variant="heading" size="sm" weight="extrabold" color="secondary">
                 {t('guestMessagesSelectToChat')}
-              </h3>
+              </Text>
             </div>
           ) : (
             <>
@@ -422,33 +472,55 @@ function GuestMessagesContent() {
                       className="w-10 h-10 rounded-xl object-cover border border-zinc-200"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white font-black flex items-center justify-center text-sm">
+                    <Text
+                      as="div"
+                      size="sm"
+                      weight="black"
+                      color="white"
+                      className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center"
+                    >
                       {(activeChat.participant?.fullName || activeChat.participant?.username || 'P')
                         .charAt(0)
                         .toUpperCase()}
-                    </div>
+                    </Text>
                   )}
                   <div>
-                    <h3 className="font-extrabold text-zinc-900 text-sm flex items-center gap-1.5">
-                      {activeChat.participant?.fullName || activeChat.participant?.username}
+                    <Text
+                      as="h3"
+                      variant="heading"
+                      size="sm"
+                      weight="extrabold"
+                      className="flex items-center gap-1.5"
+                    >
+                      <Text as="span" variant="heading" size="sm" weight="extrabold">
+                        {activeChat.participant?.fullName || activeChat.participant?.username}
+                      </Text>
                       <ShieldCheck className="w-4 h-4 text-[#2ac1bc]" />
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium truncate max-w-xs">
+                    </Text>
+                    <Text variant="subtitle" size="xs" weight="medium" truncate className="max-w-xs">
                       {activeChat.participant?.boardingHouseName ||
                         (activeChat.participant?.role === 'landlord'
-                          ? 'Chủ nhà trọ chính chủ'
-                          : 'Đối tác Dormio')}
-                    </p>
+                          ? t('guestMessagesRoleLandlord')
+                          : t('guestMessagesRolePartner'))}
+                    </Text>
                   </div>
                 </div>
 
                 {activeChat.participant?.phoneNumber && (
                   <a
                     href={`tel:${activeChat.participant.phoneNumber}`}
-                    className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-600 flex items-center gap-1.5 text-xs font-bold"
+                    className="p-2 hover:bg-zinc-100 rounded-xl transition-colors text-zinc-600 flex items-center gap-1.5"
                   >
                     <Phone className="w-4 h-4 text-[#2AC1BC]" />
-                    <span className="hidden sm:inline">{activeChat.participant.phoneNumber}</span>
+                    <Text
+                      as="span"
+                      size="xs"
+                      weight="bold"
+                      color="secondary"
+                      className="hidden sm:inline"
+                    >
+                      {activeChat.participant.phoneNumber}
+                    </Text>
                   </a>
                 )}
               </div>
@@ -461,9 +533,9 @@ function GuestMessagesContent() {
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
-                    <p className="text-xs text-zinc-400 font-medium">
-                      Chưa có tin nhắn trong cuộc trò chuyện này. Hãy gửi lời chào đến chủ nhà!
-                    </p>
+                    <Text variant="body" size="xs" weight="medium" color="subtle">
+                      {t('guestMessagesEmptyConversation')}
+                    </Text>
                   </div>
                 ) : (
                   messages.map(msg => {
@@ -475,17 +547,24 @@ function GuestMessagesContent() {
                         key={msg.id}
                         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
-                        <div
-                          className={`max-w-md px-4 py-3 rounded-2xl text-xs leading-relaxed font-medium ${
+                        <Text
+                          as="div"
+                          variant="body"
+                          size="xs"
+                          weight="medium"
+                          color={isMe ? 'white' : 'default'}
+                          className={`max-w-md px-4 py-3 rounded-2xl leading-relaxed ${
                             isMe
-                              ? 'bg-zinc-900 text-white rounded-br-none shadow-md'
-                              : 'bg-white border border-zinc-200 text-zinc-800 rounded-bl-none shadow-xs'
+                              ? 'bg-zinc-900 rounded-br-none shadow-md'
+                              : 'bg-white border border-zinc-200 rounded-bl-none shadow-xs'
                           }`}
                         >
                           {msg.content}
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-1 font-semibold px-1">
-                          <span>{time}</span>
+                        </Text>
+                        <div className="flex items-center gap-1 mt-1 px-1">
+                          <Text as="span" variant="caption" size="3xs" weight="semibold" color="subtle">
+                            {time}
+                          </Text>
                           {isMe && (
                             <CheckCheck
                               className={`w-3 h-3 ${
@@ -501,32 +580,30 @@ function GuestMessagesContent() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Form */}
-              <form
+              {/* Input Form using Form, TextInput, and Button */}
+              <Form
                 onSubmit={handleSendMessage}
-                className="p-4 border-t border-zinc-200 bg-white flex items-center gap-2"
+                className="p-4 border-t border-zinc-200 bg-white flex items-center gap-2 space-y-0"
               >
-                <input
-                  type="text"
+                <TextInput
                   placeholder={t('guestMessagesInputPlaceholder')}
                   value={messageInput}
                   onChange={e => setMessageInput(e.target.value)}
-                  className="flex-1 px-4 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2ac1bc] focus:ring-4 focus:ring-[#2ac1bc]/10 transition-all bg-zinc-50"
+                  containerClassName="flex-1"
+                  className="bg-zinc-50"
                 />
-                <button
+                <Button
                   type="submit"
+                  variant="primary"
+                  size="md"
                   disabled={!messageInput.trim() || isSending}
-                  className="px-5 py-2.5 bg-[#2ac1bc] hover:bg-[#72b3a3] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-[#2ac1bc]/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                  isLoading={isSending}
+                  rightIcon={!isSending ? <Send className="w-3.5 h-3.5" /> : undefined}
+                  className="shrink-0"
                 >
-                  {isSending ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <>
-                      {t('guestMessagesSend')} <Send className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </form>
+                  {t('guestMessagesSend')}
+                </Button>
+              </Form>
             </>
           )}
         </div>
