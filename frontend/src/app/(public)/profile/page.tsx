@@ -71,7 +71,6 @@ function UniversalProfilePage() {
       {
         key: 'info',
         labelLine1: t('guestProfileTabInfo1'),
-        labelLine2: t('guestProfileTabInfo2'),
         icon: <UserCheck className="w-4 h-4 shrink-0" />,
       },
       {
@@ -79,9 +78,6 @@ function UniversalProfilePage() {
         labelLine1: isLandlord
           ? t('guestProfileTabLandlordRole1')
           : t('guestProfileTabTenantRole1'),
-        labelLine2: isLandlord
-          ? t('guestProfileTabLandlordRole2')
-          : t('guestProfileTabTenantRole2'),
         icon: isLandlord ? (
           <Building2 className="w-4 h-4 shrink-0" />
         ) : (
@@ -91,13 +87,11 @@ function UniversalProfilePage() {
       {
         key: 'bank',
         labelLine1: t('guestProfileTabBank1'),
-        labelLine2: t('guestProfileTabBank2'),
         icon: <CreditCard className="w-4 h-4 shrink-0" />,
       },
       {
         key: 'security',
         labelLine1: t('guestProfileTabSecurity1'),
-        labelLine2: t('guestProfileTabSecurity2'),
         icon: <Lock className="w-4 h-4 shrink-0" />,
       },
     ],
@@ -372,27 +366,17 @@ function UniversalProfilePage() {
 
         {/* 100% Mobile & Desktop Responsive Tab Navigation Bar */}
         <div className="w-full border-b border-line pb-3">
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2 w-full">
+          <div className="flex flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2 w-full">
             {navTabs.map(tab => (
               <Button
                 key={tab.key}
-                type="button"
                 variant={activeTab === tab.key ? 'primary' : 'outline'}
-                size="sm"
+                size="md"
                 onClick={() => setActiveTab(tab.key)}
                 leftIcon={tab.icon}
-                className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
+                className="w-full sm:w-auto sm:justify-start leading-tight"
               >
-                <Text as="span" color="inherit">
-                  <Text as="span" color="inherit" className="block sm:inline">
-                    {tab.labelLine1}
-                  </Text>
-                  {tab.labelLine2 && (
-                    <Text as="span" color="inherit" className="block sm:inline">
-                      {tab.labelLine2}
-                    </Text>
-                  )}
-                </Text>
+                {tab.labelLine1}
               </Button>
             ))}
           </div>

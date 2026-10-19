@@ -245,8 +245,6 @@ export class UsersService {
 
   /**
    * Updates user profile avatar URL.
-   * If a base64 data string is provided, uploads to Cloudinary first.
-   * If a Cloudinary URL is provided, saves directly to database.
    */
   async updateAvatar(userId: string, avatarUrl: string) {
     this.logger.log(`Updating avatar for user ${userId}`)
@@ -259,14 +257,9 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${userId} not found`)
     }
 
-    const secureUrl = await this.uploadService.ensureCloudinaryUrl(
-      avatarUrl,
-      'dormio/avatars',
-    )
-
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: { avatarUrl: secureUrl || avatarUrl },
+      data: { avatarUrl },
       select: { id: true, avatarUrl: true },
     })
 
