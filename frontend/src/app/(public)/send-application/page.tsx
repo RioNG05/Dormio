@@ -8,14 +8,12 @@ import {
   HelpCircle,
   Sparkles,
   Plus,
-  Search,
   Clock,
   CheckCircle2,
   XCircle,
   Eye,
   Trash2,
   UploadCloud,
-  X,
   LayoutGrid,
   List,
   ChevronLeft,
@@ -23,13 +21,20 @@ import {
   ShieldCheck,
   Building,
   LogIn,
-  AlertCircle,
   Calendar,
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { TextInput } from '@/components/ui/TextInput'
-import { TextareaInput } from '@/components/ui/TextareaInput'
-import { SelectInput } from '@/components/ui/SelectInput'
+import {
+  Button,
+  ChipGroup,
+  Form,
+  Modal,
+  NumberInput,
+  SearchInput,
+  SelectInput,
+  Text,
+  TextareaInput,
+  TextInput,
+} from '@/components/ui'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
@@ -40,11 +45,13 @@ import {
   GrievancePriority,
 } from '@/services/grievance.service'
 import { uploadImageToBackend } from '@/services/upload.service'
+import { resolveErrorMessage } from '@/utils'
 
 export default function SendApplicationPage() {
   const t = useTranslations('sendApplication')
   const tCommon = useTranslations('common')
-  const { isLoggedIn, user } = useAuth()
+  const tErrors = useTranslations('errors')
+  const { isLoggedIn } = useAuth()
   const { toast } = useToast()
 
   // Data state
@@ -251,7 +258,7 @@ export default function SendApplicationPage() {
       toast.success(t('submitSuccessToast'))
     } catch (err: unknown) {
       console.error('Failed to create application:', err)
-      const errMsg = err instanceof Error ? err.message : t('submitErrorToast')
+      const errMsg = resolveErrorMessage(err, tErrors, t('submitErrorToast'))
       setFormError(errMsg)
       toast.error(errMsg)
     } finally {
@@ -297,6 +304,40 @@ export default function SendApplicationPage() {
     pageNumbers.push(i)
   }
 
+  // Type filter options for Chip.Group
+  const typeChipOptions = useMemo(
+    () => [
+      {
+        value: 'all',
+        label: t('tabAll'),
+        count: applications.length,
+        variant: 'neutral' as const,
+      },
+      {
+        value: 'complaint',
+        label: t('tabComplaint'),
+        count: applications.filter(a => (a.type || 'complaint') === 'complaint').length,
+        variant: 'danger' as const,
+        icon: <AlertTriangle className="w-3.5 h-3.5" />,
+      },
+      {
+        value: 'inquiry',
+        label: t('tabInquiry'),
+        count: applications.filter(a => a.type === 'inquiry').length,
+        variant: 'info' as const,
+        icon: <HelpCircle className="w-3.5 h-3.5" />,
+      },
+      {
+        value: 'feedback',
+        label: t('tabFeedback'),
+        count: applications.filter(a => a.type === 'feedback').length,
+        variant: 'purple' as const,
+        icon: <Sparkles className="w-3.5 h-3.5" />,
+      },
+    ],
+    [applications, t],
+  )
+
   // Type metadata helper
   const getTypeInfo = (type?: GrievanceType) => {
     switch (type) {
@@ -331,33 +372,61 @@ export default function SendApplicationPage() {
       case 'resolved':
       case 'closed':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+          <Text
+            as="span"
+            variant="badge"
+            weight="bold"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 normal-case"
+          >
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            <span>{t('statusResolved')}</span>
-          </span>
+            <Text as="span" color="inherit">
+              {t('statusResolved')}
+            </Text>
+          </Text>
         )
       case 'in_progress':
       case 'investigating':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+          <Text
+            as="span"
+            variant="badge"
+            weight="bold"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 normal-case"
+          >
             <Clock className="w-3 h-3 text-blue-600 animate-spin" />
-            <span>{t('statusInProgress')}</span>
-          </span>
+            <Text as="span" color="inherit">
+              {t('statusInProgress')}
+            </Text>
+          </Text>
         )
       case 'rejected':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-[10px] font-bold">
+          <Text
+            as="span"
+            variant="badge"
+            weight="bold"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 normal-case"
+          >
             <XCircle className="w-3 h-3 text-zinc-500" />
-            <span>{t('statusRejected')}</span>
-          </span>
+            <Text as="span" color="inherit">
+              {t('statusRejected')}
+            </Text>
+          </Text>
         )
       case 'pending':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+          <Text
+            as="span"
+            variant="badge"
+            weight="bold"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 normal-case"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>{t('statusPending')}</span>
-          </span>
+            <Text as="span" color="inherit">
+              {t('statusPending')}
+            </Text>
+          </Text>
         )
     }
   }
@@ -367,22 +436,37 @@ export default function SendApplicationPage() {
     switch (p) {
       case 'high':
         return (
-          <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black uppercase">
+          <Text
+            as="span"
+            variant="badge"
+            weight="black"
+            className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200"
+          >
             {t('priorityHigh')}
-          </span>
+          </Text>
         )
       case 'low':
         return (
-          <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-[10px] font-black uppercase">
+          <Text
+            as="span"
+            variant="badge"
+            weight="black"
+            className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200"
+          >
             {t('priorityLow')}
-          </span>
+          </Text>
         )
       case 'medium':
       default:
         return (
-          <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black uppercase">
+          <Text
+            as="span"
+            variant="badge"
+            weight="black"
+            className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
+          >
             {t('priorityMedium')}
-          </span>
+          </Text>
         )
     }
   }
@@ -407,35 +491,58 @@ export default function SendApplicationPage() {
       <section className="bg-gradient-to-b from-white via-zinc-50 to-transparent border-b border-zinc-200/80 pt-10 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 text-[#2AC1BC] text-[11px] font-bold">
+            <Text
+              as="div"
+              variant="badge"
+              size="2xs"
+              weight="bold"
+              color="brand"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 normal-case"
+            >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{t('badge')}</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-900 tracking-tight">
+              <Text as="span" color="inherit">
+                {t('badge')}
+              </Text>
+            </Text>
+            <Text
+              as="h1"
+              variant="heading"
+              className="text-2xl sm:text-3xl lg:text-4xl font-black text-zinc-900 tracking-tight"
+            >
               {t('pageTitle')}
-            </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 font-medium max-w-2xl leading-relaxed">
+            </Text>
+            <Text
+              variant="body"
+              size="xs"
+              color="secondary"
+              weight="medium"
+              className="sm:text-sm max-w-2xl leading-relaxed"
+            >
               {t('pageSubtitle')}
-            </p>
+            </Text>
           </div>
 
           <div>
             {isLoggedIn ? (
-              <Button size="xs"
+              <Button
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   resetForm()
                   setIsModalOpen(true)
                 }}
-                className="sm:w-auto sm:text-sm"
+                className="sm:w-auto"
               >
-                <Plus className="w-4 h-4" />
-                <span>{t('btnNewApplication')}</span>
+                {t('btnNewApplication')}
               </Button>
             ) : (
               <Link href="/login?from=/send-application">
-                <Button size="xs" className="sm:w-auto sm:text-sm">
-                  <LogIn className="w-4 h-4" />
-                  <span>{t('loginBtn')}</span>
+                <Button
+                  size="sm"
+                  leftIcon={<LogIn className="w-4 h-4" />}
+                  className="sm:w-auto"
+                >
+                  {t('loginBtn')}
                 </Button>
               </Link>
             )}
@@ -451,15 +558,22 @@ export default function SendApplicationPage() {
             <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
               <FileText className="w-8 h-8" />
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-zinc-900">{t('loginNoticeTitle')}</h2>
-            <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed font-medium">
+            <Text as="h2" variant="heading" size="lg" className="sm:text-xl">
+              {t('loginNoticeTitle')}
+            </Text>
+            <Text
+              variant="body"
+              size="xs"
+              color="secondary"
+              weight="medium"
+              className="sm:text-sm leading-relaxed"
+            >
               {t('loginNoticeDesc')}
-            </p>
+            </Text>
             <div className="pt-2">
               <Link href="/login?from=/send-application">
-                <Button size="xs" >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  <span>{t('loginBtn')}</span>
+                <Button size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
+                  {t('loginBtn')}
                 </Button>
               </Link>
             </div>
@@ -469,111 +583,34 @@ export default function SendApplicationPage() {
             {/* Filter and Control Bar */}
             <div className="bg-white rounded-3xl p-4 sm:p-5 border border-zinc-200/90 shadow-xs space-y-4">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* 3 Main Type Filter Tabs */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1 bg-zinc-100/80 rounded-2xl shrink-0">
-                  <button
-                    onClick={() => {
-                      setTypeFilter('all')
-                      setCurrentPage(1)
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shrink-0 ${
-                      typeFilter === 'all'
-                        ? 'bg-white text-zinc-900 shadow-xs'
-                        : 'text-zinc-600 hover:text-zinc-900'
-                    }`}
-                  >
-                    <span>{t('tabAll')}</span>
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-zinc-200 text-zinc-700">
-                      {applications.length}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTypeFilter('complaint')
-                      setCurrentPage(1)
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shrink-0 ${
-                      typeFilter === 'complaint'
-                        ? 'bg-rose-500 text-white shadow-xs'
-                        : 'text-zinc-600 hover:text-zinc-900'
-                    }`}
-                  >
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    <span>{t('tabComplaint')}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                        typeFilter === 'complaint'
-                          ? 'bg-rose-600 text-white'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}
-                    >
-                      {applications.filter(a => (a.type || 'complaint') === 'complaint').length}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTypeFilter('inquiry')
-                      setCurrentPage(1)
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shrink-0 ${
-                      typeFilter === 'inquiry'
-                        ? 'bg-blue-500 text-white shadow-xs'
-                        : 'text-zinc-600 hover:text-zinc-900'
-                    }`}
-                  >
-                    <HelpCircle className="w-3.5 h-3.5" />
-                    <span>{t('tabInquiry')}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                        typeFilter === 'inquiry'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {applications.filter(a => a.type === 'inquiry').length}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTypeFilter('feedback')
-                      setCurrentPage(1)
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 shrink-0 ${
-                      typeFilter === 'feedback'
-                        ? 'bg-purple-500 text-white shadow-xs'
-                        : 'text-zinc-600 hover:text-zinc-900'
-                    }`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{t('tabFeedback')}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-                        typeFilter === 'feedback'
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-purple-100 text-purple-800'
-                      }`}
-                    >
-                      {applications.filter(a => a.type === 'feedback').length}
-                    </span>
-                  </button>
-                </div>
+                {/* Main Type Filter Tabs using ChipGroup */}
+                <ChipGroup
+                  value={typeFilter}
+                  onChange={val => {
+                    setTypeFilter(val)
+                    setCurrentPage(1)
+                  }}
+                  options={typeChipOptions}
+                  size="md"
+                  scrollable
+                  className="p-1 bg-zinc-100/80 rounded-2xl"
+                />
 
                 {/* Search & Status Filter */}
                 <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
-                  <div className="relative flex-1 sm:w-64">
-                    <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
+                  <div className="flex-1 sm:w-64">
+                    <SearchInput
                       placeholder={t('searchPlaceholder')}
                       value={searchQuery}
-                      onChange={e => {
-                        setSearchQuery(e.target.value)
+                      onImmediateChange={val => {
+                        setSearchQuery(val)
                         setCurrentPage(1)
                       }}
-                      className="w-full pl-9 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-[#2AC1BC]"
+                      onChange={val => {
+                        setSearchQuery(val)
+                        setCurrentPage(1)
+                      }}
+                      className="py-2 bg-zinc-50 text-xs font-semibold"
                     />
                   </div>
 
@@ -585,34 +622,30 @@ export default function SendApplicationPage() {
                         setCurrentPage(1)
                       }}
                       options={statusOptions}
-                      className="py-1.5 text-xs bg-zinc-50"
+                      className="py-2 text-xs bg-zinc-50"
                     />
                   </div>
 
                   {/* Grid vs Table View Toggle (Rule #9) */}
                   <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
-                    <button
+                    <Button
+                      type="button"
+                      variant={viewMode === 'grid' ? 'white' : 'ghost'}
+                      size="icon-sm"
                       onClick={() => setViewMode('grid')}
-                      className={`p-1.5 rounded-lg cursor-pointer transition-all ${
-                        viewMode === 'grid'
-                          ? 'bg-white text-zinc-900 shadow-2xs font-bold'
-                          : 'text-zinc-500 hover:text-zinc-800'
-                      }`}
                       title="Grid View"
                     >
                       <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={viewMode === 'table' ? 'white' : 'ghost'}
+                      size="icon-sm"
                       onClick={() => setViewMode('table')}
-                      className={`p-1.5 rounded-lg cursor-pointer transition-all ${
-                        viewMode === 'table'
-                          ? 'bg-white text-zinc-900 shadow-2xs font-bold'
-                          : 'text-zinc-500 hover:text-zinc-800'
-                      }`}
                       title="Table View"
                     >
                       <List className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -622,26 +655,37 @@ export default function SendApplicationPage() {
             {loading ? (
               <div className="text-center py-16 bg-white rounded-3xl border border-zinc-200">
                 <Clock className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto mb-2" />
-                <p className="text-xs font-bold text-zinc-400">{tCommon('loading')}</p>
+                <Text variant="caption" size="xs" weight="bold" color="subtle">
+                  {tCommon('loading')}
+                </Text>
               </div>
             ) : filteredApplications.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-3xl border border-zinc-200 space-y-3">
                 <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
                   <FileText className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-black text-zinc-800">{t('emptyListTitle')}</h3>
-                <p className="text-xs text-zinc-400 font-medium max-w-sm mx-auto">
+                <Text as="h3" variant="heading" size="sm">
+                  {t('emptyListTitle')}
+                </Text>
+                <Text
+                  variant="body"
+                  size="xs"
+                  color="subtle"
+                  weight="medium"
+                  className="max-w-sm mx-auto"
+                >
                   {t('emptyListDesc')}
-                </p>
+                </Text>
                 <div className="pt-2">
-                  <Button size="xs"
+                  <Button
+                    size="sm"
+                    leftIcon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() => {
                       resetForm()
                       setIsModalOpen(true)
                     }}
                   >
-                    <Plus className="w-3.5 h-3.5 mr-1.5" />
-                    <span>{t('btnNewApplication')}</span>
+                    {t('btnNewApplication')}
                   </Button>
                 </div>
               </div>
@@ -660,12 +704,17 @@ export default function SendApplicationPage() {
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase ${typeInfo.badgeColor}`}
+                          <Text
+                            as="span"
+                            variant="badge"
+                            weight="black"
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${typeInfo.badgeColor}`}
                           >
                             <Icon className="w-3 h-3" />
-                            <span>{typeInfo.label}</span>
-                          </span>
+                            <Text as="span" color="inherit">
+                              {typeInfo.label}
+                            </Text>
+                          </Text>
                           <div className="flex items-center gap-1.5">
                             {getPriorityBadge(item.priority)}
                             {getStatusBadge(item.status)}
@@ -673,12 +722,25 @@ export default function SendApplicationPage() {
                         </div>
 
                         <div>
-                          <h4 className="text-sm font-black text-zinc-900 group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                          <Text
+                            as="h4"
+                            variant="heading"
+                            size="sm"
+                            clamp={1}
+                            className="group-hover:text-[#2AC1BC] transition-colors"
+                          >
                             {item.title}
-                          </h4>
-                          <p className="text-xs text-zinc-500 font-medium line-clamp-2 mt-1 leading-relaxed">
+                          </Text>
+                          <Text
+                            variant="body"
+                            size="xs"
+                            color="secondary"
+                            weight="medium"
+                            clamp={2}
+                            className="mt-1"
+                          >
                             {item.description}
-                          </p>
+                          </Text>
                         </div>
 
                         {item.images && item.images.length > 0 && (
@@ -692,22 +754,41 @@ export default function SendApplicationPage() {
                               />
                             ))}
                             {item.images.length > 3 && (
-                              <div className="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-500">
+                              <Text
+                                as="div"
+                                variant="badge"
+                                weight="black"
+                                color="secondary"
+                                className="w-12 h-12 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center"
+                              >
                                 +{item.images.length - 3}
-                              </div>
+                              </Text>
                             )}
                           </div>
                         )}
                       </div>
 
-                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-400 mt-4">
-                        <div className="flex items-center gap-1">
+                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between mt-4">
+                        <Text
+                          as="div"
+                          variant="caption"
+                          color="subtle"
+                          className="flex items-center gap-1"
+                        >
                           <Calendar className="w-3.5 h-3.5" />
-                          <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <span className="font-bold text-[#2AC1BC] group-hover:underline">
+                          <Text as="span" color="inherit">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </Text>
+                        </Text>
+                        <Text
+                          as="span"
+                          variant="caption"
+                          weight="bold"
+                          color="brand"
+                          className="group-hover:underline"
+                        >
                           {t('viewDetailBtn')} &rarr;
-                        </span>
+                        </Text>
                       </div>
                     </div>
                   )
@@ -719,16 +800,36 @@ export default function SendApplicationPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-zinc-200 bg-zinc-50/70 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
-                        <th className="py-3.5 px-4">{t('typeLabel')}</th>
-                        <th className="py-3.5 px-4">{t('titleLabel')}</th>
-                        <th className="py-3.5 px-4">{t('priorityLabel')}</th>
-                        <th className="py-3.5 px-4">{t('statusFilterLabel')}</th>
-                        <th className="py-3.5 px-4">{t('createdDate')}</th>
+                      <tr className="border-b border-zinc-200 bg-zinc-50/70">
+                        <th className="py-3.5 px-4">
+                          <Text as="span" variant="overline" size="2xs">
+                            {t('typeLabel')}
+                          </Text>
+                        </th>
+                        <th className="py-3.5 px-4">
+                          <Text as="span" variant="overline" size="2xs">
+                            {t('titleLabel')}
+                          </Text>
+                        </th>
+                        <th className="py-3.5 px-4">
+                          <Text as="span" variant="overline" size="2xs">
+                            {t('priorityLabel')}
+                          </Text>
+                        </th>
+                        <th className="py-3.5 px-4">
+                          <Text as="span" variant="overline" size="2xs">
+                            {t('statusFilterLabel')}
+                          </Text>
+                        </th>
+                        <th className="py-3.5 px-4">
+                          <Text as="span" variant="overline" size="2xs">
+                            {t('createdDate')}
+                          </Text>
+                        </th>
                         <th className="py-3.5 px-4 text-right"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 text-xs font-semibold text-zinc-700">
+                    <tbody className="divide-y divide-zinc-100">
                       {paginatedApplications.map(item => {
                         const typeInfo = getTypeInfo(item.type)
                         const Icon = typeInfo.icon
@@ -740,33 +841,46 @@ export default function SendApplicationPage() {
                             className="hover:bg-zinc-50/80 transition-colors cursor-pointer group"
                           >
                             <td className="py-3 px-4">
-                              <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase ${typeInfo.badgeColor}`}
+                              <Text
+                                as="span"
+                                variant="badge"
+                                weight="black"
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${typeInfo.badgeColor}`}
                               >
                                 <Icon className="w-3 h-3" />
-                                <span>{typeInfo.label}</span>
-                              </span>
+                                <Text as="span" color="inherit">
+                                  {typeInfo.label}
+                                </Text>
+                              </Text>
                             </td>
                             <td className="py-3 px-4 max-w-xs">
-                              <p className="font-black text-zinc-900 group-hover:text-[#2AC1BC] truncate">
+                              <Text
+                                variant="body"
+                                size="xs"
+                                weight="black"
+                                truncate
+                                className="text-zinc-900 group-hover:text-[#2AC1BC]"
+                              >
                                 {item.title}
-                              </p>
-                              <p className="text-[11px] text-zinc-400 font-normal truncate">
+                              </Text>
+                              <Text variant="caption" size="2xs" color="subtle" truncate>
                                 {item.description}
-                              </p>
+                              </Text>
                             </td>
                             <td className="py-3 px-4">{getPriorityBadge(item.priority)}</td>
                             <td className="py-3 px-4">{getStatusBadge(item.status)}</td>
-                            <td className="py-3 px-4 text-zinc-400 text-[11px]">
-                              {new Date(item.createdAt).toLocaleDateString()}
+                            <td className="py-3 px-4">
+                              <Text variant="caption" size="2xs" color="subtle">
+                                {new Date(item.createdAt).toLocaleDateString()}
+                              </Text>
                             </td>
                             <td className="py-3 px-4 text-right">
                               <Button
-                                size="sm"
+                                size="xs"
                                 variant="outline"
+                                leftIcon={<Eye className="w-3.5 h-3.5" />}
                               >
-                                <Eye className="w-3.5 h-3.5 mr-1" />
-                                <span>{t('viewDetailBtn')}</span>
+                                {t('viewDetailBtn')}
                               </Button>
                             </td>
                           </tr>
@@ -780,12 +894,13 @@ export default function SendApplicationPage() {
 
             {/* Standardized Pagination Bar (Rule #9) */}
             {filteredApplications.length > 0 && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-white rounded-2xl border border-zinc-200 text-xs font-semibold text-zinc-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 px-4 bg-white rounded-2xl border border-zinc-200">
                 {/* Items per page selector & Range indicator */}
                 <div className="flex items-center gap-2">
-                  <span>{tCommon('showing')}</span>
-                  <input
-                    type="number"
+                  <Text as="span" size="xs" weight="semibold" color="secondary">
+                    {tCommon('showing')}
+                  </Text>
+                  <NumberInput
                     min={1}
                     max={100}
                     value={customPageSize}
@@ -796,64 +911,71 @@ export default function SendApplicationPage() {
                         setCurrentPage(1)
                       }
                     }}
-                    className="w-14 px-2 py-1 bg-zinc-50 border border-zinc-300 rounded-lg text-center font-bold text-zinc-900 text-xs focus:outline-none focus:border-[#2AC1BC]"
+                    containerClassName="w-16"
+                    className="px-2 py-1 bg-zinc-50 text-center text-xs"
                   />
-                  <span>
+                  <Text as="span" size="xs" weight="semibold" color="secondary">
                     {tCommon('perPage')} | {(currentPage - 1) * itemsPerPage + 1}-
                     {Math.min(currentPage * itemsPerPage, filteredApplications.length)}{' '}
                     {tCommon('of')} {filteredApplications.length} {tCommon('items')}
-                  </span>
+                  </Text>
                 </div>
 
                 {/* 5-page window jumping controls */}
                 <div className="flex items-center gap-1.5">
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
                     disabled={currentPage <= 1}
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                  </button>
+                  </Button>
 
                   {windowStart > 1 && (
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
                       onClick={() => setCurrentPage(Math.max(1, windowStart - 5))}
-                      className="px-2.5 py-1 rounded-lg border border-zinc-200 hover:bg-zinc-100 text-xs font-bold"
                     >
                       ...
-                    </button>
+                    </Button>
                   )}
 
                   {pageNumbers.map(pageNum => (
-                    <button
+                    <Button
                       key={pageNum}
+                      type="button"
+                      variant={currentPage === pageNum ? 'primary' : 'outline'}
+                      size="xs"
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        currentPage === pageNum
-                          ? 'bg-[#2AC1BC] text-white shadow-2xs'
-                          : 'border border-zinc-200 hover:bg-zinc-100 text-zinc-700'
-                      }`}
                     >
                       {pageNum}
-                    </button>
+                    </Button>
                   ))}
 
                   {windowEnd < totalPages && (
-                    <button
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
                       onClick={() => setCurrentPage(Math.min(totalPages, windowEnd + 1))}
-                      className="px-2.5 py-1 rounded-lg border border-zinc-200 hover:bg-zinc-100 text-xs font-bold"
                     >
                       ...
-                    </button>
+                    </Button>
                   )}
 
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
                     disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className="p-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronRight className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -862,304 +984,313 @@ export default function SendApplicationPage() {
       </main>
 
       {/* CREATE APPLICATION MODAL */}
-      {isModalOpen && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) handleCloseModal()
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
-        >
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-zinc-200 my-8 space-y-6 relative">
-            <button
-              onClick={handleCloseModal}
-              className="absolute right-5 top-5 p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        size="xl"
+        header={
+          <div className="space-y-1">
+            <Text
+              as="div"
+              variant="badge"
+              weight="black"
+              color="brand"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 rounded-full tracking-wider"
             >
-              <X className="w-5 h-5" />
-            </button>
+              <FileText className="w-3 h-3" />
+              <Text as="span" color="inherit">
+                Dormio Support
+              </Text>
+            </Text>
+            <Text as="h2" variant="heading" size="xl">
+              {t('modalTitle')}
+            </Text>
+            <Text variant="subtitle" size="xs">
+              {t('modalSubtitle')}
+            </Text>
+          </div>
+        }
+      >
+        {formError && (
+          <Form.Alert variant="error" message={formError} onClose={() => setFormError(null)} />
+        )}
 
-            {/* Modal Header */}
-            <div className="space-y-1 pr-8">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-black rounded-full uppercase tracking-wider">
-                <FileText className="w-3 h-3" />
-                <span>Dormio Support</span>
-              </div>
-              <h2 className="text-xl font-black text-zinc-900 tracking-tight">{t('modalTitle')}</h2>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                {t('modalSubtitle')}
-              </p>
+        <Form onSubmit={handleSubmitApplication} isLoading={isSubmitting} variant="modal">
+          {/* 3 Application Type Selector Cards */}
+          <Form.Field label={t('typeLabel')} required>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {/* Complaint Card */}
+              <button
+                type="button"
+                onClick={() => setAppType('complaint')}
+                className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
+                  appType === 'complaint'
+                    ? 'border-rose-500 bg-rose-50/50 shadow-xs ring-1 ring-rose-500'
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="w-4 h-4 text-rose-500" />
+                  <Text as="span" size="xs" weight="black" color="default">
+                    {t('typeComplaint')}
+                  </Text>
+                </div>
+                <Text variant="caption" size="3xs" color="secondary">
+                  {t('typeComplaintDesc')}
+                </Text>
+              </button>
+
+              {/* Inquiry Card */}
+              <button
+                type="button"
+                onClick={() => setAppType('inquiry')}
+                className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
+                  appType === 'inquiry'
+                    ? 'border-blue-500 bg-blue-50/50 shadow-xs ring-1 ring-blue-500'
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <HelpCircle className="w-4 h-4 text-blue-500" />
+                  <Text as="span" size="xs" weight="black" color="default">
+                    {t('typeInquiry')}
+                  </Text>
+                </div>
+                <Text variant="caption" size="3xs" color="secondary">
+                  {t('typeInquiryDesc')}
+                </Text>
+              </button>
+
+              {/* Feedback Card */}
+              <button
+                type="button"
+                onClick={() => setAppType('feedback')}
+                className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
+                  appType === 'feedback'
+                    ? 'border-purple-500 bg-purple-50/50 shadow-xs ring-1 ring-purple-500'
+                    : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                  <Text as="span" size="xs" weight="black" color="default">
+                    {t('typeFeedback')}
+                  </Text>
+                </div>
+                <Text variant="caption" size="3xs" color="secondary">
+                  {t('typeFeedbackDesc')}
+                </Text>
+              </button>
             </div>
+          </Form.Field>
 
-            {formError && (
-              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-bold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                <span>{formError}</span>
+          {/* Title Input */}
+          <TextInput
+            label={t('titleLabel')}
+            required
+            placeholder={t('titlePlaceholder')}
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+
+          {/* Detail Textarea */}
+          <TextareaInput
+            label={t('detailLabel')}
+            required
+            rows={4}
+            placeholder={t('detailPlaceholder')}
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+          />
+
+          {/* Priority Selector */}
+          <SelectInput
+            label={t('priorityLabel')}
+            value={priority}
+            onChange={e => setPriority(e.target.value as GrievancePriority)}
+            options={priorityOptions}
+          />
+
+          {/* Image Evidence Upload */}
+          <Form.Field label={t('evidenceImagesLabel')}>
+            {uploadedImages.length > 0 && (
+              <div className="grid grid-cols-5 gap-2 pb-2">
+                {uploadedImages.map((src, idx) => (
+                  <div
+                    key={idx}
+                    className="relative group rounded-xl overflow-hidden border border-zinc-200 aspect-square"
+                  >
+                    <img src={src} alt="Evidence" className="w-full h-full object-cover" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => removeUploadedImage(idx)}
+                      className="absolute inset-0 w-full h-full rounded-none bg-black/50 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
 
-            <form onSubmit={handleSubmitApplication} className="space-y-5">
-              {/* 3 Application Type Selector Cards */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t('typeLabel')} <span className="text-rose-500 font-bold">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {/* Complaint Card */}
-                  <button
-                    type="button"
-                    onClick={() => setAppType('complaint')}
-                    className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
-                      appType === 'complaint'
-                        ? 'border-rose-500 bg-rose-50/50 shadow-xs ring-1 ring-rose-500'
-                        : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <AlertTriangle className="w-4 h-4 text-rose-500" />
-                      <span className="text-xs font-black text-zinc-900">{t('typeComplaint')}</span>
-                    </div>
-                    <p className="text-[10px] text-zinc-500 leading-tight">
-                      {t('typeComplaintDesc')}
-                    </p>
-                  </button>
-
-                  {/* Inquiry Card */}
-                  <button
-                    type="button"
-                    onClick={() => setAppType('inquiry')}
-                    className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
-                      appType === 'inquiry'
-                        ? 'border-blue-500 bg-blue-50/50 shadow-xs ring-1 ring-blue-500'
-                        : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <HelpCircle className="w-4 h-4 text-blue-500" />
-                      <span className="text-xs font-black text-zinc-900">{t('typeInquiry')}</span>
-                    </div>
-                    <p className="text-[10px] text-zinc-500 leading-tight">
-                      {t('typeInquiryDesc')}
-                    </p>
-                  </button>
-
-                  {/* Feedback Card */}
-                  <button
-                    type="button"
-                    onClick={() => setAppType('feedback')}
-                    className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
-                      appType === 'feedback'
-                        ? 'border-purple-500 bg-purple-50/50 shadow-xs ring-1 ring-purple-500'
-                        : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Sparkles className="w-4 h-4 text-purple-500" />
-                      <span className="text-xs font-black text-zinc-900">{t('typeFeedback')}</span>
-                    </div>
-                    <p className="text-[10px] text-zinc-500 leading-tight">
-                      {t('typeFeedbackDesc')}
-                    </p>
-                  </button>
-                </div>
+            {uploadedImages.length < 5 && (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-zinc-200 hover:border-[#2AC1BC] rounded-2xl p-4 text-center cursor-pointer transition-colors bg-zinc-50/50 hover:bg-zinc-50"
+              >
+                <UploadCloud className="w-6 h-6 text-zinc-400 mx-auto mb-1" />
+                <Text size="xs" weight="bold" color="secondary">
+                  {t('uploadGuide')}
+                </Text>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
               </div>
+            )}
+          </Form.Field>
 
-              {/* Title Input */}
-              <TextInput
-                label={t('titleLabel')}
-                required
-                placeholder={t('titlePlaceholder')}
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-
-              {/* Detail Textarea */}
-              <TextareaInput
-                label={t('detailLabel')}
-                required
-                rows={4}
-                placeholder={t('detailPlaceholder')}
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-              />
-
-              {/* Priority Selector */}
-              <SelectInput
-                label={t('priorityLabel')}
-                value={priority}
-                onChange={e => setPriority(e.target.value as GrievancePriority)}
-                options={priorityOptions}
-              />
-
-              {/* Image Evidence Upload */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700 block">
-                  {t('evidenceImagesLabel')}
-                </label>
-
-                {uploadedImages.length > 0 && (
-                  <div className="grid grid-cols-5 gap-2 pb-2">
-                    {uploadedImages.map((src, idx) => (
-                      <div
-                        key={idx}
-                        className="relative group rounded-xl overflow-hidden border border-zinc-200 aspect-square"
-                      >
-                        <img src={src} alt="Evidence" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeUploadedImage(idx)}
-                          className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {uploadedImages.length < 5 && (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-200 hover:border-[#2AC1BC] rounded-2xl p-4 text-center cursor-pointer transition-colors bg-zinc-50/50 hover:bg-zinc-50"
-                  >
-                    <UploadCloud className="w-6 h-6 text-zinc-400 mx-auto mb-1" />
-                    <p className="text-xs font-bold text-zinc-600">{t('uploadGuide')}</p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-zinc-100">
-                <Button size="xs"
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseModal}
-                >
-                  {t('cancelBtn')}
-                </Button>
-                <Button size="xs"
-                  type="submit"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? t('submittingBtn') : t('submitBtn')}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          {/* Action Buttons */}
+          <Form.Actions bordered stackedOnMobile={false}>
+            <Button size="sm" type="button" variant="outline" onClick={handleCloseModal}>
+              {t('cancelBtn')}
+            </Button>
+            <Button size="sm" type="submit" isLoading={isSubmitting}>
+              {isSubmitting ? t('submittingBtn') : t('submitBtn')}
+            </Button>
+          </Form.Actions>
+        </Form>
+      </Modal>
 
       {/* CONFIRM EXIT MODAL (Rule #10) */}
-      {showExitConfirm && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setShowExitConfirm(false)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in duration-150"
-        >
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 space-y-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-black text-zinc-900">{t('confirmExitTitle')}</h3>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                {t('confirmExitDesc')}
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Button size="xs"
-                type="button"
-                variant="outline"
-                onClick={() => setShowExitConfirm(false)}
-              >
-                {t('continueEditingBtn')}
-              </Button>
-              <Button size="xs" variant="danger"
-                type="button"
-                onClick={() => {
-                  setShowExitConfirm(false)
-                  setIsModalOpen(false)
-                  resetForm()
-                }}
-              >
-                {t('discardAndCloseBtn')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        size="md"
+        zIndex={60}
+        showCloseButton={false}
+      >
+        <Modal.Body className="text-center space-y-4 p-6">
+          <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </div>
-      )}
+          <div className="space-y-1">
+            <Text as="h3" variant="heading" size="base">
+              {t('confirmExitTitle')}
+            </Text>
+            <Text variant="subtitle" size="xs">
+              {t('confirmExitDesc')}
+            </Text>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Button
+              size="sm"
+              type="button"
+              variant="outline"
+              onClick={() => setShowExitConfirm(false)}
+            >
+              {t('continueEditingBtn')}
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              type="button"
+              onClick={() => {
+                setShowExitConfirm(false)
+                setIsModalOpen(false)
+                resetForm()
+              }}
+            >
+              {t('discardAndCloseBtn')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       {/* APPLICATION DETAIL MODAL */}
-      {selectedApplication && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setSelectedApplication(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
-        >
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-zinc-200 my-8 space-y-6 relative">
-            <button
-              onClick={() => setSelectedApplication(null)}
-              className="absolute right-5 top-5 p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Header */}
-            <div className="space-y-2 pr-8">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase ${
+      <Modal
+        isOpen={Boolean(selectedApplication)}
+        onClose={() => setSelectedApplication(null)}
+        size="xl"
+        header={
+          selectedApplication && (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Text
+                  as="span"
+                  variant="badge"
+                  weight="black"
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${
                     getTypeInfo(selectedApplication.type).badgeColor
                   }`}
                 >
-                  <span>{getTypeInfo(selectedApplication.type).label}</span>
-                </span>
+                  {getTypeInfo(selectedApplication.type).label}
+                </Text>
                 {getStatusBadge(selectedApplication.status)}
                 {getPriorityBadge(selectedApplication.priority)}
               </div>
 
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight">
+              <Text as="h3" variant="heading" size="xl">
                 {selectedApplication.title}
-              </h3>
+              </Text>
 
-              <div className="flex flex-wrap items-center gap-4 text-[11px] text-zinc-400 pt-1">
-                <span>
+              <div className="flex flex-wrap items-center gap-4 pt-1">
+                <Text as="span" variant="caption" size="2xs" color="subtle">
                   {t('createdDate')}: {new Date(selectedApplication.createdAt).toLocaleString()}
-                </span>
+                </Text>
                 {selectedApplication.boardingHouseName && (
-                  <span className="flex items-center gap-1 text-zinc-600 font-bold">
+                  <Text
+                    as="span"
+                    variant="caption"
+                    size="2xs"
+                    weight="bold"
+                    color="secondary"
+                    className="flex items-center gap-1"
+                  >
                     <Building className="w-3.5 h-3.5" />
                     {selectedApplication.boardingHouseName}
                     {selectedApplication.roomNumber ? ` - P.${selectedApplication.roomNumber}` : ''}
-                  </span>
+                  </Text>
                 )}
               </div>
             </div>
-
+          )
+        }
+        footer={
+          <Button size="sm" variant="outline" onClick={() => setSelectedApplication(null)}>
+            {t('closeBtn')}
+          </Button>
+        }
+      >
+        {selectedApplication && (
+          <div className="space-y-5">
             {/* Description */}
             <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-1">
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
+              <Text as="span" variant="overline" className="block">
                 {t('detailLabel')}
-              </span>
-              <p className="text-xs sm:text-sm text-zinc-800 leading-relaxed font-medium whitespace-pre-wrap">
+              </Text>
+              <Text
+                variant="body"
+                size="xs"
+                weight="medium"
+                color="default"
+                className="sm:text-sm whitespace-pre-wrap"
+              >
                 {selectedApplication.description}
-              </p>
+              </Text>
             </div>
 
             {/* Evidence Photos */}
             {selectedApplication.images && selectedApplication.images.length > 0 && (
               <div className="space-y-2">
-                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
+                <Text as="span" variant="overline" className="block">
                   {t('evidenceImagesLabel')}
-                </span>
+                </Text>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {selectedApplication.images.map(img => (
                     <a
@@ -1179,43 +1310,49 @@ export default function SendApplicationPage() {
             {/* Admin Resolution Section */}
             <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                <Text
+                  as="span"
+                  size="xs"
+                  weight="black"
+                  className="text-amber-900 flex items-center gap-1.5"
+                >
                   <ShieldCheck className="w-4 h-4 text-amber-600" />
-                  <span>{t('adminResolutionTitle')}</span>
-                </span>
+                  <Text as="span" color="inherit">
+                    {t('adminResolutionTitle')}
+                  </Text>
+                </Text>
                 {selectedApplication.resolvedAt && (
-                  <span className="text-[10px] text-amber-700 font-medium">
+                  <Text as="span" variant="caption" size="3xs" weight="medium" className="text-amber-700">
                     {new Date(selectedApplication.resolvedAt).toLocaleString()}
-                  </span>
+                  </Text>
                 )}
               </div>
 
               {selectedApplication.resolutionNote ? (
-                <p className="text-xs text-amber-900 leading-relaxed font-medium whitespace-pre-wrap bg-white/70 p-3 rounded-xl border border-amber-200">
+                <Text
+                  variant="body"
+                  size="xs"
+                  weight="medium"
+                  className="text-amber-900 whitespace-pre-wrap bg-white/70 p-3 rounded-xl border border-amber-200"
+                >
                   {selectedApplication.resolutionNote}
-                </p>
+                </Text>
               ) : (
-                <p className="text-xs text-amber-700 font-medium italic">{t('noResolutionYet')}</p>
+                <Text variant="body" size="xs" weight="medium" italic className="text-amber-700">
+                  {t('noResolutionYet')}
+                </Text>
               )}
 
               {selectedApplication.resolvedByName && (
-                <p className="text-[10px] text-amber-800 font-bold">
+                <Text variant="caption" size="3xs" weight="bold" className="text-amber-800">
                   {t('resolvedBy')}: {selectedApplication.resolvedByName}
-                </p>
+                </Text>
               )}
             </div>
-
-            <div className="pt-2 flex justify-end">
-              <Button size="xs"
-                variant="outline"
-                onClick={() => setSelectedApplication(null)}
-              >
-                {t('closeBtn')}
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   )
 }
+
