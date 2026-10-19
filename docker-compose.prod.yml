@@ -96,6 +96,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.dormio.site}
         NEXT_PUBLIC_API_PORT: ${NEXT_PUBLIC_API_PORT:-}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-G-6XJ0C471QC}
     image: dormio-frontend:prod
     container_name: dormio_frontend
     restart: unless-stopped
