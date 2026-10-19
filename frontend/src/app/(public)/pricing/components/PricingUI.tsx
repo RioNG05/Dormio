@@ -235,7 +235,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               variant="heading"
               weight="extrabold"
               color="white"
-              size={{ base: '3xl', sm: '5xl', lg: '6xl' }}
+              size={{ base: '3xl', sm: '4xl', lg: '6xl' }}
               className="leading-[1.18] drop-shadow-md"
             >
               {t('guestPricingTitle1')}
@@ -245,7 +245,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               as="h1"
               variant="heading"
               weight="extrabold"
-              size={{ base: '3xl', sm: '5xl', lg: '6xl' }}
+              size={{ base: '3xl', sm: '4xl', lg: '6xl' }}
               className="leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent"
             >
               {t('guestPricingTitle2')}
@@ -316,27 +316,27 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               >
                 {isBhms ? t('guestPricingBhmsBadge') : t('guestPricingBhrpBadge')}
               </Text>
-              <Text as="h2" variant="heading" size={{ base: '2xl', sm: '3xl' }} weight="black" className="leading-snug">
+              <div className='mt-3'>
                 {isBhms ? (
                   <>
-                    <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                    <Text as="h2" variant="heading" size={{ base: '2xl', sm: '3xl' }} weight="black" className="inline-block whitespace-nowrap leading-snug">
                       {t('guestPricingBhmsTitle1')}
                     </Text>{' '}
-                    <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                    <Text as="h2" variant="heading" size={{ base: '2xl', sm: '3xl' }} weight="black" className="inline-block whitespace-nowrap leading-snug">
                       {t('guestPricingBhmsTitle2')}
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                    <Text as="h2" variant="heading" size={{ base: '2xl', sm: '3xl' }} weight="black" className="inline-block whitespace-nowrap leading-snug">
                       {t('guestPricingBhrpTitle1')}
                     </Text>{' '}
-                    <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                    <Text as="h2" variant="heading" size={{ base: '2xl', sm: '3xl' }} weight="black" className="inline-block whitespace-nowrap leading-snug">
                       {t('guestPricingBhrpTitle2')}
                     </Text>
                   </>
                 )}
-              </Text>
+              </div>
             </div>
 
             {/* Billing cycle toggle — only shown for BHMS (management system) */}
@@ -599,27 +599,47 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
             >
               {isBhms ? t('guestFeaturesBhmsBadge') : t('guestFeaturesBhrpBadge')}
             </Text>
-            <Text as="h2" variant="heading" size="2xl" weight="black" className="sm:text-3xl leading-snug">
+            <div className='mt-3'>
               {isBhms ? (
                 <>
-                  <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="2xl"
+                    weight="black"
+                    className="inline-block whitespace-nowrap leading-snug">
                     {t('guestFeaturesBhmsTitle1')}
                   </Text>{' '}
-                  <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="2xl"
+                    weight="black"
+                    className="inline-block whitespace-nowrap leading-snug">
                     {t('guestFeaturesBhmsTitle2')}
                   </Text>
                 </>
               ) : (
                 <>
-                  <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="2xl"
+                    weight="black"
+                    className="inline-block whitespace-nowrap leading-snug">
                     {t('guestFeaturesBhrpTitle1')}
                   </Text>{' '}
-                  <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+                  <Text
+                    as="h2"
+                    variant="heading"
+                    size="2xl"
+                    weight="black"
+                    className="inline-block whitespace-nowrap leading-snug">
                     {t('guestFeaturesBhrpTitle2')}
                   </Text>
                 </>
               )}
-            </Text>
+            </div>
           </div>
 
           {/* Feature cards grid */}
@@ -735,21 +755,26 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
 
         {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
         <section className="bg-zinc-900 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-2xl border border-zinc-800">
-          <Text
-            as="h2"
-            variant="heading"
-            size="2xl"
-            weight="black"
-            color="white"
-            className="sm:text-4xl leading-snug"
-          >
-            <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+          <div>
+            <Text
+              as="h2"
+              variant="heading"
+              size="2xl"
+              weight="black"
+              color="white"
+              className="inline-block whitespace-nowrap leading-snug">
               {t('guestPricingCtaTitle1')}
             </Text>{' '}
-            <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+            <Text
+              as="h2"
+              variant="heading"
+              size="2xl"
+              weight="black"
+              color="white"
+              className="inline-block whitespace-nowrap leading-snug">
               {t('guestPricingCtaTitle2')}
             </Text>
-          </Text>
+          </div>
           <Text
             variant="subtitle"
             size="xs"
@@ -759,18 +784,16 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
           >
             {t('guestPricingCtaSubtitle')}
           </Text>
-          <div className="flex justify-center">
-            <Link href="/register">
-              <Button
-                variant="primary"
-                size="lg"
-                rightIcon={<span>&rarr;</span>}
-                className="rounded-2xl shadow-lg shadow-[#2AC1BC]/30 hover:scale-105"
-              >
-                {t('guestPricingCtaBtn')}
-              </Button>
-            </Link>
-          </div>
+          <Link href="/register">
+            <Button
+              variant="primary"
+              size="lg"
+              rightIcon={<span>&rarr;</span>}
+              className="rounded-2xl shadow-lg shadow-[#2AC1BC]/30 hover:scale-105"
+            >
+              {t('guestPricingCtaBtn')}
+            </Button>
+          </Link>
         </section>
       </div>
     </div>
