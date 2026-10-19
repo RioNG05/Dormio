@@ -388,10 +388,10 @@ export default function LandlordDebtsPage() {
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-zinc-900">
+              <h1 className="text-2xl font-black tracking-tight text-foreground">
                 {t('landlordDebtsTitle')}
               </h1>
-              <p className="text-xs text-zinc-500 font-medium">{t('landlordDebtsSubtitle')}</p>
+              <p className="text-xs text-muted font-medium">{t('landlordDebtsSubtitle')}</p>
             </div>
           </div>
         </div>
@@ -424,12 +424,12 @@ export default function LandlordDebtsPage() {
       {/* ─── Metric KPI Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Debt */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
+        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordDebtsTotalDebt')}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-lg bg-danger-soft text-rose-600 flex items-center justify-center font-bold text-xs">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
@@ -437,7 +437,7 @@ export default function LandlordDebtsPage() {
             <span className="text-2xl font-black text-rose-600 tracking-tight block">
               {formatCurrency(summary.totalDebtAmount)}
             </span>
-            <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
+            <span className="text-[11px] text-muted font-medium mt-1 block">
               {t('landlordDebtsInvoicesUncollected', { count: summary.totalInvoicesCount })}
             </span>
           </div>
@@ -445,12 +445,12 @@ export default function LandlordDebtsPage() {
         </div>
 
         {/* Overdue Debt */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
+        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordDebtsOverdueDebt')}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-lg bg-warning-soft text-amber-600 flex items-center justify-center font-bold text-xs">
               <Clock className="w-4 h-4" />
             </div>
           </div>
@@ -458,7 +458,7 @@ export default function LandlordDebtsPage() {
             <span className="text-2xl font-black text-amber-600 tracking-tight block">
               {formatCurrency(summary.overdueDebtAmount)}
             </span>
-            <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
+            <span className="text-[11px] text-muted font-medium mt-1 block">
               {t('landlordDebtsOverdueNotice')}
             </span>
           </div>
@@ -466,12 +466,12 @@ export default function LandlordDebtsPage() {
         </div>
 
         {/* Bad Debt (>60 days) */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
+        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordDebtsBadDebt3Months')}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-lg bg-deposit-soft text-purple-600 flex items-center justify-center font-bold text-xs">
               <ShieldAlert className="w-4 h-4" />
             </div>
           </div>
@@ -479,7 +479,7 @@ export default function LandlordDebtsPage() {
             <span className="text-2xl font-black text-purple-600 tracking-tight block">
               {formatCurrency(summary.badDebtAmount)}
             </span>
-            <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
+            <span className="text-[11px] text-muted font-medium mt-1 block">
               {t('landlordDebtsBadDebtRooms', { count: summary.agingDistribution.over60Days })}
             </span>
           </div>
@@ -487,19 +487,19 @@ export default function LandlordDebtsPage() {
         </div>
 
         {/* Debtor Rooms */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
+        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordDebtsDebtorRooms')}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-lg bg-primary-soft text-teal-600 flex items-center justify-center font-bold text-xs">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-black text-zinc-900 tracking-tight block">
+            <span className="text-2xl font-black text-foreground tracking-tight block">
               {summary.debtorRoomsCount}{' '}
-              <span className="text-sm font-bold text-zinc-500">{t('landlordDebtsRoomUnit')}</span>
+              <span className="text-sm font-bold text-muted">{t('landlordDebtsRoomUnit')}</span>
             </span>
             <span className="text-[11px] text-teal-600 font-bold mt-1 block">
               {t('landlordDebtsAtBuilding', {
@@ -512,7 +512,7 @@ export default function LandlordDebtsPage() {
       </div>
 
       {/* ─── Filter & Control Bar ─────────────────────────────────────────────── */}
-      <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+      <div className="bg-card p-4 rounded-2xl border border-line shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
         {/* Search Input */}
           <SearchInput
             value={searchTerm}
@@ -522,7 +522,7 @@ export default function LandlordDebtsPage() {
             }}
             placeholder={t('landlordDebtsSearchPlaceholder')}
             containerClassName="w-full space-y-0"
-            className="w-full text-xs font-semibold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl"
+            className="w-full text-xs font-semibold text-foreground bg-surface border border-line rounded-xl"
           />
 
         {/* Filters and View Switcher */}
@@ -542,7 +542,7 @@ export default function LandlordDebtsPage() {
               { value: 'bad_debt', label: t('landlordDebtsFilterBadDebt') },
             ]}
             containerClassName="w-auto space-y-0"
-            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl"
+            className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
           />
 
           {/* Sort By */}
@@ -558,11 +558,11 @@ export default function LandlordDebtsPage() {
               { value: 'room_asc', label: t('landlordDebtsSortRoomAsc') },
             ]}
             containerClassName="w-auto space-y-0"
-            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl"
+            className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
           />
 
           {/* View Mode Toggle per Rule #9 */}
-          <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
+          <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
             <Button
               type="button"
               variant="ghost"
@@ -587,20 +587,20 @@ export default function LandlordDebtsPage() {
 
       {/* ─── Loading / Empty / Content ───────────────────────────────────────── */}
       {isLoading ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
+        <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
           <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-3" />
-          <p className="text-sm font-bold text-zinc-700">{t('landlordDebtsLoadingTitle')}</p>
-          <p className="text-xs text-zinc-400 mt-1">{t('landlordDebtsLoadingDesc')}</p>
+          <p className="text-sm font-bold text-foreground/90">{t('landlordDebtsLoadingTitle')}</p>
+          <p className="text-xs text-muted mt-1">{t('landlordDebtsLoadingDesc')}</p>
         </div>
       ) : debtRooms.length === 0 ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
+        <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
+          <div className="w-16 h-16 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h3 className="text-base font-black text-zinc-900">
+          <h3 className="text-base font-black text-foreground">
             {t('landlordDebtsEmptyFilteredTitle')}
           </h3>
-          <p className="text-xs text-zinc-500 max-w-md mt-1.5">
+          <p className="text-xs text-muted max-w-md mt-1.5">
             {searchTerm || durationFilter !== 'all'
               ? t('landlordDebtsEmptyFilteredDesc')
               : t('landlordDebtsEmptyAllPaidDesc')}
@@ -630,12 +630,12 @@ export default function LandlordDebtsPage() {
             const is2Months = room.agingCategory === '2_months'
 
             const badgeBg = isBadDebt
-              ? 'bg-purple-100 text-purple-700 border-purple-200'
+              ? 'bg-deposit-soft text-deposit border-deposit-subtle'
               : is2Months
-                ? 'bg-rose-100 text-rose-700 border-rose-200'
+                ? 'bg-danger-soft text-danger border-danger-subtle'
                 : room.maxAgingDays > 0
-                  ? 'bg-amber-100 text-amber-700 border-amber-200'
-                  : 'bg-sky-100 text-sky-700 border-sky-200'
+                  ? 'bg-warning-soft text-warning border-warning-subtle'
+                  : 'bg-vacant-soft text-vacant border-vacant-subtle'
 
             const badgeLabel = isBadDebt
               ? t('landlordDebtsBadgeBadDebt')
@@ -648,12 +648,12 @@ export default function LandlordDebtsPage() {
             return (
               <div
                 key={room.roomId}
-                className={`bg-white rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden group ${
-                  isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-zinc-200'
+                className={`bg-card rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden group ${
+                  isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-line'
                 }`}
               >
                 {/* Card Header */}
-                <div className="p-5 border-b border-zinc-100">
+                <div className="p-5 border-b border-line">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <Checkbox
@@ -664,16 +664,16 @@ export default function LandlordDebtsPage() {
                       />
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-base font-black text-zinc-900 group-hover:text-teal-600 transition-colors">
+                          <span className="text-base font-black text-foreground group-hover:text-teal-600 transition-colors">
                             {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
                           </span>
                           {room.floor !== null && (
-                            <span className="text-[10px] font-bold text-zinc-500 px-2 py-0.5 bg-zinc-100 rounded-md">
+                            <span className="text-[10px] font-bold text-muted px-2 py-0.5 bg-card-hover rounded-md">
                               {t('landlordDebtsFloorPrefix', { floor: room.floor })}
                             </span>
                           )}
                         </div>
-                        <span className="text-[11px] text-zinc-400 font-medium block">
+                        <span className="text-[11px] text-muted font-medium block">
                           {room.buildingName}
                         </span>
                       </div>
@@ -687,25 +687,25 @@ export default function LandlordDebtsPage() {
                   </div>
 
                   {/* Tenant Details */}
-                  <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-card-hover text-muted flex items-center justify-center font-bold text-xs">
                         <User className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-zinc-800 block">
+                        <span className="text-xs font-bold text-foreground block">
                           {room.tenant?.name || t('landlordDebtsNoTenant')}
                         </span>
                         {room.tenant?.phone ? (
                           <a
                             href={`tel:${room.tenant.phone}`}
-                            className="text-[11px] text-zinc-500 hover:text-teal-600 flex items-center gap-1 font-semibold"
+                            className="text-[11px] text-muted hover:text-teal-600 flex items-center gap-1 font-semibold"
                           >
                             <Phone className="w-3 h-3" />
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-[11px] text-zinc-400">
+                          <span className="text-[11px] text-muted">
                             {t('landlordDebtsNoPhone')}
                           </span>
                         )}
@@ -713,10 +713,10 @@ export default function LandlordDebtsPage() {
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                         {t('landlordDebtsInvoicesCount')}
                       </span>
-                      <span className="text-xs font-black text-zinc-700">
+                      <span className="text-xs font-black text-foreground/90">
                         {t('landlordDebtsInvoicesUnit', { count: room.invoicesCount })}
                       </span>
                     </div>
@@ -724,9 +724,9 @@ export default function LandlordDebtsPage() {
                 </div>
 
                 {/* Card Financial Breakdown */}
-                <div className="p-5 bg-zinc-50/60 space-y-3">
+                <div className="p-5 bg-surface/60 space-y-3">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordDebtsTotalDebtLabel')}
                     </span>
                     <span className="text-lg font-black text-rose-600 tracking-tight">
@@ -736,7 +736,7 @@ export default function LandlordDebtsPage() {
 
                   {room.overdueAmount > 0 && (
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-medium">
+                      <span className="text-muted font-medium">
                         {t('landlordDebtsOverduePartLabel')}
                       </span>
                       <span className="font-extrabold text-amber-600">
@@ -746,19 +746,19 @@ export default function LandlordDebtsPage() {
                   )}
 
                   {/* Oldest Debt Date */}
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-200/60">
+                  <div className="flex items-center justify-between text-[11px] text-muted pt-2 border-t border-line">
                     <span className="flex items-center gap-1 font-medium">
-                      <Calendar className="w-3 h-3 text-zinc-400" />
+                      <Calendar className="w-3 h-3 text-muted" />
                       {t('landlordDebtsOldestDebtDate')}
                     </span>
-                    <span className="font-bold text-zinc-700">
+                    <span className="font-bold text-foreground/90">
                       {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
                     </span>
                   </div>
                 </div>
 
                 {/* Card Actions */}
-                <div className="p-4 bg-white border-t border-zinc-100 flex items-center gap-2">
+                <div className="p-4 bg-card border-t border-line flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -766,7 +766,7 @@ export default function LandlordDebtsPage() {
                     onClick={() => setInvoicesModalRoom(room)}
                     className="flex-1"
                   >
-                    <Eye className="w-3.5 h-3.5 text-zinc-500" />
+                    <Eye className="w-3.5 h-3.5 text-muted" />
                     <span>{t('landlordDebtsBtnViewInvoices')}</span>
                   </Button>
 
@@ -792,10 +792,10 @@ export default function LandlordDebtsPage() {
         </div>
       ) : (
         /* ─── Table View (Rule #9) ────────────────────────────────────────────── */
-        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+        <div className="bg-card rounded-2xl border border-line overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-50/80 text-zinc-500 uppercase tracking-wider font-extrabold border-b border-zinc-200 text-[11px]">
+              <thead className="bg-surface/80 text-muted uppercase tracking-wider font-extrabold border-b border-line text-[11px]">
                 <tr>
                   <th className="p-4 w-10 text-center">
                     <Checkbox
@@ -815,19 +815,19 @@ export default function LandlordDebtsPage() {
                   <th className="p-4 text-center">{t('landlordDebtsThActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-line">
                 {debtRooms.map(room => {
                   const isSelected = selectedRoomIds.includes(room.roomId)
                   const isBadDebt = room.agingCategory === 'bad_debt'
                   const is2Months = room.agingCategory === '2_months'
 
                   const badgeBg = isBadDebt
-                    ? 'bg-purple-100 text-purple-700 border-purple-200'
+                    ? 'bg-deposit-soft text-deposit border-deposit-subtle'
                     : is2Months
-                      ? 'bg-rose-100 text-rose-700 border-rose-200'
+                      ? 'bg-danger-soft text-danger border-danger-subtle'
                       : room.maxAgingDays > 0
-                        ? 'bg-amber-100 text-amber-700 border-amber-200'
-                        : 'bg-sky-100 text-sky-700 border-sky-200'
+                        ? 'bg-warning-soft text-warning border-warning-subtle'
+                        : 'bg-vacant-soft text-vacant border-vacant-subtle'
 
                   const badgeLabel = isBadDebt
                     ? t('landlordDebtsBadDebtStatus')
@@ -841,7 +841,7 @@ export default function LandlordDebtsPage() {
                     <tr
                       key={room.roomId}
                       className={`hover:bg-zinc-50/80 transition-colors ${
-                        isSelected ? 'bg-teal-50/40' : ''
+                        isSelected ? 'bg-primary-soft' : ''
                       }`}
                     >
                       <td className="p-4 text-center">
@@ -855,19 +855,19 @@ export default function LandlordDebtsPage() {
 
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-black text-xs">
+                          <div className="w-8 h-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center font-black text-xs">
                             {room.roomNumber}
                           </div>
                           <div>
-                            <span className="font-bold text-zinc-900 block">
+                            <span className="font-bold text-foreground block">
                               {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
                               {room.floor !== null && (
-                                <span className="text-[10px] text-zinc-400 font-normal ml-1.5">
+                                <span className="text-[10px] text-muted font-normal ml-1.5">
                                   ({t('landlordDebtsFloorPrefix', { floor: room.floor })})
                                 </span>
                               )}
                             </span>
-                            <span className="text-[11px] text-zinc-500 font-medium">
+                            <span className="text-[11px] text-muted font-medium">
                               {room.tenant?.name || t('landlordDebtsNoTenant')}
                             </span>
                           </div>
@@ -878,12 +878,12 @@ export default function LandlordDebtsPage() {
                         {room.tenant?.phone ? (
                           <a
                             href={`tel:${room.tenant.phone}`}
-                            className="text-xs text-zinc-700 hover:text-teal-600 font-semibold"
+                            className="text-xs text-foreground/90 hover:text-teal-600 font-semibold"
                           >
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-zinc-400">-</span>
+                          <span className="text-muted">-</span>
                         )}
                       </td>
 
@@ -899,11 +899,11 @@ export default function LandlordDebtsPage() {
                         </span>
                       </td>
 
-                      <td className="p-4 text-center font-bold text-zinc-700">
+                      <td className="p-4 text-center font-bold text-foreground/90">
                         {t('landlordDebtsMonthsCount', { count: room.invoicesCount })}
                       </td>
 
-                      <td className="p-4 text-zinc-600 font-medium">
+                      <td className="p-4 text-muted font-medium">
                         {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
                       </td>
 
@@ -953,8 +953,8 @@ export default function LandlordDebtsPage() {
 
       {/* ─── Rule #9 Pagination Bar ───────────────────────────────────────────── */}
       {debtRooms.length > 0 && (
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
+        <div className="bg-card p-4 rounded-2xl border border-line shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs text-muted font-medium">
             <span>{t('landlordDebtsPaginationShowing')}</span>
             <NumberInput
               min={1}
@@ -966,13 +966,13 @@ export default function LandlordDebtsPage() {
                 setCurrentPage(1)
               }}
               containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-teal-500 text-xs h-7"
+              className="w-16 text-center font-bold text-foreground bg-surface border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-teal-500 text-xs h-7"
             />
             <span>{t('landlordDebtsPaginationPerPage')}</span>
             <span className="text-zinc-300">|</span>
             <span>
               {startIndex} - {endIndex} {t('landlordDebtsPaginationOf')}{' '}
-              <span className="font-bold text-zinc-800">{totalRecords}</span>{' '}
+              <span className="font-bold text-foreground">{totalRecords}</span>{' '}
               {t('landlordDebtsPaginationRooms')}
             </span>
           </div>
@@ -1021,17 +1021,17 @@ export default function LandlordDebtsPage() {
       {/* ─── Modal 1: Invoices List for Room ──────────────────────────────────── */}
       {invoicesModalRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-card w-full max-w-2xl rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-6 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+            <div className="p-6 bg-surface border-b border-line flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <Receipt className="w-5 h-5 text-teal-600" />
-                  <h3 className="text-lg font-black text-zinc-900">
+                  <h3 className="text-lg font-black text-foreground">
                     {t('landlordDebtsModalInvoicesTitle', { room: invoicesModalRoom.roomNumber })}
                   </h3>
                 </div>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   {t('landlordDebtsModalTenant', {
                     name: invoicesModalRoom.tenant?.name || (isEn ? 'None' : 'Chưa có tên'),
                   })}{' '}
@@ -1054,16 +1054,16 @@ export default function LandlordDebtsPage() {
 
             {/* Invoices List */}
             <div className="p-6 overflow-y-auto space-y-4">
-              <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-extrabold text-rose-700 uppercase tracking-wider block">
+                  <span className="text-xs font-extrabold text-danger uppercase tracking-wider block">
                     {t('landlordDebtsModalTotalOutstanding')}
                   </span>
                   <span className="text-2xl font-black text-rose-600">
                     {formatCurrency(invoicesModalRoom.totalDebtAmount)}
                   </span>
                 </div>
-                <span className="px-3 py-1 bg-white text-rose-600 font-black text-xs rounded-full border border-rose-200 shadow-sm">
+                <span className="px-3 py-1 bg-card text-rose-600 font-black text-xs rounded-full border border-danger-subtle shadow-sm">
                   {t('landlordDebtsModalInvoicesSummary', {
                     count: invoicesModalRoom.invoicesCount,
                   })}
@@ -1074,18 +1074,18 @@ export default function LandlordDebtsPage() {
                 {invoicesModalRoom.invoices.map(inv => (
                   <div
                     key={inv.id}
-                    className="p-4 rounded-2xl border border-zinc-200 bg-white hover:border-teal-500/50 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    className="p-4 rounded-2xl border border-line bg-card hover:border-teal-500/50 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-zinc-900">
+                        <span className="font-black text-sm text-foreground">
                           {t('landlordDebtsModalPeriod', { period: inv.period })}
                         </span>
                         <span
                           className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
                             inv.status === 'overdue'
-                              ? 'bg-rose-100 text-rose-700 border-rose-200'
-                              : 'bg-amber-100 text-amber-700 border-amber-200'
+                              ? 'bg-danger-soft text-danger border-danger-subtle'
+                              : 'bg-warning-soft text-warning border-warning-subtle'
                           }`}
                         >
                           {inv.status === 'overdue'
@@ -1093,12 +1093,12 @@ export default function LandlordDebtsPage() {
                             : t('landlordDebtsModalStatusUncollected')}
                         </span>
                         {inv.agingDays > 0 && (
-                          <span className="text-[10px] font-bold text-zinc-400">
+                          <span className="text-[10px] font-bold text-muted">
                             {t('landlordDebtsModalOverdueDays', { days: inv.agingDays })}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-zinc-500 mt-1 block">
+                      <span className="text-xs text-muted mt-1 block">
                         {t('landlordDebtsModalDueDate', {
                           date: new Date(inv.dueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN'),
                         })}
@@ -1136,7 +1136,7 @@ export default function LandlordDebtsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -1153,7 +1153,7 @@ export default function LandlordDebtsPage() {
       {/* ─── Modal 2: Send Debt Reminder ─────────────────────────────────────── */}
       {reminderModalRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col">
+          <div className="bg-card w-full max-w-lg rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1179,32 +1179,32 @@ export default function LandlordDebtsPage() {
             {/* Modal Body */}
             <div className="p-6 space-y-4">
               {reminderSuccessMessage && (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
+                <div className="p-4 bg-success-soft border border-success-subtle text-success rounded-2xl text-xs font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <span>{reminderSuccessMessage}</span>
                 </div>
               )}
 
               {/* Tenant info banner */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl grid grid-cols-2 gap-3 text-xs">
+              <div className="p-4 bg-surface border border-line rounded-2xl grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsModalRecipient')}
                   </span>
-                  <span className="font-extrabold text-zinc-800 block">
+                  <span className="font-extrabold text-foreground block">
                     {reminderModalRoom.tenant?.name || (isEn ? 'No name' : 'Chưa có tên')}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsModalRecipientPhone')}
                   </span>
-                  <span className="font-extrabold text-zinc-800 block">
+                  <span className="font-extrabold text-foreground block">
                     {reminderModalRoom.tenant?.phone || (isEn ? 'None' : 'Chưa có')}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsTotalDebt')}
                   </span>
                   <span className="font-black text-rose-600 block text-sm">
@@ -1212,10 +1212,10 @@ export default function LandlordDebtsPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsInvoicesCount')}
                   </span>
-                  <span className="font-extrabold text-zinc-800 block">
+                  <span className="font-extrabold text-foreground block">
                     {t('landlordDebtsModalInvoicesSummary', {
                       count: reminderModalRoom.invoicesCount,
                     })}
@@ -1235,14 +1235,14 @@ export default function LandlordDebtsPage() {
                   }}
                   placeholder={t('landlordDebtsModalMemoPlaceholder')}
                   containerClassName="w-full space-y-1.5"
-                  className="w-full px-3.5 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full px-3.5 py-2 text-xs text-foreground border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
 
               {/* Message Preview */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <label className="text-[11px] font-bold text-muted uppercase tracking-wider">
                     {t('landlordDebtsModalTemplateTitle')}
                   </label>
                   <Button
@@ -1264,14 +1264,14 @@ export default function LandlordDebtsPage() {
                     )}
                   </Button>
                 </div>
-                <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs text-zinc-700 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto leading-relaxed">
+                <div className="p-3.5 bg-surface border border-line rounded-2xl text-xs text-foreground/90 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto leading-relaxed">
                   {buildReminderText(reminderModalRoom, reminderNote)}
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end gap-2.5">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1303,11 +1303,11 @@ export default function LandlordDebtsPage() {
       {/* ─── Modal 3: Manual Payment Recording ────────────────────────────────── */}
       {paymentModalInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col">
-            <div className="p-6 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+          <div className="bg-card w-full max-w-md rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col">
+            <div className="p-6 bg-surface border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-black text-zinc-900">
+                <h3 className="text-base font-black text-foreground">
                   {t('landlordDebtsModalPaymentTitle', { room: paymentModalInvoice.roomNumber })}
                 </h3>
               </div>
@@ -1322,17 +1322,17 @@ export default function LandlordDebtsPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
-                <span className="text-[11px] font-extrabold text-emerald-700 uppercase block">
+              <div className="p-4 bg-success-soft rounded-2xl border border-success-subtle text-center">
+                <span className="text-[11px] font-extrabold text-success uppercase block">
                   {t('landlordDebtsModalPaymentAmount', { period: paymentModalInvoice.period })}
                 </span>
-                <span className="text-2xl font-black text-emerald-700 block mt-1">
+                <span className="text-2xl font-black text-success block mt-1">
                   {formatCurrency(paymentModalInvoice.totalAmount)}
                 </span>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">
+                <label className="text-xs font-bold text-foreground/90">
                   {t('landlordDebtsModalPaymentMethod')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1372,12 +1372,12 @@ export default function LandlordDebtsPage() {
                   }}
                   placeholder={t('landlordDebtsModalPaymentNotePlaceholder')}
                   containerClassName="w-full space-y-1.5"
-                  className="w-full px-3 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
+                  className="w-full px-3 py-2 text-xs text-foreground border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end gap-2.5">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
                 type="button"
                 variant="outline"
@@ -1409,15 +1409,15 @@ export default function LandlordDebtsPage() {
       {/* ─── Rule #10: Unsaved Changes Confirmation Modal ─────────────────────── */}
       {confirmCloseTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-zinc-200 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <div className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-line space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-base font-black text-zinc-900">
+              <h4 className="text-base font-black text-foreground">
                 {t('landlordDebtsModalConfirmDiscardTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {t('landlordDebtsModalConfirmDiscardDesc')}
               </p>
             </div>

@@ -337,10 +337,10 @@ export default function AssetsPage() {
       {/* Top Bar / Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
             {t('landlordAssetsPageTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
+          <p className="text-xs sm:text-sm text-muted mt-0.5 font-medium">
             {t('landlordAssetsPageSubtitle')}
           </p>
         </div>
@@ -392,7 +392,7 @@ export default function AssetsPage() {
               )}
             </div>
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordAssetsBannerSub')}
             </p>
           </div>
@@ -450,7 +450,7 @@ export default function AssetsPage() {
       </div>
 
       {/* Category Tabs & Financial Valuation Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-line shadow-xs">
         {/* Category Pills */}
         <ChipGroup
           scrollable
@@ -472,7 +472,7 @@ export default function AssetsPage() {
 
         {/* Financial Valuation Summary */}
         <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">
-          <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs font-black text-emerald-800 flex items-center gap-1.5">
+          <div className="px-3 py-1.5 bg-success-soft border border-success-subtle rounded-xl text-xs font-black text-success flex items-center gap-1.5">
             <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
             <span>
               {t('landlordAssetsOriginalValueLabel')}{' '}
@@ -480,7 +480,7 @@ export default function AssetsPage() {
             </span>
           </div>
 
-          <div className="px-3 py-1.5 bg-blue-50 border border-blue-200/80 rounded-xl text-xs font-black text-blue-800 flex items-center gap-1.5">
+          <div className="px-3 py-1.5 bg-info-soft border border-info-subtle rounded-xl text-xs font-black text-info flex items-center gap-1.5">
             <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
             <span>
               {t('landlordAssetsCurrentValueLabel')} {totalCurrentValueSum.toLocaleString('vi-VN')}{' '}
@@ -488,7 +488,7 @@ export default function AssetsPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
             <Button
               type="button"
               variant={viewMode === 'grid' ? 'white' : 'ghost'}
@@ -520,9 +520,9 @@ export default function AssetsPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden">
+      <div className="bg-card border border-line rounded-2xl shadow-xs overflow-hidden">
         {/* Filter Toolbar */}
-        <div className="p-3.5 sm:p-4 border-b border-zinc-200 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-zinc-50/50">
+        <div className="p-3.5 sm:p-4 border-b border-line flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-surface/50">
           <SearchInput
             placeholder={t('landlordAssetsSearchPh')}
             value={searchQuery}
@@ -554,15 +554,15 @@ export default function AssetsPage() {
 
         {/* Loading Indicator */}
         {isLoading ? (
-          <div className="py-20 text-center text-zinc-500 font-medium">
+          <div className="py-20 text-center text-muted font-medium">
             <Loader2 className="w-8 h-8 mx-auto text-[#2AC1BC] animate-spin mb-3" />
-            <p className="text-xs font-bold text-zinc-500">{t('landlordAssetsLoading')}</p>
+            <p className="text-xs font-bold text-muted">{t('landlordAssetsLoading')}</p>
           </div>
         ) : viewMode === 'grid' ? (
           /* GRID VIEW */
           <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {assets.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-zinc-500 font-medium">
+              <div className="col-span-full py-12 text-center text-muted font-medium">
                 <Package className="w-10 h-10 mx-auto text-zinc-300 mb-2" />
                 {t('landlordAssetsEmptyTitle')}
               </div>
@@ -577,12 +577,12 @@ export default function AssetsPage() {
                   <div
                     key={asset.id}
                     onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                    className="bg-white rounded-2xl border border-zinc-200/80 p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all space-y-4 cursor-pointer relative group flex flex-col justify-between"
+                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all space-y-4 cursor-pointer relative group flex flex-col justify-between"
                   >
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-zinc-100 text-zinc-700 border border-zinc-200">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-card-hover text-foreground/90 border border-line">
                             {getCategoryLabel(asset.category)}
                           </span>
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30">
@@ -594,10 +594,10 @@ export default function AssetsPage() {
                             asset.condition === 'good'
                               ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
                               : asset.condition === 'new'
-                                ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                ? 'bg-info-soft text-blue-600 border-info-subtle'
                                 : asset.condition === 'under_repair'
-                                  ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse'
-                                  : 'bg-rose-50 text-rose-600 border-rose-200'
+                                  ? 'bg-accent-soft text-[#FF6B35] border-accent-subtle animate-pulse'
+                                  : 'bg-danger-soft text-rose-600 border-danger-subtle'
                           }`}
                         >
                           {getStatusLabel(asset.condition)}
@@ -605,42 +605,42 @@ export default function AssetsPage() {
                       </div>
 
                       <div>
-                        <h3 className="text-base font-black text-zinc-900 group-hover:text-[#2AC1BC] transition-colors leading-snug">
+                        <h3 className="text-base font-black text-foreground group-hover:text-[#2AC1BC] transition-colors leading-snug">
                           {asset.name}
                         </h3>
                         {asset.quantity > 1 && (
-                          <span className="text-[11px] font-bold text-zinc-400 block mt-0.5">
+                          <span className="text-[11px] font-bold text-muted block mt-0.5">
                             {t('landlordAssetsQuantityCount', { count: asset.quantity })}
                           </span>
                         )}
                       </div>
 
-                      <div className="p-3 bg-zinc-50 rounded-xl space-y-2 text-xs">
-                        <div className="flex justify-between items-center text-zinc-600">
-                          <span className="text-zinc-400 font-medium">
+                      <div className="p-3 bg-surface rounded-xl space-y-2 text-xs">
+                        <div className="flex justify-between items-center text-muted">
+                          <span className="text-muted font-medium">
                             {t('landlordAssetsLocation')}
                           </span>
-                          <span className="font-bold text-zinc-900 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
+                          <span className="font-bold text-foreground bg-card px-2 py-0.5 rounded-md border border-line">
                             {asset.roomName || asset.location}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center text-zinc-600">
-                          <span className="text-zinc-400 font-medium">
+                        <div className="flex justify-between items-center text-muted">
+                          <span className="text-muted font-medium">
                             {t('landlordAssetsOriginalValueLabel')}
                           </span>
-                          <span className="font-bold text-zinc-900">
+                          <span className="font-bold text-foreground">
                             {asset.purchasePrice
                               ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
                               : '0 ₫'}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center text-zinc-600">
-                          <span className="text-zinc-400 font-medium">
+                        <div className="flex justify-between items-center text-muted">
+                          <span className="text-muted font-medium">
                             {t('landlordAssetsCurrentValueLabel')}
                           </span>
                           <span className="font-black text-emerald-600">
                             {dep.currentValue.toLocaleString('vi-VN')} ₫{' '}
-                            <span className="text-[10px] text-zinc-400 font-normal">
+                            <span className="text-[10px] text-muted font-normal">
                               ({dep.remainingPercent}%)
                             </span>
                           </span>
@@ -648,7 +648,7 @@ export default function AssetsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-zinc-100 flex items-center justify-between gap-2 text-xs">
+                    <div className="pt-2 border-t border-line flex items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-1">
                         <Button
                           type="button"
@@ -682,7 +682,7 @@ export default function AssetsPage() {
           /* LIST VIEW TABLE */
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left min-w-[900px]">
-              <thead className="bg-zinc-50 text-zinc-500 uppercase font-extrabold border-b border-zinc-200 whitespace-nowrap">
+              <thead className="bg-surface text-muted uppercase font-extrabold border-b border-line whitespace-nowrap">
                 <tr>
                   <th className="px-4 sm:px-6 py-3.5">{t('landlordAssetsFieldSku')}</th>
                   <th className="px-4 sm:px-6 py-3.5">{t('landlordAssetsColName')}</th>
@@ -706,10 +706,10 @@ export default function AssetsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium">
+              <tbody className="divide-y divide-line font-medium">
                 {assets.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
+                    <td colSpan={8} className="px-6 py-8 text-center text-muted">
                       {t('landlordAssetsEmptyTitle')}
                     </td>
                   </tr>
@@ -731,23 +731,23 @@ export default function AssetsPage() {
                             {asset.code}
                           </span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground group-hover:text-[#2AC1BC] transition-colors whitespace-nowrap">
                           {asset.name}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 text-zinc-500 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 text-muted whitespace-nowrap">
                           {getCategoryLabel(asset.category)}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-800 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground whitespace-nowrap">
                           {asset.roomName || asset.location}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-900 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground whitespace-nowrap">
                           {asset.purchasePrice
                             ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
                             : '0 ₫'}
                         </td>
                         <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 whitespace-nowrap">
                           {dep.currentValue.toLocaleString('vi-VN')} ₫
-                          <span className="text-[10px] text-zinc-400 font-medium block">
+                          <span className="text-[10px] text-muted font-medium block">
                             {t('landlordAssetsRemaining')} {dep.remainingPercent}%
                           </span>
                         </td>
@@ -757,10 +757,10 @@ export default function AssetsPage() {
                               asset.condition === 'good'
                                 ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
                                 : asset.condition === 'new'
-                                  ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                  ? 'bg-info-soft text-blue-600 border-info-subtle'
                                   : asset.condition === 'under_repair'
-                                    ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse'
-                                    : 'bg-rose-50 text-rose-600 border-rose-200'
+                                    ? 'bg-accent-soft text-[#FF6B35] border-accent-subtle animate-pulse'
+                                    : 'bg-danger-soft text-rose-600 border-danger-subtle'
                             }`}
                           >
                             {getStatusLabel(asset.condition)}
@@ -791,7 +791,7 @@ export default function AssetsPage() {
                             </Button>
                             <Link
                               href={`/landlord/assets/${asset.id}`}
-                              className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1"
+                              className="px-2.5 py-1 bg-accent-soft text-[#FF6B35] border border-accent-subtle rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1"
                             >
                               <Eye className="w-3 h-3" /> {t('landlordAssetsBtnViewDetail')}
                             </Link>
@@ -808,9 +808,9 @@ export default function AssetsPage() {
       </div>
 
       {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
+          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
             <span>{t('landlordAssetsShowing')}</span>
             <NumberInput
               min={1}
@@ -822,7 +822,7 @@ export default function AssetsPage() {
                 setCurrentPage(1)
               }}
               containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
+              className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
             />
             <span>{t('landlordAssetsPerPage')}</span>
           </div>
@@ -830,15 +830,15 @@ export default function AssetsPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {totalRecords === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
             </span>{' '}
             -{' '}
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {Math.min(currentPage * itemsPerPage, totalRecords)}
             </span>{' '}
             {t('landlordAssetsOfTotal')}{' '}
-            <span className="font-extrabold text-zinc-800">{totalRecords}</span>{' '}
+            <span className="font-extrabold text-foreground">{totalRecords}</span>{' '}
             {t('landlordAssetsAssetsUnit')}
           </div>
         </div>
@@ -896,19 +896,19 @@ export default function AssetsPage() {
             if (e.target === e.currentTarget) handleCloseModal()
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]">
-            <div className="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+          <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
+            <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-xl">
+                <div className="p-2 bg-accent-soft text-[#FF6B35] rounded-xl">
                   <Package className="w-5 h-5 text-[#2AC1BC]" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base sm:text-lg text-zinc-900">
+                  <h3 className="font-black text-base sm:text-lg text-foreground">
                     {selectedAsset
                       ? `${t('landlordAssetsModalEditTitle')} [${selectedAsset.code}]`
                       : t('landlordAssetsModalAddTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-medium">{t('landlordAssetsModalSub')}</p>
+                  <p className="text-xs text-muted font-medium">{t('landlordAssetsModalSub')}</p>
                 </div>
               </div>
               <Button
@@ -1059,7 +1059,7 @@ export default function AssetsPage() {
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
+            <div className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
               <Button
                 type="button"
                 variant="outline"

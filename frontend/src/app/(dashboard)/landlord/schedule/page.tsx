@@ -560,15 +560,15 @@ export default function WorkforceSchedulePage() {
   const getShiftBadgeStyle = (shiftName: string) => {
     const lower = (shiftName || '').toLowerCase()
     if (lower.includes('sáng')) {
-      return 'bg-amber-50 text-amber-700 border-amber-200'
+      return 'bg-warning-soft text-warning border-warning-subtle'
     }
     if (lower.includes('chiều')) {
-      return 'bg-blue-50 text-blue-700 border-blue-200'
+      return 'bg-info-soft text-info border-info-subtle'
     }
     if (lower.includes('đêm')) {
-      return 'bg-purple-50 text-purple-700 border-purple-200'
+      return 'bg-deposit-soft text-deposit border-deposit-subtle'
     }
-    return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    return 'bg-success-soft text-success border-success-subtle'
   }
 
   // ─── Rule #9: List View Pagination Calculation ─────────────────────────
@@ -596,8 +596,8 @@ export default function WorkforceSchedulePage() {
         <div
           className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
             toastMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-emerald-500/10'
-              : 'bg-rose-50 text-rose-800 border-rose-200 shadow-rose-500/10'
+              ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
+              : 'bg-danger-soft text-danger border-danger-subtle shadow-rose-500/10'
           }`}
         >
           {toastMessage.type === 'success' ? (
@@ -616,12 +616,12 @@ export default function WorkforceSchedulePage() {
             <CalendarDays className="w-4 h-4" />
             <span> · {t('landlordScheduleStaffManagementTag')}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t('landlordScheduleTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-muted mt-0.5">
             {t('landlordScheduleSubtitleFull')} ({' '}
-            <strong className="text-zinc-800">
+            <strong className="text-foreground">
               {activeBuilding?.name || t('landlordScheduleCurrentProperty')}
             </strong>
             )
@@ -636,7 +636,7 @@ export default function WorkforceSchedulePage() {
               setIsShiftsModalOpen(true)
             }}
           >
-            <Settings className="w-3.5 h-3.5 text-zinc-500" />
+            <Settings className="w-3.5 h-3.5 text-muted" />
             <span>{t('landlordScheduleBtnShiftTemplates')}</span>
           </Button>
 
@@ -665,23 +665,23 @@ export default function WorkforceSchedulePage() {
 
       {/* ─── Metric Summary Cards ───────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between text-muted mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {t('landlordScheduleStatTotalShifts')}
             </span>
             <Layers className="w-4 h-4 text-[#2AC1BC]" />
           </div>
-          <div className="text-xl sm:text-2xl font-black text-zinc-900">
+          <div className="text-xl sm:text-2xl font-black text-foreground">
             {summary.totalSchedules}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-muted mt-0.5">
             {t('landlordScheduleStatWithinTimeframe')}
           </p>
         </div>
 
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between text-muted mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {t('landlordScheduleStatusAssigned')}
             </span>
@@ -690,13 +690,13 @@ export default function WorkforceSchedulePage() {
           <div className="text-xl sm:text-2xl font-black text-emerald-600">
             {summary.scheduledCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-muted mt-0.5">
             {t('landlordScheduleStatReadyForDuty')}
           </p>
         </div>
 
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between text-muted mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {t('landlordScheduleStatRecurringShifts')}
             </span>
@@ -705,27 +705,27 @@ export default function WorkforceSchedulePage() {
           <div className="text-xl sm:text-2xl font-black text-blue-600">
             {summary.recurringCount}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-muted mt-0.5">
             {t('landlordScheduleStatWeeklyRecurring')}
           </p>
         </div>
 
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
+        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between text-muted mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               {t('landlordScheduleStatAdhocShifts')}
             </span>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-xl sm:text-2xl font-black text-amber-600">{summary.adhocCount}</div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
+          <p className="text-[11px] text-muted mt-0.5">
             {t('landlordScheduleStatOnDemand')}
           </p>
         </div>
       </div>
 
       {/* ─── Control Bar: Date Navigator, Filters & View Mode Switcher ───── */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Week Date Navigator */}
           <div className="flex items-center gap-2">
@@ -755,7 +755,7 @@ export default function WorkforceSchedulePage() {
               <ChevronRight className="w-4 h-4" />
             </Button>
 
-            <div className="flex items-center gap-2 pl-2 text-sm font-bold text-zinc-800">
+            <div className="flex items-center gap-2 pl-2 text-sm font-bold text-foreground">
               <CalendarIcon className="w-4 h-4 text-[#2AC1BC]" />
               <span>{weekRangeLabel}</span>
             </div>
@@ -763,7 +763,7 @@ export default function WorkforceSchedulePage() {
 
           {/* View Mode Switcher (Rule #9) */}
           <div className="flex items-center gap-2 self-end md:self-auto">
-            <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
+            <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
               <Button
                 variant="ghost"
                 size="sm"
@@ -785,7 +785,7 @@ export default function WorkforceSchedulePage() {
         </div>
 
         {/* Filter row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-line">
           <SearchInput
             placeholder={t('landlordScheduleFilterSearchPh')}
             value={searchQuery}
@@ -830,9 +830,9 @@ export default function WorkforceSchedulePage() {
 
       {/* ─── Main Content Views ─────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
+        <div className="bg-card border border-line rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-          <p className="text-xs font-bold text-zinc-500">
+          <p className="text-xs font-bold text-muted">
             {t('landlordScheduleLoading')}
           </p>
         </div>
@@ -847,10 +847,10 @@ export default function WorkforceSchedulePage() {
             return (
               <div
                 key={day.dateString}
-                className={`flex flex-col bg-white border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${
+                className={`flex flex-col bg-card border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${
                   day.isToday
                     ? 'border-[#2AC1BC] ring-2 ring-[#2AC1BC]/20 bg-[#2AC1BC]/[0.01]'
-                    : 'border-zinc-200/90'
+                    : 'border-line'
                 }`}
               >
                 {/* Column Day Header */}
@@ -858,7 +858,7 @@ export default function WorkforceSchedulePage() {
                   className={`p-3 text-center border-b transition-colors ${
                     day.isToday
                       ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 text-[#1fa8a3]'
-                      : 'bg-zinc-50/80 border-zinc-100 text-zinc-700'
+                      : 'bg-surface/80 border-line text-foreground/90'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-1">
@@ -871,10 +871,10 @@ export default function WorkforceSchedulePage() {
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] font-semibold text-zinc-400 mt-0.5">
+                  <div className="text-[11px] font-semibold text-muted mt-0.5">
                     {formatDisplayDate(day.dateString)}
                   </div>
-                  <div className="text-[10px] font-bold text-zinc-400 mt-1">
+                  <div className="text-[10px] font-bold text-muted mt-1">
                     {daySchedules.length} {t('landlordScheduleShiftsCount')}
                   </div>
                 </div>
@@ -883,10 +883,10 @@ export default function WorkforceSchedulePage() {
                 <div className="p-2.5 flex-1 space-y-2 overflow-y-auto max-h-[520px] custom-scrollbar">
                   {daySchedules.length === 0 ? (
                     <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-center p-4">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-300 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-card-hover flex items-center justify-center text-zinc-300 mb-2">
                         <CalendarDays className="w-4 h-4" />
                       </div>
-                      <span className="text-[11px] font-semibold text-zinc-400">
+                      <span className="text-[11px] font-semibold text-muted">
                         {t('landlordScheduleEmptyDay')}
                       </span>
                     </div>
@@ -896,8 +896,8 @@ export default function WorkforceSchedulePage() {
                         key={schedule.id}
                         className={`p-3 rounded-xl border text-left transition-all relative group ${
                           schedule.status === 'canceled'
-                            ? 'bg-zinc-50/60 border-zinc-200 opacity-60 line-through'
-                            : 'bg-white border-zinc-200 hover:border-[#2AC1BC]/60 hover:shadow-md'
+                            ? 'bg-surface/60 border-line opacity-60 line-through'
+                            : 'bg-card border-line hover:border-[#2AC1BC]/60 hover:shadow-md'
                         }`}
                       >
                         {/* Status & Recurring Badge */}
@@ -912,37 +912,37 @@ export default function WorkforceSchedulePage() {
 
                           {schedule.isRecurring ? (
                             <span
-                              className="flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100"
+                              className="flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-info-soft px-1.5 py-0.5 rounded-md border border-info-subtle"
                               title={t('landlordScheduleWeeklyRecurringTitle')}
                             >
                               <Repeat className="w-2.5 h-2.5" />
                               <span>{t('landlordScheduleRepeat')}</span>
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-md">
+                            <span className="text-[10px] font-bold text-muted bg-card-hover px-1.5 py-0.5 rounded-md">
                               {t('landlordScheduleAdhoc')}
                             </span>
                           )}
                         </div>
 
                         {/* Employee info */}
-                        <div className="font-extrabold text-xs text-zinc-900 truncate">
+                        <div className="font-extrabold text-xs text-foreground truncate">
                           {schedule.employeeName}
                         </div>
-                        <div className="text-[10px] text-zinc-400 font-semibold truncate mb-2">
+                        <div className="text-[10px] text-muted font-semibold truncate mb-2">
                           {schedule.positionName || t('landlordScheduleStaffFallback')}
                         </div>
 
                         {/* Working hours */}
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-600 mb-2">
-                          <Clock className="w-3 h-3 text-zinc-400" />
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-muted mb-2">
+                          <Clock className="w-3 h-3 text-muted" />
                           <span>
                             {schedule.startTime} - {schedule.endTime}
                           </span>
                         </div>
 
                         {/* Action Buttons (visible on hover or focus) */}
-                        <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-zinc-100">
+                        <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-line">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -974,16 +974,16 @@ export default function WorkforceSchedulePage() {
         /* ═══════════════════════════════════════════════════════════════════
  VIEW 2: STANDARDIZED LIST / TABLE VIEW (Rule #9)
  ═══════════════════════════════════════════════════════════════════ */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           {schedules.length === 0 ? (
             <div className="py-20 text-center flex flex-col items-center justify-center">
               <div className="w-14 h-14 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-center text-[#2AC1BC] mb-3">
                 <CalendarIcon className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-extrabold text-zinc-900 mb-1">
+              <h3 className="text-base font-extrabold text-foreground mb-1">
                 {t('landlordScheduleEmptyTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+              <p className="text-xs text-muted max-w-sm mx-auto">
                 {t('landlordScheduleEmptyDesc')}
               </p>
               <Button size="xs"
@@ -1000,7 +1000,7 @@ export default function WorkforceSchedulePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-400 font-extrabold uppercase text-[10px] tracking-wider">
+                  <tr className="border-b border-line bg-surface/70 text-muted font-extrabold uppercase text-[10px] tracking-wider">
                     <th className="py-3.5 px-4">{t('landlordScheduleColDate')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColStaff')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColPosition')}</th>
@@ -1011,17 +1011,17 @@ export default function WorkforceSchedulePage() {
                     <th className="py-3.5 px-4 text-right">{t('landlordScheduleColActions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 font-medium text-zinc-700">
+                <tbody className="divide-y divide-line font-medium text-foreground/90">
                   {schedules.map(item => (
                     <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                      <td className="py-3 px-4 font-bold text-zinc-900">
+                      <td className="py-3 px-4 font-bold text-foreground">
                         {formatDisplayDate(item.workDate)}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-extrabold text-zinc-900">{item.employeeName}</div>
-                        <div className="text-[10px] text-zinc-400">{item.employeePhone}</div>
+                        <div className="font-extrabold text-foreground">{item.employeeName}</div>
+                        <div className="text-[10px] text-muted">{item.employeePhone}</div>
                       </td>
-                      <td className="py-3 px-4 text-zinc-500 font-semibold">
+                      <td className="py-3 px-4 text-muted font-semibold">
                         {item.positionName || t('landlordScheduleStaffFallback')}
                       </td>
                       <td className="py-3 px-4">
@@ -1033,28 +1033,28 @@ export default function WorkforceSchedulePage() {
                           {item.shiftName}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-bold text-zinc-700">
+                      <td className="py-3 px-4 font-bold text-foreground/90">
                         {item.startTime} – {item.endTime}
                       </td>
                       <td className="py-3 px-4">
                         {item.isRecurring ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-info-soft px-2 py-0.5 rounded-md border border-info-subtle">
                             <Repeat className="w-2.5 h-2.5" />
                             <span>{t('landlordScheduleWeeklyRecurringBadge')}</span>
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md">
+                          <span className="text-[10px] font-bold text-muted bg-card-hover px-2 py-0.5 rounded-md">
                             {t('landlordScheduleAdhocShiftBadge')}
                           </span>
                         )}
                       </td>
                       <td className="py-3 px-4">
                         {item.status === 'scheduled' ? (
-                          <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded-md border border-emerald-100">
+                          <span className="px-2 py-0.5 text-[10px] font-bold text-success bg-success-soft rounded-md border border-success-subtle">
                             {t('landlordScheduleStatusAssigned')}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 text-[10px] font-bold text-zinc-400 bg-zinc-100 rounded-md">
+                          <span className="px-2 py-0.5 text-[10px] font-bold text-muted bg-card-hover rounded-md">
                             {t('landlordScheduleStatusCanceled')}
                           </span>
                         )}
@@ -1087,8 +1087,8 @@ export default function WorkforceSchedulePage() {
               </table>
 
               {/* Rule #9: Standardized Pagination Bar */}
-              <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
+              <div className="p-4 border-t border-line bg-surface/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-muted font-semibold">
                   <span>{t('landlordSchedulePaginationShowing')}</span>
                   <NumberInput
                     min={1}
@@ -1098,7 +1098,7 @@ export default function WorkforceSchedulePage() {
                       const val = Number(e.target.value)
                       if (val > 0) setListPageSize(val)
                     }}
-                    className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white"
+                    className="w-14 px-2 py-1 text-center font-bold border border-line rounded-lg bg-card"
                   />
                   <span>{t('landlordSchedulePaginationPerPage')}</span>
                   <span className="text-zinc-300">|</span>
@@ -1175,21 +1175,21 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
                   <Repeat className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalRecurringTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordScheduleModalRecurringSubtitle')}
                   </p>
                 </div>
@@ -1211,7 +1211,7 @@ export default function WorkforceSchedulePage() {
               {/* Select Employees */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordScheduleModalStaffLabel')}</span>
                     <span className="text-rose-500">*</span>
                   </label>
@@ -1235,14 +1235,14 @@ export default function WorkforceSchedulePage() {
                 </div>
 
                 {staffList.length === 0 ? (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold flex items-center gap-2">
+                  <div className="p-3 bg-warning-soft border border-warning-subtle rounded-xl text-xs text-warning font-semibold flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>
                       {t('landlordScheduleNoStaffWarning')}
                     </span>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 border border-zinc-200 rounded-xl bg-zinc-50/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 border border-line rounded-xl bg-surface/50">
                     {staffList.map(s => {
                       const isChecked = recurringEmployeeIds.includes(s.employeeId)
                       return (
@@ -1250,8 +1250,8 @@ export default function WorkforceSchedulePage() {
                           key={s.employeeId}
                           className={`p-2 rounded-lg border text-xs transition-all ${
                             isChecked
-                              ? 'bg-white border-[#2AC1BC] text-zinc-900 shadow-sm'
-                              : 'bg-transparent border-transparent hover:bg-zinc-100 text-zinc-600'
+                              ? 'bg-card border-[#2AC1BC] text-foreground shadow-sm'
+                              : 'bg-transparent border-transparent hover:bg-card-hover text-muted'
                           }`}
                         >
                           <Checkbox
@@ -1269,7 +1269,7 @@ export default function WorkforceSchedulePage() {
                             label={
                               <div className="truncate">
                                 <span className="font-bold">{s.fullName}</span>
-                                <span className="text-[10px] text-zinc-400 ml-1">
+                                <span className="text-[10px] text-muted ml-1">
                                   ({s.positionName || t('landlordScheduleStaffFallback')})
                                 </span>
                               </div>
@@ -1305,7 +1305,7 @@ export default function WorkforceSchedulePage() {
               {/* Select Days of Week */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordScheduleModalRepeatLabel')}</span>
                     <span className="text-rose-500">*</span>
                   </label>
@@ -1408,7 +1408,7 @@ export default function WorkforceSchedulePage() {
               />
 
               {/* Pre-calculation Alert */}
-              <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
+              <div className="p-3 bg-info-soft border border-info-subtle rounded-xl text-xs text-info flex items-start gap-2">
                 <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
                   {t('landlordScheduleRecurringInfo')}
@@ -1416,7 +1416,7 @@ export default function WorkforceSchedulePage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button size="xs"
                   type="button"
                   variant="outline"
@@ -1454,20 +1454,20 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100">
+                <div className="p-2.5 bg-warning-soft text-amber-600 rounded-2xl border border-warning-subtle">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalAssignTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordScheduleModalAdhocSubtitle')}
                   </p>
                 </div>
@@ -1551,7 +1551,7 @@ export default function WorkforceSchedulePage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button size="xs"
                   type="button"
                   variant="outline"
@@ -1589,20 +1589,20 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-zinc-100 text-zinc-800 rounded-2xl">
+                <div className="p-2.5 bg-card-hover text-foreground rounded-2xl">
                   <Settings className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalTemplatesTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordScheduleModalTemplatesSubtitle')}
                   </p>
                 </div>
@@ -1620,9 +1620,9 @@ export default function WorkforceSchedulePage() {
               {/* Add New Shift */}
               <form
                 onSubmit={handleCreateShift}
-                className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3"
+                className="p-4 bg-surface border border-line rounded-2xl space-y-3"
               >
-                <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
+                <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   <span>{t('landlordShiftsAddNewBtn')}</span>
                 </div>
@@ -1668,10 +1668,10 @@ export default function WorkforceSchedulePage() {
 
               {/* Current Shifts List */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700">
+                <label className="text-xs font-bold text-foreground/90">
                   {t('landlordScheduleActiveTemplates', { count: shifts.length })}
                 </label>
-                <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
+                <div className="divide-y divide-line border border-line rounded-2xl overflow-hidden bg-card">
                   {shifts.map(s => (
                     <div
                       key={s.id}
@@ -1685,8 +1685,8 @@ export default function WorkforceSchedulePage() {
                         >
                           {s.name}
                         </span>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700">
-                          <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground/90">
+                          <Clock className="w-3.5 h-3.5 text-muted" />
                           <span>
                             {s.startTime} – {s.endTime}
                           </span>
@@ -1707,7 +1707,7 @@ export default function WorkforceSchedulePage() {
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
+            <div className="p-4 border-t border-line flex items-center justify-end bg-surface/60">
               <Button size="xs"
                 type="button"
                 variant="outline"
@@ -1731,20 +1731,20 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalEditTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {selectedScheduleForEdit.employeeName} ·{' '}
                     {formatDisplayDate(selectedScheduleForEdit.workDate)}
                   </p>
@@ -1800,8 +1800,8 @@ export default function WorkforceSchedulePage() {
 
               {/* Scope Choice if Recurring ( Rule) */}
               {selectedScheduleForEdit.isRecurring && selectedScheduleForEdit.recurrenceId && (
-                <div className="space-y-2.5 p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl">
-                  <label className="text-xs font-extrabold text-zinc-800 block">
+                <div className="space-y-2.5 p-3.5 bg-surface border border-line rounded-2xl">
+                  <label className="text-xs font-extrabold text-foreground block">
                     {t('landlordScheduleEditScope')}
                   </label>
 
@@ -1812,26 +1812,26 @@ export default function WorkforceSchedulePage() {
                     }}
                     className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
                       editScope === 'single'
-                        ? 'bg-white border-[#2AC1BC] shadow-xs'
-                        : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'
+                        ? 'bg-card border-[#2AC1BC] shadow-xs'
+                        : 'bg-surface border-line hover:bg-card-hover'
                     }`}
                   >
                     <div
                       className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
                         editScope === 'single'
                           ? 'border-[#2AC1BC] bg-[#2AC1BC]'
-                          : 'border-zinc-300 bg-white'
+                          : 'border-line bg-card'
                       }`}
                     >
                       {editScope === 'single' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <div>
-                      <span className="font-bold text-zinc-800">
+                      <span className="font-bold text-foreground">
                         {t('landlordScheduleEditScopeSingleTitle')}
                       </span>
-                      <p className="text-[11px] text-zinc-400">
+                      <p className="text-[11px] text-muted">
                         {t('landlordScheduleEditScopeSingleDesc')}
                       </p>
                     </div>
@@ -1844,23 +1844,23 @@ export default function WorkforceSchedulePage() {
                     }}
                     className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
                       editScope === 'future'
-                        ? 'bg-white border-amber-500 shadow-xs'
-                        : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'
+                        ? 'bg-card border-amber-500 shadow-xs'
+                        : 'bg-surface border-line hover:bg-card-hover'
                     }`}
                   >
                     <div
                       className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
                         editScope === 'future'
                           ? 'border-amber-500 bg-amber-500'
-                          : 'border-zinc-300 bg-white'
+                          : 'border-line bg-card'
                       }`}
                     >
                       {editScope === 'future' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <div>
-                      <span className="font-bold text-amber-700">
+                      <span className="font-bold text-warning">
                         {t('landlordScheduleEditScopeFutureTitle')}
                       </span>
                       <p className="text-[11px] text-amber-600/80 leading-relaxed">
@@ -1871,7 +1871,7 @@ export default function WorkforceSchedulePage() {
                 </div>
               )}
 
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button size="xs"
                   type="button"
                   variant="outline"
@@ -1908,16 +1908,16 @@ export default function WorkforceSchedulePage() {
             if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-amber-600 border border-warning-subtle flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-black text-zinc-900">
+              <h4 className="text-base font-black text-foreground">
                 {t('landlordShiftsConfirmCloseTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 {t('landlordShiftsConfirmCloseDesc')}
               </p>
             </div>

@@ -399,10 +399,10 @@ function InvoicesContent() {
       {/* Top Header & Actions Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
             <Receipt className="w-6 h-6 text-[#2AC1BC]" /> {t('landlordInvoicesTitle')}
           </h1>
-          <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+          <p className="text-xs text-muted font-semibold mt-0.5">
             {t('landlordInvoicesSubtitle')}
           </p>
         </div>
@@ -468,7 +468,7 @@ function InvoicesContent() {
               </a>
             </div>
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordInvoicesBannerSub')}
             </p>
           </div>
@@ -478,9 +478,9 @@ function InvoicesContent() {
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto">
               {/* Card 1: Tổng Hóa Đơn */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
+                <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-muted shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">
+                  <span className="text-[9px] uppercase font-extrabold text-muted tracking-wider whitespace-nowrap">
                     {t('landlordInvoicesTotalInvoicesShort')}
                   </span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">
@@ -533,7 +533,7 @@ function InvoicesContent() {
       </div>
 
       {/* Main Filter & Tabs Control Bar */}
-      <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
+      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Box */}
           <div className="flex-1">
@@ -596,14 +596,14 @@ function InvoicesContent() {
             </div>
 
             {/* View Switcher */}
-            <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+            <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
               <Button
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('grid')}
                 className={cn(
                   'h-7 w-7 rounded-lg',
-                  viewMode === 'grid' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                  viewMode === 'grid' ? 'bg-card shadow-2xs' : 'text-muted hover:text-foreground',
                 )}
                 title={t('landlordInvoicesViewGrid')}
               >
@@ -615,7 +615,7 @@ function InvoicesContent() {
                 onClick={() => setViewMode('table')}
                 className={cn(
                   'h-7 w-7 rounded-lg',
-                  viewMode === 'table' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                  viewMode === 'table' ? 'bg-card shadow-2xs' : 'text-muted hover:text-foreground',
                 )}
                 title={t('landlordInvoicesViewTable')}
               >
@@ -626,7 +626,7 @@ function InvoicesContent() {
         </div>
 
         {/* Quick Filter Tabs */}
-        <div className="border-t border-zinc-100 pt-3">
+        <div className="border-t border-line pt-3">
           <ChipGroup<'all' | 'unpaid' | 'paid' | 'overdue'>
             value={activeTab}
             onChange={val => {
@@ -666,15 +666,15 @@ function InvoicesContent() {
 
       {/* Main Content Display (Grid or Table View) */}
       {invoices.length === 0 ? (
-        <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
+        <div className="py-16 px-6 text-center bg-card border border-line rounded-3xl space-y-4 shadow-2xs">
           <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
             <Receipt className="w-8 h-8" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-zinc-900">
+            <h3 className="font-black text-base text-foreground">
               {t('landlordInvoicesNoDataTitle')}
             </h3>
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+            <p className="text-xs text-muted font-medium leading-relaxed">
               {t('landlordInvoicesNoDataDesc')}
             </p>
           </div>
@@ -688,12 +688,12 @@ function InvoicesContent() {
           </Button>
         </div>
       ) : paginatedInvoices.length === 0 ? (
-        <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
+        <div className="p-12 text-center bg-card border border-line rounded-2xl space-y-3">
           <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-zinc-800">
+          <h3 className="font-extrabold text-sm text-foreground">
             {t('landlordInvoicesEmptyTitle')}
           </h3>
-          <p className="text-xs text-zinc-400">{t('landlordInvoicesEmptyDesc')}</p>
+          <p className="text-xs text-muted">{t('landlordInvoicesEmptyDesc')}</p>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
@@ -705,27 +705,27 @@ function InvoicesContent() {
             return (
               <div
                 key={inv.id}
-                className={`bg-white border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${
+                className={`bg-card border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${
                   isPaid
-                    ? 'border-emerald-200 hover:border-emerald-300'
+                    ? 'border-success-subtle hover:border-emerald-300'
                     : isOverdue
-                      ? 'border-rose-200 hover:border-rose-300 bg-rose-50/20'
-                      : 'border-zinc-200/80 hover:border-[#2AC1BC]/40'
+                      ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
+                      : 'border-line hover:border-[#2AC1BC]/40'
                 }`}
               >
                 {/* Header info */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
-                    <span className="font-extrabold text-sm text-zinc-900 flex items-center gap-1.5">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-line">
+                    <span className="font-extrabold text-sm text-foreground flex items-center gap-1.5">
                       <FileText className="w-4 h-4 text-[#2AC1BC]" /> {inv.roomName}
                     </span>
                     <span
                       className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
                         isPaid
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          ? 'bg-success-soft text-success border-success-subtle'
                           : isOverdue
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                            ? 'bg-danger-soft text-danger border-danger-subtle'
+                            : 'bg-warning-soft text-warning border-warning-subtle'
                       }`}
                     >
                       {inv.status}
@@ -734,54 +734,54 @@ function InvoicesContent() {
 
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">
+                      <span className="text-muted font-semibold">
                         {t('landlordInvoicesLabelTenant')}
                       </span>
-                      <span className="font-bold text-zinc-900">{inv.tenantName}</span>
+                      <span className="font-bold text-foreground">{inv.tenantName}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">
+                      <span className="text-muted font-semibold">
                         {t('landlordInvoicesLabelPeriod')}
                       </span>
-                      <span className="font-bold text-zinc-800">
+                      <span className="font-bold text-foreground">
                         {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">
+                      <span className="text-muted font-semibold">
                         {t('landlordInvoicesLabelInvoiceId')}
                       </span>
-                      <span className="font-mono text-zinc-600 text-[11px]">{inv.id}</span>
+                      <span className="font-mono text-muted text-[11px]">{inv.id}</span>
                     </div>
                   </div>
 
                   {/* Fee Items Breakdown Summary */}
-                  <div className="p-3 bg-zinc-50 rounded-xl space-y-1.5 text-[11px]">
-                    <div className="flex justify-between text-zinc-600">
+                  <div className="p-3 bg-surface rounded-xl space-y-1.5 text-[11px]">
+                    <div className="flex justify-between text-muted">
                       <span>{t('landlordInvoicesFeeRent')}</span>
-                      <span className="font-bold text-zinc-800">
+                      <span className="font-bold text-foreground">
                         {inv.rentAmount.toLocaleString('vi-VN')} ₫
                       </span>
                     </div>
-                    <div className="flex justify-between text-zinc-600">
+                    <div className="flex justify-between text-muted">
                       <span>
                         {t('landlordInvoicesFeeElec').replace(
                           '{usage}',
                           String(inv.elecNew - inv.elecOld),
                         )}
                       </span>
-                      <span className="font-bold text-zinc-800">
+                      <span className="font-bold text-foreground">
                         {((inv.elecNew - inv.elecOld) * inv.elecRate).toLocaleString('vi-VN')} ₫
                       </span>
                     </div>
-                    <div className="flex justify-between text-zinc-600">
+                    <div className="flex justify-between text-muted">
                       <span>
                         {t('landlordInvoicesFeeWater').replace(
                           '{usage}',
                           String(inv.waterNew - inv.waterOld),
                         )}
                       </span>
-                      <span className="font-bold text-zinc-800">
+                      <span className="font-bold text-foreground">
                         {((inv.waterNew - inv.waterOld) * inv.waterRate).toLocaleString('vi-VN')} ₫
                       </span>
                     </div>
@@ -789,10 +789,10 @@ function InvoicesContent() {
                 </div>
 
                 {/* Total & Action Footer */}
-                <div className="pt-3 border-t border-zinc-100 space-y-3">
+                <div className="pt-3 border-t border-line space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-muted block uppercase tracking-wider">
                         {t('landlordInvoicesLabelTotal')}
                       </span>
                       <span className="font-black text-base text-[#2AC1BC]">
@@ -800,7 +800,7 @@ function InvoicesContent() {
                       </span>
                     </div>
                     <span
-                      className={`text-[10px] font-bold ${isOverdue ? 'text-rose-600 font-black' : 'text-zinc-400'}`}
+                      className={`text-[10px] font-bold ${isOverdue ? 'text-rose-600 font-black' : 'text-muted'}`}
                     >
                       {t('landlordInvoicesLabelDeadline').replace('{deadline}', inv.deadline)}
                     </span>
@@ -834,10 +834,10 @@ function InvoicesContent() {
         </div>
       ) : (
         /* TABLE VIEW (Rule #9 Alternative) */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase font-black tracking-wider">
+              <thead className="text-[11px] text-muted bg-surface border-b border-line uppercase font-black tracking-wider">
                 <tr>
                   <th className="px-4 py-3">{t('landlordInvoicesColInvoiceId')}</th>
                   <th className="px-4 py-3">{t('landlordInvoicesRoom')}</th>
@@ -849,23 +849,23 @@ function InvoicesContent() {
                   <th className="px-4 py-3 text-right">{t('landlordInvoicesColActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-semibold">
+              <tbody className="divide-y divide-line font-semibold">
                 {paginatedInvoices.map(inv => (
                   <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="px-4 py-3.5 font-bold font-mono text-zinc-900 flex items-center gap-2">
+                    <td className="px-4 py-3.5 font-bold font-mono text-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4 text-[#2AC1BC]" />
                       {inv.id}
                     </td>
-                    <td className="px-4 py-3.5 font-black text-zinc-900">{inv.roomName}</td>
-                    <td className="px-4 py-3.5 text-zinc-700">{inv.tenantName}</td>
-                    <td className="px-4 py-3.5 text-zinc-600">
+                    <td className="px-4 py-3.5 font-black text-foreground">{inv.roomName}</td>
+                    <td className="px-4 py-3.5 text-foreground/90">{inv.tenantName}</td>
+                    <td className="px-4 py-3.5 text-muted">
                       {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
                     </td>
                     <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">
                       {inv.totalAmount.toLocaleString('vi-VN')} ₫
                     </td>
                     <td
-                      className={`px-4 py-3.5 font-bold ${inv.status === 'Quá hạn' ? 'text-rose-600 font-black' : 'text-zinc-600'}`}
+                      className={`px-4 py-3.5 font-bold ${inv.status === 'Quá hạn' ? 'text-rose-600 font-black' : 'text-muted'}`}
                     >
                       {inv.deadline}
                     </td>
@@ -873,10 +873,10 @@ function InvoicesContent() {
                       <span
                         className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
                           inv.status === 'Đã thu'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            ? 'bg-success-soft text-success border-success-subtle'
                             : inv.status === 'Quá hạn'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                              ? 'bg-danger-soft text-danger border-danger-subtle'
+                              : 'bg-warning-soft text-warning border-warning-subtle'
                         }`}
                       >
                         {getInvoiceStatusLabel(inv.status)}
@@ -902,8 +902,8 @@ function InvoicesContent() {
 
       {/* Pagination Bar (Standard Dormio Rule #9) */}
       {totalItems > 0 && (
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
-          <div className="flex items-center gap-2 text-zinc-600">
+        <div className="p-4 bg-card border border-line rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
+          <div className="flex items-center gap-2 text-muted">
             <span>{t('landlordInvoicesPaginationShow')}</span>
             <NumberInput
               min={1}
@@ -918,7 +918,7 @@ function InvoicesContent() {
               className="text-center font-black py-1 text-xs"
             />
             <span>{t('landlordInvoicesPaginationPerPage')}</span>
-            <span className="text-zinc-400">|</span>
+            <span className="text-muted">|</span>
             <span>
               {totalItems === 0 ? '0' : `${startIndex + 1}-${endIndex}`}{' '}
               {t('landlordInvoicesPaginationOf')} {totalItems}{' '}
@@ -934,7 +934,7 @@ function InvoicesContent() {
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             >
-              <ChevronLeft className="w-4 h-4 text-zinc-600" />
+              <ChevronLeft className="w-4 h-4 text-muted" />
             </Button>
 
             {windowStart > 1 && (
@@ -954,7 +954,7 @@ function InvoicesContent() {
                 variant={currentPage === p ? 'primary' : 'outline'}
                 size="icon"
                 onClick={() => setCurrentPage(p)}
-                className={cn('h-8 w-8 text-xs', currentPage !== p && 'text-zinc-700')}
+                className={cn('h-8 w-8 text-xs', currentPage !== p && 'text-foreground/90')}
               >
                 {p}
               </Button>
@@ -977,7 +977,7 @@ function InvoicesContent() {
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             >
-              <ChevronRight className="w-4 h-4 text-zinc-600" />
+              <ChevronRight className="w-4 h-4 text-muted" />
             </Button>
           </div>
         </div>
@@ -991,15 +991,15 @@ function InvoicesContent() {
             if (e.target === e.currentTarget) setSelectedInvoice(null)
           }}
         >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-200">
+          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-line">
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-surface/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
                   <Receipt className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900 flex items-center gap-2">
+                  <h3 className="font-black text-base text-foreground flex items-center gap-2">
                     {t('landlordInvoicesModalDetailTitle').replace(
                       '{room}',
                       selectedInvoice.roomName,
@@ -1007,16 +1007,16 @@ function InvoicesContent() {
                     <span
                       className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
                         selectedInvoice.status === 'Đã thu'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          ? 'bg-success-soft text-success border-success-subtle'
                           : selectedInvoice.status === 'Quá hạn'
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                            ? 'bg-danger-soft text-danger border-danger-subtle'
+                            : 'bg-warning-soft text-warning border-warning-subtle'
                       }`}
                     >
                       {getInvoiceStatusLabel(selectedInvoice.status)}
                     </span>
                   </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">
+                  <p className="text-xs text-muted font-semibold">
                     {t('landlordInvoicesModalDetailSub')
                       .replace('{id}', selectedInvoice.id)
                       .replace('{period}', selectedInvoice.period)}
@@ -1036,33 +1036,33 @@ function InvoicesContent() {
             {/* Modal Scroll Content */}
             <div className="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
               {/* Tenant & Building Info Card */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-surface border border-line rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
                     {t('landlordInvoicesSectionTenant')}
                   </span>
-                  <p className="font-black text-sm text-zinc-900">{selectedInvoice.tenantName}</p>
-                  <p className="text-zinc-500 font-semibold">{selectedInvoice.tenantPhone}</p>
+                  <p className="font-black text-sm text-foreground">{selectedInvoice.tenantName}</p>
+                  <p className="text-muted font-semibold">{selectedInvoice.tenantPhone}</p>
                 </div>
 
                 <div className="space-y-1 sm:text-right">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
                     {t('landlordInvoicesSectionDeadlineAndCreated')}
                   </span>
-                  <p className="font-bold text-zinc-800">
+                  <p className="font-bold text-foreground">
                     {t('landlordInvoicesDeadlinePrefix')}{' '}
                     <span
-                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-rose-600 font-extrabold' : 'text-zinc-800'}`}
+                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-rose-600 font-extrabold' : 'text-foreground'}`}
                     >
                       {selectedInvoice.deadline}
                     </span>
                     {selectedInvoice.status === 'Quá hạn' && (
-                      <span className="ml-1.5 px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black rounded-md border border-rose-200">
+                      <span className="ml-1.5 px-2 py-0.5 bg-danger-soft text-danger text-[10px] font-black rounded-md border border-danger-subtle">
                         {t('landlordInvoicesStatusOverdue')}
                       </span>
                     )}
                   </p>
-                  <p className="text-zinc-500 font-medium">
+                  <p className="text-muted font-medium">
                     {t('landlordInvoicesCreatedPrefix')} {selectedInvoice.createdAt}
                   </p>
                 </div>
@@ -1070,14 +1070,14 @@ function InvoicesContent() {
 
               {/* Fee Breakdown Table */}
               <div className="space-y-3">
-                <h4 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                <h4 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
                   {t('landlordInvoicesSectionFeeBreakdown')}
                 </h4>
 
-                <div className="border border-zinc-200 rounded-2xl overflow-x-auto custom-scrollbar">
+                <div className="border border-line rounded-2xl overflow-x-auto custom-scrollbar">
                   <table className="w-full text-xs text-left min-w-[500px]">
-                    <thead className="bg-zinc-50 border-b border-zinc-200 font-black text-zinc-500 uppercase text-[10px]">
+                    <thead className="bg-surface border-b border-line font-black text-muted uppercase text-[10px]">
                       <tr>
                         <th className="px-4 py-2.5">{t('landlordInvoicesColItem')}</th>
                         <th className="px-4 py-2.5">{t('landlordInvoicesColOldNewIndex')}</th>
@@ -1087,36 +1087,36 @@ function InvoicesContent() {
                         <th className="px-4 py-2.5 text-right">{t('landlordInvoicesColAmount')}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 font-semibold">
+                    <tbody className="divide-y divide-line font-semibold">
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900">
+                        <td className="px-4 py-3 font-bold text-foreground">
                           {t('landlordInvoicesItemRoomRent').replace(
                             '{room}',
                             selectedInvoice.roomName,
                           )}
                         </td>
-                        <td className="px-4 py-3 text-zinc-400">-</td>
+                        <td className="px-4 py-3 text-muted">-</td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
                         </td>
                       </tr>
 
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
+                        <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
                           <Zap className="w-3.5 h-3.5 text-amber-500" />{' '}
                           {t('landlordInvoicesItemElec')}
                         </td>
-                        <td className="px-4 py-3 text-zinc-600">
+                        <td className="px-4 py-3 text-muted">
                           {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} (
                             {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.elecRate.toLocaleString('vi-VN')} ₫
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {(
                             (selectedInvoice.elecNew - selectedInvoice.elecOld) *
                             selectedInvoice.elecRate
@@ -1126,18 +1126,18 @@ function InvoicesContent() {
                       </tr>
 
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
+                        <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
                           <Droplets className="w-3.5 h-3.5 text-blue-500" />{' '}
                           {t('landlordInvoicesItemWater')}
                         </td>
-                        <td className="px-4 py-3 text-zinc-600">
+                        <td className="px-4 py-3 text-muted">
                           {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} (
                             {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.waterRate.toLocaleString('vi-VN')} ₫
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {(
                             (selectedInvoice.waterNew - selectedInvoice.waterOld) *
                             selectedInvoice.waterRate
@@ -1148,29 +1148,29 @@ function InvoicesContent() {
 
                       {selectedInvoice.serviceFees.map((fee, idx) => (
                         <tr key={idx}>
-                          <td className="px-4 py-3 font-bold text-zinc-900">{fee.name}</td>
-                          <td className="px-4 py-3 text-zinc-400">
+                          <td className="px-4 py-3 font-bold text-foreground">{fee.name}</td>
+                          <td className="px-4 py-3 text-muted">
                             {t('landlordInvoicesItemFixedMonthly')}
                           </td>
                           <td className="px-4 py-3 text-right">
                             {fee.amount.toLocaleString('vi-VN')} ₫
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-zinc-900">
+                          <td className="px-4 py-3 text-right font-black text-foreground">
                             {fee.amount.toLocaleString('vi-VN')} ₫
                           </td>
                         </tr>
                       ))}
 
                       {selectedInvoice.discount > 0 && (
-                        <tr className="bg-rose-50/40">
-                          <td className="px-4 py-3 font-bold text-rose-700">
+                        <tr className="bg-danger-soft">
+                          <td className="px-4 py-3 font-bold text-danger">
                             {t('landlordInvoicesItemDiscount')}
                           </td>
-                          <td className="px-4 py-3 text-zinc-400">-</td>
-                          <td className="px-4 py-3 text-right text-rose-700">
+                          <td className="px-4 py-3 text-muted">-</td>
+                          <td className="px-4 py-3 text-right text-danger">
                             -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-rose-700">
+                          <td className="px-4 py-3 text-right font-black text-danger">
                             -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
                           </td>
                         </tr>
@@ -1183,8 +1183,8 @@ function InvoicesContent() {
               {/* Total Calculation Card & VietQR Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 {/* VietQR Bank Card */}
-                <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl flex items-center gap-4">
-                  <div className="w-24 h-24 bg-white rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-zinc-200">
+                <div className="p-4 bg-success-soft border border-success-subtle rounded-2xl flex items-center gap-4">
+                  <div className="w-24 h-24 bg-card rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-line">
                     <img
                       src={getVietQrUrl(selectedInvoice)}
                       alt={t('landlordInvoicesVietQrAlt')}
@@ -1196,9 +1196,9 @@ function InvoicesContent() {
                     <span className="font-extrabold text-[#2AC1BC] flex items-center gap-1">
                       <QrCode className="w-3.5 h-3.5" /> {t('landlordInvoicesVietQrAuto')}
                     </span>
-                    <p className="font-bold text-zinc-900">{t('landlordInvoicesVietQrBank')}</p>
-                    <p className="font-mono text-zinc-700 font-bold">STK: 0988123456</p>
-                    <p className="text-zinc-500 font-medium truncate">
+                    <p className="font-bold text-foreground">{t('landlordInvoicesVietQrBank')}</p>
+                    <p className="font-mono text-foreground/90 font-bold">STK: 0988123456</p>
+                    <p className="text-muted font-medium truncate">
                       {t('landlordInvoicesVietQrMemo').replace(
                         '{memo}',
                         `${selectedInvoice.id} ${selectedInvoice.roomName.replace(' ', '')}`,
@@ -1209,7 +1209,7 @@ function InvoicesContent() {
 
                 {/* Grand Total */}
                 <div className="p-5 bg-zinc-900 text-white rounded-2xl space-y-2 text-right shadow-inner">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
                     {t('landlordInvoicesGrandTotal')}
                   </span>
                   <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] block">
@@ -1227,7 +1227,7 @@ function InvoicesContent() {
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-wrap items-center justify-between gap-3">
+            <div className="p-4 border-t border-line bg-card flex flex-wrap items-center justify-between gap-3">
               {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
               {selectedInvoice.status !== 'Đã thu' ? (
                 <Button
@@ -1247,7 +1247,7 @@ function InvoicesContent() {
                 </Button>
               ) : (
                 /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
-                <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black rounded-xl">
+                <div className="flex items-center gap-2 px-3.5 py-2 bg-success-soft border border-success-subtle text-success text-xs font-black rounded-xl">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
                     {t('landlordInvoicesPaidAtBadge')
@@ -1284,18 +1284,18 @@ function InvoicesContent() {
             if (e.target === e.currentTarget) handleRequestCloseCreate()
           }}
         >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
+          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-line">
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-card">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">
+                  <h3 className="font-black text-base text-foreground">
                     {t('landlordInvoicesModalCreateTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">
+                  <p className="text-xs text-muted font-semibold">
                     {t('landlordInvoicesModalCreateSub')}
                   </p>
                 </div>
@@ -1372,8 +1372,8 @@ function InvoicesContent() {
               </div>
 
               {/* Meter Readings Inputs */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
-                <span className="font-black text-xs text-zinc-900 uppercase tracking-wider block">
+              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+                <span className="font-black text-xs text-foreground uppercase tracking-wider block">
                   {t('landlordInvoicesMeterReadingsTitle')}
                 </span>
 
@@ -1394,8 +1394,8 @@ function InvoicesContent() {
                       setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 })
                       setIsCreateFormDirty(true)
                     }}
-                    labelClassName="text-amber-700"
-                    className="border-amber-300 text-amber-800"
+                    labelClassName="text-warning"
+                    className="border-amber-300 text-warning"
                   />
 
                   <NumberInput
@@ -1414,8 +1414,8 @@ function InvoicesContent() {
                       setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 })
                       setIsCreateFormDirty(true)
                     }}
-                    labelClassName="text-blue-700"
-                    className="border-blue-300 text-blue-800"
+                    labelClassName="text-info"
+                    className="border-blue-300 text-info"
                   />
                 </div>
               </div>
@@ -1423,7 +1423,7 @@ function InvoicesContent() {
               {/* Total Summary preview */}
               <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-extrabold text-zinc-500 block uppercase">
+                  <span className="text-[10px] font-extrabold text-muted block uppercase">
                     {t('landlordInvoicesPreviewTotal')}
                   </span>
                   <span className="text-xl font-black text-[#2AC1BC]">
@@ -1439,14 +1439,14 @@ function InvoicesContent() {
                     ₫
                   </span>
                 </div>
-                <span className="text-[11px] font-bold text-zinc-500">
+                <span className="text-[11px] font-bold text-muted">
                   {t('landlordInvoicesDeadlinePrefix')} {createForm.deadline}
                 </span>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
+            <div className="p-4 border-t border-line bg-card flex items-center justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -1478,18 +1478,18 @@ function InvoicesContent() {
             if (e.target === e.currentTarget) handleRequestCloseOcr()
           }}
         >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
+          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-line">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-card">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-amber-500/10 text-amber-600 rounded-2xl">
                   <Sparkles className="w-6 h-6 fill-amber-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-zinc-900">
+                  <h2 className="text-xl font-black text-foreground">
                     {t('landlordInvoicesOcrModalTitle')}
                   </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
+                  <p className="text-xs text-muted font-medium">
                     {t('landlordInvoicesOcrModalSub')}
                   </p>
                 </div>
@@ -1508,10 +1508,10 @@ function InvoicesContent() {
               {/* Left Side: Photo with AI Bounding Box */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">
+                  <span className="text-xs font-black text-foreground/90 uppercase tracking-wider">
                     {t('landlordInvoicesOcrPhotoTitle')}
                   </span>
-                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-extrabold">
+                  <span className="px-2.5 py-0.5 bg-success-soft text-emerald-600 border border-success-subtle rounded-full text-[10px] font-extrabold">
                     {t('landlordInvoicesOcrAccuracy')}
                   </span>
                 </div>
@@ -1524,24 +1524,24 @@ function InvoicesContent() {
                         OCR Box
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-400">{t('landlordInvoicesOcrMeterDesc')}</p>
+                    <p className="text-[11px] text-muted">{t('landlordInvoicesOcrMeterDesc')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Right Side: AI Extracted Details & Inputs */}
-              <div className="space-y-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 flex flex-col justify-between">
+              <div className="space-y-4 bg-surface p-5 rounded-2xl border border-line flex flex-col justify-between">
                 <div className="space-y-4">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">
+                  <span className="text-xs font-black text-foreground/90 uppercase tracking-wider block">
                     {t('landlordInvoicesOcrDetailsTitle')}
                   </span>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <span className="text-[10px] font-extrabold text-zinc-400 block">
+                    <div className="p-3 bg-card rounded-xl border border-line">
+                      <span className="text-[10px] font-extrabold text-muted block">
                         {t('landlordInvoicesOcrOldIndex')}
                       </span>
-                      <span className="text-base font-black text-zinc-800">1.318 kWh</span>
+                      <span className="text-base font-black text-foreground">1.318 kWh</span>
                     </div>
                     <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
                       <TextInput
@@ -1551,24 +1551,24 @@ function InvoicesContent() {
                           setOcrMeterValue(e.target.value)
                           setIsOcrFormDirty(true)
                         }}
-                        labelClassName="text-amber-700 text-[10px]"
-                        className="text-base font-black text-amber-700 border-none bg-transparent"
+                        labelClassName="text-warning text-[10px]"
+                        className="text-base font-black text-warning border-none bg-transparent"
                       />
                     </div>
                   </div>
 
-                  <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2">
-                    <div className="flex justify-between text-xs font-bold text-zinc-600">
+                  <div className="p-4 bg-card rounded-xl border border-line space-y-2">
+                    <div className="flex justify-between text-xs font-bold text-muted">
                       <span>{t('landlordInvoicesOcrUsage')}</span>
-                      <span className="text-zinc-900 font-black">
+                      <span className="text-foreground font-black">
                         {Math.max(0, parseInt(ocrMeterValue || '0') - 1318)} kWh
                       </span>
                     </div>
-                    <div className="flex justify-between text-xs font-bold text-zinc-600">
+                    <div className="flex justify-between text-xs font-bold text-muted">
                       <span>{t('landlordInvoicesOcrUnitPrice')}</span>
-                      <span className="text-zinc-900">3.500 ₫ / kWh</span>
+                      <span className="text-foreground">3.500 ₫ / kWh</span>
                     </div>
-                    <div className="border-t border-zinc-100 pt-2 flex justify-between text-sm font-black text-zinc-900">
+                    <div className="border-t border-line pt-2 flex justify-between text-sm font-black text-foreground">
                       <span>{t('landlordInvoicesOcrAmount')}</span>
                       <span className="text-[#2AC1BC]">
                         {(
@@ -1616,16 +1616,16 @@ function InvoicesContent() {
             if (e.target === e.currentTarget) setConfirmCloseTarget(null)
           }}
         >
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-200 text-center space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="w-14 h-14 bg-amber-50 text-amber-500 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
+          <div className="bg-card rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-line text-center space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 bg-warning-soft text-amber-500 border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
               <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-zinc-900">
+              <h3 className="text-lg font-black text-foreground">
                 {t('landlordInvoicesConfirmCloseTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
+              <p className="text-xs text-muted font-semibold leading-relaxed">
                 {t('landlordInvoicesConfirmCloseDesc')}
               </p>
             </div>
@@ -1659,7 +1659,7 @@ function InvoicesContent() {
 function InvoicesFallback() {
   const t = useTranslations('landlord')
   return (
-    <div className="p-8 text-center text-xs font-bold text-zinc-400">
+    <div className="p-8 text-center text-xs font-bold text-muted">
       {t('landlordInvoicesLoading')}
     </div>
   )

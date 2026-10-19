@@ -303,8 +303,8 @@ export default function NotificationsPage() {
         <div className="fixed top-6 right-6 z-70 animate-in slide-in-from-top-3 duration-200">
           <div
             className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${toast.type === 'success'
-              ? 'bg-emerald-50/95 text-emerald-800 border-emerald-200'
-              : 'bg-rose-50/95 text-rose-800 border-rose-200'
+              ? 'bg-emerald-50/95 text-success border-success-subtle'
+              : 'bg-rose-50/95 text-danger border-danger-subtle'
               }`}
           >
             {toast.type === 'success' ? (
@@ -360,7 +360,7 @@ export default function NotificationsPage() {
               </div>
             )}
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordNotificationsHeroSubtitle')}
             </p>
           </div>
@@ -451,7 +451,7 @@ export default function NotificationsPage() {
           </div>
 
           {/* View Switcher (Rule #9: Grid is Default) */}
-          <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200/80">
+          <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
             <Button
               type="button"
               variant="ghost"
@@ -501,19 +501,19 @@ export default function NotificationsPage() {
       {/* 3. Announcements List Section */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-zinc-200 text-center">
+          <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-line text-center">
             <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-            <p className="text-xs font-bold text-zinc-600">{t('landlordNotificationsLoading')}</p>
+            <p className="text-xs font-bold text-muted">{t('landlordNotificationsLoading')}</p>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white rounded-2xl border border-zinc-200 border-dashed text-center">
-            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+          <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-2xl border border-line border-dashed text-center">
+            <div className="w-16 h-16 bg-card-hover rounded-full flex items-center justify-center mb-3 text-muted">
               <Send className="w-8 h-8" />
             </div>
-            <h3 className="text-base font-bold text-zinc-800">
+            <h3 className="text-base font-bold text-foreground">
               {t('landlordNotificationsEmptyTitle')}
             </h3>
-            <p className="text-xs text-zinc-500 mt-1 max-w-sm">
+            <p className="text-xs text-muted mt-1 max-w-sm">
               {t('landlordNotificationsEmptyDesc')}
             </p>
             <Button
@@ -539,25 +539,25 @@ export default function NotificationsPage() {
                 <div
                   key={notif.id}
                   onClick={() => setSelectedNotifDetail(notif)}
-                  className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all cursor-pointer group flex flex-col justify-between"
+                  className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all cursor-pointer group flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Category Badge + Sent Time */}
-                    <div className="flex items-center justify-between gap-2 pb-3 border-b border-zinc-100">
+                    <div className="flex items-center justify-between gap-2 pb-3 border-b border-line">
                       <span
                         className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
                           ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
                           : isUtilities
                             ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
                             : isRent
-                              ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
+                              ? 'bg-emerald-500/15 text-success border border-emerald-500/30'
                               : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
                           }`}
                       >
                         {getCategoryLabel(notif.category)}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-zinc-400">
+                        <span className="text-[11px] font-semibold text-muted">
                           {notif.sentAt}
                         </span>
                         <Button
@@ -577,18 +577,18 @@ export default function NotificationsPage() {
 
                     {/* Title & Preview */}
                     <div className="py-3 space-y-1.5">
-                      <h3 className="font-extrabold text-sm text-zinc-900 group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                      <h3 className="font-extrabold text-sm text-foreground group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
                         {notif.title}
                       </h3>
-                      <p className="text-zinc-500 text-xs line-clamp-2 leading-relaxed whitespace-pre-line">
+                      <p className="text-muted text-xs line-clamp-2 leading-relaxed whitespace-pre-line">
                         {notif.content}
                       </p>
                     </div>
 
                     {/* Metadata Pills */}
-                    <div className="flex flex-wrap items-center gap-2 py-2 border-t border-zinc-100 text-xs font-bold text-zinc-700">
-                      <span className="inline-flex items-center gap-1.5 bg-zinc-100 px-2.5 py-1 rounded-full text-[11px]">
-                        <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                    <div className="flex flex-wrap items-center gap-2 py-2 border-t border-line text-xs font-bold text-foreground/90">
+                      <span className="inline-flex items-center gap-1.5 bg-card-hover px-2.5 py-1 rounded-full text-[11px]">
+                        <Building2 className="w-3.5 h-3.5 text-muted shrink-0" />
                         <span className="truncate max-w-[120px]">{notif.targetScope}</span>
                       </span>
                       <span className="inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] px-2.5 py-1 rounded-full text-[11px]">
@@ -598,15 +598,15 @@ export default function NotificationsPage() {
                     </div>
 
                     {/* Read Progress Bar */}
-                    <div className="pt-2 border-t border-zinc-100">
+                    <div className="pt-2 border-t border-line">
                       <div className="flex items-center justify-between text-[11px] font-bold mb-1">
-                        <span className="text-zinc-600">
+                        <span className="text-muted">
                           {t('landlordNotificationsReadPrefix')}: {notif.readCount}/
                           {notif.totalTarget} {t('landlordNotificationsTenantsUnit')}
                         </span>
                         <span className="text-[#2AC1BC]">{readPct}%</span>
                       </div>
-                      <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#2AC1BC] rounded-full transition-all"
                           style={{ width: `${readPct}%` }}
@@ -616,7 +616,7 @@ export default function NotificationsPage() {
                   </div>
 
                   {/* Footer Details Button */}
-                  <div className="pt-3 mt-3 border-t border-zinc-100 flex items-center justify-end">
+                  <div className="pt-3 mt-3 border-t border-line flex items-center justify-end">
                     <Button fullWidth
                       type="button"
                       variant="outline"
@@ -636,10 +636,10 @@ export default function NotificationsPage() {
           </div>
         ) : (
           /* Parallel View 2: Table/List View */
-          <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+          <div className="bg-card border border-line rounded-2xl shadow-2xs overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-xs text-left border-collapse min-w-[900px]">
-                <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 border-b border-zinc-200/80">
+                <thead className="text-[11px] font-black text-muted uppercase bg-card-hover/90 border-b border-line">
                   <tr>
                     <th className="px-4 py-3.5 whitespace-nowrap w-80">
                       {t('landlordNotificationsColCategoryTitle')}
@@ -661,7 +661,7 @@ export default function NotificationsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 font-medium">
+                <tbody className="divide-y divide-line font-medium">
                   {notifications.map(notif => {
                     const readPct =
                       notif.totalTarget > 0
@@ -683,28 +683,28 @@ export default function NotificationsPage() {
                                 : isUtilities
                                   ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
                                   : isRent
-                                    ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30'
+                                    ? 'bg-emerald-500/15 text-success border border-emerald-500/30'
                                     : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
                                 }`}
                             >
                               {getCategoryLabel(notif.category)}
                             </span>
-                            <span className="font-bold text-zinc-900 text-sm truncate">
+                            <span className="font-bold text-foreground text-sm truncate">
                               {notif.title}
                             </span>
                           </div>
-                          <p className="text-zinc-500 text-xs line-clamp-1">{notif.content}</p>
+                          <p className="text-muted text-xs line-clamp-1">{notif.content}</p>
                         </td>
 
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-700 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">
-                            <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                          <span className="inline-flex items-center gap-1.5 bg-card-hover text-foreground/90 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">
+                            <Building2 className="w-3.5 h-3.5 text-muted shrink-0" />
                             <span>{notif.targetScope}</span>
                           </span>
                         </td>
 
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground/90 whitespace-nowrap">
                             <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
                             <span>{getChannelLabel(notif.channel)}</span>
                           </span>
@@ -713,13 +713,13 @@ export default function NotificationsPage() {
                         <td className="px-4 py-4 whitespace-nowrap min-w-[160px]">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center justify-between text-[11px] font-bold">
-                              <span className="text-zinc-700">
+                              <span className="text-foreground/90">
                                 {notif.readCount}/{notif.totalTarget}{' '}
                                 {t('landlordNotificationsTenantsUnit')}
                               </span>
                               <span className="text-[#2AC1BC]">{readPct}%</span>
                             </div>
-                            <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                            <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-[#2AC1BC] rounded-full transition-all"
                                 style={{ width: `${readPct}%` }}
@@ -728,7 +728,7 @@ export default function NotificationsPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-4 text-zinc-500 font-semibold whitespace-nowrap">
+                        <td className="px-4 py-4 text-muted font-semibold whitespace-nowrap">
                           {notif.sentAt}
                         </td>
 
@@ -764,9 +764,9 @@ export default function NotificationsPage() {
         )}
 
         {/* 4. Standardized Pagination Footer (Rule #9) */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs">
-          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-            <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
+            <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
               <span>{t('landlordNotificationsPaginationShowing')}</span>
               <NumberInput
                 min={1}
@@ -778,7 +778,7 @@ export default function NotificationsPage() {
                   setPage(1)
                 }}
                 containerClassName="w-16 space-y-0"
-                className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
+                className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
               />
               <span>{t('landlordNotificationsPaginationPerPage')}</span>
             </div>
@@ -786,15 +786,15 @@ export default function NotificationsPage() {
             <span className="hidden sm:inline text-zinc-300">|</span>
 
             <div>
-              <span className="font-extrabold text-zinc-800">
+              <span className="font-extrabold text-foreground">
                 {totalItems === 0 ? 0 : (page - 1) * itemsPerPage + 1}
               </span>
               {' - '}
-              <span className="font-extrabold text-zinc-800">
+              <span className="font-extrabold text-foreground">
                 {Math.min(page * itemsPerPage, totalItems)}
               </span>
               {` ${t('landlordNotificationsPaginationOf')} `}
-              <span className="font-extrabold text-zinc-800">{totalItems}</span>
+              <span className="font-extrabold text-foreground">{totalItems}</span>
               {` ${t('landlordNotificationsPaginationAnnouncements')}`}
             </div>
           </div>
@@ -863,13 +863,13 @@ export default function NotificationsPage() {
               <Text as="h2" variant="heading" size="lg" weight="black" color="white" className="tracking-tight">
                 {t('landlordNotificationsModalTitle')}
               </Text>
-              <Text size="xs" color="subtle" className="text-zinc-400 mt-0.5">
+              <Text size="xs" color="subtle" className="text-muted mt-0.5">
                 {t('landlordNotificationsModalSubtitle')}
               </Text>
             </div>
           </div>
         }
-        bodyClassName="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar bg-zinc-50/50"
+        bodyClassName="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar bg-surface/50"
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
@@ -901,7 +901,7 @@ export default function NotificationsPage() {
         <div className="space-y-1.5">
           <label className="flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <Text as="span" size="xs" weight="bold" className="text-zinc-700 uppercase tracking-wider">
+            <Text as="span" size="xs" weight="bold" className="text-foreground/90 uppercase tracking-wider">
               {t('landlordNotificationsTemplatesLabel')}
             </Text>
           </label>
@@ -918,10 +918,10 @@ export default function NotificationsPage() {
                 }}
                 className="group flex-col items-start justify-start whitespace-normal"
               >
-                <Text size="xs" weight="bold" className="text-zinc-900 group-hover:text-[#2AC1BC] truncate w-full text-left">
+                <Text size="xs" weight="bold" className="text-foreground group-hover:text-[#2AC1BC] truncate w-full text-left">
                   {tmpl.title}
                 </Text>
-                <Text size="3xs" weight="medium" color="subtle" className="text-zinc-500 mt-0.5 text-left">
+                <Text size="3xs" weight="medium" color="subtle" className="text-muted mt-0.5 text-left">
                   {getCategoryLabel(tmpl.category)}
                 </Text>
               </Button>
@@ -1038,17 +1038,17 @@ export default function NotificationsPage() {
         {selectedNotifDetail && (
           <>
             <div>
-              <Text as="h2" size="base" weight="black" className="text-zinc-900 leading-snug mb-1">
+              <Text as="h2" size="base" weight="black" className="text-foreground leading-snug mb-1">
                 {selectedNotifDetail.title}
               </Text>
               <div className="flex items-center gap-3">
-                <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
+                <Text as="span" size="2xs" weight="bold" color="subtle" className="text-muted">
                   {t('landlordNotificationsDetailSentAt', { time: selectedNotifDetail.sentAt })}
                 </Text>
-                <Text as="span" size="2xs" color="subtle" className="text-zinc-400">
+                <Text as="span" size="2xs" color="subtle" className="text-muted">
                   •
                 </Text>
-                <Text as="span" size="2xs" weight="bold" color="subtle" className="text-zinc-400">
+                <Text as="span" size="2xs" weight="bold" color="subtle" className="text-muted">
                   {t('landlordNotificationsDetailChannel', {
                     channel: getChannelLabel(selectedNotifDetail.channel),
                   })}
@@ -1056,16 +1056,16 @@ export default function NotificationsPage() {
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/80">
-              <Text size="xs" weight="medium" className="text-zinc-800 leading-relaxed whitespace-pre-line">
+            <div className="p-4 bg-surface rounded-xl border border-line">
+              <Text size="xs" weight="medium" className="text-foreground leading-relaxed whitespace-pre-line">
                 {selectedNotifDetail.content}
               </Text>
             </div>
 
-            <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 flex items-center justify-between">
+            <div className="p-3 bg-info-soft rounded-xl border border-info-subtle flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-600" />
-                <Text as="span" size="xs" weight="bold" className="text-zinc-700">
+                <Text as="span" size="xs" weight="bold" className="text-foreground/90">
                   {t('landlordNotificationsDetailTargetReach')}
                 </Text>
               </div>
@@ -1114,15 +1114,15 @@ export default function NotificationsPage() {
         }
       >
         <div className="space-y-5 text-center">
-          <div className="w-14 h-14 bg-rose-50 border border-rose-200/80 rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
+          <div className="w-14 h-14 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
             <Trash2 className="w-7 h-7" />
           </div>
 
           <div className="space-y-2">
-            <Text as="h3" variant="heading" size="xl" weight="black" className="text-zinc-900 tracking-tight">
+            <Text as="h3" variant="heading" size="xl" weight="black" className="text-foreground tracking-tight">
               {t('landlordNotificationsConfirmDeleteTitle')}
             </Text>
-            <Text size="sm" weight="medium" color="subtle" align="center" className="text-zinc-500 leading-relaxed max-w-xs mx-auto">
+            <Text size="sm" weight="medium" color="subtle" align="center" className="text-muted leading-relaxed max-w-xs mx-auto">
               {t('landlordNotificationsConfirmDeleteDesc')}
             </Text>
           </div>

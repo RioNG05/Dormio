@@ -39,10 +39,10 @@ export function Step2ServicesAndRoomTypes({
   return (
     <section className="space-y-6 animate-in fade-in duration-300">
       {/* Services Section */}
-      <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+      <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex items-center justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center font-bold">
               <Wrench className="w-5 h-5" />
             </div>
             <div>
@@ -67,7 +67,7 @@ export function Step2ServicesAndRoomTypes({
 
         <div className="space-y-3">
           {services.length === 0 ? (
-            <div className="p-4 rounded-2xl border border-dashed border-zinc-200 text-center">
+            <div className="p-4 rounded-2xl border border-dashed border-line text-center">
               <Text as="p" size="xs" color="subtle">
                 {t('landlordSetupNoServices')}
               </Text>
@@ -76,7 +76,7 @@ export function Step2ServicesAndRoomTypes({
             services.map((service, index) => (
               <div
                 key={service.id}
-                className="p-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 space-y-3"
+                className="p-4 rounded-2xl border border-line bg-surface/50 space-y-3"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                   <div className="sm:col-span-4">
@@ -145,10 +145,10 @@ export function Step2ServicesAndRoomTypes({
       </div>
 
       {/* Room Types Section */}
-      <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+      <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
+        <div className="flex items-center justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-info-soft text-indigo-600 flex items-center justify-center font-bold">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -160,7 +160,7 @@ export function Step2ServicesAndRoomTypes({
                   as="span"
                   variant="badge"
                   color="danger"
-                  className="bg-red-50 px-2 py-0.5 rounded-md border border-red-200"
+                  className="bg-danger-soft px-2 py-0.5 rounded-md border border-danger-subtle"
                 >
                   {t('landlordSetupSection2bRequired')}
                 </Text>
@@ -185,7 +185,7 @@ export function Step2ServicesAndRoomTypes({
           {roomTypes.map((rt, index) => (
             <div
               key={rt.id}
-              className="p-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/50 space-y-3"
+              className="p-4 rounded-2xl border border-line bg-surface/50 space-y-3"
             >
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
                 <div className="sm:col-span-5">

@@ -494,10 +494,10 @@ export default function StaffPage() {
       {/* Top Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
             {t('landlordStaffTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">{t('landlordStaffSubtitle')}</p>
+          <p className="text-xs sm:text-sm text-muted mt-0.5">{t('landlordStaffSubtitle')}</p>
         </div>
 
         <div className="flex items-center gap-2.5">
@@ -545,14 +545,14 @@ export default function StaffPage() {
             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
               {t('landlordStaffHeroTitle')}
             </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordStaffHeroSubtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
             <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
                 {t('landlordStaffStatTotal')}
               </span>
               <span className="font-black text-white text-xl sm:text-2xl mt-1">
@@ -570,7 +570,7 @@ export default function StaffPage() {
             </div>
 
             <div className="flex flex-col p-3.5 bg-zinc-800/80 rounded-2xl border border-zinc-700 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
                 {t('landlordStaffStatInactive')}
               </span>
               <span className="font-black text-zinc-300 text-xl sm:text-2xl mt-1">
@@ -591,7 +591,7 @@ export default function StaffPage() {
       </div>
 
       {/* Filter & Toolbar Bar */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Bar */}
           <div className="w-full md:max-w-xs">
@@ -625,7 +625,7 @@ export default function StaffPage() {
             </div>
 
             {/* View Mode Toggle (Rule #9) */}
-            <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl border border-line shrink-0">
               <Button
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="sm"
@@ -637,8 +637,8 @@ export default function StaffPage() {
                 className={cn(
                   'p-1.5 h-auto rounded-lg',
                   viewMode === 'grid'
-                    ? 'bg-white text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-zinc-500 hover:text-zinc-900',
+                    ? 'bg-card text-[#2AC1BC] shadow-xs font-bold'
+                    : 'text-muted hover:text-foreground',
                 )}
                 title={t('landlordStaffViewGrid')}
               >
@@ -655,8 +655,8 @@ export default function StaffPage() {
                 className={cn(
                   'p-1.5 h-auto rounded-lg',
                   viewMode === 'table'
-                    ? 'bg-white text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-zinc-500 hover:text-zinc-900',
+                    ? 'bg-card text-[#2AC1BC] shadow-xs font-bold'
+                    : 'text-muted hover:text-foreground',
                 )}
                 title={t('landlordStaffViewTable')}
               >
@@ -667,7 +667,7 @@ export default function StaffPage() {
         </div>
 
         {/* Status Category Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-100">
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-line">
           {[
             { label: t('landlordStaffTabAll'), val: 'all', count: summary.totalStaff },
             { label: t('landlordStaffTabActive'), val: 'active', count: summary.activeStaff },
@@ -685,14 +685,14 @@ export default function StaffPage() {
                 'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
                 statusFilter === tab.val
                   ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/20'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70',
+                  : 'bg-card-hover text-muted hover:bg-zinc-200/70',
               )}
             >
               <span>{tab.label}</span>
               <span
                 className={cn(
                   'px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ml-1.5',
-                  statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700',
+                  statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-line text-foreground/90',
                 )}
               >
                 {tab.count}
@@ -704,20 +704,20 @@ export default function StaffPage() {
 
       {/* Main Content Area */}
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-white rounded-3xl border border-zinc-200">
+        <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-card rounded-3xl border border-line">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">{t('landlordStaffLoading')}</p>
+          <p className="text-xs text-muted font-medium">{t('landlordStaffLoading')}</p>
         </div>
       ) : staffList.length === 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
+        <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
           <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
             <Users className="w-8 h-8" />
           </div>
           <div className="max-w-sm space-y-1">
-            <h3 className="text-base font-extrabold text-zinc-900">
+            <h3 className="text-base font-extrabold text-foreground">
               {t('landlordStaffEmptyTitle')}
             </h3>
-            <p className="text-xs text-zinc-500 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {searchQuery || statusFilter !== 'all' || positionFilter !== 'all'
                 ? t('landlordStaffEmptyFiltered')
                 : t('landlordStaffEmptyDesc')}
@@ -741,7 +741,7 @@ export default function StaffPage() {
             return (
               <div
                 key={staff.assignmentId}
-                className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                className="bg-card border border-line rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-4">
                   {/* Card Header: Avatar, Name & Status */}
@@ -751,7 +751,7 @@ export default function StaffPage() {
                         {staff.fullName.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h3 className="font-extrabold text-zinc-900 text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                        <h3 className="font-extrabold text-foreground text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
                           {staff.fullName}
                         </h3>
                         <div className="inline-flex items-center gap-1 mt-0.5">
@@ -767,7 +767,7 @@ export default function StaffPage() {
                       className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border shrink-0 ${
                         isActive
                           ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                          : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+                          : 'bg-card-hover text-muted border-line'
                       }`}
                     >
                       {isActive
@@ -777,34 +777,34 @@ export default function StaffPage() {
                   </div>
 
                   {/* Details List */}
-                  <div className="space-y-2 pt-1 text-xs text-zinc-600 border-t border-zinc-100">
+                  <div className="space-y-2 pt-1 text-xs text-muted border-t border-line">
                     <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span className="font-bold text-zinc-900">{staff.phoneNumber}</span>
+                      <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
+                      <span className="font-bold text-foreground">{staff.phoneNumber}</span>
                     </div>
                     {staff.email && (
                       <div className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span className="text-zinc-600 truncate">{staff.email}</span>
+                        <Mail className="w-3.5 h-3.5 text-muted shrink-0" />
+                        <span className="text-muted truncate">{staff.email}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <Calendar className="w-3.5 h-3.5 text-muted shrink-0" />
                       <span>
                         {t('landlordStaffJoinedLabel')}{' '}
-                        <strong className="text-zinc-700">
+                        <strong className="text-foreground/90">
                           {formatDate(staff.joinedAt)}
                         </strong>
                       </span>
                     </div>
                     {staff.positionDescription && (
-                      <div className="flex items-start gap-2 text-[11px] text-zinc-500 bg-zinc-50 p-2 rounded-xl">
-                        <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2 text-[11px] text-muted bg-surface p-2 rounded-xl">
+                        <FileText className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
                         <span className="line-clamp-2 italic">{staff.positionDescription}</span>
                       </div>
                     )}
                     {staff.mustChangePassword && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 font-semibold">
+                      <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-warning-soft px-2 py-1 rounded-lg border border-warning-subtle font-semibold">
                         <AlertCircle className="w-3 h-3 shrink-0" />
                         <span>{t('landlordStaffMustChangePassword')}</span>
                       </div>
@@ -813,7 +813,7 @@ export default function StaffPage() {
                 </div>
 
                 {/* Card Footer Actions: Assign Role & Toggle Status */}
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5">
+                <div className="pt-3 border-t border-line flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
@@ -843,7 +843,7 @@ export default function StaffPage() {
                     className={cn(
                       'text-xs font-bold',
                       isActive
-                        ? 'text-rose-600 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/60'
+                        ? 'text-rose-600 bg-danger-soft hover:bg-rose-100/80 border border-danger-subtle'
                         : 'text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30',
                     )}
                     leftIcon={<Power  />}
@@ -857,10 +857,10 @@ export default function StaffPage() {
         </div>
       ) : (
         /* TABLE VIEW (Rule #9 parallel table) */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-zinc-50/80 text-zinc-500 uppercase font-bold border-b border-zinc-200">
+              <thead className="bg-surface/80 text-muted uppercase font-bold border-b border-line">
                 <tr>
                   <th className="px-6 py-3.5">{t('landlordStaffThStaff')}</th>
                   <th className="px-6 py-3.5">{t('landlordStaffThRole')}</th>
@@ -870,7 +870,7 @@ export default function StaffPage() {
                   <th className="px-6 py-3.5 text-right">{t('landlordStaffThActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium">
+              <tbody className="divide-y divide-line font-medium">
                 {staffList.map(staff => {
                   const isActive = staff.status === 'active'
                   return (
@@ -881,10 +881,10 @@ export default function StaffPage() {
                             {staff.fullName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-extrabold text-zinc-900 text-sm">
+                            <div className="font-extrabold text-foreground text-sm">
                               {staff.fullName}
                             </div>
-                            <div className="text-[11px] text-zinc-400">
+                            <div className="text-[11px] text-muted">
                               {staff.email || t('landlordStaffNoEmail')}
                             </div>
                           </div>
@@ -892,16 +892,16 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div>
-                          <span className="font-bold text-zinc-900">{staff.positionName}</span>
+                          <span className="font-bold text-foreground">{staff.positionName}</span>
                           {staff.positionDescription && (
-                            <p className="text-[11px] text-zinc-400 line-clamp-1 italic">
+                            <p className="text-[11px] text-muted line-clamp-1 italic">
                               {staff.positionDescription}
                             </p>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-zinc-900">{staff.phoneNumber}</td>
-                      <td className="px-6 py-4 text-zinc-600">
+                      <td className="px-6 py-4 font-bold text-foreground">{staff.phoneNumber}</td>
+                      <td className="px-6 py-4 text-muted">
                         {formatDate(staff.joinedAt)}
                       </td>
                       <td className="px-6 py-4">
@@ -909,7 +909,7 @@ export default function StaffPage() {
                           className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border ${
                             isActive
                               ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                              : 'bg-zinc-100 text-zinc-500 border-zinc-200'
+                              : 'bg-card-hover text-muted border-line'
                           }`}
                         >
                           {isActive
@@ -944,7 +944,7 @@ export default function StaffPage() {
                             className={cn(
                               'p-1.5 h-auto rounded-lg border',
                               isActive
-                                ? 'text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100'
+                                ? 'text-rose-600 bg-danger-soft border-danger-subtle hover:bg-rose-100'
                                 : 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20',
                             )}
                             title={
@@ -967,9 +967,9 @@ export default function StaffPage() {
       )}
 
       {/* Standardized Dormio Pagination Footer (Rule #9) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200 rounded-2xl shadow-xs">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
+          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
             <span>{t('landlordStaffPaginationShowing')}</span>
             <NumberInput
               min={1}
@@ -980,7 +980,7 @@ export default function StaffPage() {
                 setPageSize(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100))
                 setCurrentPage(1)
               }}
-              className="w-14 text-center font-extrabold text-zinc-900 bg-white"
+              className="w-14 text-center font-extrabold text-foreground bg-card"
             />
             <span>{t('landlordStaffPaginationPerPage')}</span>
           </div>
@@ -988,11 +988,11 @@ export default function StaffPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}
             </span>{' '}
             -{' '}
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {Math.min(currentPage * pageSize, totalItems)}
             </span>{' '}
             {t('landlordStaffPaginationTotal', { total: totalItems })}
@@ -1019,7 +1019,7 @@ export default function StaffPage() {
                 'w-8 h-8 p-0 text-xs font-extrabold rounded-xl',
                 currentPage === page
                   ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50',
+                  : 'bg-card border border-line text-foreground/90 hover:bg-card-hover',
               )}
             >
               {page}
@@ -1047,20 +1047,20 @@ export default function StaffPage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[92vh]"
+            className="bg-card rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[92vh]"
             onInput={() => setFormDirty(true)}
             onChange={() => setFormDirty(true)}
           >
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
+                  <h3 className="font-extrabold text-foreground text-base">
                     {t('landlordStaffOnboardTitle')}
                   </h3>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordStaffOnboardSubtitle')}
                   </p>
                 </div>
@@ -1078,7 +1078,7 @@ export default function StaffPage() {
             <form onSubmit={handleSubmitOnboard} className="flex flex-col flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
                 {errorMessage && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-xs text-rose-700 font-semibold">
+                  <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl flex items-start gap-2.5 text-xs text-danger font-semibold">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                     <span>{errorMessage}</span>
                   </div>
@@ -1086,7 +1086,7 @@ export default function StaffPage() {
 
                 {/* Phone lookup */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordStaffOnboardPhoneLabel')}</span>
                     <span className="text-rose-500">*</span>
                   </label>
@@ -1109,7 +1109,7 @@ export default function StaffPage() {
                             handleSearchPhone(lookupPhone)
                           }
                         }}
-                        leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
+                        leftIcon={<Phone className="w-4 h-4 text-muted" />}
                       />
                     </div>
                     <Button variant="dark"
@@ -1122,36 +1122,36 @@ export default function StaffPage() {
                       {t('landlordStaffOnboardBtnCheck')}
                     </Button>
                   </div>
-                  <p className="text-[11px] text-zinc-400">{t('landlordStaffOnboardPhoneHelp')}</p>
+                  <p className="text-[11px] text-muted">{t('landlordStaffOnboardPhoneHelp')}</p>
                 </div>
 
                 {/* Found user */}
                 {hasSearched && foundUser && (
-                  <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-2.5">
-                    <div className="flex items-center gap-2 text-emerald-800 text-xs font-extrabold">
+                  <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle space-y-2.5">
+                    <div className="flex items-center gap-2 text-success text-xs font-extrabold">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>{t('landlordStaffOnboardAccountFound')}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-emerald-100">
+                    <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-success-subtle">
                       <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-black text-sm">
                         {foundUser.fullName.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-zinc-900 text-xs truncate">
+                        <div className="font-extrabold text-foreground text-xs truncate">
                           {foundUser.fullName}
                         </div>
-                        <div className="text-[11px] text-zinc-500">
+                        <div className="text-[11px] text-muted">
                           {foundUser.phoneNumber} {foundUser.email ? `• ${foundUser.email}` : ''}
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-zinc-100 text-zinc-600 uppercase">
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-card-hover text-muted uppercase">
                         {foundUser.role}
                       </span>
                     </div>
 
                     {foundUser.isAlreadyStaffAtThisHouse && (
-                      <div className="p-2 bg-amber-100/70 border border-amber-300 rounded-xl text-[11px] text-amber-800 font-bold flex items-center gap-1.5">
+                      <div className="p-2 bg-warning-soft border border-amber-300 rounded-xl text-[11px] text-warning font-bold flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>{t('landlordStaffOnboardAlreadyAssigned')}</span>
                       </div>
@@ -1161,8 +1161,8 @@ export default function StaffPage() {
 
                 {/* New user prompt */}
                 {hasSearched && !foundUser && (
-                  <div className="p-4 rounded-2xl bg-orange-50/80 border border-orange-200/80 space-y-3">
-                    <div className="flex items-center gap-2 text-orange-800 text-xs font-extrabold">
+                  <div className="p-4 rounded-2xl bg-accent-soft border border-accent-subtle space-y-3">
+                    <div className="flex items-center gap-2 text-accent text-xs font-extrabold">
                       <Info className="w-4 h-4 text-[#FF6B35] shrink-0" />
                       <span>{t('landlordStaffOnboardNewAccountTitle')}</span>
                     </div>
@@ -1178,8 +1178,8 @@ export default function StaffPage() {
                       }}
                     />
 
-                    <div className="p-2.5 bg-white/80 rounded-xl border border-orange-100 text-[11px] text-zinc-600 leading-relaxed space-y-1">
-                      <p className="font-bold text-orange-700">
+                    <div className="p-2.5 bg-card/80 rounded-xl border border-accent-subtle text-[11px] text-muted leading-relaxed space-y-1">
+                      <p className="font-bold text-accent">
                         {t('landlordStaffOnboardSecurityPolicyTitle')}
                       </p>
                       <p>{t('landlordStaffOnboardSecurityPolicyDesc')}</p>
@@ -1190,7 +1190,7 @@ export default function StaffPage() {
                 {/* Job Position selection */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                    <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                       <span>{t('landlordStaffOnboardPositionLabel')}</span>
                       <span className="text-rose-500">*</span>
                     </label>
@@ -1220,10 +1220,10 @@ export default function StaffPage() {
                       }))}
                     />
                   ) : (
-                    <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                    <div className="space-y-2 p-3 bg-surface rounded-2xl border border-line">
                       <TextInput
                         label={t('landlordStaffOnboardNewPosNameLabel')}
-                        labelClassName="text-[11px] font-bold text-zinc-600"
+                        labelClassName="text-[11px] font-bold text-muted"
                         required={isCreatingNewPosition}
                         placeholder={t('landlordStaffOnboardNewPosNamePlaceholder')}
                         value={newPositionName}
@@ -1234,7 +1234,7 @@ export default function StaffPage() {
                       />
                       <TextInput
                         label={t('landlordStaffOnboardNewPosDescLabel')}
-                        labelClassName="text-[11px] font-bold text-zinc-600"
+                        labelClassName="text-[11px] font-bold text-muted"
                         placeholder={t('landlordStaffOnboardNewPosDescPlaceholder')}
                         value={newPositionDesc}
                         onChange={e => {
@@ -1251,7 +1251,7 @@ export default function StaffPage() {
                   <TextInput
                     type="date"
                     label={t('landlordStaffOnboardStartDateLabel')}
-                    labelClassName="text-xs font-bold text-zinc-700"
+                    labelClassName="text-xs font-bold text-foreground/90"
                     value={joinedAtInput}
                     onChange={e => {
                       setJoinedAtInput(e.target.value)
@@ -1261,7 +1261,7 @@ export default function StaffPage() {
 
                   <TextInput
                     label={t('landlordStaffOnboardNoteLabel')}
-                    labelClassName="text-xs font-bold text-zinc-700"
+                    labelClassName="text-xs font-bold text-foreground/90"
                     placeholder={t('landlordStaffOnboardNotePlaceholder')}
                     value={noteInput}
                     onChange={e => {
@@ -1273,7 +1273,7 @@ export default function StaffPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/60">
+              <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-3 bg-surface/60">
                 <Button
                   variant="secondary"
                   type="button"
@@ -1305,20 +1305,20 @@ export default function StaffPage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]"
+            className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]"
             onInput={() => setFormDirty(true)}
             onChange={() => setFormDirty(true)}
           >
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
+                  <h3 className="font-extrabold text-foreground text-base">
                     {t('landlordStaffAssignTitle')}
                   </h3>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordStaffAssignSubtitle')}
                   </p>
                 </div>
@@ -1335,20 +1335,20 @@ export default function StaffPage() {
 
             <form onSubmit={handleSaveAssignRole} className="p-6 space-y-4">
               {assignError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                   <span>{assignError}</span>
                 </div>
               )}
 
               {/* Staff Member Card Header */}
-              <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+              <div className="flex items-center gap-3 p-3 bg-surface rounded-2xl border border-line">
                 <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
                   {selectedStaff.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-xs font-extrabold text-zinc-900">{selectedStaff.fullName}</h4>
-                  <p className="text-[11px] text-zinc-500">
+                  <h4 className="text-xs font-extrabold text-foreground">{selectedStaff.fullName}</h4>
+                  <p className="text-[11px] text-muted">
                     {t('landlordStaffAssignCurrentLabel', { phone: selectedStaff.phoneNumber })}{' '}
                     <strong className="text-[#2AC1BC]">{selectedStaff.positionName}</strong>
                   </p>
@@ -1358,7 +1358,7 @@ export default function StaffPage() {
               {/* Role Selection */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700">
+                  <label className="text-xs font-bold text-foreground/90">
                     {t('landlordStaffAssignSelectRoleLabel')}{' '}
                     <span className="text-rose-500">*</span>
                   </label>
@@ -1387,7 +1387,7 @@ export default function StaffPage() {
                     }))}
                   />
                 ) : (
-                  <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                  <div className="space-y-2 p-3 bg-surface rounded-2xl border border-line">
                     <div>
                       <TextInput
                         label={t('landlordStaffOnboardNewPosNameLabel')}
@@ -1417,11 +1417,11 @@ export default function StaffPage() {
 
               {/* Selected Position Duty Description Preview */}
               {!isAssignCreatingNew && (
-                <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900 space-y-1">
-                  <span className="font-bold block text-[11px] uppercase tracking-wider text-blue-700">
+                <div className="p-3 bg-info-soft rounded-xl border border-info-subtle text-xs text-info space-y-1">
+                  <span className="font-bold block text-[11px] uppercase tracking-wider text-info">
                     {t('landlordStaffAssignDutiesTitle')}
                   </span>
-                  <p className="italic text-zinc-700">
+                  <p className="italic text-foreground/90">
                     {positions.find(p => p.id === assignTargetPositionId)?.description ||
                       t('landlordStaffAssignNoDuties')}
                   </p>
@@ -1429,7 +1429,7 @@ export default function StaffPage() {
               )}
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line">
                 <Button size="xs"
                   type="button"
                   variant="outline"
@@ -1467,20 +1467,20 @@ export default function StaffPage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]"
+            className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]"
             onInput={() => setFormDirty(true)}
             onChange={() => setFormDirty(true)}
           >
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
+                  <h3 className="font-extrabold text-foreground text-base">
                     {t('landlordStaffPositionsTitle')}
                   </h3>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordStaffPositionsSubtitle')}
                   </p>
                 </div>
@@ -1497,7 +1497,7 @@ export default function StaffPage() {
 
             <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
               {posErrorMessage && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                   <span>{posErrorMessage}</span>
                 </div>
@@ -1507,10 +1507,10 @@ export default function StaffPage() {
               {(isAddingPositionInline || editingPosition) && (
                 <form
                   onSubmit={handleSavePosition}
-                  className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3"
+                  className="p-4 bg-surface border border-line rounded-2xl space-y-3"
                 >
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-zinc-900">
+                    <h4 className="text-xs font-black text-foreground">
                       {editingPosition
                         ? t('landlordStaffPositionsEditTitle')
                         : t('landlordStaffPositionsAddTitle')}
@@ -1577,7 +1577,7 @@ export default function StaffPage() {
               {/* Positions List */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider">
+                  <span className="text-xs font-extrabold text-foreground/90 uppercase tracking-wider">
                     {t('landlordStaffPositionsListTitle', { count: positions.length })}
                   </span>
                   {!isAddingPositionInline && !editingPosition && (
@@ -1597,7 +1597,7 @@ export default function StaffPage() {
                   )}
                 </div>
 
-                <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
+                <div className="divide-y divide-line border border-line rounded-2xl overflow-hidden bg-card">
                   {positions.map(pos => (
                     <div
                       key={pos.id}
@@ -1605,14 +1605,14 @@ export default function StaffPage() {
                     >
                       <div className="space-y-0.5 max-w-md">
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-zinc-900 text-xs sm:text-sm">
+                          <span className="font-extrabold text-foreground text-xs sm:text-sm">
                             {pos.name}
                           </span>
-                          <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full text-[10px] font-bold">
+                          <span className="px-2 py-0.5 bg-card-hover text-muted rounded-full text-[10px] font-bold">
                             {t('landlordStaffPositionsStaffCount', { count: pos.staffCount || 0 })}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-500 italic">
+                        <p className="text-xs text-muted italic">
                           {pos.description || t('landlordStaffPositionsNoDesc')}
                         </p>
                       </div>
@@ -1653,7 +1653,7 @@ export default function StaffPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
+            <div className="px-6 py-4 border-t border-line flex items-center justify-end bg-surface/60">
               <Button size="xs"
                 type="button"
                 variant="outline"
@@ -1678,32 +1678,32 @@ export default function StaffPage() {
             }
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-5 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
+          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-line p-6 space-y-5 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-success-soft text-emerald-600 border border-success-subtle flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-black text-zinc-900">
+              <h3 className="text-lg font-black text-foreground">
                 {t('landlordStaffCredSuccessTitle')}
               </h3>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted">
                 {t('landlordStaffCredSuccessDesc', { name: credentialModal.name })}
               </p>
             </div>
 
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200 text-left space-y-3">
+            <div className="p-4 bg-surface rounded-2xl border border-line text-left space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-500 font-semibold">
+                <span className="text-muted font-semibold">
                   {t('landlordStaffCredPhoneLabel')}
                 </span>
-                <span className="font-extrabold text-zinc-900">{credentialModal.phone}</span>
+                <span className="font-extrabold text-foreground">{credentialModal.phone}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-500 font-semibold">
+                <span className="text-muted font-semibold">
                   {t('landlordStaffCredPasswordLabel')}
                 </span>
-                <span className="font-mono font-black text-sm text-[#FF6B35] bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-200">
+                <span className="font-mono font-black text-sm text-[#FF6B35] bg-accent-soft px-2 py-0.5 rounded-lg border border-accent-subtle">
                   {credentialModal.password}
                 </span>
               </div>
@@ -1752,14 +1752,14 @@ export default function StaffPage() {
             if (e.target === e.currentTarget) setIsDetailModalOpen(false)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-5">
+          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-line p-6 space-y-5">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg">
                   {selectedStaff.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
+                  <h3 className="font-extrabold text-foreground text-base">
                     {selectedStaff.fullName}
                   </h3>
                   <p className="text-xs font-bold text-[#2AC1BC]">{selectedStaff.positionName}</p>
@@ -1775,16 +1775,16 @@ export default function StaffPage() {
               </Button>
             </div>
 
-            <div className="space-y-3 text-xs bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
+            <div className="space-y-3 text-xs bg-surface p-4 rounded-2xl border border-line">
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">
+                <span className="text-muted font-semibold">
                   {t('landlordStaffDetailStatusLabel')}
                 </span>
                 <span
                   className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${
                     selectedStaff.status === 'active'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-zinc-200 text-zinc-600'
+                      ? 'bg-success-soft text-success'
+                      : 'bg-line text-muted'
                   }`}
                 >
                   {selectedStaff.status === 'active'
@@ -1793,30 +1793,30 @@ export default function StaffPage() {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">
+                <span className="text-muted font-semibold">
                   {t('landlordStaffDetailPhoneLabel')}
                 </span>
-                <span className="font-bold text-zinc-900">{selectedStaff.phoneNumber}</span>
+                <span className="font-bold text-foreground">{selectedStaff.phoneNumber}</span>
               </div>
               {selectedStaff.email && (
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-semibold">
+                  <span className="text-muted font-semibold">
                     {t('landlordStaffDetailEmailLabel')}
                   </span>
-                  <span className="font-medium text-zinc-700">{selectedStaff.email}</span>
+                  <span className="font-medium text-foreground/90">{selectedStaff.email}</span>
                 </div>
               )}
               <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">
+                <span className="text-muted font-semibold">
                   {t('landlordStaffDetailJoinedLabel')}
                 </span>
-                <span className="font-medium text-zinc-700">
+                <span className="font-medium text-foreground/90">
                   {formatDate(selectedStaff.joinedAt)}
                 </span>
               </div>
               {selectedStaff.leftAt && (
                 <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-semibold">
+                  <span className="text-muted font-semibold">
                     {t('landlordStaffDetailLeftLabel')}
                   </span>
                   <span className="font-medium text-rose-600">
@@ -1825,11 +1825,11 @@ export default function StaffPage() {
                 </div>
               )}
               {selectedStaff.positionDescription && (
-                <div className="pt-2 border-t border-zinc-200/80">
-                  <span className="text-zinc-500 font-semibold block mb-1">
+                <div className="pt-2 border-t border-line">
+                  <span className="text-muted font-semibold block mb-1">
                     {t('landlordStaffDetailDutiesLabel')}
                   </span>
-                  <p className="text-zinc-700 italic">{selectedStaff.positionDescription}</p>
+                  <p className="text-foreground/90 italic">{selectedStaff.positionDescription}</p>
                 </div>
               )}
             </div>
@@ -1874,16 +1874,16 @@ export default function StaffPage() {
             if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-amber-600 border border-warning-subtle flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-black text-zinc-900">
+              <h4 className="text-base font-black text-foreground">
                 {t('landlordStaffConfirmCloseTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 {t('landlordStaffConfirmCloseMessage')}
               </p>
             </div>

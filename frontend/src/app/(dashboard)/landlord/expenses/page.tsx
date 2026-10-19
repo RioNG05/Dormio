@@ -437,13 +437,13 @@ export default function ExpensesPage() {
     }
     if (status === 'pending') {
       return (
-        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 shrink-0">
+        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-warning-soft text-warning border border-warning-subtle flex items-center gap-1 shrink-0">
           <Clock className="w-3 h-3 text-amber-500" /> {t('landlordExpensesStatusPending')}
         </span>
       )
     }
     return (
-      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-zinc-100 text-zinc-500 border border-zinc-200 flex items-center gap-1 shrink-0">
+      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-card-hover text-muted border border-line flex items-center gap-1 shrink-0">
         <X className="w-3 h-3" /> {t('landlordExpensesStatusCanceled')}
       </span>
     )
@@ -456,10 +456,10 @@ export default function ExpensesPage() {
       {/* ─── Top Header & Actions Bar ────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
             <Wallet className="w-6 h-6 text-[#2AC1BC]" /> {t('landlordExpensesTitle')}
           </h1>
-          <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+          <p className="text-xs text-muted font-semibold mt-0.5">
             {t('landlordExpensesSubtitle')}
           </p>
         </div>
@@ -520,7 +520,7 @@ export default function ExpensesPage() {
               </div>
             )}
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordExpensesHeroSubtitle')}
             </p>
           </div>
@@ -572,10 +572,10 @@ export default function ExpensesPage() {
       </div>
 
       {/* ─── Main Filter & Control Bar ───────────────────────────────────────── */}
-      <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-sm space-y-3.5">
+      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-sm space-y-3.5">
         {/* Category Switcher Horizontal Scroll */}
-        <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
-          <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
+        <div className="flex items-center gap-2 border-b border-line pb-3">
+          <span className="text-muted text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
             {t('landlordExpensesCategoryColon')}
           </span>
           <ChipGroup
@@ -609,7 +609,7 @@ export default function ExpensesPage() {
           </div>
 
           {/* View Switcher (Grid vs Table) per Rule #9 */}
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+          <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
             <Button
               variant={viewMode === 'grid' ? 'white' : 'ghost'}
               size="icon-sm"
@@ -666,15 +666,15 @@ export default function ExpensesPage() {
 
       {/* ─── Main Content Display (Grid or Table View) ───────────────────────── */}
       {isLoading ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
+        <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-          <p className="text-sm font-bold text-zinc-700">{t('landlordExpensesLoading')}</p>
+          <p className="text-sm font-bold text-foreground/90">{t('landlordExpensesLoading')}</p>
         </div>
       ) : expensesList.length === 0 ? (
-        <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
+        <div className="p-12 text-center bg-card border border-line rounded-2xl space-y-3">
           <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-zinc-800">{t('landlordExpensesNotFound')}</h3>
-          <p className="text-xs text-zinc-400">{t('landlordExpensesNotFoundDesc')}</p>
+          <h3 className="font-extrabold text-sm text-foreground">{t('landlordExpensesNotFound')}</h3>
+          <p className="text-xs text-muted">{t('landlordExpensesNotFoundDesc')}</p>
           <Button variant="dark"
             size="sm"
             onClick={() => {
@@ -692,30 +692,30 @@ export default function ExpensesPage() {
           {expensesList.map(exp => (
             <div
               key={exp.id}
-              className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
+              className="bg-card border border-line hover:border-[#2AC1BC]/40 rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
             >
               {/* Header Info */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
+                <div className="flex items-center justify-between pb-2.5 border-b border-line">
                   <div className="flex items-center gap-2">
                     <Receipt className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                    <span className="font-black text-xs text-zinc-900">{exp.code}</span>
+                    <span className="font-black text-xs text-foreground">{exp.code}</span>
                   </div>
                   {renderStatusBadge(exp.status)}
                 </div>
 
                 <div>
-                  <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-zinc-100 text-zinc-700 border border-zinc-200 inline-block mb-1.5">
+                  <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-card-hover text-foreground/90 border border-line inline-block mb-1.5">
                     {getCategoryLabel(exp.category)}
                   </span>
-                  <h4 className="font-black text-sm text-zinc-900 leading-snug line-clamp-2">
+                  <h4 className="font-black text-sm text-foreground leading-snug line-clamp-2">
                     {exp.name}
                   </h4>
                 </div>
 
                 {/* Amount Highlight */}
-                <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-xl flex items-center justify-between">
-                  <span className="text-[11px] font-extrabold text-rose-800 uppercase">
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-xl flex items-center justify-between">
+                  <span className="text-[11px] font-extrabold text-danger uppercase">
                     {t('landlordExpensesExpenseAmount')}
                   </span>
                   <span className="text-base font-black text-rose-600 whitespace-nowrap">
@@ -724,20 +724,20 @@ export default function ExpensesPage() {
                 </div>
 
                 {/* Scope & Date Meta */}
-                <div className="space-y-1.5 text-xs text-zinc-600 font-medium">
+                <div className="space-y-1.5 text-xs text-muted font-medium">
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">{t('landlordExpensesScopeColon')}</span>
-                    <span className="font-extrabold text-zinc-800">{getScopeLabel(exp)}</span>
+                    <span className="text-muted">{t('landlordExpensesScopeColon')}</span>
+                    <span className="font-extrabold text-foreground">{getScopeLabel(exp)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">{t('landlordExpensesDateColon')}</span>
-                    <span className="font-semibold text-zinc-700">{formatDate(exp.paidAt)}</span>
+                    <span className="text-muted">{t('landlordExpensesDateColon')}</span>
+                    <span className="font-semibold text-foreground/90">{formatDate(exp.paidAt)}</span>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+              <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
@@ -793,11 +793,11 @@ export default function ExpensesPage() {
         </div>
       ) : (
         /* TABLE VIEW */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse text-xs min-w-[720px]">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-extrabold uppercase tracking-wider text-[10px] whitespace-nowrap">
+                <tr className="bg-surface border-b border-line text-muted font-extrabold uppercase tracking-wider text-[10px] whitespace-nowrap">
                   <th className="py-3 px-3.5 sm:px-4 min-w-[130px]">{t('landlordExpensesCode')}</th>
                   <th className="py-3 px-3.5 sm:px-4 min-w-[220px]">
                     {t('landlordExpensesNameAndCategory')}
@@ -817,10 +817,10 @@ export default function ExpensesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-semibold text-zinc-700">
+              <tbody className="divide-y divide-line font-semibold text-foreground/90">
                 {expensesList.map(exp => (
                   <tr key={exp.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-3 px-3.5 sm:px-4 font-black text-zinc-900 whitespace-nowrap">
+                    <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Receipt className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
                         <span>{exp.code}</span>
@@ -829,20 +829,20 @@ export default function ExpensesPage() {
 
                     <td className="py-3 px-3.5 sm:px-4">
                       <div className="min-w-[180px] max-w-[260px]">
-                        <div className="font-extrabold text-zinc-900 text-xs leading-snug line-clamp-2">
+                        <div className="font-extrabold text-foreground text-xs leading-snug line-clamp-2">
                           {exp.name}
                         </div>
-                        <span className="text-[10px] text-zinc-400 font-medium block mt-0.5">
+                        <span className="text-[10px] text-muted font-medium block mt-0.5">
                           {getCategoryLabel(exp.category)}
                         </span>
                       </div>
                     </td>
 
-                    <td className="py-3 px-3.5 sm:px-4 font-bold text-zinc-800 whitespace-nowrap">
+                    <td className="py-3 px-3.5 sm:px-4 font-bold text-foreground whitespace-nowrap">
                       {getScopeLabel(exp)}
                     </td>
 
-                    <td className="py-3 px-3.5 sm:px-4 text-zinc-600 whitespace-nowrap">
+                    <td className="py-3 px-3.5 sm:px-4 text-muted whitespace-nowrap">
                       {formatDate(exp.paidAt)}
                     </td>
 
@@ -913,8 +913,8 @@ export default function ExpensesPage() {
 
       {/* ─── Rule #9 Pagination Bar ───────────────────────────────────────────── */}
       {expensesList.length > 0 && (
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-sm">
-          <div className="flex items-center gap-2 text-zinc-500 font-medium">
+        <div className="p-4 bg-card border border-line rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-sm">
+          <div className="flex items-center gap-2 text-muted font-medium">
             <span>{t('landlordExpensesPaginationShowing')}</span>
             <NumberInput
               min={1}
@@ -933,7 +933,7 @@ export default function ExpensesPage() {
             <span className="text-zinc-300">|</span>
             <span>
               {startIndex} - {endIndex} {t('landlordExpensesPaginationOf')}{' '}
-              <span className="font-bold text-zinc-800">{totalRecords}</span>{' '}
+              <span className="font-bold text-foreground">{totalRecords}</span>{' '}
               {t('landlordExpensesPaginationItems')}
             </span>
           </div>
@@ -981,18 +981,18 @@ export default function ExpensesPage() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
+          <div className="bg-card border border-line rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-[#2AC1BC]/5 shrink-0">
+            <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between bg-[#2AC1BC]/5 shrink-0">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
                 <div className="p-2 sm:p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shadow-xs shrink-0">
                   <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-black text-sm sm:text-base text-zinc-900 truncate">
+                  <h3 className="font-black text-sm sm:text-base text-foreground truncate">
                     {t('landlordExpensesDetailTitle', { code: selectedExpense.code })}
                   </h3>
-                  <p className="text-[11px] sm:text-xs text-zinc-500 font-semibold truncate">
+                  <p className="text-[11px] sm:text-xs text-muted font-semibold truncate">
                     {getCategoryLabel(selectedExpense.category)}
                   </p>
                 </div>
@@ -1013,7 +1013,7 @@ export default function ExpensesPage() {
               {/* Financial Highlight Box */}
               <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 whitespace-nowrap">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted whitespace-nowrap">
                     {t('landlordExpensesPaymentAmountLabel')}
                   </span>
                   <span className="text-xs text-zinc-300 font-semibold whitespace-nowrap">
@@ -1037,29 +1037,29 @@ export default function ExpensesPage() {
               </div>
 
               {/* Expense Details Breakdown Card */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-zinc-600 gap-2">
-                  <span className="font-semibold text-zinc-500 shrink-0">
+              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-muted gap-2">
+                  <span className="font-semibold text-muted shrink-0">
                     {t('landlordExpensesScopeColon')}
                   </span>
-                  <span className="font-black text-zinc-900 truncate">
+                  <span className="font-black text-foreground truncate">
                     {getScopeLabel(selectedExpense)}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center text-zinc-600 border-t border-zinc-200/60 pt-2 gap-2">
-                  <span className="font-semibold text-zinc-500 shrink-0">
+                <div className="flex justify-between items-center text-muted border-t border-line pt-2 gap-2">
+                  <span className="font-semibold text-muted shrink-0">
                     {t('landlordExpensesStatusColon')}
                   </span>
                   <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
                 </div>
 
                 {selectedExpense.description && (
-                  <div className="border-t border-zinc-200/60 pt-2.5 space-y-1">
-                    <span className="font-extrabold text-zinc-700 block">
+                  <div className="border-t border-line pt-2.5 space-y-1">
+                    <span className="font-extrabold text-foreground/90 block">
                       {t('landlordExpensesDescriptionLabel')}
                     </span>
-                    <p className="text-zinc-600 leading-relaxed bg-white p-3 rounded-xl border border-zinc-200/80">
+                    <p className="text-muted leading-relaxed bg-card p-3 rounded-xl border border-line">
                       {selectedExpense.description}
                     </p>
                   </div>
@@ -1068,7 +1068,7 @@ export default function ExpensesPage() {
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="p-3.5 sm:p-4 border-t border-zinc-100 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
+            <div className="p-3.5 sm:p-4 border-t border-line bg-card flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1129,22 +1129,22 @@ export default function ExpensesPage() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
+          <div className="bg-card border border-line rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-gradient-to-r from-teal-50/50 via-white to-teal-50/50">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-gradient-to-r from-teal-50/50 via-white to-teal-50/50">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shadow-xs">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">
+                  <h3 className="font-black text-base text-foreground">
                     {showCreateModal
                       ? t('landlordExpensesCreateTitle')
                       : t('landlordExpensesEditTitleWithCode', {
                           code: editingExpense?.code || '',
                         })}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">
+                  <p className="text-xs text-muted font-semibold">
                     {t('landlordExpensesFormSubtitle')}
                   </p>
                 </div>
@@ -1163,7 +1163,7 @@ export default function ExpensesPage() {
             <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
               <TextInput
                 label={t('landlordExpensesNameLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                 value={expenseForm.name}
                 onChange={e => {
                   setExpenseForm({ ...expenseForm, name: e.target.value })
@@ -1175,7 +1175,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <SelectInput
                   label={t('landlordExpensesCategoryLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   value={expenseForm.category}
                   onChange={e => {
                     setExpenseForm({ ...expenseForm, category: e.target.value })
@@ -1192,7 +1192,7 @@ export default function ExpensesPage() {
 
                 <NumberInput
                   label={t('landlordExpensesAmountLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   min={0}
                   value={expenseForm.amount}
                   onChange={e => {
@@ -1206,7 +1206,7 @@ export default function ExpensesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <SelectInput
                   label={t('landlordExpensesScopeLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   value={expenseForm.roomScope}
                   onChange={e => {
                     const newScope = e.target.value as 'property' | 'room'
@@ -1229,7 +1229,7 @@ export default function ExpensesPage() {
                 {expenseForm.roomScope === 'room' ? (
                   <SelectInput
                     label={t('landlordExpensesSelectRoomLabel')}
-                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                    labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                     value={expenseForm.roomId}
                     onChange={e => {
                       setExpenseForm({ ...expenseForm, roomId: e.target.value })
@@ -1249,7 +1249,7 @@ export default function ExpensesPage() {
                 ) : (
                   <SelectInput
                     label={t('landlordExpensesPaymentStatusLabel')}
-                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                    labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                     value={expenseForm.status}
                     onChange={e => {
                       setExpenseForm({
@@ -1269,7 +1269,7 @@ export default function ExpensesPage() {
               {expenseForm.roomScope === 'room' && (
                 <SelectInput
                   label={t('landlordExpensesPaymentStatusLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   value={expenseForm.status}
                   onChange={e => {
                     setExpenseForm({
@@ -1288,7 +1288,7 @@ export default function ExpensesPage() {
               <TextInput
                 type="date"
                 label={t('landlordExpensesDateLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                 value={expenseForm.paidAt}
                 onChange={e => {
                   setExpenseForm({ ...expenseForm, paidAt: e.target.value })
@@ -1298,7 +1298,7 @@ export default function ExpensesPage() {
 
               <TextareaInput
                 label={t('landlordExpensesNoteLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                 rows={2}
                 value={expenseForm.description}
                 onChange={e => {
@@ -1310,7 +1310,7 @@ export default function ExpensesPage() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
+            <div className="p-4 border-t border-line bg-card flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1337,15 +1337,15 @@ export default function ExpensesPage() {
       {/* ─── Modal 3: Rule #10 Unsaved Changes Confirmation Modal ────────────── */}
       {confirmCloseTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150">
+          <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150">
             <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-black text-base text-zinc-900">
+              <h4 className="font-black text-base text-foreground">
                 {t('landlordExpensesFormCloseTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 font-medium mt-1">
+              <p className="text-xs text-muted font-medium mt-1">
                 {t('landlordExpensesFormCloseDesc')}
               </p>
             </div>
@@ -1378,15 +1378,15 @@ export default function ExpensesPage() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
         >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
+          <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
             <div className="w-12 h-12 bg-rose-500/10 text-rose-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-black text-base text-zinc-900">
+              <h4 className="font-black text-base text-foreground">
                 {t('landlordExpensesDeleteConfirmTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 font-medium mt-1.5 leading-relaxed">
+              <p className="text-xs text-muted font-medium mt-1.5 leading-relaxed">
                 {t('landlordExpensesDeleteConfirmDesc', {
                   name: deletingExpenseTarget.name,
                   code: deletingExpenseTarget.code,
@@ -1422,15 +1422,15 @@ export default function ExpensesPage() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
         >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
+          <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
             <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <Lock className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="font-black text-base text-zinc-900">
+              <h4 className="font-black text-base text-foreground">
                 {t('landlordExpensesLockedTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 font-medium mt-1.5 leading-relaxed">
+              <p className="text-xs text-muted font-medium mt-1.5 leading-relaxed">
                 {t('landlordExpensesLockedDesc', {
                   name: lockedExpenseTarget.name,
                   code: lockedExpenseTarget.code,

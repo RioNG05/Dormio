@@ -425,14 +425,14 @@ function DepositsContent() {
       const hasDeduction = (dep.deductedAmount ?? 0) > 0
       return (
         <div className="flex flex-wrap items-center gap-1 justify-end sm:justify-start">
-          <span className="px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+          <span className="px-2.5 py-0.5 rounded-full bg-deposit-soft text-deposit border border-deposit-subtle">
             <Text as="span" size="xs" weight="black" color="inherit">
               {t('landlordDepositsStatusRefunded')}
             </Text>
           </span>
           {hasDeduction && (
             <span
-              className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200"
+              className="px-2.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle"
               title={t('landlordDepositsPartialDeductionBadge').replace(
                 '{amount}',
                 `${dep.deductedAmount?.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫`,
@@ -449,7 +449,7 @@ function DepositsContent() {
 
     // 100% Deduction / Forfeited status
     return (
-      <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+      <span className="px-2.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle">
         <Text as="span" size="xs" weight="black" color="inherit">
           {t('landlordDepositsStatusDeducted')}
         </Text>
@@ -533,7 +533,7 @@ function DepositsContent() {
               </div>
             )}
 
-            <Text size="xs" color="inherit" className="text-zinc-400 leading-relaxed sm:text-sm">
+            <Text size="xs" color="inherit" className="text-muted leading-relaxed sm:text-sm">
               {t('landlordDepositsBannerDesc')}
             </Text>
           </div>
@@ -627,11 +627,11 @@ function DepositsContent() {
       </div>
 
       {/* Main Filter & Control Bar */}
-      <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3.5">
+      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3.5">
         {/* Top Segmented Pill Switcher */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-line">
           {/* 2 Deposit Types Segment Switcher */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-zinc-100 p-1 rounded-2xl sm:rounded-full border border-zinc-200/80 w-full md:w-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-card-hover p-1 rounded-2xl sm:rounded-full border border-line w-full md:w-auto">
             <Button
               rounded="full"
               variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
@@ -645,7 +645,7 @@ function DepositsContent() {
                 'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
                 selectedDepositTypeTab === 'hold'
                   ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50',
+                  : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
               )}
               leftIcon={<Clock className="shrink-0 w-3.5 h-3.5" />}
             >
@@ -657,7 +657,7 @@ function DepositsContent() {
                   'px-2 py-0.5 rounded-full text-[10px] font-black',
                   selectedDepositTypeTab === 'hold'
                     ? 'bg-white/20 text-white'
-                    : 'bg-zinc-200 text-zinc-700',
+                    : 'bg-line text-foreground/90',
                 )}
               >
                 {stats.holdTypeCountTotal}
@@ -677,7 +677,7 @@ function DepositsContent() {
                 'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
                 selectedDepositTypeTab === 'contract'
                   ? 'bg-[#2AC1BC] text-white shadow-xs'
-                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/50',
+                  : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
               )}
               leftIcon={<FileText className="shrink-0 w-3.5 h-3.5" />}
             >
@@ -689,7 +689,7 @@ function DepositsContent() {
                   'px-2 py-0.5 rounded-full text-[10px] font-black',
                   selectedDepositTypeTab === 'contract'
                     ? 'bg-white/20 text-white'
-                    : 'bg-zinc-200 text-zinc-700',
+                    : 'bg-line text-foreground/90',
                 )}
               >
                 {stats.contractTypeCountTotal}
@@ -712,14 +712,14 @@ function DepositsContent() {
             </div>
 
             {/* View Switcher (Grid vs Table) */}
-            <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+            <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
               <Button
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('grid')}
                 className={cn(
                   'h-7 w-7 rounded-lg',
-                  viewMode === 'grid' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                  viewMode === 'grid' ? 'bg-card shadow-2xs' : 'text-muted hover:text-foreground',
                 )}
                 title={t('landlordDepositsViewGrid')}
               >
@@ -731,7 +731,7 @@ function DepositsContent() {
                 onClick={() => setViewMode('table')}
                 className={cn(
                   'h-7 w-7 rounded-lg',
-                  viewMode === 'table' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
+                  viewMode === 'table' ? 'bg-card shadow-2xs' : 'text-muted hover:text-foreground',
                 )}
                 title={t('landlordDepositsViewTable')}
               >
@@ -798,8 +798,8 @@ function DepositsContent() {
           </Text>
         </div>
       ) : depositsList.length === 0 ? (
-        <div className="p-12 text-center bg-white border border-zinc-200/80 rounded-3xl space-y-3">
-          <div className="w-12 h-12 bg-zinc-100 text-zinc-400 rounded-2xl flex items-center justify-center mx-auto">
+        <div className="p-12 text-center bg-card border border-line rounded-3xl space-y-3">
+          <div className="w-12 h-12 bg-card-hover text-muted rounded-2xl flex items-center justify-center mx-auto">
             <PiggyBank className="w-6 h-6" />
           </div>
           <Text as="h3" size="base" weight="bold" color="default">
@@ -835,13 +835,13 @@ function DepositsContent() {
             return (
               <div
                 key={dep.id}
-                className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-3">
                   {/* Top Badge & Room */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="p-2 rounded-xl bg-zinc-100 text-zinc-700 font-black text-xs">
+                      <span className="p-2 rounded-xl bg-card-hover text-foreground/90 font-black text-xs">
                         <Text as="span" size="xs" weight="black" color="inherit">
                           {t('landlordContractsRoomPrefix').replace(
                             '{room}',
@@ -853,8 +853,8 @@ function DepositsContent() {
                         className={cn(
                           'px-2 py-0.5 text-[10px] font-black rounded-md border',
                           isHoldType
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            ? 'bg-warning-soft text-warning border-warning-subtle'
+                            : 'bg-success-soft text-success border-success-subtle',
                         )}
                       >
                         <Text as="span" size="xs" weight="black" color="inherit">
@@ -902,7 +902,7 @@ function DepositsContent() {
                         as="span"
                         size="xs"
                         weight="bold"
-                        className={isHoldType && isHolding ? 'text-amber-600' : 'text-zinc-600'}
+                        className={isHoldType && isHolding ? 'text-amber-600' : 'text-muted'}
                       >
                         {dep.expiryDate || t('landlordDepositsNoExpiry')}
                       </Text>
@@ -911,7 +911,7 @@ function DepositsContent() {
                 </div>
 
                 {/* Amount & Action Footer */}
-                <div className="pt-3 border-t border-zinc-100 space-y-3">
+                <div className="pt-3 border-t border-line space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <Text as="span" size="xs" weight="bold" color="secondary" className="block uppercase tracking-wider">
@@ -923,7 +923,7 @@ function DepositsContent() {
                     </div>
 
                     {isHoldType && isHolding && (
-                      <span className="text-[10px] font-extrabold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-extrabold text-amber-600 bg-warning-soft px-2 py-0.5 rounded-md">
                         <Text as="span" size="xs" weight="black" color="inherit">
                           {t('landlordDepositsHoldingDeposit')}
                         </Text>
@@ -990,11 +990,11 @@ function DepositsContent() {
         </div>
       ) : (
         /* TABLE VIEW (Rule #9: Standard 10 items per page) */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-zinc-100 bg-zinc-50/50 text-zinc-500 uppercase tracking-wider font-extrabold text-[10px]">
+                <tr className="border-b border-line bg-surface/50 text-muted uppercase tracking-wider font-extrabold text-[10px]">
                   <th className="py-3.5 px-4">{t('landlordDepositsColId')}</th>
                   <th className="py-3.5 px-4">{t('landlordDepositsColRoom')}</th>
                   <th className="py-3.5 px-4">{t('landlordDepositsColTenant')}</th>
@@ -1006,17 +1006,17 @@ function DepositsContent() {
                   <th className="py-3.5 px-4 text-right">{t('landlordDepositsColAction')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium">
+              <tbody className="divide-y divide-line font-medium">
                 {depositsList.map(dep => {
                   const isHoldType = dep.depositCategory === 'hold'
                   const isHolding = dep.status === 'paid'
 
                   return (
                     <tr key={dep.id} className="hover:bg-zinc-50/70 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-zinc-500">
+                      <td className="py-3.5 px-4 font-mono font-bold text-muted">
                         {dep.id.slice(0, 8)}...
                       </td>
-                      <td className="py-3.5 px-4 font-extrabold text-zinc-900">
+                      <td className="py-3.5 px-4 font-extrabold text-foreground">
                         {t('landlordContractsRoomPrefix').replace('{room}', String(dep.roomNumber))}
                       </td>
                       <td className="py-3.5 px-4">
@@ -1032,8 +1032,8 @@ function DepositsContent() {
                           className={cn(
                             'px-2 py-0.5 text-[10px] font-black rounded-md border',
                             isHoldType
-                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                              ? 'bg-warning-soft text-warning border-warning-subtle'
+                              : 'bg-success-soft text-success border-success-subtle',
                           )}
                         >
                           <Text as="span" size="xs" weight="black" color="inherit">
@@ -1044,12 +1044,12 @@ function DepositsContent() {
                       <td className="py-3.5 px-4 text-right font-black text-sm text-[#2AC1BC]">
                         {dep.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                       </td>
-                      <td className="py-3.5 px-4 text-zinc-600 font-semibold">{dep.depositDate}</td>
+                      <td className="py-3.5 px-4 text-muted font-semibold">{dep.depositDate}</td>
                       <td className="py-3.5 px-4">
                         <span
                           className={cn(
                             'font-semibold',
-                            isHoldType && isHolding ? 'text-amber-600 font-bold' : 'text-zinc-600',
+                            isHoldType && isHolding ? 'text-amber-600 font-bold' : 'text-muted',
                           )}
                         >
                           {dep.expiryDate || '—'}
@@ -1117,7 +1117,7 @@ function DepositsContent() {
 
       {/* Rule #9 Standardized Pagination Control */}
       {totalItems > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-zinc-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-muted">
           <div className="flex items-center gap-2">
             <Text as="span" size="xs" color="secondary">
               {t('landlordDepositsShowing')}
@@ -1161,7 +1161,7 @@ function DepositsContent() {
                 variant={currentPage === num ? 'primary' : 'outline'}
                 size="icon"
                 onClick={() => setCurrentPage(num)}
-                className={cn('h-8 w-8 text-xs', currentPage !== num && 'text-zinc-700')}
+                className={cn('h-8 w-8 text-xs', currentPage !== num && 'text-foreground/90')}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {num}
@@ -1203,7 +1203,7 @@ function DepositsContent() {
             />
 
             <Modal.Body className="space-y-4">
-              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
+              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <Text as="span" size="xs" weight="semibold" color="secondary">
                     {t('landlordDepositsRoom')}
@@ -1241,7 +1241,7 @@ function DepositsContent() {
                 </div>
               </div>
 
-              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
+              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <Text as="span" size="xs" weight="semibold" color="secondary">
                     {t('landlordDepositsTenant')}
@@ -1299,11 +1299,11 @@ function DepositsContent() {
                 )}
 
                 {selectedDeposit.refundAmount !== null && selectedDeposit.refundAmount !== undefined && (
-                  <div className="flex justify-between items-center text-xs text-purple-700">
-                    <Text as="span" size="xs" weight="semibold" className="text-purple-700">
+                  <div className="flex justify-between items-center text-xs text-deposit">
+                    <Text as="span" size="xs" weight="semibold" className="text-deposit">
                       {t('landlordDepositsRefundedAmount')}
                     </Text>
-                    <Text as="span" size="xs" weight="bold" className="text-purple-700">
+                    <Text as="span" size="xs" weight="bold" className="text-deposit">
                       {selectedDeposit.refundAmount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                     </Text>
                   </div>
@@ -1321,7 +1321,7 @@ function DepositsContent() {
 
               {/* Notes */}
               {selectedDeposit.note && (
-                <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+                <div className="p-3.5 bg-surface border border-line rounded-xl space-y-1">
                   <Text as="span" size="xs" weight="black" color="secondary" className="uppercase tracking-wider block">
                     {t('landlordDepositsNotesLabel')}
                   </Text>
@@ -1422,7 +1422,7 @@ function DepositsContent() {
                   <Text as="label" size="xs" weight="black" color="default">
                     {t('landlordDepositsRoomSelectLabel')}
                   </Text>
-                  <div className="flex items-center gap-2 py-2 text-zinc-400">
+                  <div className="flex items-center gap-2 py-2 text-muted">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />{' '}
                     <Text as="span" size="xs" color="secondary">
                       {t('landlordDepositsLoadingRooms')}
@@ -1432,7 +1432,7 @@ function DepositsContent() {
               ) : (
                 <SelectInput
                   label={t('landlordDepositsRoomSelectLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   value={newDepositForm.roomId}
                   onChange={e => {
                     setNewDepositForm({ ...newDepositForm, roomId: e.target.value })
@@ -1464,7 +1464,7 @@ function DepositsContent() {
             <div>
               <SelectInput
                 label={t('landlordDepositsDepositTypeLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                 value={newDepositForm.depositType}
                 onChange={e => {
                   setNewDepositForm({ ...newDepositForm, depositType: e.target.value as any })
@@ -1482,7 +1482,7 @@ function DepositsContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <TextInput
               label={t('landlordDepositsTenantNameLabel')}
-              labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
               value={newDepositForm.tenantName}
               onChange={e => {
                 setNewDepositForm({ ...newDepositForm, tenantName: e.target.value })
@@ -1494,7 +1494,7 @@ function DepositsContent() {
             <TextInput
               type="tel"
               label={t('landlordDepositsTenantPhoneLabel')}
-              labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
               value={newDepositForm.tenantPhone}
               onChange={e => {
                 setNewDepositForm({ ...newDepositForm, tenantPhone: e.target.value })
@@ -1508,7 +1508,7 @@ function DepositsContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <NumberInput
               label={t('landlordDepositsDepositAmountVND')}
-              labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
               min={10000}
               step={50000}
               value={newDepositForm.amount}
@@ -1522,7 +1522,7 @@ function DepositsContent() {
             <TextInput
               type="date"
               label={t('landlordDepositsHoldingDeadline')}
-              labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
               value={newDepositForm.expiryDate}
               onChange={e => {
                 setNewDepositForm({ ...newDepositForm, expiryDate: e.target.value })
@@ -1534,7 +1534,7 @@ function DepositsContent() {
           {/* Notes */}
           <TextareaInput
             label={t('landlordDepositsInitialNotes')}
-            labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+            labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
             rows={3}
             value={newDepositForm.note}
             onChange={e => {
@@ -1593,11 +1593,11 @@ function DepositsContent() {
 
             <Modal.Body className="space-y-4">
               {/* Held Amount Banner */}
-              <div className="p-4 bg-gradient-to-r from-purple-500/10 via-zinc-50 to-purple-500/10 border border-purple-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
+              <div className="p-4 bg-gradient-to-r from-purple-500/10 via-zinc-50 to-purple-500/10 border border-deposit-subtle rounded-2xl flex items-center justify-between gap-2 text-xs">
                 <Text as="span" size="xs" weight="semibold" color="secondary" className="truncate">
                   {t('landlordDepositsCurrentHeldAmount')}
                 </Text>
-                <Text as="span" size="base" weight="black" className="text-purple-900 whitespace-nowrap">
+                <Text as="span" size="base" weight="black" className="text-deposit whitespace-nowrap">
                   {showRefundModal.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                 </Text>
               </div>
@@ -1606,7 +1606,7 @@ function DepositsContent() {
               <div className="space-y-2">
                 <NumberInput
                   label={t('landlordDepositsDeductAmountLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   min={0}
                   max={showRefundModal.amount}
                   value={refundForm.deductedAmount}
@@ -1691,7 +1691,7 @@ function DepositsContent() {
               {/* Deduction Reason */}
               <TextInput
                 label={t('landlordDepositsDeductionReason')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                 value={refundForm.deductionReason}
                 onChange={e => {
                   setRefundForm({ ...refundForm, deductionReason: e.target.value })
@@ -1703,7 +1703,7 @@ function DepositsContent() {
               {/* Note */}
               <TextareaInput
                 label={t('landlordDepositsAdditionalNotes')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                 rows={2}
                 value={refundForm.note}
                 onChange={e => {
@@ -1766,15 +1766,15 @@ function DepositsContent() {
               <div className="p-3 bg-gradient-to-r from-amber-500/10 via-teal-500/10 to-emerald-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <Text size="xs" color="default" weight="medium" className="leading-relaxed">
-                  <strong className="text-zinc-900 font-black">
+                  <strong className="text-foreground font-black">
                     {t('landlordDepositsSmartFeature')}
                   </strong>{' '}
                   {t('landlordDepositsSmartFeatureDesc')}
                 </Text>
               </div>
 
-              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-zinc-600 text-xs">
+              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+                <div className="flex justify-between items-center text-muted text-xs">
                   <Text as="span" size="xs" color="secondary" weight="medium">
                     {t('landlordDepositsCollectedHoldingDeposit')}
                   </Text>
@@ -1785,7 +1785,7 @@ function DepositsContent() {
 
                 <NumberInput
                   label={t('landlordDepositsTargetContractDeposit')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   value={upgradeForm.targetContractAmount}
                   onChange={e => {
                     setUpgradeForm({ ...upgradeForm, targetContractAmount: e.target.value })
@@ -1796,10 +1796,10 @@ function DepositsContent() {
 
                 <div className="p-3.5 bg-amber-500/10 border border-amber-300/80 rounded-xl flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <Text as="span" size="xs" weight="black" className="uppercase text-amber-700 tracking-wider block truncate">
+                    <Text as="span" size="xs" weight="black" className="uppercase text-warning tracking-wider block truncate">
                       {t('landlordDepositsAdditionalAmountNeeded')}
                     </Text>
-                    <Text as="span" size="lg" weight="black" className="text-amber-900 leading-none mt-1 block whitespace-nowrap sm:text-xl">
+                    <Text as="span" size="lg" weight="black" className="text-warning leading-none mt-1 block whitespace-nowrap sm:text-xl">
                       +{upgradeForm.additionalAmount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                     </Text>
                   </div>
@@ -1842,7 +1842,7 @@ function DepositsContent() {
         showCloseButton={false}
       >
         <Modal.Body className="p-6 text-center space-y-4">
-          <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 bg-warning-soft text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
 

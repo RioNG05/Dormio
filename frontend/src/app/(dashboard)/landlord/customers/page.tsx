@@ -273,10 +273,10 @@ export default function CustomersPage() {
       {/* Top Bar / Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
             {t('landlordCustomersPageHeading')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
+          <p className="text-xs sm:text-sm text-muted mt-0.5 font-medium">
             {t('landlordCustomersPageSubheading')}
           </p>
         </div>
@@ -328,7 +328,7 @@ export default function CustomersPage() {
                 </a>
               </div>
 
-              <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+              <p className="text-muted text-xs sm:text-sm leading-relaxed">
                 {t('landlordCustomersBannerSub')}
               </p>
             </div>
@@ -388,7 +388,7 @@ export default function CustomersPage() {
       )}
 
       {/* SINGLE ROW TOOLBAR (Filter Pills + Search + Sort + View Switcher all in 1 Row) */}
-      <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
+      <div className="bg-card border border-line rounded-2xl p-3 shadow-2xs">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Left Controls: Status Pills + Search + Sort */}
           <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
@@ -425,7 +425,7 @@ export default function CustomersPage() {
             />
 
             {/* Separator Line */}
-            <div className="hidden xl:block h-6 w-px bg-zinc-200 mx-1 shrink-0" />
+            <div className="hidden xl:block h-6 w-px bg-line mx-1 shrink-0" />
 
             {/* Search Input using Base Component */}
             <SearchInput
@@ -433,7 +433,7 @@ export default function CustomersPage() {
               value={searchQuery}
               onChange={setSearchQuery}
               containerClassName="w-full sm:w-52 shrink-0 space-y-0"
-              className="py-1.5 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
+              className="py-1.5 text-xs font-semibold bg-surface border-line focus:bg-white rounded-xl"
             />
 
             {/* Sort Select using Base Component */}
@@ -441,7 +441,7 @@ export default function CustomersPage() {
               value={sortFilter}
               onChange={e => setSortFilter(e.target.value)}
               containerClassName="w-auto shrink-0 space-y-0"
-              className="py-1.5 pl-3 pr-8 text-xs font-semibold text-zinc-700 bg-zinc-50 border-zinc-200 rounded-xl"
+              className="py-1.5 pl-3 pr-8 text-xs font-semibold text-foreground/90 bg-surface border-line rounded-xl"
               options={[
                 { value: '', label: t('landlordCustomersSort') },
                 { value: 'name_asc', label: t('landlordCustomersSortName') },
@@ -451,7 +451,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Right Controls: View Mode Switcher */}
-          <div className="flex items-center justify-end gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0 self-end lg:self-auto">
+          <div className="flex items-center justify-end gap-1 bg-card-hover p-1 rounded-xl border border-line shrink-0 self-end lg:self-auto">
             <Button
               variant="ghost"
               size="sm"
@@ -484,7 +484,7 @@ export default function CustomersPage() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sortedCustomers.length === 0 ? (
-            <div className="col-span-full py-14 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500">
+            <div className="col-span-full py-14 text-center bg-card rounded-2xl border border-line text-muted">
               {isLoading ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
@@ -493,10 +493,10 @@ export default function CustomersPage() {
               ) : (
                 <div className="flex flex-col items-center gap-2">
                   <Users className="w-8 h-8 text-zinc-300" />
-                  <p className="text-sm font-bold text-zinc-700">
+                  <p className="text-sm font-bold text-foreground/90">
                     {t('landlordCustomersEmptyTitle')}
                   </p>
-                  <p className="text-xs text-zinc-400">{t('landlordCustomersEmptyDesc')}</p>
+                  <p className="text-xs text-muted">{t('landlordCustomersEmptyDesc')}</p>
                   <Button
                     variant="primary"
                     size="sm"
@@ -513,7 +513,7 @@ export default function CustomersPage() {
             paginatedCustomers.map(customer => (
               <div
                 key={customer.id}
-                className="bg-white rounded-2xl border border-zinc-200/80 p-4 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
+                className="bg-card rounded-2xl border border-line p-4 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -523,12 +523,12 @@ export default function CustomersPage() {
                     <div className="min-w-0">
                       <Link
                         href={`/landlord/customers/${customer.contractId || customer.id}`}
-                        className="font-bold text-zinc-900 text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block"
+                        className="font-bold text-foreground text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block"
                       >
                         {customer.name}
                       </Link>
-                      <p className="text-xs text-zinc-600 font-semibold truncate flex items-center gap-1.5 mt-0.5">
-                        <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <p className="text-xs text-muted font-semibold truncate flex items-center gap-1.5 mt-0.5">
+                        <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
                         <span>{customer.phone || '—'}</span>
                       </p>
                     </div>
@@ -537,35 +537,35 @@ export default function CustomersPage() {
                     className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
                       ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
                       : customer.status === 'Sắp hết hợp đồng'
-                        ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
-                        : 'bg-blue-50 text-blue-700 border border-blue-200'
+                        ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
+                        : 'bg-info-soft text-info border border-info-subtle'
                       }`}
                   >
                     {getCustomerStatusLabel(customer.status)}
                   </span>
                 </div>
 
-                <div className="p-2.5 bg-zinc-50 rounded-xl space-y-1.5 text-xs text-zinc-600">
+                <div className="p-2.5 bg-surface rounded-xl space-y-1.5 text-xs text-muted">
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-400 font-medium whitespace-nowrap">
+                    <span className="text-muted font-medium whitespace-nowrap">
                       {t('landlordCustomersBuildingAndRoomLabel')}
                     </span>
-                    <span className="font-bold text-zinc-900 whitespace-nowrap">
+                    <span className="font-bold text-foreground whitespace-nowrap">
                       {activeBuilding?.name || t('landlordCustomersBuildingFallback')} —{' '}
                       {t('landlordCustomersRoomWord')}{' '}
                       {customer.status === 'Đã rời' ? '—' : customer.room}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-400 font-medium whitespace-nowrap">
+                    <span className="text-muted font-medium whitespace-nowrap">
                       {t('landlordCustomersStayDate')}
                     </span>
-                    <span className="font-semibold text-zinc-800 whitespace-nowrap">
+                    <span className="font-semibold text-foreground whitespace-nowrap">
                       {customer.joinDate}
                     </span>
                   </div>
                   {customer.status === 'Sắp hết hợp đồng' && (
-                    <div className="flex justify-between items-center pt-1 border-t border-orange-200/60 text-orange-800 font-bold">
+                    <div className="flex justify-between items-center pt-1 border-t border-accent-subtle text-accent font-bold">
                       <span className="whitespace-nowrap">
                         ⏳ {t('landlordCustomersContractExpiry')}
                       </span>
@@ -586,7 +586,7 @@ export default function CustomersPage() {
                   <a
                     href={`tel:${customer.phone}`}
                     onClick={e => e.stopPropagation()}
-                    className="py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
+                    className="py-1.5 bg-red-600 text-white border border-line rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                   >
                     <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
                   </a>
@@ -604,7 +604,7 @@ export default function CustomersPage() {
                   </Button>
                   <Link
                     href={`/landlord/customers/${customer.contractId || customer.id}`}
-                    className="py-1.5 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
+                    className="py-1.5 bg-accent-soft text-[#FF6B35] border border-accent-subtle rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                   >
                     <Eye className="w-3 h-3" /> {t('landlordCustomersViewBtn')}
                   </Link>
@@ -614,10 +614,10 @@ export default function CustomersPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white border border-zinc-200 rounded-2xl shadow-xs overflow-hidden flex flex-col">
+        <div className="bg-card border border-line rounded-2xl shadow-xs overflow-hidden flex flex-col">
           <div className="overflow-auto max-h-[500px]">
             <table className="w-full text-sm text-left relative">
-              <thead className="text-[11px] font-bold text-zinc-500 uppercase bg-zinc-50/80 border-b border-zinc-100 sticky top-0 z-10">
+              <thead className="text-[11px] font-bold text-muted uppercase bg-surface/80 border-b border-line sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-4 whitespace-nowrap">
                     {t('landlordCustomersCustomerName')}
@@ -633,10 +633,10 @@ export default function CustomersPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-line">
                 {sortedCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-muted">
                       {isLoading ? (
                         <div className="flex items-center justify-center gap-2">
                           <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
@@ -645,10 +645,10 @@ export default function CustomersPage() {
                       ) : (
                         <div className="flex flex-col items-center gap-1.5 py-4">
                           <Users className="w-7 h-7 text-zinc-300" />
-                          <p className="text-xs font-bold text-zinc-700">
+                          <p className="text-xs font-bold text-foreground/90">
                             {t('landlordCustomersEmptyTitle')}
                           </p>
-                          <p className="text-[11px] text-zinc-400">
+                          <p className="text-[11px] text-muted">
                             {t('landlordCustomersEmptyDescTable')}
                           </p>
                         </div>
@@ -669,18 +669,18 @@ export default function CustomersPage() {
                           <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-xs uppercase shrink-0">
                             {customer.name.charAt(0)}
                           </div>
-                          <span className="font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
+                          <span className="font-bold text-foreground group-hover:text-[#2AC1BC] transition-colors">
                             {customer.name}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-3.5 font-bold text-zinc-800 whitespace-nowrap">
+                      <td className="px-6 py-3.5 font-bold text-foreground whitespace-nowrap">
                         {customer.phone}
                       </td>
-                      <td className="px-6 py-3.5 font-medium text-zinc-700 capitalize whitespace-nowrap">
+                      <td className="px-6 py-3.5 font-medium text-foreground/90 capitalize whitespace-nowrap">
                         {activeBuilding?.name || t('landlordCustomersBuildingFallback')}
                       </td>
-                      <td className="px-6 py-3.5 font-medium text-zinc-700 whitespace-nowrap">
+                      <td className="px-6 py-3.5 font-medium text-foreground/90 whitespace-nowrap">
                         {customer.status === 'Đã rời' ? '—' : customer.room}
                       </td>
                       <td className="px-6 py-3.5 whitespace-nowrap">
@@ -688,8 +688,8 @@ export default function CustomersPage() {
                           className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
                             ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
                             : customer.status === 'Sắp hết hợp đồng'
-                              ? 'bg-orange-50 text-orange-700 border border-orange-200 animate-pulse'
-                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                              ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
+                              : 'bg-info-soft text-info border border-info-subtle'
                             }`}
                         >
                           {getCustomerStatusLabel(customer.status)}
@@ -703,7 +703,7 @@ export default function CustomersPage() {
                           <a
                             href={`tel:${customer.phone}`}
                             title={t('landlordCustomersCallNow')}
-                            className="px-2.5 py-1 bg-red-600 text-white border border-zinc-200 rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
+                            className="px-2.5 py-1 bg-red-600 text-white border border-line rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
                           >
                             <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
                           </a>
@@ -718,7 +718,7 @@ export default function CustomersPage() {
                           </Button>
                           <Link
                             href={`/landlord/customers/${customer.contractId || customer.id}`}
-                            className="px-2.5 py-1 bg-orange-50 text-[#FF6B35] border border-orange-200/80 rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 bg-accent-soft text-[#FF6B35] border border-accent-subtle rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <Eye className="w-3 h-3" /> {t('landlordCustomersViewBtn')}
                           </Link>
@@ -734,9 +734,9 @@ export default function CustomersPage() {
       )}
 
       {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
+          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
             <span>{t('landlordCustomersPaginationShowing')}</span>
             <NumberInput
               min={1}
@@ -748,7 +748,7 @@ export default function CustomersPage() {
                 setCurrentPage(1)
               }}
               containerClassName="w-14 space-y-0"
-              className="text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs h-7"
+              className="text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 text-xs h-7"
             />
             <span>{t('landlordCustomersPaginationPerPage')}</span>
           </div>
@@ -756,15 +756,15 @@ export default function CustomersPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {sortedCustomers.length === 0 ? 0 : startIndex + 1}
             </span>{' '}
             -{' '}
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {Math.min(startIndex + itemsPerPage, sortedCustomers.length)}
             </span>{' '}
             {t('landlordCustomersPaginationOf')}{' '}
-            <span className="font-extrabold text-zinc-800">{sortedCustomers.length}</span>{' '}
+            <span className="font-extrabold text-foreground">{sortedCustomers.length}</span>{' '}
             {t('landlordCustomersTotalCustomers').toLowerCase()}
           </div>
         </div>
@@ -839,22 +839,22 @@ function AlertModal({
 
   const config = {
     warning: {
-      bgColor: 'bg-amber-500/10 text-amber-600 border-amber-200',
+      bgColor: 'bg-amber-500/10 text-amber-600 border-warning-subtle',
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
       btnColor: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20',
     },
     error: {
-      bgColor: 'bg-rose-500/10 text-rose-600 border-rose-200',
+      bgColor: 'bg-rose-500/10 text-rose-600 border-danger-subtle',
       icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
       btnColor: 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20',
     },
     success: {
-      bgColor: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+      bgColor: 'bg-emerald-500/10 text-emerald-600 border-success-subtle',
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
       btnColor: 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20',
     },
     info: {
-      bgColor: 'bg-orange-50 text-[#FF6B35] border-orange-200',
+      bgColor: 'bg-accent-soft text-[#FF6B35] border-accent-subtle',
       icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
       btnColor: 'bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20',
     },
@@ -867,7 +867,7 @@ function AlertModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
+      <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
         <div
           className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
         >
@@ -875,8 +875,8 @@ function AlertModal({
         </div>
 
         <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="text-xs text-muted font-medium leading-relaxed">{message}</p>
         </div>
 
         <Button fullWidth size="xs" variant="dark"

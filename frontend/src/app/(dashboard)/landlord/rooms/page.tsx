@@ -591,7 +591,7 @@ export default function RoomsPage() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-zinc-900">
+          <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-foreground">
             {t('landlordRoomsPageTitle')}
           </Text>
           <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5">
@@ -673,7 +673,7 @@ export default function RoomsPage() {
           <div className="flex flex-col items-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-4 lg:mt-0">
             <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-2.5 sm:gap-3 w-full">
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md w-full lg:w-[140px]">
-                <Home className="w-5 h-5 text-zinc-400 shrink-0" />
+                <Home className="w-5 h-5 text-muted shrink-0" />
                 <div className="flex flex-col">
                   <Text variant="overline" size="3xs" weight="bold" color="subtle">
                     {t('landlordRoomsStatTotal')}
@@ -751,9 +751,9 @@ export default function RoomsPage() {
       </div>
 
       {/* Main Card with Toolbar & View Switcher */}
-      <div className="bg-white border border-zinc-200/80 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
         {/* Toolbar Header */}
-        <div className="p-4 border-b border-zinc-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-zinc-50/40">
+        <div className="p-4 border-b border-line flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-zinc-50/40">
           <div className="flex items-center gap-3">
             {/* Search Input */}
             <SearchInput
@@ -764,7 +764,7 @@ export default function RoomsPage() {
             />
 
             {/* View Switcher: Grid vs Table */}
-            <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+            <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
               <Button
                 type="button"
                 variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
@@ -773,8 +773,8 @@ export default function RoomsPage() {
                 leftIcon={<Grid  />}
                 className={
                   viewMode === 'grid'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted hover:text-foreground'
                 }
                 title={t('landlordRoomsViewGridTooltip')}
               >
@@ -790,8 +790,8 @@ export default function RoomsPage() {
                 leftIcon={<List  />}
                 className={
                   viewMode === 'table'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted hover:text-foreground'
                 }
                 title={t('landlordRoomsViewTableTooltip')}
               >
@@ -836,7 +836,7 @@ export default function RoomsPage() {
           {isLoadingMetadata ? (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
               <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-              <Text weight="bold" size="sm" className="text-zinc-700">
+              <Text weight="bold" size="sm" className="text-foreground/90">
                 {t('landlordRoomsLoadingData')}
               </Text>
               <Text variant="caption" color="subtle" className="mt-1">
@@ -844,11 +844,11 @@ export default function RoomsPage() {
               </Text>
             </div>
           ) : filteredRooms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-50/50 rounded-2xl border border-zinc-200 border-dashed text-center">
-              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-zinc-100 flex items-center justify-center mb-4 text-zinc-400">
+            <div className="flex flex-col items-center justify-center py-16 px-4 bg-surface/50 rounded-2xl border border-line border-dashed text-center">
+              <div className="w-16 h-16 bg-card rounded-2xl shadow-sm border border-line flex items-center justify-center mb-4 text-muted">
                 <Search className="w-8 h-8" />
               </div>
-              <Text as="h3" weight="bold" size="base" className="text-zinc-900 mb-1">
+              <Text as="h3" weight="bold" size="base" className="text-foreground mb-1">
                 {t('landlordRoomsEmptyTitle')}
               </Text>
               <Text variant="subtitle" size="xs" color="secondary" className="max-w-sm">
@@ -883,7 +883,7 @@ export default function RoomsPage() {
               {floors.map(floor => (
                 <div
                   key={floor}
-                  className="flex flex-col md:flex-row gap-4 bg-white p-3.5 rounded-2xl border border-zinc-200 shadow-2xs hover:border-zinc-300 transition-all"
+                  className="flex flex-col md:flex-row gap-4 bg-card p-3.5 rounded-2xl border border-line shadow-2xs hover:border-line transition-all"
                 >
                   <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white">
                     <div className="flex items-center gap-1.5">
@@ -915,7 +915,7 @@ export default function RoomsPage() {
                                   ? 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500'
                                   : isVacant
                                     ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500'
-                                    : 'bg-white border-zinc-200 hover:border-zinc-300'
+                                    : 'bg-card border-line hover:border-line'
                             }`}
                         >
                           <Button
@@ -944,7 +944,7 @@ export default function RoomsPage() {
                                     ? 'text-purple-600'
                                     : isVacant
                                       ? 'text-blue-600'
-                                      : 'text-zinc-800'
+                                      : 'text-foreground'
                               }`}
                           >
                             {room.id}
@@ -959,7 +959,7 @@ export default function RoomsPage() {
                                     ? 'text-purple-600 bg-purple-500/15'
                                     : isVacant
                                       ? 'text-blue-600 bg-blue-500/15'
-                                      : 'text-zinc-500 bg-zinc-100'
+                                      : 'text-muted bg-card-hover'
                               }`}
                           >
                             {room.status === 'Đang thuê'
@@ -981,10 +981,10 @@ export default function RoomsPage() {
             </div>
           ) : (
             /* TABLE VIEW (All rooms displayed) */
-            <div className="overflow-x-auto rounded-2xl border border-zinc-200">
+            <div className="overflow-x-auto rounded-2xl border border-line">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-zinc-100 text-zinc-700 font-bold border-b border-zinc-200 uppercase tracking-wider text-[10px]">
+                  <tr className="bg-card-hover text-foreground/90 font-bold border-b border-line uppercase tracking-wider text-[10px]">
                     <th className="p-3">
                       <Text variant="overline" weight="bold" color="secondary">
                         {t('landlordRoomsColRoomNumber')}
@@ -1028,22 +1028,22 @@ export default function RoomsPage() {
                       key={`${room.building}-${room.id}`}
                       className="hover:bg-zinc-50/80 transition-colors"
                     >
-                      <td className="p-3 font-black text-zinc-900 text-sm">
-                        <Text as="span" weight="black" size="sm" className="text-zinc-900">
+                      <td className="p-3 font-black text-foreground text-sm">
+                        <Text as="span" weight="black" size="sm" className="text-foreground">
                           {room.id}
                         </Text>
                       </td>
-                      <td className="p-3 font-semibold text-zinc-600">
+                      <td className="p-3 font-semibold text-muted">
                         <Text as="span" weight="semibold" size="xs" color="secondary">
                           {t('landlordRoomsFloorText', { floor: room.floor })}
                         </Text>
                       </td>
-                      <td className="p-3 font-medium text-zinc-700">
-                        <Text as="span" weight="medium" size="xs" className="text-zinc-700">
+                      <td className="p-3 font-medium text-foreground/90">
+                        <Text as="span" weight="medium" size="xs" className="text-foreground/90">
                           {room.roomType || 'Studio'}
                         </Text>
                       </td>
-                      <td className="p-3 text-zinc-600">
+                      <td className="p-3 text-muted">
                         <Text as="span" size="xs" color="secondary">
                           {room.area ? `${room.area} m²` : '25 m²'}
                         </Text>
@@ -1053,10 +1053,10 @@ export default function RoomsPage() {
                           className={`px-2.5 py-0.5 rounded-full ${room.status === 'Đang thuê'
                               ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
                               : room.status === 'Trống'
-                                ? 'bg-blue-100 text-blue-700'
+                                ? 'bg-info-soft text-info'
                                 : room.status === 'Bảo trì'
                                   ? 'bg-[#FF6B35]/15 text-[#FF6B35]'
-                                  : 'bg-purple-100 text-purple-700'
+                                  : 'bg-deposit-soft text-deposit'
                             }`}
                         >
                           {room.status === 'Đang thuê'
@@ -1093,7 +1093,7 @@ export default function RoomsPage() {
                                 as="span"
                                 size="3xs"
                                 weight="medium"
-                                className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 rounded"
+                                className="px-1.5 py-0.5 bg-card-hover text-muted rounded"
                               >
                                 {sLabel}
                               </Text>
@@ -1128,12 +1128,12 @@ export default function RoomsPage() {
         </div>
 
         {/* Rooms Summary Bar (Default displays all rooms) */}
-        <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-600 font-medium">
+        <div className="p-4 border-t border-line bg-surface/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted font-medium">
           <div className="flex items-center gap-2">
             <Text as="span" size="xs" color="secondary">
               {t('landlordRoomsPaginationShowing')}:
             </Text>
-            <Text as="span" size="xs" weight="black" className="text-zinc-900">
+            <Text as="span" size="xs" weight="black" className="text-foreground">
               {filteredRooms.length}
             </Text>
             <Text as="span" size="xs" color="secondary">
@@ -1154,11 +1154,11 @@ export default function RoomsPage() {
         onSubmit={handleBulkGenerateSubmit}
         header={
           <div className="flex items-center gap-3.5">
-            <div className="p-3 bg-amber-100 text-amber-700 rounded-2xl">
+            <div className="p-3 bg-warning-soft text-warning rounded-2xl">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
-              <Text as="h2" variant="heading" size="xl" weight="black" className="tracking-tight text-zinc-900">
+              <Text as="h2" variant="heading" size="xl" weight="black" className="tracking-tight text-foreground">
                 {t('landlordRoomsBulkModalTitle')}
               </Text>
               <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
@@ -1201,20 +1201,20 @@ export default function RoomsPage() {
         )}
 
               {/* Quota Info Banner */}
-              <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
-                  <Text as="span" size="xs" weight="bold" className="flex items-center gap-1.5 text-zinc-700">
+              <div className="p-4 rounded-2xl bg-card border border-line shadow-2xs space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-foreground/90">
+                  <Text as="span" size="xs" weight="bold" className="flex items-center gap-1.5 text-foreground/90">
                     <Building2 className="w-4 h-4 text-[#2AC1BC]" />
                     {t('landlordRoomsBulkQuotaLabel')}
                   </Text>
-                  <Text as="span" size="xs" weight="black" className="text-zinc-900">
+                  <Text as="span" size="xs" weight="black" className="text-foreground">
                     {t('landlordRoomsBulkQuotaValue', {
                       current: currentTotalRooms,
                       max: maxPlanRoom,
                     })}
                   </Text>
                 </div>
-                <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-card-hover rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all ${isOverQuota ? 'bg-red-500' : 'bg-[#2AC1BC]'
                       }`}
@@ -1235,7 +1235,7 @@ export default function RoomsPage() {
               </div>
 
               {/* Form Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-card p-5 rounded-2xl border border-line shadow-2xs">
                 <NumberInput
                   label={t('landlordRoomsBulkFloorCountLabel')}
                   required
@@ -1273,17 +1273,17 @@ export default function RoomsPage() {
                     labelRight={
                       <Text as="span" size="2xs" color="subtle">
                         Placeholder:{' '}
-                        <Text.Code className="bg-zinc-100 text-[#2AC1BC]">
+                        <Text.Code className="bg-card-hover text-[#2AC1BC]">
                           &#123;floor&#125;
                         </Text.Code>
                         ,{' '}
-                        <Text.Code className="bg-zinc-100 text-[#2AC1BC]">
+                        <Text.Code className="bg-card-hover text-[#2AC1BC]">
                           &#123;index&#125;
                         </Text.Code>
                       </Text>
                     }
                   />
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-zinc-500">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-muted">
                     <Text as="span" size="3xs" weight="bold" color="secondary">
                       {t('landlordRoomsBulkSuggestedPatterns')}
                     </Text>
@@ -1360,9 +1360,9 @@ export default function RoomsPage() {
               </div>
 
               {/* Service Associations Checkboxes */}
-              <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs space-y-3">
+              <div className="bg-card p-5 rounded-2xl border border-line shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <Text as="label" size="xs" weight="bold" className="text-zinc-800 flex items-center gap-1.5">
+                  <Text as="label" size="xs" weight="bold" className="text-foreground flex items-center gap-1.5">
                     <Receipt className="w-4 h-4 text-[#2AC1BC]" />
                     {t('landlordRoomsBulkServicesSection')}
                   </Text>
@@ -1463,7 +1463,7 @@ export default function RoomsPage() {
               {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
             </div>
             <div>
-              <Text as="h2" variant="heading" size="xl" weight="black" className="text-zinc-900">
+              <Text as="h2" variant="heading" size="xl" weight="black" className="text-foreground">
                 {selectedRoomId
                   ? t('landlordRoomsSingleTitleEdit')
                   : t('landlordRoomsSingleTitleCreate')}
@@ -1476,7 +1476,7 @@ export default function RoomsPage() {
             </div>
           </div>
         }
-        bodyClassName="p-6 bg-zinc-50/50 space-y-6 custom-scrollbar"
+        bodyClassName="p-6 bg-surface/50 space-y-6 custom-scrollbar"
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
@@ -1522,18 +1522,18 @@ export default function RoomsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Left Column: Basic Details */}
                   <div className="lg:col-span-3 space-y-6">
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                      <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
+                    <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-4">
+                      <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
                         <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionInfo')}
                       </Text>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <Text as="label" size="xs" weight="bold" className="text-zinc-700">
+                          <Text as="label" size="xs" weight="bold" className="text-foreground/90">
                             {t('landlordRoomsSingleBuildingLabel')}
                           </Text>
-                          <Text as="div" size="xs" weight="medium" className="w-full px-3.5 py-2.5 border border-zinc-200 bg-zinc-50 rounded-xl text-zinc-700 truncate">
+                          <Text as="div" size="xs" weight="medium" className="w-full px-3.5 py-2.5 border border-line bg-surface rounded-xl text-foreground/90 truncate">
                             {activeBuilding?.name || 'Dormio Boarding House'}
                           </Text>
                         </div>
@@ -1651,9 +1651,9 @@ export default function RoomsPage() {
                     </div>
 
                     {/* Room Services Association */}
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
+                    <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-3">
                       <div className="flex items-center justify-between">
-                        <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
+                        <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
                           <Receipt className="w-4 h-4 text-[#2AC1BC]" />{' '}
                           {t('landlordRoomsSingleSectionServices')}
                         </Text>
@@ -1729,8 +1729,8 @@ export default function RoomsPage() {
 
                   {/* Right Column: Amenities & Notes */}
                   <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                      <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
+                    <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-3">
+                      <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
                         <Target className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionAmenities')}
                       </Text>
@@ -1767,8 +1767,8 @@ export default function RoomsPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-2">
-                      <Text as="h3" weight="bold" size="sm" className="font-bold text-zinc-900 flex items-center gap-2">
+                    <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-2">
+                      <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
                         <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
                         {t('landlordRoomsSingleSectionNotes')}
                       </Text>
@@ -1842,12 +1842,12 @@ function ConfirmModal({
       }
     >
       <div className="space-y-5 text-center">
-        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
+        <div className="w-14 h-14 bg-warning-soft border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
           <AlertTriangle className="w-7 h-7" />
         </div>
 
         <div className="space-y-2">
-          <Text as="h3" variant="heading" size="lg" weight="black" className="tracking-tight text-zinc-900">
+          <Text as="h3" variant="heading" size="lg" weight="black" className="tracking-tight text-foreground">
             {title}
           </Text>
           <Text variant="body" size="xs" weight="medium" color="secondary" className="leading-relaxed max-w-xs mx-auto">

@@ -667,21 +667,21 @@ function MessagesContent() {
   if (!isMounted) return null
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-screen bg-white border-y border-zinc-200/80 overflow-hidden flex">
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-screen bg-card border-y border-line overflow-hidden flex">
       {/* PANE 1: Left Conversation List */}
       <div
-        className={`w-full lg:w-96 border-r border-zinc-200/80 flex-col bg-zinc-50/50 shrink-0 ${
+        className={`w-full lg:w-96 border-r border-line flex-col bg-surface/50 shrink-0 ${
           mobileShowChat ? 'hidden lg:flex' : 'flex'
         }`}
       >
         {/* Top Search & Filter Tabs */}
-        <div className="p-3.5 border-b border-zinc-200/80 space-y-3 bg-white">
+        <div className="p-3.5 border-b border-line space-y-3 bg-card">
           <div className="flex items-center gap-2">
             <SearchInput
               placeholder={t('landlordMessagesSearchPlaceholder')}
               value={searchTerm}
               onChange={setSearchTerm}
-              className="py-2 text-xs font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
+              className="py-2 text-xs font-semibold bg-surface border-line focus:bg-white rounded-xl"
               containerClassName="flex-1"
             />
             <Button
@@ -739,14 +739,14 @@ function MessagesContent() {
         </div>
 
         {/* Conversation List Stream */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-zinc-100">
+        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-line">
           {isLoadingConversations ? (
-            <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
+            <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
               <span>{t('landlordMessagesLoadingConversations')}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
-            <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
+            <div className="p-8 text-center text-xs font-bold text-muted space-y-2">
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
               <p>{t('landlordMessagesEmptyConversations')}</p>
               {contacts.length > 0 && (
@@ -775,7 +775,7 @@ function MessagesContent() {
                   className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${
                     isSelected
                       ? 'bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]'
-                      : 'hover:bg-zinc-100/80'
+                      : 'hover:bg-card-hover'
                   }`}
                 >
                   {/* Avatar with Status */}
@@ -790,12 +790,12 @@ function MessagesContent() {
                   {/* Meta & Last Message */}
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="font-extrabold text-xs text-zinc-900 truncate">
+                      <span className="font-extrabold text-xs text-foreground truncate">
                         {p.roomName || p.fullName}
                       </span>
                       <span
                         className={`text-[10px] font-bold shrink-0 ${
-                          chat.unreadCount > 0 ? 'text-[#2AC1BC]' : 'text-zinc-400'
+                          chat.unreadCount > 0 ? 'text-[#2AC1BC]' : 'text-muted'
                         }`}
                       >
                         {chat.lastMessage
@@ -805,15 +805,15 @@ function MessagesContent() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-zinc-700 truncate">
+                      <span className="text-[11px] font-bold text-foreground/90 truncate">
                         {p.fullName}
                       </span>
                       {isTenant ? (
-                        <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                        <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-success-soft text-success border border-success-subtle shrink-0">
                           {t('landlordMessagesRoleTenant')}
                         </span>
                       ) : (
-                        <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                        <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-info-soft text-info border border-info-subtle shrink-0">
                           {t('landlordMessagesRoleGuest')}
                         </span>
                       )}
@@ -823,8 +823,8 @@ function MessagesContent() {
                       <p
                         className={`text-xs truncate ${
                           chat.unreadCount > 0
-                            ? 'font-extrabold text-zinc-900'
-                            : 'font-medium text-zinc-500'
+                            ? 'font-extrabold text-foreground'
+                            : 'font-medium text-muted'
                         }`}
                       >
                         {chat.lastMessage?.content || t('landlordMessagesNoMessageYet')}
@@ -845,12 +845,12 @@ function MessagesContent() {
 
       {/* PANE 2: Center Main Chat Stream */}
       <div
-        className={`flex-1 flex-col min-w-0 bg-white ${mobileShowChat ? 'flex' : 'hidden lg:flex'}`}
+        className={`flex-1 flex-col min-w-0 bg-card ${mobileShowChat ? 'flex' : 'hidden lg:flex'}`}
       >
         {activeChat ? (
           <>
             {/* Active Chat Header */}
-            <div className="p-3 sm:px-5 sm:py-3 border-b border-zinc-200/80 flex items-center justify-between gap-2 bg-white z-10 shadow-2xs">
+            <div className="p-3 sm:px-5 sm:py-3 border-b border-line flex items-center justify-between gap-2 bg-card z-10 shadow-2xs">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {/* Mobile Back Button */}
                 <Button
@@ -866,7 +866,7 @@ function MessagesContent() {
                   className="lg:hidden -ml-1 shrink-0"
                   title={t('landlordMessagesTooltipBackToList')}
                 >
-                  <ArrowLeft className="w-5 h-5 text-zinc-700" />
+                  <ArrowLeft className="w-5 h-5 text-foreground/90" />
                 </Button>
 
                 <div className="relative shrink-0">
@@ -881,14 +881,14 @@ function MessagesContent() {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <h2 className="font-black text-xs sm:text-sm text-zinc-900 truncate shrink-0">
+                    <h2 className="font-black text-xs sm:text-sm text-foreground truncate shrink-0">
                       {activeChat.participant.roomName || activeChat.participant.fullName}
                     </h2>
-                    <span className="text-[11px] sm:text-xs font-bold text-zinc-500 truncate">
+                    <span className="text-[11px] sm:text-xs font-bold text-muted truncate">
                       • {activeChat.participant.fullName}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-zinc-400 truncate">
+                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-muted truncate">
                     {activeChat.participant.phoneNumber && (
                       <span>
                         {t('landlordMessagesPhonePrefix')} {activeChat.participant.phoneNumber}
@@ -908,7 +908,7 @@ function MessagesContent() {
                 {activeChat.participant.phoneNumber && (
                   <a
                     href={`tel:${activeChat.participant.phoneNumber}`}
-                    className="p-1.5 sm:p-2 hover:bg-zinc-100 text-zinc-600 rounded-xl transition-colors cursor-pointer"
+                    className="p-1.5 sm:p-2 hover:bg-card-hover text-muted rounded-xl transition-colors cursor-pointer"
                     title={t('landlordMessagesTooltipCall')}
                   >
                     <Phone className="w-4 h-4" />
@@ -941,17 +941,17 @@ function MessagesContent() {
             </div>
 
             {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-5 space-y-4 bg-zinc-50/60">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-5 space-y-4 bg-surface/60">
               {isLoadingMessages ? (
-                <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
+                <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
                   <span>{t('landlordMessagesLoadingMessages')}</span>
                 </div>
               ) : messages.length === 0 ? (
-                <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-2">
+                <div className="p-8 text-center text-xs font-bold text-muted space-y-2">
                   <MessageSquare className="w-10 h-10 mx-auto text-zinc-300 stroke-1" />
                   <p>{t('landlordMessagesEmptyChatTitle')}</p>
-                  <p className="text-[11px] font-semibold text-zinc-400">
+                  <p className="text-[11px] font-semibold text-muted">
                     {t('landlordMessagesEmptyChatDesc')}
                   </p>
                 </div>
@@ -966,15 +966,15 @@ function MessagesContent() {
                     return (
                       <div
                         key={`sys-${msg.id}-${idx}`}
-                        className="max-w-md mx-auto my-3 p-3.5 bg-white border border-[#2AC1BC]/30 rounded-2xl shadow-2xs text-center space-y-2"
+                        className="max-w-md mx-auto my-3 p-3.5 bg-card border border-[#2AC1BC]/30 rounded-2xl shadow-2xs text-center space-y-2"
                       >
                         <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#2AC1BC]">
                           <Sparkles className="w-4 h-4" /> {t('landlordMessagesSystemNoticeBadge')}
                         </div>
-                        <p className="text-xs text-zinc-700 font-semibold leading-relaxed">
+                        <p className="text-xs text-foreground/90 font-semibold leading-relaxed">
                           {msg.content}
                         </p>
-                        <div className="text-[10px] font-bold text-zinc-400">
+                        <div className="text-[10px] font-bold text-muted">
                           {formatMessageTime(msg.sentAt)}
                         </div>
                       </div>
@@ -990,7 +990,7 @@ function MessagesContent() {
                         className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${
                           isMe
                             ? 'bg-[#2AC1BC] text-white rounded-br-xs font-medium'
-                            : 'bg-white border border-zinc-200/80 text-zinc-900 rounded-bl-xs font-medium'
+                            : 'bg-card border border-line text-foreground rounded-bl-xs font-medium'
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
@@ -1023,7 +1023,7 @@ function MessagesContent() {
                                   className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${
                                     isMe
                                       ? 'bg-white/20 text-white hover:bg-white/30'
-                                      : 'bg-zinc-100 text-zinc-800 hover:bg-zinc-200'
+                                      : 'bg-card-hover text-foreground hover:bg-line'
                                   }`}
                                 >
                                   <File className="w-4 h-4 shrink-0" />
@@ -1041,7 +1041,7 @@ function MessagesContent() {
 
                       <div
                         className={`flex items-center gap-1 text-[10px] font-bold ${
-                          isMe ? 'text-zinc-400' : 'text-zinc-400'
+                          isMe ? 'text-muted' : 'text-muted'
                         }`}
                       >
                         <span>{formatMessageTime(msg.sentAt)}</span>
@@ -1069,8 +1069,8 @@ function MessagesContent() {
             </div>
 
             {/* Preset Smart Quick Reply Chips */}
-            <div className="px-4 py-2 bg-zinc-100/80 border-t border-zinc-200/80 flex items-center gap-2 overflow-x-auto custom-scrollbar">
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+            <div className="px-4 py-2 bg-card-hover/80 border-t border-line flex items-center gap-2 overflow-x-auto custom-scrollbar">
+              <span className="text-[10px] font-black text-muted uppercase tracking-wider shrink-0 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-[#2AC1BC]" />
                 {t('landlordMessagesQuickRepliesTitle')}:
               </span>
@@ -1091,8 +1091,8 @@ function MessagesContent() {
 
             {/* Pending Attachments Preview */}
             {pendingAttachments.length > 0 && (
-              <div className="px-4 py-2 bg-zinc-50 border-t border-zinc-200 flex items-center gap-2 overflow-x-auto">
-                <span className="text-[10px] font-extrabold text-zinc-500 uppercase shrink-0">
+              <div className="px-4 py-2 bg-surface border-t border-line flex items-center gap-2 overflow-x-auto">
+                <span className="text-[10px] font-extrabold text-muted uppercase shrink-0">
                   {t('landlordMessagesAttachmentsCount').replace(
                     '{count}',
                     String(pendingAttachments.length),
@@ -1101,7 +1101,7 @@ function MessagesContent() {
                 {pendingAttachments.map((att, index) => (
                   <div
                     key={index}
-                    className="relative group bg-white border border-zinc-200 rounded-xl p-1.5 flex items-center gap-2 text-xs shrink-0"
+                    className="relative group bg-card border border-line rounded-xl p-1.5 flex items-center gap-2 text-xs shrink-0"
                   >
                     {att.type === 'image' ? (
                       <img
@@ -1112,7 +1112,7 @@ function MessagesContent() {
                     ) : (
                       <File className="w-5 h-5 text-[#2AC1BC]" />
                     )}
-                    <span className="max-w-[120px] truncate font-semibold text-zinc-700">
+                    <span className="max-w-[120px] truncate font-semibold text-foreground/90">
                       {att.name}
                     </span>
                     <Button
@@ -1131,7 +1131,7 @@ function MessagesContent() {
             )}
 
             {/* Message Input Bar reusing Base Components */}
-            <div className="p-3 sm:p-4 bg-white border-t border-zinc-200/80">
+            <div className="p-3 sm:p-4 bg-card border-t border-line">
               <form
                 onSubmit={e => {
                   e.preventDefault()
@@ -1183,7 +1183,7 @@ function MessagesContent() {
                   value={inputMessage}
                   onChange={e => setInputMessage(e.target.value)}
                   disabled={isSending}
-                  className="py-2.5 text-xs sm:text-sm font-semibold bg-zinc-50 border-zinc-200 focus:bg-white rounded-xl"
+                  className="py-2.5 text-xs sm:text-sm font-semibold bg-surface border-line focus:bg-white rounded-xl"
                   containerClassName="flex-1"
                   rightIcon={
                     <Button
@@ -1212,7 +1212,7 @@ function MessagesContent() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center p-8 text-center">
-            <p className="text-sm font-medium text-zinc-400">{t('landlordMessagesSelectPrompt')}</p>
+            <p className="text-sm font-medium text-muted">{t('landlordMessagesSelectPrompt')}</p>
           </div>
         )}
       </div>
@@ -1227,10 +1227,10 @@ function MessagesContent() {
 
       {/* PANE 3: Right Contextual Tenant & Room Panel */}
       {showRightDrawer && activeChat && (
-        <div className="fixed lg:relative inset-y-0 right-0 z-50 lg:z-auto w-full sm:w-80 lg:w-80 border-l border-zinc-200/80 bg-white flex flex-col shrink-0 overflow-y-auto custom-scrollbar animate-in slide-in-from-right duration-200 shadow-2xl lg:shadow-none">
+        <div className="fixed lg:relative inset-y-0 right-0 z-50 lg:z-auto w-full sm:w-80 lg:w-80 border-l border-line bg-card flex flex-col shrink-0 overflow-y-auto custom-scrollbar animate-in slide-in-from-right duration-200 shadow-2xl lg:shadow-none">
           {/* Panel Header */}
-          <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
-            <h3 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="p-4 border-b border-line flex items-center justify-between">
+            <h3 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordMessagesDrawerTitle')}
             </h3>
             <Button
@@ -1245,7 +1245,7 @@ function MessagesContent() {
 
           <div className="p-4 space-y-4 text-xs">
             {/* Tenant Profile Card */}
-            <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl text-center space-y-2">
+            <div className="p-4 bg-surface border border-line rounded-2xl text-center space-y-2">
               <div
                 className={`w-14 h-14 rounded-2xl ${getAvatarBg(
                   activeChat.participant.id || activeChat.participant.fullName,
@@ -1254,16 +1254,16 @@ function MessagesContent() {
                 {activeChat.participant.fullName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h4 className="font-black text-sm text-zinc-900">
+                <h4 className="font-black text-sm text-foreground">
                   {activeChat.participant.fullName}
                 </h4>
-                <p className="text-zinc-500 text-[11px] font-semibold mt-0.5">
+                <p className="text-muted text-[11px] font-semibold mt-0.5">
                   {activeChat.participant.phoneNumber || t('landlordMessagesNoPhone')}
                 </p>
               </div>
 
               <div className="pt-2 flex justify-center">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-success-soft text-success border border-success-subtle">
                   <ShieldCheck className="w-3 h-3 text-emerald-500" />{' '}
                   {t('landlordMessagesDormioAccount')}
                 </span>
@@ -1271,12 +1271,12 @@ function MessagesContent() {
             </div>
 
             {/* Room & Building Info */}
-            <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+            <div className="p-4 bg-card border border-line rounded-2xl space-y-3 shadow-2xs">
+              <div className="flex items-center justify-between pb-2 border-b border-line">
                 <span className="font-extrabold text-sm text-[#2AC1BC]">
                   {activeChat.participant.roomName || t('landlordMessagesNoRoom')}
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md border border-blue-100">
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-info-soft text-info rounded-md border border-info-subtle">
                   {activeChat.participant.boardingHouseName ||
                     activeBuilding?.name ||
                     t('landlordMessagesDefaultBuilding')}
@@ -1285,10 +1285,10 @@ function MessagesContent() {
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-semibold">
+                  <span className="text-muted font-semibold">
                     {t('landlordMessagesRoleLabel')}
                   </span>
-                  <span className="font-extrabold text-zinc-900">
+                  <span className="font-extrabold text-foreground">
                     {activeChat.participant.role === 'tenant'
                       ? t('landlordMessagesRoleTenant')
                       : t('landlordMessagesRoleProspect')}
@@ -1316,7 +1316,7 @@ function MessagesContent() {
                       activeChat.participant.roomName || '',
                     )}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-muted group-hover:translate-x-0.5 transition-transform" />
                 </Button>
 
                 <Button fullWidth size="icon"
@@ -1335,19 +1335,19 @@ function MessagesContent() {
                       activeChat.participant.roomName || '',
                     )}
                   </span>
-                  <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-muted group-hover:translate-x-0.5 transition-transform" />
                 </Button>
               </div>
             )}
 
             {/* Media & Attachments Storage Section */}
-            <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl space-y-3 shadow-2xs">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
-                <span className="font-extrabold text-xs text-zinc-900 flex items-center gap-1.5">
+            <div className="p-4 bg-card border border-line rounded-2xl space-y-3 shadow-2xs">
+              <div className="flex items-center justify-between pb-2 border-b border-line">
+                <span className="font-extrabold text-xs text-foreground flex items-center gap-1.5">
                   <FileImage className="w-4 h-4 text-[#2AC1BC]" />{' '}
                   {t('landlordMessagesMediaStorageTitle')}
                 </span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-zinc-100 text-zinc-600 rounded-md">
+                <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-card-hover text-muted rounded-md">
                   {activeChatMedia.total}
                 </span>
               </div>
@@ -1361,7 +1361,7 @@ function MessagesContent() {
                         <div
                           key={`drawer-img-${img.id || img.url}-${imgIdx}`}
                           onClick={() => setPreviewImage(img.url)}
-                          className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 group cursor-pointer bg-zinc-100"
+                          className="relative aspect-video rounded-xl overflow-hidden border border-line group cursor-pointer bg-card-hover"
                         >
                           <img
                             src={img.url}
@@ -1382,15 +1382,15 @@ function MessagesContent() {
                       {activeChatMedia.files.map((file, fileIdx) => (
                         <div
                           key={`drawer-file-${file.id || file.url}-${fileIdx}`}
-                          className="p-2 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between gap-2"
+                          className="p-2 bg-surface border border-line rounded-xl flex items-center justify-between gap-2"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             <File className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                             <div className="min-w-0">
-                              <p className="text-[11px] font-bold text-zinc-900 truncate">
+                              <p className="text-[11px] font-bold text-foreground truncate">
                                 {file.name}
                               </p>
-                              <p className="text-[9px] text-zinc-400 font-medium">
+                              <p className="text-[9px] text-muted font-medium">
                                 {file.size} • {file.time}
                               </p>
                             </div>
@@ -1399,7 +1399,7 @@ function MessagesContent() {
                             href={file.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1 hover:bg-zinc-200 rounded-lg text-zinc-500 cursor-pointer"
+                            className="p-1 hover:bg-line rounded-lg text-muted cursor-pointer"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
@@ -1409,7 +1409,7 @@ function MessagesContent() {
                   )}
                 </div>
               ) : (
-                <div className="py-4 text-center text-[11px] font-bold text-zinc-400 space-y-1">
+                <div className="py-4 text-center text-[11px] font-bold text-muted space-y-1">
                   <FileImage className="w-6 h-6 mx-auto text-zinc-300 stroke-1" />
                   <p>{t('landlordMessagesNoMedia')}</p>
                 </div>
@@ -1427,13 +1427,13 @@ function MessagesContent() {
             if (e.target === e.currentTarget) handleCloseNewChatModal()
           }}
         >
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between">
+          <div className="bg-card rounded-3xl max-w-md w-full shadow-2xl border border-line overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between">
               <div>
-                <h3 className="font-extrabold text-sm text-zinc-900">
+                <h3 className="font-extrabold text-sm text-foreground">
                   {t('landlordMessagesNewModalTitle')}
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">{t('landlordMessagesNewModalSub')}</p>
+                <p className="text-xs text-muted mt-0.5">{t('landlordMessagesNewModalSub')}</p>
               </div>
               <Button
                 type="button"
@@ -1445,33 +1445,33 @@ function MessagesContent() {
               </Button>
             </div>
 
-            <div className="p-4 border-b border-zinc-100 bg-zinc-50/50">
+            <div className="p-4 border-b border-line bg-surface/50">
               <SearchInput
                 placeholder={t('landlordMessagesNewModalSearch')}
                 value={newChatSearch}
                 onChange={setNewChatSearch}
-                className="py-2 text-xs font-semibold bg-white border-zinc-200 rounded-xl"
+                className="py-2 text-xs font-semibold bg-card border-line rounded-xl"
               />
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 divide-y divide-zinc-50">
               {isCreatingChat ? (
-                <div className="p-8 text-center text-xs font-bold text-zinc-400 flex flex-col items-center gap-2">
+                <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
                   <span>{t('landlordMessagesOpeningChat')}</span>
                 </div>
               ) : filteredContacts.length === 0 ? (
-                <div className="p-8 text-center text-xs font-bold text-zinc-400 space-y-1">
+                <div className="p-8 text-center text-xs font-bold text-muted space-y-1">
                   <User className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
                   <p>{t('landlordMessagesNoContactsTitle')}</p>
-                  <p className="text-[10px] text-zinc-400">{t('landlordMessagesNoContactsDesc')}</p>
+                  <p className="text-[10px] text-muted">{t('landlordMessagesNoContactsDesc')}</p>
                 </div>
               ) : (
                 filteredContacts.map((contact, contactIdx) => (
                   <div
                     key={`contact-${contact.id}-${contactIdx}`}
                     onClick={() => handleSelectContactToChat(contact)}
-                    className="p-3 hover:bg-zinc-50 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group"
+                    className="p-3 hover:bg-card-hover rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -1483,16 +1483,16 @@ function MessagesContent() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="font-extrabold text-xs text-zinc-900 group-hover:text-[#2AC1BC] transition-colors truncate">
+                          <h4 className="font-extrabold text-xs text-foreground group-hover:text-[#2AC1BC] transition-colors truncate">
                             {contact.fullName}
                           </h4>
                           {contact.roomName && (
-                            <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                            <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-success-soft text-success border border-success-subtle shrink-0">
                               {contact.roomName}
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
+                        <p className="text-[11px] text-muted font-medium truncate mt-0.5">
                           {contact.phoneNumber || t('landlordDepositsNoPhoneShort')} •{' '}
                           {contact.boardingHouseName || t('landlordMessagesDefaultBuilding')}
                         </p>
@@ -1518,16 +1518,16 @@ function MessagesContent() {
       {/* Confirmation Modal when Closing Form with Unsaved Inputs (Rule 10) */}
       {showCloseModalConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-zinc-200 space-y-4">
+          <div className="bg-card rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-line space-y-4">
             <div className="flex items-center gap-3 text-amber-600">
-              <div className="p-2 bg-amber-50 rounded-xl">
+              <div className="p-2 bg-warning-soft rounded-xl">
                 <AlertCircle className="w-5 h-5" />
               </div>
-              <h4 className="font-extrabold text-sm text-zinc-900">
+              <h4 className="font-extrabold text-sm text-foreground">
                 {t('landlordMessagesConfirmCloseTitle')}
               </h4>
             </div>
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('landlordMessagesConfirmCloseDesc')}
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -1587,7 +1587,7 @@ function MessagesContent() {
 function LandlordMessagesFallback() {
   const t = useTranslations('landlord')
   return (
-    <div className="p-8 text-center text-xs font-bold text-zinc-400">
+    <div className="p-8 text-center text-xs font-bold text-muted">
       {t('landlordMessagesLoadingMessages')}
     </div>
   )

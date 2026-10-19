@@ -272,23 +272,23 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-white rounded-2xl border border-zinc-200/80 shadow-xs">
+      <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-card rounded-2xl border border-line shadow-xs">
         <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
-        <p className="text-sm font-bold text-zinc-600">{t('landlordCustomersLoading')}</p>
+        <p className="text-sm font-bold text-muted">{t('landlordCustomersLoading')}</p>
       </div>
     )
   }
 
   if (!customer) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6 space-y-3 shadow-xs">
-        <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
+      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6 space-y-3 shadow-xs">
+        <div className="w-12 h-12 rounded-full bg-card-hover flex items-center justify-center mx-auto text-muted">
           <User className="w-6 h-6" />
         </div>
-        <p className="font-bold text-lg text-zinc-800">{t('landlordCustomersTenantNotFound')}</p>
-        <p className="text-xs text-zinc-500">
+        <p className="font-bold text-lg text-foreground">{t('landlordCustomersTenantNotFound')}</p>
+        <p className="text-xs text-muted">
           {t('landlordCustomersCccdOrCode')}:{' '}
-          <span className="font-mono font-bold text-zinc-700">{resolvedParams.id}</span>
+          <span className="font-mono font-bold text-foreground/90">{resolvedParams.id}</span>
         </p>
         <Link
           href="/landlord/customers"
@@ -351,11 +351,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* Top Header Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Link
             href="/landlord/customers"
-            className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer shrink-0"
+            className="p-2 -ml-2 text-muted hover:bg-card-hover hover:text-foreground rounded-full transition-colors cursor-pointer shrink-0"
             title={t('landlordCustomersBackToList')}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -367,7 +367,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                   {customer.name}
                 </h1>
                 <span
@@ -375,21 +375,21 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     customer.status === 'Đang ở'
                       ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
                       : customer.status === 'Sắp hết hợp đồng'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                        ? 'bg-warning-soft text-warning border-warning-subtle'
+                        : 'bg-card-hover text-muted border-line'
                   }`}
                 >
                   {getCustomerStatusLabel(customer.status)}
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+              <p className="text-xs text-muted font-semibold mt-0.5">
                 {t('landlordCustomersPhone')}:{' '}
-                <span className="font-bold text-zinc-800">{customer.phone}</span>
+                <span className="font-bold text-foreground">{customer.phone}</span>
                 {customer.cccd && customer.cccd !== '—' && (
                   <>
                     {' '}
                     • {t('landlordCustomersCccd')}:{' '}
-                    <span className="font-bold text-zinc-800">{customer.cccd}</span>
+                    <span className="font-bold text-foreground">{customer.cccd}</span>
                   </>
                 )}
               </p>
@@ -398,7 +398,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Action Buttons Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <a
             href={`tel:${customer.phone}`}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
@@ -449,20 +449,20 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* CARD 1: THÔNG TIN CÁ NHÂN */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
-            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <User className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersPersonalInfo')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersFullNameLabel')}
                 </span>
-                <p className="font-extrabold text-zinc-900 text-sm">{customer.name}</p>
+                <p className="font-extrabold text-foreground text-sm">{customer.name}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersCccdLabel')}
                 </span>
                 <p className="font-black text-[#2AC1BC] text-sm tracking-wide">
@@ -470,82 +470,82 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersDobLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.dob || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.dob || 'Chưa cập nhật'}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersGenderLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">
+                <p className="font-bold text-foreground">
                   {customer.gender === 'nam'
                     ? t('landlordCustomersGenderMale')
                     : t('landlordCustomersGenderFemale')}
                 </p>
               </div>
 
-              <div className="sm:col-span-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="sm:col-span-2 p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersPermanentAddressLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.address || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.address || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
 
           {/* CARD 2: THÔNG TIN LIÊN HỆ & NGHỀ NGHIỆP */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
-            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <Phone className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersContactAndWork')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersPhoneLabel')}
                 </span>
-                <p className="font-black text-zinc-900 text-sm">{customer.phone}</p>
+                <p className="font-black text-foreground text-sm">{customer.phone}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersEmailLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.email || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.email || 'Chưa cập nhật'}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersJobLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.job || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.job || 'Chưa cập nhật'}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersWorkplaceLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.workplace || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.workplace || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
 
           {/* CARD 3: HÌNH ẢNH GIẤY TỜ CCCD */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex justify-between items-center border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordCustomersIdCardsSection')}
               </h3>
               {customer.cardFrontUrl && customer.cardBackUrl ? (
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-bold">
+                <span className="px-2 py-0.5 bg-success-soft text-success border border-success-subtle rounded-full text-[10px] font-bold">
                   ✓ {t('landlordCustomersOcrVerified')}
                 </span>
               ) : (
-                <span className="px-2 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-full text-[10px] font-bold">
+                <span className="px-2 py-0.5 bg-card-hover text-muted border border-line rounded-full text-[10px] font-bold">
                   Chưa tải đủ ảnh
                 </span>
               )}
@@ -553,13 +553,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <span className="text-xs font-bold text-zinc-600 block">
+                <span className="text-xs font-bold text-muted block">
                   {t('landlordCustomersFrontIdCard')}
                 </span>
                 {customer.cardFrontUrl ? (
                   <div
                     onClick={() => setIsImagePreviewOpen(customer.cardFrontUrl!)}
-                    className="group relative border-2 border-dashed border-zinc-200 rounded-2xl h-44 overflow-hidden bg-zinc-50 flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
+                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
                   >
                     <img
                       src={customer.cardFrontUrl}
@@ -571,7 +571,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-zinc-200 rounded-2xl h-44 bg-zinc-50/50 flex flex-col items-center justify-center text-zinc-400 gap-2">
+                  <div className="border-2 border-dashed border-line rounded-2xl h-44 bg-surface/50 flex flex-col items-center justify-center text-muted gap-2">
                     <ImageIcon className="w-8 h-8 text-zinc-300" />
                     <span className="text-xs font-semibold">Chưa cập nhật ảnh mặt trước</span>
                   </div>
@@ -579,13 +579,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-xs font-bold text-zinc-600 block">
+                <span className="text-xs font-bold text-muted block">
                   {t('landlordCustomersBackIdCard')}
                 </span>
                 {customer.cardBackUrl ? (
                   <div
                     onClick={() => setIsImagePreviewOpen(customer.cardBackUrl!)}
-                    className="group relative border-2 border-dashed border-zinc-200 rounded-2xl h-44 overflow-hidden bg-zinc-50 flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
+                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
                   >
                     <img
                       src={customer.cardBackUrl}
@@ -597,7 +597,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-zinc-200 rounded-2xl h-44 bg-zinc-50/50 flex flex-col items-center justify-center text-zinc-400 gap-2">
+                  <div className="border-2 border-dashed border-line rounded-2xl h-44 bg-surface/50 flex flex-col items-center justify-center text-muted gap-2">
                     <ImageIcon className="w-8 h-8 text-zinc-300" />
                     <span className="text-xs font-semibold">Chưa cập nhật ảnh mặt sau</span>
                   </div>
@@ -610,8 +610,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* Right Column (1 Col) */}
         <div className="space-y-6">
           {/* CARD: PHÒNG ĐANG Ở & HỢP ĐỒNG */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordCustomersContractAndCurrentRoom')}
             </h3>
@@ -620,7 +620,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               <div className="space-y-3">
                 <div className="p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-zinc-600">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordCustomersCurrentlyRenting')}
                     </span>
                     {customer.roomId ? (
@@ -637,7 +637,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-semibold border-t border-[#2AC1BC]/20 pt-2 flex justify-between">
+                  <div className="text-[10px] text-muted font-semibold border-t border-[#2AC1BC]/20 pt-2 flex justify-between">
                     <span>
                       {t('landlordCustomersBuilding')}: {customer.building}
                     </span>
@@ -648,9 +648,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </div>
 
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1.5 text-xs">
+                <div className="p-3 bg-surface rounded-xl border border-line space-y-1.5 text-xs">
                   {customer.contractId && (
-                    <div className="flex justify-between items-center font-bold text-zinc-700">
+                    <div className="flex justify-between items-center font-bold text-foreground/90">
                       <span>{t('landlordCustomersContractCodeLabel')}</span>
                       <Link
                         href={`/landlord/contracts`}
@@ -662,21 +662,21 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       </Link>
                     </div>
                   )}
-                  <div className="flex justify-between text-[11px] text-zinc-500 font-semibold">
+                  <div className="flex justify-between text-[11px] text-muted font-semibold">
                     <span>{t('landlordCustomersContractTermLabel')}</span>
                     <span>
                       {customer.joinDate} - {customer.endDate || '—'}
                     </span>
                   </div>
                   {customer.rentPrice !== undefined && customer.rentPrice > 0 && (
-                    <div className="flex justify-between text-[11px] text-zinc-700 font-semibold">
+                    <div className="flex justify-between text-[11px] text-foreground/90 font-semibold">
                       <span>Giá thuê:</span>
-                      <span className="font-bold text-zinc-900">
+                      <span className="font-bold text-foreground">
                         {Number(customer.rentPrice).toLocaleString('vi-VN')} ₫/tháng
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[11px] text-emerald-700 font-bold pt-1 border-t border-zinc-200/60">
+                  <div className="flex justify-between text-[11px] text-success font-bold pt-1 border-t border-line">
                     <span>{t('landlordCustomersHoldingDepositLabel')}</span>
                     <span className="font-black text-purple-600">
                       {customer.depositAmount
@@ -698,51 +698,51 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 )}
               </div>
             ) : (
-              <div className="p-4 text-center bg-zinc-50 rounded-xl border border-zinc-100 text-xs text-zinc-500 font-bold">
+              <div className="p-4 text-center bg-surface rounded-xl border border-line text-xs text-muted font-bold">
                 {t('landlordCustomersContractEndedDesc')}
               </div>
             )}
           </div>
 
           {/* CARD: LỊCH SỬ THUÊ & THANH TOÁN */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <Clock className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersStayHistoryTitle')}
             </h3>
 
             <div className="space-y-2.5">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs space-y-1">
+              <div className="p-3 bg-surface rounded-xl border border-line text-xs space-y-1">
                 <div className="flex justify-between items-center font-bold">
-                  <span className="text-zinc-900">
+                  <span className="text-foreground">
                     {t('landlordCustomersRoomWord')} {customer.room} ({customer.building})
                   </span>
                   <span
                     className={`px-2 py-0.5 text-[9px] font-black rounded-full ${
                       customer.status === 'Đang ở'
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-success-soft text-success'
                         : customer.status === 'Sắp hết hợp đồng'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-blue-100 text-blue-700'
+                          ? 'bg-accent-soft text-accent'
+                          : 'bg-info-soft text-info'
                     }`}
                   >
                     {getCustomerStatusLabel(customer.status)}
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-500">
+                <p className="text-[10px] text-muted">
                   {t('landlordCustomersFromDate')} {customer.joinDate} -{' '}
                   {customer.endDate || t('landlordCustomersToDate')}
                 </p>
               </div>
 
               {customer.recentInvoices && customer.recentInvoices.length > 0 && (
-                <div className="p-3 bg-zinc-50/80 rounded-xl border border-zinc-100 text-xs space-y-1.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                <div className="p-3 bg-surface/80 rounded-xl border border-line text-xs space-y-1.5">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     Hóa đơn gần nhất
                   </span>
                   {customer.recentInvoices.slice(0, 2).map((inv: any) => (
                     <div key={inv.id} className="flex justify-between items-center text-[11px]">
-                      <span className="text-zinc-600 font-medium">HĐ {inv.id.slice(0, 6)}</span>
-                      <span className="font-bold text-zinc-800">
+                      <span className="text-muted font-medium">HĐ {inv.id.slice(0, 6)}</span>
+                      <span className="font-bold text-foreground">
                         {Number(inv.totalAmount).toLocaleString('vi-VN')} ₫
                       </span>
                     </div>
@@ -753,12 +753,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* CARD: GHI CHÚ CHỦ TRỌ */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-3">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordCustomersLandlordNotesTitle')}
             </h3>
-            <p className="text-xs text-zinc-600 font-medium italic bg-zinc-50 p-3 rounded-xl border border-zinc-100 leading-relaxed">
+            <p className="text-xs text-muted font-medium italic bg-surface p-3 rounded-xl border border-line leading-relaxed">
               {customer.note ? `"${customer.note}"` : 'Không có ghi chú nào.'}
             </p>
           </div>
@@ -773,17 +773,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             if (e.target === e.currentTarget) setIsEditModalOpen(false)
           }}
         >
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
+          <div className="bg-card rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-line">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
                   <Edit2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-zinc-900">
+                  <h2 className="text-base font-black text-foreground">
                     {t('landlordCustomersEditTenantTitlePrefix')} {customer.name}
                   </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
+                  <p className="text-xs text-muted font-medium">
                     {t('landlordCustomersEditTenantSubtitle')}
                   </p>
                 </div>
@@ -874,7 +874,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
+            <div className="p-4 border-t border-line flex justify-end gap-3 bg-surface/50">
               <Button
                 variant="outline"
                 size="sm"
@@ -928,14 +928,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             if (e.target === e.currentTarget) setConfirmModal(prev => ({ ...prev, isOpen: false }))
           }}
         >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
+          <div className="bg-card rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
             <div className="flex items-center gap-3 text-rose-600">
-              <div className="p-3 bg-rose-100 rounded-full">
+              <div className="p-3 bg-danger-soft rounded-full">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-black text-zinc-900">{confirmModal.title}</h3>
+              <h3 className="text-lg font-black text-foreground">{confirmModal.title}</h3>
             </div>
-            <p className="text-xs text-zinc-500 font-medium">{confirmModal.message}</p>
+            <p className="text-xs text-muted font-medium">{confirmModal.message}</p>
             <div className="flex justify-end gap-3 pt-2">
               <Button
                 variant="outline"
@@ -964,14 +964,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             if (e.target === e.currentTarget) setAlertModal(prev => ({ ...prev, isOpen: false }))
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-orange-50 text-[#FF6B35] border-orange-200">
+          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-accent-soft text-[#FF6B35] border-accent-subtle">
               <Info className="w-7 h-7 text-[#FF6B35]" />
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-zinc-900">{alertModal.title}</h3>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+              <h3 className="text-lg font-black text-foreground">{alertModal.title}</h3>
+              <p className="text-xs text-muted font-medium leading-relaxed">
                 {alertModal.message}
               </p>
             </div>

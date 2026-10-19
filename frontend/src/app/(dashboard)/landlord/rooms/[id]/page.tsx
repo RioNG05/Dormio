@@ -1023,15 +1023,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   if (!isMounted || isLoading) {
     return (
       <div className="space-y-6 animate-pulse p-4">
-        <div className="h-16 bg-zinc-200 rounded-2xl w-full"></div>
+        <div className="h-16 bg-line rounded-2xl w-full"></div>
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
-            <div className="h-44 bg-zinc-100 rounded-2xl"></div>
-            <div className="h-64 bg-zinc-100 rounded-2xl"></div>
+            <div className="h-44 bg-card-hover rounded-2xl"></div>
+            <div className="h-64 bg-card-hover rounded-2xl"></div>
           </div>
           <div className="space-y-6">
-            <div className="h-40 bg-zinc-100 rounded-2xl"></div>
-            <div className="h-60 bg-zinc-100 rounded-2xl"></div>
+            <div className="h-40 bg-card-hover rounded-2xl"></div>
+            <div className="h-60 bg-card-hover rounded-2xl"></div>
           </div>
         </div>
       </div>
@@ -1040,7 +1040,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
   if (!room) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6 shadow-xs">
+      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6 shadow-xs">
         <Text as="p" variant="heading" size="lg" weight="bold" color="default" className="mb-2">
           {t('landlordRoomDetailNotFound')}
         </Text>
@@ -1124,11 +1124,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             href="/landlord/rooms"
-            className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer shrink-0"
+            className="p-2 -ml-2 text-muted hover:bg-card-hover hover:text-foreground rounded-full transition-colors cursor-pointer shrink-0"
             title={t('landlordRoomDetailBack')}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -1147,21 +1147,21 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       ? 'text-purple-600 bg-purple-500/10 border-purple-500/30'
                       : isVacant
                         ? 'text-blue-600 bg-blue-500/10 border-blue-500/30'
-                        : 'text-zinc-500 bg-zinc-100 border-zinc-200'
+                        : 'text-muted bg-card-hover border-line'
               }`}
             >
               <Text as="span" variant="badge" size="3xs" weight="extrabold" color="inherit" className="tracking-wider">
                 {getStatusLabel(room.status)}
               </Text>
             </span>
-            <span className="bg-zinc-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-zinc-200/80 truncate max-w-[170px] sm:max-w-none">
+            <span className="bg-card-hover px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-line truncate max-w-[170px] sm:max-w-none">
               <Text as="span" size="3xs" weight="bold" color="secondary" className="truncate">
                 {activeBuilding?.name ||
                   (room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1')}
               </Text>
             </span>
             {dashboardData?.room?.roomType?.name && (
-              <span className="bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80">
+              <span className="bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle">
                 <Text as="span" size="3xs" weight="bold" color="success">
                   {dashboardData.room.roomType.name}
                 </Text>
@@ -1174,7 +1174,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Action Toolbar */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           {isOccupied && (
             <Button
               size="sm"
@@ -1268,8 +1268,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         {/* Left Main Column */}
         <div className="xl:col-span-2 space-y-6">
           {/* SPOTLIGHT TENANT PROFILE CARD */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-zinc-100">
+          <div className="bg-card rounded-2xl border border-line shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-line">
               <Text as="h2" size="xs" weight="black" color="default" className="uppercase tracking-wider flex items-center gap-2 sm:text-sm">
                 <User className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordRoomDetailCurrentTenantTitle')}
@@ -1303,8 +1303,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             {primaryTenant?.fullName || room.tenant}
                           </Text>
                           {primaryTenant?.hasIdentification && (
-                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-emerald-100 rounded-full">
-                              <ShieldCheck className="w-3 h-3 text-emerald-800" />
+                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-success-soft rounded-full">
+                              <ShieldCheck className="w-3 h-3 text-success" />
                               <Text as="span" size="3xs" weight="bold" color="success">
                                 {t('landlordRoomDetailHasCccd')}
                               </Text>
@@ -1332,7 +1332,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                       <a
                         href={`tel:${primaryTenant?.phoneNumber || room.tenantPhone || '0977815704'}`}
-                        className="px-3 py-1.5 bg-red-600 text-white border border-zinc-200 rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 bg-red-600 text-white border border-line rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
                       >
                         <Phone className="w-3 h-3" />
                         <Text as="span" size="xs" weight="bold" color="white">
@@ -1352,7 +1352,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                   {/* Co-occupants list if present */}
                   {otherTenants.length > 0 && (
-                    <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200/60 text-xs">
+                    <div className="p-3 bg-surface rounded-xl border border-line text-xs">
                       <Text as="span" size="2xs" weight="bold" color="subtle" className="block mb-1.5">
                         {t('landlordRoomDetailRoommatesCount').replace(
                           '{count}',
@@ -1363,9 +1363,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         {otherTenants.map(ot => (
                           <div
                             key={ot.id}
-                            className="px-2.5 py-1 bg-white border border-zinc-200 rounded-lg flex items-center gap-1.5 shadow-2xs"
+                            className="px-2.5 py-1 bg-card border border-line rounded-lg flex items-center gap-1.5 shadow-2xs"
                           >
-                            <Users className="w-3 h-3 text-zinc-400" />
+                            <Users className="w-3 h-3 text-muted" />
                             <Text as="span" size="2xs" weight="bold" color="default">
                               {ot.fullName}
                             </Text>
@@ -1379,7 +1379,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   )}
                 </div>
               ) : (
-                <div className="p-6 text-center bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 space-y-2">
+                <div className="p-6 text-center bg-surface rounded-2xl border border-dashed border-line space-y-2">
                   <Text size="xs" weight="bold" color="subtle">
                     {t('landlordRoomDetailVacantDesc')}
                   </Text>
@@ -1402,7 +1402,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* GLOBAL FILTER BAR FOR MONTH/YEAR */}
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-zinc-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="bg-card p-3.5 sm:p-4 rounded-2xl border border-line shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-[#2AC1BC]" />
               <Text as="span" size="xs" weight="black" color="default">
@@ -1433,14 +1433,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* SECTION 1: HÓA ĐƠN & CÔNG NỢ */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-3">
               <Text as="h2" size="xs" weight="black" color="default" className="uppercase tracking-wider flex items-center gap-2 sm:text-sm">
                 <Receipt className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordRoomDetailInvoicesTitle')}
               </Text>
               {unpaidInvoice && unpaidFinancials && (
-                <span className="self-start sm:self-auto px-2.5 py-1 bg-rose-50 border border-rose-200 rounded-full animate-pulse">
+                <span className="self-start sm:self-auto px-2.5 py-1 bg-danger-soft border border-danger-subtle rounded-full animate-pulse">
                   <Text as="span" variant="badge" size="3xs" weight="black" color="danger">
                     {t('landlordRoomDetailUnpaidInvoicesBadge')
                       .replace('{count}', '1')
@@ -1455,7 +1455,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="space-y-3">
               {invoicesHistory.length === 0 ? (
-                <div className="p-8 text-center bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+                <div className="p-8 text-center bg-surface border border-line rounded-2xl space-y-2">
                   <Receipt className="w-8 h-8 text-zinc-300 mx-auto" />
                   <Text size="xs" weight="bold" color="secondary">
                     {t('landlordRoomDetailNoInvoicesTitle')}
@@ -1465,7 +1465,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </Text>
                 </div>
               ) : filteredInvoices.length === 0 ? (
-                <div className="p-6 text-center bg-zinc-50 rounded-xl">
+                <div className="p-6 text-center bg-surface rounded-xl">
                   <Text size="xs" weight="bold" color="subtle">
                     {t('landlordRoomDetailNoInvoicesInFilter')}
                   </Text>
@@ -1489,7 +1489,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       className={`p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 ${
                         isUnpaid
                           ? 'bg-rose-500/5 border-rose-500/30'
-                          : 'bg-zinc-50 border-zinc-200/80 hover:bg-zinc-100/60'
+                          : 'bg-surface border-line hover:bg-zinc-100/60'
                       }`}
                     >
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -1510,7 +1510,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                 ({inv.period})
                               </Text>
                               <span
-                                className={`px-2 py-0.5 rounded-full ${isUnpaid ? 'bg-rose-100' : 'bg-emerald-100'}`}
+                                className={`px-2 py-0.5 rounded-full ${isUnpaid ? 'bg-danger-soft' : 'bg-success-soft'}`}
                               >
                                 <Text as="span" variant="badge" size="3xs" weight="black" color={isUnpaid ? 'danger' : 'success'}>
                                   {isUnpaid
@@ -1528,7 +1528,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-zinc-200/50">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-line">
                           <Text
                             as="span"
                             size="base"
@@ -1557,7 +1557,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               </a>
                             </div>
                           ) : (
-                            <span className="bg-zinc-200/60 px-2 py-0.5 rounded-md whitespace-nowrap">
+                            <span className="bg-line/60 px-2 py-0.5 rounded-md whitespace-nowrap">
                               <Text as="span" variant="badge" size="3xs" weight="extrabold" color="secondary">
                                 {inv.method}
                               </Text>
@@ -1566,8 +1566,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         </div>
                       </div>
 
-                      <div className="p-3 bg-white rounded-xl border border-zinc-200/60 text-xs space-y-1.5">
-                        <div className="flex justify-between border-b border-zinc-100 pb-1">
+                      <div className="p-3 bg-card rounded-xl border border-line text-xs space-y-1.5">
+                        <div className="flex justify-between border-b border-line pb-1">
                           <Text as="span" size="2xs" weight="extrabold" color="secondary">
                             {t('landlordRoomDetailInvoiceDetailsTitle')}
                           </Text>
@@ -1576,7 +1576,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           </Text>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                          <div className="p-1.5 bg-zinc-50 rounded-lg">
+                          <div className="p-1.5 bg-surface rounded-lg">
                             <Text as="span" size="3xs" color="subtle" className="block">
                               {t('landlordRoomDetailInvoiceRoomPrice')}
                             </Text>
@@ -1584,7 +1584,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               {roomRentNum.toLocaleString('vi-VN')} ₫
                             </Text>
                           </div>
-                          <div className="p-1.5 bg-zinc-50 rounded-lg">
+                          <div className="p-1.5 bg-surface rounded-lg">
                             <Text as="span" size="3xs" color="subtle" className="block">
                               {t('landlordRoomDetailInvoiceFixedServices')}
                             </Text>
@@ -1592,7 +1592,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               {fixedServicesTotal.toLocaleString('vi-VN')} ₫
                             </Text>
                           </div>
-                          <div className="p-1.5 bg-amber-50 rounded-lg">
+                          <div className="p-1.5 bg-warning-soft rounded-lg">
                             <Text as="span" size="3xs" color="warning" className="block">
                               {t('landlordRoomDetailInvoiceElecUsage').replace(
                                 '{usage}',
@@ -1603,21 +1603,21 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               {fin.elecCost.toLocaleString('vi-VN')} ₫
                             </Text>
                           </div>
-                          <div className="p-1.5 bg-blue-50 rounded-lg">
+                          <div className="p-1.5 bg-info-soft rounded-lg">
                             <Text as="span" size="3xs" className="block text-blue-600">
                               {t('landlordRoomDetailInvoiceWaterUsage').replace(
                                 '{usage}',
                                 String(fin.waterUse),
                               )}
                             </Text>
-                            <Text as="strong" size="2xs" weight="bold" className="text-blue-900 whitespace-nowrap">
+                            <Text as="strong" size="2xs" weight="bold" className="text-info whitespace-nowrap">
                               {fin.waterCost.toLocaleString('vi-VN')} ₫
                             </Text>
                           </div>
                         </div>
 
                         {inv.editReason && (
-                          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-1.5">
+                          <div className="mt-2 p-2 bg-warning-soft border border-warning-subtle rounded-lg flex items-start gap-1.5">
                             <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                             <div>
                               <Text as="span" size="3xs" weight="bold" color="warning">
@@ -1640,7 +1640,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               {/* Pagination Controls for Invoices */}
               {totalInvoicePages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-zinc-100">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-line">
                   <Text as="span" size="2xs" weight="bold" color="subtle">
                     {t('landlordRoomDetailShowingItems')
                       .replace('{start}', String((invoicePage - 1) * ITEMS_PER_PAGE + 1))
@@ -1690,8 +1690,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* SECTION: LỊCH SỬ THUÊ PHÒNG (RENTAL HISTORY) */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
               <Text as="h2" weight="black" color="default" className="text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
                 <History className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordRoomDetailRentalHistoryTitle').replace(
@@ -1714,16 +1714,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                         isActive
                           ? 'bg-[#2AC1BC]/5 border-[#2AC1BC]/30'
-                          : 'bg-zinc-50 border-zinc-200/80'
+                          : 'bg-surface border-line'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                            isActive ? 'bg-[#2AC1BC]' : 'bg-zinc-200'
+                            isActive ? 'bg-[#2AC1BC]' : 'bg-line'
                           }`}
                         >
-                          <Text as="span" size="xs" weight="black" className={isActive ? 'text-white' : 'text-zinc-700'}>
+                          <Text as="span" size="xs" weight="black" className={isActive ? 'text-white' : 'text-foreground/90'}>
                             {hist.primaryTenantName.charAt(0)}
                           </Text>
                         </div>
@@ -1735,8 +1735,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             <span
                               className={`px-2 py-0.5 rounded-full ${
                                 isActive
-                                  ? 'bg-emerald-100'
-                                  : 'bg-zinc-200'
+                                  ? 'bg-success-soft'
+                                  : 'bg-line'
                               }`}
                             >
                               <Text as="span" size="2xs" weight="black" color={isActive ? 'success' : 'secondary'}>
@@ -1759,14 +1759,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-200/60">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
                         <Text as="span" size="xs" weight="black" color="brand">
                           {parseInt(hist.rentPrice).toLocaleString('vi-VN')}{' '}
                           {t('landlordRoomDetailRentPerMonth')}
                         </Text>
                         <Link
                           href={`/landlord/contracts/${hist.id}`}
-                          className="px-2.5 py-1 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
+                          className="px-2.5 py-1 bg-card border border-line rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
                         >
                           <Text as="span" size="xs" weight="bold" color="default">
                             {t('landlordRoomDetailViewContractShort')}
@@ -1777,7 +1777,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   )
                 })
               ) : (
-                <div className="p-4 text-center bg-zinc-50 rounded-xl">
+                <div className="p-4 text-center bg-surface rounded-xl">
                   <Text size="xs" weight="bold" color="subtle">
                     {t('landlordRoomDetailNoRentalHistory')}
                   </Text>
@@ -1787,8 +1787,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* SECTION 2: LỊCH SỬ CHỐT ĐIỆN NƯỚC */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-3.5 sm:p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-line pb-3">
               <div>
                 <Text as="h2" weight="black" color="default" className="text-xs sm:text-sm flex items-center gap-2">
                   <History className="w-4 h-4 text-[#2AC1BC]" />{' '}
@@ -1813,8 +1813,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="space-y-3">
               {meterHistory.length === 0 ? (
-                <div className="p-8 text-center bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-zinc-200/70 text-zinc-400 flex items-center justify-center mx-auto">
+                <div className="p-8 text-center bg-surface border border-line rounded-2xl space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-line/70 text-muted flex items-center justify-center mx-auto">
                     <Gauge className="w-5 h-5" />
                   </div>
                   <Text weight="bold" size="sm" color="default">
@@ -1825,7 +1825,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </Text>
                 </div>
               ) : filteredMeterHistory.length === 0 ? (
-                <div className="p-6 text-center bg-zinc-50 rounded-xl">
+                <div className="p-6 text-center bg-surface rounded-xl">
                   <Text size="xs" color="subtle" weight="bold">
                     {t('landlordRoomDetailNoMeterDataInFilter')}
                   </Text>
@@ -1839,24 +1839,24 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   return (
                     <details
                       key={item.id || `${item.period}-${itemIdx}`}
-                      className="group border border-zinc-200/80 rounded-xl overflow-hidden shadow-2xs"
+                      className="group border border-line rounded-xl overflow-hidden shadow-2xs"
                       open={item.isOpen}
                     >
-                      <summary className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-3.5 bg-zinc-50/80 hover:bg-zinc-100/80 cursor-pointer select-none outline-none transition-colors gap-2">
+                      <summary className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-3.5 bg-surface/80 hover:bg-card-hover cursor-pointer select-none outline-none transition-colors gap-2">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <Text as="span" size="xs" weight="black" color="brand" className="uppercase tracking-wider">
                             {t('landlordRoomDetailReadingPeriod').replace('{period}', item.period)}
                           </Text>
                           <Text as="span" size="2xs" weight="bold" color="subtle">({item.date})</Text>
                           {item.editReason && (
-                            <span className="px-2 py-0.5 bg-amber-100 rounded-full">
+                            <span className="px-2 py-0.5 bg-warning-soft rounded-full">
                               <Text as="span" size="2xs" weight="black" color="warning">
                                 {t('landlordRoomDetailEditedBadge')}
                               </Text>
                             </span>
                           )}
                           {isPaid && (
-                            <span className="px-2 py-0.5 bg-emerald-100 rounded-full">
+                            <span className="px-2 py-0.5 bg-success-soft rounded-full">
                               <Text as="span" size="2xs" weight="black" color="success">
                                 {t('landlordRoomDetailPaidBadge')}
                               </Text>
@@ -1866,7 +1866,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         <div className="flex items-center gap-2 sm:gap-3">
                           {isPaid ? (
                             <span
-                              className="px-2.5 py-1 bg-zinc-100 border border-zinc-200 rounded-lg flex items-center gap-1 cursor-not-allowed select-none"
+                              className="px-2.5 py-1 bg-card-hover border border-line rounded-lg flex items-center gap-1 cursor-not-allowed select-none"
                               title={t('landlordRoomDetailLockedTooltip')}
                             >
                               <Text as="span" size="2xs" weight="bold" color="secondary">
@@ -1893,11 +1893,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             {t('landlordRoomDetailTotalAmount')}{' '}
                             {fin.meterTotal.toLocaleString('vi-VN')} ₫
                           </Text>
-                          <ChevronDown className="w-4 h-4 text-zinc-400 group-open:rotate-180 transition-transform" />
+                          <ChevronDown className="w-4 h-4 text-muted group-open:rotate-180 transition-transform" />
                         </div>
                       </summary>
 
-                      <div className="p-3 sm:p-4 bg-white border-t border-zinc-100 space-y-2.5">
+                      <div className="p-3 sm:p-4 bg-card border-t border-line space-y-2.5">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
                           <div className="flex items-center justify-between sm:justify-start gap-2">
                             <Text as="div" weight="black" size="xs" color="default" className="flex items-center gap-1">
@@ -1947,9 +1947,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         </div>
 
                         {item.editActions && item.editActions.length > 0 ? (
-                          <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-2">
+                          <div className="p-2.5 bg-warning-soft border border-warning-subtle rounded-xl text-xs space-y-2">
                             <Text as="div" weight="bold" color="warning" size="xs" className="flex items-center gap-1.5">
-                              <History className="w-3.5 h-3.5 text-amber-700" />{' '}
+                              <History className="w-3.5 h-3.5 text-warning" />{' '}
                               {t('landlordRoomDetailEditHistoryTitle').replace(
                                 '{count}',
                                 String(item.editActions.length),
@@ -1959,9 +1959,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               {item.editActions.map((act, actIdx) => (
                                 <div
                                   key={act.id || actIdx}
-                                  className="p-2 bg-white/90 border border-amber-200/70 rounded-lg text-[11px] text-amber-900 space-y-1 shadow-2xs"
+                                  className="p-2 bg-card/90 border border-warning-subtle rounded-lg text-[11px] text-warning space-y-1 shadow-2xs"
                                 >
-                                  <div className="flex flex-wrap items-center justify-between gap-1 border-b border-amber-100 pb-1">
+                                  <div className="flex flex-wrap items-center justify-between gap-1 border-b border-warning-subtle pb-1">
                                     <Text as="span" size="2xs" weight="bold" color="warning">
                                       {t('landlordRoomDetailEditHistoryTimes').replace(
                                         '{times}',
@@ -1979,7 +1979,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                         {ch.oldValue !== null
                                           ? ch.oldValue
                                           : t('landlordRoomDetailNotAvailable')}{' '}
-                                        ➔ <strong className="text-zinc-900">{ch.newValue}</strong>{' '}
+                                        ➔ <strong className="text-foreground">{ch.newValue}</strong>{' '}
                                         {ch.unit || ''}
                                       </Text>
                                     ))}
@@ -1994,23 +1994,23 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             </div>
                           </div>
                         ) : item.editHistory && item.editHistory.length > 0 ? (
-                          <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-1.5">
+                          <div className="p-2.5 bg-warning-soft border border-warning-subtle rounded-xl text-xs space-y-1.5">
                             <Text as="div" weight="bold" color="warning" size="xs" className="flex items-center gap-1.5">
-                              <History className="w-3.5 h-3.5 text-amber-700" />{' '}
+                              <History className="w-3.5 h-3.5 text-warning" />{' '}
                               {t('landlordRoomDetailEditHistorySingle')}
                             </Text>
                             <div className="space-y-1">
                               {item.editHistory.map((eh, ehIdx) => (
                                 <div
                                   key={eh.id || ehIdx}
-                                  className="border-b border-amber-200/50 last:border-0 pb-1 last:pb-0 flex flex-wrap justify-between gap-1"
+                                  className="border-b border-warning-subtle last:border-0 pb-1 last:pb-0 flex flex-wrap justify-between gap-1"
                                 >
                                   <Text as="span" size="xs" color="default">
                                     <strong>{eh.serviceName}</strong>:{' '}
                                     {eh.oldValue !== null
                                       ? eh.oldValue
                                       : t('landlordRoomDetailNotAvailable')}{' '}
-                                    ➔ <strong className="text-zinc-900">{eh.newValue}</strong>
+                                    ➔ <strong className="text-foreground">{eh.newValue}</strong>
                                     {eh.reason && (
                                       <Text as="span" size="xs" color="secondary" className="italic">
                                         {' '}
@@ -2026,7 +2026,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             </div>
                           </div>
                         ) : item.editReason ? (
-                          <div className="p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs space-y-0.5">
+                          <div className="p-2.5 bg-warning-soft border border-warning-subtle rounded-xl text-xs space-y-0.5">
                             <Text as="div" weight="bold" color="warning" size="xs">
                               {t('landlordRoomDetailEditLogTitle').replace(
                                 '{editedAt}',
@@ -2046,7 +2046,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               {/* Pagination Controls for Meter History */}
               {totalMeterPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-zinc-100">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-3 border-t border-line">
                   <Text as="span" size="xs" weight="bold" color="secondary">
                     {t('landlordRoomDetailShowingMeters')
                       .replace('{start}', String((meterPage - 1) * ITEMS_PER_PAGE + 1))
@@ -2098,9 +2098,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* BẢO TRÌ & TIỀN ĐẶT CỌC */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 1. Quản Lý Bảo Trì */}
-            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4 flex flex-col justify-between">
+            <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4 flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
+                <div className="flex justify-between items-center border-b border-line pb-3">
                   <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-[#FF6B35]" />{' '}
                     {t('landlordRoomDetailMaintenanceTitle').replace(
@@ -2121,7 +2121,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                 <div className="space-y-3 min-h-[195px] pt-1">
                   {maintenanceHistory.length === 0 ? (
-                    <div className="p-4 text-center bg-zinc-50 rounded-xl">
+                    <div className="p-4 text-center bg-surface rounded-xl">
                       <Text size="xs" color="subtle" weight="bold">
                         {t('landlordRoomDetailNoMaintenance')}
                       </Text>
@@ -2135,7 +2135,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           className={`p-3 rounded-xl border min-h-[86px] flex flex-col justify-between ${
                             item.status === 'Đang xử lý'
                               ? 'bg-amber-500/5 border-amber-500/20'
-                              : 'bg-zinc-50 border-zinc-100'
+                              : 'bg-surface border-line'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-2">
@@ -2145,8 +2145,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             <span
                               className={`px-2 py-0.5 rounded-full shrink-0 ${
                                 item.status === 'Đang xử lý'
-                                  ? 'bg-amber-100'
-                                  : 'bg-emerald-100'
+                                  ? 'bg-warning-soft'
+                                  : 'bg-success-soft'
                               }`}
                             >
                               <Text as="span" size="2xs" weight="black" color={item.status === 'Đang xử lý' ? 'warning' : 'success'}>
@@ -2165,7 +2165,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             <div className="my-1"></div>
                           )}
 
-                          <div className="flex items-center justify-between pt-0.5 border-t border-zinc-100/60">
+                          <div className="flex items-center justify-between pt-0.5 border-t border-line">
                             <Text as="span" size="2xs" color="secondary" weight="bold">
                               {item.completedDate
                                 ? t('landlordRoomDetailMaintenanceCompletedDate').replace(
@@ -2194,7 +2194,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               {/* Maintenance Pagination */}
               {Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE) > 1 && (
-                <div className="flex items-center justify-between pt-3 border-t border-zinc-100 text-xs mt-auto">
+                <div className="flex items-center justify-between pt-3 border-t border-line text-xs mt-auto">
                   <Text as="span" size="2xs" color="subtle" weight="bold">
                     Trang {maintPage} / {Math.ceil(maintenanceHistory.length / MAINT_PER_PAGE)}
                   </Text>
@@ -2229,26 +2229,26 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {/* 2. Quản Lý Tiền Đặt Cọc */}
-            <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4 flex flex-col justify-between">
+            <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4 flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
+                <div className="flex justify-between items-center border-b border-line pb-3">
                   <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2">
                     <Wallet className="w-4 h-4 text-purple-600" />{' '}
                     {t('landlordRoomDetailDepositTitle')}
                   </Text>
-                  <span className="px-2.5 py-0.5 bg-purple-50 border border-purple-200/80 rounded-full">
-                    <Text as="span" size="2xs" weight="black" className="text-purple-700">
+                  <span className="px-2.5 py-0.5 bg-deposit-soft border border-deposit-subtle rounded-full">
+                    <Text as="span" size="2xs" weight="black" className="text-deposit">
                       Escrow
                     </Text>
                   </span>
                 </div>
 
-                <div className="mt-3 p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-indigo-500/10 rounded-2xl border border-purple-200/80 space-y-3">
+                <div className="mt-3 p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-indigo-500/10 rounded-2xl border border-deposit-subtle space-y-3">
                   <div className="flex items-center justify-between">
-                    <Text as="span" size="2xs" weight="black" className="text-purple-800 uppercase tracking-wider">
+                    <Text as="span" size="2xs" weight="black" className="text-deposit uppercase tracking-wider">
                       {t('landlordRoomDetailDepositSafeBadge')}
                     </Text>
-                    <span className="px-2 py-0.5 bg-emerald-100 rounded-full border border-emerald-200">
+                    <span className="px-2 py-0.5 bg-success-soft rounded-full border border-success-subtle">
                       <Text as="span" size="2xs" weight="black" color="success">
                         {currentContract?.deposit?.status === 'active'
                           ? t('landlordRoomDetailDepositLocked')
@@ -2258,8 +2258,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
 
                   <div className="flex items-baseline justify-between">
-                    <div className="text-2xl font-black text-purple-700 tracking-tight">
-                      <Text as="span" weight="black" className="text-2xl text-purple-700">
+                    <div className="text-2xl font-black text-deposit tracking-tight">
+                      <Text as="span" weight="black" className="text-2xl text-deposit">
                         {currentContract?.deposit?.amount
                           ? parseInt(currentContract.deposit.amount).toLocaleString('vi-VN')
                           : '3.000.000'}{' '}
@@ -2268,7 +2268,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 border-t border-purple-200/50 pt-2.5">
+                  <div className="grid grid-cols-2 gap-2 border-t border-deposit-subtle pt-2.5">
                     <div className="space-y-0.5">
                       <Text as="span" size="2xs" color="subtle" weight="medium" className="block">
                         {t('landlordRoomDetailContractStartDate')}
@@ -2313,15 +2313,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         {/* Right Sidebar Column */}
         <div className="space-y-6">
           {/* COMPACT SIDEBAR 4 ROOM METRIC CARDS */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-4 space-y-3">
-            <Text as="h2" weight="black" color="default" className="flex items-center gap-2 text-xs uppercase tracking-wider border-b border-zinc-100 pb-2">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-4 space-y-3">
+            <Text as="h2" weight="black" color="default" className="flex items-center gap-2 text-xs uppercase tracking-wider border-b border-line pb-2">
               <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
               <Text as="span" color="inherit">
                 {t('landlordRoomDetailSpecsTitle').replace('{roomNumber}', room.roomNumber)}
               </Text>
             </Text>
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="p-2.5 bg-surface rounded-xl border border-line space-y-0.5">
                 <Text as="span" size="2xs" weight="black" color="subtle" className="uppercase block">
                   {t('landlordRoomDetailRentLabel')}
                 </Text>
@@ -2338,7 +2338,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </Text>
               </div>
 
-              <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="p-2.5 bg-surface rounded-xl border border-line space-y-0.5">
                 <Text as="span" size="2xs" weight="black" color="subtle" className="uppercase block">
                   {t('landlordRoomDetailDepositSpecLabel')}
                 </Text>
@@ -2352,7 +2352,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </Text>
               </div>
 
-              <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="p-2.5 bg-surface rounded-xl border border-line space-y-0.5">
                 <Text as="span" size="2xs" weight="black" color="subtle" className="uppercase block">
                   {t('landlordRoomDetailDebtLabel')}
                 </Text>
@@ -2366,7 +2366,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </Text>
               </div>
 
-              <div className="p-2.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-0.5">
+              <div className="p-2.5 bg-surface rounded-xl border border-line space-y-0.5">
                 <Text as="span" size="2xs" weight="black" color="subtle" className="uppercase block">
                   {t('landlordRoomDetailAreaLabel')}
                 </Text>
@@ -2386,8 +2386,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Giá dịch vụ định kỳ với Badge màu sắc */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
-            <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
+            <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-line pb-3">
               <Banknote className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordRoomDetailServicesTitle')}
             </Text>
             <div className="space-y-2.5">
@@ -2395,12 +2395,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 service => (
                   <div
                     key={service.id}
-                    className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-xl border border-zinc-100"
+                    className="flex justify-between items-center p-2.5 bg-surface rounded-xl border border-line"
                   >
                     <div className="flex items-center gap-2">
                       <Text as="span" size="xs" weight="black" color="default">{service.name}</Text>
                       {service.isCustom && (
-                        <span className="bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">
+                        <span className="bg-warning-soft border border-warning-subtle px-1.5 py-0.5 rounded-md">
                           <Text as="span" size="2xs" weight="bold" color="warning">
                             {t('landlordRoomDetailCustomServiceBadge')}
                           </Text>
@@ -2417,7 +2417,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Tiện nghi phòng */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
             {(() => {
               const amenitiesList = room.amenities || [
                 'WiFi',
@@ -2431,7 +2431,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               ]
               return (
                 <>
-                  <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-zinc-100 pb-3">
+                  <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-line pb-3">
                     <Sparkles className="w-4 h-4 text-[#2AC1BC]" />{' '}
                     {t('landlordRoomDetailAmenitiesTitle').replace(
                       '{count}',
@@ -2443,7 +2443,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     {amenitiesList.map((item: string, idx: number) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 bg-zinc-100 border border-zinc-200/80 rounded-xl shadow-2xs"
+                        className="px-2.5 py-1 bg-card-hover border border-line rounded-xl shadow-2xs"
                       >
                         <Text as="span" size="xs" weight="bold" color="default" className="flex items-center gap-1">
                           {getAmenityLabel(item, t)}
@@ -2457,8 +2457,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Quản lý trạng thái phòng */}
-          <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs p-5 space-y-4">
-            <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
+            <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-line pb-3">
               <Building2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordRoomDetailRoomStatusTitle')}
             </Text>
@@ -2534,7 +2534,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <Edit className="w-5 h-5" />
             </div>
           }
-          className="bg-amber-50/50"
+          className="bg-warning-soft"
         />
 
         <Modal.Body className="space-y-4">
@@ -2654,7 +2654,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* AI OCR UPLOAD BOX */}
           <div className="p-4 bg-gradient-to-br from-[#2AC1BC]/10 to-teal-500/5 rounded-2xl border border-[#2AC1BC]/30 space-y-2 text-center">
             <div className="flex justify-center">
-              <div className="w-10 h-10 rounded-full bg-white shadow-xs text-[#2AC1BC] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-card shadow-xs text-[#2AC1BC] flex items-center justify-center">
                 <Sparkles className="w-5 h-5" />
               </div>
             </div>
@@ -2679,7 +2679,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </Text>
             </Button>
             {ocrSuccessMsg && (
-              <div className="bg-white/80 p-2 rounded-xl border border-emerald-200 animate-in fade-in">
+              <div className="bg-card/80 p-2 rounded-xl border border-success-subtle animate-in fade-in">
                 <Text size="xs" weight="bold" color="success">
                   {ocrSuccessMsg}
                 </Text>
@@ -2820,7 +2820,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   className={
                     editAmenities.includes(item)
                       ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/40 hover:bg-[#2AC1BC]/20 text-xs'
-                      : 'bg-white text-zinc-600 hover:bg-zinc-50 text-xs'
+                      : 'bg-card text-muted hover:bg-card-hover text-xs'
                   }
                   onClick={() =>
                     setEditAmenities(prev =>
@@ -2837,7 +2837,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Cấu hình dịch vụ phòng */}
-          <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-3">
+          <div className="border border-line rounded-xl p-4 bg-surface/50 space-y-3">
             <div className="flex justify-between items-center mb-1">
               <Text as="h3" weight="bold" color="default" size="xs" className="uppercase tracking-wider flex items-center gap-1.5">
                 <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
@@ -2852,7 +2852,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               {editServices.map(service => (
                 <div
                   key={service.id}
-                  className="border border-zinc-200/80 rounded-xl p-3 bg-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shadow-2xs"
+                  className="border border-line rounded-xl p-3 bg-card flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shadow-2xs"
                 >
                   <div className="flex items-center gap-2">
                     {!service.isRemovable ? (
@@ -3074,7 +3074,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       >
         <Modal.Body className="space-y-4">
           <div className="flex items-center gap-3 text-rose-600">
-            <div className="p-3 bg-rose-100 rounded-full">
+            <div className="p-3 bg-danger-soft rounded-full">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <Text as="h3" weight="black" color="default" size="lg">{confirmModal.title}</Text>
@@ -3112,7 +3112,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       >
         <Modal.Body className="space-y-4">
           <div className="flex items-center gap-3 text-amber-600">
-            <div className="p-3 bg-amber-100 rounded-full shrink-0">
+            <div className="p-3 bg-warning-soft rounded-full shrink-0">
               <AlertTriangle className="w-6 h-6 text-amber-600" />
             </div>
             <div>
@@ -3124,7 +3124,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </Text>
             </div>
           </div>
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-zinc-100">
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
             <Button
               type="button"
               variant="outline"

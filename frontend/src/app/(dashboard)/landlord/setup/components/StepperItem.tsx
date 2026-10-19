@@ -39,8 +39,8 @@ export function StepperItem({
         isActive
           ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 hover:bg-[#2AC1BC]/10 shadow-xs'
           : isCompleted
-            ? 'border-zinc-200 bg-white hover:bg-zinc-50'
-            : 'border-zinc-100 bg-zinc-50/50 hover:bg-zinc-50/50 opacity-60',
+            ? 'border-line bg-card hover:bg-card-hover'
+            : 'border-line bg-surface/50 hover:bg-zinc-50/50 opacity-60',
       )}
     >
       <div
@@ -50,7 +50,7 @@ export function StepperItem({
             ? 'bg-emerald-600 text-white'
             : isActive
               ? 'bg-[#2AC1BC] text-white shadow-sm'
-              : 'bg-zinc-200 text-zinc-600',
+              : 'bg-line text-muted',
         )}
       >
         {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : icon}

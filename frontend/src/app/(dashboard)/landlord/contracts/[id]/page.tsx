@@ -438,11 +438,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   if (!contract) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6">
-        <p className="font-bold text-lg mb-2 text-zinc-800">
+      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6">
+        <p className="font-bold text-lg mb-2 text-foreground">
           {t('landlordContractsNoContractsFound')}
         </p>
-        <p className="text-xs text-zinc-500 mb-4">
+        <p className="text-xs text-muted mb-4">
           {t('landlordContractDetailContractId', { id: resolvedParams.id })}
         </p>
         <Link
@@ -460,11 +460,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Link
             href="/landlord/contracts"
-            className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer shrink-0"
+            className="p-2 -ml-2 text-muted hover:bg-card-hover hover:text-foreground rounded-full transition-colors cursor-pointer shrink-0"
             title={t('landlordContractDetailBack')}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -472,23 +472,23 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                 {t('landlordContractDetailRoomPrefix')} {contract.room}
               </h1>
               <span
                 className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${contract.status === 'Đang hiệu lực'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    ? 'bg-success-soft text-success border-success-subtle'
                     : contract.status === 'Quá hạn'
-                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                      ? 'bg-danger-soft text-danger border-danger-subtle'
                       : contract.status === 'Sắp hết hạn'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                        ? 'bg-warning-soft text-warning border-warning-subtle'
+                        : 'bg-card-hover text-muted border-line'
                   }`}
               >
                 {contract.status}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 font-semibold mt-0.5 flex flex-wrap items-center gap-2">
+            <p className="text-xs text-muted font-semibold mt-0.5 flex flex-wrap items-center gap-2">
               <span>{contract.buildingName}</span>
               <span>•</span>
               <span>{t('landlordContractDetailContractId', { id: contract.id })}</span>
@@ -509,7 +509,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Action Toolbar using Base Button Components */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <Button
             type="button"
             variant="primary"
@@ -552,9 +552,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* CARD 1: THÔNG TIN HỢP ĐỒNG & GIÁ THUÊ */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractDetailFinancialSection')}
               </h3>
@@ -570,34 +570,34 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3.5 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailContractId', { id: '' }).replace(':', '').trim()}
                 </span>
                 <p className="font-black text-[#2AC1BC] text-sm tracking-wide">{contract.id}</p>
               </div>
 
-              <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3.5 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailRoomTypeLabel')}
                 </span>
-                <p className="font-extrabold text-zinc-900 text-sm">
+                <p className="font-extrabold text-foreground text-sm">
                   {t('landlordContractDetailRoomPrefix')} {contract.room} • {contract.roomType}
                 </p>
               </div>
 
-              <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3.5 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailStartDate')}
                 </span>
-                <p className="font-bold text-zinc-800">{contract.startDate}</p>
+                <p className="font-bold text-foreground">{contract.startDate}</p>
               </div>
 
-              <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3.5 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailEndDate')}
                 </span>
-                <p className="font-bold text-zinc-800">{contract.endDate}</p>
+                <p className="font-bold text-foreground">{contract.endDate}</p>
               </div>
 
               <div className="p-3.5 bg-emerald-500/5 rounded-xl border border-emerald-500/20 space-y-1">
@@ -614,18 +614,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 <p className="font-black text-purple-600 text-base">{contract.deposit}</p>
               </div>
 
-              <div className="sm:col-span-2 p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between">
+              <div className="sm:col-span-2 p-3.5 bg-surface rounded-xl border border-line flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     {t('landlordContractDetailPaymentDay')}
                   </span>
-                  <p className="font-bold text-zinc-800 text-xs">
+                  <p className="font-bold text-foreground text-xs">
                     {t('landlordContractDetailPaymentDayValue', {
                       day: contract.paymentDate || '5',
                     })}
                   </p>
                 </div>
-                <span className="px-2.5 py-1 bg-zinc-200 text-zinc-700 text-[10px] font-extrabold rounded-lg">
+                <span className="px-2.5 py-1 bg-line text-foreground/90 text-[10px] font-extrabold rounded-lg">
                   {t('landlordContractDetailVietQrAuto')}
                 </span>
               </div>
@@ -633,9 +633,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* CARD 2: BÊN B - KHÁCH THUÊ CHÍNH */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
                 <User className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractDetailTenantSection')}
               </h3>
@@ -647,14 +647,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </Link>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface rounded-2xl border border-line">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-[#2AC1BC] text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
                   {contract.tenant.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-zinc-900">{contract.tenant}</h4>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 font-semibold mt-0.5">
+                  <h4 className="text-base font-black text-foreground">{contract.tenant}</h4>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted font-semibold mt-0.5">
                     <span>{t('landlordContractDetailMemberPhoneLabel')} {contract.tenantPhone}</span>
                     <span>•</span>
                     <span>{t('landlordContractDetailMemberCccdLabel')} {contract.tenantCccd}</span>
@@ -683,9 +683,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* CARD 3: THÀNH VIÊN Ở CÙNG */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex justify-between items-center border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractDetailMembersSection', {
                   count: contract.members?.length || 0,
@@ -703,7 +703,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
 
             {!contract.members || contract.members.length === 0 ? (
-              <div className="p-4 text-center text-xs text-zinc-400 font-bold bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+              <div className="p-4 text-center text-xs text-muted font-bold bg-surface rounded-xl border border-dashed border-line">
                 {t('landlordContractDetailNoMembers')}
               </div>
             ) : (
@@ -711,16 +711,16 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 {contract.members.map((mem, idx) => (
                   <div
                     key={idx}
-                    className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 flex items-center justify-between text-xs"
+                    className="p-3 bg-surface rounded-xl border border-line flex items-center justify-between text-xs"
                   >
                     <div>
-                      <div className="font-bold text-zinc-900 flex items-center gap-1.5">
+                      <div className="font-bold text-foreground flex items-center gap-1.5">
                         <span>{mem.name}</span>
-                        <span className="text-[10px] bg-zinc-200 text-zinc-700 px-1.5 py-0.5 rounded-md font-semibold">
+                        <span className="text-[10px] bg-line text-foreground/90 px-1.5 py-0.5 rounded-md font-semibold">
                           {mem.relation}
                         </span>
                       </div>
-                      <p className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                      <p className="text-[10px] text-muted font-medium mt-0.5">
                         {t('landlordContractDetailMemberPhoneLabel')} {mem.phone} • {t('landlordContractDetailMemberCccdLabel')} {mem.cccd || '—'}
                       </p>
                     </div>
@@ -746,8 +746,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* CARD 4: CẤU HÌNH DỊCH VỤ ĐỊNH KỲ */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordContractDetailServicesSection')}
             </h3>
@@ -756,11 +756,11 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               {contract.services.map(svc => (
                 <div
                   key={svc.id}
-                  className="flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs"
+                  className="flex items-center justify-between p-3 bg-surface rounded-xl border border-line text-xs"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-zinc-800">{svc.name}</span>
-                    <span className="text-[9px] bg-zinc-200 text-zinc-600 px-1.5 py-0.5 rounded font-semibold">
+                    <span className="font-bold text-foreground">{svc.name}</span>
+                    <span className="text-[9px] bg-line text-muted px-1.5 py-0.5 rounded font-semibold">
                       {svc.type}
                     </span>
                   </div>
@@ -773,8 +773,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* CARD 5: NHẬT KÝ LỊCH SỬ THAY ĐỔI */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <Clock className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordContractDetailHistorySection')}
             </h3>
@@ -783,15 +783,15 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               {contract.history.map((h, idx) => (
                 <div
                   key={idx}
-                  className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs space-y-0.5"
+                  className="p-3 bg-surface rounded-xl border border-line text-xs space-y-0.5"
                 >
-                  <div className="flex justify-between items-center font-bold text-zinc-800">
+                  <div className="flex justify-between items-center font-bold text-foreground">
                     <span>{h.content}</span>
-                    <span className="text-[10px] text-zinc-400 font-semibold">{h.date}</span>
+                    <span className="text-[10px] text-muted font-semibold">{h.date}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 font-medium">
+                  <p className="text-[10px] text-muted font-medium">
                     {t('landlordContractDetailUpdatedBy')}{' '}
-                    <strong className="text-zinc-700">{h.user}</strong>
+                    <strong className="text-foreground/90">{h.user}</strong>
                   </p>
                 </div>
               ))}
@@ -802,40 +802,40 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* Right Column (1 Col) */}
         <div className="space-y-6">
           {/* CARD BÊN A (CHỦ TRỌ / BQL) */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
               <Building2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordContractDetailPartyA')}
             </h3>
 
             <div className="space-y-2 text-xs">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailPartyARep')}
                 </span>
-                <p className="font-extrabold text-zinc-900">Nguyễn Văn Quyền (Chủ trọ Dormio)</p>
+                <p className="font-extrabold text-foreground">Nguyễn Văn Quyền (Chủ trọ Dormio)</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailPartyAPhone')}
                 </span>
-                <p className="font-bold text-zinc-800">0988 123 456</p>
+                <p className="font-bold text-foreground">0988 123 456</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailPartyABuilding')}
                 </span>
-                <p className="font-bold text-zinc-800">{contract.buildingName}</p>
+                <p className="font-bold text-foreground">{contract.buildingName}</p>
               </div>
             </div>
           </div>
 
           {/* LINK SANG PHÒNG HIỆN TẠI */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2">
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
                 <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractDetailRentedRoom')}
               </h3>
@@ -865,7 +865,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <CalendarDays className="w-5 h-5" />
             </div>
             <div>
-              <Text as="h2" size="base" weight="black" className="text-zinc-900">
+              <Text as="h2" size="base" weight="black" className="text-foreground">
                 {t('landlordContractDetailModalExtendTitle')}
               </Text>
               <Text size="xs" color="subtle" weight="medium">
@@ -924,7 +924,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <Edit2 className="w-5 h-5" />
             </div>
             <div>
-              <Text as="h2" size="base" weight="black" className="text-zinc-900">
+              <Text as="h2" size="base" weight="black" className="text-foreground">
                 {t('landlordContractDetailModalEditTitle')} {contract.id}
               </Text>
               <Text size="xs" color="subtle" weight="medium">
@@ -1016,7 +1016,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <Text as="h2" size="base" weight="black" className="text-zinc-900">
+              <Text as="h2" size="base" weight="black" className="text-foreground">
                 {t('landlordContractDetailModalAddMemberTitle')}
               </Text>
               <Text size="xs" color="subtle" weight="medium">
@@ -1050,7 +1050,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         }
       >
         {/* Mode Switcher Tabs */}
-        <div className="grid grid-cols-2 p-2 bg-zinc-100/70 border-b border-zinc-200/60 text-xs font-bold gap-1">
+        <div className="grid grid-cols-2 p-2 bg-card-hover/70 border-b border-line text-xs font-bold gap-1">
           <Button
             type="button"
             size="sm"
@@ -1074,7 +1074,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           {addMemberTab === 'select' ? (
             /* CÁCH 1: CHỌN KHÁCH THUÊ CÓ SẴN TRONG DATA */
             <div className="space-y-4">
-              <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl text-xs text-blue-700 font-semibold">
+              <div className="p-3 bg-info-soft border border-info-subtle rounded-xl text-xs text-info font-semibold">
                 {t('landlordContractDetailSearchMemberHint')}
               </div>
 
@@ -1089,10 +1089,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               {/* Dropdown danh sách kết quả tìm kiếm */}
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-bold text-zinc-700">
+                  <label className="block text-xs font-bold text-foreground/90">
                     {t('landlordContractDetailSelectMemberLabel')}
                   </label>
-                  <span className="text-[10px] text-zinc-400 font-bold">
+                  <span className="text-[10px] text-muted font-bold">
                     {t('landlordContractDetailSelectMemberCount')
                       .replace('{filtered}', String(filteredCustomers.length))
                       .replace('{total}', String(existingCustomers.length))}
@@ -1113,22 +1113,22 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
               {/* Preview Khách Thuê Đã Chọn */}
               {newMemberName ? (
-                <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-200/80 space-y-1 text-xs">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                <div className="p-3.5 bg-surface rounded-xl border border-line space-y-1 text-xs">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordContractDetailSelectedMemberTitle')}
                   </span>
-                  <p className="font-extrabold text-zinc-900 text-sm">{newMemberName}</p>
-                  <p className="text-zinc-500 font-medium">
+                  <p className="font-extrabold text-foreground text-sm">{newMemberName}</p>
+                  <p className="text-muted font-medium">
                     {t('landlordContractDetailMemberPhoneLabel')}{' '}
-                    <strong className="text-zinc-800">{newMemberPhone}</strong> •{' '}
+                    <strong className="text-foreground">{newMemberPhone}</strong> •{' '}
                     {t('landlordContractDetailMemberCccdLabel')}{' '}
-                    <strong className="text-zinc-800">{newMemberCccd}</strong>
+                    <strong className="text-foreground">{newMemberCccd}</strong>
                   </p>
                 </div>
               ) : (
                 memberSearchQuery && (
                   /* Danh Sách Kết Quả Nhanh Click-to-Select */
-                  <div className="border border-zinc-200 rounded-xl divide-y divide-zinc-100 max-h-40 overflow-y-auto custom-scrollbar">
+                  <div className="border border-line rounded-xl divide-y divide-line max-h-40 overflow-y-auto custom-scrollbar">
                     {filteredCustomers.slice(0, 5).map((cust, idx) => (
                       <div
                         key={`quick-${cust.id}-${idx}`}
@@ -1136,8 +1136,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                         className="p-2.5 hover:bg-[#2AC1BC]/10 cursor-pointer transition-colors flex items-center justify-between text-xs"
                       >
                         <div>
-                          <span className="font-bold text-zinc-900 block">{cust.name}</span>
-                          <span className="text-[10px] text-zinc-500">
+                          <span className="font-bold text-foreground block">{cust.name}</span>
+                          <span className="text-[10px] text-muted">
                             {t('landlordContractDetailMemberPhoneLabel')} {cust.phone} •{' '}
                             {t('landlordContractDetailMemberCccdLabel')} {cust.cccd}
                           </span>
@@ -1148,7 +1148,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                       </div>
                     ))}
                     {filteredCustomers.length === 0 && (
-                      <div className="p-3 text-center text-xs text-zinc-400">
+                      <div className="p-3 text-center text-xs text-muted">
                         {t('landlordContractDetailNotFoundForQuery').replace(
                           '{query}',
                           memberSearchQuery,
@@ -1177,7 +1177,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           ) : (
             /* CÁCH 2: TẠO MỚI TRONG HỢP ĐỒNG -> TỰ ĐỘNG ĐỒNG BỘ */
             <div className="space-y-4">
-              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold">
+              <div className="p-3 bg-success-soft border border-success-subtle rounded-xl text-xs text-success font-semibold">
                 {t('landlordContractDetailCreateMemberHint').replace('{room}', contract.room)}
               </div>
 
@@ -1293,10 +1293,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         size="md"
         header={
           <div className="flex items-center gap-3 text-rose-600">
-            <div className="p-3 bg-rose-100 rounded-full">
+            <div className="p-3 bg-danger-soft rounded-full">
               <AlertTriangle className="w-6 h-6" />
             </div>
-            <Text as="h3" size="lg" weight="black" className="text-zinc-900">
+            <Text as="h3" size="lg" weight="black" className="text-foreground">
               {t('landlordContractDetailModalTerminateTitle')}
             </Text>
           </div>
@@ -1359,7 +1359,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         }
       >
         <div className="space-y-2">
-          <Text as="h3" size="base" weight="bold" className="text-zinc-900">
+          <Text as="h3" size="base" weight="bold" className="text-foreground">
             {t('landlordContractDetailConfirmCloseTitle')}
           </Text>
           <Text size="xs" color="subtle" className="leading-relaxed">

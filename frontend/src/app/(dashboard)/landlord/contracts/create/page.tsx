@@ -688,23 +688,23 @@ function CreateContractPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-2xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-line shadow-2xs">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wider mb-1">
             <Building2 className="w-3.5 h-3.5 text-[#2AC1BC]" />
             <span>{activeBuilding?.name || t('landlordContractsCreatePropertyFallback')}</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
             {t('landlordContractsCreateTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+          <p className="text-xs sm:text-sm text-muted mt-1">
             {t('landlordContractsCreateSubtitle')}
           </p>
         </div>
       </div>
 
       {/* Progress Wizard */}
-      <div className="flex items-center justify-center gap-2 sm:gap-3 bg-white p-3 rounded-2xl border border-zinc-200/80 shadow-2xs">
+      <div className="flex items-center justify-center gap-2 sm:gap-3 bg-card p-3 rounded-2xl border border-line shadow-2xs">
         <Button variant="dark"
           type="button"
           onClick={() => setStep(1)}
@@ -739,11 +739,11 @@ function CreateContractPage() {
 
       {/* STEP 1: Phòng & Khách thuê */}
       {step === 1 && (
-        <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
+        <div className="bg-card border border-line rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
           {/* Room Selection */}
-          <div className="space-y-3 border-b border-zinc-100 pb-6">
+          <div className="space-y-3 border-b border-line pb-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+              <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
                 <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractsCreateRoomSelectLabel')}
               </h2>
@@ -777,23 +777,23 @@ function CreateContractPage() {
               </SelectInput>
 
               {selectedRoomObj && (
-                <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between text-xs font-bold">
+                <div className="p-3 bg-surface border border-line rounded-xl flex items-center justify-between text-xs font-bold">
                   <div>
-                    <span className="text-zinc-500 block text-[11px]">
+                    <span className="text-muted block text-[11px]">
                       {t('landlordContractDetailRoomPrefix')}:
                     </span>
-                    <span className="text-zinc-900 font-extrabold text-sm">
+                    <span className="text-foreground font-extrabold text-sm">
                       {t('landlordContractDetailRoomPrefix')} {selectedRoomObj.roomNumber}
                     </span>
-                    <span className="text-zinc-500 ml-1 text-xs">
+                    <span className="text-muted ml-1 text-xs">
                       ({t('landlordRoomDetailFloor')} {selectedRoomObj.floor},{' '}
                       {selectedRoomObj.area || 20}m²)
                     </span>
                   </div>
                   <span
                     className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${selectedRoomObj.status === 'deposited'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-deposit-soft text-deposit'
+                        : 'bg-success-soft text-success'
                       }`}
                   >
                     {selectedRoomObj.status}
@@ -804,15 +804,15 @@ function CreateContractPage() {
 
             {/* FLOW A BANNER IF PENDING PLATFORM DEPOSIT DETECTED */}
             {flowType === 'platform' && pendingDeposit && (
-              <div className="p-4 bg-purple-50 border border-purple-200 rounded-2xl space-y-2 mt-4 animate-in zoom-in-95">
-                <div className="flex items-center gap-2 text-purple-700 font-black text-xs uppercase tracking-wider">
+              <div className="p-4 bg-deposit-soft border border-deposit-subtle rounded-2xl space-y-2 mt-4 animate-in zoom-in-95">
+                <div className="flex items-center gap-2 text-deposit font-black text-xs uppercase tracking-wider">
                   <Sparkles className="w-4 h-4 text-purple-600" />
                   <span>{t('landlordContractsCreateFlowPlatformBadge')}</span>
                 </div>
-                <p className="text-xs text-purple-900 font-medium leading-relaxed">
+                <p className="text-xs text-deposit font-medium leading-relaxed">
                   {t('landlordContractsCreateFlowPlatformDesc')}
                 </p>
-                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-purple-800">
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-deposit">
                   <span>
                     {t('landlordContractsCreateTenantNameLabel')}:{' '}
                     <strong>
@@ -836,8 +836,8 @@ function CreateContractPage() {
 
           {/* Tenant Information Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
                 <User className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordContractsCreateStep1Header')}
               </h2>
@@ -874,20 +874,20 @@ function CreateContractPage() {
 
                 {/* Status hints under phone input */}
                 {flowType === 'direct' && tenantPhone.length < 10 && tenantFound === null && (
-                  <p className="text-[11px] text-zinc-500 font-medium mt-1.5 flex items-center gap-1.5 animate-in fade-in">
+                  <p className="text-[11px] text-muted font-medium mt-1.5 flex items-center gap-1.5 animate-in fade-in">
                     <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                     <span>{t('landlordContractsCreateTenantPhoneLockedHint')}</span>
                   </p>
                 )}
 
                 {tenantFound === true && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-xs text-emerald-900 mt-2.5 animate-in fade-in">
+                  <div className="p-3 bg-success-soft border border-success-subtle rounded-xl flex items-start gap-2.5 text-xs text-success mt-2.5 animate-in fade-in">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-black text-emerald-950 block">
+                      <span className="font-black text-success block">
                         {t('landlordContractsCreateTenantFound')}: {tenantFullName}
                       </span>
-                      <span className="text-[11px] text-emerald-700 font-medium block mt-0.5">
+                      <span className="text-[11px] text-success font-medium block mt-0.5">
                         {t('landlordContractsCreateTenantLockedAccountDesc')}
                       </span>
                     </div>
@@ -895,13 +895,13 @@ function CreateContractPage() {
                 )}
 
                 {tenantFound === false && flowType === 'direct' && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 mt-2.5 animate-in fade-in">
+                  <div className="p-3 bg-warning-soft border border-warning-subtle rounded-xl flex items-start gap-2.5 text-xs text-warning mt-2.5 animate-in fade-in">
                     <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-black text-amber-950 block">
+                      <span className="font-black text-warning block">
                         {t('landlordContractsCreateTenantNotFound')}
                       </span>
-                      <span className="text-[11px] text-amber-700 font-medium block mt-0.5">
+                      <span className="text-[11px] text-warning font-medium block mt-0.5">
                         {t('landlordContractsCreateTenantNewAccountDesc')}
                       </span>
                     </div>
@@ -946,13 +946,13 @@ function CreateContractPage() {
 
             {/* Notice when existing user has NO identification on file */}
             {tenantFound === true && !hasIdentification && (
-              <div className="p-4 bg-sky-50 border border-sky-200 rounded-2xl flex items-start gap-3 text-xs text-sky-900 animate-in fade-in">
+              <div className="p-4 bg-vacant-soft border border-vacant-subtle rounded-2xl flex items-start gap-3 text-xs text-vacant animate-in fade-in">
                 <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-black text-sky-950 block">
+                  <span className="font-black text-vacant block">
                     {t('landlordContractsCreateTenantFound')}: {tenantFullName}
                   </span>
-                  <p className="text-[11px] text-sky-800 font-medium mt-0.5">
+                  <p className="text-[11px] text-vacant font-medium mt-0.5">
                     {t('landlordContractsCreateTenantNoIdNotice')}
                   </p>
                 </div>
@@ -961,31 +961,31 @@ function CreateContractPage() {
           </div>
 
           {/* Citizen Identification (CCCD) Section (Direct display, no toggle) */}
-          <div className="p-5 bg-zinc-50/80 border border-zinc-200 rounded-2xl space-y-4 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between border-b border-zinc-200/60 pb-2.5">
+          <div className="p-5 bg-surface/80 border border-line rounded-2xl space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-line pb-2.5">
               <div className="flex items-center gap-2.5">
                 <div
                   className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${hasIdentification
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-success-soft text-success'
                       : canEditTenantInfo
                         ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
-                        : 'bg-zinc-200 text-zinc-500'
+                        : 'bg-line text-muted'
                     }`}
                 >
                   <IdCard className="w-3.5 h-3.5" />
                 </div>
-                <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-2">
+                <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-2">
                   <span>{t('landlordContractsCreateStep2Header')}</span>
                   {hasIdentification && (
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold text-[10px] normal-case">
+                    <span className="px-2 py-0.5 bg-success-soft text-success rounded-full font-bold text-[10px] normal-case">
                       {t('landlordContractsCreateTenantHasIdBadge')}
                     </span>
                   )}
                 </h4>
               </div>
               {!canEditTenantInfo ? (
-                <span className="text-[11px] text-zinc-500 font-bold flex items-center gap-1">
-                  <Lock className="w-3 h-3 text-zinc-400" />
+                <span className="text-[11px] text-muted font-bold flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-muted" />
                   {t('landlordContractsCreateReadOnlyLocked')}
                 </span>
               ) : (
@@ -998,7 +998,7 @@ function CreateContractPage() {
 
             {/* Alert inside CCCD form if missing identification fields */}
             {errorMessage === t('landlordContractsCreateErrIdentification') && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+              <div className="p-3 bg-danger-soft border border-danger-subtle text-danger rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -1150,21 +1150,21 @@ function CreateContractPage() {
                   disabled={!canEditTenantInfo}
                   onChange={e => handlePhotoUpload(e, 'front')}
                 />
-                <div className="block text-[11px] font-bold text-zinc-700 mb-1 flex items-center justify-between">
+                <div className="block text-[11px] font-bold text-foreground/90 mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
                     {t('landlordContractsCreateCccdFrontUrlLabel')}
                   </span>
                   {cardFrontUrl && (
-                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] text-emerald-600 font-bold bg-success-soft px-2 py-0.5 rounded-full">
                       {t('landlordContractsCreatePhotoUploaded')}
                     </span>
                   )}
                 </div>
 
                 {cardFrontUrl ? (
-                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 space-y-2">
-                    <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-zinc-200/60">
+                  <div className="rounded-xl border border-line bg-surface p-2 space-y-2">
+                    <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-line">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={cardFrontUrl}
@@ -1223,7 +1223,7 @@ function CreateContractPage() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                        <div className="flex items-center gap-1 text-[10px] text-muted font-medium">
                           <Lock className="w-3 h-3" />
                           <span>{t('landlordContractsCreatePhotoLocked')}</span>
                         </div>
@@ -1231,14 +1231,14 @@ function CreateContractPage() {
                     </div>
                   </div>
                 ) : !canEditTenantInfo ? (
-                  <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-100/70 p-4 text-center cursor-not-allowed select-none">
-                    <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
-                    <span className="text-xs font-bold text-zinc-500">
+                  <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-card-hover/70 p-4 text-center cursor-not-allowed select-none">
+                    <Lock className="w-6 h-6 text-muted mb-1.5" />
+                    <span className="text-xs font-bold text-muted">
                       {tenantPhone.trim().length < 10
                         ? t('landlordContractsCreateEnterPhoneToUnlock')
                         : t('landlordContractsCreateNoFrontPhoto')}
                     </span>
-                    <span className="text-[10px] text-zinc-400 mt-0.5">
+                    <span className="text-[10px] text-muted mt-0.5">
                       {tenantPhone.trim().length < 10
                         ? t('landlordContractsCreateVerifyPhoneFirst')
                         : t('landlordContractsCreateAccountExists')}
@@ -1262,7 +1262,7 @@ function CreateContractPage() {
                     onDrop={e => handleDropFile(e, 'front')}
                     className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${isDraggingFront
                         ? 'border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]'
-                        : 'border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50'
+                        : 'border-line bg-surface/70 hover:border-[#2AC1BC]/70 hover:bg-card-hover'
                       }`}
                   >
                     {uploadingFront ? (
@@ -1277,10 +1277,10 @@ function CreateContractPage() {
                         <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-1.5 shadow-2xs">
                           <UploadCloud className="w-5 h-5" />
                         </div>
-                        <p className="text-xs font-bold text-zinc-800">
+                        <p className="text-xs font-bold text-foreground">
                           {t('landlordContractsCreateCccdUploadPrompt')}
                         </p>
-                        <p className="text-[10px] text-zinc-400 mt-0.5">
+                        <p className="text-[10px] text-muted mt-0.5">
                           {t('landlordContractsCreateCccdUploadHint')}
                         </p>
                       </>
@@ -1300,21 +1300,21 @@ function CreateContractPage() {
                   disabled={!canEditTenantInfo}
                   onChange={e => handlePhotoUpload(e, 'back')}
                 />
-                <div className="block text-[11px] font-bold text-zinc-700 mb-1 flex items-center justify-between">
+                <div className="block text-[11px] font-bold text-foreground/90 mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <IdCard className="w-3.5 h-3.5 text-[#2AC1BC]" />
                     {t('landlordContractsCreateCccdBackUrlLabel')}
                   </span>
                   {cardBackUrl && (
-                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] text-emerald-600 font-bold bg-success-soft px-2 py-0.5 rounded-full">
                       {t('landlordContractsCreatePhotoUploaded')}
                     </span>
                   )}
                 </div>
 
                 {cardBackUrl ? (
-                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2 space-y-2">
-                    <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-zinc-200/60">
+                  <div className="rounded-xl border border-line bg-surface p-2 space-y-2">
+                    <div className="relative h-36 w-full rounded-lg overflow-hidden bg-zinc-900/5 flex items-center justify-center border border-line">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={cardBackUrl}
@@ -1373,7 +1373,7 @@ function CreateContractPage() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-medium">
+                        <div className="flex items-center gap-1 text-[10px] text-muted font-medium">
                           <Lock className="w-3 h-3" />
                           <span>{t('landlordContractsCreatePhotoLocked')}</span>
                         </div>
@@ -1381,14 +1381,14 @@ function CreateContractPage() {
                     </div>
                   </div>
                 ) : !canEditTenantInfo ? (
-                  <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-100/70 p-4 text-center cursor-not-allowed select-none">
-                    <Lock className="w-6 h-6 text-zinc-400 mb-1.5" />
-                    <span className="text-xs font-bold text-zinc-500">
+                  <div className="h-36 flex flex-col items-center justify-center rounded-xl border border-dashed border-line bg-card-hover/70 p-4 text-center cursor-not-allowed select-none">
+                    <Lock className="w-6 h-6 text-muted mb-1.5" />
+                    <span className="text-xs font-bold text-muted">
                       {tenantPhone.trim().length < 10
                         ? t('landlordContractsCreateEnterPhoneToUnlock')
                         : t('landlordContractsCreateNoBackPhoto')}
                     </span>
-                    <span className="text-[10px] text-zinc-400 mt-0.5">
+                    <span className="text-[10px] text-muted mt-0.5">
                       {tenantPhone.trim().length < 10
                         ? t('landlordContractsCreateVerifyPhoneFirst')
                         : t('landlordContractsCreateAccountExists')}
@@ -1412,7 +1412,7 @@ function CreateContractPage() {
                     onDrop={e => handleDropFile(e, 'back')}
                     className={`h-36 flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${isDraggingBack
                         ? 'border-[#2AC1BC] bg-[#2AC1BC]/10 scale-[0.99]'
-                        : 'border-zinc-200 bg-zinc-50/70 hover:border-[#2AC1BC]/70 hover:bg-zinc-50'
+                        : 'border-line bg-surface/70 hover:border-[#2AC1BC]/70 hover:bg-card-hover'
                       }`}
                   >
                     {uploadingBack ? (
@@ -1427,10 +1427,10 @@ function CreateContractPage() {
                         <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-1.5 shadow-2xs">
                           <UploadCloud className="w-5 h-5" />
                         </div>
-                        <p className="text-xs font-bold text-zinc-800">
+                        <p className="text-xs font-bold text-foreground">
                           {t('landlordContractsCreateCccdUploadBackPrompt')}
                         </p>
-                        <p className="text-[10px] text-zinc-400 mt-0.5">
+                        <p className="text-[10px] text-muted mt-0.5">
                           {t('landlordContractsCreateCccdUploadHint')}
                         </p>
                       </>
@@ -1443,7 +1443,7 @@ function CreateContractPage() {
 
           {/* Error Alert if any */}
           {errorMessage && (
-            <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-bold animate-in fade-in">
+            <div className="flex items-center gap-3 p-4 bg-danger-soft border border-danger-subtle text-danger rounded-2xl text-xs font-bold animate-in fade-in">
               <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
               <span>{errorMessage}</span>
               <Button
@@ -1459,7 +1459,7 @@ function CreateContractPage() {
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
+          <div className="flex justify-between items-center pt-4 border-t border-line">
             <Button
               type="button"
               variant="outline"
@@ -1483,9 +1483,9 @@ function CreateContractPage() {
 
       {/* STEP 2: Điều khoản & Tài chính */}
       {step === 2 && (
-        <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
-          <div className="border-b border-zinc-100 pb-3">
-            <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-card border border-line rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
+          <div className="border-b border-line pb-3">
+            <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordContractsCreateStep2Btn')}
             </h2>
@@ -1558,8 +1558,8 @@ function CreateContractPage() {
             </SelectInput>
           </div>
 
-          <div className="border-b border-zinc-100 pb-3 pt-2">
-            <h2 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+          <div className="border-b border-line pb-3 pt-2">
+            <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#2AC1BC]" />{' '}
               {t('landlordContractDetailTimelineSection')}
             </h2>
@@ -1601,7 +1601,7 @@ function CreateContractPage() {
           </div>
 
           {/* Navigation */}
-          <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
+          <div className="flex justify-between items-center pt-4 border-t border-line">
             <Button
               type="button"
               variant="outline"
@@ -1626,25 +1626,25 @@ function CreateContractPage() {
 
       {/* STEP 3: Xác nhận & Ký kết */}
       {step === 3 && (
-        <div className="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
+        <div className="bg-card border border-line rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xs animate-in fade-in duration-300">
           <div className="text-center max-w-md mx-auto space-y-2">
             <div className="w-12 h-12 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto mb-2">
               <FileSignature className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-black text-zinc-900">
+            <h2 className="text-lg font-black text-foreground">
               {t('landlordContractsCreateStep3Header')}
             </h2>
-            <p className="text-xs text-zinc-500">{t('landlordContractsCreateStep3Desc')}</p>
+            <p className="text-xs text-muted">{t('landlordContractsCreateStep3Desc')}</p>
           </div>
 
           {/* Summary Card */}
-          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-5 space-y-4 text-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
-              <span className="font-bold text-zinc-500">{t('landlordContractDetailStatus')}:</span>
+          <div className="bg-surface border border-line rounded-2xl p-5 space-y-4 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
+              <span className="font-bold text-muted">{t('landlordContractDetailStatus')}:</span>
               <span
                 className={`px-3 py-1 rounded-full font-black text-[11px] ${flowType === 'platform'
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-deposit-soft text-deposit'
+                    : 'bg-success-soft text-success'
                   }`}
               >
                 {flowType === 'platform'
@@ -1655,50 +1655,50 @@ function CreateContractPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractDetailRoom')}:
                 </span>
-                <span className="font-black text-zinc-900 text-sm">
+                <span className="font-black text-foreground text-sm">
                   {t('landlordContractDetailRoomPrefix')} {selectedRoomObj?.roomNumber} (
                   {t('landlordRoomDetailFloor')} {selectedRoomObj?.floor})
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractDetailTenant')}:
                 </span>
-                <span className="font-black text-zinc-900 text-sm block">
+                <span className="font-black text-foreground text-sm block">
                   {tenantFullName} ({tenantPhone})
                 </span>
                 {identityNumber && (
-                  <span className="text-[11px] text-zinc-500 font-mono block mt-0.5">
+                  <span className="text-[11px] text-muted font-mono block mt-0.5">
                     CCCD: {identityNumber}
                   </span>
                 )}
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractDetailDuration')}:
                 </span>
-                <span className="font-bold text-zinc-800">
+                <span className="font-bold text-foreground">
                   {startDate} &rarr; {endDate}
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractsCreatePaymentCycleLabel')}:
                 </span>
-                <span className="font-bold text-zinc-800">
+                <span className="font-bold text-foreground">
                   {t('landlordContractDetailPaymentDayValue', { day: monthlyPaymentDate })} &bull;{' '}
                   {rentPaymentCycle} {t('landlordContractsPaymentCycleLabel')}
                 </span>
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractDetailRentPrice')}:
                 </span>
                 <span className="font-black text-[#2AC1BC] text-sm">
@@ -1708,27 +1708,27 @@ function CreateContractPage() {
               </div>
 
               <div>
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractDetailDeposit')}:
                 </span>
-                <span className="font-black text-purple-700 text-sm">
+                <span className="font-black text-deposit text-sm">
                   {Number(depositAmount).toLocaleString('vi-VN')} ₫
                 </span>
               </div>
             </div>
 
             {note && (
-              <div className="pt-2 border-t border-zinc-200">
-                <span className="text-zinc-400 block text-[11px] font-semibold">
+              <div className="pt-2 border-t border-line">
+                <span className="text-muted block text-[11px] font-semibold">
                   {t('landlordContractsCreateNoteLabel')}:
                 </span>
-                <p className="text-zinc-700 italic">{note}</p>
+                <p className="text-foreground/90 italic">{note}</p>
               </div>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
+          <div className="flex justify-between items-center pt-4 border-t border-line">
             <Button
               type="button"
               variant="outline"
@@ -1765,16 +1765,16 @@ function CreateContractPage() {
             if (e.target === e.currentTarget) setShowConfirmClose(false)
           }}
         >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden p-6 space-y-4 animate-in zoom-in-95">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-md overflow-hidden p-6 space-y-4 animate-in zoom-in-95">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-base font-black text-zinc-900">
+              <h3 className="text-base font-black text-foreground">
                 {t('landlordContractsCreateConfirmCloseTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 font-medium">
+              <p className="text-xs text-muted font-medium">
                 {t('landlordContractsCreateConfirmCloseDesc')}
               </p>
             </div>

@@ -447,7 +447,7 @@ export default function ContractsPage() {
         {/* Top Page Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-zinc-900">
+            <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-foreground">
               {t('landlordContractsTitle')}
             </Text>
             <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5">
@@ -500,7 +500,7 @@ export default function ContractsPage() {
                 )}
               </div>
 
-              <Text variant="body" size="sm" color="subtle" className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+              <Text variant="body" size="sm" color="subtle" className="text-muted text-xs sm:text-sm leading-relaxed">
                 {t('landlordContractsBannerDesc')}
               </Text>
             </div>
@@ -568,7 +568,7 @@ export default function ContractsPage() {
         </div>
 
         {/* Single Row Toolbar (Filter Pills + Search Bar + View Mode) */}
-        <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 shadow-2xs">
+        <div className="bg-card border border-line rounded-2xl p-3 shadow-2xs">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {/* Status Filter Pills */}
             <ChipGroup
@@ -597,11 +597,11 @@ export default function ContractsPage() {
                     setSearchQuery(val)
                     setCurrentPage(1)
                   }}
-                  className="bg-zinc-50 focus:bg-white text-xs"
+                  className="bg-surface focus:bg-white text-xs"
                 />
               </div>
 
-              <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl border border-zinc-200 shrink-0">
+              <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl border border-line shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -633,7 +633,7 @@ export default function ContractsPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-zinc-200/80 rounded-2xl">
+          <div className="flex flex-col items-center justify-center gap-3 py-16 bg-card border border-line rounded-2xl">
             <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
             <Text size="sm" weight="semibold" color="secondary">
               {t('landlordContractsLoading')}
@@ -643,7 +643,7 @@ export default function ContractsPage() {
 
         {/* Error State */}
         {!isLoading && loadError && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 bg-white border border-rose-200 rounded-2xl">
+          <div className="flex flex-col items-center justify-center gap-3 py-16 bg-card border border-danger-subtle rounded-2xl">
             <AlertTriangle className="w-8 h-8 text-rose-500" />
             <Text size="sm" weight="semibold" color="danger">
               {loadError}
@@ -664,7 +664,7 @@ export default function ContractsPage() {
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {paginatedContracts.length === 0 ? (
-                  <div className="col-span-full p-8 text-center bg-white border border-zinc-200/80 rounded-2xl">
+                  <div className="col-span-full p-8 text-center bg-card border border-line rounded-2xl">
                     <Text weight="bold" color="subtle">
                       {t('landlordContractsNoContractsFound')}
                     </Text>
@@ -675,17 +675,17 @@ export default function ContractsPage() {
                       <div
                         key={c.id || idx}
                         onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                        className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                        className="bg-card border border-line hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
                       >
                         <div>
                           {/* Card Header: Room & Status */}
-                          <div className="flex items-start justify-between gap-3 pb-3 border-b border-zinc-100">
+                          <div className="flex items-start justify-between gap-3 pb-3 border-b border-line">
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-[#2AC1BC] transition-colors">
                                   {t('landlordRoomDetailRoomPrefix')} {c.room}
                                 </Text>
-                                <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-info-soft text-info border border-info-subtle">
                                   {activeBuilding?.name || 'Dormio'}
                                 </Text>
                               </div>
@@ -700,7 +700,7 @@ export default function ContractsPage() {
                                   className="rounded"
                                   title={t('landlordContractsCopyCodeTitle')}
                                 >
-                                  <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                  <Copy className="w-3 h-3 text-muted hover:text-[#2AC1BC]" />
                                 </Button>
                               </div>
                             </div>
@@ -712,10 +712,10 @@ export default function ContractsPage() {
                               className={cn(
                                 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border shrink-0',
                                 c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  ? 'bg-success-soft text-success border-success-subtle'
                                   : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-zinc-100 text-zinc-600 border-zinc-200',
+                                    ? 'bg-warning-soft text-warning border-warning-subtle'
+                                    : 'bg-card-hover text-muted border-line',
                               )}
                             >
                               <span
@@ -736,7 +736,7 @@ export default function ContractsPage() {
                           <div className="py-3 space-y-2.5">
                             <div className="flex items-center justify-between text-xs">
                               <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5 text-zinc-400" />
+                                <User className="w-3.5 h-3.5 text-muted" />
                                 {t('landlordContractsRepresentative')}
                               </Text>
                               <div className="flex flex-col items-end">
@@ -745,7 +745,7 @@ export default function ContractsPage() {
                                 </Text>
                                 {c.members && c.members.length > 0 && (
                                   <Text as="span" size="3xs" weight="bold" color="secondary" className="flex items-center gap-1">
-                                    <Users className="w-3 h-3 text-zinc-400" />
+                                    <Users className="w-3 h-3 text-muted" />
                                     {t('landlordContractsRoommatesCount').replace(
                                       '{count}',
                                       String(c.members.length),
@@ -757,7 +757,7 @@ export default function ContractsPage() {
 
                             <div className="flex items-center justify-between text-xs">
                               <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
+                                <CreditCard className="w-3.5 h-3.5 text-muted" />
                                 {t('landlordContractsRentPriceLabel')}:
                               </Text>
                               <Text as="span" size="sm" weight="black" color="brand">
@@ -767,24 +767,24 @@ export default function ContractsPage() {
 
                             <div className="flex items-center justify-between text-xs">
                               <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <CalendarDays className="w-3.5 h-3.5 text-zinc-400" />
+                                <CalendarDays className="w-3.5 h-3.5 text-muted" />
                                 {t('landlordContractsDurationLabel')}
                               </Text>
                               <div className="flex items-center gap-1.5">
-                                <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                                <Text as="span" size="xs" weight="bold" className="text-foreground">
                                   {c.startDate} - {c.endDate}
                                 </Text>
                                 {c.isOverdue && (
-                                  <Text as="span" size="3xs" weight="black" className="px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                  <Text as="span" size="3xs" weight="black" className="px-1.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle">
                                     {t('landlordContractsDueExpired')}
                                   </Text>
                                 )}
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-line">
                               <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <CreditCard className="w-3.5 h-3.5 text-zinc-400" />
+                                <CreditCard className="w-3.5 h-3.5 text-muted" />
                                 {t('landlordContractsPaymentLabel')}
                               </Text>
                               <Text
@@ -794,8 +794,8 @@ export default function ContractsPage() {
                                 className={cn(
                                   'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
                                   c.paymentStatus === 'Đã thu đủ'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : 'bg-rose-50 text-rose-700 border-rose-200',
+                                    ? 'bg-success-soft text-success border-success-subtle'
+                                    : 'bg-danger-soft text-danger border-danger-subtle',
                                 )}
                               >
                                 {getPaymentStatusLabel(c.paymentStatus)}
@@ -805,7 +805,7 @@ export default function ContractsPage() {
                         </div>
 
                         {/* Card Footer Actions */}
-                        <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                        <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -827,7 +827,7 @@ export default function ContractsPage() {
                               }}
                               title={t('landlordContractsPrintExportTitle')}
                             >
-                              <Printer className="w-3.5 h-3.5 text-zinc-700" />
+                              <Printer className="w-3.5 h-3.5 text-foreground/90" />
                             </Button>
                             <Button
                               variant="outline"
@@ -862,10 +862,10 @@ export default function ContractsPage() {
               </div>
             ) : (
               /* Table View */
-              <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-xs overflow-hidden">
+              <div className="bg-card border border-line rounded-2xl shadow-xs overflow-hidden">
                 <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
                   <table className="w-full min-w-[850px] text-xs text-left border-collapse">
-                    <thead className="text-[11px] font-black text-zinc-500 uppercase bg-zinc-100/90 backdrop-blur-md border-b border-zinc-200/80 sticky top-0 z-20 shadow-xs">
+                    <thead className="text-[11px] font-black text-muted uppercase bg-card-hover/90 backdrop-blur-md border-b border-line sticky top-0 z-20 shadow-xs">
                       <tr>
                         <th className="px-5 py-3.5 whitespace-nowrap">
                           <Text as="span" variant="overline" size="2xs" weight="black" color="secondary">
@@ -904,7 +904,7 @@ export default function ContractsPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 bg-white">
+                    <tbody className="divide-y divide-line bg-card">
                       {paginatedContracts.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="p-8 text-center">
@@ -927,7 +927,7 @@ export default function ContractsPage() {
                                     <Text as="span" size="sm" weight="black" color="brand">
                                       {t('landlordRoomDetailRoomPrefix')} {c.room}
                                     </Text>
-                                    <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-info-soft text-info border border-info-subtle">
                                       {activeBuilding?.name || 'Dormio'}
                                     </Text>
                                   </div>
@@ -940,7 +940,7 @@ export default function ContractsPage() {
                                       className="rounded"
                                       title={t('landlordContractsCopyCodeTitle')}
                                     >
-                                      <Copy className="w-3 h-3 text-zinc-400 hover:text-[#2AC1BC]" />
+                                      <Copy className="w-3 h-3 text-muted hover:text-[#2AC1BC]" />
                                     </Button>
                                   </div>
                                 </div>
@@ -957,7 +957,7 @@ export default function ContractsPage() {
                               </td>
                               <td className="px-5 py-4 whitespace-nowrap">
                                 <div className="flex flex-col">
-                                  <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                                  <Text as="span" size="xs" weight="bold" className="text-foreground">
                                     {c.startDate} - {c.endDate}
                                   </Text>
                                   {c.isOverdue && (
@@ -980,8 +980,8 @@ export default function ContractsPage() {
                                   className={cn(
                                     'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
                                     c.paymentStatus === 'Đã thu đủ'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                      : 'bg-rose-50 text-rose-700 border-rose-200',
+                                      ? 'bg-success-soft text-success border-success-subtle'
+                                      : 'bg-danger-soft text-danger border-danger-subtle',
                                   )}
                                 >
                                   {getPaymentStatusLabel(c.paymentStatus)}
@@ -995,10 +995,10 @@ export default function ContractsPage() {
                                   className={cn(
                                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border',
                                     c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      ? 'bg-success-soft text-success border-success-subtle'
                                       : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                        : 'bg-zinc-100 text-zinc-600 border-zinc-200',
+                                        ? 'bg-warning-soft text-warning border-warning-subtle'
+                                        : 'bg-card-hover text-muted border-line',
                                   )}
                                 >
                                   <span
@@ -1015,7 +1015,7 @@ export default function ContractsPage() {
                                 </Text>
                               </td>
                               <td className="px-5 py-4 text-right whitespace-nowrap">
-                                <div className="flex items-center justify-end gap-1 text-zinc-400">
+                                <div className="flex items-center justify-end gap-1 text-muted">
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -1075,9 +1075,9 @@ export default function ContractsPage() {
             )}
 
             {/* Standardized Pagination Footer (Rule #9) */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
-              <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-                <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
+              <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
+                <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
                   <Text as="span" size="xs" weight="semibold" color="secondary">
                     {t('landlordContractsPaginationShowing')}
                   </Text>
@@ -1090,7 +1090,7 @@ export default function ContractsPage() {
                       setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val)
                       setCurrentPage(1)
                     }}
-                    className="w-14 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 text-xs"
+                    className="w-14 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 text-xs"
                   />
                   <Text as="span" size="xs" weight="semibold" color="secondary">
                     {t('landlordContractsPaginationPerPage')}
@@ -1099,7 +1099,7 @@ export default function ContractsPage() {
 
                 <span className="hidden sm:inline text-zinc-300">|</span>
 
-                <div className="text-xs font-semibold text-zinc-500">
+                <div className="text-xs font-semibold text-muted">
                   <Text as="span" weight="extrabold" color="default">
                     {totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}
                   </Text>{' '}
@@ -1261,7 +1261,7 @@ export default function ContractsPage() {
           options={terminateReasonOptions}
         />
 
-        <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50/50 space-y-4">
+        <div className="border border-line rounded-xl p-4 bg-surface/50 space-y-4">
           <div className="flex items-center gap-2">
             <Gauge className="w-4 h-4 text-[#2AC1BC]" />
             <Text as="span" size="sm" weight="medium" color="brand">
@@ -1274,7 +1274,7 @@ export default function ContractsPage() {
 
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
+              <Text as="span" size="sm" weight="semibold" className="w-12 text-foreground">
                 {t('landlordContractsTerminateLastElec')}
               </Text>
               <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">
@@ -1294,7 +1294,7 @@ export default function ContractsPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Text as="span" size="sm" weight="semibold" className="w-12 text-zinc-800">
+              <Text as="span" size="sm" weight="semibold" className="w-12 text-foreground">
                 {t('landlordContractsTerminateLastWater')}
               </Text>
               <Text as="span" size="sm" color="secondary" className="whitespace-nowrap min-w-[50px]">

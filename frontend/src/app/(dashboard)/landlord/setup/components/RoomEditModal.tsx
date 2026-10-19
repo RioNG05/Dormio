@@ -44,11 +44,11 @@ export function RoomEditModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-zinc-100 space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-3xl bg-card p-6 shadow-2xl border border-line space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
+        <div className="flex items-start justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold shrink-0">
               <Layers className="w-5 h-5" />
@@ -192,7 +192,7 @@ export function RoomEditModal({
         </div>
 
         {/* Modal Actions */}
-        <Form.Actions align="between" className="border-t border-zinc-100 pt-4">
+        <Form.Actions align="between" className="border-t border-line pt-4">
           <div>
             {isCustomized && (
               <Button

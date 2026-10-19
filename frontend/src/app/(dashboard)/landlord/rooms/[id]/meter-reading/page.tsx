@@ -452,20 +452,20 @@ export default function LandlordRoomMeterReadingPage({
       </div>
 
       {/* Progress & Overview Card */}
-      <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-2xs space-y-3">
+      <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
                 isReadyToConfirm
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-success-soft text-success'
                   : 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
               }`}
             >
               {completedCount}/{servicesList.length}
             </div>
             <div>
-              <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+              <Text as="h3" size="sm" weight="bold" className="text-foreground">
                 {t('landlordMeterRecordProgressTitle')}
               </Text>
               <Text size="xs" color="secondary">
@@ -482,8 +482,8 @@ export default function LandlordRoomMeterReadingPage({
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                 isReadyToConfirm
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  ? 'bg-success-soft text-success border border-success-subtle'
+                  : 'bg-warning-soft text-warning border border-warning-subtle'
               }`}
             >
               {isReadyToConfirm ? (
@@ -502,7 +502,7 @@ export default function LandlordRoomMeterReadingPage({
         </div>
 
         {/* Progress bar line */}
-        <div className="w-full bg-zinc-100 h-2.5 rounded-full overflow-hidden">
+        <div className="w-full bg-card-hover h-2.5 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 rounded-full ${
               isReadyToConfirm
@@ -521,11 +521,11 @@ export default function LandlordRoomMeterReadingPage({
       {/* Metered Services Cards List */}
       <div className="space-y-5">
         {servicesList.length === 0 ? (
-          <div className="bg-white border border-zinc-200 rounded-2xl p-10 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+          <div className="bg-card border border-line rounded-2xl p-10 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-card-hover text-muted flex items-center justify-center mx-auto">
               <Check className="w-6 h-6" />
             </div>
-            <Text as="h3" size="base" weight="bold" className="text-zinc-900">
+            <Text as="h3" size="base" weight="bold" className="text-foreground">
               Không có dịch vụ đồng hồ đo
             </Text>
             <Text size="xs" color="secondary" className="max-w-md mx-auto">
@@ -554,26 +554,26 @@ export default function LandlordRoomMeterReadingPage({
             return (
               <div
                 key={service.serviceId}
-                className={`bg-white border rounded-3xl p-5 sm:p-6 transition-all shadow-sm space-y-5 ${
+                className={`bg-card border rounded-3xl p-5 sm:p-6 transition-all shadow-sm space-y-5 ${
                   state.readingValue !== null
                     ? isAnomaly
-                      ? 'border-rose-200 ring-2 ring-rose-100'
-                      : 'border-emerald-200 ring-2 ring-emerald-100'
-                    : 'border-zinc-200/80 hover:border-zinc-300'
+                      ? 'border-danger-subtle ring-2 ring-rose-100'
+                      : 'border-success-subtle ring-2 ring-emerald-100'
+                    : 'border-line hover:border-line'
                 }`}
               >
                 {/* Service Card Top Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
                   <div className="flex items-center gap-3.5">
-                    <div className="p-3 bg-zinc-50 border border-zinc-200/80 rounded-2xl shadow-2xs">
+                    <div className="p-3 bg-surface border border-line rounded-2xl shadow-2xs">
                       {getServiceIcon(service.serviceName)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <Text as="h2" size="base" weight="black" className="text-zinc-900">
+                        <Text as="h2" size="base" weight="black" className="text-foreground">
                           {service.serviceName}
                         </Text>
-                        <span className="px-2 py-0.5 rounded-lg bg-zinc-100 text-zinc-600 text-[11px] font-bold">
+                        <span className="px-2 py-0.5 rounded-lg bg-card-hover text-muted text-[11px] font-bold">
                           {service.unit}
                         </span>
                       </div>
@@ -587,19 +587,19 @@ export default function LandlordRoomMeterReadingPage({
                   </div>
 
                   {/* Previous Reading Info Badge */}
-                  <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-200/70 text-right self-start sm:self-auto min-w-[150px]">
-                    <Text size="2xs" color="subtle" weight="medium" className="block text-zinc-500">
+                  <div className="p-3 bg-surface rounded-xl border border-line text-right self-start sm:self-auto min-w-[150px]">
+                    <Text size="2xs" color="subtle" weight="medium" className="block text-muted">
                       {t('landlordMeterRecordCardOldReading')}
                     </Text>
                     <div className="flex items-baseline justify-end gap-1">
-                      <Text size="base" weight="black" className="font-mono text-zinc-900">
+                      <Text size="base" weight="black" className="font-mono text-foreground">
                         {prevVal}
                       </Text>
                       <Text size="xs" weight="bold" color="secondary">
                         {service.unit}
                       </Text>
                     </div>
-                    <Text size="3xs" color="subtle" className="text-zinc-400">
+                    <Text size="3xs" color="subtle" className="text-muted">
                       ({prevDate})
                     </Text>
                   </div>
@@ -621,7 +621,7 @@ export default function LandlordRoomMeterReadingPage({
                     />
 
                     {state.imageUrl ? (
-                      <div className="relative group rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-900 h-48 flex items-center justify-center shadow-inner">
+                      <div className="relative group rounded-2xl overflow-hidden border border-line bg-zinc-900 h-48 flex items-center justify-center shadow-inner">
                         <img
                           src={state.imageUrl}
                           alt={service.serviceName}
@@ -655,16 +655,16 @@ export default function LandlordRoomMeterReadingPage({
                     ) : (
                       <div
                         onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                        className="h-48 border-2 border-dashed border-zinc-200 hover:border-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-2xl flex flex-col items-center justify-center gap-2.5 p-4 cursor-pointer transition-all text-center group"
+                        className="h-48 border-2 border-dashed border-line hover:border-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-2xl flex flex-col items-center justify-center gap-2.5 p-4 cursor-pointer transition-all text-center group"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-zinc-100 group-hover:bg-[#2AC1BC]/15 text-zinc-500 group-hover:text-[#2AC1BC] flex items-center justify-center transition-colors">
+                        <div className="w-12 h-12 rounded-2xl bg-card-hover group-hover:bg-[#2AC1BC]/15 text-muted group-hover:text-[#2AC1BC] flex items-center justify-center transition-colors">
                           <Camera className="w-6 h-6" />
                         </div>
                         <div>
-                          <Text as="span" size="xs" weight="bold" className="block text-zinc-800 group-hover:text-[#2AC1BC] transition-colors">
+                          <Text as="span" size="xs" weight="bold" className="block text-foreground group-hover:text-[#2AC1BC] transition-colors">
                             {t('landlordMeterRecordTakePhoto', { name: service.serviceName })}
                           </Text>
-                          <Text size="3xs" color="subtle" className="text-zinc-400 mt-0.5">
+                          <Text size="3xs" color="subtle" className="text-muted mt-0.5">
                             Tải ảnh chụp để AI tự động nhận diện chỉ số
                           </Text>
                         </div>
@@ -673,10 +673,10 @@ export default function LandlordRoomMeterReadingPage({
                   </div>
 
                   {/* Right Column: Reading Value & Consumption Display */}
-                  <div className="flex flex-col justify-between p-5 bg-zinc-50/70 border border-zinc-200/80 rounded-2xl space-y-4">
+                  <div className="flex flex-col justify-between p-5 bg-surface/70 border border-line rounded-2xl space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <Text as="label" size="xs" weight="bold" className="text-zinc-700">
+                        <Text as="label" size="xs" weight="bold" className="text-foreground/90">
                           {t('landlordMeterRecordCardNewReading')}
                         </Text>
                         {!state.isEditing && state.readingValue !== null && (
@@ -722,14 +722,14 @@ export default function LandlordRoomMeterReadingPage({
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex items-baseline gap-2 p-3 bg-white border border-zinc-200 rounded-xl shadow-2xs">
-                          <Text as="span" size="2xl" weight="black" className="font-mono text-zinc-900 tracking-tight">
+                        <div className="flex items-baseline gap-2 p-3 bg-card border border-line rounded-xl shadow-2xs">
+                          <Text as="span" size="2xl" weight="black" className="font-mono text-foreground tracking-tight">
                             {state.readingValue}
                           </Text>
                           <Text size="xs" weight="bold" color="secondary">
                             {service.unit}
                           </Text>
-                          <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle">
                             <Check className="w-3 h-3" />
                             Đã ghi nhận
                           </span>
@@ -739,27 +739,27 @@ export default function LandlordRoomMeterReadingPage({
 
                     {/* Anomaly Alert if new < old */}
                     {isAnomaly && (
-                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700">
+                      <div className="p-3 bg-danger-soft border border-danger-subtle rounded-xl flex items-start gap-2.5 text-danger">
                         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                        <Text size="xs" weight="medium" className="text-rose-700 leading-snug">
+                        <Text size="xs" weight="medium" className="text-danger leading-snug">
                           {t('landlordMeterRecordAnomalyWarning', { old: prevVal })}
                         </Text>
                       </div>
                     )}
 
                     {/* Calculated Consumption & Estimated Cost */}
-                    <div className="p-3.5 bg-white border border-zinc-200 rounded-xl space-y-1.5 shadow-2xs">
+                    <div className="p-3.5 bg-card border border-line rounded-xl space-y-1.5 shadow-2xs">
                       <div className="flex items-center justify-between text-xs">
                         <Text size="xs" color="secondary" weight="medium">
                           {t('landlordMeterRecordCardConsumption')}
                         </Text>
-                        <Text size="xs" weight="black" className="font-mono text-zinc-900">
+                        <Text size="xs" weight="black" className="font-mono text-foreground">
                           {consumption !== null ? `${consumption} ${service.unit}` : '---'}
                         </Text>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
-                        <Text size="xs" weight="bold" className="text-zinc-700">
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-line">
+                        <Text size="xs" weight="bold" className="text-foreground/90">
                           {t('landlordMeterRecordCardEstimated')}
                         </Text>
                         <Text size="sm" weight="black" className="text-[#2AC1BC]">
@@ -778,10 +778,10 @@ export default function LandlordRoomMeterReadingPage({
       </div>
 
       {/* Date & Period Notes Section */}
-      <div className="bg-white border border-zinc-200/80 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+      <div className="bg-card border border-line rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-[#2AC1BC]" />
-          <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+          <Text as="h3" size="sm" weight="bold" className="text-foreground">
             Thông tin bổ sung kỳ chốt số
           </Text>
         </div>
@@ -805,12 +805,12 @@ export default function LandlordRoomMeterReadingPage({
       </div>
 
       {/* Summary Bar & Action Footer */}
-      <div className="bg-white border border-zinc-200 rounded-3xl p-5 sm:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-card border border-line rounded-3xl p-5 sm:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <Text size="xs" color="secondary" weight="medium">
             {t('landlordMeterRecordSummaryTitle')}
           </Text>
-          <Text as="div" size="2xl" weight="black" className="text-zinc-900 tracking-tight mt-0.5">
+          <Text as="div" size="2xl" weight="black" className="text-foreground tracking-tight mt-0.5">
             {formatCurrency(totalEstimatedCost, locale)}
           </Text>
         </div>
@@ -852,7 +852,7 @@ export default function LandlordRoomMeterReadingPage({
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <Text as="h3" variant="heading" size="lg" weight="black" className="text-zinc-900">
+              <Text as="h3" variant="heading" size="lg" weight="black" className="text-foreground">
                 {t('landlordMeterRecordModalTitle')}
               </Text>
               <Text size="xs" color="secondary">
@@ -888,9 +888,9 @@ export default function LandlordRoomMeterReadingPage({
       >
         <div className="space-y-4">
           {/* Summary Table */}
-          <div className="border border-zinc-200 rounded-2xl overflow-hidden shadow-2xs">
+          <div className="border border-line rounded-2xl overflow-hidden shadow-2xs">
             <table className="w-full text-xs text-left border-collapse">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-bold uppercase text-[10px]">
+              <thead className="bg-surface border-b border-line text-muted font-bold uppercase text-[10px]">
                 <tr>
                   <th className="p-3">Dịch vụ</th>
                   <th className="p-3 text-right">Số cũ</th>
@@ -899,7 +899,7 @@ export default function LandlordRoomMeterReadingPage({
                   <th className="p-3 text-right">Thành tiền</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-line">
                 {servicesList.map(s => {
                   const state = readingsState[s.serviceId]
                   const curr = state?.readingValue ?? 0
@@ -909,15 +909,15 @@ export default function LandlordRoomMeterReadingPage({
 
                   return (
                     <tr key={s.serviceId} className="hover:bg-zinc-50/50">
-                      <td className="p-3 font-bold text-zinc-900">
+                      <td className="p-3 font-bold text-foreground">
                         {s.serviceName}
-                        <span className="block text-[10px] font-normal text-zinc-400">
+                        <span className="block text-[10px] font-normal text-muted">
                           {formatCurrency(s.unitPrice, locale)} / {s.unit}
                         </span>
                       </td>
-                      <td className="p-3 text-right font-mono text-zinc-500">{prev}</td>
-                      <td className="p-3 text-right font-mono font-bold text-zinc-900">{curr}</td>
-                      <td className="p-3 text-right font-bold text-zinc-800">
+                      <td className="p-3 text-right font-mono text-muted">{prev}</td>
+                      <td className="p-3 text-right font-mono font-bold text-foreground">{curr}</td>
+                      <td className="p-3 text-right font-bold text-foreground">
                         {cons} {s.unit}
                       </td>
                       <td className="p-3 text-right font-black text-[#2AC1BC]">
@@ -927,9 +927,9 @@ export default function LandlordRoomMeterReadingPage({
                   )
                 })}
               </tbody>
-              <tfoot className="bg-zinc-50/80 border-t border-zinc-200 font-black">
+              <tfoot className="bg-surface/80 border-t border-line font-black">
                 <tr>
-                  <td colSpan={4} className="p-3 text-right text-zinc-700">
+                  <td colSpan={4} className="p-3 text-right text-foreground/90">
                     Tổng cộng:
                   </td>
                   <td className="p-3 text-right text-sm text-[#2AC1BC]">
@@ -940,8 +940,8 @@ export default function LandlordRoomMeterReadingPage({
             </table>
           </div>
 
-          <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl">
-            <Text size="xs" color="secondary" className="leading-relaxed text-blue-900">
+          <div className="p-3.5 bg-info-soft border border-info-subtle rounded-xl">
+            <Text size="xs" color="secondary" className="leading-relaxed text-info">
               {t('landlordMeterRecordModalNotice')}
             </Text>
           </div>

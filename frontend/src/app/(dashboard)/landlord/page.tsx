@@ -103,7 +103,7 @@ export default function LandlordDashboardPage() {
   // Gating check: if no buildings yet, show loading spinner while redirecting to /landlord/setup
   if (isBuildingsLoading || buildings.length === 0 || !activeBuilding?.id) {
     return (
-      <div className="py-24 text-center text-zinc-400 space-y-3">
+      <div className="py-24 text-center text-muted space-y-3">
         <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
         <Text size="xs" weight="semibold" color="subtle">
           {buildings.length === 0
@@ -149,9 +149,9 @@ export default function LandlordDashboardPage() {
   return (
     <div className="flex flex-col gap-6 pb-16 animate-in fade-in duration-500">
       {/* Top Header Title & Create Building Button */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-zinc-200/80 pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-line pb-4">
         <div>
-          <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-zinc-900">
+          <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-foreground">
             {t('landlordOverviewHeaderTitle', { name: activeBuilding.name })}
           </Text>
           <Text variant="subtitle" size="xs" color="secondary" className="mt-0.5">
@@ -178,7 +178,7 @@ export default function LandlordDashboardPage() {
       </div>
 
       {isLoading && !overview ? (
-        <div className="py-16 text-center text-zinc-400 space-y-3">
+        <div className="py-16 text-center text-muted space-y-3">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
           <Text size="xs" weight="semibold" color="subtle">{t('landlordOverviewLoadingOverview')}</Text>
         </div>
@@ -276,15 +276,15 @@ export default function LandlordDashboardPage() {
           {/* 2-COLUMN LAYOUT: REVENUE CHART & CASHFLOW KPI */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* REVENUE LINE CHART (2/3 WIDTH) */}
-            <div className="lg:col-span-2 bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-2.5">
+            <div className="lg:col-span-2 bg-card rounded-3xl p-5 border border-line shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-2.5">
                 <div>
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-[#2AC1BC]" />
                     <Text as="h2" variant="heading" size="sm" weight="black" className="sm:text-base">
                       {t('landlordOverviewMonthlyRevenueTitle')}
                     </Text>
-                    <div className="flex items-center bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/80 ml-1">
+                    <div className="flex items-center bg-card-hover p-0.5 rounded-lg border border-line ml-1">
                       <Button
                         type="button"
                         variant={rangeMode === '6m' ? 'primary' : 'ghost'}
@@ -321,7 +321,7 @@ export default function LandlordDashboardPage() {
               {/* Chart Content or Empty State */}
               {chartData.length === 0 ? (
                 <div className="py-14 flex flex-col items-center justify-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-400">
+                  <div className="w-12 h-12 rounded-2xl bg-card-hover flex items-center justify-center text-muted">
                     <BarChart2 className="w-6 h-6" />
                   </div>
                   <Text size="xs" weight="bold" color="default">
@@ -417,10 +417,10 @@ export default function LandlordDashboardPage() {
                       </div>
 
                       {/* Month Labels */}
-                      <div className="flex justify-between items-center text-xs font-bold text-zinc-500 pt-1.5 border-t border-zinc-100">
+                      <div className="flex justify-between items-center text-xs font-bold text-muted pt-1.5 border-t border-line">
                         {chartData.map((d, i) => (
                           <div key={i} className="text-center">
-                            <Text as="span" size="3xs" weight="bold" className="block text-zinc-600">
+                            <Text as="span" size="3xs" weight="bold" className="block text-muted">
                               {d.month}
                             </Text>
                             <Text as="span" size="3xs" weight="bold" color="brand" className="block text-[8px]">
@@ -436,9 +436,9 @@ export default function LandlordDashboardPage() {
             </div>
 
             {/* FINANCIAL SUMMARY KPI CARD (1/3 WIDTH) */}
-            <div className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="bg-card rounded-3xl p-5 border border-line shadow-xs flex flex-col justify-between space-y-4">
               <div>
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+                <div className="flex items-center justify-between border-b border-line pb-2.5">
                   <Text as="span" size="xs" weight="black" color="default" className="flex items-center gap-1.5">
                     <BarChart2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
                     {t('landlordOverviewCashflowOverview')}
@@ -483,7 +483,7 @@ export default function LandlordDashboardPage() {
                 </div>
               </div>
 
-              <Link href="/landlord/invoices" className="block pt-2 border-t border-zinc-100">
+              <Link href="/landlord/invoices" className="block pt-2 border-t border-line">
                 <Text as="span" size="xs" weight="bold" color="brand" className="hover:underline flex items-center justify-between">
                   {t('landlordOverviewViewInvoicesList')}
                 </Text>
@@ -496,9 +496,9 @@ export default function LandlordDashboardPage() {
             {/* 1. DEPOSIT NOTIFICATIONS */}
             <div
               onClick={() => router.push('/landlord/deposits')}
-              className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-purple-500/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-purple-500/40 transition-all cursor-pointer group space-y-3"
             >
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-purple-600 shrink-0" />
                   <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-purple-600 transition-colors">
@@ -512,7 +512,7 @@ export default function LandlordDashboardPage() {
 
               {depositNotifications.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-400 flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-deposit-soft text-purple-400 flex items-center justify-center mx-auto">
                     <Inbox className="w-5 h-5" />
                   </div>
                   <Text size="xs" weight="bold" color="default">
@@ -545,7 +545,7 @@ export default function LandlordDashboardPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
+              <div className="flex items-center justify-between pt-1 border-t border-line">
                 <Text as="span" size="xs" weight="bold" className="text-purple-600">
                   {t('landlordOverviewViewAllDepositsSimple')}
                 </Text>
@@ -555,9 +555,9 @@ export default function LandlordDashboardPage() {
             {/* 2. YÊU CẦU BẢO TRÌ */}
             <div
               onClick={() => router.push('/landlord/complaints')}
-              className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-[#FF6B35]/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-[#FF6B35]/40 transition-all cursor-pointer group space-y-3"
             >
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
                   <Wrench className="w-4 h-4 text-[#FF6B35] shrink-0" />
                   <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-[#FF6B35] transition-colors">
@@ -571,7 +571,7 @@ export default function LandlordDashboardPage() {
 
               {maintenanceRequests.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-500 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <Text size="xs" weight="bold" color="default">
@@ -620,7 +620,7 @@ export default function LandlordDashboardPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
+              <div className="flex items-center justify-between pt-1 border-t border-line">
                 <Text as="span" size="xs" weight="bold" color="orange">
                   {t('landlordOverviewViewAllMaintSimple')}
                 </Text>
@@ -630,9 +630,9 @@ export default function LandlordDashboardPage() {
             {/* 3. CONTRACT RENEWALS */}
             <div
               onClick={() => router.push('/landlord/contracts')}
-              className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-amber-500/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-amber-500/40 transition-all cursor-pointer group space-y-3"
             >
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-500 shrink-0" />
                   <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-amber-600 transition-colors">
@@ -646,7 +646,7 @@ export default function LandlordDashboardPage() {
 
               {expiringContracts.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-500 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <Text size="xs" weight="bold" color="default">
@@ -682,7 +682,7 @@ export default function LandlordDashboardPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-1 border-t border-zinc-100">
+              <div className="flex items-center justify-between pt-1 border-t border-line">
                 <Text as="span" size="xs" weight="bold" color="warning">
                   {t('landlordOverviewViewAllContractsSimple')}
                 </Text>

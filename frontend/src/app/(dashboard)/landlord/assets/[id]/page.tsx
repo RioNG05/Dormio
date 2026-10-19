@@ -184,7 +184,7 @@ export default function AssetDetailPage() {
 
   if (!asset) {
     return (
-      <div className="p-8 sm:p-12 text-center text-zinc-500">
+      <div className="p-8 sm:p-12 text-center text-muted">
         <Package className="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-3 text-zinc-300 animate-pulse" />
         <p className="font-bold text-xs sm:text-sm">{t('landlordAssetsDetailLoading')}</p>
       </div>
@@ -318,7 +318,7 @@ export default function AssetDetailPage() {
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-zinc-500 flex-wrap">
+      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-muted flex-wrap">
         <Link
           href="/landlord/assets"
           className="hover:text-[#2AC1BC] flex items-center gap-1 transition-colors"
@@ -326,20 +326,20 @@ export default function AssetDetailPage() {
           <ArrowLeft className="w-3.5 h-3.5" /> {t('landlordAssetsDetailBack')}
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
-        <span className="text-zinc-900 font-extrabold truncate">
+        <span className="text-foreground font-extrabold truncate">
           {asset.name} (SKU: {asset.sku || asset.id})
         </span>
       </div>
 
       {/* Main Asset Header Card (With Sub-bar for Location & Tenant right under Title) */}
-      <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
+      <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
         <div className="flex items-start gap-3.5 sm:gap-4 min-w-0">
-          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-2xl bg-orange-50 border border-orange-200/80 text-[#FF6B35] flex items-center justify-center shrink-0 shadow-2xs">
+          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-2xl bg-accent-soft border border-accent-subtle text-[#FF6B35] flex items-center justify-center shrink-0 shadow-2xs">
             <Package className="w-6 sm:w-8 h-6 sm:h-8" />
           </div>
           <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
+              <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-card-hover text-foreground/90 border border-line">
                 {getCategoryLabel(asset.category)}
               </span>
               <span className="text-[10px] sm:text-xs font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
@@ -350,23 +350,23 @@ export default function AssetDetailPage() {
                   asset.status === 'Đang sử dụng'
                     ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
                     : asset.status === 'Sẵn sàng'
-                      ? 'bg-blue-50 text-blue-600 border-blue-200'
+                      ? 'bg-info-soft text-blue-600 border-info-subtle'
                       : asset.status === 'Bảo trì'
-                        ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse'
-                        : 'bg-rose-50 text-rose-600 border-rose-200'
+                        ? 'bg-accent-soft text-[#FF6B35] border-accent-subtle animate-pulse'
+                        : 'bg-danger-soft text-rose-600 border-danger-subtle'
                 }`}
               >
                 {getStatusLabel(asset.status)}
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight leading-snug">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-snug">
               {asset.name}
             </h1>
 
             {/* LOCATION & TENANT SUB-BAR DIRECTLY UNDER TITLE (Links integrated into Room Name & Tenant Name) */}
-            <div className="flex flex-wrap items-center gap-3.5 text-xs font-semibold text-zinc-600 pt-2 border-t border-zinc-100">
-              <div className="flex items-center gap-1.5 bg-zinc-50 px-3 py-1.5 rounded-xl border border-zinc-200/80">
+            <div className="flex flex-wrap items-center gap-3.5 text-xs font-semibold text-muted pt-2 border-t border-line">
+              <div className="flex items-center gap-1.5 bg-surface px-3 py-1.5 rounded-xl border border-line">
                 <Home className="w-4 h-4 text-[#2AC1BC] shrink-0" />
                 <span>
                   {t('landlordAssetsDetailLocation')}{' '}
@@ -378,23 +378,23 @@ export default function AssetDetailPage() {
                       {isEn ? `Room ${asset.room}` : `Phòng ${asset.room}`}
                     </Link>
                   ) : (
-                    <strong className="text-zinc-900 font-extrabold">{asset.room}</strong>
+                    <strong className="text-foreground font-extrabold">{asset.room}</strong>
                   )}
                 </span>
               </div>
 
               {hasRoomLink && (
-                <div className="flex items-center gap-1.5 bg-emerald-50/80 px-3 py-1.5 rounded-xl border border-emerald-200/80">
+                <div className="flex items-center gap-1.5 bg-success-soft px-3 py-1.5 rounded-xl border border-success-subtle">
                   <User className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
                     {t('landlordAssetsDetailTenant')}{' '}
                     <Link
                       href="/landlord/customers"
-                      className="font-extrabold text-emerald-700 hover:underline hover:text-emerald-800 transition-colors"
+                      className="font-extrabold text-success hover:underline hover:text-emerald-800 transition-colors"
                     >
                       {currentTenant.name}
                     </Link>{' '}
-                    <span className="text-zinc-600 font-medium">({currentTenant.phone})</span>
+                    <span className="text-muted font-medium">({currentTenant.phone})</span>
                   </span>
                 </div>
               )}
@@ -403,7 +403,7 @@ export default function AssetDetailPage() {
         </div>
 
         {/* Quick Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
+        <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
           <Button
             variant="warning"
             size="sm"
@@ -440,44 +440,44 @@ export default function AssetDetailPage() {
         {/* Left Column (7 Cols on desktop: Info + Valuation) */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-4 sm:space-y-6">
           {/* General Information Card */}
-          <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-zinc-100">
+          <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-line">
               <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC]" />
-              <h2 className="text-sm sm:text-base font-black text-zinc-900">
+              <h2 className="text-sm sm:text-base font-black text-foreground">
                 {t('landlordAssetsDetailGeneral')}
               </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsDetailModel')}
                 </span>
-                <span className="font-bold text-zinc-800">
+                <span className="font-bold text-foreground">
                   {asset.modelCode || '— Chưa cập nhật'}
                 </span>
               </div>
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsDetailSerial')}
                 </span>
-                <span className="font-bold text-zinc-800">
+                <span className="font-bold text-foreground">
                   {asset.serialNumber || '— Chưa cập nhật'}
                 </span>
               </div>
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsFieldPurchaseDate')}
                 </span>
-                <span className="font-bold text-zinc-800">
+                <span className="font-bold text-foreground">
                   {asset.purchaseDate || asset.dateAdded}
                 </span>
               </div>
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsDetailWarranty')}
                 </span>
-                <span className="font-bold text-emerald-700">
+                <span className="font-bold text-success">
                   {asset.warrantyPeriod || '12 tháng'}
                 </span>
               </div>
@@ -485,16 +485,16 @@ export default function AssetDetailPage() {
           </div>
 
           {/* REAL-WORLD LINEAR DEPRECIATION VALUATION CARD */}
-          <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
+          <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+              <div className="flex items-center justify-between pb-3 border-b border-line">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-emerald-600" />
-                  <h2 className="text-sm sm:text-base font-black text-zinc-900">
+                  <h2 className="text-sm sm:text-base font-black text-foreground">
                     {t('landlordAssetsDetailDepreciation')}
                   </h2>
                 </div>
-                <span className="text-[10px] font-black text-zinc-500 bg-zinc-100 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-black text-muted bg-card-hover px-2 py-1 rounded-lg">
                   {t('landlordAssetsDetailYearsUsed', {
                     years: asset.depreciationYears || 5,
                     months: dep.totalMonths,
@@ -503,28 +503,28 @@ export default function AssetDetailPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
-                <div className="p-3.5 sm:p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl space-y-1">
-                  <span className="text-emerald-700 font-medium block">
+                <div className="p-3.5 sm:p-4 bg-success-soft border border-success-subtle rounded-2xl space-y-1">
+                  <span className="text-success font-medium block">
                     {t('landlordAssetsDetailInitialValue')}
                   </span>
-                  <span className="font-black text-emerald-900 text-base sm:text-lg">
+                  <span className="font-black text-success text-base sm:text-lg">
                     {asset.value}
                   </span>
-                  <span className="text-[10px] text-emerald-700 font-medium block">
+                  <span className="text-[10px] text-success font-medium block">
                     Ngày mua: {asset.purchaseDate || asset.dateAdded}
                   </span>
                 </div>
 
-                <div className="p-3.5 sm:p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl space-y-1">
-                  <span className="text-amber-700 font-medium block">
+                <div className="p-3.5 sm:p-4 bg-warning-soft border border-warning-subtle rounded-2xl space-y-1">
+                  <span className="text-warning font-medium block">
                     {t('landlordAssetsDetailAccumulatedDepreciation', {
                       percent: dep.depreciatedPercent,
                     })}
                   </span>
-                  <span className="font-black text-amber-900 text-base sm:text-lg">
+                  <span className="font-black text-warning text-base sm:text-lg">
                     - {dep.accumulatedDepreciation.toLocaleString('vi-VN')} ₫
                   </span>
-                  <span className="text-[10px] text-amber-700 font-medium block">
+                  <span className="text-[10px] text-warning font-medium block">
                     {t('landlordAssetsDetailUsedMonths', {
                       used: dep.monthsUsed,
                       total: dep.totalMonths,
@@ -532,14 +532,14 @@ export default function AssetDetailPage() {
                   </span>
                 </div>
 
-                <div className="p-3.5 sm:p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl space-y-1">
-                  <span className="text-blue-700 font-medium block">
+                <div className="p-3.5 sm:p-4 bg-info-soft border border-info-subtle rounded-2xl space-y-1">
+                  <span className="text-info font-medium block">
                     {t('landlordAssetsDetailCurrentEstimated', { percent: dep.remainingPercent })}
                   </span>
-                  <span className="font-black text-blue-900 text-base sm:text-lg">
+                  <span className="font-black text-info text-base sm:text-lg">
                     {dep.currentValue.toLocaleString('vi-VN')} ₫
                   </span>
-                  <span className="text-[10px] text-blue-700 font-medium block">
+                  <span className="text-[10px] text-info font-medium block">
                     Khấu hao ~{Math.round(dep.monthlyDepreciation).toLocaleString('vi-VN')} ₫/tháng
                   </span>
                 </div>
@@ -548,7 +548,7 @@ export default function AssetDetailPage() {
 
             {/* VISUAL DEPRECIATION PROGRESS BAR */}
             <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-xs font-extrabold text-zinc-700">
+              <div className="flex justify-between text-xs font-extrabold text-foreground/90">
                 <span>
                   {t('landlordAssetsDetailRemainingRatio', { percent: dep.remainingPercent })}
                 </span>
@@ -556,7 +556,7 @@ export default function AssetDetailPage() {
                   {t('landlordAssetsDetailDepreciatedRatio', { percent: dep.depreciatedPercent })}
                 </span>
               </div>
-              <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden flex p-0.5 border border-zinc-200">
+              <div className="w-full h-3 bg-warning-soft rounded-full overflow-hidden flex p-0.5 border border-line">
                 <div
                   style={{ width: `${dep.remainingPercent}%` }}
                   className="h-full bg-[#2AC1BC] rounded-full transition-all duration-500 shadow-xs"
@@ -569,12 +569,12 @@ export default function AssetDetailPage() {
         {/* Right Column (5 Cols on desktop: Always 100% equal height with Left Column) */}
         <div className="lg:col-span-5 flex flex-col">
           {/* Maintenance Logs Section */}
-          <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
+          <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
             <div className="space-y-4 flex-1 flex flex-col">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-100 shrink-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-line shrink-0">
                 <div className="flex items-center gap-2">
                   <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-amber-500 shrink-0" />
-                  <h2 className="text-sm sm:text-base font-black text-zinc-900">
+                  <h2 className="text-sm sm:text-base font-black text-foreground">
                     {t('landlordAssetsDetailMaintenanceHistory')}
                   </h2>
                 </div>
@@ -589,15 +589,15 @@ export default function AssetDetailPage() {
               </div>
 
               {maintenanceLogs.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-zinc-400 text-xs space-y-2.5 my-auto">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/80 flex items-center justify-center shadow-2xs">
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-muted text-xs space-y-2.5 my-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-500 border border-warning-subtle flex items-center justify-center shadow-2xs">
                     <Clock className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="font-extrabold text-zinc-800 text-sm">
+                    <p className="font-extrabold text-foreground text-sm">
                       {t('landlordAssetsDetailNoMaintenance')}
                     </p>
-                    <p className="text-xs text-zinc-400 font-medium max-w-xs mx-auto mt-1">
+                    <p className="text-xs text-muted font-medium max-w-xs mx-auto mt-1">
                       {t('landlordAssetsDetailNoMaintenanceDesc')}
                     </p>
                   </div>
@@ -607,31 +607,31 @@ export default function AssetDetailPage() {
                   {maintenanceLogs.map(log => (
                     <div
                       key={log.id}
-                      className="p-3.5 sm:p-4 bg-zinc-50 rounded-2xl border border-zinc-200/60 space-y-2.5 text-xs"
+                      className="p-3.5 sm:p-4 bg-surface rounded-2xl border border-line space-y-2.5 text-xs"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md font-extrabold text-[10px]">
+                          <span className="px-2 py-0.5 bg-warning-soft text-warning rounded-md font-extrabold text-[10px]">
                             {log.type}
                           </span>
-                          <span className="text-zinc-400 font-medium text-[11px] flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-zinc-400 inline shrink-0" />{' '}
+                          <span className="text-muted font-medium text-[11px] flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-muted inline shrink-0" />{' '}
                             {log.date}
                           </span>
                         </div>
-                        <span className="font-black text-emerald-600 text-xs sm:text-sm bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 shrink-0">
+                        <span className="font-black text-emerald-600 text-xs sm:text-sm bg-success-soft px-2 py-0.5 rounded-md border border-success-subtle shrink-0">
                           {log.cost}
                         </span>
                       </div>
 
-                      <p className="font-bold text-zinc-800 leading-relaxed text-xs sm:text-sm break-words">
+                      <p className="font-bold text-foreground leading-relaxed text-xs sm:text-sm break-words">
                         {log.description}
                       </p>
 
-                      <div className="text-[11px] text-zinc-400 font-medium pt-1.5 border-t border-zinc-200/50 flex items-center justify-between">
+                      <div className="text-[11px] text-muted font-medium pt-1.5 border-t border-line flex items-center justify-between">
                         <span>
                           {t('landlordAssetsDetailPerformer')}{' '}
-                          <strong className="text-zinc-700">{log.performer}</strong>
+                          <strong className="text-foreground/90">{log.performer}</strong>
                         </span>
                       </div>
                     </div>
@@ -651,17 +651,17 @@ export default function AssetDetailPage() {
             if (e.target === e.currentTarget) setIsEditModalOpen(false)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]">
-            <div className="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+          <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
+            <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-xl">
+                <div className="p-2 bg-accent-soft text-[#FF6B35] rounded-xl">
                   <Edit3 className="w-5 h-5 text-[#2AC1BC]" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base sm:text-lg text-zinc-900">
+                  <h3 className="font-black text-base sm:text-lg text-foreground">
                     {t('landlordAssetsModalEditTitle')} [{t('landlordAssetsFieldSku')}: {editSku}]
                   </h3>
-                  <p className="text-xs text-zinc-500 font-medium">{t('landlordAssetsModalSub')}</p>
+                  <p className="text-xs text-muted font-medium">{t('landlordAssetsModalSub')}</p>
                 </div>
               </div>
               <Button
@@ -681,7 +681,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editSku}
                   onChange={e => setEditSku(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-bold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
+                  className="px-3.5 py-2.5 text-xs font-bold border border-line rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
                 />
 
                 <TextInput
@@ -689,14 +689,14 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
                 />
 
                 <SelectInput
                   label={t('landlordAssetsFieldCategory')}
                   value={editCategory}
                   onChange={e => setEditCategory(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
                     { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
@@ -710,7 +710,7 @@ export default function AssetDetailPage() {
                   label={t('landlordAssetsFieldRoom')}
                   value={editRoom}
                   onChange={e => setEditRoom(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     {
                       value: '101',
@@ -760,7 +760,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editPurchaseValue}
                   onChange={e => setEditPurchaseValue(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
                 />
 
                 <TextInput
@@ -769,14 +769,14 @@ export default function AssetDetailPage() {
                   placeholder="VD: 10/01/2024"
                   value={editPurchaseDate}
                   onChange={e => setEditPurchaseDate(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
                 />
 
                 <SelectInput
                   label={t('landlordAssetsFieldDepreciationYears')}
                   value={editDepreciationYears}
                   onChange={e => setEditDepreciationYears(Number(e.target.value))}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     { value: 3, label: `3 ${isEn ? 'years (36 months)' : 'năm (36 tháng)'}` },
                     { value: 5, label: `5 ${isEn ? 'years (60 months)' : 'năm (60 tháng)'}` },
@@ -789,7 +789,7 @@ export default function AssetDetailPage() {
                   label={t('landlordAssetsFieldStatus')}
                   value={editStatus}
                   onChange={e => setEditStatus(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
                     { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
@@ -803,7 +803,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editModelCode}
                   onChange={e => setEditModelCode(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
                 />
 
                 <TextInput
@@ -811,12 +811,12 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editWarrantyPeriod}
                   onChange={e => setEditWarrantyPeriod(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
+            <div className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
               <Button
                 variant="outline"
                 size="sm"
@@ -844,9 +844,9 @@ export default function AssetDetailPage() {
             if (e.target === e.currentTarget) setIsLogModalOpen(false)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-base text-zinc-900">
+          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h3 className="font-black text-base text-foreground">
                 {t('landlordAssetsDetailLogModalTitle')}
               </h3>
               <Button
@@ -863,7 +863,7 @@ export default function AssetDetailPage() {
                 label={t('landlordAssetsDetailLogType')}
                 value={logType}
                 onChange={e => setLogType(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+                className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
                 options={[
                   { value: 'Bảo dưỡng định kỳ', label: t('landlordAssetsDetailLogTypeRoutine') },
                   { value: 'Sửa chữa linh kiện', label: t('landlordAssetsDetailLogTypeRepair') },
@@ -878,7 +878,7 @@ export default function AssetDetailPage() {
                 placeholder={t('landlordAssetsDetailLogDescPh')}
                 value={logDescription}
                 onChange={e => setLogDescription(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none resize-none"
+                className="px-3 py-2 font-semibold border border-line rounded-xl outline-none resize-none"
               />
 
               <TextInput
@@ -887,7 +887,7 @@ export default function AssetDetailPage() {
                 placeholder="VD: 250.000 ₫"
                 value={logCost}
                 onChange={e => setLogCost(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+                className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
               />
 
               <TextInput
@@ -896,7 +896,7 @@ export default function AssetDetailPage() {
                 placeholder={t('landlordAssetsDetailLogPerformerPh')}
                 value={logPerformer}
                 onChange={e => setLogPerformer(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+                className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
               />
             </div>
 
@@ -962,13 +962,13 @@ function ConfirmModal({
         if (e.target === e.currentTarget) onCancel()
       }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-200 mx-auto flex items-center justify-center shadow-inner">
+      <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-warning-subtle mx-auto flex items-center justify-center shadow-inner">
           <AlertTriangle className="w-7 h-7" />
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="text-xs text-muted font-medium leading-relaxed">{message}</p>
         </div>
         <div className="grid grid-cols-2 gap-2.5 pt-2">
           <Button
@@ -1008,22 +1008,22 @@ function AlertModal({
   if (!isOpen) return null
   const config = {
     warning: {
-      bgColor: 'bg-amber-500/10 text-amber-600 border-amber-200',
+      bgColor: 'bg-amber-500/10 text-amber-600 border-warning-subtle',
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
       btnColor: 'bg-amber-500 text-white',
     },
     error: {
-      bgColor: 'bg-rose-500/10 text-rose-600 border-rose-200',
+      bgColor: 'bg-rose-500/10 text-rose-600 border-danger-subtle',
       icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
       btnColor: 'bg-rose-500 text-white',
     },
     success: {
-      bgColor: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+      bgColor: 'bg-emerald-500/10 text-emerald-600 border-success-subtle',
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
       btnColor: 'bg-emerald-500 text-white',
     },
     info: {
-      bgColor: 'bg-orange-50 text-[#FF6B35] border-orange-200',
+      bgColor: 'bg-accent-soft text-[#FF6B35] border-accent-subtle',
       icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
       btnColor: 'bg-[#FF6B35] text-white',
     },
@@ -1036,15 +1036,15 @@ function AlertModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
+      <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
         <div
           className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
         >
           {config.icon}
         </div>
         <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="text-xs text-muted font-medium leading-relaxed">{message}</p>
         </div>
         <Button
           variant={

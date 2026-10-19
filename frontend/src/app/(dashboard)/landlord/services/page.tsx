@@ -131,7 +131,7 @@ export default function ServicesPage() {
       return {
         iconName: 'Zap',
         color: 'text-amber-500',
-        bg: 'bg-amber-50 border-amber-200/80',
+        bg: 'bg-warning-soft border-warning-subtle',
         typeLabel: t('landlordServicesTypeMetered'),
       }
     }
@@ -139,7 +139,7 @@ export default function ServicesPage() {
       return {
         iconName: 'Droplets',
         color: 'text-blue-500',
-        bg: 'bg-blue-50 border-blue-200/80',
+        bg: 'bg-info-soft border-info-subtle',
         typeLabel: t('landlordServicesTypeMetered'),
       }
     }
@@ -151,7 +151,7 @@ export default function ServicesPage() {
       return {
         iconName: 'Wifi',
         color: 'text-indigo-500',
-        bg: 'bg-indigo-50 border-indigo-200/80',
+        bg: 'bg-info-soft border-info-subtle',
         typeLabel: t('landlordServicesTypeFixedRoom'),
       }
     }
@@ -165,7 +165,7 @@ export default function ServicesPage() {
       return {
         iconName: 'Trash2',
         color: 'text-emerald-500',
-        bg: 'bg-emerald-50 border-emerald-200/80',
+        bg: 'bg-success-soft border-success-subtle',
         typeLabel:
           lowerUnit.includes('người') || lowerUnit.includes('person')
             ? t('landlordServicesTypeFixedPerson')
@@ -182,7 +182,7 @@ export default function ServicesPage() {
       return {
         iconName: 'CarFront',
         color: 'text-purple-500',
-        bg: 'bg-purple-50 border-purple-200/80',
+        bg: 'bg-deposit-soft border-deposit-subtle',
         typeLabel: t('landlordServicesTypeQuantity'),
       }
     }
@@ -196,7 +196,7 @@ export default function ServicesPage() {
       return {
         iconName: 'ShieldCheck',
         color: 'text-rose-500',
-        bg: 'bg-rose-50 border-rose-200/80',
+        bg: 'bg-danger-soft border-danger-subtle',
         typeLabel: t('landlordServicesTypeFixedRoom'),
       }
     }
@@ -204,7 +204,7 @@ export default function ServicesPage() {
       return {
         iconName: 'Flame',
         color: 'text-orange-500',
-        bg: 'bg-orange-50 border-orange-200/80',
+        bg: 'bg-accent-soft border-accent-subtle',
         typeLabel: isMetered
           ? t('landlordServicesTypeMetered')
           : t('landlordServicesTypeFixedRoom'),
@@ -236,7 +236,7 @@ export default function ServicesPage() {
     return {
       iconName: 'Wrench',
       color: 'text-[#2AC1BC]',
-      bg: 'bg-teal-50 border-teal-200/80',
+      bg: 'bg-primary-soft border-primary-subtle',
       typeLabel,
     }
   }
@@ -471,10 +471,10 @@ export default function ServicesPage() {
       {/* Top Bar Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
             {t('landlordServicesTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 font-medium">
+          <p className="text-xs sm:text-sm text-muted mt-0.5 font-medium">
             {t('landlordServicesSubtitle')}
           </p>
         </div>
@@ -504,7 +504,7 @@ export default function ServicesPage() {
             onClick={fetchServices}
             title={t('landlordServicesRefresh')}
           >
-            <RefreshCw className={`w-4 h-4 text-zinc-500 ${isLoading ? 'animate-spin' : ''}`} />{' '}
+            <RefreshCw className={`w-4 h-4 text-muted ${isLoading ? 'animate-spin' : ''}`} />{' '}
             {t('landlordServicesRefresh')}
           </Button>
           <Button
@@ -552,7 +552,7 @@ export default function ServicesPage() {
               )}
             </div>
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordServicesHeroSubtitle')}
             </p>
           </div>
@@ -615,8 +615,8 @@ export default function ServicesPage() {
           <Info className="w-4 h-4" />
         </div>
         <div className="space-y-0.5 text-xs">
-          <h3 className="font-extrabold text-zinc-900">{t('landlordServicesPricingRule')}</h3>
-          <p className="text-zinc-600 leading-relaxed font-medium">
+          <h3 className="font-extrabold text-foreground">{t('landlordServicesPricingRule')}</h3>
+          <p className="text-muted leading-relaxed font-medium">
             {t('landlordServicesPricingRuleGuidance', {
               building: activeBuilding?.name || (isEn ? 'the property' : 'tòa nhà'),
             })}
@@ -625,7 +625,7 @@ export default function ServicesPage() {
       </div>
 
       {/* FILTER & TOOLBAR BAR */}
-      <div className="bg-white border border-zinc-200/80 rounded-2xl p-3 sm:p-4 shadow-2xs space-y-3">
+      <div className="bg-card border border-line rounded-2xl p-3 sm:p-4 shadow-2xs space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Bar */}
           <div className="relative w-full sm:max-w-xs">
@@ -637,13 +637,13 @@ export default function ServicesPage() {
                 setCurrentPage(1)
               }}
               containerClassName="w-full space-y-0"
-              className="w-full text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+              className="w-full text-xs font-semibold bg-surface border border-line rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
             />
           </div>
 
           {/* Right Toolbar: View Mode Toggle */}
           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-            <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200">
+            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl border border-line">
               <Button
                 type="button"
                 variant="ghost"
@@ -675,7 +675,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Category Pills */}
-        <div className="pt-1 border-t border-zinc-100">
+        <div className="pt-1 border-t border-line">
           <ChipGroup
             value={typeFilter}
             onChange={val => {
@@ -695,7 +695,7 @@ export default function ServicesPage() {
       {isLoading && (
         <div className="py-12 flex flex-col items-center justify-center space-y-2">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">{t('landlordServicesLoading')}</p>
+          <p className="text-xs text-muted font-medium">{t('landlordServicesLoading')}</p>
         </div>
       )}
 
@@ -712,8 +712,8 @@ export default function ServicesPage() {
               return (
                 <div
                   key={service.id}
-                  className={`bg-white border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${
-                    isActive ? 'border-zinc-200/90' : 'border-zinc-200 opacity-70 bg-zinc-50/50'
+                  className={`bg-card border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${
+                    isActive ? 'border-line' : 'border-line opacity-70 bg-surface/50'
                   }`}
                 >
                   <div className="space-y-3.5">
@@ -733,8 +733,8 @@ export default function ServicesPage() {
                             <span
                               className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
                                 service.autoApplied
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                  : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                  ? 'bg-danger-soft text-danger border-danger-subtle'
+                                  : 'bg-info-soft text-info border-info-subtle'
                               }`}
                             >
                               {service.autoApplied
@@ -742,7 +742,7 @@ export default function ServicesPage() {
                                 : t('landlordServicesOptional')}
                             </span>
                           </div>
-                          <h3 className="font-black text-zinc-900 text-base sm:text-lg mt-1">
+                          <h3 className="font-black text-foreground text-base sm:text-lg mt-1">
                             {service.name}
                           </h3>
                         </div>
@@ -750,13 +750,13 @@ export default function ServicesPage() {
                     </div>
 
                     {/* STATUS TOGGLE WITH SWITCH */}
-                    <div className="flex items-center justify-between p-3 bg-zinc-50 rounded-2xl border border-zinc-200/80">
+                    <div className="flex items-center justify-between p-3 bg-surface rounded-2xl border border-line">
                       <div className="space-y-0.5">
-                        <span className="text-xs font-extrabold text-zinc-700 block">
+                        <span className="text-xs font-extrabold text-foreground/90 block">
                           {t('landlordServicesAppliedStatus')}:
                         </span>
                         <span
-                          className={`text-[11px] font-bold block ${isActive ? 'text-emerald-600' : 'text-zinc-400'}`}
+                          className={`text-[11px] font-bold block ${isActive ? 'text-emerald-600' : 'text-muted'}`}
                         >
                           {isActive
                             ? t('landlordServicesStatusOn')
@@ -786,23 +786,23 @@ export default function ServicesPage() {
                     </div>
 
                     {/* Service Specification Table */}
-                    <div className="p-3.5 bg-zinc-50/80 rounded-2xl space-y-2 text-xs border border-zinc-100">
-                      <div className="flex justify-between items-center text-zinc-600">
-                        <span className="text-zinc-400 font-medium">
+                    <div className="p-3.5 bg-surface/80 rounded-2xl space-y-2 text-xs border border-line">
+                      <div className="flex justify-between items-center text-muted">
+                        <span className="text-muted font-medium">
                           {t('landlordServicesBillingTypeLabel')}
                         </span>
-                        <span className="font-bold text-zinc-900 bg-white px-2 py-0.5 rounded-md border border-zinc-200">
+                        <span className="font-bold text-foreground bg-card px-2 py-0.5 rounded-md border border-line">
                           {visual.typeLabel}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center text-zinc-600">
-                        <span className="text-zinc-400 font-medium">
+                      <div className="flex justify-between items-center text-muted">
+                        <span className="text-muted font-medium">
                           {t('landlordServicesUnitLabel')}
                         </span>
-                        <span className="font-bold text-zinc-800">{service.unit}</span>
+                        <span className="font-bold text-foreground">{service.unit}</span>
                       </div>
-                      <div className="flex justify-between items-center text-zinc-600 pt-1 border-t border-zinc-200/60">
-                        <span className="text-zinc-400 font-medium">
+                      <div className="flex justify-between items-center text-muted pt-1 border-t border-line">
+                        <span className="text-muted font-medium">
                           {t('landlordServicesDefaultPriceLabel')}
                         </span>
                         <span className="font-black text-emerald-600 text-base sm:text-lg">
@@ -813,7 +813,7 @@ export default function ServicesPage() {
                   </div>
 
                   {/* Footer Action Controls */}
-                  <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5 text-xs">
+                  <div className="pt-3 border-t border-line flex items-center justify-between gap-1.5 text-xs">
                     <Button
                       type="button"
                       variant="outline"
@@ -849,21 +849,21 @@ export default function ServicesPage() {
               )
             })
           ) : (
-            <div className="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-zinc-200 border-dashed p-6 text-center space-y-2">
+            <div className="col-span-full py-16 flex flex-col items-center justify-center bg-card rounded-3xl border border-line border-dashed p-6 text-center space-y-2">
               <Wrench className="w-12 h-12 text-zinc-300 mb-1" />
-              <p className="font-black text-zinc-900 text-base">
+              <p className="font-black text-foreground text-base">
                 {t('landlordServicesEmptyTitle')}
               </p>
-              <p className="text-xs text-zinc-500">{t('landlordServicesEmptyDesc')}</p>
+              <p className="text-xs text-muted">{t('landlordServicesEmptyDesc')}</p>
             </div>
           )}
         </div>
       ) : !isLoading ? (
         /* LIST VIEW TABLE */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl shadow-2xs overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl sm:rounded-3xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left min-w-[900px]">
-              <thead className="bg-zinc-50 text-zinc-500 uppercase font-extrabold border-b border-zinc-200 whitespace-nowrap">
+              <thead className="bg-surface text-muted uppercase font-extrabold border-b border-line whitespace-nowrap">
                 <tr>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[200px]">{t('landlordServicesCode')}</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[170px]">{t('landlordServicesType')}</th>
@@ -883,10 +883,10 @@ export default function ServicesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium">
+              <tbody className="divide-y divide-line font-medium">
                 {services.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
+                    <td colSpan={8} className="px-6 py-8 text-center text-muted">
                       {t('landlordServicesEmptyTitle')}
                     </td>
                   </tr>
@@ -906,7 +906,7 @@ export default function ServicesPage() {
                               {renderIcon(visual.iconName, 'w-4.5 h-4.5')}
                             </div>
                             <div>
-                              <span className="font-black text-zinc-900 block text-xs sm:text-sm whitespace-nowrap">
+                              <span className="font-black text-foreground block text-xs sm:text-sm whitespace-nowrap">
                                 {service.name}
                               </span>
                               <span className="text-[10px] font-mono text-[#2AC1BC] font-bold block">
@@ -916,11 +916,11 @@ export default function ServicesPage() {
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className="font-bold text-zinc-800 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200 inline-block">
+                          <span className="font-bold text-foreground bg-card-hover px-2.5 py-1 rounded-md border border-line inline-block">
                             {visual.typeLabel}
                           </span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-zinc-700 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground/90 whitespace-nowrap">
                           {service.unit}
                         </td>
                         <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 text-sm whitespace-nowrap">
@@ -930,8 +930,8 @@ export default function ServicesPage() {
                           <span
                             className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold border inline-block whitespace-nowrap ${
                               service.autoApplied
-                                ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                ? 'bg-danger-soft text-danger border-danger-subtle'
+                                : 'bg-info-soft text-info border-info-subtle'
                             }`}
                           >
                             {service.autoApplied
@@ -972,7 +972,7 @@ export default function ServicesPage() {
                               />
                             </Button>
                             <span
-                              className={`text-xs font-bold ${isActive ? 'text-emerald-600 font-black' : 'text-zinc-400'}`}
+                              className={`text-xs font-bold ${isActive ? 'text-emerald-600 font-black' : 'text-muted'}`}
                             >
                               {isActive
                                 ? t('landlordServicesAlertStatusActive')
@@ -1013,9 +1013,9 @@ export default function ServicesPage() {
       ) : null}
 
       {/* Standardized Dormio Pagination Footer (Rule #9) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-xs mt-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200/80">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
+          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
             <span>{t('landlordServicesPaginationShowing')}</span>
             <NumberInput
               min={1}
@@ -1027,7 +1027,7 @@ export default function ServicesPage() {
                 setCurrentPage(1)
               }}
               containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
+              className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
             />
             <span>{t('landlordServicesPaginationPerPage')}</span>
           </div>
@@ -1035,11 +1035,11 @@ export default function ServicesPage() {
           <span className="hidden sm:inline text-zinc-300">|</span>
 
           <div>
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
             </span>{' '}
             -{' '}
-            <span className="font-extrabold text-zinc-800">
+            <span className="font-extrabold text-foreground">
               {Math.min(currentPage * itemsPerPage, totalItems)}
             </span>{' '}
             {t('landlordServicesPaginationTotal', { total: totalItems })}
@@ -1099,19 +1099,19 @@ export default function ServicesPage() {
             if (e.target === e.currentTarget) handleCloseModal()
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]">
-            <div className="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
+          <div className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
+            <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-xl">
+                <div className="p-2 bg-accent-soft text-[#FF6B35] rounded-xl">
                   <Wrench className="w-5 h-5 text-[#2AC1BC]" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base sm:text-lg text-zinc-900">
+                  <h3 className="font-black text-base sm:text-lg text-foreground">
                     {selectedService
                       ? t('landlordServicesModalEditTitle', { name: selectedService.name })
                       : t('landlordServicesModalAddTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-medium">
+                  <p className="text-xs text-muted font-medium">
                     {t('landlordServicesModalSubtitle')}
                   </p>
                 </div>
@@ -1138,8 +1138,8 @@ export default function ServicesPage() {
                   setIsDirty(true)
                 }}
                 containerClassName="w-full space-y-1"
-                labelClassName="block font-extrabold text-zinc-700"
-                className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                labelClassName="block font-extrabold text-foreground/90"
+                className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1155,8 +1155,8 @@ export default function ServicesPage() {
                     { value: 'fixed', label: t('landlordServicesFormOptionFixed') },
                   ]}
                   containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-zinc-700"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-white cursor-pointer"
+                  labelClassName="block font-extrabold text-foreground/90"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-card cursor-pointer"
                 />
 
                 <SelectInput
@@ -1171,8 +1171,8 @@ export default function ServicesPage() {
                     { value: 'optional', label: t('landlordServicesFormOptionOptional') },
                   ]}
                   containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-zinc-700"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-white cursor-pointer"
+                  labelClassName="block font-extrabold text-foreground/90"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-card cursor-pointer"
                 />
               </div>
 
@@ -1188,8 +1188,8 @@ export default function ServicesPage() {
                     setIsDirty(true)
                   }}
                   containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-zinc-700"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                  labelClassName="block font-extrabold text-foreground/90"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
                 />
 
                 <NumberInput
@@ -1204,8 +1204,8 @@ export default function ServicesPage() {
                     setIsDirty(true)
                   }}
                   containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-zinc-700"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                  labelClassName="block font-extrabold text-foreground/90"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
                 />
               </div>
 
@@ -1222,13 +1222,13 @@ export default function ServicesPage() {
                     { value: 'inactive', label: t('landlordServicesFormOptionInactive') },
                   ]}
                   containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-zinc-700"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-white cursor-pointer"
+                  labelClassName="block font-extrabold text-foreground/90"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-card cursor-pointer"
                 />
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
+            <div className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
               <Button
                 type="button"
                 variant="outline"
@@ -1260,15 +1260,15 @@ export default function ServicesPage() {
             if (e.target === e.currentTarget) setRoomsModalService(null)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-teal-50 border-teal-200 text-[#2AC1BC]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-primary-soft border-primary-subtle text-[#2AC1BC]">
                   <Wrench className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-zinc-900">{roomsModalService.name}</h3>
-                  <span className="text-xs text-zinc-400 font-medium">
+                  <h3 className="font-black text-base text-foreground">{roomsModalService.name}</h3>
+                  <span className="text-xs text-muted font-medium">
                     {t('landlordServicesRoomsAppliedSubtitle', { count: serviceRooms.length })}
                   </span>
                 </div>
@@ -1284,15 +1284,15 @@ export default function ServicesPage() {
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="p-3 bg-zinc-50 rounded-xl space-y-1 border border-zinc-100">
-                <span className="text-zinc-500 font-bold block">
+              <div className="p-3 bg-surface rounded-xl space-y-1 border border-line">
+                <span className="text-muted font-bold block">
                   {t('landlordServicesPrice')}:{' '}
                   <strong className="text-emerald-600 text-sm">
                     {roomsModalService.numericPrice.toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫
                   </strong>{' '}
                   / {roomsModalService.unit}
                 </span>
-                <span className="text-zinc-400 block font-medium">
+                <span className="text-muted block font-medium">
                   {t('landlordServicesType')}:{' '}
                   {roomsModalService.isMetered
                     ? t('landlordServicesMetered')
@@ -1305,7 +1305,7 @@ export default function ServicesPage() {
                 </span>
               </div>
 
-              <span className="font-extrabold text-zinc-700 block pt-2">
+              <span className="font-extrabold text-foreground/90 block pt-2">
                 {t('landlordServicesRoomsListTitle')}
               </span>
 
@@ -1314,7 +1314,7 @@ export default function ServicesPage() {
                   <Loader2 className="w-6 h-6 text-[#2AC1BC] animate-spin" />
                 </div>
               ) : serviceRooms.length === 0 ? (
-                <div className="py-6 text-center text-zinc-400 text-xs">
+                <div className="py-6 text-center text-muted text-xs">
                   {t('landlordServicesRoomsEmpty')}
                 </div>
               ) : (
@@ -1322,7 +1322,7 @@ export default function ServicesPage() {
                   {serviceRooms.map(room => (
                     <div
                       key={room.id}
-                      className="p-2 bg-zinc-50 border border-zinc-200/80 rounded-xl text-center font-bold text-zinc-800 text-xs"
+                      className="p-2 bg-surface border border-line rounded-xl text-center font-bold text-foreground text-xs"
                       title={`Tầng ${room.floor} - Trạng thái: ${room.status}`}
                     >
                       P.{room.roomNumber}
@@ -1352,16 +1352,16 @@ export default function ServicesPage() {
             if (e.target === e.currentTarget) setDeleteTarget(null)
           }}
         >
-          <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-            <div className="w-14 h-14 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
+          <div className="bg-card rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-line">
+            <div className="w-14 h-14 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
               <Trash2 className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xl font-black text-zinc-900 tracking-tight">
+              <h3 className="text-xl font-black text-foreground tracking-tight">
                 {t('landlordServicesDeleteTitle')}
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+              <p className="text-xs sm:text-sm text-muted font-medium leading-relaxed max-w-xs mx-auto">
                 {t('landlordServicesDeleteMessage', { name: deleteTarget.name })}
               </p>
             </div>
@@ -1443,14 +1443,14 @@ function ConfirmModal({
         if (e.target === e.currentTarget) onCancel()
       }}
     >
-      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
+      <div className="bg-card rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-line">
+        <div className="w-14 h-14 bg-warning-soft border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
           <AlertTriangle className="w-7 h-7" />
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-xl font-black text-zinc-900 tracking-tight">{title}</h3>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
+          <h3 className="text-xl font-black text-foreground tracking-tight">{title}</h3>
+          <p className="text-xs sm:text-sm text-muted font-medium leading-relaxed max-w-xs mx-auto">
             {message}
           </p>
         </div>
@@ -1500,22 +1500,22 @@ function AlertModal({
 
   const config = {
     warning: {
-      bgColor: 'bg-amber-500/10 text-amber-600 border-amber-200',
+      bgColor: 'bg-amber-500/10 text-amber-600 border-warning-subtle',
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
       btnColor: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20',
     },
     error: {
-      bgColor: 'bg-rose-500/10 text-rose-600 border-rose-200',
+      bgColor: 'bg-rose-500/10 text-rose-600 border-danger-subtle',
       icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
       btnColor: 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20',
     },
     success: {
-      bgColor: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+      bgColor: 'bg-emerald-500/10 text-emerald-600 border-success-subtle',
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
       btnColor: 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20',
     },
     info: {
-      bgColor: 'bg-orange-50 text-[#FF6B35] border-orange-200',
+      bgColor: 'bg-accent-soft text-[#FF6B35] border-accent-subtle',
       icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
       btnColor: 'bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20',
     },
@@ -1528,7 +1528,7 @@ function AlertModal({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
+      <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
         <div
           className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
         >
@@ -1536,8 +1536,8 @@ function AlertModal({
         </div>
 
         <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
+          <h3 className="text-lg font-black text-foreground">{title}</h3>
+          <p className="text-xs text-muted font-medium leading-relaxed">{message}</p>
         </div>
 
         <Button fullWidth variant="dark"

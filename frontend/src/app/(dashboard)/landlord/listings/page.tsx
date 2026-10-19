@@ -181,10 +181,10 @@ export default function ListingsPage() {
       {/* Top Header & Action */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
             {t('landlordListingsPageTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-muted mt-0.5">
             {t('landlordListingsPageSubtitle')}
           </p>
         </div>
@@ -213,12 +213,12 @@ export default function ListingsPage() {
                   ? t('landlordListingsQuotaLandlord', { plan: quota.planName || 'Free' })
                   : t('landlordListingsQuotaBroker')}
               </span>
-              <span className="text-xs text-zinc-400">{t('landlordListingsQuotaResetNotice')}</span>
+              <span className="text-xs text-muted">{t('landlordListingsQuotaResetNotice')}</span>
             </div>
             <h2 className="text-xl md:text-3xl font-black tracking-tight text-white">
               {t('landlordListingsBhrpBannerTitle')}
             </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               {t('landlordListingsBhrpBannerDesc')}
             </p>
           </div>
@@ -228,7 +228,7 @@ export default function ListingsPage() {
             <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
               <Coins className="w-5 h-5 text-[#FF6B35] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">
+                <span className="text-[9px] uppercase font-bold text-muted tracking-wider">
                   {t('landlordListingsFreeToday')}
                 </span>
                 <span className="font-black text-white text-base leading-none mt-1">
@@ -240,7 +240,7 @@ export default function ListingsPage() {
             <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
               <Sparkles className="w-5 h-5 text-[#2ac1bc] shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">
+                <span className="text-[9px] uppercase font-bold text-muted tracking-wider">
                   {t('landlordListingsPaidCredits')}
                 </span>
                 <span className="font-black text-[#2ac1bc] text-base leading-none mt-1">
@@ -252,7 +252,7 @@ export default function ListingsPage() {
             <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
               <Eye className="w-5 h-5 text-blue-400 shrink-0" />
               <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">
+                <span className="text-[9px] uppercase font-bold text-muted tracking-wider">
                   {t('landlordListingsTotalPublished')}
                 </span>
                 <span className="font-black text-white text-base leading-none mt-1">
@@ -308,7 +308,7 @@ export default function ListingsPage() {
                       • {room.roomTypeName}
                     </span>
                   </div>
-                  <div className="text-[11px] text-zinc-400 line-clamp-1">
+                  <div className="text-[11px] text-muted line-clamp-1">
                     {room.boardingHouseName}
                   </div>
                   <div className="text-[10px] text-amber-300">
@@ -329,7 +329,7 @@ export default function ListingsPage() {
       )}
 
       {/* Filter and View Mode Toolbar */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <form onSubmit={handleSearchSubmit} className="w-full md:max-w-xs">
           <SearchInput
             value={searchQuery}
@@ -339,7 +339,7 @@ export default function ListingsPage() {
             }}
             placeholder={t('landlordListingsSearchPlaceholder')}
             containerClassName="w-full space-y-0"
-            className="w-full py-2 text-xs border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
+            className="w-full py-2 text-xs border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
           />
         </form>
 
@@ -352,7 +352,7 @@ export default function ListingsPage() {
               setPage(1)
             }}
             containerClassName="w-auto space-y-0"
-            className="rounded-xl border border-zinc-200 pl-3 pr-8 py-2 text-xs font-semibold text-zinc-700 bg-zinc-50/50 hover:bg-white focus:outline-none focus:border-[#FF6B35] transition-colors cursor-pointer"
+            className="rounded-xl border border-line pl-3 pr-8 py-2 text-xs font-semibold text-foreground/90 bg-surface/50 hover:bg-card focus:outline-none focus:border-[#FF6B35] transition-colors cursor-pointer"
             options={[
               { value: '', label: t('landlordListingsFilterAllStatus') },
               { value: 'posted', label: t('landlordListingsStatusPosted') },
@@ -362,7 +362,7 @@ export default function ListingsPage() {
           />
 
           {/* View Toggle (Grid / Table) */}
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200">
+          <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line">
             <Button
               type="button"
               variant="ghost"
@@ -393,21 +393,21 @@ export default function ListingsPage() {
 
       {/* Loading state */}
       {isLoading ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-3">
+        <div className="bg-card border border-line rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-3">
           <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
-          <span className="text-xs font-bold text-zinc-500">{t('landlordListingsLoading')}</span>
+          <span className="text-xs font-bold text-muted">{t('landlordListingsLoading')}</span>
         </div>
       ) : listings.length === 0 ? (
         /* Empty State */
-        <div className="bg-white border border-zinc-200 rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-orange-50 text-[#FF6B35] flex items-center justify-center">
+        <div className="bg-card border border-line rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-accent-soft text-[#FF6B35] flex items-center justify-center">
             <ImageIcon className="w-8 h-8" />
           </div>
           <div className="space-y-1 max-w-sm">
-            <h3 className="text-base font-black text-zinc-900">
+            <h3 className="text-base font-black text-foreground">
               {t('landlordListingsEmptyTitle')}
             </h3>
-            <p className="text-xs text-zinc-500">{t('landlordListingsEmptyDesc')}</p>
+            <p className="text-xs text-muted">{t('landlordListingsEmptyDesc')}</p>
           </div>
           <Link
             href="/landlord/listings/create"
@@ -428,10 +428,10 @@ export default function ListingsPage() {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md hover:border-zinc-300 transition-all flex flex-col group"
+                className="bg-card rounded-3xl border border-line overflow-hidden shadow-sm hover:shadow-md hover:border-line transition-all flex flex-col group"
               >
                 {/* Thumbnail Image */}
-                <div className="relative aspect-video w-full bg-zinc-100 overflow-hidden">
+                <div className="relative aspect-video w-full bg-card-hover overflow-hidden">
                   <img
                     src={firstImage}
                     alt={item.title}
@@ -473,8 +473,8 @@ export default function ListingsPage() {
                 {/* Content */}
                 <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-zinc-500">
-                      <span className="font-bold text-zinc-700">
+                    <div className="flex items-center justify-between text-xs text-muted">
+                      <span className="font-bold text-foreground/90">
                         {item.room
                           ? t('landlordListingsRoomLabel', {
                               room: item.room.roomNumber,
@@ -490,19 +490,19 @@ export default function ListingsPage() {
                       </span>
                     </div>
 
-                    <h3 className="text-base font-black text-zinc-900 line-clamp-2 leading-snug group-hover:text-[#FF6B35] transition-colors">
+                    <h3 className="text-base font-black text-foreground line-clamp-2 leading-snug group-hover:text-[#FF6B35] transition-colors">
                       {item.title}
                     </h3>
 
-                    <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                       {item.content}
                     </p>
                   </div>
 
                   {/* Financial & Controls */}
-                  <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                  <div className="pt-4 border-t border-line flex items-center justify-between">
                     <div>
-                      <div className="text-[10px] font-bold uppercase text-zinc-400">
+                      <div className="text-[10px] font-bold uppercase text-muted">
                         {t('landlordListingsDepositHolding')}
                       </div>
                       <div className="text-sm font-black text-[#FF6B35]">
@@ -544,11 +544,11 @@ export default function ListingsPage() {
         </div>
       ) : (
         /* TABLE VIEW */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200 text-[11px] font-black uppercase text-zinc-500 tracking-wider">
+                <tr className="bg-surface border-b border-line text-[11px] font-black uppercase text-muted tracking-wider">
                   <th className="px-6 py-4">{t('landlordListingsColListing')}</th>
                   <th className="px-6 py-4">{t('landlordListingsColLinkedRoom')}</th>
                   <th className="px-6 py-4">{t('landlordListingsColDeposit')}</th>
@@ -558,16 +558,16 @@ export default function ListingsPage() {
                   <th className="px-6 py-4 text-right">{t('landlordListingsColActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200 text-xs">
+              <tbody className="divide-y divide-line text-xs">
                 {listings.map(item => (
                   <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="px-6 py-4 max-w-xs">
-                      <div className="font-bold text-zinc-900 line-clamp-1">{item.title}</div>
-                      <div className="text-[11px] text-zinc-400 mt-0.5 line-clamp-1">
+                      <div className="font-bold text-foreground line-clamp-1">{item.title}</div>
+                      <div className="text-[11px] text-muted mt-0.5 line-clamp-1">
                         {item.content}
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-bold text-zinc-700">
+                    <td className="px-6 py-4 font-bold text-foreground/90">
                       {item.room
                         ? `P.${item.room.roomNumber} (${item.room.boardingHouseName || t('landlordListingsRoomFallback')})`
                         : '—'}
@@ -579,21 +579,21 @@ export default function ListingsPage() {
                       ₫
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-100 text-zinc-700">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-card-hover text-foreground/90">
                         {item.sourceType === 'free_quote'
                           ? t('landlordListingsSourceFree')
                           : t('landlordListingsSourcePaid')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-zinc-600 font-bold">{item.viewsCount}</td>
+                    <td className="px-6 py-4 text-muted font-bold">{item.viewsCount}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2.5 py-1 text-[10px] font-black rounded-full uppercase ${
                           item.status === 'posted'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            ? 'bg-success-soft text-success border border-success-subtle'
                             : item.status === 'draft'
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                              ? 'bg-warning-soft text-warning border border-warning-subtle'
+                              : 'bg-card-hover text-muted border border-line'
                         }`}
                       >
                         {item.status === 'posted'
@@ -625,9 +625,9 @@ export default function ListingsPage() {
 
       {/* Standardized Pagination Bar */}
       {totalItems > 0 && (
-        <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+        <div className="bg-card border border-line rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
           {/* Items per page and range display */}
-          <div className="flex items-center gap-2 text-zinc-600">
+          <div className="flex items-center gap-2 text-muted">
             <span>{t('landlordListingsItemsPerPage')}</span>
             <NumberInput
               min={1}
@@ -639,10 +639,10 @@ export default function ListingsPage() {
                 setPage(1)
               }}
               containerClassName="w-16 space-y-0"
-              className="py-1 text-center font-bold border border-zinc-200 rounded-lg focus:outline-none focus:border-[#FF6B35]"
+              className="py-1 text-center font-bold border border-line rounded-lg focus:outline-none focus:border-[#FF6B35]"
             />
             <span>{t('landlordListingsPerPageUnit')} | </span>
-            <span className="font-bold text-zinc-900">
+            <span className="font-bold text-foreground">
               {startIndex}-{endIndex} {t('landlordListingsPaginationOf')} {totalItems}{' '}
               {t('landlordListingsPaginationItems')}
             </span>
@@ -671,7 +671,7 @@ export default function ListingsPage() {
                 >
                   1
                 </Button>
-                {windowStart > 2 && <span className="px-1 text-zinc-400">...</span>}
+                {windowStart > 2 && <span className="px-1 text-muted">...</span>}
               </>
             )}
 
@@ -689,7 +689,7 @@ export default function ListingsPage() {
 
             {windowEnd < totalPages && (
               <>
-                {windowEnd < totalPages - 1 && <span className="px-1 text-zinc-400">...</span>}
+                {windowEnd < totalPages - 1 && <span className="px-1 text-muted">...</span>}
                 <Button
                   type="button"
                   variant="outline"

@@ -209,10 +209,10 @@ function PaymentsContent() {
       {/* Top Header & Actions Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
             <CreditCard className="w-6 h-6 text-[#2AC1BC]" /> Lịch Sử Thu Tiền & Thanh Toán
           </h1>
-          <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+          <p className="text-xs text-muted font-semibold mt-0.5">
             Theo dõi tất cả giao dịch thanh toán thành công, biên nhận điện tử và hình ảnh công tơ
             điện nước.
           </p>
@@ -221,9 +221,9 @@ function PaymentsContent() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Link
             href="/landlord/invoices"
-            className="flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200/80 rounded-xl hover:bg-zinc-50 transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+            className="flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs font-bold text-foreground/90 bg-card border border-line rounded-xl hover:bg-card-hover transition-all cursor-pointer shadow-2xs whitespace-nowrap"
           >
-            <Receipt className="w-4 h-4 text-zinc-500 shrink-0" /> Quản Lý Hóa Đơn
+            <Receipt className="w-4 h-4 text-muted shrink-0" /> Quản Lý Hóa Đơn
           </Link>
 
           <Link
@@ -248,7 +248,7 @@ function PaymentsContent() {
               <span className="px-2.5 py-1 bg-[#2AC1BC]/20 text-[#2AC1BC] text-[10px] font-black uppercase rounded-lg border border-[#2AC1BC]/30">
                 Sổ Quỹ Thu Tiền
               </span>
-              <span className="text-zinc-400 text-xs font-bold"></span>
+              <span className="text-muted text-xs font-bold"></span>
             </div>
 
             <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
@@ -272,7 +272,7 @@ function PaymentsContent() {
               </div>
             )}
 
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+            <p className="text-muted text-xs sm:text-sm leading-relaxed">
               Tổng hợp giao dịch tiền phòng và dịch vụ đã thu thành công qua hệ thống ngân hàng
               VietQR hoặc ghi nhận tiền mặt trực tiếp.
             </p>
@@ -296,9 +296,9 @@ function PaymentsContent() {
 
               {/* Card 2: Tổng Giao Dịch */}
               <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-muted shrink-0" />
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">
+                  <span className="text-[9px] uppercase font-extrabold text-muted tracking-wider whitespace-nowrap">
                     SỐ GIAO DỊCH
                   </span>
                   <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">
@@ -338,7 +338,7 @@ function PaymentsContent() {
       </div>
 
       {/* Main Filter & Tabs Control Bar */}
-      <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
+      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
           {/* Search Box */}
           <SearchInput
@@ -349,7 +349,7 @@ function PaymentsContent() {
             }}
             placeholder="Tìm theo mã giao dịch, số phòng, số biên nhận, tên khách..."
             containerClassName="flex-1 space-y-0"
-            className="py-2 bg-zinc-50 border-zinc-200 text-xs font-semibold"
+            className="py-2 bg-surface border-line text-xs font-semibold"
           />
 
           {/* Filter Dropdowns Row */}
@@ -369,7 +369,7 @@ function PaymentsContent() {
                 })),
               ]}
               containerClassName="space-y-0 max-w-[150px]"
-              className="py-2 text-xs font-bold bg-zinc-50"
+              className="py-2 text-xs font-bold bg-surface"
             />
 
             {/* Method Filter Dropdown */}
@@ -385,7 +385,7 @@ function PaymentsContent() {
                 { value: 'cash', label: 'Tiền mặt' },
               ]}
               containerClassName="space-y-0 max-w-[170px]"
-              className="py-2 text-xs font-bold bg-zinc-50"
+              className="py-2 text-xs font-bold bg-surface"
             />
 
             {/* Month Filter Dropdown */}
@@ -403,7 +403,7 @@ function PaymentsContent() {
                 })),
               ]}
               containerClassName="space-y-0 max-w-[130px]"
-              className="py-2 text-xs font-bold bg-zinc-50"
+              className="py-2 text-xs font-bold bg-surface"
             />
 
             {/* Year Filter Dropdown */}
@@ -420,11 +420,11 @@ function PaymentsContent() {
                 { value: '2024', label: '2024' },
               ]}
               containerClassName="space-y-0 max-w-[130px]"
-              className="py-2 text-xs font-bold bg-zinc-50"
+              className="py-2 text-xs font-bold bg-surface"
             />
 
             {/* View Switcher (Rule 9) */}
-            <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
+            <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
               <Button
                 type="button"
                 variant="ghost"
@@ -448,7 +448,7 @@ function PaymentsContent() {
         </div>
 
         {/* Quick Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-line pt-3">
           <Button
             type="button"
             variant="ghost"
@@ -494,19 +494,19 @@ function PaymentsContent() {
 
       {/* Main Content Display (Grid or Table View) */}
       {isLoading ? (
-        <div className="py-20 text-center space-y-3 bg-white border border-zinc-200 rounded-3xl">
+        <div className="py-20 text-center space-y-3 bg-card border border-line rounded-3xl">
           <div className="inline-block animate-spin w-8 h-8 border-4 border-[#2AC1BC] border-t-transparent rounded-full" />
-          <p className="text-xs text-zinc-500 font-bold">Đang tải lịch sử giao dịch...</p>
+          <p className="text-xs text-muted font-bold">Đang tải lịch sử giao dịch...</p>
         </div>
       ) : payments.length === 0 ? (
         /* Clean Empty State (No Mockup Data!) */
-        <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
+        <div className="py-16 px-6 text-center bg-card border border-line rounded-3xl space-y-4 shadow-2xs">
           <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
             <CreditCard className="w-8 h-8" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-zinc-900">Chưa có dữ liệu thanh toán nào</h3>
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+            <h3 className="font-black text-base text-foreground">Chưa có dữ liệu thanh toán nào</h3>
+            <p className="text-xs text-muted font-medium leading-relaxed">
               Tòa nhà hiện chưa phát sinh giao dịch thanh toán thành công nào theo bộ lọc đã chọn.
               Giao dịch sẽ tự động hiển thị tại đây khi khách thuê quét mã VietQR hoặc khi bạn xác
               nhận thu tiền.
@@ -546,7 +546,7 @@ function PaymentsContent() {
             return (
               <div
                 key={p.id}
-                className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/50 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
+                className="bg-card border border-line hover:border-[#2AC1BC]/50 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
               >
                 {/* Method Accent Stripe */}
                 <div
@@ -563,7 +563,7 @@ function PaymentsContent() {
                         {p.roomNumber}
                       </span>
                       {p.roomTypeName && (
-                        <span className="text-[11px] font-bold text-zinc-500 truncate">
+                        <span className="text-[11px] font-bold text-muted truncate">
                           {p.roomTypeName}
                         </span>
                       )}
@@ -573,68 +573,68 @@ function PaymentsContent() {
                       <span
                         className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
                           isBanking
-                            ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200/80'
+                            ? 'bg-info-soft text-info border border-info-subtle'
+                            : 'bg-warning-soft text-warning border border-warning-subtle'
                         }`}
                       >
                         {isBanking ? 'VietQR' : 'Tiền mặt'}
                       </span>
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/80 flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-success-soft text-success border border-success-subtle flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Thành công
                       </span>
                     </div>
                   </div>
 
                   {/* Payment Amount & Period Callout */}
-                  <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-100 flex items-baseline justify-between">
+                  <div className="p-3.5 bg-surface rounded-xl border border-line flex items-baseline justify-between">
                     <div>
-                      <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
                         Kỳ Hóa Đơn {p.period}
                       </span>
                       <span className="text-xl font-black text-emerald-600 tracking-tight block mt-0.5">
                         +{formatMoney(p.amount)}
                       </span>
                     </div>
-                    <span className="text-[11px] font-bold text-zinc-500">
+                    <span className="text-[11px] font-bold text-muted">
                       {p.items.length} khoản thu
                     </span>
                   </div>
 
                   {/* Payer Info & Receipt Numbers */}
                   <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-zinc-600">
-                      <span className="font-medium text-zinc-400 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-zinc-400" /> Người nộp:
+                    <div className="flex items-center justify-between text-muted">
+                      <span className="font-medium text-muted flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-muted" /> Người nộp:
                       </span>
-                      <span className="font-bold text-zinc-900 truncate max-w-[150px]">
+                      <span className="font-bold text-foreground truncate max-w-[150px]">
                         {p.payerName}
                       </span>
                     </div>
 
                     {p.payerPhone && (
-                      <div className="flex items-center justify-between text-zinc-600">
-                        <span className="font-medium text-zinc-400 flex items-center gap-1.5">
-                          <Phone className="w-3.5 h-3.5 text-zinc-400" /> SĐT:
+                      <div className="flex items-center justify-between text-muted">
+                        <span className="font-medium text-muted flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-muted" /> SĐT:
                         </span>
-                        <span className="font-bold text-zinc-700">{p.payerPhone}</span>
+                        <span className="font-bold text-foreground/90">{p.payerPhone}</span>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-zinc-600">
-                      <span className="font-medium text-zinc-400 flex items-center gap-1.5">
-                        <Receipt className="w-3.5 h-3.5 text-zinc-400" /> Số biên nhận:
+                    <div className="flex items-center justify-between text-muted">
+                      <span className="font-medium text-muted flex items-center gap-1.5">
+                        <Receipt className="w-3.5 h-3.5 text-muted" /> Số biên nhận:
                       </span>
-                      <span className="font-mono font-bold text-zinc-800 text-[11px]">
+                      <span className="font-mono font-bold text-foreground text-[11px]">
                         {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}
                       </span>
                     </div>
 
                     {p.transactionRef && (
-                      <div className="flex items-center justify-between text-zinc-600">
-                        <span className="font-medium text-zinc-400 text-[11px]">
+                      <div className="flex items-center justify-between text-muted">
+                        <span className="font-medium text-muted text-[11px]">
                           Mã GD ngân hàng:
                         </span>
-                        <span className="font-mono text-zinc-500 text-[10px] truncate max-w-[140px]">
+                        <span className="font-mono text-muted text-[10px] truncate max-w-[140px]">
                           {p.transactionRef}
                         </span>
                       </div>
@@ -643,8 +643,8 @@ function PaymentsContent() {
 
                   {/* Supporting Evidence Meter Photos Pill */}
                   {evidencePhotos.length > 0 && (
-                    <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-amber-900 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200/60 flex items-center gap-1">
+                    <div className="pt-2 border-t border-line flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-warning bg-warning-soft px-2 py-1 rounded-lg border border-warning-subtle flex items-center gap-1">
                         <Camera className="w-3 h-3 text-amber-600" /> {evidencePhotos.length} ảnh
                         đồng hồ
                       </span>
@@ -675,9 +675,9 @@ function PaymentsContent() {
                 </div>
 
                 {/* Card Footer: Timestamp & Action */}
-                <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-zinc-400 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-zinc-400" /> {formatDateTime(p.paidAt)}
+                <div className="pt-4 mt-4 border-t border-line flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-muted flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-muted" /> {formatDateTime(p.paidAt)}
                   </span>
 
                   <Button
@@ -695,10 +695,10 @@ function PaymentsContent() {
         </div>
       ) : (
         /* Parallel Table View (Rule 9) */
-        <div className="bg-white border border-zinc-200 rounded-2xl shadow-2xs overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-extrabold uppercase text-[10px] tracking-wider">
+              <thead className="bg-surface border-b border-line text-muted font-extrabold uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="px-5 py-3.5">Số Biên Nhận / Mã GD</th>
                   <th className="px-4 py-3.5">Phòng</th>
@@ -711,7 +711,7 @@ function PaymentsContent() {
                   <th className="px-5 py-3.5 text-right">Thao Tác</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-line">
                 {payments.map(p => {
                   const isBanking = p.method === 'banking'
                   const evidencePhotos = p.meterReadings.filter(mr => mr.imageUrl)
@@ -719,34 +719,34 @@ function PaymentsContent() {
                   return (
                     <tr key={p.id} className="hover:bg-zinc-50/80 transition-colors">
                       <td className="px-5 py-4">
-                        <div className="font-mono font-black text-zinc-900 text-xs">
+                        <div className="font-mono font-black text-foreground text-xs">
                           {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}
                         </div>
                         {p.transactionRef && (
-                          <div className="text-[10px] font-mono text-zinc-400 mt-0.5 truncate max-w-[140px]">
+                          <div className="text-[10px] font-mono text-muted mt-0.5 truncate max-w-[140px]">
                             {p.transactionRef}
                           </div>
                         )}
                       </td>
 
                       <td className="px-4 py-4">
-                        <span className="font-black text-zinc-900 bg-zinc-100 px-2.5 py-1 rounded-lg">
+                        <span className="font-black text-foreground bg-card-hover px-2.5 py-1 rounded-lg">
                           {p.roomNumber}
                         </span>
                       </td>
 
                       <td className="px-4 py-4">
-                        <div className="font-bold text-zinc-900">{p.payerName}</div>
+                        <div className="font-bold text-foreground">{p.payerName}</div>
                         {p.payerPhone && (
-                          <div className="text-[11px] text-zinc-400 font-medium">
+                          <div className="text-[11px] text-muted font-medium">
                             {p.payerPhone}
                           </div>
                         )}
                       </td>
 
-                      <td className="px-4 py-4 font-bold text-zinc-700">{p.period}</td>
+                      <td className="px-4 py-4 font-bold text-foreground/90">{p.period}</td>
 
-                      <td className="px-4 py-4 text-zinc-500 font-medium">
+                      <td className="px-4 py-4 text-muted font-medium">
                         {formatDateTime(p.paidAt)}
                       </td>
 
@@ -758,8 +758,8 @@ function PaymentsContent() {
                         <span
                           className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${
                             isBanking
-                              ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/80'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200/80'
+                              ? 'bg-info-soft text-info border border-info-subtle'
+                              : 'bg-warning-soft text-warning border border-warning-subtle'
                           }`}
                         >
                           {isBanking ? 'VietQR' : 'Tiền mặt'}
@@ -787,7 +787,7 @@ function PaymentsContent() {
                               </Button>
                             ))}
                             {evidencePhotos.length > 2 && (
-                              <span className="text-[10px] text-zinc-400 font-bold">
+                              <span className="text-[10px] text-muted font-bold">
                                 +{evidencePhotos.length - 2}
                               </span>
                             )}
@@ -818,7 +818,7 @@ function PaymentsContent() {
 
       {/* Standardized View & Pagination Bar (Rule #9) */}
       {totalRecords > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white border border-zinc-200 rounded-2xl text-xs font-bold text-zinc-600 shadow-2xs">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card border border-line rounded-2xl text-xs font-bold text-muted shadow-2xs">
           {/* Left: Displayed Range & Custom Page Size Input */}
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
@@ -833,16 +833,16 @@ function PaymentsContent() {
                   setCurrentPage(1)
                 }}
                 containerClassName="w-16 space-y-0"
-                className="w-16 text-center font-extrabold text-zinc-900 bg-white border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
+                className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
               />{' '}
               / trang
             </span>
             <span className="text-zinc-300">|</span>
             <span>
-              <span className="text-zinc-900 font-black">
+              <span className="text-foreground font-black">
                 {startIndex}-{endIndex}
               </span>{' '}
-              trên <span className="text-zinc-900 font-black">{totalRecords}</span> giao dịch
+              trên <span className="text-foreground font-black">{totalRecords}</span> giao dịch
             </span>
           </div>
 
@@ -915,24 +915,24 @@ function PaymentsContent() {
       {/* Electronic Receipt & Detail Modal */}
       {selectedPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-zinc-200 p-6 sm:p-8 space-y-6 relative print:p-0 print:border-none print:shadow-none">
+          <div className="bg-card rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-line p-6 sm:p-8 space-y-6 relative print:p-0 print:border-none print:shadow-none">
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-zinc-100 pb-5">
+            <div className="flex items-start justify-between border-b border-line pb-5">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-black uppercase">
+                  <span className="px-2.5 py-0.5 bg-success-soft text-success border border-success-subtle rounded-lg text-[10px] font-black uppercase">
                     Thanh Toán Hoàn Tất
                   </span>
-                  <span className="text-zinc-400 text-xs font-semibold">
+                  <span className="text-muted text-xs font-semibold">
                     {formatDateTime(selectedPayment.paidAt)}
                   </span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+                <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
                   <Receipt className="w-6 h-6 text-[#2AC1BC]" /> Biên Nhận Điện Tử
                 </h3>
-                <p className="text-xs text-zinc-400 font-mono">
+                <p className="text-xs text-muted font-mono">
                   Mã biên nhận:{' '}
-                  <span className="text-zinc-700 font-bold">
+                  <span className="text-foreground/90 font-bold">
                     {selectedPayment.receiptNumber || `REC-${selectedPayment.id}`}
                   </span>
                 </p>
@@ -961,45 +961,45 @@ function PaymentsContent() {
             </div>
 
             {/* Payer & Property Info Card */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-50 p-4 rounded-2xl border border-zinc-100 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-surface p-4 rounded-2xl border border-line text-xs">
               <div className="space-y-1.5">
-                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-muted tracking-wider">
                   THÔNG TIN PHÒNG & KHÁCH HÀNG
                 </span>
-                <div className="font-black text-zinc-900 text-sm">
+                <div className="font-black text-foreground text-sm">
                   Phòng {selectedPayment.roomNumber}{' '}
                   {selectedPayment.roomTypeName && `(${selectedPayment.roomTypeName})`}
                 </div>
-                <div className="text-zinc-600 font-semibold">
+                <div className="text-muted font-semibold">
                   Người thanh toán:{' '}
-                  <span className="text-zinc-900 font-black">{selectedPayment.payerName}</span>
+                  <span className="text-foreground font-black">{selectedPayment.payerName}</span>
                 </div>
                 {selectedPayment.payerPhone && (
-                  <div className="text-zinc-500">
+                  <div className="text-muted">
                     Số điện thoại:{' '}
-                    <span className="font-bold text-zinc-700">{selectedPayment.payerPhone}</span>
+                    <span className="font-bold text-foreground/90">{selectedPayment.payerPhone}</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-1.5 sm:border-l sm:border-zinc-200 sm:pl-4">
-                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-muted tracking-wider">
                   THÔNG TIN GIAO DỊCH
                 </span>
-                <div className="text-zinc-700">
+                <div className="text-foreground/90">
                   Hình thức:{' '}
-                  <span className="font-black text-zinc-900">
+                  <span className="font-black text-foreground">
                     {selectedPayment.method === 'banking'
                       ? 'Chuyển khoản VietQR'
                       : 'Tiền mặt trực tiếp'}
                   </span>
                 </div>
                 {selectedPayment.transactionRef && (
-                  <div className="text-zinc-500 font-mono text-[11px] truncate">
+                  <div className="text-muted font-mono text-[11px] truncate">
                     Mã GD: {selectedPayment.transactionRef}
                   </div>
                 )}
-                <div className="text-zinc-700">
+                <div className="text-foreground/90">
                   Kỳ thanh toán:{' '}
                   <span className="font-black text-[#2AC1BC]">{selectedPayment.period}</span>
                 </div>
@@ -1008,12 +1008,12 @@ function PaymentsContent() {
 
             {/* Invoice Breakdown Items */}
             <div className="space-y-3">
-              <h4 className="text-xs font-black uppercase text-zinc-500 tracking-wider">
+              <h4 className="text-xs font-black uppercase text-muted tracking-wider">
                 Chi Tiết Các Khoản Đã Thu
               </h4>
-              <div className="border border-zinc-200 rounded-2xl overflow-hidden">
+              <div className="border border-line rounded-2xl overflow-hidden">
                 <table className="w-full text-xs">
-                  <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-400 font-bold uppercase text-[10px]">
+                  <thead className="bg-surface border-b border-line text-muted font-bold uppercase text-[10px]">
                     <tr>
                       <th className="px-4 py-2.5 text-left">Nội dung</th>
                       <th className="px-3 py-2.5 text-center">Số lượng</th>
@@ -1021,40 +1021,40 @@ function PaymentsContent() {
                       <th className="px-4 py-2.5 text-right">Thành tiền</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-100">
+                  <tbody className="divide-y divide-line">
                     {selectedPayment.items.length > 0 ? (
                       selectedPayment.items.map(item => (
                         <tr key={item.id} className="hover:bg-zinc-50/50">
-                          <td className="px-4 py-3 font-bold text-zinc-900">{item.serviceName}</td>
-                          <td className="px-3 py-3 text-center text-zinc-600 font-medium">
+                          <td className="px-4 py-3 font-bold text-foreground">{item.serviceName}</td>
+                          <td className="px-3 py-3 text-center text-muted font-medium">
                             {item.quantity}
                           </td>
-                          <td className="px-4 py-3 text-right text-zinc-600 font-medium">
+                          <td className="px-4 py-3 text-right text-muted font-medium">
                             {formatMoney(item.unitPrice)}
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-zinc-900">
+                          <td className="px-4 py-3 text-right font-black text-foreground">
                             {formatMoney(item.amount)}
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900">
+                        <td className="px-4 py-3 font-bold text-foreground">
                           Tiền phòng & Dịch vụ trọn gói kỳ {selectedPayment.period}
                         </td>
-                        <td className="px-3 py-3 text-center text-zinc-600 font-medium">1</td>
-                        <td className="px-4 py-3 text-right text-zinc-600 font-medium">
+                        <td className="px-3 py-3 text-center text-muted font-medium">1</td>
+                        <td className="px-4 py-3 text-right text-muted font-medium">
                           {formatMoney(selectedPayment.amount)}
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {formatMoney(selectedPayment.amount)}
                         </td>
                       </tr>
                     )}
                   </tbody>
-                  <tfoot className="bg-zinc-50 border-t border-zinc-200">
+                  <tfoot className="bg-surface border-t border-line">
                     <tr>
-                      <td colSpan={3} className="px-4 py-3 font-black text-zinc-900 text-right">
+                      <td colSpan={3} className="px-4 py-3 font-black text-foreground text-right">
                         TỔNG CỘNG ĐÃ THANH TOÁN:
                       </td>
                       <td className="px-4 py-3 font-black text-emerald-600 text-base text-right whitespace-nowrap">
@@ -1070,10 +1070,10 @@ function PaymentsContent() {
             {selectedPayment.meterReadings.length > 0 && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-black uppercase text-warning tracking-wider flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-amber-600" /> Bằng Chứng Chỉ Số Đồng Hồ
                   </h4>
-                  <span className="text-[11px] text-zinc-400 font-medium">
+                  <span className="text-[11px] text-muted font-medium">
                     Ảnh chụp đối soát chỉ số điện / nước
                   </span>
                 </div>
@@ -1082,7 +1082,7 @@ function PaymentsContent() {
                   {selectedPayment.meterReadings.map(mr => (
                     <div
                       key={mr.id}
-                      className="p-3 bg-amber-50/50 border border-amber-200/80 rounded-2xl flex items-center gap-3"
+                      className="p-3 bg-warning-soft border border-warning-subtle rounded-2xl flex items-center gap-3"
                     >
                       {mr.imageUrl ? (
                         <Button
@@ -1102,16 +1102,16 @@ function PaymentsContent() {
                           </div>
                         </Button>
                       ) : (
-                        <div className="w-16 h-16 rounded-xl bg-zinc-100 flex items-center justify-center shrink-0 text-zinc-400">
+                        <div className="w-16 h-16 rounded-xl bg-card-hover flex items-center justify-center shrink-0 text-muted">
                           <Camera className="w-6 h-6 stroke-1" />
                         </div>
                       )}
 
                       <div className="space-y-1 min-w-0 text-xs">
-                        <span className="font-extrabold text-zinc-900 block truncate">
+                        <span className="font-extrabold text-foreground block truncate">
                           Đồng hồ {mr.serviceName}
                         </span>
-                        <span className="text-amber-800 font-black text-sm block">
+                        <span className="text-warning font-black text-sm block">
                           Chỉ số: {mr.readingValue}
                         </span>
                         {mr.imageUrl && (
@@ -1133,8 +1133,8 @@ function PaymentsContent() {
             )}
 
             {/* Modal Bottom Actions */}
-            <div className="pt-4 border-t border-zinc-100 flex items-center justify-between print:hidden">
-              <span className="text-[11px] text-zinc-400">Xác thực số hóa bởi Dormio BHMS</span>
+            <div className="pt-4 border-t border-line flex items-center justify-between print:hidden">
+              <span className="text-[11px] text-muted">Xác thực số hóa bởi Dormio BHMS</span>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -1191,7 +1191,7 @@ export default function PaymentsPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-xs text-zinc-400 font-bold">
+        <div className="p-8 text-center text-xs text-muted font-bold">
           Đang tải trang thanh toán...
         </div>
       }
