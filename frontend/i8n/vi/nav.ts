@@ -47,6 +47,7 @@ export const viNav = {
     landlordTitleRooms: "Sơ Đồ Phòng",
     landlordTitleServices: "Bảng Dịch Vụ",
     langLabel: "Ngôn ngữ",
+    themeLabel: "Giao diện",
     listings: "Đăng tin",
     login: "Đăng nhập",
     logout: "Đăng xuất tài khoản",

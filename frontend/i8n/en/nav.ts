@@ -47,6 +47,7 @@ export const enNav = {
     landlordTitleRooms: "Room Layout",
     landlordTitleServices: "Service Rates",
     langLabel: "Language",
+    themeLabel: "Appearance",
     listings: "Listings",
     login: "Log in",
     logout: "Log out",
