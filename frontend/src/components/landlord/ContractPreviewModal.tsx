@@ -175,7 +175,7 @@ export default function ContractPreviewModal({
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <Text as="h2" size="lg" weight="black" className="text-zinc-900 leading-tight">
+              <Text as="h2" size="lg" weight="black" className="text-foreground leading-tight">
                 {t('landlordContractsExportTitle', { roomNumber })}
               </Text>
               <Text size="xs" color="subtle" weight="medium">
@@ -219,11 +219,11 @@ export default function ContractPreviewModal({
           </div>
         </div>
       }
-      bodyClassName="flex-1 bg-zinc-100/70 p-2 sm:p-4 overflow-hidden relative min-h-0"
+      bodyClassName="flex-1 bg-card-hover/70 p-2 sm:p-4 overflow-hidden relative min-h-0"
       footer={
-        <div className="flex items-center justify-between w-full text-xs text-zinc-500 font-medium">
+        <div className="flex items-center justify-between w-full text-xs text-muted font-medium">
           <div>
-            <Text as="span" size="xs" weight="bold" className="text-zinc-700">
+            <Text as="span" size="xs" weight="bold" className="text-foreground/90">
               {t('landlordContractsExportFormatStandard')}
             </Text>
           </div>
@@ -253,17 +253,17 @@ export default function ContractPreviewModal({
       }
     >
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-xs">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-card/80 backdrop-blur-xs">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <Text size="sm" weight="semibold" className="text-zinc-600">
+          <Text size="sm" weight="semibold" className="text-muted">
             {t('landlordContractsExportPreparing')}
           </Text>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white p-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-card p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-danger-soft flex items-center justify-center text-rose-600">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <Text size="base" weight="bold" className="text-rose-600">{error}</Text>
@@ -295,7 +295,7 @@ export default function ContractPreviewModal({
       )}
 
       {!isLoading && !error && htmlContent && (
-        <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white theme-preserve-light">
+        <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-line bg-white">
           <iframe
             ref={iframeRef}
             srcDoc={htmlContent}

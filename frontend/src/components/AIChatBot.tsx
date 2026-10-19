@@ -119,7 +119,7 @@ export default function AIChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] bg-white sm:rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden sm:border border-zinc-200 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] bg-card sm:rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden sm:border border-line animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
           <div className="bg-[#2AC1BC] p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex items-center gap-3">
@@ -149,7 +149,7 @@ export default function AIChatBot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50/50 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface/50 custom-scrollbar">
             {messages.map(msg => (
               <div
                 key={msg.id}
@@ -161,7 +161,7 @@ export default function AIChatBot() {
                 >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
-                      ? 'bg-zinc-200 text-zinc-600'
+                      ? 'bg-line text-muted'
                       : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
                       }`}
                   >
@@ -174,7 +174,7 @@ export default function AIChatBot() {
                   <div
                     className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${msg.role === 'user'
                       ? 'bg-[#2AC1BC] text-white rounded-tr-sm prose-invert'
-                      : 'bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
+                      : 'bg-card border border-line text-foreground rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
                       }`}
                   >
                     <ReactMarkdown
@@ -205,7 +205,7 @@ export default function AIChatBot() {
                   <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
                     <Bot className="w-5 h-5" />
                   </div>
-                  <div className="px-4 py-3 rounded-2xl bg-white border border-zinc-200 rounded-tl-sm shadow-sm flex items-center gap-1.5">
+                  <div className="px-4 py-3 rounded-2xl bg-card border border-line rounded-tl-sm shadow-sm flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce" />
                     <span
                       className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"
@@ -223,7 +223,7 @@ export default function AIChatBot() {
           </div>
 
           {/* Input */}
-          <div className="p-3.5 sm:p-4 bg-white border-t border-zinc-100 shrink-0">
+          <div className="p-3.5 sm:p-4 bg-card border-t border-line shrink-0">
             <form onSubmit={handleSend} className="relative flex items-center w-full">
               <TextInput
                 value={input}
@@ -231,7 +231,7 @@ export default function AIChatBot() {
                 placeholder={t('aiChatInputPlaceholder')}
                 disabled={isLoading}
                 containerClassName="w-full space-y-0"
-                className="pr-12 text-xs sm:text-sm py-2.5 bg-zinc-100/80 focus:bg-white"
+                className="pr-12 text-xs sm:text-sm py-2.5 bg-card-hover/80 focus:bg-white"
                 rightIcon={
                   <Button
                     type="submit"

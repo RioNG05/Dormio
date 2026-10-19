@@ -148,7 +148,7 @@ export function CoverPhotoUpload({
 
       {/* When an image is selected */}
       {previewUrl ? (
-        <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+        <div className="relative overflow-hidden rounded-2xl border border-line bg-surface p-3">
           <div className="relative h-48 w-full overflow-hidden rounded-xl bg-zinc-900/5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={previewUrl} alt="Thumbnail preview" className="h-full w-full object-cover" />
@@ -215,7 +215,7 @@ export function CoverPhotoUpload({
           className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition-all ${
             isDragging
               ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 scale-[0.99]'
-              : 'border-zinc-200 bg-zinc-50/50 hover:border-[#2AC1BC]/60 hover:bg-zinc-50'
+              : 'border-line bg-surface/50 hover:border-[#2AC1BC]/60 hover:bg-card-hover'
           }`}
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] shadow-xs">

@@ -148,7 +148,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
       </Text>
 
       {/* Tab Switcher using Button components */}
-      <div className="flex p-1 bg-zinc-100/90 rounded-2xl border border-zinc-200/70 gap-1">
+      <div className="flex p-1 bg-card-hover/90 rounded-2xl border border-line gap-1">
         <Button
           type="button"
           variant={activeTab === 'terms' ? 'primary' : 'ghost'}
@@ -172,19 +172,19 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
       </div>
 
       {/* Dedicated Scrollable Sections Container: Only policy info scrolls, page layout stays fixed */}
-      <div className="flex-10 border border-zinc-200/80 rounded-2xl p-2.5 sm:p-3.5 bg-zinc-50/50 space-y-3 overflow-y-auto custom-scrollbar">
+      <div className="flex-10 border border-line rounded-2xl p-2.5 sm:p-3.5 bg-surface/50 space-y-3 overflow-y-auto custom-scrollbar">
         {currentSections.map(sec => {
           const Icon = sec.icon
           return (
             <div
               key={sec.id}
-              className="p-3.5 sm:p-4 rounded-xl bg-white border border-zinc-200/80 shadow-2xs hover:border-[#2AC1BC]/40 transition-all space-y-1.5"
+              className="p-3.5 sm:p-4 rounded-xl bg-card border border-line shadow-2xs hover:border-[#2AC1BC]/40 transition-all space-y-1.5"
             >
               <div className="flex items-center gap-2.5">
                 <div className="w-6 h-6 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
-                <Text as="h3" variant="heading" size="sm" className="text-zinc-900">
+                <Text as="h3" variant="heading" size="sm" className="text-foreground">
                   {t(sec.titleKey)}
                 </Text>
               </div>
@@ -192,7 +192,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
                 variant="body"
                 size="xs"
                 color="secondary"
-                className="leading-relaxed pl-8.5 text-zinc-600 font-normal"
+                className="leading-relaxed pl-8.5 text-muted font-normal"
               >
                 {t(sec.contentKey)}
               </Text>
@@ -203,27 +203,27 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
         {/* Dedicated Card at bottom of Privacy Policy scrollable list */}
         {activeTab === 'privacy' && (
           <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-white border border-emerald-500/20 space-y-2.5 mt-2">
-            <div className="flex items-center gap-2 text-emerald-800">
+            <div className="flex items-center gap-2 text-success">
               <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
               <Text as="h4" variant="heading" size="sm">
                 {t('authPrivacySec7Title')}
               </Text>
             </div>
-            <Form.Grid cols={2} gap="sm" className="text-zinc-600">
+            <Form.Grid cols={2} gap="sm" className="text-muted">
               <div className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
                 <Text as="span" variant="body" size="xs" color="secondary">
                   Hotline: 0344 265 925 (24/7)
                 </Text>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <Mail className="w-3.5 h-3.5 text-muted shrink-0" />
                 <Text as="span" variant="body" size="xs" color="secondary">
                   Email: contact@dormio.site
                 </Text>
               </div>
               <div className="flex items-start gap-2 col-span-full">
-                <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
                 <Text as="span" variant="body" size="xs" color="secondary">
                   Hoà Lạc, Thạch Thất, Hà Nội
                 </Text>

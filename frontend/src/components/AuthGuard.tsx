@@ -58,7 +58,7 @@ function checkUserPermission(
  */
 function HydrationSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+    <div className="min-h-screen flex items-center justify-center bg-surface">
       <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
     </div>
   )

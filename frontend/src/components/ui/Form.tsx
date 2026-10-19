@@ -257,7 +257,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
             {collapsible && (
               <ChevronDown
                 className={cn(
-                  'w-4 h-4 text-zinc-400 transition-transform duration-200',
+                  'w-4 h-4 text-muted transition-transform duration-200',
                   isOpen && 'transform rotate-180',
                 )}
               />

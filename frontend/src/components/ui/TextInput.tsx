@@ -78,7 +78,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
             disabled={disabled}
             className={cn(
               'w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold transition-all outline-none',
-              'placeholder:text-zinc-400 dark:placeholder:text-slate-500 placeholder:font-normal',
+              'placeholder:text-muted dark:placeholder:text-slate-500 placeholder:font-normal',
               leftIcon ? 'pl-9' : '',
               rightIcon ? 'pr-9' : '',
               disabled
@@ -92,7 +92,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
           />
 
           {rightIcon && (
-            <div className="absolute right-3 flex items-center text-zinc-400 shrink-0">
+            <div className="absolute right-3 flex items-center text-muted shrink-0">
               {rightIcon}
             </div>
           )}

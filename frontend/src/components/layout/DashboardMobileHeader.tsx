@@ -42,7 +42,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
 
       {/* Admin badge or Staff Badge or Building Selector Dropdown on Mobile Topbar */}
       {isAdmin ? (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200/80">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-soft border border-accent-subtle">
           <Shield className="w-3.5 h-3.5 text-orange-600" />
           <Text as="span" variant="overline" color="orange">
             {tNav('adminTag')}
@@ -65,7 +65,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
                 value: b.id,
                 label: b.name,
               }))}
-              className="w-full bg-zinc-100 border border-zinc-200/80 rounded-xl px-2 py-1 text-[11px] font-black text-zinc-900 focus:outline-none focus:border-[#2AC1BC] cursor-pointer pr-6 truncate h-8"
+              className="w-full bg-card-hover border border-line rounded-xl px-2 py-1 text-[11px] font-black text-foreground focus:outline-none focus:border-[#2AC1BC] cursor-pointer pr-6 truncate h-8"
               containerClassName="space-y-0"
             />
           </div>
@@ -78,7 +78,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
           href={isTenant ? '/tenant/profile' : '/profile'}
           className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
             isAdmin
-              ? 'bg-orange-100 text-orange-600'
+              ? 'bg-accent-soft text-orange-600'
               : isStaff
                 ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
                 : 'bg-primary/10 text-primary'

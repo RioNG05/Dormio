@@ -18,14 +18,14 @@ interface IdentityCheckResult {
 // ─── Checking spinner screen ──────────────────────────────────────────────────
 function IdentityCheckingScreen({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-6">
       <div className="text-center space-y-4 max-w-sm">
         <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 flex items-center justify-center mx-auto">
           <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-base font-black text-zinc-900">{title}</h2>
-          <p className="text-sm text-zinc-500 font-medium">{desc}</p>
+          <h2 className="text-base font-black text-foreground">{title}</h2>
+          <p className="text-sm text-muted font-medium">{desc}</p>
         </div>
       </div>
     </div>
@@ -45,17 +45,17 @@ function IdentityBlockerScreen({
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-lg p-8 max-w-md w-full space-y-6 animate-in fade-in duration-300">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-6">
+      <div className="bg-card rounded-3xl border border-line shadow-lg p-8 max-w-md w-full space-y-6 animate-in fade-in duration-300">
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-2xl bg-warning-soft flex items-center justify-center mx-auto">
           <ShieldCheck className="w-8 h-8 text-amber-500" />
         </div>
 
         {/* Title */}
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-black text-zinc-900">{t('identityGuardMissingTitle')}</h2>
-          <p className="text-sm text-zinc-500 font-medium leading-relaxed">
+          <h2 className="text-xl font-black text-foreground">{t('identityGuardMissingTitle')}</h2>
+          <p className="text-sm text-muted font-medium leading-relaxed">
             {t('identityGuardMissingDesc')}
           </p>
         </div>
@@ -64,18 +64,18 @@ function IdentityBlockerScreen({
         <div className="space-y-3">
           <div
             className={`flex items-center gap-3 p-3 rounded-2xl border ${
-              missingId ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'
+              missingId ? 'bg-danger-soft border-danger-subtle' : 'bg-success-soft border-success-subtle'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                missingId ? 'bg-red-100' : 'bg-emerald-100'
+                missingId ? 'bg-danger-soft' : 'bg-success-soft'
               }`}
             >
               <User className={`w-4 h-4 ${missingId ? 'text-red-500' : 'text-emerald-600'}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className={`text-xs font-bold ${missingId ? 'text-red-700' : 'text-emerald-700'}`}>
+              <p className={`text-xs font-bold ${missingId ? 'text-danger' : 'text-success'}`}>
                 {missingId ? '✗ ' : '✓ '}
                 {t('identityGuardMissingId')}
               </p>
@@ -84,12 +84,12 @@ function IdentityBlockerScreen({
 
           <div
             className={`flex items-center gap-3 p-3 rounded-2xl border ${
-              missingBank ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'
+              missingBank ? 'bg-danger-soft border-danger-subtle' : 'bg-success-soft border-success-subtle'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                missingBank ? 'bg-red-100' : 'bg-emerald-100'
+                missingBank ? 'bg-danger-soft' : 'bg-success-soft'
               }`}
             >
               <CreditCard
@@ -98,7 +98,7 @@ function IdentityBlockerScreen({
             </div>
             <div className="flex-1 min-w-0">
               <p
-                className={`text-xs font-bold ${missingBank ? 'text-red-700' : 'text-emerald-700'}`}
+                className={`text-xs font-bold ${missingBank ? 'text-danger' : 'text-success'}`}
               >
                 {missingBank ? '✗ ' : '✓ '}
                 {t('identityGuardMissingBank')}

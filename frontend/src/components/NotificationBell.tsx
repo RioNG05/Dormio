@@ -137,7 +137,7 @@ export default function NotificationBell({
     const tLower = type.toLowerCase()
     if (tLower === 'happy_new_year' || tLower.includes('greeting') || tLower.includes('tet')) {
       return (
-        <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-deposit-soft text-purple-600 flex items-center justify-center shrink-0">
           <Sparkles className="w-4 h-4" />
         </div>
       )
@@ -149,34 +149,34 @@ export default function NotificationBell({
       tLower.includes('billing')
     ) {
       return (
-        <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center shrink-0">
           <Receipt className="w-4 h-4" />
         </div>
       )
     }
     if (tLower.includes('contract')) {
       return (
-        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-info-soft text-blue-600 flex items-center justify-center shrink-0">
           <FileText className="w-4 h-4" />
         </div>
       )
     }
     if (tLower.includes('meter')) {
       return (
-        <div className="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-primary-soft text-cyan-600 flex items-center justify-center shrink-0">
           <Zap className="w-4 h-4" />
         </div>
       )
     }
     if (tLower.includes('grievance')) {
       return (
-        <div className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-danger-soft text-red-600 flex items-center justify-center shrink-0">
           <AlertTriangle className="w-4 h-4" />
         </div>
       )
     }
     return (
-      <div className="w-8 h-8 rounded-xl bg-zinc-100 text-zinc-600 flex items-center justify-center shrink-0">
+      <div className="w-8 h-8 rounded-xl bg-card-hover text-muted flex items-center justify-center shrink-0">
         <Info className="w-4 h-4" />
       </div>
     )
@@ -193,7 +193,7 @@ export default function NotificationBell({
           setIsOpen(!isOpen)
           if (!isOpen) loadNotifications()
         }}
-        className="relative text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+        className="relative text-muted hover:text-foreground hover:bg-card-hover"
         aria-label={t('notifications')}
         title={t('notifications')}
       >
@@ -208,12 +208,12 @@ export default function NotificationBell({
       {/* Floating Popover Panel */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 w-80 sm:w-96 bg-white rounded-3xl border border-zinc-200 shadow-2xl z-50 overflow-hidden animate-scaleIn ${
+          className={`absolute top-full mt-2 w-80 sm:w-96 bg-card rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >
           {/* Popover Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-zinc-100 bg-zinc-50/70">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-line bg-surface/70">
             <div className="flex items-center gap-2">
               <Text as="h3" size="xs" weight="black" color="default" uppercase className="tracking-wider">
                 {t('notifications')}
@@ -242,9 +242,9 @@ export default function NotificationBell({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-84 overflow-y-auto divide-y divide-zinc-100">
+          <div className="max-h-84 overflow-y-auto divide-y divide-line">
             {loading ? (
-              <div className="py-8 text-center text-xs text-zinc-400 flex items-center justify-center gap-2">
+              <div className="py-8 text-center text-xs text-muted flex items-center justify-center gap-2">
                 <div className="w-4 h-4 rounded-full border-2 border-orange-500/20 border-t-orange-600 animate-spin" />
                 <Text as="span" size="xs" color="subtle">
                   {t('notificationsLoading')}
@@ -252,7 +252,7 @@ export default function NotificationBell({
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 px-4 text-center space-y-2">
-                <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+                <div className="w-10 h-10 rounded-2xl bg-card-hover text-muted flex items-center justify-center mx-auto">
                   <Bell className="w-5 h-5" />
                 </div>
                 <Text size="xs" weight="bold" color="default">
@@ -273,7 +273,7 @@ export default function NotificationBell({
                     onClick={() => handleNotificationClick(item)}
                     className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 text-left ${
                       item.isRead
-                        ? 'bg-white hover:bg-zinc-50/80'
+                        ? 'bg-card hover:bg-zinc-50/80'
                         : 'bg-orange-50/30 hover:bg-orange-50/60'
                     }`}
                   >
@@ -336,13 +336,13 @@ export default function NotificationBell({
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-zinc-100 bg-zinc-50/50 text-center">
+          <div className="p-2 border-t border-line bg-surface/50 text-center">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
-              className="w-full text-zinc-500 hover:text-zinc-800"
+              className="w-full text-muted hover:text-foreground"
             >
               <Text as="span" size="2xs" weight="bold" color="inherit">
                 {t('close')}

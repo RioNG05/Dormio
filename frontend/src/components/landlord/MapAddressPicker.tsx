@@ -362,9 +362,9 @@ export function MapAddressPicker({
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs transition-all">
+    <div className="rounded-2xl border border-line bg-card p-5 shadow-xs transition-all">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
             <MapPin className="h-5 w-5" />
@@ -392,7 +392,7 @@ export function MapAddressPicker({
             variant="outline"
             size="sm"
             onClick={() => setIsExpanded(prev => !prev)}
-            leftIcon={isExpanded ? <Minimize2 className="h-3.5 w-3.5 text-zinc-500" /> : <Maximize2 className="h-3.5 w-3.5 text-zinc-500" />}
+            leftIcon={isExpanded ? <Minimize2 className="h-3.5 w-3.5 text-muted" /> : <Maximize2 className="h-3.5 w-3.5 text-muted" />}
           >
             <Text as="span" size="xs" weight="medium" color="inherit">
               {isExpanded ? 'Thu nhỏ' : 'Phóng to bản đồ'}
@@ -426,7 +426,7 @@ export function MapAddressPicker({
               }
             }}
             placeholder="Nhập địa chỉ, tên đường hoặc địa danh để tìm kiếm..."
-            leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
+            leftIcon={<Search className="h-4 w-4 text-muted" />}
           />
         </div>
 
@@ -447,14 +447,14 @@ export function MapAddressPicker({
 
       {/* Map Container */}
       <div
-        className={`relative mt-3 w-full rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 z-0 transition-all duration-300 ${
+        className={`relative mt-3 w-full rounded-2xl overflow-hidden border border-line bg-card-hover z-0 transition-all duration-300 ${
           isExpanded ? 'h-[620px]' : 'h-[460px]'
         }`}
       >
         <div ref={mapContainerRef} className="h-full w-full" />
 
         {isReverseGeocoding && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 shadow-md border border-zinc-200 backdrop-blur-xs">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 shadow-md border border-line backdrop-blur-xs">
             <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2AC1BC]" />
             <Text as="span" size="xs" weight="semibold" color="default">
               Đang nhận diện địa chỉ từ tọa độ...
@@ -487,22 +487,22 @@ export function MapAddressPicker({
               {/* Breakdown tags */}
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {resolvedAddress.houseNumber && (
-                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
                     Số nhà: <Text as="strong" weight="bold" color="default">{resolvedAddress.houseNumber}</Text>
                   </Text>
                 )}
                 {resolvedAddress.street && (
-                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
                     Đường: <Text as="strong" weight="bold" color="default">{resolvedAddress.street}</Text>
                   </Text>
                 )}
                 {resolvedAddress.ward && (
-                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
                     Phường/Xã: <Text as="strong" weight="bold" color="default">{resolvedAddress.ward}</Text>
                   </Text>
                 )}
                 {resolvedAddress.province && (
-                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
                     Tỉnh/TP: <Text as="strong" weight="bold" color="default">{resolvedAddress.province}</Text>
                   </Text>
                 )}

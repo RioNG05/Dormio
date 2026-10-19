@@ -55,15 +55,15 @@ export type TextProps<E extends React.ElementType = 'p'> = TextCustomProps & {
 /* -------------------------------------------------------------------------- */
 
 const variantStyles: Record<TextVariant, string> = {
-  body: 'text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed',
-  lead: 'text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal',
-  heading: 'text-lg font-black text-zinc-900 dark:text-zinc-100 tracking-tight',
-  subtitle: 'text-xs font-medium text-zinc-500 dark:text-zinc-400 leading-normal',
-  caption: 'text-[11px] text-zinc-400 dark:text-zinc-500 leading-tight',
-  overline: 'text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500',
+  body: 'text-sm text-foreground/90 leading-relaxed',
+  lead: 'text-base sm:text-lg text-muted leading-relaxed font-normal',
+  heading: 'text-lg font-black text-foreground tracking-tight',
+  subtitle: 'text-xs font-medium text-muted leading-normal',
+  caption: 'text-[11px] text-muted/80 leading-tight',
+  overline: 'text-[10px] font-black uppercase tracking-widest text-muted/80',
   badge: 'text-[10px] font-extrabold uppercase tracking-wide',
-  code: 'font-mono text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded-md',
-  quote: 'text-sm italic border-l-2 border-[#2AC1BC] pl-3 py-1 text-zinc-600 dark:text-zinc-300',
+  code: 'font-mono text-xs bg-card-hover text-foreground px-1.5 py-0.5 rounded-md',
+  quote: 'text-sm italic border-l-2 border-[#2AC1BC] pl-3 py-1 text-muted',
 }
 
 const sizeStyles: Record<TextSize, string> = {
@@ -88,9 +88,9 @@ const weightStyles: Record<TextWeight, string> = {
 }
 
 const colorStyles: Record<TextColor, string> = {
-  default: 'text-zinc-900 dark:text-zinc-100',
-  secondary: 'text-zinc-600 dark:text-zinc-400',
-  subtle: 'text-zinc-400 dark:text-zinc-500',
+  default: 'text-foreground',
+  secondary: 'text-muted',
+  subtle: 'text-muted/80',
   brand: 'text-[#2AC1BC]',
   'brand-dark': 'text-[#138e89]',
   success: 'text-emerald-600 dark:text-emerald-400',

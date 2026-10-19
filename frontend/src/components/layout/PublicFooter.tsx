@@ -11,7 +11,7 @@ export function PublicFooter() {
   const tFooter = useTranslations('footer')
 
   return (
-    <footer className="border-t border-zinc-200 bg-zinc-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+    <footer className="border-t border-line bg-zinc-900 text-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="space-y-3">
           <Logo size="md" priority={false} />
@@ -31,7 +31,7 @@ export function PublicFooter() {
           >
             {tFooter('systemModules')}
           </Text>
-          <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
+          <ul className="space-y-1.5 text-xs text-muted font-medium">
             <li>
               <Link href="/pricing" className="hover:text-white transition-colors">
                 <Text as="span" size="xs" color="inherit">
@@ -76,7 +76,7 @@ export function PublicFooter() {
           >
             {tFooter('customerSupport')}
           </Text>
-          <ul className="space-y-1.5 text-xs text-zinc-400 font-medium">
+          <ul className="space-y-1.5 text-xs text-muted font-medium">
             <li>
               <Link href="/pricing" className="hover:text-white transition-colors">
                 <Text as="span" size="xs" color="inherit">

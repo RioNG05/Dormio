@@ -206,7 +206,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                 isActive
                   ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 font-bold shadow-2xs'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  : 'text-muted hover:bg-card-hover hover:text-foreground'
               }`}
             >
               {isActive && (
@@ -254,14 +254,14 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                 isActive
                   ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] font-bold shadow-2xs'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  : 'text-muted hover:bg-card-hover hover:text-foreground'
               }`}
             >
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-[#2AC1BC] rounded-r-full" />
               )}
               <item.icon
-                className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#2AC1BC]' : 'text-zinc-400'}`}
+                className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#2AC1BC]' : 'text-muted'}`}
                 strokeWidth={isActive ? 2.2 : 1.75}
               />
               <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">
@@ -294,7 +294,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               className={`relative flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 isActive
                   ? 'bg-primary/10 text-primary'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  : 'text-muted hover:bg-card-hover hover:text-foreground'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -302,7 +302,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
                 )}
                 <item.icon
-                  className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-400'}`}
+                  className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
                   strokeWidth={isActive ? 2 : 1.75}
                 />
                 <Text as="span" size="sm" weight={isActive ? 'bold' : 'medium'} color="inherit">
@@ -346,14 +346,14 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               className={`relative flex items-center gap-3 px-3 py-2 mb-3 text-sm font-semibold rounded-lg transition-colors ${
                 isActive
                   ? 'bg-primary/10 text-primary'
-                  : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900'
+                  : 'text-foreground/90 hover:bg-card-hover hover:text-foreground'
               }`}
             >
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
               )}
               <block.icon
-                className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`}
+                className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
                 strokeWidth={isActive ? 2 : 1.75}
               />
               <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">
@@ -379,7 +379,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                   variant="overline"
                   weight="bold"
                   color="subtle"
-                  className="hover:text-zinc-600 transition-colors"
+                  className="hover:text-foreground transition-colors"
                 >
                   {block.group}
                 </Text>
@@ -396,9 +396,9 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                 )}
               </div>
               {isOpen ? (
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-muted" />
               ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                <ChevronRight className="w-3.5 h-3.5 text-muted" />
               )}
             </Button>
 
@@ -417,7 +417,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                       className={`relative flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                         isActive
                           ? 'bg-primary/10 text-primary'
-                          : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                          : 'text-muted hover:bg-card-hover hover:text-foreground'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -426,7 +426,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                         )}
                         <item.icon
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? 'text-primary' : 'text-zinc-400'
+                            isActive ? 'text-primary' : 'text-muted'
                           }`}
                           strokeWidth={isActive ? 2 : 1.75}
                         />

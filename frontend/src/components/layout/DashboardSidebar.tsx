@@ -28,9 +28,9 @@ export function DashboardSidebar({
   return (
     <>
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-zinc-200 bg-white z-20">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-line bg-card z-20">
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-100">
+          <div className="flex items-center justify-between h-14 px-4 border-b border-line">
             <Logo size="sm" imageClassName="h-7 w-auto" />
             <NotificationBell align="left" />
           </div>
@@ -49,8 +49,8 @@ export function DashboardSidebar({
             className="fixed inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onCloseMobileMenu}
           />
-          <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl flex flex-col border-r border-zinc-200">
-            <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-100">
+          <aside className="fixed inset-y-0 left-0 w-64 bg-card shadow-xl flex flex-col border-r border-line">
+            <div className="flex items-center justify-between h-14 px-4 border-b border-line">
               <Logo size="sm" imageClassName="h-7 w-auto" />
               <div className="flex items-center gap-1">
                 <NotificationBell align="left" />

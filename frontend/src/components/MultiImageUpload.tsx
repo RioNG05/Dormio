@@ -421,12 +421,12 @@ export function MultiImageUpload({
           'relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-200 select-none',
           isDragging
             ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 scale-[0.99]'
-            : 'border-zinc-200 hover:border-[#2AC1BC] bg-zinc-50/60 hover:bg-zinc-50',
+            : 'border-line hover:border-[#2AC1BC] bg-surface/60 hover:bg-card-hover',
           disabled || isAtMaxImages ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
         )}
       >
         <div className="flex flex-col items-center space-y-2 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-zinc-200/80 flex items-center justify-center text-zinc-400 group-hover:text-[#2AC1BC] transition-colors">
+          <div className="w-12 h-12 rounded-2xl bg-card shadow-xs border border-line flex items-center justify-center text-muted group-hover:text-[#2AC1BC] transition-colors">
             <UploadCloud className="w-6 h-6 text-[#2AC1BC]" />
           </div>
           <div>
@@ -448,7 +448,7 @@ export function MultiImageUpload({
           {values.map((url, idx) => (
             <div
               key={idx}
-              className="relative group rounded-2xl overflow-hidden border border-zinc-200/90 aspect-video bg-zinc-100 shadow-xs transition-all hover:shadow-md"
+              className="relative group rounded-2xl overflow-hidden border border-line aspect-video bg-card-hover shadow-xs transition-all hover:shadow-md"
             >
               <Image
                 src={url}
@@ -512,7 +512,7 @@ export function MultiImageUpload({
           {uploadingItems.map(item => (
             <div
               key={item.id}
-              className="relative rounded-2xl overflow-hidden border border-zinc-200 aspect-video bg-zinc-100 shadow-xs flex items-center justify-center"
+              className="relative rounded-2xl overflow-hidden border border-line aspect-video bg-card-hover shadow-xs flex items-center justify-center"
             >
               <Image
                 src={item.previewUrl}

@@ -88,7 +88,7 @@ export function DashboardUserFooter() {
   }
 
   const avatarColor = isAdmin
-    ? 'bg-orange-100 text-orange-600'
+    ? 'bg-accent-soft text-orange-600'
     : isStaff
       ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
       : 'bg-primary/10 text-primary'
@@ -113,9 +113,9 @@ export function DashboardUserFooter() {
       <div ref={userMenuRef} className="relative">
         {/* Upward popup menu */}
         {userMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-zinc-200 rounded-2xl shadow-lg shadow-zinc-200/60 overflow-hidden z-50">
+          <div className="absolute bottom-full left-0 right-0 mb-2 bg-card border border-line rounded-2xl shadow-lg shadow-black/5 overflow-hidden z-50">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-zinc-100 bg-zinc-50/60">
+            <div className="px-4 py-3 border-b border-line bg-surface/60">
               <Text variant="overline" color="subtle" className="mb-0.5">
                 {tNav('userMenuTitle')}
               </Text>
@@ -147,9 +147,9 @@ export function DashboardUserFooter() {
               <Link
                 href={isTenant ? '/tenant/profile' : '/profile'}
                 onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-foreground/90 hover:bg-card-hover transition-colors"
               >
-                <UserCircle className="w-4 h-4 text-zinc-400 shrink-0" />
+                <UserCircle className="w-4 h-4 text-muted shrink-0" />
                 <Text as="span" size="sm" weight="semibold" color="inherit">
                   {tNav('userMenuProfile')}
                 </Text>
@@ -157,7 +157,7 @@ export function DashboardUserFooter() {
               <Link
                 href="/send-application"
                 onClick={() => setUserMenuOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold text-foreground/90 hover:bg-card-hover transition-colors"
               >
                 <FileText className="w-4 h-4 text-amber-500 shrink-0" />
                 <Text as="span" size="sm" weight="semibold" color="inherit">
@@ -169,7 +169,7 @@ export function DashboardUserFooter() {
             {/* Dashboard switcher — only shown if user has access to at least 1 */}
             {availableOptions.length > 0 && (
               <>
-                <div className="mx-3 my-1 h-px bg-zinc-100" />
+                <div className="mx-3 my-1 h-px bg-card-hover" />
                 <div className="px-2 py-1.5">
                   <Text variant="overline" color="subtle" className="px-3 pb-1">
                     {tNav('userMenuSwitchDashboard')}
@@ -196,7 +196,7 @@ export function DashboardUserFooter() {
             )}
 
             {/* Logout */}
-            <div className="mx-3 my-1 h-px bg-zinc-100" />
+            <div className="mx-3 my-1 h-px bg-card-hover" />
             <div className="px-2 py-1.5">
               <Button
                 fullWidth
@@ -255,9 +255,9 @@ export function DashboardUserFooter() {
             </Text>
           </div>
           {userMenuOpen ? (
-            <ChevronUp className="w-4 h-4 text-zinc-400 shrink-0" />
+            <ChevronUp className="w-4 h-4 text-muted shrink-0" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0" />
+            <ChevronDown className="w-4 h-4 text-muted shrink-0" />
           )}
         </Button>
 

@@ -172,7 +172,7 @@ export function PublicHeader() {
   return (
     <>
       {/* Public Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-line bg-card/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Logo size="md" />
@@ -190,7 +190,7 @@ export function PublicHeader() {
                   className={`text-xs font-bold transition-all relative py-1 ${
                     isActive
                       ? 'text-[#2AC1BC] font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#2AC1BC] after:rounded-full'
-                      : 'text-zinc-700 hover:text-[#2AC1BC]'
+                      : 'text-foreground/90 hover:text-[#2AC1BC]'
                   }`}
                 >
                   <Text as="span" size="xs" weight={isActive ? 'extrabold' : 'bold'} color="inherit">
@@ -218,18 +218,18 @@ export function PublicHeader() {
             {isLoggedIn && user ? (
               <div className="flex items-center gap-3">
                 {/* User Avatar & Dropdown Menu */}
-                <div ref={userMenuRef} className="relative pl-2 border-l border-zinc-200">
+                <div ref={userMenuRef} className="relative pl-2 border-l border-line">
                   <Button
                     type="button"
                     variant="ghost"
                     size="xs"
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 p-1 rounded-2xl hover:bg-zinc-100 text-left h-auto"
+                    className="flex items-center gap-2 p-1 rounded-2xl hover:bg-card-hover text-left h-auto"
                   >
                     <img
                       src={user.avatar}
                       alt={user.name}
-                      className="w-8 h-8 rounded-full object-cover border border-zinc-200 shadow-xs"
+                      className="w-8 h-8 rounded-full object-cover border border-line shadow-xs"
                     />
                     <div className="hidden sm:block text-left">
                       <Text
@@ -243,7 +243,7 @@ export function PublicHeader() {
                       </Text>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${
+                      className={`w-3.5 h-3.5 text-muted transition-transform ${
                         isUserMenuOpen ? 'rotate-180' : ''
                       }`}
                     />
@@ -251,8 +251,8 @@ export function PublicHeader() {
 
                   {/* Dropdown Menu Popup */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-zinc-200 shadow-2xl p-2 z-50 animate-in fade-in duration-200 space-y-1">
-                      <div className="px-3 py-2 border-b border-zinc-100">
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-card rounded-2xl border border-line shadow-2xl p-2 z-50 animate-in fade-in duration-200 space-y-1">
+                      <div className="px-3 py-2 border-b border-line">
                         <Text as="p" size="xs" weight="black" color="default" className="truncate">
                           {user.name}
                         </Text>
@@ -279,7 +279,7 @@ export function PublicHeader() {
                       <Link
                         href="/profile"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
                       >
                         <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
                         <Text as="span" size="xs" weight="bold" color="inherit">
@@ -291,7 +291,7 @@ export function PublicHeader() {
                       <Link
                         href="/send-application"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
                       >
                         <FileText className="w-4 h-4 text-amber-500" />
                         <Text as="span" size="xs" weight="bold" color="inherit">
@@ -309,7 +309,7 @@ export function PublicHeader() {
                               : '/tenant'
                         }
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
                       >
                         <Building className="w-4 h-4 text-blue-500" />
                         <Text as="span" size="xs" weight="bold" color="inherit">
@@ -326,7 +326,7 @@ export function PublicHeader() {
                         <Link
                           href="/saved-posts"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
                         >
                           <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
                           <Text as="span" size="xs" weight="bold" color="inherit">
@@ -337,11 +337,11 @@ export function PublicHeader() {
 
                       {/* 4. Create Post & Analytics (BHRP only) */}
                       {FEATURE_FLAGS.ENABLE_BHRP && (
-                        <div className="border-t border-zinc-100 pt-1">
+                        <div className="border-t border-line pt-1">
                           <Link
                             href="/posts/create"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
                           >
                             <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
                             <Text as="span" size="xs" weight="bold" color="inherit">
@@ -352,7 +352,7 @@ export function PublicHeader() {
                           <Link
                             href="/posts/analytics"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all"
+                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
                           >
                             <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
                             <Text as="span" size="xs" weight="bold" color="inherit">
@@ -362,7 +362,7 @@ export function PublicHeader() {
                         </div>
                       )}
 
-                      <div className="border-t border-zinc-100 pt-1">
+                      <div className="border-t border-line pt-1">
                         {/* 6. Logout */}
                         <Button
                           type="button"
@@ -427,13 +427,13 @@ export function PublicHeader() {
 
         {/* Mobile Dropdown Menu (Vertically Scrollable) */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-b border-zinc-200 bg-white px-4 py-6 space-y-6 animate-in slide-in-from-top-3 duration-200 shadow-2xl max-h-[calc(100vh-5rem)] overflow-y-auto">
+          <div className="lg:hidden border-b border-line bg-card px-4 py-6 space-y-6 animate-in slide-in-from-top-3 duration-200 shadow-2xl max-h-[calc(100vh-5rem)] overflow-y-auto">
             <nav className="flex flex-col space-y-2">
               {navItems.map(item => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-4 py-3 rounded-2xl text-sm font-extrabold text-zinc-800 hover:bg-zinc-100 transition-all flex items-center justify-between"
+                  className="px-4 py-3 rounded-2xl text-sm font-extrabold text-foreground hover:bg-card-hover transition-all flex items-center justify-between"
                 >
                   <Text as="span" size="sm" weight="extrabold" color="inherit">
                     {item.label}
@@ -444,14 +444,14 @@ export function PublicHeader() {
             </nav>
 
             {/* Mobile Auth Actions */}
-            <div className="pt-4 border-t border-zinc-100 space-y-3">
+            <div className="pt-4 border-t border-line space-y-3">
               {isLoggedIn && user ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200">
+                  <div className="flex items-center gap-3 p-3.5 bg-surface rounded-2xl border border-line">
                     <img
                       src={user.avatar}
                       alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover border border-zinc-200"
+                      className="w-10 h-10 rounded-full object-cover border border-line"
                     />
                     <div>
                       <Text as="h4" size="xs" weight="black" color="default">
@@ -478,12 +478,12 @@ export function PublicHeader() {
                   </Button>
 
                   {/* Inner Profile Links for Mobile/Tablet */}
-                  <div className="bg-zinc-50 rounded-2xl p-2 border border-zinc-200 space-y-1">
+                  <div className="bg-surface rounded-2xl p-2 border border-line space-y-1">
                     {/* 1. Profile */}
                     <Link
                       href="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
                     >
                       <div className="flex items-center gap-2.5">
                         <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
@@ -498,7 +498,7 @@ export function PublicHeader() {
                     <Link
                       href="/send-application"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
                     >
                       <div className="flex items-center gap-2.5">
                         <FileText className="w-4 h-4 text-amber-500" />
@@ -513,7 +513,7 @@ export function PublicHeader() {
                     <Link
                       href={user.role === 'landlord' ? '/landlord/rooms' : '/tenant'}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
                     >
                       <div className="flex items-center gap-2.5">
                         <Building className="w-4 h-4 text-blue-500" />
@@ -533,7 +533,7 @@ export function PublicHeader() {
                       <Link
                         href="/saved-posts"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                        className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
                       >
                         <div className="flex items-center gap-2.5">
                           <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
@@ -551,7 +551,7 @@ export function PublicHeader() {
                         <Link
                           href="/posts/create"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                          className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
                         >
                           <div className="flex items-center gap-2.5">
                             <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
@@ -565,7 +565,7 @@ export function PublicHeader() {
                         <Link
                           href="/posts/analytics"
                           onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all"
+                          className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
                         >
                           <div className="flex items-center gap-2.5">
                             <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
@@ -639,7 +639,7 @@ export function PublicHeader() {
         <Modal.Body className="p-6 sm:p-8 space-y-6">
           {upgradeSuccess ? (
             <div className="text-center py-8 space-y-4 animate-in fade-in duration-300">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+              <div className="w-16 h-16 rounded-full bg-success-soft text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <Text as="h3" size="xl" weight="black" color="default">
@@ -652,7 +652,7 @@ export function PublicHeader() {
           ) : (
             <form onSubmit={handleUpgradeSubmit} className="space-y-5">
               <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#FF6B35] text-[10px] font-black rounded-full uppercase tracking-wider">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-danger-soft text-[#FF6B35] text-[10px] font-black rounded-full uppercase tracking-wider">
                   <Sparkles className="w-3 h-3 fill-[#FF6B35]" />
                   <Text as="span" size="3xs" weight="black" color="orange">
                     {tUpgrade('badge')}
@@ -715,8 +715,8 @@ export function PublicHeader() {
           }}
           className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white rounded-3xl max-w-xl w-full p-4 shadow-2xl space-y-4 border border-zinc-200 cursor-default">
-            <div className="relative flex items-center border-b border-zinc-100 pb-3">
+          <div className="bg-card rounded-3xl max-w-xl w-full p-4 shadow-2xl space-y-4 border border-line cursor-default">
+            <div className="relative flex items-center border-b border-line pb-3">
               <Search className="w-5 h-5 text-[#2AC1BC] absolute left-3" />
               <input
                 type="text"
@@ -724,7 +724,7 @@ export function PublicHeader() {
                 placeholder={tUpgrade('searchPlaceholder')}
                 value={commandQuery}
                 onChange={e => setCommandQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 text-sm font-bold text-zinc-900 focus:outline-none"
+                className="w-full pl-10 pr-10 py-2 text-sm font-bold text-foreground focus:outline-none"
               />
               <Button
                 variant="ghost"
@@ -767,7 +767,7 @@ export function PublicHeader() {
                     key={idx}
                     href={item.href}
                     onClick={() => setIsCommandOpen(false)}
-                    className="flex items-center justify-between p-3 rounded-2xl hover:bg-zinc-50 transition-colors group cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-2xl hover:bg-card-hover transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">

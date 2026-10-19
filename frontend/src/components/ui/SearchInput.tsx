@@ -153,7 +153,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       leftIcon !== undefined ? (
         leftIcon
       ) : (
-        <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+        <Search className="w-4 h-4 text-muted shrink-0" />
       )
 
     // Resolved right icon: loading spinner > clear button > custom rightIcon
@@ -161,14 +161,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       rightIcon !== undefined ? (
         rightIcon
       ) : isLoading ? (
-        <Loader2 className="w-4 h-4 text-zinc-400 animate-spin shrink-0" />
+        <Loader2 className="w-4 h-4 text-muted animate-spin shrink-0" />
       ) : clearable && localValue ? (
         <button
           type="button"
           onClick={handleClear}
           disabled={disabled}
           tabIndex={-1}
-          className="p-1 -mr-1 text-zinc-400 hover:text-zinc-600 focus:outline-none rounded-md transition-colors cursor-pointer"
+          className="p-1 -mr-1 text-muted hover:text-foreground focus:outline-none rounded-md transition-colors cursor-pointer"
           title="Clear search"
         >
           <X className="w-3.5 h-3.5" />

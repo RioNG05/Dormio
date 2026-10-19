@@ -13,7 +13,7 @@ export function DashboardBuildingSelector() {
   const [buildingDropdownOpen, setBuildingDropdownOpen] = useState(false)
 
   return (
-    <div className="relative px-3 py-2.5 border-b border-zinc-100 bg-zinc-50/60">
+    <div className="relative px-3 py-2.5 border-b border-line bg-surface/60">
       <div className="flex items-center justify-between mb-1.5">
         <Text as="span" variant="overline" color="subtle" className="block">
           {tNav('managingBuilding')}
@@ -51,7 +51,7 @@ export function DashboardBuildingSelector() {
           )}
         </div>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 text-muted shrink-0 transition-transform duration-200 ${
             buildingDropdownOpen ? 'rotate-180 text-[#2AC1BC]' : ''
           }`}
         />
@@ -60,7 +60,7 @@ export function DashboardBuildingSelector() {
       {buildingDropdownOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setBuildingDropdownOpen(false)} />
-          <div className="absolute left-2 right-2 top-full mt-1 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+          <div className="absolute left-2 right-2 top-full mt-1 bg-card border border-line rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150">
             <div className="px-2 py-1 flex items-center justify-between">
               <Text as="span" variant="overline" color="subtle">
                 {tNav('switchProperty')}
@@ -85,7 +85,7 @@ export function DashboardBuildingSelector() {
                       <div className="flex items-center gap-1.5">
                         <Building
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-[#2AC1BC]' : 'text-zinc-400'
+                            isActive ? 'text-[#2AC1BC]' : 'text-muted'
                           }`}
                         />
                         <Text
@@ -107,7 +107,7 @@ export function DashboardBuildingSelector() {
                 )
               })}
             </div>
-            <div className="pt-1.5 border-t border-zinc-100">
+            <div className="pt-1.5 border-t border-line">
               <Link
                 href="/landlord/setup"
                 onClick={() => setBuildingDropdownOpen(false)}

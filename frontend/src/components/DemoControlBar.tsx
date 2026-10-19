@@ -108,7 +108,7 @@ export default function DemoControlBar() {
                 rounded="full"
                 onClick={() => setIsDismissed(true)}
                 title="Ẩn nút thử nghiệm"
-                className="!h-7 !w-7 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800"
+                className="!h-7 !w-7 text-muted hover:text-rose-400 hover:bg-zinc-800"
               >
                 <EyeOff className="w-4 h-4" />
               </Button>
@@ -117,7 +117,7 @@ export default function DemoControlBar() {
                 size="icon"
                 rounded="full"
                 onClick={() => setIsOpen(false)}
-                className="!h-7 !w-7 text-zinc-400 hover:text-white hover:bg-zinc-800"
+                className="!h-7 !w-7 text-muted hover:text-white hover:bg-zinc-800"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -136,14 +136,14 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('guest', '/')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'guest'
-                    ? 'border-white bg-white text-zinc-950 shadow-md'
+                    ? 'border-white bg-card text-foreground shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   🌐 1. Khách Vãng Lai (Chưa đăng nhập)
                 </Text>
-                {activePreset === 'guest' && <Check className="w-4 h-4 text-zinc-950 stroke-[3]" />}
+                {activePreset === 'guest' && <Check className="w-4 h-4 text-foreground stroke-[3]" />}
               </button>
 
               {/* Tenant */}
@@ -247,9 +247,9 @@ export default function DemoControlBar() {
         </Text>
 
         {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+          <ChevronDown className="w-4 h-4 text-muted group-hover:text-white transition-colors" />
         ) : (
-          <ChevronUp className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+          <ChevronUp className="w-4 h-4 text-muted group-hover:text-white transition-colors" />
         )}
       </button>
     </div>

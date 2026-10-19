@@ -520,7 +520,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     const renderCalendarBody = () => (
       <div className="flex flex-col">
         {/* Calendar Navigation Header */}
-        <div className="flex items-center justify-between gap-1 pb-3 mb-2 border-b border-zinc-100">
+        <div className="flex items-center justify-between gap-1 pb-3 mb-2 border-b border-line">
           <button
             type="button"
             onClick={
@@ -530,7 +530,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                   ? () => handleYearChange(viewYear - 12)
                   : handlePrevMonth
             }
-            className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-card-hover text-muted hover:text-foreground transition-colors cursor-pointer"
             title={
               calendarView === 'months'
                 ? isEn
@@ -558,14 +558,14 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                 calendarView === 'months'
                   ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border border-zinc-200/60',
+                  : 'bg-card-hover hover:bg-line text-foreground border border-line',
               )}
             >
               <span>{monthNames[viewMonth]}</span>
               <ChevronDown
                 className={cn(
                   'w-3.5 h-3.5 transition-transform duration-200',
-                  calendarView === 'months' ? 'rotate-180 text-white' : 'text-zinc-400',
+                  calendarView === 'months' ? 'rotate-180 text-white' : 'text-muted',
                 )}
               />
             </button>
@@ -578,14 +578,14 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                 calendarView === 'years'
                   ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border border-zinc-200/60',
+                  : 'bg-card-hover hover:bg-line text-foreground border border-line',
               )}
             >
               <span>{viewYear}</span>
               <ChevronDown
                 className={cn(
                   'w-3.5 h-3.5 transition-transform duration-200',
-                  calendarView === 'years' ? 'rotate-180 text-white' : 'text-zinc-400',
+                  calendarView === 'years' ? 'rotate-180 text-white' : 'text-muted',
                 )}
               />
             </button>
@@ -600,7 +600,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                   ? () => handleYearChange(viewYear + 12)
                   : handleNextMonth
             }
-            className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-card-hover text-muted hover:text-foreground transition-colors cursor-pointer"
             title={
               calendarView === 'months'
                 ? isEn
@@ -647,8 +647,8 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                     isSelected
                       ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30 scale-105 font-black'
                       : isDisabled
-                        ? 'text-zinc-300 bg-zinc-50/50 cursor-not-allowed pointer-events-none opacity-40'
-                        : 'text-zinc-700 bg-zinc-50 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]',
+                        ? 'text-zinc-300 bg-surface/50 cursor-not-allowed pointer-events-none opacity-40'
+                        : 'text-foreground/90 bg-surface hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]',
                   )}
                 >
                   {name}
@@ -686,8 +686,8 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                     isSelected
                       ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30 scale-105 font-black'
                       : isDisabled
-                        ? 'text-zinc-300 bg-zinc-50/50 cursor-not-allowed pointer-events-none opacity-40'
-                        : 'text-zinc-700 bg-zinc-50 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]',
+                        ? 'text-zinc-300 bg-surface/50 cursor-not-allowed pointer-events-none opacity-40'
+                        : 'text-foreground/90 bg-surface hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]',
                   )}
                 >
                   {y}
@@ -703,7 +703,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             {/* Day of Week Header */}
             <div className="grid grid-cols-7 gap-1 mb-1 text-center">
               {dayHeaders.map(day => (
-                <div key={day} className="text-[10px] font-black text-zinc-400 py-1 uppercase">
+                <div key={day} className="text-[10px] font-black text-muted py-1 uppercase">
                   {day}
                 </div>
               ))}
@@ -724,7 +724,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                       dayItem.isCurrentMonth && !dayItem.isSelected && !dayItem.isDisabled && (
                         dayItem.isToday
                           ? 'border-2 border-[#2AC1BC] text-[#2AC1BC] hover:bg-[#2AC1BC]/10'
-                          : 'text-zinc-700 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]'
+                          : 'text-foreground/90 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]'
                       ),
                       dayItem.isSelected && (
                         'bg-[#2AC1BC] text-white font-black shadow-md shadow-[#2AC1BC]/30 scale-105'
@@ -743,7 +743,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         )}
 
         {/* Bottom Quick Actions Footer */}
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-100 text-xs">
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-line text-xs">
           {calendarView !== 'days' ? (
             <button
               type="button"
@@ -767,7 +767,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               <button
                 type="button"
                 onClick={handleClear}
-                className="font-semibold text-zinc-400 hover:text-zinc-600 px-2 py-1 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="font-semibold text-muted hover:text-foreground px-2 py-1 rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
               >
                 {textClear}
               </button>
@@ -775,7 +775,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="font-bold text-zinc-600 hover:text-zinc-900 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer"
+              className="font-bold text-muted hover:text-foreground px-3 py-1.5 rounded-xl bg-card-hover hover:bg-line transition-colors cursor-pointer"
             >
               {textClose}
             </button>
@@ -857,7 +857,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               type="button"
               onClick={handleClear}
               title="Xóa ngày"
-              className="absolute right-3 p-1 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-slate-200 hover:bg-zinc-100 dark:hover:bg-card-hover transition-colors cursor-pointer"
+              className="absolute right-3 p-1 rounded-lg text-muted hover:text-foreground dark:hover:text-slate-200 hover:bg-card-hover dark:hover:bg-card-hover transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -901,7 +901,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                     <button
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-200 hover:bg-zinc-100 dark:hover:bg-card-hover transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-muted hover:text-foreground dark:hover:text-slate-200 hover:bg-card-hover dark:hover:bg-card-hover transition-colors cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -918,7 +918,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         {error ? (
           <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <p className="text-[11px] text-muted">{helperText}</p>
         ) : null}
       </div>
     )

@@ -416,7 +416,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                           setSearchQuery('')
                           searchInputRef.current?.focus()
                         }}
-                        className="absolute right-2 p-0.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-200 rounded-md cursor-pointer"
+                        className="absolute right-2 p-0.5 text-muted hover:text-foreground dark:hover:text-slate-200 rounded-md cursor-pointer"
                       >
                         <X className="w-3 h-3" />
                       </button>
