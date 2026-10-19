@@ -12,7 +12,6 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       defaultTheme="light"
       enableSystem
       storageKey="dormio_theme"
-      disableTransitionOnChange
       {...props}
     >
       {children}
