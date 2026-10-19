@@ -35,3 +35,4 @@ export default function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
     </Button>
   )
 }
+

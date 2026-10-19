@@ -81,7 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <AuthGuard>
-      <div className="flex min-h-screen bg-zinc-50">
+      <div className="flex min-h-screen bg-surface text-foreground transition-colors duration-200">
         <DashboardSidebar
           mobileMenuOpen={mobileMenuOpen}
           onCloseMobileMenu={() => setMobileMenuOpen(false)}

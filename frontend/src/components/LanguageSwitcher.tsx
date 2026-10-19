@@ -1,6 +1,6 @@
 'use client'
 
-import { useLanguage } from '@/context/LanguageContext'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { Button, Text } from '@/components/ui'
 
 interface LanguageSwitcherProps {
@@ -9,12 +9,14 @@ interface LanguageSwitcherProps {
 
 export default function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
   const { locale, setLocale } = useLanguage()
+  const tCommon = useTranslations('common')
 
   const toggleLanguage = () => {
     setLocale(locale === 'vi' ? 'en' : 'vi')
   }
 
   const isVi = locale === 'vi'
+  const label = isVi ? tCommon('switchToEn') : tCommon('switchToVi')
 
   return (
     <Button
@@ -22,12 +24,12 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
       variant="outline"
       size="sm"
       onClick={toggleLanguage}
-      title={isVi ? 'Switch to English (EN)' : 'Chuyển sang Tiếng Việt (VI)'}
-      aria-label={isVi ? 'Switch to English (EN)' : 'Chuyển sang Tiếng Việt (VI)'}
-      className={`!h-8 !w-9 !p-0 select-none ${className}`}
+      title={label}
+      aria-label={label}
+      className={`!h-8 !w-9 !p-0 select-none border-border hover:border-primary/50 ${className}`}
     >
       <Text as="span" size="xs" weight="bold" color="inherit">
-        {isVi ? 'VI' : 'EN'}
+        {isVi ? tCommon('langVi') : tCommon('langEn')}
       </Text>
     </Button>
   )

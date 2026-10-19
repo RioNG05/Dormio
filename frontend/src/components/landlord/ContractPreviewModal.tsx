@@ -295,7 +295,7 @@ export default function ContractPreviewModal({
       )}
 
       {!isLoading && !error && htmlContent && (
-        <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white">
+        <div className="w-full h-full rounded-xl overflow-hidden shadow-inner border border-zinc-200/80 bg-white theme-preserve-light">
           <iframe
             ref={iframeRef}
             srcDoc={htmlContent}

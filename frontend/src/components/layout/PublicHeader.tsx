@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import ThemeSwitcher from '@/components/ThemeSwitcher'
 import NotificationBell from '@/components/NotificationBell'
 import Logo from '@/components/Logo'
 import { useTranslations } from '@/context/LanguageContext'
@@ -394,9 +395,10 @@ export function PublicHeader() {
               </div>
             )}
 
-            {/* Notification Popup & Language Switcher */}
-            <div className="flex items-center gap-1 pl-1 border-l border-zinc-200/80">
+            {/* Notification Popup, Theme Switcher & Language Switcher */}
+            <div className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-200/80 dark:border-border">
               {isLoggedIn && <NotificationBell align="right" />}
+              <ThemeSwitcher />
               <LanguageSwitcher />
             </div>
           </div>
@@ -404,19 +406,20 @@ export function PublicHeader() {
           {/* Mobile Controls */}
           <div className="flex items-center gap-1.5 lg:hidden">
             {isLoggedIn && <NotificationBell align="right" />}
+            <ThemeSwitcher />
             <LanguageSwitcher />
             <Button
               type="button"
               variant="secondary"
               size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="rounded-2xl border border-zinc-200/80"
+              className="rounded-2xl border border-zinc-200/80 dark:border-border"
               aria-label="Toggle Navigation Menu"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-zinc-900" />
+                <X className="w-6 h-6 text-zinc-900 dark:text-foreground" />
               ) : (
-                <Menu className="w-6 h-6 text-zinc-900" />
+                <Menu className="w-6 h-6 text-zinc-900 dark:text-foreground" />
               )}
             </Button>
           </div>

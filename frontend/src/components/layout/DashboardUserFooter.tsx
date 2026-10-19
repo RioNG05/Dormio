@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, Text } from '@/components/ui'
 
@@ -50,7 +51,7 @@ export function DashboardUserFooter() {
       icon: Building2,
       allowed: capabilities.isLandlord,
       color: 'text-[#2AC1BC]',
-      bg: 'hover:bg-[#2AC1BC]/5',
+      bg: 'hover:bg-[#2AC1BC]/10',
     },
     {
       label: tNav('userMenuTenantDashboard'),
@@ -58,7 +59,7 @@ export function DashboardUserFooter() {
       icon: Home,
       allowed: capabilities.isTenant,
       color: 'text-blue-500',
-      bg: 'hover:bg-blue-50',
+      bg: 'hover:bg-blue-500/10',
     },
     {
       label: tNav('userMenuStaffDashboard'),
@@ -66,15 +67,15 @@ export function DashboardUserFooter() {
       icon: UserCircle,
       allowed: capabilities.isEmployee,
       color: 'text-teal-500',
-      bg: 'hover:bg-teal-50',
+      bg: 'hover:bg-teal-500/10',
     },
     {
       label: tNav('userMenuAdminDashboard'),
       href: '/admin',
       icon: Shield,
       allowed: capabilities.isAdmin,
-      color: 'text-orange-500',
-      bg: 'hover:bg-orange-50',
+      color: 'text-[#FF6B35]',
+      bg: 'hover:bg-[#FF6B35]/10',
     },
   ]
 
@@ -101,13 +102,16 @@ export function DashboardUserFooter() {
         : 'R'
 
   return (
-    <div className="border-t border-zinc-100 p-3">
-      {/* Language toggle row */}
+    <div className="border-t border-zinc-100 dark:border-border p-3">
+      {/* Theme & Language toggle row */}
       <div className="flex items-center justify-between px-2 mb-2">
         <Text as="span" size="xs" weight="semibold" color="secondary">
-          {tNav('langLabel')}
+          {tNav('themeLabel')} / {tNav('langLabel')}
         </Text>
-        <LanguageSwitcher />
+        <div className="flex items-center gap-1.5">
+          <ThemeSwitcher />
+          <LanguageSwitcher />
+        </div>
       </div>
 
       {/* Account popup trigger + menu container */}

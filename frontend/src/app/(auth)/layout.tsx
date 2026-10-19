@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { Building2, CheckCircle2, Star } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
@@ -18,14 +19,15 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const isLegalPage = ['/terms', '/privacy', '/policy'].some(path => pathname?.startsWith(path))
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden bg-white">
-      {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding, cố định layout, chỉ cuộn nội dung form/chính sách) */}
-      <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
-        {/* Header Brand Logo & Language Switcher */}
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 shrink-0">
+    <div className="flex h-screen max-h-screen overflow-hidden bg-background text-foreground transition-colors duration-200">
+      {/* Left Column: Auth Form */}
+      <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-background z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
+        {/* Header Brand Logo, Theme Switcher & Language Switcher */}
+        <div className="flex items-center justify-between pb-4 border-b border-border shrink-0">
           <Logo size="lg" />
 
           <div className="flex items-center gap-2">
+            <ThemeSwitcher />
             <LanguageSwitcher />
             {isLegalPage && (
               <>

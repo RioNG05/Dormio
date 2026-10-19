@@ -7,6 +7,7 @@ import { Menu, Shield, UserCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import Logo from '@/components/Logo'
 import NotificationBell from '@/components/NotificationBell'
+import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, Text, SelectInput } from '@/components/ui'
 
@@ -24,7 +25,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
   const isStaff = pathname?.startsWith('/staff')
 
   return (
-    <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 bg-white sticky top-0 z-30 gap-2">
+    <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 dark:border-border bg-white dark:bg-card sticky top-0 z-30 gap-2">
       <div className="flex items-center gap-2 shrink-0">
         <Button
           type="button"
@@ -71,27 +72,30 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
         )
       )}
 
-      <Link
-        href={isTenant ? '/tenant/profile' : '/profile'}
-        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
-          isAdmin
-            ? 'bg-orange-100 text-orange-600'
-            : isStaff
-              ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
-              : 'bg-primary/10 text-primary'
-        }`}
-        title={tNav('viewProfileTooltip')}
-      >
-        <Text as="span" size="xs" weight="bold" color="inherit">
-          {user?.name
-            ? user.name.trim().charAt(0).toUpperCase()
-            : isAdmin
-              ? 'A'
+      <div className="flex items-center gap-1.5 shrink-0">
+        <ThemeSwitcher />
+        <Link
+          href={isTenant ? '/tenant/profile' : '/profile'}
+          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
+            isAdmin
+              ? 'bg-orange-100 text-orange-600'
               : isStaff
-                ? 'T'
-                : 'R'}
-        </Text>
-      </Link>
+                ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
+                : 'bg-primary/10 text-primary'
+          }`}
+          title={tNav('viewProfileTooltip')}
+        >
+          <Text as="span" size="xs" weight="bold" color="inherit">
+            {user?.name
+              ? user.name.trim().charAt(0).toUpperCase()
+              : isAdmin
+                ? 'A'
+                : isStaff
+                  ? 'T'
+                  : 'R'}
+          </Text>
+        </Link>
+      </div>
     </header>
   )
 }
