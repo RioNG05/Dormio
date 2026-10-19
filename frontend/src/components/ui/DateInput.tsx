@@ -809,8 +809,8 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           <label
             onClick={() => !disabled && setIsOpen(prev => !prev)}
             className={cn(
-              'block text-xs font-bold text-zinc-700 select-none cursor-pointer',
-              disabled && 'text-zinc-400 cursor-not-allowed',
+              'block text-xs font-bold text-zinc-700 dark:text-slate-200 select-none cursor-pointer',
+              disabled && 'text-zinc-400 dark:text-slate-500 cursor-not-allowed',
               labelClassName,
             )}
           >
@@ -825,7 +825,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             type="button"
             disabled={disabled}
             onClick={() => !disabled && setIsOpen(prev => !prev)}
-            className="absolute left-3 flex items-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer disabled:cursor-not-allowed"
+            className="absolute left-3 flex items-center text-zinc-400 dark:text-slate-400 hover:text-[#2AC1BC] transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             <CalendarIcon className="w-4 h-4" />
           </button>
@@ -841,12 +841,12 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             className={cn(
               'w-full rounded-xl border pl-9 pr-9 py-2.5 text-xs font-semibold transition-all duration-200 outline-none select-none',
               disabled
-                ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed shadow-none'
+                ? 'bg-zinc-100 dark:bg-surface text-zinc-400 dark:text-slate-500 border-zinc-200 dark:border-border cursor-not-allowed shadow-none'
                 : error
-                  ? 'bg-white border-rose-400 text-rose-900 ring-2 ring-rose-500/15'
+                  ? 'bg-white dark:bg-input-bg border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
                   : isOpen
-                    ? 'bg-white border-[#2AC1BC] ring-3 ring-[#2AC1BC]/15 text-zinc-900 shadow-sm'
-                    : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50/50 shadow-2xs',
+                    ? 'bg-white dark:bg-input-bg border-[#2AC1BC] ring-3 ring-[#2AC1BC]/20 text-zinc-900 dark:text-foreground shadow-sm'
+                    : 'bg-white dark:bg-input-bg border-zinc-200 dark:border-border text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
               className,
             )}
           />
@@ -857,7 +857,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               type="button"
               onClick={handleClear}
               title="Xóa ngày"
-              className="absolute right-3 p-1 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+              className="absolute right-3 p-1 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-slate-200 hover:bg-zinc-100 dark:hover:bg-card-hover transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -867,7 +867,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           {isOpen && !isMobile && (
             <div
               className={cn(
-                'absolute z-50 w-80 max-w-[calc(100vw-2rem)] rounded-3xl border border-zinc-200/90 bg-white/95 backdrop-blur-md shadow-2xl shadow-zinc-950/15 p-4',
+                'absolute z-50 w-80 max-w-[calc(100vw-2rem)] rounded-3xl border border-zinc-200/90 dark:border-border bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-2xl shadow-zinc-950/15 dark:shadow-black/50 p-4',
                 alignPosition === 'right' ? 'right-0' : 'left-0',
                 dropPosition === 'top'
                   ? 'bottom-full mb-2 origin-bottom animate-in fade-in slide-in-from-bottom-2 zoom-in-95 duration-150 ease-out'
@@ -881,27 +881,27 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           {/* Mobile Bottom-sheet Modal rendered via React Portal */}
           {isOpen && isMobile && mounted && typeof document !== 'undefined' && createPortal(
             <div
-              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-xs animate-in fade-in duration-200 p-0"
+              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-xs animate-in fade-in duration-200 p-0"
               onClick={() => setIsOpen(false)}
             >
               <div
-                className="w-full max-w-sm bg-white rounded-t-3xl p-4 shadow-2xl border-t border-zinc-200 animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-sm bg-white dark:bg-card rounded-t-3xl p-4 shadow-2xl border-t border-zinc-200 dark:border-border animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
               >
                 {/* Mobile Header Handle & Title */}
                 <div className="flex flex-col items-center mb-3">
-                  <div className="w-10 h-1 bg-zinc-300 rounded-full mb-3" />
+                  <div className="w-10 h-1 bg-zinc-300 dark:bg-slate-600 rounded-full mb-3" />
                   <div className="w-full flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="w-4 h-4 text-[#2AC1BC]" />
-                      <span className="text-xs font-bold text-zinc-800">
+                      <span className="text-xs font-bold text-zinc-800 dark:text-foreground">
                         {label || textSelectDate}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-slate-200 hover:bg-zinc-100 dark:hover:bg-card-hover transition-colors cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>

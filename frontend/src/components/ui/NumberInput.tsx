@@ -42,8 +42,8 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           <label
             htmlFor={inputId}
             className={cn(
-              'block text-xs font-bold text-zinc-700 select-none',
-              disabled && 'text-zinc-400 cursor-not-allowed',
+              'block text-xs font-bold text-zinc-700 dark:text-slate-200 select-none',
+              disabled && 'text-zinc-400 dark:text-slate-500 cursor-not-allowed',
               labelClassName,
             )}
           >
@@ -78,10 +78,10 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
               prefixText ? 'pl-8' : '',
               suffixText ? 'pr-14' : '',
               disabled
-                ? 'bg-zinc-100 text-zinc-500 border-zinc-200 cursor-not-allowed select-none shadow-none'
+                ? 'bg-zinc-100 dark:bg-surface text-zinc-500 dark:text-slate-500 border-zinc-200 dark:border-border cursor-not-allowed select-none shadow-none'
                 : error
-                  ? 'bg-white border-rose-400 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                  : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-300 focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/15',
+                  ? 'bg-white dark:bg-input-bg border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                  : 'bg-white dark:bg-input-bg border-zinc-200 dark:border-border text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 focus:border-[#2AC1BC] dark:focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/20',
               className,
             )}
             {...props}

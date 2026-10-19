@@ -133,9 +133,9 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             variant === 'card' &&
               cn(
                 'p-3.5 rounded-2xl border transition-all duration-200',
-                'border-zinc-200 bg-white hover:border-[#2AC1BC]/60 hover:bg-zinc-50/50',
-                isChecked && 'border-[#2AC1BC] bg-[#2AC1BC]/5 shadow-xs',
-                hasError && 'border-rose-300 bg-rose-50/20',
+                'border-zinc-200 dark:border-border bg-white dark:bg-card hover:border-[#2AC1BC]/60 hover:bg-zinc-50/50 dark:hover:bg-card-hover',
+                isChecked && 'border-[#2AC1BC] bg-[#2AC1BC]/5 dark:bg-[#2AC1BC]/15 shadow-xs',
+                hasError && 'border-rose-300 dark:border-rose-500/60 bg-rose-50/20',
               ),
             labelClassName,
           )}
@@ -164,7 +164,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 'flex items-center justify-center transition-all duration-200 border',
                 sizeConfig.box,
                 // Unchecked baseline
-                'border-zinc-300 bg-white group-hover:border-[#2AC1BC]',
+                'border-zinc-300 dark:border-border bg-white dark:bg-input-bg group-hover:border-[#2AC1BC]',
                 // Focus styling
                 'peer-focus-visible:ring-2 peer-focus-visible:ring-[#2AC1BC]/40 peer-focus-visible:ring-offset-1',
                 // Checked or Indeterminate styling
@@ -176,7 +176,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                   'border-rose-400 bg-rose-50/20 peer-checked:bg-rose-500 peer-checked:border-rose-500',
                 // Disabled styling
                 disabled &&
-                  'bg-zinc-100 border-zinc-200 text-zinc-400 group-hover:border-zinc-200 cursor-not-allowed peer-checked:bg-zinc-400 peer-checked:border-zinc-400',
+                  'bg-zinc-100 dark:bg-surface border-zinc-200 dark:border-border text-zinc-400 group-hover:border-zinc-200 cursor-not-allowed peer-checked:bg-zinc-400 peer-checked:border-zinc-400',
                 boxClassName,
                 className,
               )}

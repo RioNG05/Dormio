@@ -43,7 +43,7 @@ export interface FormProps extends Omit<React.FormHTMLAttributes<HTMLFormElement
 
 const formVariantClasses: Record<NonNullable<FormProps['variant']>, string> = {
   plain: 'space-y-5 w-full',
-  card: 'bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-xs space-y-6 w-full',
+  card: 'bg-white dark:bg-card rounded-3xl p-5 sm:p-8 border border-zinc-200/80 dark:border-border shadow-xs space-y-6 w-full',
   modal: 'space-y-5 w-full',
   compact: 'space-y-3.5 w-full',
 }
@@ -144,7 +144,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
     <div
       className={cn(
         'flex flex-col sm:flex-row sm:items-center justify-between gap-3',
-        bordered && 'border-b border-zinc-100 pb-4',
+        bordered && 'border-b border-zinc-100 dark:border-border pb-4',
         className,
       )}
     >
@@ -219,7 +219,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
   return (
     <section
-      className={cn('space-y-4 w-full', divider && 'pt-5 border-t border-zinc-100', className)}
+      className={cn('space-y-4 w-full', divider && 'pt-5 border-t border-zinc-100 dark:border-border', className)}
     >
       {(title || description || actions || collapsible) && (
         <div
@@ -231,11 +231,11 @@ export const FormSection: React.FC<FormSectionProps> = ({
           onClick={collapsible ? () => setIsOpen(!isOpen) : undefined}
         >
           <div className="flex items-center gap-2.5">
-            {icon && <div className="text-zinc-500 shrink-0 flex items-center">{icon}</div>}
+            {icon && <div className="text-zinc-500 dark:text-slate-400 shrink-0 flex items-center">{icon}</div>}
             <div>
               {title &&
                 (typeof title === 'string' ? (
-                  <Text as="h4" size="xs" weight="extrabold" color="default" className="sm:text-sm tracking-tight text-zinc-800">
+                  <Text as="h4" size="xs" weight="extrabold" color="default" className="sm:text-sm tracking-tight text-zinc-800 dark:text-foreground">
                     {title}
                   </Text>
                 ) : (
@@ -374,7 +374,7 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
           <div className="flex items-center justify-between gap-2">
             {label && (
               <label
-                className={cn('block text-xs font-bold text-zinc-700 select-none', labelClassName)}
+                className={cn('block text-xs font-bold text-zinc-700 dark:text-slate-200 select-none', labelClassName)}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {label}
@@ -446,9 +446,9 @@ export const FormActions = React.forwardRef<HTMLDivElement, FormActionsProps>(
           'flex items-stretch sm:items-center gap-3 pt-2 w-full',
           stackedOnMobile ? 'flex-col-reverse sm:flex-row' : 'flex-row',
           alignMap[align],
-          bordered && 'border-t border-zinc-100 pt-4 mt-2',
+          bordered && 'border-t border-zinc-100 dark:border-border pt-4 mt-2',
           sticky &&
-            'sticky bottom-0 bg-white/95 backdrop-blur-xs py-3 border-t border-zinc-200/80 -mx-5 px-5 sm:-mx-8 sm:px-8 z-10 shadow-xs',
+            'sticky bottom-0 bg-white/95 dark:bg-card/95 backdrop-blur-xs py-3 border-t border-zinc-200/80 dark:border-border -mx-5 px-5 sm:-mx-8 sm:px-8 z-10 shadow-xs',
           className,
         )}
         {...props}
@@ -479,20 +479,20 @@ const alertVariantStyles: Record<
   { container: string; icon: string }
 > = {
   error: {
-    container: 'bg-rose-500/10 border-rose-500/30 text-rose-700',
-    icon: 'text-rose-500',
+    container: 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300',
+    icon: 'text-rose-500 dark:text-rose-400',
   },
   success: {
-    container: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700',
-    icon: 'text-emerald-500',
+    container: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300',
+    icon: 'text-emerald-500 dark:text-emerald-400',
   },
   warning: {
-    container: 'bg-amber-500/10 border-amber-500/30 text-amber-700',
-    icon: 'text-amber-500',
+    container: 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300',
+    icon: 'text-amber-500 dark:text-amber-400',
   },
   info: {
-    container: 'bg-sky-500/10 border-sky-500/30 text-sky-700',
-    icon: 'text-sky-500',
+    container: 'bg-sky-500/10 border-sky-500/30 text-sky-700 dark:text-sky-300',
+    icon: 'text-sky-500 dark:text-sky-400',
   },
 }
 
