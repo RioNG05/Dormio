@@ -4,8 +4,11 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Calendar, Clock, ChevronRight, ArrowLeft, Copy, Check } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, Text } from '@/components/ui'
+import { cn } from '@/lib/utils'
 
 export default function BlogDetailPage() {
   const tGuest = useTranslations('guest')
@@ -171,15 +174,113 @@ export default function BlogDetailPage() {
 
         {/* Article Body Content */}
         <div className="bg-card rounded-3xl p-6 sm:p-10 border border-line shadow-sm mb-12">
-          <Text
-            as="div"
-            variant="body"
-            size="xs"
-            weight="medium"
-            className="prose prose-zinc max-w-none sm:text-sm leading-relaxed whitespace-pre-line"
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              h1: ({ children }) => (
+                <Text
+                  as="h1"
+                  variant="heading"
+                  size={{ base: 'xl', sm: '2xl' }}
+                  weight="black"
+                  className="mt-8 mb-4 first:mt-0 tracking-tight"
+                >
+                  {children}
+                </Text>
+              ),
+              h2: ({ children }) => (
+                <Text
+                  as="h2"
+                  variant="heading"
+                  size={{ base: 'lg', sm: 'xl' }}
+                  weight="extrabold"
+                  className="mt-8 mb-3 first:mt-0 tracking-tight"
+                >
+                  {children}
+                </Text>
+              ),
+              h3: ({ children }) => (
+                <Text
+                  as="h3"
+                  variant="heading"
+                  size={{ base: 'base', sm: 'lg' }}
+                  weight="bold"
+                  className="mt-6 mb-3 first:mt-0 tracking-tight text-foreground"
+                >
+                  {children}
+                </Text>
+              ),
+              h4: ({ children }) => (
+                <Text
+                  as="h4"
+                  variant="heading"
+                  size="sm"
+                  weight="bold"
+                  className="mt-5 mb-2 first:mt-0 tracking-tight"
+                >
+                  {children}
+                </Text>
+              ),
+              p: ({ children }) => (
+                <Text
+                  as="p"
+                  variant="body"
+                  size={{ base: 'xs', sm: 'sm' }}
+                  className="my-3 leading-relaxed text-foreground/90"
+                >
+                  {children}
+                </Text>
+              ),
+              strong: ({ children }) => (
+                <strong className="font-bold text-foreground">
+                  {children}
+                </strong>
+              ),
+              em: ({ children }) => (
+                <em className="italic text-foreground/80">
+                  {children}
+                </em>
+              ),
+              ul: ({ children }) => (
+                <ul className="my-4 space-y-2 list-disc list-inside text-xs sm:text-sm text-foreground/90 pl-1">
+                  {children}
+                </ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="my-4 space-y-2 list-decimal list-inside text-xs sm:text-sm text-foreground/90 pl-1">
+                  {children}
+                </ol>
+              ),
+              li: ({ children }) => (
+                <li className="leading-relaxed marker:text-[#2AC1BC]">
+                  {children}
+                </li>
+              ),
+              hr: () => <hr className="my-8 border-line" />,
+              blockquote: ({ children }) => (
+                <blockquote className="my-4 border-l-4 border-[#2AC1BC] bg-card-hover/40 rounded-r-xl py-3 px-4 italic text-muted text-xs sm:text-sm">
+                  {children}
+                </blockquote>
+              ),
+              code: ({ children, className }) => (
+                <code className={cn('px-1.5 py-0.5 rounded-md bg-card-hover text-[#2AC1BC] font-mono text-xs', className)}>
+                  {children}
+                </code>
+              ),
+              a: ({ href, children }) => (
+                <a
+                  href={href}
+                  target={href?.startsWith('http') ? '_blank' : undefined}
+                  rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="text-[#2AC1BC] hover:underline font-semibold"
+                >
+                  {children}
+                </a>
+              ),
+            }}
           >
             {post.content}
-          </Text>
+          </ReactMarkdown>
         </div>
 
         {/* RELATED ARTICLES */}
