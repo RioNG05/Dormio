@@ -338,135 +338,95 @@ export default function SendApplicationPage() {
     [applications, t],
   )
 
-  // Type metadata helper
-  const getTypeInfo = (type?: GrievanceType) => {
+  // Standardized badge helpers with uniform height (h-6), padding (px-2.5), casing (normal-case), and whitespace-nowrap
+  const getTypeBadge = (type?: GrievanceType) => {
     switch (type) {
       case 'inquiry':
-        return {
-          label: t('typeInquiry'),
-          icon: HelpCircle,
-          badgeColor: 'bg-info-soft text-info border-info-subtle',
-          cardBorder: 'border-blue-500 bg-blue-50/30',
-        }
+        return (
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-info-soft text-info border-info-subtle">
+            <HelpCircle className="w-3 h-3 shrink-0" />
+            <span>{t('typeInquiry')}</span>
+          </span>
+        )
       case 'feedback':
-        return {
-          label: t('typeFeedback'),
-          icon: Sparkles,
-          badgeColor: 'bg-deposit-soft text-deposit border-deposit-subtle',
-          cardBorder: 'border-purple-500 bg-purple-50/30',
-        }
+        return (
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-deposit-soft text-deposit border-deposit-subtle">
+            <Sparkles className="w-3 h-3 shrink-0" />
+            <span>{t('typeFeedback')}</span>
+          </span>
+        )
       case 'complaint':
       default:
-        return {
-          label: t('typeComplaint'),
-          icon: AlertTriangle,
-          badgeColor: 'bg-danger-soft text-danger border-danger-subtle',
-          cardBorder: 'border-rose-500 bg-rose-50/30',
-        }
+        return (
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-danger-soft text-danger border-danger-subtle">
+            <AlertTriangle className="w-3 h-3 shrink-0" />
+            <span>{t('typeComplaint')}</span>
+          </span>
+        )
     }
   }
 
-  // Status badge helper
-  const getStatusBadge = (status: string) => {
+  // Unified Status badge helper
+  const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'resolved':
       case 'closed':
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle normal-case"
-          >
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            <Text as="span" color="inherit">
-              {t('statusResolved')}
-            </Text>
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-success-soft text-success border-success-subtle">
+            <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+            <span>{t('statusResolved')}</span>
+          </span>
         )
       case 'in_progress':
       case 'investigating':
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-info-soft text-info border border-info-subtle normal-case"
-          >
-            <Clock className="w-3 h-3 text-blue-600 animate-spin" />
-            <Text as="span" color="inherit">
-              {t('statusInProgress')}
-            </Text>
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-info-soft text-info border-info-subtle">
+            <Clock className="w-3 h-3 text-blue-500 animate-spin shrink-0" />
+            <span>{t('statusInProgress')}</span>
+          </span>
         )
       case 'rejected':
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-card-hover text-muted border border-line normal-case"
-          >
-            <XCircle className="w-3 h-3 text-muted" />
-            <Text as="span" color="inherit">
-              {t('statusRejected')}
-            </Text>
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-card-hover text-muted border-line">
+            <XCircle className="w-3 h-3 text-muted shrink-0" />
+            <span>{t('statusRejected')}</span>
+          </span>
         )
       case 'pending':
       default:
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="bold"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle normal-case"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <Text as="span" color="inherit">
-              {t('statusPending')}
-            </Text>
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-warning-soft text-warning border-warning-subtle">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <span>{t('statusPending')}</span>
+          </span>
         )
     }
   }
 
-  // Priority badge helper
-  const getPriorityBadge = (p: string) => {
+  // Unified Priority badge helper
+  const getPriorityBadge = (p?: string) => {
     switch (p) {
       case 'high':
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="black"
-            className="px-2 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle"
-          >
-            {t('priorityHigh')}
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-danger-soft text-danger border-danger-subtle">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+            <span>{t('priorityHigh')}</span>
+          </span>
         )
       case 'low':
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="black"
-            className="px-2 py-0.5 rounded-full bg-card-hover text-muted border border-line"
-          >
-            {t('priorityLow')}
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-card-hover text-muted border-line">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+            <span>{t('priorityLow')}</span>
+          </span>
         )
       case 'medium':
       default:
         return (
-          <Text
-            as="span"
-            variant="badge"
-            weight="black"
-            className="px-2 py-0.5 rounded-full bg-warning-soft text-warning border border-warning-subtle"
-          >
-            {t('priorityMedium')}
-          </Text>
+          <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-warning-soft text-warning border-warning-subtle">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+            <span>{t('priorityMedium')}</span>
+          </span>
         )
     }
   }
@@ -637,7 +597,7 @@ export default function SendApplicationPage() {
                     <Button
                       type="button"
                       variant={viewMode === 'grid' ? 'white' : 'ghost'}
-                      size="icon-sm"
+                      size="icon-xs"
                       onClick={() => setViewMode('grid')}
                       title="Grid View"
                     >
@@ -646,7 +606,7 @@ export default function SendApplicationPage() {
                     <Button
                       type="button"
                       variant={viewMode === 'table' ? 'white' : 'ghost'}
-                      size="icon-sm"
+                      size="icon-xs"
                       onClick={() => setViewMode('table')}
                       title="Table View"
                     >
@@ -699,9 +659,6 @@ export default function SendApplicationPage() {
               /* GRID VIEW (Rule #9 Default) */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {paginatedApplications.map(item => {
-                  const typeInfo = getTypeInfo(item.type)
-                  const Icon = typeInfo.icon
-
                   return (
                     <div
                       key={item.id}
@@ -709,19 +666,9 @@ export default function SendApplicationPage() {
                       className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group hover:border-[#2AC1BC]"
                     >
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <Text
-                            as="span"
-                            variant="badge"
-                            weight="black"
-                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${typeInfo.badgeColor}`}
-                          >
-                            <Icon className="w-3 h-3" />
-                            <Text as="span" color="inherit">
-                              {typeInfo.label}
-                            </Text>
-                          </Text>
-                          <div className="flex items-center gap-1.5">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          {getTypeBadge(item.type)}
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {getPriorityBadge(item.priority)}
                             {getStatusBadge(item.status)}
                           </div>
@@ -837,9 +784,6 @@ export default function SendApplicationPage() {
                     </thead>
                     <tbody className="divide-y divide-line">
                       {paginatedApplications.map(item => {
-                        const typeInfo = getTypeInfo(item.type)
-                        const Icon = typeInfo.icon
-
                         return (
                           <tr
                             key={item.id}
@@ -847,17 +791,7 @@ export default function SendApplicationPage() {
                             className="hover:bg-zinc-50/80 transition-colors cursor-pointer group"
                           >
                             <td className="py-3 px-4">
-                              <Text
-                                as="span"
-                                variant="badge"
-                                weight="black"
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${typeInfo.badgeColor}`}
-                              >
-                                <Icon className="w-3 h-3" />
-                                <Text as="span" color="inherit">
-                                  {typeInfo.label}
-                                </Text>
-                              </Text>
+                              {getTypeBadge(item.type)}
                             </td>
                             <td className="py-3 px-4 max-w-xs">
                               <Text
@@ -1227,18 +1161,9 @@ export default function SendApplicationPage() {
           selectedApplication && (
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Text
-                  as="span"
-                  variant="badge"
-                  weight="black"
-                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${
-                    getTypeInfo(selectedApplication.type).badgeColor
-                  }`}
-                >
-                  {getTypeInfo(selectedApplication.type).label}
-                </Text>
-                {getStatusBadge(selectedApplication.status)}
+                {getTypeBadge(selectedApplication.type)}
                 {getPriorityBadge(selectedApplication.priority)}
+                {getStatusBadge(selectedApplication.status)}
               </div>
 
               <Text as="h3" variant="heading" size="xl">
