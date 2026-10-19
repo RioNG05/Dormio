@@ -26,35 +26,35 @@
   --accent-border: rgba(255, 107, 53, 0.3);
 
   /* Semantic tokens */
-  --danger: #ea580c;
-  --danger-hover: #c2410c;
-  --danger-bg: #fff7ed;
-  --danger-border: #fed7aa;
+  --danger: #e11d48;
+  --danger-hover: #be123c;
+  --danger-soft: #fff1f2;
+  --danger-subtle: #fecdd3;
 
   --deposit: #9333ea;
   --deposit-hover: #7e22ce;
-  --deposit-bg: #faf5ff;
-  --deposit-border: #e9d5ff;
+  --deposit-soft: #faf5ff;
+  --deposit-subtle: #e9d5ff;
 
-  --success: var(--primary);
-  --success-bg: #f0fcfa;
-  --success-border: #b3e0d8;
+  --success: #059669;
+  --success-soft: #ecfdf5;
+  --success-subtle: #a7f3d0;
 
   --vacant: #0ea5e9;
   --vacant-hover: #0284c7;
-  --vacant-bg: #f0f9ff;
-  --vacant-border: #bae6fd;
+  --vacant-soft: #f0f9ff;
+  --vacant-subtle: #bae6fd;
 
   --warning: #d97706;
-  --warning-bg: #fffbeb;
-  --warning-border: #fde68a;
+  --warning-soft: #fffbeb;
+  --warning-subtle: #fde68a;
 
   --info: #2563eb;
-  --info-bg: #eff6ff;
-  --info-border: #bfdbfe;
+  --info-soft: #eff6ff;
+  --info-subtle: #bfdbfe;
 
   --muted: #64748b;
-  --border: #e2e8f0;
+  --line: #e2e8f0;
 }
 
 .dark {
@@ -80,35 +80,35 @@
   --accent-border: rgba(255, 107, 53, 0.38);
 
   /* Semantic tokens adapted for dark mode */
-  --danger: #fb923c;
-  --danger-hover: #f97316;
-  --danger-bg: rgba(234, 88, 12, 0.15);
-  --danger-border: rgba(251, 146, 60, 0.32);
+  --danger: #fb7185;
+  --danger-hover: #f43f5e;
+  --danger-soft: rgba(244, 63, 94, 0.14);
+  --danger-subtle: rgba(251, 113, 133, 0.3);
 
   --deposit: #c084fc;
   --deposit-hover: #a855f7;
-  --deposit-bg: rgba(147, 51, 234, 0.15);
-  --deposit-border: rgba(192, 132, 252, 0.32);
+  --deposit-soft: rgba(147, 51, 234, 0.15);
+  --deposit-subtle: rgba(192, 132, 252, 0.32);
 
-  --success: #33cfc9;
-  --success-bg: rgba(42, 193, 188, 0.15);
-  --success-border: rgba(42, 193, 188, 0.35);
+  --success: #34d399;
+  --success-soft: rgba(16, 185, 129, 0.14);
+  --success-subtle: rgba(52, 211, 153, 0.3);
 
   --vacant: #38bdf8;
   --vacant-hover: #0ea5e9;
-  --vacant-bg: rgba(14, 165, 233, 0.15);
-  --vacant-border: rgba(56, 189, 248, 0.32);
+  --vacant-soft: rgba(14, 165, 233, 0.15);
+  --vacant-subtle: rgba(56, 189, 248, 0.32);
 
   --warning: #fbbf24;
-  --warning-bg: rgba(217, 119, 6, 0.15);
-  --warning-border: rgba(251, 191, 36, 0.32);
+  --warning-soft: rgba(217, 119, 6, 0.15);
+  --warning-subtle: rgba(251, 191, 36, 0.32);
 
   --info: #60a5fa;
-  --info-bg: rgba(37, 99, 235, 0.15);
-  --info-border: rgba(96, 165, 250, 0.32);
+  --info-soft: rgba(37, 99, 235, 0.15);
+  --info-subtle: rgba(96, 165, 250, 0.32);
 
   --muted: #94a3b8;
-  --border: #22323f;
+  --line: #22323f;
 }
 
 @theme inline {
@@ -118,64 +118,45 @@
   --color-card: var(--card);
   --color-card-hover: var(--card-hover);
   --color-input: var(--input-bg);
-  --color-input-bg: var(--input-bg);
-
-  /* Clean border token: border-line instead of border-border */
-  --color-line: var(--border);
-  --color-border: var(--border);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
 
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-primary-subtle: var(--primary-border);
-  --color-primary-border: var(--primary-border);
 
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-subtle: var(--accent-border);
-  --color-accent-border: var(--accent-border);
 
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
-  --color-danger-soft: var(--danger-bg);
-  --color-danger-subtle: var(--danger-border);
-  --color-danger-bg: var(--danger-bg);
-  --color-danger-border: var(--danger-border);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-subtle: var(--danger-subtle);
 
   --color-deposit: var(--deposit);
   --color-deposit-hover: var(--deposit-hover);
-  --color-deposit-soft: var(--deposit-bg);
-  --color-deposit-subtle: var(--deposit-border);
-  --color-deposit-bg: var(--deposit-bg);
-  --color-deposit-border: var(--deposit-border);
+  --color-deposit-soft: var(--deposit-soft);
+  --color-deposit-subtle: var(--deposit-subtle);
 
   --color-success: var(--success);
-  --color-success-soft: var(--success-bg);
-  --color-success-subtle: var(--success-border);
-  --color-success-bg: var(--success-bg);
-  --color-success-border: var(--success-border);
+  --color-success-soft: var(--success-soft);
+  --color-success-subtle: var(--success-subtle);
 
   --color-vacant: var(--vacant);
   --color-vacant-hover: var(--vacant-hover);
-  --color-vacant-soft: var(--vacant-bg);
-  --color-vacant-subtle: var(--vacant-border);
-  --color-vacant-bg: var(--vacant-bg);
-  --color-vacant-border: var(--vacant-border);
+  --color-vacant-soft: var(--vacant-soft);
+  --color-vacant-subtle: var(--vacant-subtle);
 
   --color-warning: var(--warning);
-  --color-warning-soft: var(--warning-bg);
-  --color-warning-subtle: var(--warning-border);
-  --color-warning-bg: var(--warning-bg);
-  --color-warning-border: var(--warning-border);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-subtle: var(--warning-subtle);
 
   --color-info: var(--info);
-  --color-info-soft: var(--info-bg);
-  --color-info-subtle: var(--info-border);
-  --color-info-bg: var(--info-bg);
-  --color-info-border: var(--info-border);
-
-  --color-muted: var(--muted);
+  --color-info-soft: var(--info-soft);
+  --color-info-subtle: var(--info-subtle);
 
   --font-sans: var(--font-be-vietnam-pro);
 }
@@ -197,186 +178,6 @@ body {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
     transition-delay: 0ms !important;
   }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Global Dark Mode Adaptation Layer                                          */
-/* Harmonizes existing utility classes across all 80+ routes while respecting */
-/* .theme-preserve-light safe zones (e.g. A4 contracts, QR payment boxes).    */
-/* -------------------------------------------------------------------------- */
-
-.dark :where(.bg-white):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--card) !important;
-}
-
-.dark :where(.bg-white\/95, .bg-white\/90, .bg-white\/80):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: color-mix(in srgb, var(--card) 92%, transparent) !important;
-}
-
-.dark :where(.bg-zinc-50, .bg-slate-50, .bg-gray-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--surface) !important;
-}
-
-.dark :where(.bg-zinc-50\/50, .bg-zinc-50\/60, .bg-zinc-50\/80, .bg-slate-50\/50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: color-mix(in srgb, var(--surface) 75%, transparent) !important;
-}
-
-.dark :where(.bg-zinc-100, .bg-zinc-100\/80, .bg-slate-100, .bg-gray-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--card-hover) !important;
-}
-
-.dark :where(.bg-zinc-200, .bg-zinc-200\/80, .bg-slate-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: #243542 !important;
-}
-
-/* Hover surface states */
-.dark :where(.hover\:bg-white:hover, .hover\:bg-zinc-50:hover, .hover\:bg-slate-50:hover):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--card-hover) !important;
-}
-
-.dark :where(.hover\:bg-zinc-100:hover, .hover\:bg-zinc-200:hover, .hover\:bg-slate-100:hover):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: #243542 !important;
-}
-
-/* Borders & Dividers */
-.dark :where(
-  .border-zinc-100,
-  .border-zinc-200,
-  .border-zinc-200\/80,
-  .border-zinc-200\/90,
-  .border-zinc-200\/60,
-  .border-zinc-300,
-  .border-slate-100,
-  .border-slate-200,
-  .border-gray-100,
-  .border-gray-200
-):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: var(--border) !important;
-}
-
-.dark :where(.divide-zinc-100 > :not(:last-child), .divide-zinc-200 > :not(:last-child), .divide-slate-100 > :not(:last-child)):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: var(--border) !important;
-}
-
-/* Typography hierarchy */
-.dark :where(.text-zinc-950, .text-zinc-900, .text-zinc-800, .text-slate-900, .text-slate-800, .text-gray-900):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: var(--foreground) !important;
-}
-
-.dark :where(.text-zinc-700, .text-slate-700, .text-gray-700):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #cbd5e1 !important;
-}
-
-.dark :where(.text-zinc-600, .text-zinc-500, .text-slate-600, .text-slate-500, .text-gray-600, .text-gray-500):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: var(--muted) !important;
-}
-
-.dark :where(.text-zinc-400, .text-slate-400):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #64748b !important;
-}
-
-/* Pastel status backgrounds & borders harmonized for dark surfaces */
-.dark :where(.bg-emerald-50, .bg-emerald-50\/50, .bg-emerald-100\/50, .bg-green-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(16, 185, 129, 0.14) !important;
-}
-.dark :where(.bg-emerald-100, .bg-green-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(16, 185, 129, 0.22) !important;
-}
-.dark :where(.border-emerald-100, .border-emerald-200, .border-emerald-200\/80, .border-green-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: rgba(52, 211, 153, 0.3) !important;
-}
-.dark :where(.text-emerald-700, .text-emerald-800, .text-emerald-900, .text-green-700, .text-green-800):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #34d399 !important;
-}
-
-.dark :where(.bg-teal-50, .bg-cyan-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--primary-soft) !important;
-}
-.dark :where(.bg-teal-100, .bg-cyan-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(42, 193, 188, 0.24) !important;
-}
-.dark :where(.border-teal-100, .border-teal-200, .border-cyan-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: var(--primary-border) !important;
-}
-.dark :where(.text-teal-700, .text-teal-800, .text-teal-900):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #5eead4 !important;
-}
-
-.dark :where(.bg-orange-50, .bg-orange-50\/50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--accent-soft) !important;
-}
-.dark :where(.bg-orange-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(255, 107, 53, 0.24) !important;
-}
-.dark :where(.border-orange-100, .border-orange-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: var(--accent-border) !important;
-}
-.dark :where(.text-orange-700, .text-orange-800, .text-orange-900):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #fb923c !important;
-}
-
-.dark :where(.bg-rose-50, .bg-rose-50\/50, .bg-red-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(244, 63, 94, 0.14) !important;
-}
-.dark :where(.bg-rose-100, .bg-red-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(244, 63, 94, 0.22) !important;
-}
-.dark :where(.border-rose-100, .border-rose-200, .border-red-100, .border-red-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: rgba(251, 113, 133, 0.3) !important;
-}
-.dark :where(.text-rose-700, .text-rose-800, .text-rose-900, .text-red-700, .text-red-800):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #fb7185 !important;
-}
-
-.dark :where(.bg-amber-50, .bg-amber-50\/50, .bg-yellow-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(245, 158, 11, 0.14) !important;
-}
-.dark :where(.bg-amber-100, .bg-yellow-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(245, 158, 11, 0.22) !important;
-}
-.dark :where(.border-amber-100, .border-amber-200, .border-yellow-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: rgba(251, 191, 36, 0.3) !important;
-}
-.dark :where(.text-amber-700, .text-amber-800, .text-amber-900, .text-yellow-700, .text-yellow-800):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #fbbf24 !important;
-}
-
-.dark :where(.bg-blue-50, .bg-blue-50\/50, .bg-sky-50, .bg-indigo-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(59, 130, 246, 0.14) !important;
-}
-.dark :where(.bg-blue-100, .bg-sky-100, .bg-indigo-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(59, 130, 246, 0.22) !important;
-}
-.dark :where(.border-blue-100, .border-blue-200, .border-sky-200, .border-indigo-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: rgba(96, 165, 250, 0.3) !important;
-}
-.dark :where(.text-blue-700, .text-blue-800, .text-blue-900, .text-sky-700, .text-indigo-700):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #60a5fa !important;
-}
-
-.dark :where(.bg-purple-50, .bg-violet-50):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(168, 85, 247, 0.14) !important;
-}
-.dark :where(.bg-purple-100, .bg-violet-100):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: rgba(168, 85, 247, 0.22) !important;
-}
-.dark :where(.border-purple-100, .border-purple-200, .border-violet-200):not(.theme-preserve-light, .theme-preserve-light *) {
-  border-color: rgba(192, 132, 252, 0.3) !important;
-}
-.dark :where(.text-purple-700, .text-purple-800, .text-purple-900, .text-violet-700):not(.theme-preserve-light, .theme-preserve-light *) {
-  color: #c084fc !important;
-}
-
-/* Native form controls in pages without custom UI wrappers */
-.dark :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea):not(.theme-preserve-light, .theme-preserve-light *) {
-  background-color: var(--input-bg);
-  color: var(--foreground);
-  border-color: var(--border);
-}
-
-/* Soften heavy zinc-200 shadows in dark mode */
-.dark :where(.shadow-zinc-200, .shadow-zinc-200\/60, .shadow-zinc-200\/50) {
-  --tw-shadow-color: rgba(0, 0, 0, 0.45) !important;
 }
 
 /* Utility: hide scrollbar while keeping scroll functionality */
@@ -423,7 +224,7 @@ body {
 
 .data-table thead {
   background: var(--surface);
-  border-bottom: 2px solid var(--border);
+  border-bottom: 2px solid var(--line);
 }
 
 .data-table thead th {
@@ -436,7 +237,7 @@ body {
 }
 
 .data-table tbody tr {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   transition: background 0.15s;
 }
 
