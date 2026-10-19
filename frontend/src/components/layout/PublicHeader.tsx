@@ -396,7 +396,7 @@ export function PublicHeader() {
             )}
 
             {/* Notification Popup, Theme Switcher & Language Switcher */}
-            <div className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-200/80 dark:border-border">
+            <div className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-200/80 dark:border-line">
               {isLoggedIn && <NotificationBell align="right" />}
               <ThemeSwitcher />
               <LanguageSwitcher />
@@ -413,7 +413,7 @@ export function PublicHeader() {
               variant="secondary"
               size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="rounded-2xl border border-zinc-200/80 dark:border-border"
+              className="rounded-2xl border border-zinc-200/80 dark:border-line"
               aria-label="Toggle Navigation Menu"
             >
               {isMobileMenuOpen ? (

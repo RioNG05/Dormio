@@ -26,7 +26,7 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
       onClick={toggleLanguage}
       title={label}
       aria-label={label}
-      className={`!h-8 !w-9 !p-0 select-none border-border hover:border-primary/50 ${className}`}
+      className={`!h-8 !w-9 !p-0 select-none border-line hover:border-primary/50 ${className}`}
     >
       <Text as="span" size="xs" weight="bold" color="inherit">
         {isVi ? tCommon('langVi') : tCommon('langEn')}

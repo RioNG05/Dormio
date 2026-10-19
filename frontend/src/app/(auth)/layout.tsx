@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Left Column: Auth Form */}
       <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-background z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
         {/* Header Brand Logo, Theme Switcher & Language Switcher */}
-        <div className="flex items-center justify-between pb-4 border-b border-border shrink-0">
+        <div className="flex items-center justify-between pb-4 border-b border-line shrink-0">
           <Logo size="lg" />
 
           <div className="flex items-center gap-2">

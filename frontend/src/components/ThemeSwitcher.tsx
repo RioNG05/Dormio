@@ -46,7 +46,7 @@ export default function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
       onClick={handleToggleTheme}
       title={tCommon('toggleTheme')}
       aria-label={tCommon('toggleTheme')}
-      className={`!h-8 !w-9 !p-0 select-none group relative overflow-hidden border-border hover:border-primary/50 ${className}`}
+      className={`!h-8 !w-9 !p-0 select-none group relative overflow-hidden border-line hover:border-primary/50 ${className}`}
     >
       <span className="relative flex items-center justify-center w-4 h-4">
         {/* Sun icon shown in Light Mode (Warm Accent Orange #FF6B35) */}

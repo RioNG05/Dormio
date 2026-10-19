@@ -43,7 +43,7 @@ export interface FormProps extends Omit<React.FormHTMLAttributes<HTMLFormElement
 
 const formVariantClasses: Record<NonNullable<FormProps['variant']>, string> = {
   plain: 'space-y-5 w-full',
-  card: 'bg-white dark:bg-card rounded-3xl p-5 sm:p-8 border border-zinc-200/80 dark:border-border shadow-xs space-y-6 w-full',
+  card: 'bg-white dark:bg-card rounded-3xl p-5 sm:p-8 border border-zinc-200/80 dark:border-line shadow-xs space-y-6 w-full',
   modal: 'space-y-5 w-full',
   compact: 'space-y-3.5 w-full',
 }
@@ -144,7 +144,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
     <div
       className={cn(
         'flex flex-col sm:flex-row sm:items-center justify-between gap-3',
-        bordered && 'border-b border-zinc-100 dark:border-border pb-4',
+        bordered && 'border-b border-zinc-100 dark:border-line pb-4',
         className,
       )}
     >
@@ -219,7 +219,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
   return (
     <section
-      className={cn('space-y-4 w-full', divider && 'pt-5 border-t border-zinc-100 dark:border-border', className)}
+      className={cn('space-y-4 w-full', divider && 'pt-5 border-t border-zinc-100 dark:border-line', className)}
     >
       {(title || description || actions || collapsible) && (
         <div
@@ -446,9 +446,9 @@ export const FormActions = React.forwardRef<HTMLDivElement, FormActionsProps>(
           'flex items-stretch sm:items-center gap-3 pt-2 w-full',
           stackedOnMobile ? 'flex-col-reverse sm:flex-row' : 'flex-row',
           alignMap[align],
-          bordered && 'border-t border-zinc-100 dark:border-border pt-4 mt-2',
+          bordered && 'border-t border-zinc-100 dark:border-line pt-4 mt-2',
           sticky &&
-            'sticky bottom-0 bg-white/95 dark:bg-card/95 backdrop-blur-xs py-3 border-t border-zinc-200/80 dark:border-border -mx-5 px-5 sm:-mx-8 sm:px-8 z-10 shadow-xs',
+            'sticky bottom-0 bg-white/95 dark:bg-card/95 backdrop-blur-xs py-3 border-t border-zinc-200/80 dark:border-line -mx-5 px-5 sm:-mx-8 sm:px-8 z-10 shadow-xs',
           className,
         )}
         {...props}

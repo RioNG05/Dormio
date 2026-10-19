@@ -25,7 +25,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
   const isStaff = pathname?.startsWith('/staff')
 
   return (
-    <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 dark:border-border bg-white dark:bg-card sticky top-0 z-30 gap-2">
+    <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 dark:border-line bg-white dark:bg-card sticky top-0 z-30 gap-2">
       <div className="flex items-center gap-2 shrink-0">
         <Button
           type="button"

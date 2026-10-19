@@ -63,10 +63,10 @@ export const TextareaInput = React.forwardRef<HTMLTextAreaElement, TextareaInput
             'w-full rounded-xl border px-3.5 py-2.5 text-xs font-semibold transition-all outline-none resize-y',
             'placeholder:text-zinc-400 dark:placeholder:text-slate-500 placeholder:font-normal',
             disabled
-              ? 'bg-zinc-100 dark:bg-surface text-zinc-500 dark:text-slate-500 border-zinc-200 dark:border-border cursor-not-allowed select-none shadow-none'
+              ? 'bg-zinc-100 dark:bg-surface text-zinc-500 dark:text-slate-500 border-zinc-200 dark:border-line cursor-not-allowed select-none shadow-none'
               : error
-                ? 'bg-white dark:bg-input-bg border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                : 'bg-white dark:bg-input-bg border-zinc-200 dark:border-border text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 focus:border-[#2AC1BC] dark:focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/20',
+                ? 'bg-white dark:bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                : 'bg-white dark:bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 focus:border-[#2AC1BC] dark:focus:border-[#2AC1BC] focus:ring-2 focus:ring-[#2AC1BC]/20',
             className,
           )}
           {...props}

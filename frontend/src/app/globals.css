@@ -117,47 +117,65 @@
   --color-surface: var(--surface);
   --color-card: var(--card);
   --color-card-hover: var(--card-hover);
+  --color-input: var(--input-bg);
   --color-input-bg: var(--input-bg);
+
+  /* Clean border token: border-line instead of border-border */
+  --color-line: var(--border);
+  --color-border: var(--border);
 
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-subtle: var(--primary-border);
   --color-primary-border: var(--primary-border);
 
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-subtle: var(--accent-border);
   --color-accent-border: var(--accent-border);
 
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-bg);
+  --color-danger-subtle: var(--danger-border);
   --color-danger-bg: var(--danger-bg);
   --color-danger-border: var(--danger-border);
 
   --color-deposit: var(--deposit);
   --color-deposit-hover: var(--deposit-hover);
+  --color-deposit-soft: var(--deposit-bg);
+  --color-deposit-subtle: var(--deposit-border);
   --color-deposit-bg: var(--deposit-bg);
   --color-deposit-border: var(--deposit-border);
 
   --color-success: var(--success);
+  --color-success-soft: var(--success-bg);
+  --color-success-subtle: var(--success-border);
   --color-success-bg: var(--success-bg);
   --color-success-border: var(--success-border);
 
   --color-vacant: var(--vacant);
   --color-vacant-hover: var(--vacant-hover);
+  --color-vacant-soft: var(--vacant-bg);
+  --color-vacant-subtle: var(--vacant-border);
   --color-vacant-bg: var(--vacant-bg);
   --color-vacant-border: var(--vacant-border);
 
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-bg);
+  --color-warning-subtle: var(--warning-border);
   --color-warning-bg: var(--warning-bg);
   --color-warning-border: var(--warning-border);
 
   --color-info: var(--info);
+  --color-info-soft: var(--info-bg);
+  --color-info-subtle: var(--info-border);
   --color-info-bg: var(--info-bg);
   --color-info-border: var(--info-border);
 
   --color-muted: var(--muted);
-  --color-border: var(--border);
 
   --font-sans: var(--font-be-vietnam-pro);
 }
@@ -175,7 +193,7 @@ body {
   html.theme-transitioning *::before,
   html.theme-transitioning *::after {
     transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
-    transition-duration: 300ms !important;
+    transition-duration: 500ms !important;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
     transition-delay: 0ms !important;
   }

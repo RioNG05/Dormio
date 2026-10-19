@@ -102,16 +102,11 @@ export function DashboardUserFooter() {
         : 'R'
 
   return (
-    <div className="border-t border-zinc-100 dark:border-border p-3">
+    <div className="border-t border-zinc-100 dark:border-line p-3">
       {/* Theme & Language toggle row */}
-      <div className="flex items-center justify-between px-2 mb-2">
-        <Text as="span" size="xs" weight="semibold" color="secondary">
-          {tNav('themeLabel')} / {tNav('langLabel')}
-        </Text>
-        <div className="flex items-center gap-1.5">
-          <ThemeSwitcher />
-          <LanguageSwitcher />
-        </div>
+      <div className="flex items-center justify-end gap-1.5 px-2 mb-2">
+        <ThemeSwitcher />
+        <LanguageSwitcher />
       </div>
 
       {/* Account popup trigger + menu container */}
@@ -222,11 +217,11 @@ export function DashboardUserFooter() {
         {/* Clickable Profile Card (trigger) */}
         <Button
           fullWidth
-          size="xs"
+          size="lg"
           type="button"
           variant="ghost"
           onClick={() => setUserMenuOpen(prev => !prev)}
-          className="group mb-2 justify-start"
+          className="group mb-2 px-0 justify-start"
           title={tNav('viewProfileTooltip')}
         >
           <div
@@ -270,7 +265,7 @@ export function DashboardUserFooter() {
         <Link
           href="/login"
           onClick={logout}
-          className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg hover:bg-orange-100 transition-colors"
+          className="flex items-center justify-center gap-2 w-full py-2 text-sm font-medium rounded-lg text-danger bg-danger-bg opacity-100 hover:opacity-70 transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           <Text as="span" size="sm" weight="medium" color="danger">

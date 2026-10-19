@@ -51,9 +51,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             // Variants
             'bg-primary text-white hover:bg-primary-hover active:opacity-90 shadow-2xs shadow-primary/20':
               variant === 'primary',
-            'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 active:bg-zinc-300 dark:bg-surface dark:text-foreground dark:border dark:border-border dark:hover:bg-card-hover':
+            'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 active:bg-zinc-300 dark:bg-surface dark:text-foreground dark:border dark:border-line dark:hover:bg-card-hover':
               variant === 'secondary',
-            'border border-zinc-200 bg-transparent text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 dark:border-border dark:text-foreground dark:hover:bg-card-hover':
+            'border border-zinc-200 bg-transparent text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 dark:border-line dark:text-foreground dark:hover:bg-card-hover':
               variant === 'outline',
             'bg-transparent hover:bg-zinc-100 active:bg-zinc-200 text-zinc-700 dark:text-slate-200 dark:hover:bg-card-hover':
               variant === 'ghost',
@@ -67,7 +67,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               variant === 'warning',
             'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950 dark:bg-primary dark:text-white dark:hover:bg-primary-hover':
               variant === 'dark',
-            'bg-white text-zinc-900 border border-zinc-200/80 hover:bg-zinc-50 shadow-xs active:bg-zinc-100 dark:bg-card dark:text-foreground dark:border-border dark:hover:bg-card-hover':
+            'bg-white text-zinc-900 border border-zinc-200/80 hover:bg-zinc-50 shadow-xs active:bg-zinc-100 dark:bg-card dark:text-foreground dark:border-line dark:hover:bg-card-hover':
               variant === 'white',
 
             // Sizes (default rounded applied per size if rounded !== 'full')

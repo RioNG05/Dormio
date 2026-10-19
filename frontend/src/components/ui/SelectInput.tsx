@@ -352,12 +352,12 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
             className={cn(
               'w-full flex items-center justify-between rounded-xl border pl-3.5 pr-3 py-2.5 text-xs font-semibold transition-all duration-200 outline-none text-left cursor-pointer select-none',
               disabled
-                ? 'bg-zinc-100 dark:bg-surface text-zinc-400 dark:text-slate-500 border-zinc-200 dark:border-border cursor-not-allowed shadow-none'
+                ? 'bg-zinc-100 dark:bg-surface text-zinc-400 dark:text-slate-500 border-zinc-200 dark:border-line cursor-not-allowed shadow-none'
                 : error
-                  ? 'bg-white dark:bg-input-bg border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
+                  ? 'bg-white dark:bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
                   : isOpen
-                    ? 'bg-white dark:bg-input-bg border-[#2AC1BC] ring-3 ring-[#2AC1BC]/20 text-zinc-900 dark:text-foreground shadow-sm'
-                    : 'bg-white dark:bg-input-bg border-zinc-200 dark:border-border text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
+                    ? 'bg-white dark:bg-input border-[#2AC1BC] ring-3 ring-[#2AC1BC]/20 text-zinc-900 dark:text-foreground shadow-sm'
+                    : 'bg-white dark:bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
               className,
             )}
           >
@@ -386,7 +386,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
           {isOpen && (
             <div
               className={cn(
-                'absolute z-50 rounded-2xl border border-zinc-200/90 dark:border-border bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-xl shadow-zinc-950/10 dark:shadow-black/50 p-1.5 flex flex-col',
+                'absolute z-50 rounded-2xl border border-zinc-200/90 dark:border-line bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-xl shadow-zinc-950/10 dark:shadow-black/50 p-1.5 flex flex-col',
                 'w-full min-w-full',
                 alignPosition === 'right' ? 'right-0' : 'left-0',
                 dropPosition === 'top'
@@ -396,7 +396,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
             >
               {/* Search Bar for large lists (> 10 items) */}
               {parsedOptions.length > 10 && (
-                <div className="p-1 pb-1.5 border-b border-zinc-100 dark:border-border">
+                <div className="p-1 pb-1.5 border-b border-zinc-100 dark:border-line">
                   <div className="relative flex items-center">
                     <Search className="w-3.5 h-3.5 text-zinc-400 dark:text-slate-400 absolute left-2.5 pointer-events-none" />
                     <input
@@ -406,7 +406,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder="Tìm kiếm..."
                       onClick={e => e.stopPropagation()}
-                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-zinc-100/80 dark:bg-surface hover:bg-zinc-100 dark:hover:bg-card-hover focus:bg-white dark:focus:bg-input-bg border border-transparent focus:border-[#2AC1BC] rounded-xl outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-slate-500 text-foreground font-medium"
+                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-zinc-100/80 dark:bg-surface hover:bg-zinc-100 dark:hover:bg-card-hover focus:bg-white dark:focus:bg-input border border-transparent focus:border-[#2AC1BC] rounded-xl outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-slate-500 text-foreground font-medium"
                     />
                     {searchQuery && (
                       <button
