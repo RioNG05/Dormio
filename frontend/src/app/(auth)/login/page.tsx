@@ -55,6 +55,7 @@ export default function LoginPage() {
         email: user.email || '',
         phone: user.phoneNumber,
         role: displayRole,
+        avatar: user.avatarUrl,
         mustChangePassword: !!mustChangePassword,
       })
 

@@ -68,6 +68,8 @@ interface AuthContextType {
   upgradeToLandlord: (houseDetails: { houseName: string; houseAddress: string }) => void
   setDemoPreset: (preset: DemoPreset) => void
   refreshCapabilities: () => Promise<void>
+  updateAvatar: (avatarUrl: string) => void
+  updateUserProfile: (data: Partial<UserProfile>) => void
 
   // Multi-Building Management for Landlord Dashboard
   buildings: BuildingItem[]
@@ -131,6 +133,8 @@ const AuthContext = createContext<AuthContextType>({
   upgradeToLandlord: () => {},
   setDemoPreset: () => {},
   refreshCapabilities: async () => {},
+  updateAvatar: () => {},
+  updateUserProfile: () => {},
 
   buildings: [],
   isBuildingsLoading: true,
@@ -272,6 +276,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_email') : null
     const savedPhone =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_phone') : null
+    const savedAvatar =
+      typeof window !== 'undefined' ? localStorage.getItem('dormio_user_avatar') : null
     const savedId = typeof window !== 'undefined' ? localStorage.getItem('dormio_user_id') : null
     const savedCapsStr =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_capabilities') : null
@@ -286,6 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phone: savedPhone || '',
         role: resolvedRole,
         avatar:
+          savedAvatar ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
         houseName: savedHouseName || undefined,
         houseAddress: savedHouseAddress || undefined,
@@ -376,6 +383,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (updatedUser.name) localStorage.setItem('dormio_user_name', updatedUser.name)
     if (updatedUser.email) localStorage.setItem('dormio_user_email', updatedUser.email)
     if (updatedUser.phone) localStorage.setItem('dormio_user_phone', updatedUser.phone)
+    if (updatedUser.avatar) localStorage.setItem('dormio_user_avatar', updatedUser.avatar)
   }
 
   // Called by login/register pages after receiving a real JWT token from the backend
@@ -412,6 +420,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (userData.name) localStorage.setItem('dormio_user_name', userData.name)
     if (userData.email) localStorage.setItem('dormio_user_email', userData.email)
     if (userData.phone) localStorage.setItem('dormio_user_phone', userData.phone)
+    if (updatedUser.avatar) localStorage.setItem('dormio_user_avatar', updatedUser.avatar)
 
     // Immediately load real buildings so all dashboard pages use real UUIDs
     if (resolvedRole === 'landlord') {
@@ -476,7 +485,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('dormio_user_email')
     localStorage.removeItem('dormio_user_phone')
     localStorage.removeItem('dormio_user_capabilities')
+    localStorage.removeItem('dormio_user_avatar')
   }
+
+  const updateAvatar = useCallback((avatarUrl: string) => {
+    setUser(prev => (prev ? { ...prev, avatar: avatarUrl } : null))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dormio_user_avatar', avatarUrl)
+    }
+  }, [])
+
+  const updateUserProfile = useCallback((data: Partial<UserProfile>) => {
+    setUser(prev => (prev ? { ...prev, ...data } : null))
+    if (typeof window !== 'undefined') {
+      if (data.avatar) localStorage.setItem('dormio_user_avatar', data.avatar)
+      if (data.name) localStorage.setItem('dormio_user_name', data.name)
+      if (data.email) localStorage.setItem('dormio_user_email', data.email)
+      if (data.phone) localStorage.setItem('dormio_user_phone', data.phone)
+    }
+  }, [])
 
   const toggleLoginDemo = () => {
     if (isLoggedIn) {
@@ -598,6 +625,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         upgradeToLandlord,
         setDemoPreset,
         refreshCapabilities: loadCapabilitiesFromApi,
+        updateAvatar,
+        updateUserProfile,
         buildings,
         isBuildingsLoading,
         activeBuildingId,

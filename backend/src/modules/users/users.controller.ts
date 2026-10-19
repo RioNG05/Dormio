@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Body,
   UseGuards,
   Logger,
@@ -21,6 +22,7 @@ import { UsersService } from './users.service'
 import { UpsertUserIdentificationDto } from './dto/upsert-user-identification.dto'
 import { UpsertBankAccountDto } from './dto/upsert-bank-account.dto'
 import { UserCapabilitiesResponseDto } from './dto/user-capabilities.dto'
+import { UpdateAvatarDto } from './dto/update-avatar.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import type { JwtPayload } from '../auth/types/jwt-payload.type'
@@ -165,4 +167,28 @@ export class UsersController {
     this.logger.log(`POST /api/v1/users/bank-account called by user ${user.id}`)
     return this.usersService.upsertBankAccount(user.id, dto)
   }
+
+  @Patch(['me/avatar', 'avatar'])
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update user profile avatar URL',
+    description: "Saves the Cloudinary image URL as the authenticated user's profile avatar.",
+  })
+  @ApiOkResponse({
+    description: 'Avatar updated successfully',
+    schema: {
+      example: {
+        avatarUrl:
+          'https://res.cloudinary.com/dormio/image/upload/v1234567890/dormio/avatars/user.jpg',
+      },
+    },
+  })
+  async updateAvatar(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateAvatarDto,
+  ) {
+    this.logger.log(`PATCH /api/v1/users/me/avatar called by user ${user.id}`)
+    return this.usersService.updateAvatar(user.id, dto.avatarUrl)
+  }
 }
+

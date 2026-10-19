@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
@@ -8,6 +8,7 @@ import {
   Mail,
   ShieldCheck,
   Camera,
+  Loader2,
   Lock,
   Building,
   CreditCard,
@@ -16,7 +17,10 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { Button, Text, Avatar } from '@/components/ui'
+import { uploadImageToBackend } from '@/services/upload.service'
+import { userService } from '@/services/user.service'
 
 import PersonalInfoTab from './tabs/PersonalInfoTab'
 import RoleDataTab from './tabs/RoleDataTab'
@@ -25,7 +29,8 @@ import SecurityTab from './tabs/SecurityTab'
 
 function UniversalProfilePage() {
   const t = useTranslations('guest')
-  const { isLoggedIn, user } = useAuth()
+  const { isLoggedIn, user, updateAvatar } = useAuth()
+  const { toast } = useToast()
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -57,6 +62,86 @@ function UniversalProfilePage() {
   const fullName = user?.name || t('guestProfileDefaultFullName')
   const phone = user?.phone || '0987.654.321'
   const email = user?.email || 'nguyenvana@gmail.com'
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(null)
+
+  const handleAvatarClick = () => {
+    if (isUploadingAvatar) return
+    fileInputRef.current?.click()
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate MIME type
+    const validMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
+    if (!validMimes.includes(file.type) && !file.type.startsWith('image/')) {
+      toast.error(t('guestProfileAvatarInvalidType'))
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024
+    if (file.size > MAX_SIZE) {
+      toast.error(t('guestProfileAvatarSizeLimit'))
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    setIsUploadingAvatar(true)
+
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const base64Data = reader.result as string
+        setPreviewAvatarUrl(base64Data)
+
+        // Upload to Cloudinary backend
+        const uploadResult = await uploadImageToBackend(base64Data, 'dormio/avatars')
+        const newAvatarUrl = uploadResult?.url
+
+        if (!newAvatarUrl) {
+          throw new Error('Upload returned empty URL')
+        }
+
+        // Persist to backend database if user is authenticated
+        try {
+          await userService.updateAvatar(newAvatarUrl)
+        } catch (apiErr) {
+          console.warn('Could not persist avatar to backend database:', apiErr)
+        }
+
+        // Update global auth state & localStorage
+        updateAvatar(newAvatarUrl)
+
+        toast.success(t('guestProfileAvatarUploadSuccess'))
+      } catch (err) {
+        console.error('Failed to upload avatar:', err)
+        toast.error(t('guestProfileAvatarUploadFailed'))
+      } finally {
+        setPreviewAvatarUrl(null)
+        setIsUploadingAvatar(false)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+    }
+
+    reader.onerror = () => {
+      setIsUploadingAvatar(false)
+      setPreviewAvatarUrl(null)
+      toast.error(t('guestProfileAvatarUploadFailed'))
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+
+    reader.readAsDataURL(file)
+  }
 
   if (!isLoggedIn) {
     return (
@@ -102,41 +187,78 @@ function UniversalProfilePage() {
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 text-center md:text-left">
             <div className="flex flex-col sm:flex-row items-center gap-5">
+              {/* Hidden File Input for Avatar Upload */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/jpg"
+                onChange={handleAvatarChange}
+                className="hidden"
+                disabled={isUploadingAvatar}
+              />
+
               {/* Avatar Image with Edit Badge */}
-              <div className="relative group shrink-0">
+              <div
+                className="relative group shrink-0 cursor-pointer"
+                onClick={handleAvatarClick}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleAvatarClick()
+                  }
+                }}
+                title={t('guestProfileAvatarChangeTooltip')}
+              >
                 <Avatar
-                  src={user?.avatar}
+                  src={previewAvatarUrl || user?.avatar}
                   name={fullName}
                   size="3xl"
                   shape="rounded"
                 />
+
+                {/* Uploading Spinner Overlay */}
+                {isUploadingAvatar && (
+                  <div className="absolute inset-0 bg-black/60 rounded-3xl flex flex-col items-center justify-center gap-1 z-10 transition-opacity">
+                    <Loader2 className="w-7 h-7 text-white animate-spin" />
+                  </div>
+                )}
+
                 <Button
                   type="button"
                   variant="primary"
                   size="icon-sm"
                   title={t('guestProfileAvatarChangeTooltip')}
-                  className="absolute bottom-1 right-1 shadow-lg hover:scale-110"
+                  disabled={isUploadingAvatar}
+                  onClick={e => {
+                    e.stopPropagation()
+                    handleAvatarClick()
+                  }}
+                  className="absolute bottom-1 right-1 shadow-lg hover:scale-110 z-20"
                 >
-                  <Camera className="w-4 h-4" />
+                  {isUploadingAvatar ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
 
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                  <Text
-                    as="span"
-                    variant="badge"
-                    size="3xs"
-                    weight="black"
-                    color="brand"
-                    uppercase
-                    className="px-3 py-1 bg-[#2AC1BC]/20 rounded-full border border-[#2AC1BC]/30 tracking-wider whitespace-nowrap"
-                  >
+                  <div className="px-3 py-1 bg-[#2AC1BC]/20 rounded-full border border-[#2AC1BC]/30 tracking-wider whitespace-nowrap flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    <Text as="span" color="inherit">
+                    <Text
+                      variant="badge"
+                      size="3xs"
+                      weight="black"
+                      color="brand"
+                      uppercase
+                    >
                       {t('guestProfileEkycVerifiedBadge')}
                     </Text>
-                  </Text>
+                  </div>
 
                   <Text
                     as="span"
@@ -144,13 +266,12 @@ function UniversalProfilePage() {
                     size="3xs"
                     weight="black"
                     uppercase
-                    className={`px-3 py-1 rounded-full border tracking-wider whitespace-nowrap ${
-                      isLandlord
-                        ? 'bg-[#FF6B35]/20 text-[#FF6B35] border-[#FF6B35]/30'
-                        : isAdmin
-                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                          : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                    }`}
+                    className={`px-3 py-1 rounded-full border tracking-wider whitespace-nowrap ${isLandlord
+                      ? 'bg-[#FF6B35]/20 text-[#FF6B35] border-[#FF6B35]/30'
+                      : isAdmin
+                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      }`}
                   >
                     {isLandlord && t('guestProfileRoleLandlord')}
                     {isTenant && t('guestProfileRoleTenant')}
