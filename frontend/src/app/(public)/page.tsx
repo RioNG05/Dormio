@@ -301,7 +301,7 @@ export default function HomePage() {
                     size="lg"
                     rounded="full"
                     leftIcon={<Sparkles className="w-4 h-4" />}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] font-extrabold text-sm shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300"
+                    className="w-full sm:w-auto px-8 py-3.5 shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300"
                   >
                     {t('guestHomeTrialBtn')}
                   </Button>
@@ -312,7 +312,7 @@ export default function HomePage() {
                     size="lg"
                     rounded="full"
                     rightIcon={<ArrowRight className="w-4 h-4 text-[#2AC1BC]" />}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white hover:text-white font-extrabold text-sm border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300"
+                    className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300"
                   >
                     {t('guestFeaturesViewPricingBtn')}
                   </Button>
