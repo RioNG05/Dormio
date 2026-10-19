@@ -207,8 +207,8 @@ export default function AdminUsersManagementPage() {
   )
 
   const getRootAdminBadge = () => (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
-      <Shield className="w-3 h-3 text-amber-700" />
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-warning-soft text-warning border border-amber-300 shadow-2xs">
+      <Shield className="w-3 h-3 text-warning" />
       {t('adminUsersRootAdminBadge')}
     </span>
   )
@@ -377,35 +377,35 @@ export default function AdminUsersManagementPage() {
         )
       case 'tenant':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-info-soft text-blue-600 border border-info-subtle">
             <Home className="w-3 h-3" />
             {t('adminUsersRoleTenant')}
           </span>
         )
       case 'employee':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-warning-soft text-warning border border-warning-subtle">
             <UserCheck className="w-3 h-3" />
             {t('adminUsersRoleStaff')}
           </span>
         )
       case 'leasing_agent':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-deposit-soft text-deposit border border-deposit-subtle">
             <UserCog className="w-3 h-3" />
             {t('adminUsersRoleAgent')}
           </span>
         )
       case 'admin':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-danger-soft text-danger border border-danger-subtle">
             <Shield className="w-3 h-3" />
             {t('adminUsersRoleAdmin')}
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-zinc-100 text-zinc-700">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-card-hover text-foreground/90">
             {role}
           </span>
         )
@@ -416,27 +416,27 @@ export default function AdminUsersManagementPage() {
     switch (status) {
       case 'active':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-success-soft text-success border border-success-subtle">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             {t('adminUsersStatusActive')}
           </span>
         )
       case 'banned':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-danger-soft text-danger border border-danger-subtle">
             <UserX className="w-3 h-3" />
             {t('adminUsersStatusBanned')}
           </span>
         )
       case 'inactive':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-600 border border-zinc-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-card-hover text-muted border border-line">
             <Clock className="w-3 h-3" />
             {t('adminUsersStatusInactive')}
           </span>
         )
       default:
-        return <span className="text-xs text-zinc-500">{status}</span>
+        return <span className="text-xs text-muted">{status}</span>
     }
   }
 
@@ -445,14 +445,14 @@ export default function AdminUsersManagementPage() {
     switch (normalized) {
       case 'pro':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-300">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-warning-soft text-warning border border-amber-300">
             <Crown className="w-3 h-3 text-amber-600" />
             {t('adminUsersTierBadgePro')}
           </span>
         )
       case 'plus':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-deposit-soft text-deposit border border-deposit-subtle">
             <Sparkles className="w-3 h-3 text-purple-600" />
             {t('adminUsersTierBadgePlus')}
           </span>
@@ -460,7 +460,7 @@ export default function AdminUsersManagementPage() {
       case 'free':
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-zinc-100 text-zinc-600 border border-zinc-200">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-card-hover text-muted border border-line">
             {t('adminUsersTierBadgeFree')}
           </span>
         )
@@ -501,8 +501,8 @@ export default function AdminUsersManagementPage() {
           <div
             className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${
               toastMsg.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : 'bg-rose-50 text-rose-800 border-rose-200'
+                ? 'bg-success-soft text-success border-success-subtle'
+                : 'bg-danger-soft text-danger border-danger-subtle'
             }`}
           >
             {toastMsg.type === 'success' ? (
@@ -518,10 +518,10 @@ export default function AdminUsersManagementPage() {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-zinc-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-3xl border border-line shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-orange-50 text-orange-600 border border-orange-200/80">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-accent-soft text-orange-600 border border-accent-subtle">
               <Shield className="w-3.5 h-3.5" />
               {t('adminUsersBadge')}
             </span>
@@ -529,7 +529,7 @@ export default function AdminUsersManagementPage() {
               • {t('adminUsersLiveDb')}
             </Text>
           </div>
-          <Text as="h1" variant="heading" size="xl" className="text-zinc-900 font-black tracking-tight">
+          <Text as="h1" variant="heading" size="xl" className="text-foreground font-black tracking-tight">
             {t('adminUsersTitle')}
           </Text>
           <Text variant="caption" size="xs" color="subtle" className="max-w-2xl">
@@ -552,24 +552,24 @@ export default function AdminUsersManagementPage() {
 
       {/* KPI Cards Grid using Form.Grid */}
       <Form.Grid cols={5} gap="sm" className="grid-cols-2 lg:grid-cols-5">
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="bg-card p-4 rounded-2xl border border-line shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-muted">
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiTotal')}
             </Text>
-            <div className="p-2 rounded-xl bg-zinc-100 text-zinc-700">
+            <div className="p-2 rounded-xl bg-card-hover text-foreground/90">
               <Users className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
-            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+            <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
-            <Text as="p" variant="heading" size="2xl" weight="black" className="text-zinc-900">
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-foreground">
               {summary.totalUsers.toLocaleString()}
             </Text>
           )}
           {loading ? (
-            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+            <div className="h-3 w-24 bg-card-hover rounded animate-pulse" />
           ) : (
             <Text as="p" size="2xs" weight="bold" color="success">
               {summary.activeUsers} {t('adminUsersStatusActive').toLowerCase()}
@@ -577,8 +577,8 @@ export default function AdminUsersManagementPage() {
           )}
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="bg-card p-4 rounded-2xl border border-line shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-muted">
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiLandlords')}
             </Text>
@@ -587,14 +587,14 @@ export default function AdminUsersManagementPage() {
             </div>
           </div>
           {loading ? (
-            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+            <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
             <Text as="p" variant="heading" size="2xl" weight="black" className="text-[#2AC1BC]">
               {summary.landlordsCount.toLocaleString()}
             </Text>
           )}
           {loading ? (
-            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+            <div className="h-3 w-24 bg-card-hover rounded animate-pulse" />
           ) : (
             <Text as="p" size="2xs" color="subtle">
               {summary.totalUsers > 0 ? Math.round((summary.landlordsCount / summary.totalUsers) * 100) : 0}% platform
@@ -602,24 +602,24 @@ export default function AdminUsersManagementPage() {
           )}
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="bg-card p-4 rounded-2xl border border-line shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-muted">
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiTenants')}
             </Text>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+            <div className="p-2 rounded-xl bg-info-soft text-blue-600">
               <Home className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
-            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+            <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
             <Text as="p" variant="heading" size="2xl" weight="black" className="text-blue-600">
               {summary.tenantsCount.toLocaleString()}
             </Text>
           )}
           {loading ? (
-            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+            <div className="h-3 w-24 bg-card-hover rounded animate-pulse" />
           ) : (
             <Text as="p" size="2xs" color="subtle">
               {summary.totalUsers > 0 ? Math.round((summary.tenantsCount / summary.totalUsers) * 100) : 0}% platform
@@ -627,24 +627,24 @@ export default function AdminUsersManagementPage() {
           )}
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="bg-card p-4 rounded-2xl border border-line shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-muted">
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiStaff')}
             </Text>
-            <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
+            <div className="p-2 rounded-xl bg-warning-soft text-amber-600">
               <UserCheck className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
-            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+            <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
             <Text as="p" variant="heading" size="2xl" weight="black" className="text-amber-600">
               {summary.employeesCount.toLocaleString()}
             </Text>
           )}
           {loading ? (
-            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+            <div className="h-3 w-24 bg-card-hover rounded animate-pulse" />
           ) : (
             <Text as="p" size="2xs" color="subtle">
               Operations staff
@@ -652,24 +652,24 @@ export default function AdminUsersManagementPage() {
           )}
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200/80 shadow-xs space-y-1 col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between text-zinc-500">
+        <div className="bg-card p-4 rounded-2xl border border-line shadow-xs space-y-1 col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between text-muted">
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiBanned')}
             </Text>
-            <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
+            <div className="p-2 rounded-xl bg-danger-soft text-rose-600">
               <UserX className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
-            <div className="h-8 w-16 bg-zinc-100 rounded-lg animate-pulse my-1" />
+            <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
             <Text as="p" variant="heading" size="2xl" weight="black" className="text-rose-600">
               {summary.bannedUsers.toLocaleString()}
             </Text>
           )}
           {loading ? (
-            <div className="h-3 w-24 bg-zinc-100 rounded animate-pulse" />
+            <div className="h-3 w-24 bg-card-hover rounded animate-pulse" />
           ) : (
             <Text as="p" size="2xs" color="subtle">
               {summary.inactiveUsers} {t('adminUsersStatusInactive').toLowerCase()}
@@ -679,7 +679,7 @@ export default function AdminUsersManagementPage() {
       </Form.Grid>
 
       {/* Filter and View Mode Toolbar using TextInput, SelectInput, Button */}
-      <div className="bg-white p-4 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-card p-4 rounded-3xl border border-line shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Reusing TextInput base component for search */}
         <TextInput
           value={searchQuery}
@@ -688,7 +688,7 @@ export default function AdminUsersManagementPage() {
             setCurrentPage(1)
           }}
           placeholder={t('adminUsersSearchPlaceholder')}
-          leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+          leftIcon={<Search className="w-4 h-4 text-muted" />}
           rightIcon={
             searchQuery ? (
               <Button
@@ -705,7 +705,7 @@ export default function AdminUsersManagementPage() {
             ) : null
           }
           containerClassName="w-full md:w-80"
-          className="rounded-2xl py-2 bg-zinc-50/50 text-xs font-semibold"
+          className="rounded-2xl py-2 bg-surface/50 text-xs font-semibold"
         />
 
         {/* Reusing SelectInput and Button base components */}
@@ -747,7 +747,7 @@ export default function AdminUsersManagementPage() {
           />
 
           {/* View Mode Toggle using Button base components */}
-          <div className="flex items-center bg-zinc-100 p-1 rounded-2xl border border-zinc-200/80">
+          <div className="flex items-center bg-card-hover p-1 rounded-2xl border border-line">
             <Button
               type="button"
               variant={viewMode === 'grid' ? 'primary' : 'ghost'}
@@ -772,7 +772,7 @@ export default function AdminUsersManagementPage() {
 
       {/* Content Section: Loading / Error / Empty / Grid / Table */}
       {loading ? (
-        <div className="bg-white p-12 rounded-3xl border border-zinc-200/80 text-center space-y-3 shadow-xs">
+        <div className="bg-card p-12 rounded-3xl border border-line text-center space-y-3 shadow-xs">
           <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
           <Text variant="body" size="sm" weight="bold" color="secondary">
             {t('adminUsersLoading')}
@@ -791,9 +791,9 @@ export default function AdminUsersManagementPage() {
           </div>
         </Form.Alert>
       ) : users.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-zinc-200/80 text-center space-y-2 shadow-xs">
+        <div className="bg-card p-12 rounded-3xl border border-line text-center space-y-2 shadow-xs">
           <UserX className="w-10 h-10 text-zinc-300 mx-auto" />
-          <Text variant="heading" size="base" className="text-zinc-800">
+          <Text variant="heading" size="base" className="text-foreground">
             {t('adminUsersNoResults')}
           </Text>
           <Text variant="caption" size="xs" color="subtle">
@@ -808,13 +808,13 @@ export default function AdminUsersManagementPage() {
             return (
               <div
                 key={user.id}
-                className="bg-white rounded-3xl border border-zinc-200/80 hover:border-[#2AC1BC]/40 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 group"
+                className="bg-card rounded-3xl border border-line hover:border-[#2AC1BC]/40 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 group"
               >
                 {/* Header: Avatar, Name, Role & Status */}
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#2AC1BC]/20 to-[#FF6B35]/20 text-[#2AC1BC] flex items-center justify-center font-black text-base shrink-0 border border-zinc-100 group-hover:scale-105 transition-transform">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#2AC1BC]/20 to-[#FF6B35]/20 text-[#2AC1BC] flex items-center justify-center font-black text-base shrink-0 border border-line group-hover:scale-105 transition-transform">
                         {user.avatarUrl ? (
                           <img
                             src={user.avatarUrl}
@@ -831,7 +831,7 @@ export default function AdminUsersManagementPage() {
                             as="h3"
                             variant="heading"
                             size="sm"
-                            className="text-zinc-900 font-extrabold truncate"
+                            className="text-foreground font-extrabold truncate"
                           >
                             {user.fullName || user.username || t('adminUsersUnidentified')}
                           </Text>
@@ -857,15 +857,15 @@ export default function AdminUsersManagementPage() {
                   </div>
 
                   {/* Contact Info */}
-                  <div className="space-y-1.5 pt-1 text-xs text-zinc-600">
+                  <div className="space-y-1.5 pt-1 text-xs text-muted">
                     <div className="flex items-center gap-2 truncate">
-                      <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                      <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
+                      <Text as="span" size="xs" weight="semibold" className="text-foreground">
                         {user.phoneNumber}
                       </Text>
                     </div>
                     <div className="flex items-center gap-2 truncate">
-                      <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <Mail className="w-3.5 h-3.5 text-muted shrink-0" />
                       <Text as="span" size="xs" color="secondary" truncate>
                         {user.email || t('adminUsersNoEmail')}
                       </Text>
@@ -873,17 +873,17 @@ export default function AdminUsersManagementPage() {
                   </div>
 
                   {/* Registration Time & Activity */}
-                  <div className="p-2.5 rounded-2xl bg-zinc-50 border border-zinc-200/60 space-y-1 text-[11px]">
-                    <div className="flex items-center justify-between text-zinc-500">
+                  <div className="p-2.5 rounded-2xl bg-surface border border-line space-y-1 text-[11px]">
+                    <div className="flex items-center justify-between text-muted">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-zinc-400" />
+                        <Calendar className="w-3 h-3 text-muted" />
                         {t('adminUsersColJoined')}:
                       </span>
-                      <Text as="span" size="2xs" weight="bold" className="text-zinc-700">
+                      <Text as="span" size="2xs" weight="bold" className="text-foreground/90">
                         {formatJoinedDate(user.createdAt)}
                       </Text>
                     </div>
-                    <div className="flex items-center justify-between text-zinc-400">
+                    <div className="flex items-center justify-between text-muted">
                       <Text as="span" size="3xs" color="subtle">
                         {getRelativeTime(user.createdAt)}
                       </Text>
@@ -897,14 +897,14 @@ export default function AdminUsersManagementPage() {
                   </div>
 
                   {/* Summary Counters */}
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-500 pt-1">
+                  <div className="flex items-center gap-2 text-[11px] text-muted pt-1">
                     {user.role === 'landlord' && (
-                      <Text as="span" size="2xs" weight="bold" className="text-zinc-700">
+                      <Text as="span" size="2xs" weight="bold" className="text-foreground/90">
                         {t('adminUsersHousesCount', { count: user.housesCount })}
                       </Text>
                     )}
                     {user.role === 'tenant' && (
-                      <Text as="span" size="2xs" weight="bold" className="text-zinc-700">
+                      <Text as="span" size="2xs" weight="bold" className="text-foreground/90">
                         {t('adminUsersContractsCount', { count: user.contractsCount })}
                       </Text>
                     )}
@@ -917,7 +917,7 @@ export default function AdminUsersManagementPage() {
                 </div>
 
                 {/* Card Actions using Button */}
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                   <Button
                     type="button"
                     variant="primary"
@@ -953,7 +953,7 @@ export default function AdminUsersManagementPage() {
                     </>
                   ) : (
                     <div
-                      className="inline-flex items-center justify-center p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 cursor-not-allowed"
+                      className="inline-flex items-center justify-center p-2 rounded-xl bg-warning-soft text-warning border border-warning-subtle cursor-not-allowed"
                       title={t('adminUsersRootAdminProtected')}
                     >
                       <Lock className="w-4 h-4" />
@@ -966,10 +966,10 @@ export default function AdminUsersManagementPage() {
         </div>
       ) : (
         /* TABLE VIEW (Rule 9: Parallel support) */
-        <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs overflow-hidden">
+        <div className="bg-card rounded-3xl border border-line shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
+              <thead className="bg-surface/80 border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4">{t('adminUsersColUser')}</th>
                   <th className="py-3.5 px-4">{t('adminUsersColContact')}</th>
@@ -979,14 +979,14 @@ export default function AdminUsersManagementPage() {
                   <th className="py-3.5 px-4 text-right">{t('adminUsersColActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 text-zinc-700">
+              <tbody className="divide-y divide-line text-foreground/90">
                 {paginatedUsers.map(user => {
                   const initial = (user.fullName || user.username || user.phoneNumber).charAt(0).toUpperCase()
                   return (
                     <tr key={user.id} className="hover:bg-zinc-50/60 transition-colors group">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2AC1BC]/15 to-[#FF6B35]/15 text-[#2AC1BC] flex items-center justify-center font-bold text-sm shrink-0 border border-zinc-100">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2AC1BC]/15 to-[#FF6B35]/15 text-[#2AC1BC] flex items-center justify-center font-bold text-sm shrink-0 border border-line">
                             {user.avatarUrl ? (
                               <img src={user.avatarUrl} alt="" className="w-full h-full object-cover rounded-xl" />
                             ) : (
@@ -995,7 +995,7 @@ export default function AdminUsersManagementPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <Text as="span" size="xs" weight="extrabold" className="text-zinc-900">
+                              <Text as="span" size="xs" weight="extrabold" className="text-foreground">
                                 {user.fullName || user.username || t('adminUsersUnidentified')}
                               </Text>
                               {user.isIdentityVerified && (
@@ -1012,7 +1012,7 @@ export default function AdminUsersManagementPage() {
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="space-y-0.5">
-                          <Text as="p" size="xs" weight="semibold" className="text-zinc-800">
+                          <Text as="p" size="xs" weight="semibold" className="text-foreground">
                             {user.phoneNumber}
                           </Text>
                           <Text as="p" size="2xs" color="subtle" truncate className="max-w-[180px]">
@@ -1030,7 +1030,7 @@ export default function AdminUsersManagementPage() {
                       <td className="py-3.5 px-4">{getStatusBadge(user.status)}</td>
                       <td className="py-3.5 px-4">
                         <div>
-                          <Text as="p" size="xs" weight="semibold" className="text-zinc-800">
+                          <Text as="p" size="xs" weight="semibold" className="text-foreground">
                             {formatJoinedDate(user.createdAt)}
                           </Text>
                           <Text as="p" size="2xs" color="subtle">
@@ -1091,7 +1091,7 @@ export default function AdminUsersManagementPage() {
 
       {/* Standardized Pagination Bar using Button base component */}
       {!loading && totalItems > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-zinc-200 text-xs text-zinc-600 bg-white p-4 rounded-3xl shadow-xs">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-line text-xs text-muted bg-card p-4 rounded-3xl shadow-xs">
           {/* Left: Hiển thị [NumberInput] / trang | X-Y trên Z người dùng */}
           <div className="flex items-center gap-2 font-medium">
             <Text as="span" size="xs">
@@ -1123,13 +1123,13 @@ export default function AdminUsersManagementPage() {
                 }
               }}
               containerClassName="space-y-0 w-14 inline-block"
-              className="px-2 py-1 text-center font-bold text-zinc-800 border-zinc-300 rounded-xl"
+              className="px-2 py-1 text-center font-bold text-foreground border-line rounded-xl"
             />
             <Text as="span" size="xs">
               {t('adminUsersPerPage')}
             </Text>
             <span className="text-zinc-300">|</span>
-            <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+            <Text as="span" size="xs" weight="bold" className="text-foreground">
               {startIndex}-{endIndex} {t('adminUsersOf')} {totalItems} {t('adminUsersItems')}
             </Text>
           </div>
@@ -1193,16 +1193,16 @@ export default function AdminUsersManagementPage() {
       {/* USER DETAIL MODAL (Tabs: Profile, Activity History, Admin Actions) */}
       {(selectedUser || detailLoading) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl border border-zinc-200 flex flex-col overflow-hidden">
+          <div className="bg-card w-full max-w-3xl max-h-[90vh] rounded-3xl shadow-2xl border border-line flex flex-col overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-50/50">
+            <div className="flex items-center justify-between p-5 border-b border-line bg-surface/50">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <Text as="h2" variant="heading" size="base" className="font-extrabold text-zinc-900">
+                    <Text as="h2" variant="heading" size="base" className="font-extrabold text-foreground">
                       {selectedUser
                         ? t('adminUsersModalTitle', {
                             name: selectedUser.fullName || selectedUser.username || selectedUser.phoneNumber,
@@ -1231,7 +1231,7 @@ export default function AdminUsersManagementPage() {
 
             {/* Modal Tab Switcher using Button components */}
             {selectedUser && (
-              <div className="flex border-b border-zinc-200 bg-zinc-100/50 px-5 gap-2 pt-2">
+              <div className="flex border-b border-line bg-card-hover/50 px-5 gap-2 pt-2">
                 <Button
                   type="button"
                   variant={modalTab === 'profile' ? 'primary' : 'ghost'}
@@ -1275,7 +1275,7 @@ export default function AdminUsersManagementPage() {
                 /* TAB 1: Profile & KYC Details using Form.Grid */
                 <div className="space-y-6">
                   {/* Account Overview Card */}
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3">
+                  <div className="p-4 rounded-2xl bg-surface border border-line space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {getRoleBadge(selectedUser.role)}
@@ -1293,7 +1293,7 @@ export default function AdminUsersManagementPage() {
                         <Text as="span" size="2xs" color="subtle" className="block">
                           {t('adminUsersUsernameLabel')}
                         </Text>
-                        <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                        <Text as="span" size="xs" weight="bold" className="text-foreground">
                           @{selectedUser.username || '—'}
                         </Text>
                       </div>
@@ -1301,7 +1301,7 @@ export default function AdminUsersManagementPage() {
                         <Text as="span" size="2xs" color="subtle" className="block">
                           {t('adminUsersPhoneLabel')}
                         </Text>
-                        <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                        <Text as="span" size="xs" weight="bold" className="text-foreground">
                           {selectedUser.phoneNumber}
                         </Text>
                       </div>
@@ -1309,7 +1309,7 @@ export default function AdminUsersManagementPage() {
                         <Text as="span" size="2xs" color="subtle" className="block">
                           Email
                         </Text>
-                        <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                        <Text as="span" size="xs" weight="bold" className="text-foreground">
                           {selectedUser.email || '—'}
                         </Text>
                       </div>
@@ -1332,7 +1332,7 @@ export default function AdminUsersManagementPage() {
                             </Button>
                           ) : (
                             <span
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-warning bg-warning-soft px-2 py-0.5 rounded-lg border border-warning-subtle"
                               title={t('adminUsersRootAdminProtected')}
                             >
                               <Lock className="w-3 h-3 text-amber-600" />
@@ -1347,29 +1347,29 @@ export default function AdminUsersManagementPage() {
                   {/* Citizen Identification (CCCD / KYC) */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-foreground">
                         {t('adminUsersTabProfile')}
                       </Text>
                       {selectedUser.isIdentityVerified ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-success-soft px-2.5 py-1 rounded-full border border-success-subtle">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {t('adminUsersVerified')}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-muted bg-card-hover px-2.5 py-1 rounded-full">
                           {t('adminUsersUnverified')}
                         </span>
                       )}
                     </div>
 
                     {selectedUser.identification ? (
-                      <div className="p-4 rounded-2xl border border-zinc-200/80 space-y-3 text-xs">
+                      <div className="p-4 rounded-2xl border border-line space-y-3 text-xs">
                         <Form.Grid cols={2} gap="sm">
                           <div>
                             <Text as="span" size="2xs" color="subtle" className="block">
                               {t('adminUsersLabelFullName')}
                             </Text>
-                            <Text as="span" size="xs" weight="bold" className="text-zinc-900">
+                            <Text as="span" size="xs" weight="bold" className="text-foreground">
                               {selectedUser.identification.fullName}
                             </Text>
                           </div>
@@ -1377,7 +1377,7 @@ export default function AdminUsersManagementPage() {
                             <Text as="span" size="2xs" color="subtle" className="block">
                               {t('adminUsersLabelCitizenId')}
                             </Text>
-                            <Text as="span" size="xs" weight="bold" className="font-mono text-zinc-900">
+                            <Text as="span" size="xs" weight="bold" className="font-mono text-foreground">
                               {selectedUser.identification.identityNumber}
                             </Text>
                           </div>
@@ -1385,7 +1385,7 @@ export default function AdminUsersManagementPage() {
                             <Text as="span" size="2xs" color="subtle" className="block">
                               {t('adminUsersLabelDob')}
                             </Text>
-                            <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                            <Text as="span" size="xs" weight="semibold" className="text-foreground">
                               {new Date(selectedUser.identification.dateOfBirth).toLocaleDateString(
                                 locale === 'en' ? 'en-US' : 'vi-VN',
                               )}
@@ -1395,7 +1395,7 @@ export default function AdminUsersManagementPage() {
                             <Text as="span" size="2xs" color="subtle" className="block">
                               {t('adminUsersLabelGender')}
                             </Text>
-                            <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                            <Text as="span" size="xs" weight="semibold" className="text-foreground">
                               {selectedUser.identification.gender === 'male'
                                 ? t('adminUsersLabelGenderMale')
                                 : t('adminUsersLabelGenderFemale')}
@@ -1405,7 +1405,7 @@ export default function AdminUsersManagementPage() {
                             <Text as="span" size="2xs" color="subtle" className="block">
                               {t('adminUsersLabelResidence')}
                             </Text>
-                            <Text as="span" size="xs" weight="semibold" className="text-zinc-800">
+                            <Text as="span" size="xs" weight="semibold" className="text-foreground">
                               {typeof selectedUser.identification.placeOfResidence === 'object'
                                 ? JSON.stringify(selectedUser.identification.placeOfResidence)
                                 : String(selectedUser.identification.placeOfResidence || '—')}
@@ -1415,7 +1415,7 @@ export default function AdminUsersManagementPage() {
 
                         {/* Card Front/Back Images if present */}
                         {(selectedUser.identification.cardFrontUrl || selectedUser.identification.cardBackUrl) && (
-                          <div className="pt-2 border-t border-zinc-100 space-y-2">
+                          <div className="pt-2 border-t border-line space-y-2">
                             <Text as="span" size="2xs" weight="bold" color="secondary" className="uppercase block">
                               {t('adminUsersLabelCardPhotos')}
                             </Text>
@@ -1425,7 +1425,7 @@ export default function AdminUsersManagementPage() {
                                   href={selectedUser.identification.cardFrontUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="group relative block rounded-xl overflow-hidden border border-zinc-200"
+                                  className="group relative block rounded-xl overflow-hidden border border-line"
                                 >
                                   <img
                                     src={selectedUser.identification.cardFrontUrl}
@@ -1442,7 +1442,7 @@ export default function AdminUsersManagementPage() {
                                   href={selectedUser.identification.cardBackUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="group relative block rounded-xl overflow-hidden border border-zinc-200"
+                                  className="group relative block rounded-xl overflow-hidden border border-line"
                                 >
                                   <img
                                     src={selectedUser.identification.cardBackUrl}
@@ -1459,7 +1459,7 @@ export default function AdminUsersManagementPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-center text-xs text-zinc-400">
+                      <div className="p-4 rounded-2xl bg-surface border border-line text-center text-xs text-muted">
                         {t('adminUsersNoKycDesc')}
                       </div>
                     )}
@@ -1468,15 +1468,15 @@ export default function AdminUsersManagementPage() {
                   {/* Bank Account Details using Form.Grid */}
                   {selectedUser.bankAccount && (
                     <div className="space-y-2">
-                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-foreground">
                         {t('adminUsersLabelBank')}
                       </Text>
-                      <Form.Grid cols={3} gap="sm" className="p-4 rounded-2xl border border-zinc-200/80 text-xs">
+                      <Form.Grid cols={3} gap="sm" className="p-4 rounded-2xl border border-line text-xs">
                         <div>
                           <Text as="span" size="2xs" color="subtle" className="block">
                             {t('adminUsersBankLabel')}
                           </Text>
-                          <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                          <Text as="span" size="xs" weight="bold" className="text-foreground">
                             {selectedUser.bankAccount.bankName}
                           </Text>
                         </div>
@@ -1484,7 +1484,7 @@ export default function AdminUsersManagementPage() {
                           <Text as="span" size="2xs" color="subtle" className="block">
                             {t('adminUsersAccountNoLabel')}
                           </Text>
-                          <Text as="span" size="xs" weight="bold" className="font-mono text-zinc-900">
+                          <Text as="span" size="xs" weight="bold" className="font-mono text-foreground">
                             {selectedUser.bankAccount.accountNumber}
                           </Text>
                         </div>
@@ -1492,7 +1492,7 @@ export default function AdminUsersManagementPage() {
                           <Text as="span" size="2xs" color="subtle" className="block">
                             {t('adminUsersAccountNameLabel')}
                           </Text>
-                          <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                          <Text as="span" size="xs" weight="bold" className="text-foreground">
                             {selectedUser.bankAccount.accountName}
                           </Text>
                         </div>
@@ -1503,7 +1503,7 @@ export default function AdminUsersManagementPage() {
                   {/* Properties Owned if landlord */}
                   {selectedUser.houseNames.length > 0 && (
                     <div className="space-y-2">
-                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                      <Text as="h3" variant="heading" size="sm" className="font-extrabold text-foreground">
                         {t('adminUsersManagedHouses', { count: selectedUser.houseNames.length })}
                       </Text>
                       <div className="flex flex-wrap gap-2">
@@ -1523,12 +1523,12 @@ export default function AdminUsersManagementPage() {
               ) : modalTab === 'activity' ? (
                 /* TAB 2: System Activity Logs */
                 <div className="space-y-4">
-                  <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                  <Text as="h3" variant="heading" size="sm" className="font-extrabold text-foreground">
                     {t('adminUsersTabActivity')}
                   </Text>
 
                   {selectedUser.recentActivities.length === 0 ? (
-                    <div className="p-8 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-center space-y-2">
+                    <div className="p-8 rounded-2xl bg-surface border border-line text-center space-y-2">
                       <Activity className="w-8 h-8 text-zinc-300 mx-auto" />
                       <Text as="p" size="xs" weight="semibold" color="secondary">
                         {t('adminUsersNoActivity')}
@@ -1539,23 +1539,23 @@ export default function AdminUsersManagementPage() {
                       {selectedUser.recentActivities.map(act => (
                         <div
                           key={act.id}
-                          className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/70 space-y-1.5 text-xs hover:bg-zinc-100/50 transition-colors"
+                          className="p-3.5 rounded-2xl bg-surface border border-line space-y-1.5 text-xs hover:bg-zinc-100/50 transition-colors"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-zinc-900 text-white">
                                 {act.action}
                               </span>
-                              <Text as="span" size="xs" weight="bold" className="text-zinc-800">
+                              <Text as="span" size="xs" weight="bold" className="text-foreground">
                                 {t('adminUsersTargetEntity')}: {act.entityType} ({act.entityId.slice(0, 8)}...)
                               </Text>
                             </div>
-                            <span className="text-[11px] font-mono text-zinc-400">
+                            <span className="text-[11px] font-mono text-muted">
                               {formatJoinedDate(act.createdAt)}
                             </span>
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                          <div className="flex items-center justify-between text-[11px] text-muted">
                             <span>
                               {t('adminUsersIpAddress')}: <span className="font-mono">{act.ipAddress}</span>
                             </span>
@@ -1563,7 +1563,7 @@ export default function AdminUsersManagementPage() {
                           </div>
 
                           {act.newValue && (
-                            <pre className="p-2 rounded-xl bg-white border border-zinc-200/80 text-[10px] font-mono text-zinc-700 overflow-x-auto max-h-24">
+                            <pre className="p-2 rounded-xl bg-card border border-line text-[10px] font-mono text-foreground/90 overflow-x-auto max-h-24">
                               {JSON.stringify(act.newValue, null, 2)}
                             </pre>
                           )}
@@ -1575,7 +1575,7 @@ export default function AdminUsersManagementPage() {
               ) : (
                 /* TAB 3: Admin Actions using Form.Grid */
                 <div className="space-y-4">
-                  <Text as="h3" variant="heading" size="sm" className="font-extrabold text-zinc-900">
+                  <Text as="h3" variant="heading" size="sm" className="font-extrabold text-foreground">
                     {t('adminUsersTabActions')}
                   </Text>
                   <Text as="p" size="xs" color="subtle">
@@ -1583,8 +1583,8 @@ export default function AdminUsersManagementPage() {
                   </Text>
 
                   {!canModifyUser(selectedUser) && (
-                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
-                      <div className="flex items-center gap-2 font-bold text-sm text-amber-800">
+                    <div className="p-4 rounded-2xl bg-warning-soft border border-warning-subtle text-warning space-y-1">
+                      <div className="flex items-center gap-2 font-bold text-sm text-warning">
                         <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                         <span>{t('adminUsersRootAdminProtectedTitle')}</span>
                       </div>
@@ -1597,8 +1597,8 @@ export default function AdminUsersManagementPage() {
                   <Form.Grid cols={2} gap="md" className="pt-2">
                     {/* Choice 1: Ban or Unban */}
                     {selectedUser.status === 'banned' ? (
-                      <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 space-y-2">
-                        <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-sm">
+                      <div className="p-4 rounded-2xl border border-success-subtle bg-success-soft space-y-2">
+                        <div className="flex items-center gap-2 text-success font-extrabold text-sm">
                           <UserCheck className="w-4 h-4" />
                           <Text as="span" size="sm" weight="extrabold" color="inherit">
                             {t('adminUsersBtnUnban')}
@@ -1620,8 +1620,8 @@ export default function AdminUsersManagementPage() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="p-4 rounded-2xl border border-rose-200 bg-rose-50/40 space-y-2">
-                        <div className="flex items-center gap-2 text-rose-800 font-extrabold text-sm">
+                      <div className="p-4 rounded-2xl border border-danger-subtle bg-danger-soft space-y-2">
+                        <div className="flex items-center gap-2 text-danger font-extrabold text-sm">
                           <UserX className="w-4 h-4" />
                           <Text as="span" size="sm" weight="extrabold" color="inherit">
                             {t('adminUsersBtnBan')}
@@ -1645,8 +1645,8 @@ export default function AdminUsersManagementPage() {
                     )}
 
                     {/* Choice 2: Change Role */}
-                    <div className="p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 space-y-2">
-                      <div className="flex items-center gap-2 text-zinc-800 font-extrabold text-sm">
+                    <div className="p-4 rounded-2xl border border-line bg-surface/50 space-y-2">
+                      <div className="flex items-center gap-2 text-foreground font-extrabold text-sm">
                         <UserCog className="w-4 h-4 text-[#2AC1BC]" />
                         <Text as="span" size="sm" weight="extrabold" color="inherit">
                           {t('adminUsersBtnChangeRole')}
@@ -1669,8 +1669,8 @@ export default function AdminUsersManagementPage() {
                     </div>
 
                     {/* Choice 3: Change Subscription Tier */}
-                    <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/40 space-y-2">
-                      <div className="flex items-center gap-2 text-purple-800 font-extrabold text-sm">
+                    <div className="p-4 rounded-2xl border border-deposit-subtle bg-deposit-soft space-y-2">
+                      <div className="flex items-center gap-2 text-deposit font-extrabold text-sm">
                         <Crown className="w-4 h-4 text-purple-600" />
                         <Text as="span" size="sm" weight="extrabold" color="inherit">
                           {t('adminUsersBtnChangeTier')}
@@ -1693,8 +1693,8 @@ export default function AdminUsersManagementPage() {
                     </div>
 
                     {/* Choice 4: Reset Password */}
-                    <div className="p-4 rounded-2xl border border-zinc-200 bg-zinc-50/50 space-y-2">
-                      <div className="flex items-center gap-2 text-zinc-800 font-extrabold text-sm">
+                    <div className="p-4 rounded-2xl border border-line bg-surface/50 space-y-2">
+                      <div className="flex items-center gap-2 text-foreground font-extrabold text-sm">
                         <KeyRound className="w-4 h-4 text-orange-500" />
                         <Text as="span" size="sm" weight="extrabold" color="inherit">
                           {t('adminUsersBtnResetPassword')}
@@ -1721,7 +1721,7 @@ export default function AdminUsersManagementPage() {
             </div>
 
             {/* Modal Footer using Form.Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50">
+            <div className="p-4 border-t border-line bg-surface/50">
               <Form.Actions align="end">
                 <Button type="button" variant="outline" size="sm" onClick={requestCloseDetailModal} >
                   {t('adminUsersClose')}
@@ -1735,11 +1735,11 @@ export default function AdminUsersManagementPage() {
       {/* ADMIN ACTION EXECUTION MODAL using Form root, SelectInput, TextInput, TextareaInput, Checkbox */}
       {actionType && actionTargetUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden p-6">
+          <div className="bg-card w-full max-w-lg rounded-3xl shadow-2xl border border-line overflow-hidden p-6">
             <Form variant="modal" autoPreventDefault onSubmit={handleExecuteAction}>
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <Text as="h3" variant="heading" size="base" className="font-black text-zinc-900">
+                  <Text as="h3" variant="heading" size="base" className="font-black text-foreground">
                     {actionType === 'ban' && t('adminUsersModalBanTitle')}
                     {actionType === 'unban' && t('adminUsersModalUnbanTitle')}
                     {actionType === 'role' && t('adminUsersModalRoleTitle')}
@@ -1765,12 +1765,12 @@ export default function AdminUsersManagementPage() {
               </div>
 
               {/* Target user recap */}
-              <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-zinc-200 flex items-center justify-center font-bold text-zinc-700">
+              <div className="p-3 rounded-2xl bg-surface border border-line flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-line flex items-center justify-center font-bold text-foreground/90">
                   {actionTargetUser.username?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div>
-                  <Text as="p" size="xs" weight="bold" className="text-zinc-900">
+                  <Text as="p" size="xs" weight="bold" className="text-foreground">
                     {actionTargetUser.fullName || actionTargetUser.username || actionTargetUser.phoneNumber}
                   </Text>
                   <Text as="p" variant="caption" size="2xs" color="subtle">
@@ -1818,7 +1818,7 @@ export default function AdminUsersManagementPage() {
               {actionType === 'tier' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-zinc-700 mb-2">
+                    <label className="block text-xs font-bold text-foreground/90 mb-2">
                       {t('adminUsersSelectNewTier')}
                     </label>
                     <div className="grid grid-cols-3 gap-2.5">
@@ -1827,21 +1827,21 @@ export default function AdminUsersManagementPage() {
                           id: 'free' as const,
                           name: t('adminUsersTierBadgeFree'),
                           icon: Sparkles,
-                          color: 'border-zinc-200 text-zinc-700 hover:bg-zinc-50',
+                          color: 'border-line text-foreground/90 hover:bg-card-hover',
                           activeColor: 'border-zinc-900 bg-zinc-900 text-white shadow-sm',
                         },
                         {
                           id: 'plus' as const,
                           name: t('adminUsersTierBadgePlus'),
                           icon: Sparkles,
-                          color: 'border-purple-200 text-purple-700 hover:bg-purple-50',
+                          color: 'border-deposit-subtle text-deposit hover:bg-purple-50',
                           activeColor: 'border-purple-600 bg-purple-600 text-white shadow-sm',
                         },
                         {
                           id: 'pro' as const,
                           name: t('adminUsersTierBadgePro'),
                           icon: Crown,
-                          color: 'border-amber-200 text-amber-700 hover:bg-amber-50',
+                          color: 'border-warning-subtle text-warning hover:bg-amber-50',
                           activeColor: 'border-amber-600 bg-amber-600 text-white shadow-sm',
                         },
                       ].map(tierOpt => {
@@ -1865,12 +1865,12 @@ export default function AdminUsersManagementPage() {
                   </div>
 
                   {newTier === 'free' ? (
-                    <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs">
+                    <div className="p-3 rounded-2xl bg-warning-soft border border-warning-subtle text-warning text-xs">
                       {t('adminUsersTierFreeNotice')}
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <label className="block text-xs font-bold text-zinc-700">
+                      <label className="block text-xs font-bold text-foreground/90">
                         {t('adminUsersTierDurationLabel')}
                       </label>
                       <div className="flex items-center gap-2">
@@ -1935,13 +1935,13 @@ export default function AdminUsersManagementPage() {
       {/* CONFIRMATION POP-UP MODAL (Rule 10: "Xác nhận đóng form" when unsaved changes exist) */}
       {showDiscardConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-zinc-200 p-6 space-y-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200/80">
+          <div className="bg-card w-full max-w-sm rounded-3xl shadow-2xl border border-line p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto border border-warning-subtle">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
             <div className="space-y-1">
-              <Text as="h3" variant="heading" size="base" className="font-black text-zinc-900">
+              <Text as="h3" variant="heading" size="base" className="font-black text-foreground">
                 {t('adminUsersConfirmCloseTitle')}
               </Text>
               <Text variant="caption" size="xs" color="subtle">

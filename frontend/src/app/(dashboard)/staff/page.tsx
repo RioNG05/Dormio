@@ -658,53 +658,53 @@ export default function StaffOverviewPage() {
     return (
       <div className="space-y-6 max-w-6xl mx-auto pb-16 animate-pulse">
         {/* Banner Skeleton */}
-        <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2.5 flex-1">
-            <div className="h-5 w-24 bg-zinc-200 rounded-full" />
-            <div className="h-8 w-64 bg-zinc-200 rounded-xl" />
-            <div className="h-4 w-48 bg-zinc-100 rounded-md" />
+            <div className="h-5 w-24 bg-line rounded-full" />
+            <div className="h-8 w-64 bg-line rounded-xl" />
+            <div className="h-4 w-48 bg-card-hover rounded-md" />
           </div>
-          <div className="h-14 w-48 bg-zinc-200 rounded-2xl shrink-0" />
+          <div className="h-14 w-48 bg-line rounded-2xl shrink-0" />
         </div>
 
         {/* 2-Column Grid Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-6 sm:p-7 space-y-6">
-              <div className="flex justify-between items-center pb-5 border-b border-zinc-100">
+            <div className="bg-card rounded-3xl border border-line shadow-2xs p-6 sm:p-7 space-y-6">
+              <div className="flex justify-between items-center pb-5 border-b border-line">
                 <div className="space-y-2">
-                  <div className="h-4 w-28 bg-zinc-200 rounded-md" />
-                  <div className="h-7 w-52 bg-zinc-200 rounded-lg" />
+                  <div className="h-4 w-28 bg-line rounded-md" />
+                  <div className="h-7 w-52 bg-line rounded-lg" />
                 </div>
-                <div className="h-8 w-32 bg-zinc-200 rounded-xl" />
+                <div className="h-8 w-32 bg-line rounded-xl" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
               </div>
-              <div className="h-48 bg-zinc-100 rounded-2xl" />
+              <div className="h-48 bg-card-hover rounded-2xl" />
               <div className="space-y-3 pt-2">
-                <div className="h-5 w-36 bg-zinc-200 rounded-md" />
-                <div className="h-16 bg-zinc-50 rounded-2xl border border-zinc-100" />
-                <div className="h-16 bg-zinc-50 rounded-2xl border border-zinc-100" />
+                <div className="h-5 w-36 bg-line rounded-md" />
+                <div className="h-16 bg-surface rounded-2xl border border-line" />
+                <div className="h-16 bg-surface rounded-2xl border border-line" />
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
-              <div className="h-5 w-32 bg-zinc-200 rounded-md" />
-              <div className="h-16 bg-zinc-100 rounded-2xl" />
-              <div className="h-16 bg-zinc-100 rounded-2xl" />
+            <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 space-y-4">
+              <div className="h-5 w-32 bg-line rounded-md" />
+              <div className="h-16 bg-card-hover rounded-2xl" />
+              <div className="h-16 bg-card-hover rounded-2xl" />
             </div>
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
-              <div className="h-5 w-40 bg-zinc-200 rounded-md" />
+            <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 space-y-4">
+              <div className="h-5 w-40 bg-line rounded-md" />
               <div className="grid grid-cols-2 gap-3">
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
-                <div className="h-20 bg-zinc-100 rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
+                <div className="h-20 bg-card-hover rounded-2xl" />
               </div>
             </div>
           </div>
@@ -734,17 +734,17 @@ export default function StaffOverviewPage() {
       )}
 
       {/* TOP BANNER: GREETING & CLOCK */}
-      <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-2 z-10">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-[#2AC1BC]/15 text-[#2AC1BC]">
               {t('badge')}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t('greeting', { name: currentStaffName })}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium">
+          <p className="text-xs sm:text-sm text-muted font-medium">
             {t('greetingSubtitle', { date: todayFormattedDate })}
           </p>
         </div>
@@ -757,7 +757,7 @@ export default function StaffOverviewPage() {
               <div className="text-xl sm:text-2xl font-black font-mono tracking-wider text-emerald-400">
                 {effectiveTimeString}
               </div>
-              <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">
+              <div className="text-[10px] font-bold text-muted uppercase tracking-widest text-right">
                 {t('realSystemTime')}
               </div>
             </div>
@@ -770,16 +770,16 @@ export default function StaffOverviewPage() {
         {/* COLUMN LEFT (2 SPAN): TODAY'S SHIFT CARD & SMART TIMEKEEPING BUTTONS OR EMPTY STATE */}
         {!todaySchedule ? (
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-8 sm:p-12 text-center space-y-6">
+            <div className="bg-card rounded-3xl border border-line shadow-2xs p-8 sm:p-12 text-center space-y-6">
               <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto shadow-inner">
                 <Calendar className="w-8 h-8" />
               </div>
 
               <div className="space-y-2 max-w-md mx-auto">
-                <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
+                <h2 className="text-xl sm:text-2xl font-black text-foreground">
                   {t('noShiftTitle')}
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">
+                <p className="text-xs sm:text-sm text-muted leading-relaxed">
                   {fetchError
                     ? fetchError === 'ERR_FETCH_FAILED'
                       ? t('errFailedLoad')
@@ -812,7 +812,7 @@ export default function StaffOverviewPage() {
 
                 <Link
                   href="/staff/shift-history"
-                  className="py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
+                  className="py-2.5 px-4 rounded-xl border border-line hover:bg-card-hover text-foreground/90 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
                 >
                   <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   <span>{t('btnShiftHistory')}</span>
@@ -823,9 +823,9 @@ export default function StaffOverviewPage() {
         ) : (
           <div className="lg:col-span-2 space-y-6">
             {/* TODAY'S SHIFT HERO CARD */}
-            <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-6 sm:p-7 space-y-6">
+            <div className="bg-card rounded-3xl border border-line shadow-2xs p-6 sm:p-7 space-y-6">
               {/* Header of Shift Card */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-zinc-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-line">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] animate-ping" />
@@ -833,7 +833,7 @@ export default function StaffOverviewPage() {
                       {t('todayShiftTitle')}
                     </span>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-black text-zinc-900">
+                  <h2 className="text-xl sm:text-2xl font-black text-foreground">
                     {getShiftName(todaySchedule.shift)} ({todaySchedule.shift.startTime} -{' '}
                     {todaySchedule.shift.endTime})
                   </h2>
@@ -842,7 +842,7 @@ export default function StaffOverviewPage() {
                 {/* Status Badge */}
                 <div>
                   {attendance?.checkOut ? (
-                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-emerald-100 text-emerald-700 inline-flex items-center gap-1.5">
+                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-success-soft text-success inline-flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
                       {t('badgeShiftCompleted')}
                     </span>
@@ -852,7 +852,7 @@ export default function StaffOverviewPage() {
                       {t('badgeOnDuty')}
                     </span>
                   ) : (
-                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-amber-100 text-amber-800 inline-flex items-center gap-1.5">
+                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-warning-soft text-warning inline-flex items-center gap-1.5">
                       <AlertCircle className="w-4 h-4" />
                       {t('badgeNotCheckedIn')}
                     </span>
@@ -862,31 +862,31 @@ export default function StaffOverviewPage() {
 
               {/* Shift Metadata Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                  <span className="text-[11px] font-bold text-zinc-400 block uppercase">
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-1">
+                  <span className="text-[11px] font-bold text-muted block uppercase">
                     {t('shiftLocationLabel')}
                   </span>
-                  <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
                     <Building2 className="w-4 h-4 text-[#2AC1BC]" />
                     <span className="truncate">{todaySchedule.boardingHouseName}</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                  <span className="text-[11px] font-bold text-zinc-400 block uppercase">
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-1">
+                  <span className="text-[11px] font-bold text-muted block uppercase">
                     {t('assignedRoleLabel')}
                   </span>
-                  <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
                     <Shield className="w-4 h-4 text-[#2AC1BC]" />
                     <span className="truncate">{getPositionName(todaySchedule.position)}</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
-                  <span className="text-[11px] font-bold text-zinc-400 block uppercase">
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-1">
+                  <span className="text-[11px] font-bold text-muted block uppercase">
                     {t('shiftDurationLabel')}
                   </span>
-                  <div className="flex items-center gap-2 font-black text-zinc-900 text-xs sm:text-sm">
+                  <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
                     <Clock className="w-4 h-4 text-[#2AC1BC]" />
                     <span>
                       {t('shiftDurationHours', { hours: todaySchedule.shift.durationHours })}
@@ -896,13 +896,13 @@ export default function StaffOverviewPage() {
               </div>
 
               {/* TIMEKEEPING ACTION CONTAINER */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-zinc-200 space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-line space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <h3 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Camera className="w-4 h-4 text-[#2AC1BC]" />
                     <span>{t('attendanceTitle')}</span>
                   </h3>
-                  <span className="text-[11px] font-semibold text-zinc-500">
+                  <span className="text-[11px] font-semibold text-muted">
                     {t('attendanceSubtitle')}
                   </span>
                 </div>
@@ -910,13 +910,13 @@ export default function StaffOverviewPage() {
                 {/* Status details line */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   {/* Check In info */}
-                  <div className="p-3.5 rounded-xl bg-white border border-zinc-200 flex flex-col justify-between gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-card border border-line flex flex-col justify-between gap-2.5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-zinc-400 block">
+                        <span className="text-[10px] font-bold text-muted block">
                           {t('checkInTime')}
                         </span>
-                        <span className="font-black text-zinc-900 text-sm">
+                        <span className="font-black text-foreground text-sm">
                           {attendance?.checkIn ? `${attendance.checkIn}` : '--:--:--'}
                         </span>
                       </div>
@@ -925,14 +925,14 @@ export default function StaffOverviewPage() {
                           <span
                             className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
                               attendance.status === 'late'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-warning-soft text-warning'
+                                : 'bg-success-soft text-success'
                             }`}
                           >
                             {attendance.status === 'late' ? t('statusLate') : t('statusOnTime')}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-zinc-400 font-bold">
+                          <span className="text-[10px] text-muted font-bold">
                             {t('windowCheckIn')}
                           </span>
                         )}
@@ -941,12 +941,12 @@ export default function StaffOverviewPage() {
 
                     {/* Photo & Watermark pill if checked in */}
                     {attendance?.checkIn && attendance?.checkInPhoto && (
-                      <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                      <div className="pt-2 border-t border-line flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <img
                             src={attendance.checkInPhoto}
                             alt="Check-in proof"
-                            className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
+                            className="w-8 h-8 rounded-lg object-cover border border-line cursor-pointer hover:opacity-80"
                             onClick={() =>
                               setPreviewImageModal({
                                 isOpen: true,
@@ -972,9 +972,9 @@ export default function StaffOverviewPage() {
                               })
                             }
                           />
-                          <div className="text-[10px] text-zinc-500 font-medium">
+                          <div className="text-[10px] text-muted font-medium">
                             <span
-                              className="text-zinc-800 font-bold block truncate max-w-[150px]"
+                              className="text-foreground font-bold block truncate max-w-[150px]"
                               title={getLocalizedPlace(
                                 attendance.checkInWatermark?.place ||
                                   todaySchedule.boardingHouseName,
@@ -988,7 +988,7 @@ export default function StaffOverviewPage() {
                                 locale === 'en',
                               )}
                             </span>
-                            <span className="text-zinc-500 block truncate max-w-[150px]">
+                            <span className="text-muted block truncate max-w-[150px]">
                               🕒 {attendance.checkInWatermark?.time || t('timePlaceStamped')}
                             </span>
                           </div>
@@ -1031,13 +1031,13 @@ export default function StaffOverviewPage() {
 
                     {/* Explanation snippet if present */}
                     {attendance?.checkInExplanation && (
-                      <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
+                      <div className="p-2 rounded-lg bg-warning-soft border border-warning-subtle text-[11px] text-warning">
                         <span className="font-bold block">
                           {attendance.status === 'late'
                             ? t('explanationLate')
                             : t('explanationCheckIn')}
                         </span>
-                        <p className="italic text-zinc-700 truncate">
+                        <p className="italic text-foreground/90 truncate">
                           &quot;
                           {getLocalizedExplanation(attendance.checkInExplanation, locale === 'en')}
                           &quot;
@@ -1047,13 +1047,13 @@ export default function StaffOverviewPage() {
                   </div>
 
                   {/* Check Out info */}
-                  <div className="p-3.5 rounded-xl bg-white border border-zinc-200 flex flex-col justify-between gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-card border border-line flex flex-col justify-between gap-2.5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-zinc-400 block">
+                        <span className="text-[10px] font-bold text-muted block">
                           {t('checkOutTime')}
                         </span>
-                        <span className="font-black text-zinc-900 text-sm">
+                        <span className="font-black text-foreground text-sm">
                           {attendance?.checkOut ? `${attendance.checkOut}` : '--:--:--'}
                         </span>
                       </div>
@@ -1062,14 +1062,14 @@ export default function StaffOverviewPage() {
                           <span
                             className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
                               attendance.isEarlyCheckOut
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-emerald-100 text-emerald-700'
+                                ? 'bg-warning-soft text-warning'
+                                : 'bg-success-soft text-success'
                             }`}
                           >
                             {attendance.isEarlyCheckOut ? t('statusEarly') : t('statusCompleted')}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-zinc-400 font-bold">
+                          <span className="text-[10px] text-muted font-bold">
                             {t('windowCheckOut')}
                           </span>
                         )}
@@ -1078,12 +1078,12 @@ export default function StaffOverviewPage() {
 
                     {/* Photo & Watermark pill if checked out */}
                     {attendance?.checkOut && attendance?.checkOutPhoto && (
-                      <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                      <div className="pt-2 border-t border-line flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <img
                             src={attendance.checkOutPhoto}
                             alt="Check-out proof"
-                            className="w-8 h-8 rounded-lg object-cover border border-zinc-200 cursor-pointer hover:opacity-80"
+                            className="w-8 h-8 rounded-lg object-cover border border-line cursor-pointer hover:opacity-80"
                             onClick={() =>
                               setPreviewImageModal({
                                 isOpen: true,
@@ -1109,9 +1109,9 @@ export default function StaffOverviewPage() {
                               })
                             }
                           />
-                          <div className="text-[10px] text-zinc-500 font-medium">
+                          <div className="text-[10px] text-muted font-medium">
                             <span
-                              className="text-zinc-800 font-bold block truncate max-w-[150px]"
+                              className="text-foreground font-bold block truncate max-w-[150px]"
                               title={getLocalizedPlace(
                                 attendance.checkOutWatermark?.place ||
                                   todaySchedule.boardingHouseName,
@@ -1125,7 +1125,7 @@ export default function StaffOverviewPage() {
                                 locale === 'en',
                               )}
                             </span>
-                            <span className="text-zinc-500 block truncate max-w-[150px]">
+                            <span className="text-muted block truncate max-w-[150px]">
                               🕒 {attendance.checkOutWatermark?.time || t('timePlaceStamped')}
                             </span>
                           </div>
@@ -1168,9 +1168,9 @@ export default function StaffOverviewPage() {
 
                     {/* Explanation snippet if early check-out */}
                     {attendance?.checkOutExplanation && (
-                      <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900">
+                      <div className="p-2 rounded-lg bg-warning-soft border border-warning-subtle text-[11px] text-warning">
                         <span className="font-bold block">{t('explanationEarly')}</span>
-                        <p className="italic text-zinc-700 truncate">
+                        <p className="italic text-foreground/90 truncate">
                           &quot;
                           {getLocalizedExplanation(attendance.checkOutExplanation, locale === 'en')}
                           &quot;
@@ -1284,8 +1284,8 @@ export default function StaffOverviewPage() {
                 </div>
 
                 {/* Explanatory Notice */}
-                <div className="p-3 rounded-xl bg-white border border-zinc-200/90 text-[11px] text-zinc-500 space-y-1">
-                  <div className="font-bold text-zinc-700 flex items-center gap-1.5">
+                <div className="p-3 rounded-xl bg-card border border-line text-[11px] text-muted space-y-1">
+                  <div className="font-bold text-foreground/90 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
                     <span>{t('rulesTitle')}</span>
                   </div>
@@ -1297,7 +1297,7 @@ export default function StaffOverviewPage() {
               {/* CHECKLIST (NHIỆM VỤ CA LÀM • DUTY LIST ) */}
               <div className="space-y-4 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-zinc-800 text-xs font-black uppercase tracking-wider">
+                  <div className="flex items-center gap-2 text-foreground text-xs font-black uppercase tracking-wider">
                     <CheckSquare className="w-4 h-4 text-[#2AC1BC]" />
                     <span>{t('checklistTitle')}</span>
                   </div>
@@ -1320,10 +1320,10 @@ export default function StaffOverviewPage() {
 
                 {/* Additional Tasks / Landlord Reminders Due Today Banner */}
                 {todayAdditionalTasks.length > 0 && (
-                  <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="p-3.5 rounded-2xl bg-warning-soft border border-warning-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                     <div className="flex items-center gap-2.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                      <span className="text-xs font-bold text-amber-950">
+                      <span className="text-xs font-bold text-warning">
                         {t('todayAdditionalNotice', { count: todayAdditionalTasks.length })}
                       </span>
                     </div>
@@ -1346,8 +1346,8 @@ export default function StaffOverviewPage() {
                         key={duty.id}
                         className={`p-4 rounded-2xl border transition-all ${
                           duty.completed
-                            ? 'bg-emerald-50/40 border-emerald-200/80 text-zinc-800'
-                            : 'bg-white border-zinc-200 text-zinc-800 hover:border-[#2AC1BC]/40'
+                            ? 'bg-success-soft border-success-subtle text-foreground'
+                            : 'bg-card border-line text-foreground hover:border-[#2AC1BC]/40'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -1361,26 +1361,26 @@ export default function StaffOverviewPage() {
                             <div className="space-y-1.5 flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span
-                                  className={`text-xs font-bold leading-snug ${duty.completed ? 'line-through text-zinc-400' : 'text-zinc-900'}`}
+                                  className={`text-xs font-bold leading-snug ${duty.completed ? 'line-through text-muted' : 'text-foreground'}`}
                                 >
                                   {getDutyTitle(duty, locale === 'en')}
                                 </span>
 
                                 {/* Requirement Tag */}
                                 {duty.requiresPhoto ? (
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200/80 inline-flex items-center gap-1 shrink-0">
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle inline-flex items-center gap-1 shrink-0">
                                     <Camera className="w-3 h-3 text-amber-600" />
                                     {t('requiresPhoto')}
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 text-zinc-500 inline-flex items-center gap-1 shrink-0">
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-card-hover text-muted inline-flex items-center gap-1 shrink-0">
                                     {t('photoOptional')}
                                   </span>
                                 )}
                               </div>
 
                               {duty.note && (
-                                <p className="text-[11px] text-zinc-500 font-medium italic">
+                                <p className="text-[11px] text-muted font-medium italic">
                                   {t('notePrefix', {
                                     note: getDutyNote(duty.note, locale === 'en'),
                                   })}
@@ -1429,7 +1429,7 @@ export default function StaffOverviewPage() {
                                 <img
                                   src={duty.photoProof}
                                   alt="Proof thumbnail"
-                                  className="w-10 h-10 rounded-xl object-cover border border-zinc-200 shadow-2xs group-hover:opacity-80 transition-opacity"
+                                  className="w-10 h-10 rounded-xl object-cover border border-line shadow-2xs group-hover:opacity-80 transition-opacity"
                                 />
                                 <div className="absolute inset-0 bg-black/30 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Eye className="w-3.5 h-3.5 text-white" />
@@ -1456,10 +1456,10 @@ export default function StaffOverviewPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-6 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-1">
-                    <CheckSquare className="w-5 h-5 text-zinc-400 mx-auto" />
-                    <p className="text-xs font-bold text-zinc-600">{t('noDutiesTitle')}</p>
-                    <p className="text-[11px] text-zinc-400">{t('noDutiesDesc')}</p>
+                  <div className="p-6 rounded-2xl bg-surface border border-dashed border-line text-center space-y-1">
+                    <CheckSquare className="w-5 h-5 text-muted mx-auto" />
+                    <p className="text-xs font-bold text-muted">{t('noDutiesTitle')}</p>
+                    <p className="text-[11px] text-muted">{t('noDutiesDesc')}</p>
                   </div>
                 )}
               </div>
@@ -1470,9 +1470,9 @@ export default function StaffOverviewPage() {
         {/* COLUMN RIGHT (1 SPAN): CO-WORKERS ON SHIFT & QUICK METRICS */}
         <div className="space-y-6">
           {/* CO-WORKERS ON THE SAME SHIFT */}
-          <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <div className="flex items-center gap-2 text-zinc-800 text-xs font-black uppercase tracking-wider">
+          <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div className="flex items-center gap-2 text-foreground text-xs font-black uppercase tracking-wider">
                 <Users className="w-4 h-4 text-[#2AC1BC]" />
                 <span>{t('coworkersTitle')}</span>
               </div>
@@ -1488,7 +1488,7 @@ export default function StaffOverviewPage() {
                 {todaySchedule.coWorkers.map(cw => (
                   <div
                     key={cw.id}
-                    className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl bg-surface border border-line flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
@@ -1497,11 +1497,11 @@ export default function StaffOverviewPage() {
                           `https://ui-avatars.com/api/?name=${encodeURIComponent(cw.name)}&background=2AC1BC&color=fff`
                         }
                         alt={cw.name}
-                        className="w-10 h-10 rounded-full object-cover border border-zinc-200 shrink-0"
+                        className="w-10 h-10 rounded-full object-cover border border-line shrink-0"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-black text-zinc-900 truncate">{cw.name}</h4>
-                        <p className="text-[11px] font-semibold text-zinc-500 truncate">
+                        <h4 className="text-xs font-black text-foreground truncate">{cw.name}</h4>
+                        <p className="text-[11px] font-semibold text-muted truncate">
                           {getPositionName(cw.positionName)}
                         </p>
                       </div>
@@ -1510,7 +1510,7 @@ export default function StaffOverviewPage() {
                       <a
                         href={`tel:${cw.phone}`}
                         title={t('callCoworker', { name: cw.name })}
-                        className="p-2 rounded-xl bg-white border border-zinc-200 text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors shrink-0 shadow-2xs"
+                        className="p-2 rounded-xl bg-card border border-line text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors shrink-0 shadow-2xs"
                       >
                         <Phone className="w-3.5 h-3.5" />
                       </a>
@@ -1519,35 +1519,35 @@ export default function StaffOverviewPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 text-zinc-400 text-xs font-medium space-y-1">
+              <div className="text-center py-6 text-muted text-xs font-medium space-y-1">
                 <Users className="w-6 h-6 text-zinc-300 mx-auto" />
                 <p>{todaySchedule ? t('onlyStaffAssigned') : t('noScheduledShifts')}</p>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-muted">
                   {todaySchedule ? t('coworkerNote') : t('coWorkersEmptyDesc')}
                 </p>
               </div>
             )}
 
             {todaySchedule && todaySchedule.coWorkers.length > 0 && (
-              <div className="pt-2 text-[11px] text-zinc-400 leading-tight">
+              <div className="pt-2 text-[11px] text-muted leading-tight">
                 {t('coworkerNote')}
               </div>
             )}
           </div>
 
           {/* MONTHLY SUMMARY METRICS WIDGET */}
-          <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs font-black text-zinc-800 uppercase tracking-wider">
+          <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 space-y-4">
+            <h3 className="text-xs font-black text-foreground uppercase tracking-wider">
               {monthlySummaryTitle}
             </h3>
 
             {monthlySummary && monthlySummary.totalShifts > 0 ? (
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('metricTotalShifts')}
                   </span>
-                  <div className="text-xl font-black text-zinc-900">
+                  <div className="text-xl font-black text-foreground">
                     {t('shiftsUnit', { count: monthlySummary.totalShifts })}
                   </div>
                   <span className="text-[10px] text-emerald-600 font-bold">
@@ -1555,53 +1555,53 @@ export default function StaffOverviewPage() {
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('onTimeLabel')}
                   </span>
                   <div className="text-xl font-black text-[#2AC1BC]">
                     {monthlySummary.onTimeRate}%
                   </div>
-                  <span className="text-[10px] text-zinc-500 font-bold">
+                  <span className="text-[10px] text-muted font-bold">
                     {t('onTimeStandard', {
                       count: `${monthlySummary.onTimeCount}/${monthlySummary.totalShifts}`,
                     })}
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('lateLabel')}
                   </span>
                   <div className="text-xl font-black text-amber-600">
                     {t('shiftsUnit', { count: monthlySummary.lateCount })}
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-medium">
+                  <span className="text-[10px] text-muted font-medium">
                     {t('lateHasExplanation')}
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-0.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('earlyLabel')}
                   </span>
                   <div className="text-xl font-black text-amber-600">
                     {t('shiftsUnit', { count: monthlySummary.earlyCount })}
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-medium">
+                  <span className="text-[10px] text-muted font-medium">
                     {t('earlyApproved')}
                   </span>
                 </div>
               </div>
             ) : (
-              <div className="p-5 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 text-center space-y-2">
-                <div className="w-8 h-8 mx-auto rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-400">
+              <div className="p-5 rounded-2xl bg-surface border border-dashed border-line text-center space-y-2">
+                <div className="w-8 h-8 mx-auto rounded-full bg-card border border-line flex items-center justify-center text-muted">
                   <Calendar className="w-4 h-4 text-[#2AC1BC]" />
                 </div>
-                <div className="text-xs font-bold text-zinc-700">
+                <div className="text-xs font-bold text-foreground/90">
                   {t('noMonthlyAttendanceTitle')}
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                <p className="text-[11px] text-muted leading-relaxed">
                   {t('noMonthlyAttendanceDesc')}
                 </p>
               </div>
@@ -1609,7 +1609,7 @@ export default function StaffOverviewPage() {
 
             <Link
               href="/staff/shift-history"
-              className="w-full py-2.5 px-4 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+              className="w-full py-2.5 px-4 rounded-xl border border-line hover:bg-card-hover text-foreground/90 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
             >
               <span>{t('viewAttendanceHistory')}</span>
               <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
@@ -1697,7 +1697,7 @@ export default function StaffOverviewPage() {
                 <Lock className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>{t('auditLockedBanner')}</span>
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono tracking-wider">
+              <span className="text-[10px] text-muted font-mono tracking-wider">
                 {t('auditVerified')}
               </span>
             </div>
@@ -1729,13 +1729,13 @@ export default function StaffOverviewPage() {
                   </div>
                   <div className="text-[10px] text-zinc-300 flex items-center justify-between pt-0.5 border-t border-white/10">
                     <span className="flex items-center gap-1">
-                      <User className="w-3 h-3 text-zinc-400" />{' '}
+                      <User className="w-3 h-3 text-muted" />{' '}
                       {getLocalizedStaffName(
                         previewImageModal.watermark.staffName,
                         locale === 'en',
                       )}
                     </span>
-                    <span className="font-mono text-zinc-400">
+                    <span className="font-mono text-muted">
                       {previewImageModal.watermark.coordinates || t('gpsRecorded')}
                     </span>
                   </div>
@@ -1778,14 +1778,14 @@ export default function StaffOverviewPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl border border-zinc-200 shadow-2xl max-w-sm w-full p-6 space-y-5 text-center cursor-default"
+            className="bg-card rounded-3xl border border-line shadow-2xl max-w-sm w-full p-6 space-y-5 text-center cursor-default"
           >
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-warning-subtle text-amber-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-base font-black text-zinc-900">{t('confirmCloseTitle')}</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">{t('confirmCloseDesc')}</p>
+              <h3 className="text-base font-black text-foreground">{t('confirmCloseTitle')}</h3>
+              <p className="text-xs text-muted leading-relaxed">{t('confirmCloseDesc')}</p>
             </div>
             <div className="grid grid-cols-2 gap-2.5 pt-1">
               <Button
@@ -1840,7 +1840,7 @@ function LiveClockBadge() {
   }, [locale])
 
   return (
-    <span className="text-[11px] font-mono font-bold text-cyan-900 bg-cyan-50 border border-cyan-200/90 px-2.5 py-1 rounded-lg flex items-center gap-1.5 tabular-nums shrink-0 shadow-2xs">
+    <span className="text-[11px] font-mono font-bold text-primary bg-primary-soft border border-primary-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 tabular-nums shrink-0 shadow-2xs">
       <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
       <span>{clockStr || '--/--/---- --:--:--'}</span>
     </span>
@@ -2364,10 +2364,10 @@ function CheckInOutCameraModal({
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="bg-white rounded-3xl border border-zinc-200 shadow-2xl max-w-xl w-full my-auto overflow-hidden flex flex-col cursor-default"
+        className="bg-card rounded-3xl border border-line shadow-2xl max-w-xl w-full my-auto overflow-hidden flex flex-col cursor-default"
       >
         {/* Modal Header */}
-        <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+        <div className="p-5 border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
               className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-[#2AC1BC]' : 'bg-emerald-600'}`}
@@ -2375,10 +2375,10 @@ function CheckInOutCameraModal({
               {mode === 'checkin' ? <Camera className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-black text-zinc-900">
+              <h3 className="text-base sm:text-lg font-black text-foreground">
                 {mode === 'checkin' ? t('modalCheckInTitle') : t('modalCheckOutTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 font-medium">
+              <p className="text-xs text-muted font-medium">
                 {shiftName} • {boardingHouseName}
               </p>
             </div>
@@ -2397,7 +2397,7 @@ function CheckInOutCameraModal({
         </div>
 
         <div className="p-5 sm:p-6 space-y-4 overflow-y-auto max-h-[75vh]">
-          <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+          <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-success-soft border border-success-subtle text-success text-xs">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span className="font-black text-[11px] uppercase tracking-wide">
@@ -2409,7 +2409,7 @@ function CheckInOutCameraModal({
           <div className="space-y-2">
             {/* Stable Non-Jitter Status Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-zinc-700 flex items-center gap-1.5 shrink-0">
+              <span className="font-bold text-foreground/90 flex items-center gap-1.5 shrink-0">
                 <Camera className="w-4 h-4 text-[#2AC1BC]" />
                 <span>
                   {t('cameraLabel', {
@@ -2424,14 +2424,14 @@ function CheckInOutCameraModal({
 
                 {/* Stable GPS Status Badge */}
                 {geoState.status === 'locating' && (
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] font-bold text-warning bg-warning-soft border border-warning-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0">
                     <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
                     {t('locatingGps')}
                   </span>
                 )}
                 {geoState.status === 'ready' && (
                   <span
-                    className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0"
+                    className="text-[10px] font-bold text-success bg-success-soft border border-success-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0"
                     title={geoState.place}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -2440,10 +2440,10 @@ function CheckInOutCameraModal({
                 )}
                 {geoState.status === 'error' && (
                   <span
-                    className="text-[10px] font-bold text-zinc-600 bg-zinc-100 border border-zinc-200 px-2 py-1 rounded-lg flex items-center gap-1 shrink-0"
+                    className="text-[10px] font-bold text-muted bg-card-hover border border-line px-2 py-1 rounded-lg flex items-center gap-1 shrink-0"
                     title={geoState.error}
                   >
-                    <MapPin className="w-3 h-3 text-zinc-400" />
+                    <MapPin className="w-3 h-3 text-muted" />
                     {t('gpsDisabled')}
                     <Button
                       type="button"
@@ -2461,11 +2461,11 @@ function CheckInOutCameraModal({
 
             {/* Resolved GPS Address Banner (Pure address, no boarding house suffix) */}
             {geoState.status === 'ready' && (
-              <div className="px-3 py-1.5 rounded-xl bg-zinc-100 text-zinc-700 text-[11px] font-medium flex items-center gap-1.5 truncate border border-zinc-200/80 shadow-2xs">
+              <div className="px-3 py-1.5 rounded-xl bg-card-hover text-foreground/90 text-[11px] font-medium flex items-center gap-1.5 truncate border border-line shadow-2xs">
                 <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                <span className="font-bold text-zinc-900 shrink-0">{t('realLocation')}</span>
+                <span className="font-bold text-foreground shrink-0">{t('realLocation')}</span>
                 <span
-                  className="truncate text-zinc-700"
+                  className="truncate text-foreground/90"
                   title={getLocalizedPlace(geoState.place, isEn)}
                 >
                   {getLocalizedPlace(geoState.place, isEn)}
@@ -2485,13 +2485,13 @@ function CheckInOutCameraModal({
                     className={`w-full h-full object-contain ${facingMode === 'user' ? 'scale-x-[-1]' : ''} ${cameraStatus === 'ready' ? 'block' : 'hidden'}`}
                   />
                   {cameraStatus === 'starting' && (
-                    <div className="text-center p-6 text-zinc-400 text-xs space-y-3">
+                    <div className="text-center p-6 text-muted text-xs space-y-3">
                       <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
                       <p className="font-semibold text-zinc-300">{t('cameraStarting')}</p>
                     </div>
                   )}
                   {(cameraStatus === 'error' || cameraStatus === 'unsupported') && (
-                    <div className="text-center p-6 text-zinc-400 text-xs space-y-3 max-w-sm">
+                    <div className="text-center p-6 text-muted text-xs space-y-3 max-w-sm">
                       <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
                       <p className="font-bold text-zinc-200">{cameraError}</p>
                       <TextInput
@@ -2554,7 +2554,7 @@ function CheckInOutCameraModal({
                 />
               )}
               {isFlashing && (
-                <div className="absolute inset-0 bg-white animate-out fade-out duration-250 pointer-events-none z-30" />
+                <div className="absolute inset-0 bg-card animate-out fade-out duration-250 pointer-events-none z-30" />
               )}
             </div>
 
@@ -2575,7 +2575,7 @@ function CheckInOutCameraModal({
                     {getLocalizedPlace(capturedWatermark.place, isEn)}
                   </span>
                 </div>
-                <div className="text-zinc-400 text-[10px] flex items-center justify-between pt-1 border-t border-zinc-800">
+                <div className="text-muted text-[10px] flex items-center justify-between pt-1 border-t border-zinc-800">
                   <span>{getLocalizedStaffName(capturedWatermark.staffName, isEn)}</span>
                   <span className="font-mono text-zinc-300">
                     GPS: {capturedWatermark.coordinates}
@@ -2620,12 +2620,12 @@ function CheckInOutCameraModal({
           </div>
 
           {/* EXPLANATION / NOTE SECTION */}
-          <div className="space-y-3 pt-1 border-t border-zinc-100">
-            <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-3">
+          <div className="space-y-3 pt-1 border-t border-line">
+            <div className="p-4 sm:p-5 rounded-2xl bg-warning-soft border border-warning-subtle space-y-3">
               <div className="flex items-start gap-2.5">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <h4 className="text-xs font-black text-amber-900 uppercase">
+                  <h4 className="text-xs font-black text-warning uppercase">
                     {mode === 'checkin'
                       ? isLate
                         ? t('lateCheckInTitle')
@@ -2634,7 +2634,7 @@ function CheckInOutCameraModal({
                         ? t('earlyCheckOutTitle')
                         : t('normalCheckOutTitle')}
                   </h4>
-                  <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
+                  <p className="text-[11px] text-warning leading-relaxed font-medium">
                     {mode === 'checkin'
                       ? isLate
                         ? t('lateCheckInDesc', { time: shiftStartTime || '07:00' })
@@ -2648,7 +2648,7 @@ function CheckInOutCameraModal({
 
               {/* Preset Chips */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-amber-800 uppercase block tracking-wider">
+                <span className="text-[10px] font-bold text-warning uppercase block tracking-wider">
                   {t('commonReasonsTitle')}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -2684,7 +2684,7 @@ function CheckInOutCameraModal({
                         ? t('placeholderExplanation')
                         : t('placeholderCheckOutNote')
                   }
-                  className="w-full p-2.5 rounded-xl bg-white border border-amber-300 text-xs text-zinc-900 font-medium focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-500/20"
+                  className="w-full p-2.5 rounded-xl bg-card border border-amber-300 text-xs text-foreground font-medium focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-500/20"
                   containerClassName="space-y-0"
                 />
                 {isRequireExplanation && !explanation.trim() ? (
@@ -2702,7 +2702,7 @@ function CheckInOutCameraModal({
         </div>
 
         {/* MODAL FOOTER */}
-        <div className="p-4 sm:p-5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
+        <div className="p-4 sm:p-5 bg-surface border-t border-line flex items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
@@ -2805,17 +2805,17 @@ function DutyProofModal({
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="bg-white rounded-3xl border border-zinc-200 shadow-2xl max-w-lg w-full my-auto overflow-hidden flex flex-col cursor-default"
+        className="bg-card rounded-3xl border border-line shadow-2xl max-w-lg w-full my-auto overflow-hidden flex flex-col cursor-default"
       >
         {/* Header */}
-        <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+        <div className="p-5 border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-[#2AC1BC] text-white">
               <Camera className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-zinc-900">{t('dutyProofTitle')}</h3>
-              <p className="text-xs text-zinc-500 font-medium truncate max-w-xs">
+              <h3 className="text-base font-black text-foreground">{t('dutyProofTitle')}</h3>
+              <p className="text-xs text-muted font-medium truncate max-w-xs">
                 {getDutyTitle(duty, locale === 'en')}
               </p>
             </div>
@@ -2832,7 +2832,7 @@ function DutyProofModal({
 
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-4">
-          <div className="p-3 rounded-xl bg-teal-50 border border-teal-200/80 text-xs text-teal-900 flex items-start gap-2">
+          <div className="p-3 rounded-xl bg-primary-soft border border-primary-subtle text-xs text-primary flex items-start gap-2">
             <Info className="w-4 h-4 text-[#2AC1BC] shrink-0 mt-0.5" />
             <p className="leading-relaxed">{t('dutyProofNotice')}</p>
           </div>
@@ -2851,7 +2851,7 @@ function DutyProofModal({
                 <div className="text-zinc-200 font-medium truncate">
                   📍 {getLocalizedPlace(boardingHouseName, locale === 'en')}
                 </div>
-                <div className="text-zinc-400 text-[9px]">
+                <div className="text-muted text-[9px]">
                   👤{' '}
                   {getLocalizedStaffName(
                     staffName || t('employeeDefaultStaffName'),
@@ -2863,14 +2863,14 @@ function DutyProofModal({
           ) : (
             <div
               onClick={() => fileRef.current?.click()}
-              className="rounded-2xl border-2 border-dashed border-zinc-300 hover:border-[#2AC1BC] bg-zinc-50 hover:bg-[#2AC1BC]/5 aspect-16/10 flex flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer transition-colors"
+              className="rounded-2xl border-2 border-dashed border-line hover:border-[#2AC1BC] bg-surface hover:bg-[#2AC1BC]/5 aspect-16/10 flex flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer transition-colors"
             >
-              <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center shadow-2xs text-[#2AC1BC]">
+              <div className="w-10 h-10 rounded-xl bg-card border border-line flex items-center justify-center shadow-2xs text-[#2AC1BC]">
                 <Camera className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-zinc-700">{t('dutyProofUploadTitle')}</p>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-xs font-bold text-foreground/90">{t('dutyProofUploadTitle')}</p>
+                <p className="text-[11px] text-muted">
                   {duty.requiresPhoto ? t('requiresPhoto') : t('photoOptional')}
                 </p>
               </div>
@@ -2926,13 +2926,13 @@ function DutyProofModal({
               onChangeDraft()
             }}
             placeholder={t('dutyNotePlaceholder')}
-            className="w-full p-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-900 font-medium focus:outline-none focus:border-[#2AC1BC]"
+            className="w-full p-2.5 rounded-xl bg-surface border border-line text-xs text-foreground font-medium focus:outline-none focus:border-[#2AC1BC]"
             containerClassName="space-y-1"
           />
 
           {/* Warning notice if required photo is missing */}
           {warningNotice && (
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-150">
+            <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle text-warning text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-150">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
               <span>{warningNotice}</span>
             </div>
@@ -2940,7 +2940,7 @@ function DutyProofModal({
         </div>
 
         {/* Footer with 2 separate action buttons: Update Progress & Complete Task */}
-        <div className="p-4 sm:p-5 bg-zinc-50 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="p-4 sm:p-5 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-2.5">
           <Button
             type="button"
             variant="outline"

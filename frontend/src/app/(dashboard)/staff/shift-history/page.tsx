@@ -278,12 +278,12 @@ function StaffShiftHistoryContent() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
       {/* HEADER BAR */}
-      <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
+      <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Link
               href="/staff"
-              className="p-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors"
+              className="p-1.5 rounded-xl bg-card-hover hover:bg-line text-muted transition-colors"
               title={t('btnBackToOverview')}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -292,21 +292,21 @@ function StaffShiftHistoryContent() {
               {t('attHistoryTag')}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t('attHistoryTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium">{t('attHistorySubtitle')}</p>
+          <p className="text-xs sm:text-sm text-muted font-medium">{t('attHistorySubtitle')}</p>
         </div>
 
         {/* Action Link to Work Schedule */}
         <div className="flex items-center gap-2 self-start md:self-center shrink-0">
           <Link
             href="/staff/schedule"
-            className="px-4 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-zinc-200/80 cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-card-hover hover:bg-line text-foreground text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-line cursor-pointer"
           >
             <Calendar className="w-4 h-4 text-[#2AC1BC]" />
             <span>{t('btnViewWorkSchedule')}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+            <ArrowRight className="w-3.5 h-3.5 text-muted" />
           </Link>
         </div>
       </div>
@@ -318,28 +318,28 @@ function StaffShiftHistoryContent() {
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-2 animate-pulse"
+                className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-2 animate-pulse"
               >
-                <div className="h-2.5 w-16 bg-zinc-200 rounded" />
-                <div className="h-7 w-12 bg-zinc-200 rounded" />
-                <div className="h-2.5 w-20 bg-zinc-100 rounded" />
+                <div className="h-2.5 w-16 bg-line rounded" />
+                <div className="h-7 w-12 bg-line rounded" />
+                <div className="h-2.5 w-20 bg-card-hover rounded" />
               </div>
             ))}
           </>
         ) : (
           <>
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricTotalShifts')}
               </span>
-              <div className="text-2xl font-black text-zinc-900">{summary.total}</div>
-              <span className="text-[10px] font-semibold text-zinc-500 block">
+              <div className="text-2xl font-black text-foreground">{summary.total}</div>
+              <span className="text-[10px] font-semibold text-muted block">
                 {t('metricMonthSub')}
               </span>
             </div>
 
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricOnTime')}
               </span>
               <div className="text-2xl font-black text-[#2AC1BC]">{summary.onTime}</div>
@@ -348,8 +348,8 @@ function StaffShiftHistoryContent() {
               </span>
             </div>
 
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricLate')}
               </span>
               <div className="text-2xl font-black text-amber-600">{summary.late}</div>
@@ -358,22 +358,22 @@ function StaffShiftHistoryContent() {
               </span>
             </div>
 
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricAbsent')}
               </span>
-              <div className="text-2xl font-black text-zinc-400">{summary.absent}</div>
-              <span className="text-[10px] font-medium text-zinc-400 block">
+              <div className="text-2xl font-black text-muted">{summary.absent}</div>
+              <span className="text-[10px] font-medium text-muted block">
                 {t('metricAbsentSub')}
               </span>
             </div>
 
-            <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="col-span-2 sm:col-span-1 bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricHours')}
               </span>
               <div className="text-2xl font-black text-purple-600">{summary.hours}h</div>
-              <span className="text-[10px] font-bold text-zinc-500 block">
+              <span className="text-[10px] font-bold text-muted block">
                 {t('metricHoursSub')}
               </span>
             </div>
@@ -382,7 +382,7 @@ function StaffShiftHistoryContent() {
       </div>
 
       {/* FILTER CONTROLS BAR (Above Table) */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-card rounded-2xl border border-line shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Nút bấm "Sử dụng bộ lọc" */}
           <Button
@@ -404,7 +404,7 @@ function StaffShiftHistoryContent() {
             <div className="flex flex-wrap items-center gap-1.5">
               {/* Date Range Chip */}
               {(appliedStartDate || appliedEndDate) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
                   <Calendar className="w-3 h-3 text-[#2AC1BC]" />
                   <span>
                     {appliedStartDate && appliedEndDate
@@ -433,7 +433,7 @@ function StaffShiftHistoryContent() {
 
               {/* Shift Chip */}
               {appliedShift !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
                   <Clock className="w-3 h-3 text-[#2AC1BC]" />
                   <span>{getShiftName(appliedShift)}</span>
                   <Button
@@ -455,7 +455,7 @@ function StaffShiftHistoryContent() {
 
               {/* Status Chip */}
               {appliedStatus !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
                   <ShieldCheck className="w-3 h-3 text-[#2AC1BC]" />
                   <span>
                     {appliedStatus === 'on_time' && t('tableStatusOnTime')}
@@ -491,21 +491,21 @@ function StaffShiftHistoryContent() {
               </Button>
             </div>
           ) : (
-            <span className="text-xs text-zinc-400 font-medium italic">{t('noActiveFilters')}</span>
+            <span className="text-xs text-muted font-medium italic">{t('noActiveFilters')}</span>
           )}
         </div>
 
         {/* Total records count */}
-        <div className="text-xs text-zinc-500 font-medium self-start md:self-center">
-          {t('totalRecords')} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
+        <div className="text-xs text-muted font-medium self-start md:self-center">
+          {t('totalRecords')} <strong className="text-foreground font-bold">{totalItems}</strong>
         </div>
       </div>
 
       {/* TABLE VIEW */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+      <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
+            <thead className="bg-surface/80 border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">{t('tableColDate')}</th>
                 <th className="py-3.5 px-3">{t('tableColShift')}</th>
@@ -517,34 +517,34 @@ function StaffShiftHistoryContent() {
                 <th className="py-3.5 px-3 text-center">{t('tableColAction')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
+            <tbody className="divide-y divide-line font-medium text-foreground">
               {isLoading ? (
                 <>
                   {[...Array(5)].map((_, idx) => (
                     <tr key={idx} className="animate-pulse">
                       <td className="py-4 px-3">
-                        <div className="h-4 w-20 bg-zinc-200 rounded" />
+                        <div className="h-4 w-20 bg-line rounded" />
                       </td>
                       <td className="py-4 px-3">
-                        <div className="h-4 w-28 bg-zinc-200 rounded" />
+                        <div className="h-4 w-28 bg-line rounded" />
                       </td>
                       <td className="py-4 px-3">
-                        <div className="h-4 w-16 bg-zinc-200 rounded" />
+                        <div className="h-4 w-16 bg-line rounded" />
                       </td>
                       <td className="py-4 px-3">
-                        <div className="h-4 w-16 bg-zinc-200 rounded" />
+                        <div className="h-4 w-16 bg-line rounded" />
                       </td>
                       <td className="py-4 px-3">
-                        <div className="h-5 w-18 bg-zinc-100 rounded-lg" />
+                        <div className="h-5 w-18 bg-card-hover rounded-lg" />
                       </td>
                       <td className="py-4 px-3">
-                        <div className="h-4 w-10 bg-zinc-200 rounded" />
+                        <div className="h-4 w-10 bg-line rounded" />
                       </td>
                       <td className="py-4 px-3">
-                        <div className="h-4 w-36 bg-zinc-100 rounded" />
+                        <div className="h-4 w-36 bg-card-hover rounded" />
                       </td>
                       <td className="py-4 px-3 text-center">
-                        <div className="h-6 w-10 bg-zinc-100 rounded-lg mx-auto" />
+                        <div className="h-6 w-10 bg-card-hover rounded-lg mx-auto" />
                       </td>
                     </tr>
                   ))}
@@ -552,12 +552,12 @@ function StaffShiftHistoryContent() {
               ) : attendances.length > 0 ? (
                 attendances.map(item => (
                   <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-4 px-3 font-bold text-zinc-900 whitespace-nowrap">
+                    <td className="py-4 px-3 font-bold text-foreground whitespace-nowrap">
                       {item.workDate}
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap font-bold">
                       <div>{getShiftName(item.shiftName)}</div>
-                      <div className="text-[10px] text-zinc-400 font-normal">{item.shiftTime}</div>
+                      <div className="text-[10px] text-muted font-normal">{item.shiftTime}</div>
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
@@ -627,31 +627,31 @@ function StaffShiftHistoryContent() {
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       {item.status === 'on_time' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-success-soft text-success border border-success-subtle">
                           {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
                         </span>
                       )}
                       {item.status === 'late' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle">
                           {t('tableStatusLate')}
                         </span>
                       )}
                       {item.status === 'absent' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-700 border border-red-200">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-danger-soft text-danger border border-danger-subtle">
                           {t('tableStatusAbsent')}
                         </span>
                       )}
                       {item.status === 'not_yet' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-zinc-100 text-zinc-600">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-card-hover text-muted">
                           {t('statusNotYet')}
                         </span>
                       )}
                     </td>
                     <td className="py-4 px-3 font-black text-[#2AC1BC]">{item.totalHours}h</td>
-                    <td className="py-4 px-3 text-[11px] text-zinc-500 max-w-xs">
+                    <td className="py-4 px-3 text-[11px] text-muted max-w-xs">
                       {item.checkInExplanation ? (
                         <div
-                          className="text-amber-800 font-medium truncate"
+                          className="text-warning font-medium truncate"
                           title={getLocalizedExplanation(item.checkInExplanation, locale)}
                         >
                           <span className="font-bold">{t('tableLateShort')}</span> &quot;
@@ -659,7 +659,7 @@ function StaffShiftHistoryContent() {
                         </div>
                       ) : item.checkOutExplanation ? (
                         <div
-                          className="text-amber-800 font-medium truncate"
+                          className="text-warning font-medium truncate"
                           title={getLocalizedExplanation(item.checkOutExplanation, locale)}
                         >
                           <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
@@ -718,12 +718,12 @@ function StaffShiftHistoryContent() {
 
       {/* Empty State */}
       {!isLoading && attendances.length === 0 && (
-        <div className="p-8 rounded-3xl bg-white border border-dashed border-zinc-200 text-center space-y-2">
-          <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400">
+        <div className="p-8 rounded-3xl bg-card border border-dashed border-line text-center space-y-2">
+          <div className="w-10 h-10 mx-auto rounded-full bg-card-hover flex items-center justify-center text-muted">
             <Clock className="w-5 h-5" />
           </div>
-          <p className="text-xs font-bold text-zinc-700">{t('emptyHistoryTitle')}</p>
-          <p className="text-[11px] text-zinc-400">{t('emptyHistoryDesc')}</p>
+          <p className="text-xs font-bold text-foreground/90">{t('emptyHistoryTitle')}</p>
+          <p className="text-[11px] text-muted">{t('emptyHistoryDesc')}</p>
           {hasAnyAppliedFilter && (
             <div className="pt-1">
               <Button
@@ -732,7 +732,7 @@ function StaffShiftHistoryContent() {
                 type="button"
                 onClick={handleClearAllFilters}
               >
-                <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
+                <RotateCcw className="w-3.5 h-3.5 text-muted" />
                 <span>{t('btnResetFilters')}</span>
               </Button>
             </div>
@@ -741,8 +741,8 @@ function StaffShiftHistoryContent() {
       )}
 
       {/* RULE #9 STANDARDIZED PAGINATION BAR */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-xs text-zinc-600 font-medium">
+      <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 text-xs text-muted font-medium">
           <div className="flex items-center gap-1.5">
             <span>{t('paginationShowing')}</span>
             <NumberInput
@@ -756,7 +756,7 @@ function StaffShiftHistoryContent() {
                 setWindowStart(1)
               }}
               containerClassName="w-14 space-y-0"
-              className="w-14 px-2 py-1 text-center font-bold text-zinc-900 border border-zinc-200 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
+              className="w-14 px-2 py-1 text-center font-bold text-foreground border border-line rounded-lg focus:outline-none focus:border-[#2AC1BC]"
             />
             <span>{t('paginationPerPage')}</span>
           </div>
@@ -778,7 +778,7 @@ function StaffShiftHistoryContent() {
             disabled={windowStart === 1}
             title={t('paginationJumpBack5')}
           >
-            <ChevronsLeft className="w-4 h-4 text-zinc-600" />
+            <ChevronsLeft className="w-4 h-4 text-muted" />
           </Button>
 
           <Button
@@ -789,7 +789,7 @@ function StaffShiftHistoryContent() {
             disabled={safeCurrentPage === 1}
             title={t('paginationPrev')}
           >
-            <ChevronLeft className="w-4 h-4 text-zinc-600" />
+            <ChevronLeft className="w-4 h-4 text-muted" />
           </Button>
 
           {pageNumbers.map(num => (
@@ -812,7 +812,7 @@ function StaffShiftHistoryContent() {
             disabled={safeCurrentPage >= totalPages}
             title={t('paginationNext')}
           >
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
+            <ChevronRight className="w-4 h-4 text-muted" />
           </Button>
 
           <Button
@@ -823,7 +823,7 @@ function StaffShiftHistoryContent() {
             disabled={windowStart + 5 > totalPages}
             title={t('paginationJumpForward5')}
           >
-            <ChevronsRight className="w-4 h-4 text-zinc-600" />
+            <ChevronsRight className="w-4 h-4 text-muted" />
           </Button>
         </div>
       </div>
@@ -836,12 +836,12 @@ function StaffShiftHistoryContent() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200"
+            className="bg-card rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-line"
           >
-            <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+            <div className="p-4 border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Camera className="w-4 h-4 text-[#2AC1BC]" />
-                <h3 className="text-sm font-black text-zinc-900 truncate">
+                <h3 className="text-sm font-black text-foreground truncate">
                   {previewImageModal.title}
                 </h3>
               </div>
@@ -874,7 +874,7 @@ function StaffShiftHistoryContent() {
                 <div className="text-zinc-200 font-sans text-xs">
                   📍 {previewImageModal.watermark.place}
                 </div>
-                <div className="text-zinc-400 font-sans text-[11px]">
+                <div className="text-muted font-sans text-[11px]">
                   👤 {previewImageModal.watermark.staffName} • GPS:{' '}
                   {previewImageModal.watermark.coordinates}
                 </div>
@@ -882,18 +882,18 @@ function StaffShiftHistoryContent() {
             )}
 
             {previewImageModal.note && (
-              <div className="p-4 bg-amber-50 border-t border-amber-200/80 text-xs text-amber-900 space-y-1">
-                <span className="font-bold flex items-center gap-1 text-amber-800">
+              <div className="p-4 bg-warning-soft border-t border-warning-subtle text-xs text-warning space-y-1">
+                <span className="font-bold flex items-center gap-1 text-warning">
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
                   {t('explanationNoteTitle')}
                 </span>
-                <p className="italic text-zinc-800 font-medium">
+                <p className="italic text-foreground font-medium">
                   &quot;{previewImageModal.note}&quot;
                 </p>
               </div>
             )}
 
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
+            <div className="p-4 bg-surface border-t border-line flex justify-end">
               <Button size="xs"
                 variant="secondary"
                 type="button"
@@ -914,17 +914,17 @@ function StaffShiftHistoryContent() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl max-w-md w-full shadow-2xl overflow-hidden cursor-default my-auto border border-line animate-in zoom-in-95 duration-200"
           >
             {/* Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-surface/50">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center text-[#2AC1BC]">
+                <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center text-[#2AC1BC]">
                   <Filter className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-zinc-900">{t('titleFilterModal')}</h3>
-                  <p className="text-[11px] text-zinc-500 font-medium">{t('descFilterModal')}</p>
+                  <h3 className="text-sm font-black text-foreground">{t('titleFilterModal')}</h3>
+                  <p className="text-[11px] text-muted font-medium">{t('descFilterModal')}</p>
                 </div>
               </div>
               <Button
@@ -943,7 +943,7 @@ function StaffShiftHistoryContent() {
               {/* Ngày trực: Date Range (From - To) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
                     <span>{t('filterDateRange')}</span>
                   </label>
@@ -963,7 +963,7 @@ function StaffShiftHistoryContent() {
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <span className="text-[10px] font-bold text-zinc-400 block mb-1">
+                    <span className="text-[10px] font-bold text-muted block mb-1">
                       {t('filterFromDate')}
                     </span>
                     <TextInput
@@ -971,11 +971,11 @@ function StaffShiftHistoryContent() {
                       value={modalStartDate}
                       onChange={e => setModalStartDate(e.target.value)}
                       containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-zinc-400 block mb-1">
+                    <span className="text-[10px] font-bold text-muted block mb-1">
                       {t('filterToDate')}
                     </span>
                     <TextInput
@@ -984,7 +984,7 @@ function StaffShiftHistoryContent() {
                       min={modalStartDate || undefined}
                       onChange={e => setModalEndDate(e.target.value)}
                       containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                     />
                   </div>
                 </div>
@@ -992,7 +992,7 @@ function StaffShiftHistoryContent() {
 
               {/* Ca làm việc: Dynamic from backend */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   <span>{t('filterShiftType')}</span>
                 </label>
@@ -1008,11 +1008,11 @@ function StaffShiftHistoryContent() {
                         label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
                       })),
                     ]}
-                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
+                    className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
                   />
                   {isShiftsLoading && (
                     <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                      <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
                     </div>
                   )}
                 </div>
@@ -1020,7 +1020,7 @@ function StaffShiftHistoryContent() {
 
               {/* Trạng thái chấm công */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
                   <span>{t('filterStatus')}</span>
                 </label>
@@ -1035,13 +1035,13 @@ function StaffShiftHistoryContent() {
                     { value: 'late', label: t('tableStatusLate') },
                     { value: 'absent', label: t('tableStatusAbsent') },
                   ]}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                  className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
+            <div className="p-4 bg-surface/80 border-t border-line flex items-center justify-between gap-3">
               <Button
                 variant="ghost"
                 size="sm"
@@ -1081,14 +1081,14 @@ function StaffShiftHistoryContent() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100"
+            className="bg-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-line"
           >
             <div className="p-6">
               <div className="flex items-center gap-2.5 mb-2 text-amber-600">
                 <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                <h3 className="text-base font-bold text-zinc-900">{t('confirmCloseTitle')}</h3>
+                <h3 className="text-base font-bold text-foreground">{t('confirmCloseTitle')}</h3>
               </div>
-              <p className="text-xs text-zinc-600 leading-relaxed">{t('filterConfirmCloseDesc')}</p>
+              <p className="text-xs text-muted leading-relaxed">{t('filterConfirmCloseDesc')}</p>
             </div>
             <div className="flex items-center gap-3 px-6 pb-6">
               <Button size="xs"
@@ -1118,7 +1118,7 @@ function StaffShiftHistoryContent() {
 export default function StaffShiftHistoryPage() {
   return (
     <Suspense
-      fallback={<div className="p-8 text-center text-xs text-zinc-400 font-bold">Loading...</div>}
+      fallback={<div className="p-8 text-center text-xs text-muted font-bold">Loading...</div>}
     >
       <StaffShiftHistoryContent />
     </Suspense>

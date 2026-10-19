@@ -253,20 +253,20 @@ export default function TenantAdminComplaintsPage() {
       case 'urgent':
       case 'high':
         return (
-          <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-black uppercase flex items-center gap-1">
+          <span className="px-2.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle text-[10px] font-black uppercase flex items-center gap-1">
             <AlertTriangle className="w-3 h-3 text-rose-600" />
             <span>{t('tenantPriorityUrgent')}</span>
           </span>
         )
       case 'medium':
         return (
-          <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-black uppercase">
+          <span className="px-2.5 py-0.5 rounded-full bg-warning-soft text-warning border border-warning-subtle text-[10px] font-black uppercase">
             {t('tenantPriorityNormal')}
           </span>
         )
       default:
         return (
-          <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-[10px] font-black uppercase">
+          <span className="px-2.5 py-0.5 rounded-full bg-card-hover text-muted border border-line text-[10px] font-black uppercase">
             {t('tenantPriorityLow')}
           </span>
         )
@@ -278,7 +278,7 @@ export default function TenantAdminComplaintsPage() {
       case 'resolved':
       case 'closed':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span>{t('tenantStatusResponded')}</span>
           </span>
@@ -286,14 +286,14 @@ export default function TenantAdminComplaintsPage() {
       case 'in_progress':
       case 'investigating':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-info-soft text-info border border-info-subtle text-[10px] font-bold">
             <Clock className="w-3 h-3 text-blue-600 animate-spin" />
             <span>{t('tenantStatusProcessing')}</span>
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>{t('tenantStatusUnresponded')}</span>
           </span>
@@ -306,14 +306,14 @@ export default function TenantAdminComplaintsPage() {
       {/* Top Header with Protected Escrow Badge */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/70 text-[#2AC1BC] text-[11px] font-bold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft border border-primary-subtle text-[#2AC1BC] text-[11px] font-bold mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>{t('tenantEscrowProtectedBadge')}</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t('tenantComplaintsTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-relaxed max-w-3xl">
+          <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed max-w-3xl">
             {t('tenantComplaintsSubtitle')}
           </p>
         </div>
@@ -331,11 +331,11 @@ export default function TenantAdminComplaintsPage() {
       </div>
 
       {/* Main Container */}
-      <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-xs overflow-hidden">
+      <div className="rounded-3xl border border-line bg-card shadow-xs overflow-hidden">
         {/* Controls Bar */}
-        <div className="p-4 sm:p-5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-zinc-50/50">
+        <div className="p-4 sm:p-5 border-b border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-surface/50">
           {/* Status Capsule Filter Tabs with Badge Counts */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto p-1 bg-zinc-100/80 rounded-2xl">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto p-1 bg-card-hover/80 rounded-2xl">
             <Button
               variant="ghost"
               size="sm"
@@ -349,7 +349,7 @@ export default function TenantAdminComplaintsPage() {
               <span>{t('tenantTabAllIssues')}</span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === 'all' ? 'bg-zinc-900 text-white' : 'bg-zinc-200 text-zinc-700'
+                  statusFilter === 'all' ? 'bg-zinc-900 text-white' : 'bg-line text-foreground/90'
                 }`}
               >
                 {complaints.length}
@@ -373,7 +373,7 @@ export default function TenantAdminComplaintsPage() {
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                   statusFilter === 'pending'
                     ? 'bg-amber-600 text-white'
-                    : 'bg-amber-100 text-amber-800'
+                    : 'bg-warning-soft text-warning'
                 }`}
               >
                 {complaints.filter(c => c.status === 'pending').length}
@@ -397,7 +397,7 @@ export default function TenantAdminComplaintsPage() {
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                   statusFilter === 'resolved'
                     ? 'bg-[#20a8a3] text-white'
-                    : 'bg-emerald-100 text-emerald-800'
+                    : 'bg-success-soft text-success'
                 }`}
               >
                 {
@@ -411,7 +411,7 @@ export default function TenantAdminComplaintsPage() {
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             {/* View Mode Toggle: Grid vs Table (Rule #9) */}
-            <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-xl shrink-0">
+            <div className="flex items-center gap-1 p-1 bg-card border border-line rounded-xl shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -440,8 +440,8 @@ export default function TenantAdminComplaintsPage() {
                 setCurrentPage(1)
               }}
               placeholder={t('tenantSearchGrievancePlaceholder')}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
-              className="py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              leftIcon={<Search className="w-4 h-4 text-muted" />}
+              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               containerClassName="w-full sm:w-64 space-y-0"
             />
           </div>
@@ -452,7 +452,7 @@ export default function TenantAdminComplaintsPage() {
           /* Grid View (Rule #9 Default) */
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedComplaints.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-zinc-400 text-xs">
+              <div className="col-span-full py-12 text-center text-muted text-xs">
                 {t('tenantNoGrievancesFound')}
               </div>
             ) : (
@@ -460,34 +460,34 @@ export default function TenantAdminComplaintsPage() {
                 <div
                   key={item.id}
                   onClick={() => setSelectedGrievance(item)}
-                  className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs hover:shadow-md hover:border-[#2AC1BC]/50 transition-all duration-200 flex flex-col justify-between cursor-pointer space-y-4 group"
+                  className="rounded-2xl border border-line bg-card p-5 shadow-xs hover:shadow-md hover:border-[#2AC1BC]/50 transition-all duration-200 flex flex-col justify-between cursor-pointer space-y-4 group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-mono text-zinc-600 font-bold bg-zinc-100 px-2 py-0.5 rounded-md">
+                        <span className="text-[11px] font-mono text-muted font-bold bg-card-hover px-2 py-0.5 rounded-md">
                           {item.id}
                         </span>
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-orange-50 text-[#FF6B35] border border-orange-200/80">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-accent-soft text-[#FF6B35] border border-accent-subtle">
                           {t('tenantBqtDormioBadge')}
                         </span>
                       </div>
                       {getPriorityBadge(item.priority)}
                     </div>
 
-                    <h3 className="text-sm font-bold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors line-clamp-2 leading-snug">
+                    <h3 className="text-sm font-bold text-foreground group-hover:text-[#2AC1BC] transition-colors line-clamp-2 leading-snug">
                       {item.title}
                     </h3>
 
-                    <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                       {item.description}
                     </p>
                   </div>
 
                   {/* Resolution card snippet */}
                   {item.resolutionNote && (
-                    <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-100 text-[11px] text-emerald-800 space-y-1">
-                      <div className="font-black flex items-center gap-1 text-emerald-700">
+                    <div className="p-3 rounded-xl bg-success-soft border border-success-subtle text-[11px] text-success space-y-1">
+                      <div className="font-black flex items-center gap-1 text-success">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         <span>{t('tenantResolutionResponseFromAdmin')}</span>
                       </div>
@@ -497,8 +497,8 @@ export default function TenantAdminComplaintsPage() {
                     </div>
                   )}
 
-                  <div className="border-t border-zinc-100 pt-3 flex items-center justify-between text-[11px]">
-                    <span className="text-zinc-400 font-medium">{formatDate(item.createdAt)}</span>
+                  <div className="border-t border-line pt-3 flex items-center justify-between text-[11px]">
+                    <span className="text-muted font-medium">{formatDate(item.createdAt)}</span>
                     {getStatusBadge(item.status)}
                   </div>
                 </div>
@@ -509,7 +509,7 @@ export default function TenantAdminComplaintsPage() {
           /* Table View */
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase font-black text-[10px] tracking-wider">
+              <thead className="bg-surface border-b border-line text-muted uppercase font-black text-[10px] tracking-wider">
                 <tr>
                   <th className="px-6 py-4">{t('tenantColGrievanceId')}</th>
                   <th className="px-6 py-4">{t('tenantColGrievanceTitle')}</th>
@@ -519,10 +519,10 @@ export default function TenantAdminComplaintsPage() {
                   <th className="px-6 py-4 text-right">{t('tenantColGrievanceAction')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200">
+              <tbody className="divide-y divide-line">
                 {paginatedComplaints.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-zinc-400">
+                    <td colSpan={6} className="px-6 py-12 text-center text-muted">
                       {t('tenantNoGrievances')}
                     </td>
                   </tr>
@@ -533,12 +533,12 @@ export default function TenantAdminComplaintsPage() {
                       onClick={() => setSelectedGrievance(item)}
                       className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
                     >
-                      <td className="px-6 py-4 font-mono font-bold text-zinc-500">{item.id}</td>
-                      <td className="px-6 py-4 font-bold text-zinc-900 max-w-xs truncate">
+                      <td className="px-6 py-4 font-mono font-bold text-muted">{item.id}</td>
+                      <td className="px-6 py-4 font-bold text-foreground max-w-xs truncate">
                         {item.title}
                       </td>
                       <td className="px-6 py-4">{getPriorityBadge(item.priority)}</td>
-                      <td className="px-6 py-4 text-zinc-600 font-medium">
+                      <td className="px-6 py-4 text-muted font-medium">
                         {formatDate(item.createdAt)}
                       </td>
                       <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
@@ -560,8 +560,8 @@ export default function TenantAdminComplaintsPage() {
         )}
 
         {/* Standard Pagination Bar (Rule #9) */}
-        <div className="p-4 sm:p-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-50/50">
-          <div className="text-xs font-medium text-zinc-500">
+        <div className="p-4 sm:p-6 border-t border-line flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface/50">
+          <div className="text-xs font-medium text-muted">
             {t('tenantShowingGrievancesRange', {
               from: (currentPage - 1) * itemsPerPage + 1,
               to: Math.min(currentPage * itemsPerPage, filteredComplaints.length),
@@ -611,18 +611,18 @@ export default function TenantAdminComplaintsPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col border border-zinc-200 my-auto"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col border border-line my-auto"
           >
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-surface/60">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-zinc-900">
+                  <h3 className="text-base font-black text-foreground">
                     {t('tenantCreateGrievanceModalTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-400">{t('tenantCreateGrievanceModalSubtitle')}</p>
+                  <p className="text-xs text-muted">{t('tenantCreateGrievanceModalSubtitle')}</p>
                 </div>
               </div>
               <Button rounded="full"
@@ -640,7 +640,7 @@ export default function TenantAdminComplaintsPage() {
               className="p-6 overflow-y-auto space-y-4 text-xs"
             >
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -648,16 +648,16 @@ export default function TenantAdminComplaintsPage() {
 
               {/* Priority Selection */}
               <div>
-                <label className="font-bold text-zinc-700 block mb-1.5">
+                <label className="font-bold text-foreground/90 block mb-1.5">
                   {t('tenantFieldSeverityLabel')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { key: 'low', label: t('tenantPriorityLowDesc'), color: 'border-zinc-200' },
+                    { key: 'low', label: t('tenantPriorityLowDesc'), color: 'border-line' },
                     {
                       key: 'medium',
                       label: t('tenantPriorityNormalDesc'),
-                      color: 'border-amber-200',
+                      color: 'border-warning-subtle',
                     },
                     { key: 'high', label: t('tenantPriorityUrgentDesc'), color: 'border-rose-300' },
                   ].map(p => (
@@ -676,7 +676,7 @@ export default function TenantAdminComplaintsPage() {
 
               {/* Title */}
               <div>
-                <label className="font-bold text-zinc-700 block mb-1.5">
+                <label className="font-bold text-foreground/90 block mb-1.5">
                   {t('tenantFieldTitleLabel')} <span className="text-rose-500">*</span>
                 </label>
                 <TextInput
@@ -685,13 +685,13 @@ export default function TenantAdminComplaintsPage() {
                   onChange={e => setTitle(e.target.value)}
                   placeholder={t('tenantFieldTitlePlaceholder')}
                   containerClassName="space-y-0"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-line font-medium focus:outline-none focus:border-[#2AC1BC] text-xs"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="font-bold text-zinc-700 block mb-1.5">
+                <label className="font-bold text-foreground/90 block mb-1.5">
                   {t('tenantFieldDescLabel')} <span className="text-rose-500">*</span>
                 </label>
                 <TextareaInput
@@ -700,22 +700,22 @@ export default function TenantAdminComplaintsPage() {
                   onChange={e => setDescription(e.target.value)}
                   placeholder={t('tenantFieldDescPlaceholder')}
                   containerClassName="space-y-0"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 font-medium focus:outline-none focus:border-[#2AC1BC] text-xs leading-relaxed"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-line font-medium focus:outline-none focus:border-[#2AC1BC] text-xs leading-relaxed"
                 />
               </div>
 
               {/* Image attachments */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="font-bold text-zinc-700">{t('tenantFieldPhotosLabel')}</label>
-                  <span className="text-zinc-400">{uploadedImages.length}/5</span>
+                  <label className="font-bold text-foreground/90">{t('tenantFieldPhotosLabel')}</label>
+                  <span className="text-muted">{uploadedImages.length}/5</span>
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {uploadedImages.map((img, idx) => (
                     <div
                       key={idx}
-                      className="relative h-20 rounded-xl overflow-hidden border border-zinc-200 group"
+                      className="relative h-20 rounded-xl overflow-hidden border border-line group"
                     >
                       <img src={img} alt="Evidence" className="w-full h-full object-cover" />
                       <Button
@@ -753,7 +753,7 @@ export default function TenantAdminComplaintsPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-zinc-100 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-line flex items-center justify-end gap-2.5">
                 <Button size="xs"
                   type="button"
                   variant="ghost"
@@ -781,11 +781,11 @@ export default function TenantAdminComplaintsPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col border border-zinc-200 my-auto"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-hidden flex flex-col border border-line my-auto"
           >
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-surface/60">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-zinc-400 bg-white px-2 py-0.5 rounded border border-zinc-200">
+                <span className="text-xs font-mono font-bold text-muted bg-card px-2 py-0.5 rounded border border-line">
                   {selectedGrievance.id}
                 </span>
                 {getStatusBadge(selectedGrievance.status)}
@@ -802,10 +802,10 @@ export default function TenantAdminComplaintsPage() {
 
             <div className="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed">
               <div>
-                <h3 className="text-base font-black text-zinc-900 leading-snug">
+                <h3 className="text-base font-black text-foreground leading-snug">
                   {selectedGrievance.title}
                 </h3>
-                <div className="text-[11px] text-zinc-400 mt-1 flex items-center gap-2">
+                <div className="text-[11px] text-muted mt-1 flex items-center gap-2">
                   <span>
                     {t('tenantSubmittedDateLabel', {
                       date: formatDate(selectedGrievance.createdAt),
@@ -821,11 +821,11 @@ export default function TenantAdminComplaintsPage() {
                 </div>
               </div>
 
-              <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-100 space-y-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+              <div className="p-3.5 bg-surface rounded-2xl border border-line space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-muted">
                   {t('tenantComplaintContentTitle')}
                 </span>
-                <p className="text-zinc-700 font-medium whitespace-pre-wrap">
+                <p className="text-foreground/90 font-medium whitespace-pre-wrap">
                   {selectedGrievance.description}
                 </p>
               </div>
@@ -833,7 +833,7 @@ export default function TenantAdminComplaintsPage() {
               {/* Evidence Images */}
               {selectedGrievance.images && selectedGrievance.images.length > 0 && (
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-muted block mb-2">
                     {t('tenantEvidencePhotosTitle')}
                   </span>
                   <div className="flex flex-wrap gap-2">
@@ -841,7 +841,7 @@ export default function TenantAdminComplaintsPage() {
                       <div
                         key={img.id}
                         onClick={() => setPreviewImage(img.url)}
-                        className="w-20 h-20 rounded-xl overflow-hidden border border-zinc-200 cursor-pointer hover:opacity-90"
+                        className="w-20 h-20 rounded-xl overflow-hidden border border-line cursor-pointer hover:opacity-90"
                       >
                         <img src={img.url} alt="Evidence" className="w-full h-full object-cover" />
                       </div>
@@ -852,9 +852,9 @@ export default function TenantAdminComplaintsPage() {
 
               {/* Admin Resolution Section */}
               {selectedGrievance.resolutionNote ? (
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2">
+                <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-black text-emerald-900 text-xs">
+                    <div className="flex items-center gap-2 font-black text-success text-xs">
                       <ShieldCheck className="w-4 h-4 text-emerald-600" />
                       <span>
                         {t('tenantOfficialResponseFromAdmin', {
@@ -868,19 +868,19 @@ export default function TenantAdminComplaintsPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-emerald-800 font-medium whitespace-pre-wrap leading-relaxed">
+                  <p className="text-success font-medium whitespace-pre-wrap leading-relaxed">
                     {selectedGrievance.resolutionNote}
                   </p>
                 </div>
               ) : (
-                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 font-medium flex items-center gap-2.5">
+                <div className="p-4 rounded-2xl bg-warning-soft border border-warning-subtle text-warning font-medium flex items-center gap-2.5">
                   <Clock className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>{t('tenantPendingVerificationNotice')}</span>
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex justify-end bg-zinc-50/50">
+            <div className="p-4 border-t border-line flex justify-end bg-surface/50">
               <Button size="xs"
                 onClick={() => setSelectedGrievance(null)}
               >
@@ -899,16 +899,16 @@ export default function TenantAdminComplaintsPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-zinc-200"
+            className="bg-card rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-line"
           >
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-sm font-black text-zinc-900">
+              <h3 className="text-sm font-black text-foreground">
                 {t('tenantConfirmCloseFormTitle')}
               </h3>
-              <p className="text-xs text-zinc-500">{t('tenantConfirmCloseFormDesc')}</p>
+              <p className="text-xs text-muted">{t('tenantConfirmCloseFormDesc')}</p>
             </div>
             <div className="flex items-center gap-2 pt-2">
               <Button size="xs"
@@ -941,10 +941,10 @@ export default function TenantAdminComplaintsPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl p-4 max-w-xl w-full space-y-3"
+            className="bg-card rounded-3xl p-4 max-w-xl w-full space-y-3"
           >
             <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-xs font-bold text-zinc-700">
+              <span className="text-xs font-bold text-foreground/90">
                 {t('tenantEvidencePhotoTitle')}
               </span>
               <Button rounded="full"
@@ -956,7 +956,7 @@ export default function TenantAdminComplaintsPage() {
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="max-h-[70vh] overflow-hidden rounded-2xl bg-zinc-100">
+            <div className="max-h-[70vh] overflow-hidden rounded-2xl bg-card-hover">
               <img src={previewImage} alt="Preview" className="w-full h-full object-contain" />
             </div>
           </div>

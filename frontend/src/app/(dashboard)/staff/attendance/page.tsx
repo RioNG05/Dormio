@@ -11,7 +11,7 @@ export default function StaffAttendancePage() {
   }, [router])
 
   return (
-    <div className="p-12 text-center text-xs text-zinc-400 font-bold animate-pulse">
+    <div className="p-12 text-center text-xs text-muted font-bold animate-pulse">
       Đang chuyển đến Lịch sử chấm công...
     </div>
   )

@@ -469,17 +469,17 @@ export default function TenantMessagesPage() {
   }
 
   return (
-    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-[100dvh] lg:h-screen bg-white border-y border-zinc-200/80 overflow-hidden flex relative animate-in fade-in duration-300">
+    <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-[100dvh] lg:h-screen bg-card border-y border-line overflow-hidden flex relative animate-in fade-in duration-300">
       {/* PANE 1: Left Conversation List */}
       <div
-        className={`w-full md:w-80 lg:w-88 border-r border-zinc-200/80 flex flex-col bg-zinc-50/50 shrink-0 h-full ${
+        className={`w-full md:w-80 lg:w-88 border-r border-line flex flex-col bg-surface/50 shrink-0 h-full ${
           mobileShowChat ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Header & Search */}
-        <div className="p-3.5 sm:p-4 border-b border-zinc-200/80 space-y-2.5 bg-white shrink-0">
+        <div className="p-3.5 sm:p-4 border-b border-line space-y-2.5 bg-card shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
               {t('tenantMessagesTitle')}
             </h2>
             <span className="px-2 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-black uppercase">
@@ -493,7 +493,7 @@ export default function TenantMessagesPage() {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder={t('tenantSearchChatPlaceholder')}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              leftIcon={<Search className="w-4 h-4 text-muted" />}
               rightIcon={
                 searchTerm ? (
                   <Button
@@ -506,7 +506,7 @@ export default function TenantMessagesPage() {
                   </Button>
                 ) : undefined
               }
-              className="py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              className="py-2 rounded-xl bg-surface border border-line text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               containerClassName="space-y-0"
             />
           </div>
@@ -534,16 +534,16 @@ export default function TenantMessagesPage() {
         </div>
 
         {/* Conversation Contacts List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto divide-y divide-line custom-scrollbar">
           {isLoadingConversations ? (
-            <div className="p-8 text-center text-xs font-semibold text-zinc-400 flex flex-col items-center gap-2">
+            <div className="p-8 text-center text-xs font-semibold text-muted flex flex-col items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
               <span>{t('tenantLoadingConversations')}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
-            <div className="p-6 text-center text-xs text-zinc-400 space-y-2">
+            <div className="p-6 text-center text-xs text-muted space-y-2">
               <MessageSquare className="w-8 h-8 mx-auto text-zinc-300" />
-              <p className="font-semibold text-zinc-600">{t('tenantNoConversationsTitle')}</p>
+              <p className="font-semibold text-muted">{t('tenantNoConversationsTitle')}</p>
               {contacts.length > 0 ? (
                 <Button
                   variant="primary"
@@ -603,16 +603,16 @@ export default function TenantMessagesPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <h3 className="text-xs sm:text-sm font-black text-zinc-900 truncate">
+                      <h3 className="text-xs sm:text-sm font-black text-foreground truncate">
                         {formatDisplayName(conv.participant?.fullName, t('tenantFallbackLandlord'))}
                       </h3>
-                      <span className="text-[10px] text-zinc-400 shrink-0 font-medium">
+                      <span className="text-[10px] text-muted shrink-0 font-medium">
                         {formatConversationTime(conv.updatedAt, locale)}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/60 shrink-0">
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-card-hover text-muted border border-line shrink-0">
                         {conv.participant?.role === 'landlord'
                           ? t('tenantRoleLandlord')
                           : conv.participant?.role === 'admin'
@@ -621,12 +621,12 @@ export default function TenantMessagesPage() {
                               ? t('tenantRoleEmployee')
                               : t('tenantRoleResident')}
                       </span>
-                      <span className="text-[10px] text-zinc-400 truncate">
+                      <span className="text-[10px] text-muted truncate">
                         {formatPhoneDisplay(conv.participant?.phoneNumber)}
                       </span>
                     </div>
 
-                    <p className="text-xs text-zinc-500 truncate font-normal">
+                    <p className="text-xs text-muted truncate font-normal">
                       {conv.lastMessage?.content || t('tenantNoNewMessages')}
                     </p>
                   </div>
@@ -645,14 +645,14 @@ export default function TenantMessagesPage() {
 
       {/* PANE 2: Center Main Chat Box */}
       <div
-        className={`flex-1 flex flex-col min-w-0 bg-white h-full overflow-hidden ${
+        className={`flex-1 flex flex-col min-w-0 bg-card h-full overflow-hidden ${
           !mobileShowChat ? 'hidden md:flex' : 'flex'
         }`}
       >
         {activeChat ? (
           <>
             {/* Chat Header */}
-            <div className="p-3 sm:px-5 sm:py-3.5 border-b border-zinc-200/80 flex items-center justify-between gap-2 bg-white shrink-0 z-10 shadow-2xs">
+            <div className="p-3 sm:px-5 sm:py-3.5 border-b border-line flex items-center justify-between gap-2 bg-card shrink-0 z-10 shadow-2xs">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 {/* Back to list on mobile */}
                 <Button
@@ -662,7 +662,7 @@ export default function TenantMessagesPage() {
                   className="md:hidden -ml-1 shrink-0"
                   title={t('tenantBackToList')}
                 >
-                  <ArrowLeft className="w-5 h-5 text-zinc-700" />
+                  <ArrowLeft className="w-5 h-5 text-foreground/90" />
                 </Button>
 
                 <div className="relative shrink-0">
@@ -682,13 +682,13 @@ export default function TenantMessagesPage() {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <h3 className="text-xs sm:text-sm font-black text-zinc-900 truncate shrink-0">
+                    <h3 className="text-xs sm:text-sm font-black text-foreground truncate shrink-0">
                       {formatDisplayName(
                         activeChat.participant?.fullName,
                         t('tenantFallbackLandlord'),
                       )}
                     </h3>
-                    <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-600 text-[10px] font-bold truncate">
+                    <span className="px-1.5 py-0.5 rounded-md bg-card-hover text-muted text-[10px] font-bold truncate">
                       {activeChat.participant?.role === 'landlord'
                         ? t('tenantRoleLandlord')
                         : activeChat.participant?.role === 'admin'
@@ -698,7 +698,7 @@ export default function TenantMessagesPage() {
                             : t('tenantRoleResident')}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-zinc-400 font-medium truncate mt-0.5">
+                  <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-muted font-medium truncate mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-emerald-500" />
                     <span className="truncate">{t('tenantOnlineNow')}</span>
                     <span className="hidden sm:inline text-zinc-300">•</span>
@@ -715,7 +715,7 @@ export default function TenantMessagesPage() {
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <a
                   href={`tel:${activeChat.participant?.phoneNumber}`}
-                  className="p-1.5 sm:p-2 rounded-xl bg-zinc-50 border border-zinc-200 text-zinc-700 hover:bg-[#2AC1BC] hover:text-white hover:border-[#2AC1BC] transition-all cursor-pointer shadow-2xs"
+                  className="p-1.5 sm:p-2 rounded-xl bg-surface border border-line text-foreground/90 hover:bg-[#2AC1BC] hover:text-white hover:border-[#2AC1BC] transition-all cursor-pointer shadow-2xs"
                   title={t('tenantCallLandlord')}
                 >
                   <Phone className="w-4 h-4" />
@@ -734,12 +734,12 @@ export default function TenantMessagesPage() {
             {/* Messages Feed */}
             <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 bg-zinc-50/40 custom-scrollbar">
               {isLoadingMessages ? (
-                <div className="flex items-center justify-center h-full text-zinc-400 text-xs gap-2">
+                <div className="flex items-center justify-center h-full text-muted text-xs gap-2">
                   <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
                   <span>{t('tenantLoadingMessages')}</span>
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-zinc-400 text-xs space-y-2">
+                <div className="flex flex-col items-center justify-center h-full text-muted text-xs space-y-2">
                   <MessageSquare className="w-10 h-10 text-zinc-300" />
                   <p>
                     {t('tenantStartChatWithName', {
@@ -782,24 +782,24 @@ export default function TenantMessagesPage() {
                         className={`max-w-xs sm:max-w-md p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                           isMe
                             ? 'bg-[#2AC1BC] text-white rounded-br-xs shadow-xs'
-                            : 'bg-white text-zinc-800 border border-zinc-200/80 rounded-bl-xs shadow-2xs'
+                            : 'bg-card text-foreground border border-line rounded-bl-xs shadow-2xs'
                         }`}
                       >
                         <p className="whitespace-pre-line">{msg.content}</p>
 
                         {/* Interactive Invoice Card shortcut inside Chat bubble */}
                         {isInvoiceMsg && !isMe && (
-                          <div className="mt-2.5 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 space-y-2 text-zinc-800 shadow-2xs">
+                          <div className="mt-2.5 p-3 rounded-xl bg-warning-soft border border-warning-subtle space-y-2 text-foreground shadow-2xs">
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black uppercase text-amber-900 flex items-center gap-1">
+                              <span className="text-[10px] font-black uppercase text-warning flex items-center gap-1">
                                 <Receipt className="w-3.5 h-3.5 text-[#FF6B35]" />
                                 {t('tenantCurrentRoomBillCard')}
                               </span>
-                              <span className="px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-900 text-[9px] font-bold">
+                              <span className="px-1.5 py-0.5 rounded bg-amber-200/60 text-warning text-[9px] font-bold">
                                 {t('tenantPendingPaymentBadge')}
                               </span>
                             </div>
-                            <p className="text-[11px] text-zinc-600">
+                            <p className="text-[11px] text-muted">
                               {t('tenantClickViewInvoiceHint')}
                             </p>
                             <Link
@@ -820,7 +820,7 @@ export default function TenantMessagesPage() {
                                 return (
                                   <div
                                     key={attIdx}
-                                    className="rounded-xl overflow-hidden border border-zinc-200/80 max-w-[240px] cursor-pointer"
+                                    className="rounded-xl overflow-hidden border border-line max-w-[240px] cursor-pointer"
                                     onClick={() => setPreviewImage(att.url)}
                                   >
                                     <img
@@ -840,7 +840,7 @@ export default function TenantMessagesPage() {
                                   className={`flex items-center gap-2 p-2 rounded-xl text-xs font-medium ${
                                     isMe
                                       ? 'bg-teal-700/50 text-white'
-                                      : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+                                      : 'bg-card-hover text-foreground/90 hover:bg-line'
                                   }`}
                                 >
                                   <File className="w-4 h-4 shrink-0" />
@@ -857,7 +857,7 @@ export default function TenantMessagesPage() {
 
                         <div
                           className={`flex items-center justify-end gap-1 text-[10px] mt-1.5 ${
-                            isMe ? 'text-teal-100' : 'text-zinc-400'
+                            isMe ? 'text-teal-100' : 'text-muted'
                           }`}
                         >
                           <span>{formatMessageTime(msg.sentAt, locale)}</span>
@@ -872,8 +872,8 @@ export default function TenantMessagesPage() {
             </div>
 
             {/* Quick Prompt Pills */}
-            <div className="px-3.5 py-1.5 border-t border-zinc-100 bg-white flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-              <span className="text-[10px] font-black uppercase text-zinc-400 flex items-center gap-1 shrink-0">
+            <div className="px-3.5 py-1.5 border-t border-line bg-card flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+              <span className="text-[10px] font-black uppercase text-muted flex items-center gap-1 shrink-0">
                 <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" />
                 {t('tenantQuickPillsTitle')}:
               </span>
@@ -892,11 +892,11 @@ export default function TenantMessagesPage() {
 
             {/* Pending Attachments Bar */}
             {pendingAttachments.length > 0 && (
-              <div className="px-4 py-2 border-t border-zinc-100 bg-zinc-50 flex items-center gap-2 overflow-x-auto shrink-0">
+              <div className="px-4 py-2 border-t border-line bg-surface flex items-center gap-2 overflow-x-auto shrink-0">
                 {pendingAttachments.map((att, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 shrink-0"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-card border border-line text-xs font-semibold text-foreground/90 shrink-0"
                   >
                     <span>{att.name}</span>
                     <Button
@@ -920,7 +920,7 @@ export default function TenantMessagesPage() {
                 e.preventDefault()
                 handleSendMessage()
               }}
-              className="p-2.5 sm:p-3.5 border-t border-zinc-200/80 bg-white flex items-center gap-2 shrink-0"
+              className="p-2.5 sm:p-3.5 border-t border-line bg-card flex items-center gap-2 shrink-0"
             >
               <TextInput
                 type="file"
@@ -938,7 +938,7 @@ export default function TenantMessagesPage() {
                 onChange={e => handleFileUpload(e, 'image')}
               />
 
-              <div className="flex items-center gap-1 text-zinc-400">
+              <div className="flex items-center gap-1 text-muted">
                 <Button
                   type="button"
                   variant="ghost"
@@ -965,7 +965,7 @@ export default function TenantMessagesPage() {
                 onChange={e => setInputMessage(e.target.value)}
                 placeholder={t('tenantTypeMessagePlaceholder')}
                 containerClassName="flex-1 space-y-0"
-                className="py-2 sm:py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+                className="py-2 sm:py-2.5 rounded-xl bg-surface border border-line text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
               />
 
               <Button size="xs"
@@ -982,9 +982,9 @@ export default function TenantMessagesPage() {
             </form>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 text-xs p-6 space-y-3">
+          <div className="flex-1 flex flex-col items-center justify-center text-muted text-xs p-6 space-y-3">
             <MessageSquare className="w-12 h-12 text-zinc-300" />
-            <p className="font-semibold text-zinc-600 text-sm">{t('tenantSelectChatToStart')}</p>
+            <p className="font-semibold text-muted text-sm">{t('tenantSelectChatToStart')}</p>
           </div>
         )}
       </div>
@@ -999,10 +999,10 @@ export default function TenantMessagesPage() {
           />
 
           {/* Side Panel Content */}
-          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:h-full lg:w-80 xl:w-88 border-l border-zinc-200/80 bg-zinc-50 flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
+          <div className="fixed inset-y-0 right-0 z-50 w-80 sm:w-88 lg:static lg:z-auto lg:h-full lg:w-80 xl:w-88 border-l border-line bg-surface flex flex-col overflow-y-auto custom-scrollbar p-5 space-y-5 shrink-0 shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
             {/* Header on mobile */}
-            <div className="flex lg:hidden items-center justify-between pb-3 border-b border-zinc-200">
-              <span className="text-xs font-black text-zinc-900 uppercase">
+            <div className="flex lg:hidden items-center justify-between pb-3 border-b border-line">
+              <span className="text-xs font-black text-foreground uppercase">
                 {t('tenantRoomInfoTitle')}
               </span>
               <Button
@@ -1015,46 +1015,46 @@ export default function TenantMessagesPage() {
             </div>
 
             {/* Room Overview Card */}
-            <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-3">
+            <div className="p-4 rounded-2xl bg-card border border-line shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                <span className="text-[10px] font-black uppercase tracking-wider text-muted">
                   {t('tenantRoomInfoTitle')}
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-full bg-success-soft text-success text-[10px] font-bold">
                   {t('tenantRoomStatusActive')}
                 </span>
               </div>
 
               <div>
-                <h4 className="text-base font-black text-zinc-900">
+                <h4 className="text-base font-black text-foreground">
                   {activeChat.participant?.roomName || `${t('tenantRoomNumber')} 101`} &bull; Studio
                 </h4>
-                <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <p className="text-xs text-muted flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3.5 h-3.5 text-muted shrink-0" />
                   <span>{activeChat.participant?.boardingHouseName || 'Dormio Premier'}</span>
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-xs">
-                <span className="text-zinc-500">{t('tenantRentPrice')}</span>
+              <div className="pt-2 border-t border-line flex items-center justify-between text-xs">
+                <span className="text-muted">{t('tenantRentPrice')}</span>
                 <span className="font-bold text-[#2AC1BC]">4.500.000 ₫/{t('tenantPerMonth')}</span>
               </div>
             </div>
 
             {/* Current Bill Due Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200/80 shadow-2xs space-y-2.5">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-accent-subtle shadow-2xs space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-orange-900">
+                <span className="text-[10px] font-black uppercase tracking-wider text-accent">
                   {t('tenantPaymentDue')}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
+                <span className="px-2 py-0.5 rounded-md bg-warning-soft text-warning text-[10px] font-extrabold uppercase">
                   {t('tenantUnpaid')}
                 </span>
               </div>
 
               <div>
-                <div className="text-lg font-black text-zinc-900">4.120.000 ₫</div>
-                <div className="text-[11px] text-zinc-500 font-medium">
+                <div className="text-lg font-black text-foreground">4.120.000 ₫</div>
+                <div className="text-[11px] text-muted font-medium">
                   {t('tenantDueDate')}: 05/08/2026
                 </div>
               </div>
@@ -1068,20 +1068,20 @@ export default function TenantMessagesPage() {
             </div>
 
             {/* Shared Attachments & Photos */}
-            <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-3">
-              <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 block">
+            <div className="p-4 rounded-2xl bg-card border border-line shadow-2xs space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-wider text-muted block">
                 {t('tenantSharedMedia')} ({activeChatMedia.total})
               </span>
 
               {activeChatMedia.total === 0 ? (
-                <p className="text-xs text-zinc-400 text-center py-2">{t('tenantNoSharedMedia')}</p>
+                <p className="text-xs text-muted text-center py-2">{t('tenantNoSharedMedia')}</p>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {activeChatMedia.images.slice(0, 3).map((img, i) => (
                     <div
                       key={i}
                       onClick={() => setPreviewImage(img.url)}
-                      className="h-16 rounded-xl overflow-hidden border border-zinc-200 group relative cursor-pointer"
+                      className="h-16 rounded-xl overflow-hidden border border-line group relative cursor-pointer"
                     >
                       <img
                         src={img.url}
@@ -1096,7 +1096,7 @@ export default function TenantMessagesPage() {
                       href={f.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="h-16 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-100 flex flex-col items-center justify-center text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer p-1"
+                      className="h-16 rounded-xl overflow-hidden border border-line bg-card-hover flex flex-col items-center justify-center text-muted hover:text-foreground transition-colors cursor-pointer p-1"
                     >
                       <FileText className="w-5 h-5 mb-0.5" />
                       <span className="text-[9px] font-bold truncate max-w-full">{f.name}</span>

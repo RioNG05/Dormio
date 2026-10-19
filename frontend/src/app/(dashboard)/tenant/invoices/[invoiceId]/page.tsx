@@ -532,7 +532,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-        <span className="text-xs font-semibold text-zinc-400">{t('loading')}</span>
+        <span className="text-xs font-semibold text-muted">{t('loading')}</span>
       </div>
     )
   }
@@ -541,12 +541,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
   if (!invoice) {
     return (
       <div className="max-w-2xl mx-auto py-20 px-4 text-center space-y-5 animate-in fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto border border-zinc-200">
+        <div className="w-16 h-16 rounded-3xl bg-card-hover text-muted flex items-center justify-center mx-auto border border-line">
           <FileQuestion className="w-8 h-8" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-lg font-black text-zinc-800">{t('noInvoiceData')}</h2>
-          <p className="text-xs text-zinc-400 max-w-md mx-auto">{t('loadInvoiceError')}</p>
+          <h2 className="text-lg font-black text-foreground">{t('noInvoiceData')}</h2>
+          <p className="text-xs text-muted max-w-md mx-auto">{t('loadInvoiceError')}</p>
         </div>
         <div>
           <Button size="xs"
@@ -574,51 +574,51 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             onClick={handleBackClick}
             title={t('backToInvoices')}
           >
-            <ArrowLeft className="w-5 h-5 text-zinc-700" />
+            <ArrowLeft className="w-5 h-5 text-foreground/90" />
           </Button>
           <div>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
-              <Link href="/tenant/invoices" className="hover:text-zinc-700 transition-colors">
+            <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
+              <Link href="/tenant/invoices" className="hover:text-foreground transition-colors">
                 {t('invoicesTitle')}
               </Link>
               <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-zinc-700 font-bold">{t('paymentPageTitle')}</span>
+              <span className="text-foreground/90 font-bold">{t('paymentPageTitle')}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight mt-0.5">
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mt-0.5">
               {t('paymentPageTitle')}
             </h1>
           </div>
         </div>
 
         {/* Invoice Summary Pill */}
-        <div className="flex items-center gap-2.5 px-4 py-2 bg-white rounded-2xl border border-zinc-200/80 shadow-xs self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 px-4 py-2 bg-card rounded-2xl border border-line shadow-xs self-start sm:self-auto">
           <Receipt className="w-4 h-4 text-[#FF6B35]" />
-          <span className="text-xs font-bold text-zinc-800">{invoice.period}</span>
-          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 uppercase font-mono">
+          <span className="text-xs font-bold text-foreground">{invoice.period}</span>
+          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-warning-soft text-warning uppercase font-mono">
             {invoice.id}
           </span>
         </div>
       </div>
 
       {/* ─── SECTION 1: Meter Reading Capture & AI OCR ───────────────────────── */}
-      <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+      <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
         <div>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-sm">
               1
             </div>
-            <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
               {t('metersSectionTitle')}
             </h2>
           </div>
-          <p className="text-xs text-zinc-400 mt-1 max-w-2xl">{t('metersSectionDesc')}</p>
+          <p className="text-xs text-muted mt-1 max-w-2xl">{t('metersSectionDesc')}</p>
         </div>
 
         {/* If no metered services exist for this invoice/room */}
         {meteredServicesList.length === 0 ? (
-          <div className="py-8 px-4 text-center rounded-2xl bg-zinc-50 border border-zinc-200/60 space-y-2">
-            <Info className="w-6 h-6 text-zinc-400 mx-auto" />
-            <p className="text-xs font-medium text-zinc-500">{t('noMeteredServices')}</p>
+          <div className="py-8 px-4 text-center rounded-2xl bg-surface border border-line space-y-2">
+            <Info className="w-6 h-6 text-muted mx-auto" />
+            <p className="text-xs font-medium text-muted">{t('noMeteredServices')}</p>
           </div>
         ) : (
           /* Grid of Metered Services (Electricity & Water) */
@@ -650,8 +650,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   key={sId}
                   className={`rounded-2xl border p-5 transition-all space-y-4 ${
                     isElec
-                      ? 'border-amber-200/80 bg-gradient-to-br from-amber-50/40 via-white to-white'
-                      : 'border-sky-200/80 bg-gradient-to-br from-sky-50/40 via-white to-white'
+                      ? 'border-warning-subtle bg-gradient-to-br from-amber-50/40 via-white to-white'
+                      : 'border-vacant-subtle bg-gradient-to-br from-sky-50/40 via-white to-white'
                   }`}
                 >
                   {/* Card Title & Unit Price */}
@@ -667,8 +667,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         {isElec ? <Zap className="w-5 h-5" /> : <Droplets className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h3 className="text-sm font-black text-zinc-900">{service.serviceName}</h3>
-                        <span className="text-[11px] font-bold text-zinc-400">
+                        <h3 className="text-sm font-black text-foreground">{service.serviceName}</h3>
+                        <span className="text-[11px] font-bold text-muted">
                           {formatCurrency(service.unitPrice, locale)} / {service.unit}
                         </span>
                       </div>
@@ -681,7 +681,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         <span>{t('aiScanningBadge')}</span>
                       </span>
                     ) : state.isExtractedByAi ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft border border-success-subtle text-success text-[10px] font-bold">
                         <Sparkles className="w-3 h-3 text-emerald-600" />
                         <span>{t('aiExtractedBadge')}</span>
                       </span>
@@ -703,14 +703,14 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       onInspect={url => setInspectImage(url)}
                       onFileSelect={file => handlePhotoUpload(sId, file)}
                       emptyPlaceholder={
-                        <div className="flex flex-col items-center justify-center p-4 text-center text-zinc-400 space-y-1.5">
-                          <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200/80 flex items-center justify-center text-zinc-400 shadow-2xs">
+                        <div className="flex flex-col items-center justify-center p-4 text-center text-muted space-y-1.5">
+                          <div className="w-12 h-12 rounded-2xl bg-card border border-line flex items-center justify-center text-muted shadow-2xs">
                             <Camera className="w-6 h-6" />
                           </div>
-                          <span className="text-xs font-bold text-zinc-600">
+                          <span className="text-xs font-bold text-muted">
                             {t('uploadOrCapture')}
                           </span>
-                          <span className="text-[10px] text-zinc-400">JPG, PNG, WEBP</span>
+                          <span className="text-[10px] text-muted">JPG, PNG, WEBP</span>
                         </div>
                       }
                     />
@@ -770,10 +770,10 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
 
                     {/* Error message displayed right below the two action buttons if AI check failed */}
                     {uploadErrors[sId] && (
-                      <div className="p-3 rounded-xl bg-rose-50 border border-rose-200/90 text-rose-700 flex items-start gap-2.5 animate-in fade-in duration-200 shadow-xs">
+                      <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger flex items-start gap-2.5 animate-in fade-in duration-200 shadow-xs">
                         <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
-                          <p className="text-xs font-bold text-rose-800 leading-tight">
+                          <p className="text-xs font-bold text-danger leading-tight">
                             Ảnh không hợp lệ
                           </p>
                           <p className="text-[11px] font-medium text-rose-600 leading-relaxed">
@@ -789,10 +789,10 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     <div className="grid grid-cols-2 gap-3">
                       {/* Previous Reading (Disabled from DB) */}
                       <div>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
+                        <span className="text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
                           {t('previousReadingLabel')}
                         </span>
-                        <div className="px-3.5 py-2.5 rounded-xl bg-zinc-100 border border-zinc-200 text-xs font-bold text-zinc-600 truncate">
+                        <div className="px-3.5 py-2.5 rounded-xl bg-card-hover border border-line text-xs font-bold text-muted truncate">
                           {state.previousValue !== null
                             ? `${state.previousValue} ${state.unit}`
                             : t('noData')}
@@ -809,8 +809,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                           placeholder="0"
                           className={`font-black text-xs ${
                             isElec
-                              ? 'border-amber-300 text-amber-800'
-                              : 'border-sky-300 text-sky-800'
+                              ? 'border-amber-300 text-warning'
+                              : 'border-sky-300 text-vacant'
                           }`}
                           helperText={state.hasManualEdits ? 'Đã chỉnh sửa' : undefined}
                         />
@@ -819,17 +819,17 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
 
                     {/* Calculation Status Banner (Calculated ONLY after photo is uploaded) */}
                     {serviceCalc?.hasCalculated ? (
-                      <div className="p-3 rounded-xl bg-white/95 border border-zinc-200/80 shadow-2xs flex items-center justify-between text-xs animate-in fade-in">
+                      <div className="p-3 rounded-xl bg-card/95 border border-line shadow-2xs flex items-center justify-between text-xs animate-in fade-in">
                         <div>
-                          <span className="text-[10px] text-zinc-400 block font-medium">
+                          <span className="text-[10px] text-muted block font-medium">
                             {t('consumptionDelta')}
                           </span>
-                          <span className="font-black text-zinc-800 text-sm">
+                          <span className="font-black text-foreground text-sm">
                             {serviceCalc.delta} {state.unit}
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-zinc-400 block font-medium">
+                          <span className="text-[10px] text-muted block font-medium">
                             {t('estimatedFee')}
                           </span>
                           <span className="font-black text-[#FF6B35] text-sm">
@@ -838,15 +838,15 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                         </div>
                       </div>
                     ) : (
-                      <div className="p-3 rounded-xl bg-zinc-50 border border-dashed border-zinc-300 text-xs text-zinc-500 flex items-center gap-2">
-                        <Info className="w-4 h-4 text-zinc-400 shrink-0" />
+                      <div className="p-3 rounded-xl bg-surface border border-dashed border-line text-xs text-muted flex items-center gap-2">
+                        <Info className="w-4 h-4 text-muted shrink-0" />
                         <span>{t('pendingPhotoUpload')}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="text-[10px] text-zinc-400 flex items-center gap-1 pt-0.5">
-                    <Info className="w-3 h-3 text-zinc-400 shrink-0" />
+                  <div className="text-[10px] text-muted flex items-center gap-1 pt-0.5">
+                    <Info className="w-3 h-3 text-muted shrink-0" />
                     <span>{t('aiAccuracyNote')}</span>
                   </div>
                 </div>
@@ -857,27 +857,27 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
       </div>
 
       {/* ─── SECTION 2: Cost Breakdown & Summary ────────────────────────────── */}
-      <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+      <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center font-black text-sm">
               2
             </div>
-            <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
               {t('summarySectionTitle')}
             </h2>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
               {t('paymentDueDate')}
             </span>
-            <span className="text-xs font-bold text-zinc-700">{invoice.dueDate}</span>
+            <span className="text-xs font-bold text-foreground/90">{invoice.dueDate}</span>
           </div>
         </div>
 
         {/* Detailed Line Items */}
-        <div className="divide-y divide-zinc-100 rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 space-y-3">
+        <div className="divide-y divide-line rounded-2xl border border-line bg-surface/50 p-4 space-y-3">
           {/* Base non-metered items */}
           {invoice.details
             .filter(d => !d.isMetered)
@@ -887,14 +887,14 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 className="flex items-center justify-between pt-2.5 first:pt-0 text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-zinc-600">{item.name}</span>
+                  <span className="font-medium text-muted">{item.name}</span>
                   {item.quantity && item.quantity > 1 && (
-                    <span className="text-[10px] text-zinc-400 bg-zinc-200/70 px-1.5 py-0.5 rounded font-bold">
+                    <span className="text-[10px] text-muted bg-line/70 px-1.5 py-0.5 rounded font-bold">
                       x{item.quantity}
                     </span>
                   )}
                 </div>
-                <span className="font-bold text-zinc-900">
+                <span className="font-bold text-foreground">
                   {formatCurrency(item.value, locale)}
                 </span>
               </div>
@@ -911,16 +911,16 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 className="flex items-center justify-between pt-2.5 text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-zinc-600">{service.serviceName}</span>
+                  <span className="font-medium text-muted">{service.serviceName}</span>
                   {calc?.hasCalculated ? (
-                    <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                    <span className="text-[10px] text-success bg-success-soft border border-success-subtle px-1.5 py-0.5 rounded font-bold">
                       {calc.delta} {service.unit}
                     </span>
                   ) : null}
                 </div>
 
                 {calc?.hasCalculated ? (
-                  <span className="font-bold text-zinc-900">
+                  <span className="font-bold text-foreground">
                     {formatCurrency(calc.cost, locale)}
                   </span>
                 ) : (
@@ -933,9 +933,9 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           })}
 
           {/* Grand Total */}
-          <div className="flex items-center justify-between pt-3 border-t-2 border-zinc-200 text-sm">
+          <div className="flex items-center justify-between pt-3 border-t-2 border-line text-sm">
             <div>
-              <span className="font-black text-zinc-900 uppercase tracking-wider block">
+              <span className="font-black text-foreground uppercase tracking-wider block">
                 {t('totalPayment')}
               </span>
               {utilityCalculations.hasAnyMeteredService &&
@@ -986,31 +986,31 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
       {payOsData && (
         <div
           id="payos-qr-section"
-          className="rounded-3xl border-2 border-[#2AC1BC]/80 bg-white p-6 sm:p-8 shadow-xl shadow-[#2AC1BC]/10 space-y-6 animate-in fade-in duration-500"
+          className="rounded-3xl border-2 border-[#2AC1BC]/80 bg-card p-6 sm:p-8 shadow-xl shadow-[#2AC1BC]/10 space-y-6 animate-in fade-in duration-500"
         >
           {/* Section Header with Countdown Timer */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-5">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-black text-zinc-900">
+                <h2 className="text-base sm:text-lg font-black text-foreground">
                   {t('qrSectionTitle')}
                 </h2>
-                <p className="text-xs text-zinc-400">{t('scanQrGuide')}</p>
+                <p className="text-xs text-muted">{t('scanQrGuide')}</p>
               </div>
             </div>
 
             {/* 15-Minute Countdown Badge */}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-zinc-100 border border-zinc-200 self-start sm:self-auto">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-card-hover border border-line self-start sm:self-auto">
               <Clock className="w-4 h-4 text-amber-600 animate-spin" />
-              <span className="text-xs text-zinc-500 font-semibold">{t('qrExpiresIn')}</span>
+              <span className="text-xs text-muted font-semibold">{t('qrExpiresIn')}</span>
               <span
                 className={`font-black text-xs font-mono px-2 py-0.5 rounded-md ${
                   countdown <= 60
-                    ? 'bg-rose-100 text-rose-700 animate-pulse'
-                    : 'bg-white text-zinc-900 shadow-2xs'
+                    ? 'bg-danger-soft text-danger animate-pulse'
+                    : 'bg-card text-foreground shadow-2xs'
                 }`}
               >
                 {formatTimer(countdown)}
@@ -1019,27 +1019,27 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           </div>
 
           {/* ─── Critical Security / Escrow Notice Banner ───────────────────── */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-50 via-sky-50/60 to-white border border-sky-200/80 shadow-xs space-y-3">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-50 via-sky-50/60 to-white border border-vacant-subtle shadow-xs space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-black text-sky-950 uppercase tracking-wide">
+                  <h4 className="text-xs font-black text-vacant uppercase tracking-wide">
                     {t('systemAccountNoticeTitle')}
                   </h4>
-                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-sky-200/80 text-sky-800">
+                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-sky-200/80 text-vacant">
                     Dormio Escrow
                   </span>
                 </div>
-                <p className="text-xs text-sky-900 leading-relaxed font-medium">
+                <p className="text-xs text-vacant leading-relaxed font-medium">
                   {t('systemAccountNoticeDesc')}
                 </p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-900 font-bold">
+            <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle flex items-start gap-2.5 text-xs text-warning font-bold">
               <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <span>{t('lockedInfoWarning')}</span>
             </div>
@@ -1048,8 +1048,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           {/* QR Display & Bank Information Columns */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             {/* Left: PayOS QR Code */}
-            <div className="md:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-4">
-              <div className="relative w-56 h-56 bg-white p-3 rounded-2xl shadow-xs border border-zinc-200 flex items-center justify-center">
+            <div className="md:col-span-5 flex flex-col items-center justify-center p-6 rounded-2xl bg-surface border border-line space-y-4">
+              <div className="relative w-56 h-56 bg-white p-3 rounded-2xl shadow-xs border border-line flex items-center justify-center">
                 {isExpired ? (
                   <div className="flex flex-col items-center justify-center text-center p-4 space-y-2">
                     <Clock className="w-10 h-10 text-rose-500" />
@@ -1073,7 +1073,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   <span>{t('btnRegenerateQr')}</span>
                 </Button>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-zinc-500 font-bold animate-pulse">
+                <div className="flex items-center gap-2 text-xs text-muted font-bold animate-pulse">
                   <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC] animate-spin" />
                   <span>{t('waitingForPayment')}</span>
                 </div>
@@ -1083,24 +1083,24 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             {/* Right: Bank Transfer Details with 1-Click Copy */}
             <div className="md:col-span-7 space-y-2.5 text-xs">
               {/* Beneficiary Bank */}
-              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-surface border border-line flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                     {t('bankNameLabel')}
                   </span>
-                  <span className="font-bold text-zinc-800 text-sm">
+                  <span className="font-bold text-foreground text-sm">
                     {BANK_NAMES[payOsData.bin] || `Ngân hàng (BIN: ${payOsData.bin})`}
                   </span>
                 </div>
               </div>
 
               {/* Account Number with Copy */}
-              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-surface border border-line flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                     {t('accountNumberLabel')}
                   </span>
-                  <span className="font-mono font-black text-zinc-900 text-base tracking-wider">
+                  <span className="font-mono font-black text-foreground text-base tracking-wider">
                     {payOsData.accountNumber}
                   </span>
                 </div>
@@ -1120,21 +1120,21 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </div>
 
               {/* Account Holder */}
-              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+              <div className="p-3 rounded-xl bg-surface border border-line">
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                   {t('accountHolderLabel')}
                 </span>
-                <span className="font-black text-zinc-900 text-sm">{payOsData.accountName}</span>
+                <span className="font-black text-foreground text-sm">{payOsData.accountName}</span>
               </div>
 
               {/* Exact Amount (Locked) */}
-              <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-200/80 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">
+                    <span className="text-[10px] font-bold text-warning uppercase tracking-wider block">
                       {t('transferAmountLabel')}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-900 text-[9px] font-extrabold flex items-center gap-0.5">
+                    <span className="px-1.5 py-0.5 rounded bg-amber-200/70 text-warning text-[9px] font-extrabold flex items-center gap-0.5">
                       <Lock className="w-2.5 h-2.5" />
                       {t('lockedBadge')}
                     </span>
@@ -1159,13 +1159,13 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </div>
 
               {/* Transfer Syntax (Locked) */}
-              <div className="p-3 rounded-xl bg-sky-50/50 border border-sky-200/80 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-vacant-soft border border-vacant-subtle flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-sky-700 uppercase tracking-wider block">
+                    <span className="text-[10px] font-bold text-vacant uppercase tracking-wider block">
                       {t('transferSyntaxLabel')}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded bg-sky-200/70 text-sky-900 text-[9px] font-extrabold flex items-center gap-0.5">
+                    <span className="px-1.5 py-0.5 rounded bg-sky-200/70 text-vacant text-[9px] font-extrabold flex items-center gap-0.5">
                       <Lock className="w-2.5 h-2.5" />
                       {t('lockedBadge')}
                     </span>
@@ -1201,10 +1201,10 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-4 overflow-hidden border border-zinc-200 space-y-4"
+            className="bg-card rounded-3xl shadow-2xl max-w-xl w-full p-4 overflow-hidden border border-line space-y-4"
           >
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="text-sm font-black text-zinc-900">{t('meterReadingPhotoTitle')}</h3>
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h3 className="text-sm font-black text-foreground">{t('meterReadingPhotoTitle')}</h3>
               <Button rounded="full"
                 variant="ghost"
                 size="icon"
@@ -1213,7 +1213,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="h-80 w-full rounded-2xl overflow-hidden bg-zinc-100">
+            <div className="h-80 w-full rounded-2xl overflow-hidden bg-card-hover">
               <img
                 src={inspectImage}
                 alt="Meter Inspection"
@@ -1241,16 +1241,16 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 overflow-hidden border border-zinc-200 space-y-4"
+            className="bg-card rounded-3xl shadow-2xl max-w-md w-full p-6 overflow-hidden border border-line space-y-4"
           >
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base font-black text-zinc-900">
+              <h3 className="text-base font-black text-foreground">
                 {t('discardPaymentModalTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+              <p className="text-xs text-muted mt-1 leading-relaxed">
                 {t('discardPaymentModalDesc')}
               </p>
             </div>

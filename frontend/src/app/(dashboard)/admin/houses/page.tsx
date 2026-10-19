@@ -273,16 +273,16 @@ export default function AdminBoardingHouseModerationPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-accent-soft text-accent tracking-wide uppercase">
               <Building2 className="w-3.5 h-3.5" />
               {t('adminHouseModBadge')}
             </span>
-            <span className="text-xs font-semibold text-zinc-400">• {t('adminBlogsLiveDb')}</span>
+            <span className="text-xs font-semibold text-muted">• {t('adminBlogsLiveDb')}</span>
           </div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-black text-foreground tracking-tight mt-1">
             {t('adminHouseModTitle')}
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{t('adminHouseModSubtitle')}</p>
+          <p className="text-xs text-muted mt-0.5">{t('adminHouseModSubtitle')}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -304,8 +304,8 @@ export default function AdminBoardingHouseModerationPage() {
         <div
           className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 animate-fadeIn ${
             feedbackMsg.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-success-soft border-success-subtle text-success'
+              : 'bg-danger-soft border-danger-subtle text-danger'
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -328,7 +328,7 @@ export default function AdminBoardingHouseModerationPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="p-4 rounded-2xl bg-danger-soft border border-danger-subtle text-danger text-xs flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
             <span className="font-semibold">{error}</span>
@@ -344,16 +344,16 @@ export default function AdminBoardingHouseModerationPage() {
         </div>
       )}
 
-      <span className="text-xs font-semibold text-zinc-500 pl-2">
+      <span className="text-xs font-semibold text-muted pl-2">
         {t('adminBlogsShowingCount', { total: totalItems })}
       </span>
 
       {/* Main Content: Table Mode Only (With Column-Level Filters) */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-x-auto">
+      <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse min-w-[950px]">
           <thead>
             {/* Row 1: Column Headers */}
-            <tr className="border-b border-zinc-200 bg-zinc-50/70 text-zinc-600 uppercase tracking-wider font-black">
+            <tr className="border-b border-line bg-surface/70 text-muted uppercase tracking-wider font-black">
               <th className="p-3.5 min-w-[240px]">{t('adminHouseModColHouseAddress')}</th>
               <th className="p-3.5 min-w-[190px]">{t('adminHouseModLandlordContact')}</th>
               <th className="p-3.5 min-w-[170px]">{t('adminHouseModTotalRooms')}</th>
@@ -363,7 +363,7 @@ export default function AdminBoardingHouseModerationPage() {
             </tr>
 
             {/* Row 2: Column-level Filter Inputs Row */}
-            <tr className="border-b border-zinc-200 bg-zinc-100/75">
+            <tr className="border-b border-line bg-zinc-100/75">
               {/* 1. Property & Address search */}
               <th className="p-2">
                 <div className="relative">
@@ -376,8 +376,8 @@ export default function AdminBoardingHouseModerationPage() {
                     }}
                     placeholder={t('adminHouseModFilterPropertyPlaceholder')}
                     containerClassName="space-y-0"
-                    className="py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
-                    leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+                    className="py-1.5 bg-card border-line rounded-lg text-[11px] font-medium text-foreground placeholder:text-muted focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    leftIcon={<Search className="w-3.5 h-3.5 text-muted" />}
                     rightIcon={
                       propertyQuery ? (
                         <Button
@@ -409,8 +409,8 @@ export default function AdminBoardingHouseModerationPage() {
                     }}
                     placeholder={t('adminHouseModFilterLandlordPlaceholder')}
                     containerClassName="space-y-0"
-                    className="py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
-                    leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+                    className="py-1.5 bg-card border-line rounded-lg text-[11px] font-medium text-foreground placeholder:text-muted focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all"
+                    leftIcon={<Search className="w-3.5 h-3.5 text-muted" />}
                     rightIcon={
                       landlordQuery ? (
                         <Button
@@ -442,9 +442,9 @@ export default function AdminBoardingHouseModerationPage() {
                     }}
                     placeholder={t('adminHouseModFilterFrom')}
                     containerClassName="space-y-0 w-16"
-                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
+                    className="px-1.5 py-1.5 bg-card border-line rounded-lg text-[11px] text-center font-medium text-foreground placeholder:text-muted focus:border-orange-500"
                   />
-                  <span className="text-zinc-400 text-xs">-</span>
+                  <span className="text-muted text-xs">-</span>
                   <NumberInput
                     min={0}
                     value={maxRooms}
@@ -454,7 +454,7 @@ export default function AdminBoardingHouseModerationPage() {
                     }}
                     placeholder={t('adminHouseModFilterTo')}
                     containerClassName="space-y-0 w-16"
-                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
+                    className="px-1.5 py-1.5 bg-card border-line rounded-lg text-[11px] text-center font-medium text-foreground placeholder:text-muted focus:border-orange-500"
                   />
                   {(minRooms || maxRooms) && (
                     <Button
@@ -486,9 +486,9 @@ export default function AdminBoardingHouseModerationPage() {
                     }}
                     placeholder={t('adminHouseModFilterOccupancyFrom')}
                     containerClassName="space-y-0 w-16"
-                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
+                    className="px-1.5 py-1.5 bg-card border-line rounded-lg text-[11px] text-center font-medium text-foreground placeholder:text-muted focus:border-orange-500"
                   />
-                  <span className="text-zinc-400 text-xs">-</span>
+                  <span className="text-muted text-xs">-</span>
                   <NumberInput
                     min={0}
                     max={100}
@@ -499,7 +499,7 @@ export default function AdminBoardingHouseModerationPage() {
                     }}
                     placeholder={t('adminHouseModFilterOccupancyTo')}
                     containerClassName="space-y-0 w-16"
-                    className="px-1.5 py-1.5 bg-white border-zinc-200 rounded-lg text-[11px] text-center font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500"
+                    className="px-1.5 py-1.5 bg-card border-line rounded-lg text-[11px] text-center font-medium text-foreground placeholder:text-muted focus:border-orange-500"
                   />
                   {(minOccupancy || maxOccupancy) && (
                     <Button
@@ -532,7 +532,7 @@ export default function AdminBoardingHouseModerationPage() {
                         ? t('adminHouseModFilterStatusAll')
                         : t('adminHouseModFilterStatusSelected', { count: statusFilters.length })}
                     </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                    <ChevronDown className="w-3.5 h-3.5 text-muted shrink-0" />
                   </Button>
 
                   {tableStatusDropdownOpen && (
@@ -541,8 +541,8 @@ export default function AdminBoardingHouseModerationPage() {
                         className="fixed inset-0 z-20"
                         onClick={() => setTableStatusDropdownOpen(false)}
                       />
-                      <div className="absolute left-0 mt-1 w-52 bg-white rounded-xl border border-zinc-200 shadow-xl p-2 z-30 space-y-1 animate-scaleIn">
-                        <div className="flex items-center justify-between pb-1.5 border-b border-zinc-100 text-[10px] font-bold text-zinc-400 px-1">
+                      <div className="absolute left-0 mt-1 w-52 bg-card rounded-xl border border-line shadow-xl p-2 z-30 space-y-1 animate-scaleIn">
+                        <div className="flex items-center justify-between pb-1.5 border-b border-line text-[10px] font-bold text-muted px-1">
                           <span>{t('adminHouseModFilterStatusHeader')}</span>
                           {statusFilters.length > 0 && (
                             <Button
@@ -563,13 +563,13 @@ export default function AdminBoardingHouseModerationPage() {
                             <label
                               key={opt.id}
                               onClick={() => toggleStatusFilter(opt.id)}
-                              className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-zinc-50 text-xs font-semibold text-zinc-700 cursor-pointer"
+                              className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-card-hover text-xs font-semibold text-foreground/90 cursor-pointer"
                             >
                               <div
                                 className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
                                   checked
                                     ? 'bg-orange-600 border-orange-600 text-white'
-                                    : 'border-zinc-300 bg-white'
+                                    : 'border-line bg-card'
                                 }`}
                               >
                                 {checked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -599,48 +599,48 @@ export default function AdminBoardingHouseModerationPage() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-line">
             {loading ? (
               Array.from({ length: 5 }).map((_, idx) => (
                 <tr key={`skeleton-${idx}`} className="animate-pulse">
                   <td className="p-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-zinc-200 shrink-0" />
+                      <div className="w-12 h-12 rounded-xl bg-line shrink-0" />
                       <div className="space-y-1.5 flex-1">
-                        <div className="h-3.5 bg-zinc-200 rounded-md w-3/4" />
-                        <div className="h-2.5 bg-zinc-100 rounded-md w-1/2" />
+                        <div className="h-3.5 bg-line rounded-md w-3/4" />
+                        <div className="h-2.5 bg-card-hover rounded-md w-1/2" />
                       </div>
                     </div>
                   </td>
                   <td className="p-3.5">
                     <div className="space-y-1.5">
-                      <div className="h-3.5 bg-zinc-200 rounded-md w-28" />
-                      <div className="h-2.5 bg-zinc-100 rounded-md w-20" />
+                      <div className="h-3.5 bg-line rounded-md w-28" />
+                      <div className="h-2.5 bg-card-hover rounded-md w-20" />
                     </div>
                   </td>
                   <td className="p-3.5">
-                    <div className="h-3.5 bg-zinc-200 rounded-md w-14" />
+                    <div className="h-3.5 bg-line rounded-md w-14" />
                   </td>
                   <td className="p-3.5">
-                    <div className="h-3.5 bg-zinc-200 rounded-md w-20" />
+                    <div className="h-3.5 bg-line rounded-md w-20" />
                   </td>
                   <td className="p-3.5">
-                    <div className="h-5 bg-zinc-200 rounded-full w-20" />
+                    <div className="h-5 bg-line rounded-full w-20" />
                   </td>
                   <td className="p-3.5 text-right">
-                    <div className="h-7 w-7 bg-zinc-200 rounded-lg ml-auto" />
+                    <div className="h-7 w-7 bg-line rounded-lg ml-auto" />
                   </td>
                 </tr>
               ))
             ) : houses.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-12 text-center text-zinc-400">
+                <td colSpan={6} className="p-12 text-center text-muted">
                   <div className="space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+                    <div className="w-12 h-12 rounded-2xl bg-card-hover text-muted flex items-center justify-center mx-auto">
                       <Building2 className="w-6 h-6" />
                     </div>
-                    <h3 className="text-base font-bold text-zinc-800">{t('adminBlogsNoPosts')}</h3>
-                    <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                    <h3 className="text-base font-bold text-foreground">{t('adminBlogsNoPosts')}</h3>
+                    <p className="text-xs text-muted max-w-sm mx-auto">
                       {hasActiveFilters
                         ? t('adminHouseModEmptyFiltered')
                         : t('adminBlogsNoPostsDesc')}
@@ -676,27 +676,27 @@ export default function AdminBoardingHouseModerationPage() {
                         <img
                           src={item.coverImage || '/house-placeholder.jpg'}
                           alt=""
-                          className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200"
+                          className="w-12 h-12 rounded-xl object-cover shrink-0 border border-line"
                         />
                         <div>
-                          <div className="font-bold text-zinc-900 group-hover:text-orange-600 transition-colors">
+                          <div className="font-bold text-foreground group-hover:text-orange-600 transition-colors">
                             {item.name}
                           </div>
-                          <div className="text-[11px] text-zinc-400 line-clamp-1">
+                          <div className="text-[11px] text-muted line-clamp-1">
                             {item.address}
                           </div>
                         </div>
                       </Link>
                     </td>
                     <td className="p-3.5">
-                      <div className="font-bold text-zinc-800">{item.landlordName}</div>
-                      <div className="text-[11px] text-zinc-400">{item.landlordPhone}</div>
+                      <div className="font-bold text-foreground">{item.landlordName}</div>
+                      <div className="text-[11px] text-muted">{item.landlordPhone}</div>
                     </td>
-                    <td className="p-3.5 font-bold text-zinc-800">
+                    <td className="p-3.5 font-bold text-foreground">
                       {item.totalRooms} {t('adminHouseModRoomsUnit')}
                     </td>
                     <td className="p-3.5">
-                      <div className="font-bold text-zinc-800">
+                      <div className="font-bold text-foreground">
                         {item.occupiedRooms}/{item.totalRooms} ({occupancyRate}%)
                       </div>
                     </td>
@@ -704,10 +704,10 @@ export default function AdminBoardingHouseModerationPage() {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${
                           item.status === 'active'
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-success-soft text-success'
                             : item.status === 'locked'
-                              ? 'bg-red-100 text-red-800 ring-1 ring-red-300'
-                              : 'bg-amber-100 text-amber-800'
+                              ? 'bg-danger-soft text-danger ring-1 ring-red-300'
+                              : 'bg-warning-soft text-warning'
                         }`}
                       >
                         {item.status === 'active'
@@ -747,7 +747,7 @@ export default function AdminBoardingHouseModerationPage() {
       </div>
 
       {/* Standardized Pagination Bar */}
-      <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
+      <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
         <div className="flex items-center gap-2">
           <span>{t('adminBlogsPaginationShowing')}</span>
           <NumberInput
@@ -760,7 +760,7 @@ export default function AdminBoardingHouseModerationPage() {
               setCurrentPage(1)
             }}
             containerClassName="space-y-0 w-14 inline-block"
-            className="px-2 py-1 text-center bg-zinc-50 border-zinc-200 rounded-lg font-bold text-zinc-900 focus:border-orange-500"
+            className="px-2 py-1 text-center bg-surface border-line rounded-lg font-bold text-foreground focus:border-orange-500"
           />
           <span>{t('adminBlogsPaginationPerPage')}</span>
           <span className="text-zinc-300">|</span>
@@ -830,22 +830,22 @@ export default function AdminBoardingHouseModerationPage() {
       {/* LOCK HOUSE MODAL */}
       {lockTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
+          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
             <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">
+                <h3 className="text-base font-black text-foreground">
                   {t('adminHouseModLockHouse')}
                 </h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {lockTarget.name}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('adminHouseModLockConfirmDesc')}
             </p>
 
@@ -864,7 +864,7 @@ export default function AdminBoardingHouseModerationPage() {
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
                 size="sm"
@@ -890,26 +890,26 @@ export default function AdminBoardingHouseModerationPage() {
       {/* UNLOCK HOUSE MODAL */}
       {unlockTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
+          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
             <div className="flex items-center gap-3 text-emerald-600">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
                 <Unlock className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">
+                <h3 className="text-base font-black text-foreground">
                   {t('adminHouseModUnlockHouse')}
                 </h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {unlockTarget.name}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('adminHouseModUnlockConfirmDesc', { name: unlockTarget.name })}
             </p>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
                 size="sm"

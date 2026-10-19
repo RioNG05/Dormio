@@ -395,7 +395,7 @@ export default function AdminNotificationsPage() {
             return (
               <span
                 key={ch}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-info-soft text-info border border-info-subtle"
               >
                 <Bell className="w-3 h-3" />
                 In-App
@@ -405,7 +405,7 @@ export default function AdminNotificationsPage() {
             return (
               <span
                 key={ch}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-purple-50 text-purple-700 border border-purple-200"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-deposit-soft text-deposit border border-deposit-subtle"
               >
                 <Mail className="w-3 h-3" />
                 Email
@@ -415,7 +415,7 @@ export default function AdminNotificationsPage() {
             return (
               <span
                 key={ch}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle"
               >
                 <Smartphone className="w-3 h-3" />
                 SMS
@@ -425,7 +425,7 @@ export default function AdminNotificationsPage() {
             return (
               <span
                 key={ch}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-cyan-50 text-cyan-800 border border-cyan-200"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-primary-soft text-primary border border-primary-subtle"
               >
                 <MessageSquare className="w-3 h-3" />
                 Zalo ZNS
@@ -440,25 +440,25 @@ export default function AdminNotificationsPage() {
     switch (status) {
       case 'sent':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-success-soft text-success border border-success-subtle">
             {t('adminNotifyStatusSent')}
           </span>
         )
       case 'pending':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-800 border border-blue-200">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-info-soft text-info border border-info-subtle">
             {t('adminNotifyStatusPending')}
           </span>
         )
       case 'failed':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-800 border border-red-200">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-danger-soft text-danger border border-danger-subtle">
             {t('adminNotifyStatusFailed')}
           </span>
         )
       case 'canceled':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-zinc-100 text-zinc-600 border border-zinc-200">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-card-hover text-muted border border-line">
             {t('adminNotifyStatusCanceled')}
           </span>
         )
@@ -490,18 +490,18 @@ export default function AdminNotificationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-accent-soft text-accent tracking-wide uppercase">
               <Megaphone className="w-3.5 h-3.5" />
               {t('adminNotifyBadge')}
             </span>
-            <span className="text-xs font-semibold text-zinc-400">
+            <span className="text-xs font-semibold text-muted">
               • {t('adminNotifySubbadge')}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-black text-foreground tracking-tight mt-1">
             {t('adminNotifyTitle')}
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             {t('adminNotifySubtitle')}
           </p>
         </div>
@@ -509,7 +509,7 @@ export default function AdminNotificationsPage() {
         <div className="flex flex-wrap items-center gap-3">
           {/* Live KPI summary with skeleton placeholders during loading */}
           <div className="hidden md:flex items-center gap-2">
-            <div className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 min-w-[70px]">
+            <div className="px-3 py-1.5 rounded-xl bg-success-soft border border-success-subtle text-success min-w-[70px]">
               <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">
                 {t('adminNotifySent')}
               </span>
@@ -521,7 +521,7 @@ export default function AdminNotificationsPage() {
                 </span>
               )}
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 min-w-[70px]">
+            <div className="px-3 py-1.5 rounded-xl bg-info-soft border border-info-subtle text-info min-w-[70px]">
               <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-600">
                 {t('adminNotifyPending')}
               </span>
@@ -535,7 +535,7 @@ export default function AdminNotificationsPage() {
                 </span>
               )}
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 min-w-[70px]">
+            <div className="px-3 py-1.5 rounded-xl bg-danger-soft border border-danger-subtle text-danger min-w-[70px]">
               <span className="text-[10px] font-bold uppercase tracking-wider block text-rose-600">
                 {t('adminNotifyFailed')}
               </span>
@@ -564,7 +564,7 @@ export default function AdminNotificationsPage() {
       </div>
 
       {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
-      <div className="bg-white p-4 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div className="bg-card p-4 rounded-2xl border border-line shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1">
           <div className="relative flex-1 min-w-[220px] max-w-md">
             <TextInput
@@ -576,8 +576,8 @@ export default function AdminNotificationsPage() {
               }}
               placeholder={t('adminNotifySearchPlaceholder')}
               containerClassName="space-y-0"
-              className="py-2 bg-zinc-50 border-zinc-200 rounded-xl text-xs font-semibold text-zinc-800 placeholder:text-zinc-400 focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
+              className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+              leftIcon={<Search className="w-4 h-4 text-muted" />}
               rightIcon={
                 searchQuery ? (
                   <Button
@@ -593,7 +593,7 @@ export default function AdminNotificationsPage() {
           </div>
 
           {/* Status chips */}
-          <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
             {(
               [
                 { id: 'all', label: t('adminNotifyAllStatus') },
@@ -625,7 +625,7 @@ export default function AdminNotificationsPage() {
               setCurrentPage(1)
             }}
             containerClassName="space-y-0"
-            className="py-2 bg-zinc-50 border-zinc-200 rounded-xl text-xs font-semibold text-zinc-700 cursor-pointer focus:border-orange-500"
+            className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground/90 cursor-pointer focus:border-orange-500"
           >
             <option value="all">{t('adminNotifyAllChannels')}</option>
             <option value="in_app">{t('adminNotifyChannelInApp')}</option>
@@ -648,7 +648,7 @@ export default function AdminNotificationsPage() {
             <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
           </Button>
 
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl">
+          <div className="flex items-center bg-card-hover p-1 rounded-xl">
             <Button
               variant="ghost"
               size="sm"
@@ -671,7 +671,7 @@ export default function AdminNotificationsPage() {
 
       {/* Select All on Current Page Bar */}
       {!loading && paginatedItems.length > 0 && (
-        <div className="flex items-center justify-between px-2 text-xs font-semibold text-zinc-500">
+        <div className="flex items-center justify-between px-2 text-xs font-semibold text-muted">
           <Checkbox
             checked={isAllCurrentSelected}
             onChange={toggleSelectAllCurrent}
@@ -694,34 +694,34 @@ export default function AdminNotificationsPage() {
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div
                 key={i}
-                className="bg-white rounded-2xl border border-zinc-200 p-5 space-y-4 animate-pulse"
+                className="bg-card rounded-2xl border border-line p-5 space-y-4 animate-pulse"
               >
                 <div className="flex items-center justify-between">
-                  <div className="h-4 bg-zinc-100 rounded-md w-20" />
-                  <div className="h-4 bg-zinc-100 rounded-md w-16" />
+                  <div className="h-4 bg-card-hover rounded-md w-20" />
+                  <div className="h-4 bg-card-hover rounded-md w-16" />
                 </div>
-                <div className="h-5 bg-zinc-100 rounded-md w-3/4" />
-                <div className="h-12 bg-zinc-100 rounded-md w-full" />
-                <div className="h-16 bg-zinc-50 rounded-xl" />
+                <div className="h-5 bg-card-hover rounded-md w-3/4" />
+                <div className="h-12 bg-card-hover rounded-md w-full" />
+                <div className="h-16 bg-surface rounded-xl" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-2xs animate-pulse p-4 space-y-3">
+          <div className="bg-card rounded-2xl border border-line overflow-hidden shadow-2xs animate-pulse p-4 space-y-3">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-12 bg-zinc-100 rounded-xl w-full" />
+              <div key={i} className="h-12 bg-card-hover rounded-xl w-full" />
             ))}
           </div>
         )
       ) : paginatedItems.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-zinc-200 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+        <div className="bg-card rounded-3xl border border-line p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-card-hover text-muted flex items-center justify-center mx-auto">
             <Megaphone className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-zinc-800">
+          <h3 className="text-base font-bold text-foreground">
             {t('adminNotifyNoCampaigns')}
           </h3>
-          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+          <p className="text-xs text-muted max-w-sm mx-auto">
             {t('adminNotifyNoCampaignsDesc')}
           </p>
         </div>
@@ -738,8 +738,8 @@ export default function AdminNotificationsPage() {
             return (
               <div
                 key={item.id}
-                className={`bg-white rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md p-5 space-y-4 ${
-                  isSelected ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-zinc-200/90'
+                className={`bg-card rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md p-5 space-y-4 ${
+                  isSelected ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-line'
                 }`}
               >
                 <div className="space-y-3">
@@ -750,7 +750,7 @@ export default function AdminNotificationsPage() {
                         onChange={() => toggleSelectItem(item.id)}
                         size="sm"
                       />
-                      <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md">
+                      <span className="font-mono text-xs font-black text-foreground/90 bg-card-hover px-2 py-0.5 rounded-md">
                         {item.id}
                       </span>
                     </div>
@@ -758,21 +758,21 @@ export default function AdminNotificationsPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-black text-zinc-900 line-clamp-1">{item.name}</h3>
+                    <h3 className="text-sm font-black text-foreground line-clamp-1">{item.name}</h3>
                     <p className="text-xs font-bold text-orange-600 mt-0.5 line-clamp-1">
                       {item.title}
                     </p>
                   </div>
 
-                  <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                     {item.content}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-zinc-100 space-y-3 text-xs">
+                <div className="pt-3 border-t border-line space-y-3 text-xs">
                   {/* Target & Channels */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">
+                    <span className="font-semibold text-muted bg-card-hover px-2 py-0.5 rounded-md">
                       {getTargetLabel(item.targetGroup)}
                     </span>
                     {renderChannelBadges(item.channels)}
@@ -781,19 +781,19 @@ export default function AdminNotificationsPage() {
                   {/* Dispatch Stats Progress Bar */}
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-[11px] font-bold">
-                      <span className="text-zinc-500">
+                      <span className="text-muted">
                         {item.sentCount.toLocaleString()} / {item.totalRecipients.toLocaleString()}{' '}
                         {t('adminNotifyRecipientsUnit')}
                       </span>
                       <span className="text-emerald-600">{percent}%</span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full bg-card-hover overflow-hidden">
                       <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
                     </div>
                   </div>
 
                   {/* Actions & Created Date */}
-                  <div className="flex items-center justify-between pt-1 text-[11px] text-zinc-400">
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-muted">
                     <span>{item.createdAt}</span>
                     <Button
                       variant="outline"
@@ -811,10 +811,10 @@ export default function AdminNotificationsPage() {
         </div>
       ) : (
         /* TABLE VIEW */
-        <div className="bg-white rounded-2xl border border-zinc-200/90 overflow-hidden shadow-2xs">
+        <div className="bg-card rounded-2xl border border-line overflow-hidden shadow-2xs">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200 font-bold text-zinc-600">
+              <tr className="bg-surface border-b border-line font-bold text-muted">
                 <th className="p-3.5 w-10">
                   <Checkbox
                     checked={isAllCurrentSelected}
@@ -830,7 +830,7 @@ export default function AdminNotificationsPage() {
                 <th className="p-3.5 text-right">{t('adminNotifyThActions')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-line">
               {paginatedItems.map(item => {
                 const isSelected = selectedIds.includes(item.id)
                 const percent =
@@ -854,15 +854,15 @@ export default function AdminNotificationsPage() {
                     </td>
 
                     <td className="p-3.5 space-y-0.5">
-                      <span className="font-mono text-xs font-black text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-block">
+                      <span className="font-mono text-xs font-black text-foreground/90 bg-card-hover px-2 py-0.5 rounded-md inline-block">
                         {item.id}
                       </span>
-                      <div className="font-bold text-zinc-900">{item.name}</div>
-                      <div className="text-[10px] text-zinc-400">{item.createdAt}</div>
+                      <div className="font-bold text-foreground">{item.name}</div>
+                      <div className="text-[10px] text-muted">{item.createdAt}</div>
                     </td>
 
                     <td className="p-3.5 space-y-1.5">
-                      <span className="font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md inline-block">
+                      <span className="font-semibold text-muted bg-card-hover px-2 py-0.5 rounded-md inline-block">
                         {getTargetLabel(item.targetGroup)}
                       </span>
                       <div>{renderChannelBadges(item.channels)}</div>
@@ -870,7 +870,7 @@ export default function AdminNotificationsPage() {
 
                     <td className="p-3.5 max-w-xs space-y-0.5">
                       <div className="font-bold text-orange-600 line-clamp-1">{item.title}</div>
-                      <div className="text-zinc-500 line-clamp-1">{item.content}</div>
+                      <div className="text-muted line-clamp-1">{item.content}</div>
                     </td>
 
                     <td className="p-3.5 min-w-[140px]">
@@ -879,7 +879,7 @@ export default function AdminNotificationsPage() {
                           <span>{item.sentCount.toLocaleString()}</span>
                           <span>{percent}%</span>
                         </div>
-                        <div className="w-full h-1.5 rounded-full bg-zinc-200 overflow-hidden">
+                        <div className="w-full h-1.5 rounded-full bg-line overflow-hidden">
                           <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
                         </div>
                       </div>
@@ -907,12 +907,12 @@ export default function AdminNotificationsPage() {
 
       {/* Standardized Pagination Bar (Rule #9) */}
       {loading ? (
-        <div className="bg-white px-4 py-3.5 rounded-2xl border border-zinc-200/90 shadow-2xs flex items-center justify-between animate-pulse">
-          <div className="h-4 bg-zinc-200 rounded w-48" />
-          <div className="h-7 bg-zinc-200 rounded w-56" />
+        <div className="bg-card px-4 py-3.5 rounded-2xl border border-line shadow-2xs flex items-center justify-between animate-pulse">
+          <div className="h-4 bg-line rounded w-48" />
+          <div className="h-7 bg-line rounded w-56" />
         </div>
       ) : paginatedItems.length > 0 ? (
-        <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
+        <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
           <div className="flex items-center gap-2">
             <span>{t('adminNotifyPaginationShowing')}</span>
             <NumberInput
@@ -925,7 +925,7 @@ export default function AdminNotificationsPage() {
                 setCurrentPage(1)
               }}
               containerClassName="space-y-0 w-14 inline-block"
-              className="px-2 py-1 text-center bg-zinc-50 border-zinc-200 rounded-lg font-bold text-zinc-900 focus:border-orange-500"
+              className="px-2 py-1 text-center bg-surface border-line rounded-lg font-bold text-foreground focus:border-orange-500"
             />
             <span>{t('adminNotifyPaginationPerPage')}</span>
             <span className="text-zinc-300">|</span>
@@ -996,13 +996,13 @@ export default function AdminNotificationsPage() {
       {/* COMPOSE CAMPAIGN MODAL (Rule #10 compliant) */}
       {isComposeOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+          <div className="bg-card rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center">
                   <Megaphone className="w-4 h-4" />
                 </div>
-                <h2 className="text-base font-black text-zinc-900">
+                <h2 className="text-base font-black text-foreground">
                   {t('adminNotifyComposeTitle')}
                 </h2>
               </div>
@@ -1017,7 +1017,7 @@ export default function AdminNotificationsPage() {
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
               {formError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
                   <span>{formError}</span>
                 </div>
@@ -1036,11 +1036,11 @@ export default function AdminNotificationsPage() {
               {/* Channels Selection */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-bold text-zinc-700 block">
+                  <label className="font-bold text-foreground/90 block">
                     {t('adminNotifyDeliveryChannels')}
                     <span className="text-rose-500 ml-1 font-bold">*</span>
                   </label>
-                  <span className="text-[11px] font-bold text-zinc-400">
+                  <span className="text-[11px] font-bold text-muted">
                     {composeChannels.length} {t('adminNotifyAllChannels')}
                   </span>
                 </div>
@@ -1088,10 +1088,10 @@ export default function AdminNotificationsPage() {
                             className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
                               isSelected
                                 ? 'border-orange-600 bg-orange-600 text-white'
-                                : 'border-zinc-300'
+                                : 'border-line'
                             }`}
                           >
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-card" />}
                           </div>
                         </div>
                         <span className="text-[11px] leading-tight">{ch.label}</span>
@@ -1109,7 +1109,7 @@ export default function AdminNotificationsPage() {
 
               {/* Target Audience Group (Prisma NotifyTarget) */}
               <div className="space-y-1.5">
-                <label className="font-bold text-zinc-700 block">
+                <label className="font-bold text-foreground/90 block">
                   {t('adminNotifyTargetGroup')}
                   <span className="text-rose-500 ml-1 font-bold">*</span>
                 </label>
@@ -1191,14 +1191,14 @@ export default function AdminNotificationsPage() {
               {/* Schedule options */}
               <div className="space-y-1.5">
                 <div
-                  className={`p-3 rounded-2xl bg-zinc-50 border transition-colors ${
+                  className={`p-3 rounded-2xl bg-surface border transition-colors ${
                     fieldErrors.scheduleTime
                       ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-400'
-                      : 'border-zinc-100'
+                      : 'border-line'
                   } flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
                 >
                   <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
+                    <label className="flex items-center gap-2 cursor-pointer font-bold text-foreground/90">
                       <TextInput
                         type="radio"
                         name="schedule"
@@ -1213,7 +1213,7 @@ export default function AdminNotificationsPage() {
                       />
                       <span>{t('adminNotifyScheduleNow')}</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer font-bold text-zinc-700">
+                    <label className="flex items-center gap-2 cursor-pointer font-bold text-foreground/90">
                       <TextInput
                         type="radio"
                         name="schedule"
@@ -1236,10 +1236,10 @@ export default function AdminNotificationsPage() {
                           setFieldErrors(prev => ({ ...prev, scheduleTime: undefined }))
                       }}
                       containerClassName="space-y-0"
-                      className={`px-3 py-1.5 bg-white border rounded-xl text-xs font-bold text-zinc-800 ${
+                      className={`px-3 py-1.5 bg-card border rounded-xl text-xs font-bold text-foreground ${
                         fieldErrors.scheduleTime
                           ? 'border-rose-500 focus:border-rose-600'
-                          : 'border-zinc-200 focus:border-orange-500'
+                          : 'border-line focus:border-orange-500'
                       }`}
                     />
                   )}
@@ -1253,7 +1253,7 @@ export default function AdminNotificationsPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
+            <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
                 variant="outline"
                 size="sm"
@@ -1279,13 +1279,13 @@ export default function AdminNotificationsPage() {
       {/* INSPECT REPORT MODAL */}
       {inspectCampaign && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+          <div className="bg-card rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-zinc-400">
+                <span className="font-mono text-xs font-bold text-muted">
                   ({inspectCampaign.id})
                 </span>
-                <h3 className="text-base font-black text-zinc-900 line-clamp-1">
+                <h3 className="text-base font-black text-foreground line-clamp-1">
                   {inspectCampaign.name}
                 </h3>
               </div>
@@ -1300,35 +1300,35 @@ export default function AdminNotificationsPage() {
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
               <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-zinc-400 block">
+                <span className="text-[10px] font-black uppercase text-muted block">
                   {t('adminNotifyMessageTitle')}
                 </span>
-                <h4 className="text-sm font-black text-zinc-900">{inspectCampaign.title}</h4>
+                <h4 className="text-sm font-black text-foreground">{inspectCampaign.title}</h4>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100 text-zinc-700 leading-relaxed">
+              <div className="p-3.5 rounded-2xl bg-surface border border-line text-foreground/90 leading-relaxed">
                 {inspectCampaign.content}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100">
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-surface border border-line">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     {t('adminNotifyTargetGroup')}
                   </span>
-                  <span className="font-bold text-zinc-900 text-sm mt-0.5 block">
+                  <span className="font-bold text-foreground text-sm mt-0.5 block">
                     {getTargetLabel(inspectCampaign.targetGroup)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     {t('adminNotifyDetailCreatedBy')}
                   </span>
-                  <span className="font-bold text-zinc-800 text-sm mt-0.5 block">
+                  <span className="font-bold text-foreground text-sm mt-0.5 block">
                     {inspectCampaign.createdBy}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     {t('adminNotifyDetailSentCount')}
                   </span>
                   <span className="font-black text-emerald-600 text-sm mt-0.5 block">
@@ -1336,7 +1336,7 @@ export default function AdminNotificationsPage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     {t('adminNotifyDetailFailedCount')}
                   </span>
                   <span className="font-black text-orange-600 text-sm mt-0.5 block">
@@ -1346,14 +1346,14 @@ export default function AdminNotificationsPage() {
               </div>
 
               <div>
-                <span className="text-[10px] font-bold text-zinc-400 uppercase block mb-1.5">
+                <span className="text-[10px] font-bold text-muted uppercase block mb-1.5">
                   {t('adminNotifyDetailChannels')}
                 </span>
                 {renderChannelBadges(inspectCampaign.channels)}
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2">
+            <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2">
               {(inspectCampaign.status === 'failed' || inspectCampaign.status === 'pending') && (
                 <Button
                   variant="primary"
@@ -1379,15 +1379,15 @@ export default function AdminNotificationsPage() {
       {/* Rule #10: Custom Pop-up Confirmation Modal */}
       {confirmCloseModal.isOpen && (
         <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <div className="bg-card rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
+            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-zinc-900">
+              <h3 className="text-base font-black text-foreground">
                 {t('adminNotifyDiscardTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+              <p className="text-xs text-muted mt-1 leading-relaxed">
                 {t('adminNotifyDiscardDesc')}
               </p>
             </div>

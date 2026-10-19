@@ -395,12 +395,12 @@ function StaffScheduleContent() {
       )}
 
       {/* HEADER BAR */}
-      <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
+      <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Link
               href="/staff"
-              className="p-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors"
+              className="p-1.5 rounded-xl bg-card-hover hover:bg-line text-muted transition-colors"
               title={t('btnBackToOverview')}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -409,21 +409,21 @@ function StaffScheduleContent() {
               {t('schedTag')}
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
             {t('schedTitle')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium">{t('schedSubtitle')}</p>
+          <p className="text-xs sm:text-sm text-muted font-medium">{t('schedSubtitle')}</p>
         </div>
 
         {/* Action Button to Attendance History */}
         <div className="flex items-center gap-2 self-start md:self-center shrink-0">
           <Link
             href="/staff/shift-history"
-            className="px-4 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-zinc-200/80 cursor-pointer"
+            className="px-4 py-2.5 rounded-2xl bg-card-hover hover:bg-line text-foreground text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-line cursor-pointer"
           >
             <Clock className="w-4 h-4 text-[#2AC1BC]" />
             <span>{t('btnViewAttendanceHistory')}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
+            <ArrowRight className="w-3.5 h-3.5 text-muted" />
           </Link>
         </div>
       </div>
@@ -433,12 +433,12 @@ function StaffScheduleContent() {
       {/* ========================================================================= */}
       <div className="space-y-5 animate-in fade-in duration-150">
         {/* Controls Bar */}
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* House selector */}
           <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-zinc-400" />
+            <Building2 className="w-4 h-4 text-muted" />
             {isHousesLoading ? (
-              <div className="h-8 w-44 bg-zinc-100 rounded-xl animate-pulse" />
+              <div className="h-8 w-44 bg-card-hover rounded-xl animate-pulse" />
             ) : (
               <SelectInput
                 value={selectedHouse}
@@ -450,7 +450,7 @@ function StaffScheduleContent() {
                     label: getLocalizedPlace(house.name, isEn),
                   })),
                 ]}
-                className="px-3.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+                className="px-3.5 py-1.5 bg-surface border border-line rounded-xl text-xs font-bold text-foreground focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
                 containerClassName="w-auto"
               />
             )}
@@ -471,7 +471,7 @@ function StaffScheduleContent() {
         </div>
 
         {/* Week Navigation bar */}
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-card rounded-2xl border border-line shadow-2xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1">
               <Button
@@ -506,12 +506,12 @@ function StaffScheduleContent() {
               <span>{t('btnTodaySchedule')}</span>
             </Button>
 
-            <span className="text-xs sm:text-sm font-black text-zinc-900 ml-1">
+            <span className="text-xs sm:text-sm font-black text-foreground ml-1">
               {t('weekLabel')}
             </span>
           </div>
 
-          <span className="text-xs font-semibold text-zinc-500 bg-zinc-50 px-3 py-1 rounded-xl border border-zinc-200/80 font-mono self-start sm:self-center">
+          <span className="text-xs font-semibold text-muted bg-surface px-3 py-1 rounded-xl border border-line font-mono self-start sm:self-center">
             {startDate} — {endDate}
           </span>
         </div>
@@ -522,20 +522,20 @@ function StaffScheduleContent() {
             {weekDays.map((_, idx) => (
               <div
                 key={idx}
-                className="min-h-[260px] rounded-2xl border border-zinc-200/90 p-3 bg-white shadow-2xs flex flex-col justify-between animate-pulse"
+                className="min-h-[260px] rounded-2xl border border-line p-3 bg-card shadow-2xs flex flex-col justify-between animate-pulse"
               >
-                <div className="border-b border-zinc-100 pb-2 mb-2 flex items-center justify-between">
+                <div className="border-b border-line pb-2 mb-2 flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="h-3 w-10 bg-zinc-200 rounded" />
-                    <div className="h-5 w-12 bg-zinc-200 rounded" />
+                    <div className="h-3 w-10 bg-line rounded" />
+                    <div className="h-5 w-12 bg-line rounded" />
                   </div>
                 </div>
                 <div className="space-y-2 flex-1 pt-2">
-                  <div className="h-16 bg-zinc-100 rounded-xl" />
-                  <div className="h-16 bg-zinc-100 rounded-xl" />
+                  <div className="h-16 bg-card-hover rounded-xl" />
+                  <div className="h-16 bg-card-hover rounded-xl" />
                 </div>
-                <div className="pt-2 border-t border-zinc-100 mt-2">
-                  <div className="h-3 w-14 mx-auto bg-zinc-200 rounded" />
+                <div className="pt-2 border-t border-line mt-2">
+                  <div className="h-3 w-14 mx-auto bg-line rounded" />
                 </div>
               </div>
             ))}
@@ -552,18 +552,18 @@ function StaffScheduleContent() {
                   className={`min-h-[260px] rounded-2xl border p-3 flex flex-col justify-between transition-all ${
                     day.isToday
                       ? 'bg-[#2AC1BC]/5 border-[#2AC1BC] shadow-xs'
-                      : 'bg-white border-zinc-200/90 shadow-2xs'
+                      : 'bg-card border-line shadow-2xs'
                   }`}
                 >
                   {/* Day Header */}
-                  <div className="border-b border-zinc-100 pb-2 mb-2 flex items-center justify-between">
+                  <div className="border-b border-line pb-2 mb-2 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                      <span className="text-[10px] font-bold text-muted uppercase block">
                         {day.label}
                       </span>
                       <span
                         className={`text-base font-black ${
-                          day.isToday ? 'text-[#2AC1BC]' : 'text-zinc-900'
+                          day.isToday ? 'text-[#2AC1BC]' : 'text-foreground'
                         }`}
                       >
                         {day.dayNum}/{day.date.split('-')[1] || '09'}
@@ -585,8 +585,8 @@ function StaffScheduleContent() {
                           onClick={() => setSelectedSchedule(item)}
                           className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all hover:scale-[1.02] shadow-2xs ${
                             item.status === 'completed'
-                              ? 'bg-zinc-50 border-zinc-200 text-zinc-700'
-                              : 'bg-white border-[#2AC1BC]/40 hover:border-[#2AC1BC]'
+                              ? 'bg-surface border-line text-foreground/90'
+                              : 'bg-card border-[#2AC1BC]/40 hover:border-[#2AC1BC]'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1 mb-1">
@@ -595,16 +595,16 @@ function StaffScheduleContent() {
                             </span>
                           </div>
 
-                          <div className="text-[11px] font-bold text-zinc-900">
+                          <div className="text-[11px] font-bold text-foreground">
                             {item.shift.startTime} - {item.shift.endTime}
                           </div>
 
-                          <div className="text-[10px] text-zinc-500 font-semibold truncate mt-1">
+                          <div className="text-[10px] text-muted font-semibold truncate mt-1">
                             {getLocalizedPlace(item.boardingHouseName, isEn)}
                           </div>
 
                           {item.coWorkers && item.coWorkers.length > 0 && (
-                            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-1.5 pt-1 border-t border-zinc-100">
+                            <div className="flex items-center gap-1 text-[10px] text-muted mt-1.5 pt-1 border-t border-line">
                               <Users className="w-3 h-3" />
                               <span>{t('plusCoworkers', { count: item.coWorkers.length })}</span>
                             </div>
@@ -612,14 +612,14 @@ function StaffScheduleContent() {
                         </div>
                       ))
                     ) : (
-                      <div className="h-full flex items-center justify-center text-center py-8 text-[11px] text-zinc-400 font-medium italic">
+                      <div className="h-full flex items-center justify-center text-center py-8 text-[11px] text-muted font-medium italic">
                         {t('offShift')}
                       </div>
                     )}
                   </div>
 
                   {/* Day Footer note */}
-                  <div className="pt-2 text-[10px] text-zinc-400 font-semibold text-center border-t border-zinc-100 mt-2">
+                  <div className="pt-2 text-[10px] text-muted font-semibold text-center border-t border-line mt-2">
                     {t('shiftCountPerDay', { count: schedulesForDay.length })}
                   </div>
                 </div>
@@ -632,9 +632,9 @@ function StaffScheduleContent() {
       {/* ========================================================================= */}
       {/* SECTION 2: NHIỆM VỤ HÔM NAY (TODAY'S TASKS CHECKLIST)                      */}
       {/* ========================================================================= */}
-      <div className="space-y-4 pt-4 border-t border-zinc-200/80">
+      <div className="space-y-4 pt-4 border-t border-line">
         {/* Section Header & Progress Card */}
-        <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="p-1 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC]">
@@ -643,24 +643,24 @@ function StaffScheduleContent() {
               <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
                 {t('todayDutiesTag')}
               </span>
-              <span className="text-xs text-zinc-400 font-medium">• {todayStr}</span>
+              <span className="text-xs text-muted font-medium">• {todayStr}</span>
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-zinc-900">{t('todayDutiesTitle')}</h2>
-            <p className="text-xs text-zinc-500 leading-relaxed font-medium">
+            <h2 className="text-lg sm:text-xl font-black text-foreground">{t('todayDutiesTitle')}</h2>
+            <p className="text-xs text-muted leading-relaxed font-medium">
               {t('todayDutiesDesc')}
             </p>
           </div>
 
           {/* Progress Indicator */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-3.5 min-w-[200px] space-y-1.5">
+            <div className="bg-surface border border-line rounded-2xl p-3.5 min-w-[200px] space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-zinc-600">{t('dutyProgressLabel')}</span>
+                <span className="font-bold text-muted">{t('dutyProgressLabel')}</span>
                 <span className="font-black text-[#2AC1BC] text-sm font-mono">
                   {completedDuties}/{totalDuties} ({progressPercent}%)
                 </span>
               </div>
-              <div className="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-line rounded-full h-2 overflow-hidden">
                 <div
                   className="bg-linear-to-r from-[#2AC1BC] to-emerald-400 h-full rounded-full transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
@@ -673,9 +673,9 @@ function StaffScheduleContent() {
         {/* SKELETON LOADING STATE FOR DUTIES */}
         {isDutiesLoading ? (
           <div className="space-y-3 animate-pulse">
-            <div className="h-20 bg-white rounded-2xl border border-zinc-200/90 p-4" />
-            <div className="h-20 bg-white rounded-2xl border border-zinc-200/90 p-4" />
-            <div className="h-20 bg-white rounded-2xl border border-zinc-200/90 p-4" />
+            <div className="h-20 bg-card rounded-2xl border border-line p-4" />
+            <div className="h-20 bg-card rounded-2xl border border-line p-4" />
+            <div className="h-20 bg-card rounded-2xl border border-line p-4" />
           </div>
         ) : todayDuties.length > 0 ? (
           /* Duties List */
@@ -683,10 +683,10 @@ function StaffScheduleContent() {
             {todayDuties.map((duty, idx) => (
               <div
                 key={duty.id}
-                className={`bg-white rounded-2xl border transition-all p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                className={`bg-card rounded-2xl border transition-all p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   duty.completed
-                    ? 'border-emerald-200 bg-emerald-50/20'
-                    : 'border-zinc-200/90 hover:border-[#2AC1BC]/50 shadow-2xs'
+                    ? 'border-success-subtle bg-emerald-50/20'
+                    : 'border-line hover:border-[#2AC1BC]/50 shadow-2xs'
                 }`}
               >
                 <div className="flex items-start gap-3.5 flex-1">
@@ -698,28 +698,28 @@ function StaffScheduleContent() {
 
                   <div className="space-y-1.5 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-zinc-400">#{idx + 1}</span>
+                      <span className="text-xs font-mono font-bold text-muted">#{idx + 1}</span>
                       <h3
-                        className={`text-sm font-black text-zinc-900 leading-snug ${
-                          duty.completed ? 'line-through text-zinc-500' : ''
+                        className={`text-sm font-black text-foreground leading-snug ${
+                          duty.completed ? 'line-through text-muted' : ''
                         }`}
                       >
                         {duty.title}
                       </h3>
                       {duty.requiresPhoto ? (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-warning-soft text-warning border border-warning-subtle flex items-center gap-1">
                           <Camera className="w-3 h-3 text-amber-600" />
                           {t('dutyPhotoRequired')}
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-100 text-zinc-500">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-card-hover text-muted">
                           {t('dutyPhotoOptional')}
                         </span>
                       )}
                     </div>
 
                     {duty.note && (
-                      <p className="text-xs text-zinc-600 italic bg-white/70 p-2 rounded-xl border border-zinc-200/60 inline-block font-medium">
+                      <p className="text-xs text-muted italic bg-card/70 p-2 rounded-xl border border-line inline-block font-medium">
                         Ghi chú: &quot;{duty.note}&quot;
                       </p>
                     )}
@@ -744,7 +744,7 @@ function StaffScheduleContent() {
                           note: duty.note,
                         })
                       }
-                      className="flex items-center gap-2 p-1.5 rounded-xl bg-zinc-50 border border-zinc-200 hover:border-[#2AC1BC] cursor-pointer group transition-colors"
+                      className="flex items-center gap-2 p-1.5 rounded-xl bg-surface border border-line hover:border-[#2AC1BC] cursor-pointer group transition-colors"
                       title={t('titleEnlargePhoto')}
                     >
                       <img
@@ -753,10 +753,10 @@ function StaffScheduleContent() {
                         className="w-10 h-10 rounded-lg object-cover"
                       />
                       <div className="text-left pr-1 hidden sm:block">
-                        <span className="text-[10px] font-bold text-zinc-700 group-hover:text-[#2AC1BC] block flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-foreground/90 group-hover:text-[#2AC1BC] block flex items-center gap-1">
                           <Eye className="w-2.5 h-2.5" /> {t('dutyAuditProof')}
                         </span>
-                        <span className="text-[9px] text-zinc-400 font-mono">
+                        <span className="text-[9px] text-muted font-mono">
                           {duty.photoProofTime || todayStr}
                         </span>
                       </div>
@@ -778,12 +778,12 @@ function StaffScheduleContent() {
           </div>
         ) : (
           /* Empty State: Thông báo không có nhiệm vụ */
-          <div className="p-8 rounded-3xl bg-white border border-dashed border-zinc-200 text-center space-y-2.5">
-            <div className="w-12 h-12 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <div className="p-8 rounded-3xl bg-card border border-dashed border-line text-center space-y-2.5">
+            <div className="w-12 h-12 mx-auto rounded-full bg-success-soft text-emerald-600 flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-black text-zinc-800">{t('noTasksAssigned')}</h4>
-            <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
+            <h4 className="text-sm font-black text-foreground">{t('noTasksAssigned')}</h4>
+            <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
               {t('noTasksAssignedDesc')}
             </p>
           </div>
@@ -800,15 +800,15 @@ function StaffScheduleContent() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-7 space-y-5 animate-scaleIn cursor-default my-auto border border-zinc-200 max-h-[90vh] overflow-y-auto"
+            className="bg-card rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-7 space-y-5 animate-scaleIn cursor-default my-auto border border-line max-h-[90vh] overflow-y-auto"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+            <div className="flex items-center justify-between border-b border-line pb-4">
               <div>
                 <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">
                   {t('detailTag')}
                 </span>
-                <h3 className="text-lg sm:text-xl font-black text-zinc-900">
+                <h3 className="text-lg sm:text-xl font-black text-foreground">
                   {getShiftName(selectedSchedule.shift.name)}
                 </h3>
               </div>
@@ -825,26 +825,26 @@ function StaffScheduleContent() {
             {/* UNIFIED CONTENT: SHIFT INFO + CO-WORKERS + DUTIES (NO TABS) */}
             <div className="space-y-5">
               {/* 1. General Shift Info */}
-              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2.5 text-xs">
+              <div className="p-4 rounded-2xl bg-surface border border-line space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-medium">{t('detailDate')}</span>
-                  <span className="font-bold text-zinc-900">{selectedSchedule.workDate}</span>
+                  <span className="text-muted font-medium">{t('detailDate')}</span>
+                  <span className="font-bold text-foreground">{selectedSchedule.workDate}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-medium">{t('detailPlace')}</span>
-                  <span className="font-bold text-zinc-900">
+                  <span className="text-muted font-medium">{t('detailPlace')}</span>
+                  <span className="font-bold text-foreground">
                     {getLocalizedPlace(selectedSchedule.boardingHouseName, isEn)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-medium">{t('detailPosition')}</span>
+                  <span className="text-muted font-medium">{t('detailPosition')}</span>
                   <span className="font-bold text-[#2AC1BC]">
                     {getPositionName(selectedSchedule.position.name)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-zinc-500 font-medium">{t('detailShiftType')}</span>
-                  <span className="font-bold text-zinc-700">
+                  <span className="text-muted font-medium">{t('detailShiftType')}</span>
+                  <span className="font-bold text-foreground/90">
                     {selectedSchedule.isRecurring ? t('shiftTypeRecurring') : t('shiftTypeOneTime')}
                   </span>
                 </div>
@@ -853,7 +853,7 @@ function StaffScheduleContent() {
               {/* 2. Co-workers on duty */}
               {selectedSchedule.coWorkers && selectedSchedule.coWorkers.length > 0 && (
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-[#2AC1BC]" />
                     <span>{t('detailCoworkersTitle')}</span>
                   </h4>
@@ -861,7 +861,7 @@ function StaffScheduleContent() {
                     {selectedSchedule.coWorkers.map(cw => (
                       <div
                         key={cw.id}
-                        className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-between text-xs"
+                        className="p-3 rounded-2xl bg-surface border border-line flex items-center justify-between text-xs"
                       >
                         <div className="flex items-center gap-2.5">
                           <img
@@ -872,13 +872,13 @@ function StaffScheduleContent() {
                               )}&background=2AC1BC&color=fff`
                             }
                             alt={cw.name}
-                            className="w-8 h-8 rounded-full object-cover border border-zinc-200"
+                            className="w-8 h-8 rounded-full object-cover border border-line"
                           />
                           <div>
-                            <span className="font-bold text-zinc-900 block">
+                            <span className="font-bold text-foreground block">
                               {getLocalizedStaffName(cw.name, isEn)}
                             </span>
-                            <span className="text-[10px] text-zinc-500">
+                            <span className="text-[10px] text-muted">
                               {getPositionName(cw.positionName)}
                             </span>
                           </div>
@@ -886,7 +886,7 @@ function StaffScheduleContent() {
                         {cw.phone && (
                           <a
                             href={`tel:${cw.phone}`}
-                            className="p-1.5 rounded-lg bg-white border border-zinc-200 text-[#2AC1BC] hover:bg-teal-50 shadow-2xs"
+                            className="p-1.5 rounded-lg bg-card border border-line text-[#2AC1BC] hover:bg-teal-50 shadow-2xs"
                             title={`Gọi cho ${cw.name}`}
                           >
                             <Phone className="w-3.5 h-3.5" />
@@ -899,9 +899,9 @@ function StaffScheduleContent() {
               )}
 
               {/* 3. Fixed Daily Routine Duties */}
-              <div className="space-y-2.5 pt-2 border-t border-zinc-100">
+              <div className="space-y-2.5 pt-2 border-t border-line">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-[#2AC1BC]" />
                     <span>{t('routineDutiesTitle')}</span>
                   </h4>
@@ -909,7 +909,7 @@ function StaffScheduleContent() {
                     {getPositionName(selectedSchedule.position.name)}
                   </span>
                 </div>
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-800 space-y-2.5">
+                <div className="p-4 rounded-2xl bg-surface border border-line text-xs text-foreground space-y-2.5">
                   {getDutyLines(selectedSchedule).length > 0 ? (
                     getDutyLines(selectedSchedule).map((line, idx) => (
                       <div key={idx} className="flex items-start gap-2.5">
@@ -918,48 +918,48 @@ function StaffScheduleContent() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-zinc-400 italic">{t('noRoutineDuties')}</p>
+                    <p className="text-muted italic">{t('noRoutineDuties')}</p>
                   )}
                 </div>
               </div>
 
               {/* 4. Additional tasks / Landlord reminders */}
-              <div className="space-y-2.5 pt-2 border-t border-zinc-100">
-                <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="space-y-2.5 pt-2 border-t border-line">
+                <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
                   <BellRing className="w-4 h-4 text-amber-500" />
                   <span>{t('landlordTasksTitle')}</span>
                 </h4>
 
                 {selectedSchedule.additionalTasks && selectedSchedule.additionalTasks.length > 0 ? (
-                  <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 space-y-3">
+                  <div className="p-4 rounded-2xl bg-warning-soft border border-warning-subtle space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-black text-amber-900">
+                        <span className="text-xs font-black text-warning">
                           {t('upcomingDeadlines', {
                             count: selectedSchedule.additionalTasks.length,
                           })}
                         </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-md bg-amber-200/70 text-amber-900 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-md bg-amber-200/70 text-warning font-bold text-[10px]">
                         {selectedSchedule.workDate}
                       </span>
                     </div>
 
-                    <div className="space-y-2 pt-1 border-t border-amber-200/60">
+                    <div className="space-y-2 pt-1 border-t border-warning-subtle">
                       {selectedSchedule.additionalTasks.map(task => (
                         <div
                           key={task.id}
-                          className="p-2.5 rounded-xl bg-white border border-amber-200 text-xs space-y-1 shadow-2xs"
+                          className="p-2.5 rounded-xl bg-card border border-warning-subtle text-xs space-y-1 shadow-2xs"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-zinc-900">{task.title}</span>
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
+                            <span className="font-bold text-foreground">{task.title}</span>
+                            <span className="text-[10px] font-bold text-warning bg-warning-soft px-2 py-0.5 rounded-full shrink-0">
                               {task.deadline}
                             </span>
                           </div>
                           {task.description && (
-                            <p className="text-[11px] text-zinc-600 leading-snug">
+                            <p className="text-[11px] text-muted leading-snug">
                               {task.description}
                             </p>
                           )}
@@ -968,7 +968,7 @@ function StaffScheduleContent() {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-zinc-500 text-xs flex items-center gap-2">
+                  <div className="p-3 rounded-2xl bg-surface border border-line text-muted text-xs flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>{t('noAdditionalTasks')}</span>
                   </div>
@@ -977,7 +977,7 @@ function StaffScheduleContent() {
             </div>
 
             {/* Modal Close Button */}
-            <div className="pt-3 border-t border-zinc-100">
+            <div className="pt-3 border-t border-line">
               <Button fullWidth size="xs"
                 variant="secondary"
                 type="button"
@@ -1000,13 +1000,13 @@ function StaffScheduleContent() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 cursor-default my-auto border border-zinc-200 animate-scaleIn"
+            className="bg-card rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 cursor-default my-auto border border-line animate-scaleIn"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#2AC1BC]" />
-                <h3 className="text-base font-black text-zinc-900 truncate">
+                <h3 className="text-base font-black text-foreground truncate">
                   {t('dutyModalHeader')}
                 </h3>
               </div>
@@ -1021,21 +1021,21 @@ function StaffScheduleContent() {
             </div>
 
             {/* Task Info */}
-            <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+            <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-1">
+              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                 {t('taskTitleLabel')}
               </span>
-              <h4 className="text-xs font-black text-zinc-900 leading-snug">
+              <h4 className="text-xs font-black text-foreground leading-snug">
                 {activeDutyForProof.title}
               </h4>
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-zinc-500">
+              <div className="flex items-center gap-2 pt-1 text-[11px] text-muted">
                 {activeDutyForProof.requiresPhoto ? (
-                  <span className="text-amber-700 font-bold flex items-center gap-1">
+                  <span className="text-warning font-bold flex items-center gap-1">
                     <Camera className="w-3 h-3 text-amber-600" />
                     {t('proofMandatory')}
                   </span>
                 ) : (
-                  <span className="text-zinc-500">{t('proofOptional')}</span>
+                  <span className="text-muted">{t('proofOptional')}</span>
                 )}
               </div>
             </div>
@@ -1052,22 +1052,22 @@ function StaffScheduleContent() {
 
             {/* Photo Upload / Preview */}
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-zinc-600 block">
+              <label className="text-[11px] font-bold text-muted block">
                 {t('auditPhotoLabel')}
               </label>
 
               {dutyDraftPhoto ? (
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 border border-zinc-200">
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-line">
                   <img
                     src={dutyDraftPhoto}
                     alt="Proof"
-                    className="w-16 h-16 rounded-xl object-cover border border-zinc-200"
+                    className="w-16 h-16 rounded-xl object-cover border border-line"
                   />
                   <div className="space-y-1 text-xs flex-1">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-success-soft text-success border border-success-subtle">
                       ✓ {t('photoAttached')}
                     </span>
-                    <p className="text-[11px] text-zinc-500 font-mono">{todayStr}</p>
+                    <p className="text-[11px] text-muted font-mono">{todayStr}</p>
                   </div>
                   <Button
                     variant="ghost"
@@ -1088,7 +1088,7 @@ function StaffScheduleContent() {
                 >
                   <Camera className="w-6 h-6 text-[#2AC1BC]" />
                   <span>{t('clickToCapturePhoto')}</span>
-                  <span className="text-[10px] text-zinc-400 font-normal">
+                  <span className="text-[10px] text-muted font-normal">
                     {t('autoTimestampDesc')}
                   </span>
                 </Button>
@@ -1097,7 +1097,7 @@ function StaffScheduleContent() {
 
             {/* Note input */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-zinc-600 block">
+              <label className="text-[11px] font-bold text-muted block">
                 {t('dutyNoteLabel')}
               </label>
               <TextareaInput
@@ -1105,12 +1105,12 @@ function StaffScheduleContent() {
                 value={dutyDraftNote}
                 onChange={e => setDutyDraftNote(e.target.value)}
                 placeholder={t('dutyNotePlaceholder')}
-                className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC] leading-relaxed"
+                className="w-full p-3 bg-surface border border-line rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC] leading-relaxed"
               />
             </div>
 
             {/* Actions */}
-            <div className="pt-3 border-t border-zinc-100 flex flex-wrap items-center justify-between gap-2.5">
+            <div className="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-2.5">
               <Button size="xs"
                 variant="secondary"
                 type="button"
@@ -1125,7 +1125,7 @@ function StaffScheduleContent() {
                   type="button"
                   onClick={() => handleSaveDutyProof(false)}
                 >
-                  <FileText className="w-3.5 h-3.5 text-zinc-500" />
+                  <FileText className="w-3.5 h-3.5 text-muted" />
                   <span>{t('saveProgress')}</span>
                 </Button>
 
@@ -1153,12 +1153,12 @@ function StaffScheduleContent() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200"
+            className="bg-card rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-line"
           >
-            <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
+            <div className="p-4 border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Camera className="w-4 h-4 text-[#2AC1BC]" />
-                <h3 className="text-sm font-black text-zinc-900 truncate">
+                <h3 className="text-sm font-black text-foreground truncate">
                   {previewPhotoModal.title}
                 </h3>
               </div>
@@ -1181,17 +1181,17 @@ function StaffScheduleContent() {
             </div>
 
             {previewPhotoModal.note && (
-              <div className="p-4 bg-zinc-50 border-t border-zinc-200 text-xs text-zinc-700 space-y-1">
-                <span className="font-bold text-zinc-500 uppercase tracking-wider text-[10px] block">
+              <div className="p-4 bg-surface border-t border-line text-xs text-foreground/90 space-y-1">
+                <span className="font-bold text-muted uppercase tracking-wider text-[10px] block">
                   {t('lightboxNoteLabel')}
                 </span>
-                <p className="italic text-zinc-900 font-medium leading-relaxed">
+                <p className="italic text-foreground font-medium leading-relaxed">
                   &quot;{previewPhotoModal.note}&quot;
                 </p>
               </div>
             )}
 
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
+            <div className="p-4 bg-surface border-t border-line flex justify-end">
               <Button size="xs"
                 variant="secondary"
                 type="button"
@@ -1210,7 +1210,7 @@ function StaffScheduleContent() {
 export default function StaffSchedulePage() {
   return (
     <Suspense
-      fallback={<div className="p-8 text-center text-xs text-zinc-400 font-bold">Loading...</div>}
+      fallback={<div className="p-8 text-center text-xs text-muted font-bold">Loading...</div>}
     >
       <StaffScheduleContent />
     </Suspense>

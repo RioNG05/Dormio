@@ -318,8 +318,8 @@ export default function TenantMeterReadingsPage() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="bg-white border border-zinc-200/90 rounded-2xl p-8 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+        <div className="bg-card border border-line rounded-2xl p-8 text-center space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
             <AlertCircle className="w-7 h-7" />
           </div>
           <div className="space-y-1.5">
@@ -360,8 +360,8 @@ export default function TenantMeterReadingsPage() {
   if (!data || servicesList.length === 0) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="bg-white border border-zinc-200/90 rounded-2xl p-8 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto">
+        <div className="bg-card border border-line rounded-2xl p-8 text-center space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-primary-soft text-teal-600 flex items-center justify-center mx-auto">
             <Gauge className="w-7 h-7" />
           </div>
           <div className="space-y-1.5">
@@ -427,12 +427,12 @@ export default function TenantMeterReadingsPage() {
       </div>
 
       {/* Progress & Overview Bar */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="bg-card border border-line rounded-xl p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                isReadyToConfirm ? 'bg-emerald-100 text-emerald-700' : 'bg-teal-100 text-teal-700'
+                isReadyToConfirm ? 'bg-success-soft text-success' : 'bg-primary-soft text-primary'
               }`}
             >
               {completedCount}/{servicesList.length}
@@ -455,8 +455,8 @@ export default function TenantMeterReadingsPage() {
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
                 isReadyToConfirm
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  ? 'bg-success-soft text-success border border-success-subtle'
+                  : 'bg-warning-soft text-warning border border-warning-subtle'
               }`}
             >
               {isReadyToConfirm ? (
@@ -479,7 +479,7 @@ export default function TenantMeterReadingsPage() {
         </div>
 
         {/* Progress bar line */}
-        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+        <div className="w-full bg-card-hover h-2.5 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
               isReadyToConfirm ? 'bg-emerald-500' : 'bg-gradient-to-r from-teal-500 to-cyan-500'
@@ -514,34 +514,34 @@ export default function TenantMeterReadingsPage() {
           return (
             <div
               key={service.serviceId}
-              className={`bg-white border rounded-2xl p-5 md:p-6 transition-all shadow-sm ${
+              className={`bg-card border rounded-2xl p-5 md:p-6 transition-all shadow-sm ${
                 isAnomaly
                   ? 'border-amber-300 ring-1 ring-amber-100'
                   : state.readingValue !== null
-                    ? 'border-emerald-200 ring-1 ring-emerald-100'
-                    : 'border-slate-200 hover:border-teal-300'
+                    ? 'border-success-subtle ring-1 ring-emerald-100'
+                    : 'border-line hover:border-teal-300'
               }`}
             >
               {/* Service Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
+                  <div className="w-10 h-10 rounded-xl bg-surface border border-line flex items-center justify-center shadow-inner">
                     {getServiceIcon(service.serviceName)}
                   </div>
                   <div>
                     <Text as="h3" size="base" weight="bold" color="default">
                       {service.serviceName}
                     </Text>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                    <div className="flex items-center gap-2 text-xs text-muted mt-0.5">
                       <Text as="span" size="xs" color="secondary">
-                        {t('unitPriceLabel')} <strong className="text-slate-700">{formatCurrency(service.unitPrice, locale)} / {service.unit}</strong>
+                        {t('unitPriceLabel')} <strong className="text-foreground/90">{formatCurrency(service.unitPrice, locale)} / {service.unit}</strong>
                       </Text>
                       {service.previousReading && (
                         <>
                           <span>•</span>
                           <Text as="span" size="xs" color="secondary">
                             {t('previousCycleLabel')}{' '}
-                            <strong className="text-slate-700">
+                            <strong className="text-foreground/90">
                               {service.previousReading.readingValue.toLocaleString(
                                 locale === 'en' ? 'en-US' : 'vi-VN',
                               )}{' '}
@@ -560,8 +560,8 @@ export default function TenantMeterReadingsPage() {
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                         isAnomaly
-                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          ? 'bg-warning-soft text-warning border border-warning-subtle'
+                          : 'bg-success-soft text-success border border-success-subtle'
                       }`}
                     >
                       {isAnomaly ? (
@@ -579,7 +579,7 @@ export default function TenantMeterReadingsPage() {
                       </Text>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-card-hover text-muted">
                       <Clock className="w-3.5 h-3.5" />
                       <Text as="span" size="xs" weight="medium" color="inherit">
                         {t('noReadingYet')}
@@ -591,7 +591,7 @@ export default function TenantMeterReadingsPage() {
 
               {/* Anomaly warning banner if new reading is less than previous */}
               {isAnomaly && (
-                <div className="mt-3 p-3 bg-amber-50 border border-amber-200/80 rounded-xl flex items-center gap-2.5 text-amber-800 text-xs">
+                <div className="mt-3 p-3 bg-warning-soft border border-warning-subtle rounded-xl flex items-center gap-2.5 text-warning text-xs">
                   <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                   <Text as="span" size="xs" weight="medium" color="inherit">
                     {t('anomalyWarning', { old: prevVal })}
@@ -616,7 +616,7 @@ export default function TenantMeterReadingsPage() {
                   />
 
                   {state.imageUrl ? (
-                    <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video md:aspect-[4/3] flex items-center justify-center">
+                    <div className="relative group rounded-xl overflow-hidden border border-line bg-slate-900 aspect-video md:aspect-[4/3] flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={state.imageUrl}
@@ -657,9 +657,9 @@ export default function TenantMeterReadingsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                      className="aspect-video md:aspect-[4/3] flex-col group border-2 border-dashed border-slate-200 hover:border-teal-400 bg-slate-50/50"
+                      className="aspect-video md:aspect-[4/3] flex-col group border-2 border-dashed border-line hover:border-teal-400 bg-surface/50"
                     >
-                      <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
+                      <div className="w-12 h-12 rounded-full bg-primary-soft text-teal-600 flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
                         <Camera className="w-6 h-6" />
                       </div>
                       <Text as="span" size="sm" weight="bold" color="default" className="group-hover:text-teal-700">
@@ -674,9 +674,9 @@ export default function TenantMeterReadingsPage() {
 
                 {/* Right Column: Extracted Reading & Manual Verification Form */}
                 <div className="md:col-span-7 space-y-4">
-                  <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-4 space-y-3">
+                  <div className="bg-surface/80 border border-line rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                      <label className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-teal-600" />
                         <Text as="span" size="xs" weight="bold" color="secondary">
                           {t('meterReadingLabelWithUnit', { unit: service.unit })}
@@ -722,9 +722,9 @@ export default function TenantMeterReadingsPage() {
                             }))
                           }
                           containerClassName="space-y-0 flex-1"
-                          className="w-full py-2.5 bg-white border-slate-300 rounded-lg text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          className="w-full py-2.5 bg-card border-line rounded-lg text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                           rightIcon={
-                            <span className="text-xs font-medium text-slate-400 pr-1">
+                            <span className="text-xs font-medium text-muted pr-1">
                               {service.unit}
                             </span>
                           }
@@ -737,7 +737,7 @@ export default function TenantMeterReadingsPage() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-baseline justify-between bg-white border border-emerald-200 rounded-lg px-4 py-3">
+                      <div className="flex items-baseline justify-between bg-card border border-success-subtle rounded-lg px-4 py-3">
                         <div>
                           <Text as="span" size="2xl" weight="black" color="default" className="tracking-tight">
                             {state.readingValue.toLocaleString(
@@ -748,7 +748,7 @@ export default function TenantMeterReadingsPage() {
                             {service.unit}
                           </Text>
                         </div>
-                        <span className="text-xs text-emerald-700 bg-emerald-50 font-medium px-2 py-0.5 rounded">
+                        <span className="text-xs text-success bg-success-soft font-medium px-2 py-0.5 rounded">
                           <Text as="span" size="xs" weight="bold" color="inherit">
                             {t('validReadingBadge')}
                           </Text>
@@ -758,7 +758,7 @@ export default function TenantMeterReadingsPage() {
 
                     {/* Calculation Breakdown Preview */}
                     {consumption !== null && (
-                      <div className="pt-2 border-t border-slate-200/60 grid grid-cols-2 gap-2 text-xs">
+                      <div className="pt-2 border-t border-line grid grid-cols-2 gap-2 text-xs">
                         <div>
                           <Text size="xs" color="secondary">
                             {t('consumptionLabel')}
@@ -772,7 +772,7 @@ export default function TenantMeterReadingsPage() {
                           <Text size="xs" color="secondary">
                             {t('estimatedCostLabel')}
                           </Text>
-                          <Text size="sm" weight="bold" className="text-teal-700 mt-0.5">
+                          <Text size="sm" weight="bold" className="text-primary mt-0.5">
                             {estimatedCost !== null ? formatCurrency(estimatedCost, locale) : '-'}
                           </Text>
                         </div>
@@ -788,8 +788,8 @@ export default function TenantMeterReadingsPage() {
 
       {/* Action Footer */}
       {servicesList.length > 0 && (
-        <div className="sticky bottom-4 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className="sticky bottom-4 bg-card/95 backdrop-blur-md border border-line rounded-2xl p-4 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs text-muted">
             <Info className="w-4 h-4 text-teal-600 shrink-0" />
             <Text as="span" size="xs" color="secondary">
               {t('confirmWarningNotice')}
@@ -815,7 +815,7 @@ export default function TenantMeterReadingsPage() {
         <Modal.Header
           title={t('confirmMeterModalTitle')}
           icon={
-            <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-primary-soft text-primary flex items-center justify-center font-bold">
               <FileCheck className="w-5 h-5" />
             </div>
           }
@@ -827,9 +827,9 @@ export default function TenantMeterReadingsPage() {
           </Text>
 
           {/* Summary Table */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl overflow-hidden">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-100/80 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-200">
+              <thead className="bg-card-hover/80 text-muted font-semibold uppercase tracking-wider border-b border-line">
                 <tr>
                   <th className="px-3.5 py-2.5">{t('tableHeaderService')}</th>
                   <th className="px-3 py-2.5 text-center">{t('tableHeaderOldReading')}</th>
@@ -837,7 +837,7 @@ export default function TenantMeterReadingsPage() {
                   <th className="px-3.5 py-2.5 text-right">{t('tableHeaderConsumption')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-line">
                 {servicesList.map(service => {
                   const current = readingsState[service.serviceId]?.readingValue ?? 0
                   const prev = service.previousReading?.readingValue ?? 0
@@ -845,14 +845,14 @@ export default function TenantMeterReadingsPage() {
 
                   return (
                     <tr key={service.serviceId}>
-                      <td className="px-3.5 py-2.5 font-medium text-slate-800">
+                      <td className="px-3.5 py-2.5 font-medium text-foreground">
                         {service.serviceName}
                       </td>
-                      <td className="px-3 py-2.5 text-center text-slate-500">{prev}</td>
-                      <td className="px-3 py-2.5 text-center font-bold text-teal-700">
+                      <td className="px-3 py-2.5 text-center text-muted">{prev}</td>
+                      <td className="px-3 py-2.5 text-center font-bold text-primary">
                         {current}
                       </td>
-                      <td className="px-3.5 py-2.5 text-right font-bold text-slate-900">
+                      <td className="px-3.5 py-2.5 text-right font-bold text-foreground">
                         {diff} {service.unit}
                       </td>
                     </tr>
@@ -902,7 +902,7 @@ export default function TenantMeterReadingsPage() {
       >
         <Modal.Body className="space-y-5">
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mx-auto">
               <Receipt className="w-7 h-7" />
             </div>
             <Text as="h3" weight="bold" size="xl" color="default">
@@ -916,11 +916,11 @@ export default function TenantMeterReadingsPage() {
           {/* Total Amount Box */}
           {generatedInvoice && (
             <>
-              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4 text-center">
-                <Text size="xs" weight="bold" className="text-teal-700 uppercase tracking-wider">
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-primary-subtle rounded-xl p-4 text-center">
+                <Text size="xs" weight="bold" className="text-primary uppercase tracking-wider">
                   {t('totalAmountDue')}
                 </Text>
-                <div className="text-3xl font-black text-teal-800 mt-1">
+                <div className="text-3xl font-black text-primary mt-1">
                   {formatCurrency(generatedInvoice.totalAmount, locale)}
                 </div>
                 <Text size="xs" color="secondary" className="mt-1 block">
@@ -933,13 +933,13 @@ export default function TenantMeterReadingsPage() {
               </div>
 
               {/* Invoice Line Items */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <div className="bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <div className="border border-line rounded-xl overflow-hidden">
+                <div className="bg-card-hover px-4 py-2 text-xs font-semibold text-muted uppercase tracking-wider">
                   <Text as="span" size="xs" weight="bold" color="secondary">
                     {t('invoiceLineItemsTitle')}
                   </Text>
                 </div>
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-line">
                   {generatedInvoice.items?.map(item => (
                     <div
                       key={item.id}

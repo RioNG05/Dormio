@@ -174,7 +174,7 @@ export default function AdminBoardingHouseDetailPage() {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
         <div className="w-12 h-12 rounded-full border-4 border-orange-500/20 border-t-orange-600 animate-spin" />
-        <p className="text-sm font-semibold text-zinc-500">{t('adminHouseDetailLoading')}</p>
+        <p className="text-sm font-semibold text-muted">{t('adminHouseDetailLoading')}</p>
       </div>
     )
   }
@@ -182,11 +182,11 @@ export default function AdminBoardingHouseDetailPage() {
   if (error || !house) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-4 max-w-md mx-auto">
-        <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-2xl bg-danger-soft text-red-600 flex items-center justify-center">
           <AlertCircle className="w-7 h-7" />
         </div>
-        <h2 className="text-lg font-black text-zinc-900">{t('adminHouseDetailNotFoundTitle')}</h2>
-        <p className="text-xs text-zinc-500 leading-relaxed">
+        <h2 className="text-lg font-black text-foreground">{t('adminHouseDetailNotFoundTitle')}</h2>
+        <p className="text-xs text-muted leading-relaxed">
           {error || t('adminHouseDetailNotFoundDesc')}
         </p>
         <Link
@@ -212,8 +212,8 @@ export default function AdminBoardingHouseDetailPage() {
         <div
           className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2.5 text-xs font-bold animate-slideDown ${
             toastMsg.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : 'bg-red-50 text-red-800 border-red-200'
+              ? 'bg-success-soft text-success border-success-subtle'
+              : 'bg-danger-soft text-danger border-danger-subtle'
           }`}
         >
           {toastMsg.type === 'success' ? (
@@ -228,35 +228,35 @@ export default function AdminBoardingHouseDetailPage() {
       {/* Breadcrumb & Navigation Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1 font-medium">
+          <div className="flex items-center gap-2 text-xs text-muted mb-1 font-medium">
             <Link href="/admin" className="hover:text-orange-600 transition-colors">
               {t('adminHouseDetailBreadcrumbAdmin')}
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+            <ChevronRight className="w-3.5 h-3.5 text-muted" />
             <Link href="/admin/boarding-houses" className="hover:text-orange-600 transition-colors">
               {t('adminHouseDetailBreadcrumbHouses')}
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-zinc-800 font-bold truncate max-w-[200px]">{house.name}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-muted" />
+            <span className="text-foreground font-bold truncate max-w-[200px]">{house.name}</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/admin/boarding-houses"
-              className="p-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors cursor-pointer"
+              className="p-2 rounded-xl border border-line bg-card hover:bg-card-hover text-muted transition-colors cursor-pointer"
               title={t('adminHouseDetailBackTooltip')}
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-xl font-black text-zinc-900 tracking-tight flex items-center gap-2.5">
+              <h1 className="text-xl font-black text-foreground tracking-tight flex items-center gap-2.5">
                 <span>{house.name}</span>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-2xs ${
                     house.status === 'active'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      ? 'bg-success-soft text-success border border-emerald-300'
                       : house.status === 'locked'
-                        ? 'bg-red-100 text-red-800 border border-red-300 ring-2 ring-red-200'
-                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        ? 'bg-danger-soft text-danger border border-red-300 ring-2 ring-red-200'
+                        : 'bg-warning-soft text-warning border border-amber-300'
                   }`}
                 >
                   {house.status === 'active'
@@ -266,7 +266,7 @@ export default function AdminBoardingHouseDetailPage() {
                       : t('adminHouseDetailStatusReported')}
                 </span>
               </h1>
-              <p className="text-xs text-zinc-400 font-mono mt-0.5">ID: {house.id}</p>
+              <p className="text-xs text-muted font-mono mt-0.5">ID: {house.id}</p>
             </div>
           </div>
         </div>
@@ -306,15 +306,15 @@ export default function AdminBoardingHouseDetailPage() {
 
       {/* Lock Notice Banner */}
       {house.status === 'locked' && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+        <div className="p-4 rounded-2xl bg-danger-soft border border-danger-subtle text-danger flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-danger-soft flex items-center justify-center shrink-0 mt-0.5">
             <BadgeAlert className="w-5 h-5 text-red-600" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-xs font-black uppercase tracking-wider text-red-800">
+            <h4 className="text-xs font-black uppercase tracking-wider text-danger">
               {t('adminHouseDetailSuspensionAlertTitle')}
             </h4>
-            <p className="text-xs font-medium text-red-700 leading-relaxed">
+            <p className="text-xs font-medium text-danger leading-relaxed">
               <span className="font-bold">{t('adminHouseDetailSuspensionReasonLabel')}</span>
               {house.lockReason || t('adminHouseDetailDefaultViolationReason')}
             </p>
@@ -332,8 +332,8 @@ export default function AdminBoardingHouseDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: House Media & Summary */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl border border-zinc-200/90 overflow-hidden shadow-2xs">
-            <div className="relative h-64 sm:h-72 w-full bg-zinc-100 overflow-hidden">
+          <div className="bg-card rounded-3xl border border-line overflow-hidden shadow-2xs">
+            <div className="relative h-64 sm:h-72 w-full bg-card-hover overflow-hidden">
               <img
                 src={house.thumbnail || '/house-placeholder.jpg'}
                 alt={house.name}
@@ -352,50 +352,50 @@ export default function AdminBoardingHouseDetailPage() {
             <div className="p-6 space-y-5">
               {/* House Stats Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100 text-center">
-                  <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="p-3.5 rounded-2xl bg-surface border border-line text-center">
+                  <div className="text-[11px] font-bold text-muted uppercase tracking-wider">
                     {t('adminHouseDetailTotalRooms')}
                   </div>
-                  <div className="text-xl font-black text-zinc-900 mt-1">
+                  <div className="text-xl font-black text-foreground mt-1">
                     {house.stats.totalRooms}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100 text-center">
+                <div className="p-3.5 rounded-2xl bg-success-soft border border-success-subtle text-center">
                   <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
                     {t('adminHouseDetailOccupied')}
                   </div>
-                  <div className="text-xl font-black text-emerald-700 mt-1">
+                  <div className="text-xl font-black text-success mt-1">
                     {house.stats.occupiedRooms}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-orange-50/70 border border-orange-100 text-center">
+                <div className="p-3.5 rounded-2xl bg-accent-soft border border-accent-subtle text-center">
                   <div className="text-[11px] font-bold text-orange-600 uppercase tracking-wider">
                     {t('adminHouseDetailVacant')}
                   </div>
-                  <div className="text-xl font-black text-orange-700 mt-1">
+                  <div className="text-xl font-black text-accent mt-1">
                     {house.stats.vacantRooms}
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 text-center">
+                <div className="p-3.5 rounded-2xl bg-info-soft border border-info-subtle text-center">
                   <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
                     {t('adminHouseDetailOccupancy')}
                   </div>
-                  <div className="text-xl font-black text-blue-700 mt-1">{occupancyRate}%</div>
+                  <div className="text-xl font-black text-info mt-1">{occupancyRate}%</div>
                 </div>
               </div>
 
               {/* Occupancy bar */}
               <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-semibold text-zinc-600">
+                <div className="flex justify-between text-xs font-semibold text-muted">
                   <span>{t('adminHouseDetailOccupancyRateSubtitle')}</span>
-                  <span className="font-bold text-zinc-900">
+                  <span className="font-bold text-foreground">
                     {occupancyRate}% ({house.stats.occupiedRooms}/{house.stats.totalRooms})
                   </span>
                 </div>
-                <div className="w-full h-2.5 bg-zinc-100 rounded-full overflow-hidden">
+                <div className="w-full h-2.5 bg-card-hover rounded-full overflow-hidden">
                   <div
                     className="h-full bg-linear-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(100, Math.max(0, occupancyRate))}%` }}
@@ -404,26 +404,26 @@ export default function AdminBoardingHouseDetailPage() {
               </div>
 
               {/* House details list */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-100 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-line text-xs">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center shrink-0">
                     <Layers className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-zinc-400 block">{t('adminHouseDetailTotalFloors')}</span>
-                    <span className="font-bold text-zinc-800">
+                    <span className="text-muted block">{t('adminHouseDetailTotalFloors')}</span>
+                    <span className="font-bold text-foreground">
                       {house.totalFloor} {t('adminHouseDetailFloorsUnit')}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-deposit-soft text-purple-600 flex items-center justify-center shrink-0">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-zinc-400 block">{t('adminHouseDetailBuiltYear')}</span>
-                    <span className="font-bold text-zinc-800">
+                    <span className="text-muted block">{t('adminHouseDetailBuiltYear')}</span>
+                    <span className="font-bold text-foreground">
                       {house.builtAt ? new Date(house.builtAt).getFullYear() : '2023'}
                     </span>
                   </div>
@@ -431,8 +431,8 @@ export default function AdminBoardingHouseDetailPage() {
               </div>
 
               {house.description && (
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100 text-xs text-zinc-600 leading-relaxed">
-                  <span className="font-bold text-zinc-800 block mb-1">
+                <div className="p-4 rounded-2xl bg-surface border border-line text-xs text-muted leading-relaxed">
+                  <span className="font-bold text-foreground block mb-1">
                     {t('adminHouseDetailDescriptionTitle')}
                   </span>
                   {house.description}
@@ -444,18 +444,18 @@ export default function AdminBoardingHouseDetailPage() {
 
         {/* Right Column: Owner Profile Card */}
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-zinc-200/90 p-6 shadow-2xs space-y-5">
+          <div className="bg-card rounded-3xl border border-line p-6 shadow-2xs space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider">
+              <h3 className="text-sm font-black text-foreground uppercase tracking-wider">
                 {t('adminHouseDetailOwnerTitle')}
               </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-100 text-orange-800">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-accent-soft text-accent">
                 {t('adminHouseDetailOwnerRoleBadge')}
               </span>
             </div>
 
             {/* Clickable Owner Avatar for Modal */}
-            <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-zinc-50/80 border border-zinc-100">
+            <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-surface/80 border border-line">
               <Button
                 variant="ghost"
                 size="sm"
@@ -484,10 +484,10 @@ export default function AdminBoardingHouseDetailPage() {
                 >
                   {house.owner.name}
                 </Button>
-                <div className="text-xs text-zinc-500 font-mono truncate">
+                <div className="text-xs text-muted font-mono truncate">
                   {house.owner.phoneNumber}
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-emerald-700 font-semibold">
+                <div className="flex items-center gap-1 text-[11px] text-success font-semibold">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>{t('adminHouseDetailCccdVerified')}</span>
                 </div>
@@ -495,27 +495,27 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-zinc-400" />
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-surface border border-line">
+                <span className="text-muted flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-muted" />
                   <span>Email</span>
                 </span>
-                <span className="font-semibold text-zinc-800 truncate max-w-[170px]">
+                <span className="font-semibold text-foreground truncate max-w-[170px]">
                   {house.owner.email}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-zinc-400" />
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-surface border border-line">
+                <span className="text-muted flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-muted" />
                   <span>{t('adminHouseDetailPhoneLabel')}</span>
                 </span>
-                <span className="font-semibold text-zinc-800">{house.owner.phoneNumber}</span>
+                <span className="font-semibold text-foreground">{house.owner.phoneNumber}</span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-zinc-400" />
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-surface border border-line">
+                <span className="text-muted flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-muted" />
                   <span>{t('adminHouseDetailPropertiesOwnedLabel')}</span>
                 </span>
                 <span className="font-bold text-orange-600">
@@ -539,46 +539,46 @@ export default function AdminBoardingHouseDetailPage() {
       {/* Services & Room Types Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Services */}
-        <div className="bg-white rounded-3xl border border-zinc-200/90 p-6 shadow-2xs space-y-4">
+        <div className="bg-card rounded-3xl border border-line p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
               <Zap className="w-4 h-4 text-orange-600" />
               <span>{t('adminHouseDetailServicesTitle')}</span>
             </h3>
-            <span className="text-xs font-bold text-zinc-400">
+            <span className="text-xs font-bold text-muted">
               {house.services.length} {t('adminHouseDetailServicesUnit')}
             </span>
           </div>
 
           {house.services.length === 0 ? (
-            <p className="text-xs text-zinc-400 italic text-center py-6">
+            <p className="text-xs text-muted italic text-center py-6">
               {t('adminHouseDetailNoServices')}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="border-b border-zinc-100 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="border-b border-line text-muted font-bold uppercase tracking-wider text-[10px]">
                     <th className="pb-2.5">{t('adminHouseDetailColService')}</th>
                     <th className="pb-2.5">{t('adminHouseDetailColRate')}</th>
                     <th className="pb-2.5">{t('adminHouseDetailColUnit')}</th>
                     <th className="pb-2.5 text-right">{t('adminHouseDetailColType')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-line">
                   {house.services.map(srv => (
                     <tr key={srv.id} className="hover:bg-zinc-50/70">
-                      <td className="py-3 font-bold text-zinc-800">{srv.name}</td>
+                      <td className="py-3 font-bold text-foreground">{srv.name}</td>
                       <td className="py-3 font-semibold text-orange-600">
                         {new Intl.NumberFormat('vi-VN').format(srv.price)} đ
                       </td>
-                      <td className="py-3 text-zinc-500 font-mono">/{srv.unit}</td>
+                      <td className="py-3 text-muted font-mono">/{srv.unit}</td>
                       <td className="py-3 text-right">
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             srv.isMetered
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'bg-zinc-100 text-zinc-700'
+                              ? 'bg-info-soft text-info border border-info-subtle'
+                              : 'bg-card-hover text-foreground/90'
                           }`}
                         >
                           {srv.isMetered
@@ -595,19 +595,19 @@ export default function AdminBoardingHouseDetailPage() {
         </div>
 
         {/* Room Types */}
-        <div className="bg-white rounded-3xl border border-zinc-200/90 p-6 shadow-2xs space-y-4">
+        <div className="bg-card rounded-3xl border border-line p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
               <Building2 className="w-4 h-4 text-orange-600" />
               <span>{t('adminHouseDetailRoomTypesTitle')}</span>
             </h3>
-            <span className="text-xs font-bold text-zinc-400">
+            <span className="text-xs font-bold text-muted">
               {house.roomTypes.length} {t('adminHouseDetailRoomTypesUnit')}
             </span>
           </div>
 
           {house.roomTypes.length === 0 ? (
-            <p className="text-xs text-zinc-400 italic text-center py-6">
+            <p className="text-xs text-muted italic text-center py-6">
               {t('adminHouseDetailNoRoomTypes')}
             </p>
           ) : (
@@ -615,30 +615,30 @@ export default function AdminBoardingHouseDetailPage() {
               {house.roomTypes.map(rt => (
                 <div
                   key={rt.id}
-                  className="p-4 rounded-2xl bg-zinc-50/80 border border-zinc-100 space-y-2"
+                  className="p-4 rounded-2xl bg-surface/80 border border-line space-y-2"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-bold text-xs text-zinc-900">{rt.name}</h4>
+                      <h4 className="font-bold text-xs text-foreground">{rt.name}</h4>
                       {rt.description && (
-                        <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5">
+                        <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
                           {rt.description}
                         </p>
                       )}
                     </div>
-                    <span className="font-black text-xs text-orange-600 bg-orange-50 px-2.5 py-1 rounded-xl border border-orange-100">
+                    <span className="font-black text-xs text-orange-600 bg-accent-soft px-2.5 py-1 rounded-xl border border-accent-subtle">
                       {new Intl.NumberFormat('vi-VN').format(rt.basePrice || 4500000)} đ/tháng
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-[11px] text-zinc-500 pt-1">
+                  <div className="flex items-center gap-4 text-[11px] text-muted pt-1">
                     <span>
                       {t('adminHouseDetailAreaLabel')}
-                      <strong className="text-zinc-700">{rt.area || 25} m²</strong>
+                      <strong className="text-foreground/90">{rt.area || 25} m²</strong>
                     </span>
                     <span>•</span>
                     <span>
                       {t('adminHouseDetailRoomsCountLabel')}
-                      <strong className="text-zinc-700">
+                      <strong className="text-foreground/90">
                         {rt.roomsCount || house.stats.totalRooms} phòng
                       </strong>
                     </span>
@@ -651,33 +651,33 @@ export default function AdminBoardingHouseDetailPage() {
       </div>
 
       {/* Grievances & Tenant Reports Section */}
-      <div className="bg-white rounded-3xl border border-zinc-200/90 p-6 shadow-2xs space-y-5">
+      <div className="bg-card rounded-3xl border border-line p-6 shadow-2xs space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600" />
               <span>{t('adminHouseDetailGrievancesTitle')}</span>
             </h3>
-            <p className="text-xs text-zinc-400 mt-0.5">{t('adminHouseDetailGrievancesHint')}</p>
+            <p className="text-xs text-muted mt-0.5">{t('adminHouseDetailGrievancesHint')}</p>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-warning-soft text-warning border border-warning-subtle">
             {house.grievances.length} {t('adminHouseDetailReportsUnit')}
           </span>
         </div>
 
         {house.grievances.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-zinc-50 border border-zinc-100 text-center space-y-2">
+          <div className="p-8 rounded-2xl bg-surface border border-line text-center space-y-2">
             <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-            <div className="text-xs font-bold text-zinc-800">
+            <div className="text-xs font-bold text-foreground">
               {t('adminHouseDetailNoGrievancesTitle')}
             </div>
-            <p className="text-[11px] text-zinc-400">{t('adminHouseDetailNoGrievancesDesc')}</p>
+            <p className="text-[11px] text-muted">{t('adminHouseDetailNoGrievancesDesc')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse min-w-[750px]">
               <thead>
-                <tr className="border-b border-zinc-200 bg-zinc-50/80 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
+                <tr className="border-b border-line bg-surface/80 text-muted font-bold uppercase tracking-wider text-[10px]">
                   <th className="p-3.5">{t('adminHouseDetailColComplainant')}</th>
                   <th className="p-3.5">{t('adminHouseDetailColContent')}</th>
                   <th className="p-3.5">{t('adminHouseDetailColPriority')}</th>
@@ -685,7 +685,7 @@ export default function AdminBoardingHouseDetailPage() {
                   <th className="p-3.5 text-right">{t('adminHouseDetailColSentDate')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-line">
                 {house.grievances.map(g => (
                   <tr key={g.id} className="hover:bg-zinc-50/80 transition-colors">
                     {/* Sender with Clickable Avatar */}
@@ -702,7 +702,7 @@ export default function AdminBoardingHouseDetailPage() {
                           <img
                             src={g.sender.avatarUrl || '/avatar-placeholder.png'}
                             alt={g.sender.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-zinc-200 group-hover:ring-2 group-hover:ring-orange-500 transition-all"
+                            className="w-10 h-10 rounded-xl object-cover border border-line group-hover:ring-2 group-hover:ring-orange-500 transition-all"
                           />
                           <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[9px] font-bold">
                             {t('adminHouseDetailViewButton')}
@@ -718,8 +718,8 @@ export default function AdminBoardingHouseDetailPage() {
                           >
                             {g.sender.name}
                           </Button>
-                          <div className="text-[11px] text-zinc-400 font-mono flex items-center gap-1.5">
-                            <span className="bg-zinc-100 px-1.5 py-0.2 rounded text-zinc-700 font-bold">
+                          <div className="text-[11px] text-muted font-mono flex items-center gap-1.5">
+                            <span className="bg-card-hover px-1.5 py-0.2 rounded text-foreground/90 font-bold">
                               {g.sender.roomNumber || 'P.302'}
                             </span>
                             <span>{g.sender.phoneNumber}</span>
@@ -730,12 +730,12 @@ export default function AdminBoardingHouseDetailPage() {
 
                     {/* Content */}
                     <td className="p-3.5 max-w-sm">
-                      <div className="font-bold text-zinc-800">{g.title}</div>
-                      <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-2 leading-relaxed">
+                      <div className="font-bold text-foreground">{g.title}</div>
+                      <div className="text-[11px] text-muted mt-0.5 line-clamp-2 leading-relaxed">
                         {g.description}
                       </div>
                       {g.resolutionNote && (
-                        <div className="mt-1.5 text-[10px] p-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100">
+                        <div className="mt-1.5 text-[10px] p-1.5 rounded-lg bg-success-soft text-success border border-success-subtle">
                           <span className="font-bold">{t('adminHouseDetailResolutionLabel')}</span>
                           {g.resolutionNote}
                         </div>
@@ -747,12 +747,12 @@ export default function AdminBoardingHouseDetailPage() {
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
                           g.priority === 'urgent'
-                            ? 'bg-red-100 text-red-800 ring-1 ring-red-300'
+                            ? 'bg-danger-soft text-danger ring-1 ring-red-300'
                             : g.priority === 'high'
-                              ? 'bg-orange-100 text-orange-800'
+                              ? 'bg-accent-soft text-accent'
                               : g.priority === 'medium'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-zinc-100 text-zinc-700'
+                                ? 'bg-warning-soft text-warning'
+                                : 'bg-card-hover text-foreground/90'
                         }`}
                       >
                         {g.priority === 'urgent'
@@ -770,12 +770,12 @@ export default function AdminBoardingHouseDetailPage() {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
                           g.status === 'resolved'
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-success-soft text-success'
                             : g.status === 'in_progress'
-                              ? 'bg-blue-100 text-blue-800'
+                              ? 'bg-info-soft text-info'
                               : g.status === 'dismissed'
-                                ? 'bg-zinc-100 text-zinc-500'
-                                : 'bg-amber-100 text-amber-800'
+                                ? 'bg-card-hover text-muted'
+                                : 'bg-warning-soft text-warning'
                         }`}
                       >
                         {g.status === 'resolved'
@@ -789,7 +789,7 @@ export default function AdminBoardingHouseDetailPage() {
                     </td>
 
                     {/* Send date */}
-                    <td className="p-3.5 text-right whitespace-nowrap text-zinc-500 font-mono text-[11px]">
+                    <td className="p-3.5 text-right whitespace-nowrap text-muted font-mono text-[11px]">
                       {new Date(g.createdAt).toLocaleDateString(
                         locale === 'en' ? 'en-US' : 'vi-VN',
                         {
@@ -814,10 +814,10 @@ export default function AdminBoardingHouseDetailPage() {
           onClick={() => setSelectedOwner(null)}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleIn"
+            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleIn"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between pb-3 border-b border-zinc-100">
+            <div className="flex items-start justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-3">
                 <img
                   src={selectedOwner.avatarUrl || '/avatar-placeholder.png'}
@@ -825,11 +825,11 @@ export default function AdminBoardingHouseDetailPage() {
                   className="w-14 h-14 rounded-2xl object-cover border-2 border-orange-500 shadow-sm"
                 />
                 <div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-100 text-orange-800 inline-block mb-1">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-accent-soft text-accent inline-block mb-1">
                     {t('adminHouseDetailModalOwnerTitle')}
                   </span>
-                  <h3 className="text-base font-black text-zinc-900">{selectedOwner.name}</h3>
-                  <p className="text-[11px] text-zinc-400 font-mono">ID: {selectedOwner.id}</p>
+                  <h3 className="text-base font-black text-foreground">{selectedOwner.name}</h3>
+                  <p className="text-[11px] text-muted font-mono">ID: {selectedOwner.id}</p>
                 </div>
               </div>
               <Button
@@ -842,51 +842,51 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelFullName')}
                 </span>
-                <span className="font-bold text-zinc-900">{selectedOwner.name}</span>
+                <span className="font-bold text-foreground">{selectedOwner.name}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelPhoneNumber')}
                 </span>
-                <span className="font-bold text-zinc-900">{selectedOwner.phoneNumber}</span>
+                <span className="font-bold text-foreground">{selectedOwner.phoneNumber}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">Email</span>
-                <span className="font-bold text-zinc-900 truncate max-w-[200px]">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">Email</span>
+                <span className="font-bold text-foreground truncate max-w-[200px]">
                   {selectedOwner.email}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelCitizenId')}
                 </span>
-                <span className="font-bold font-mono text-zinc-900 flex items-center gap-1.5">
+                <span className="font-bold font-mono text-foreground flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span>{selectedOwner.idCardNumber || '079201004829'}</span>
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelAccountStatus')}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-success-soft text-success">
                   {t('adminHouseDetailStatusActive')}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelMemberSince')}
                 </span>
-                <span className="font-medium text-zinc-700">
+                <span className="font-medium text-foreground/90">
                   {selectedOwner.createdAt
                     ? new Date(selectedOwner.createdAt).toLocaleDateString('vi-VN')
                     : '12/03/2024'}
@@ -914,10 +914,10 @@ export default function AdminBoardingHouseDetailPage() {
           onClick={() => setSelectedSender(null)}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleIn"
+            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleIn"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between pb-3 border-b border-zinc-100">
+            <div className="flex items-start justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-3">
                 <img
                   src={selectedSender.avatarUrl || '/avatar-placeholder.png'}
@@ -925,11 +925,11 @@ export default function AdminBoardingHouseDetailPage() {
                   className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-500 shadow-sm"
                 />
                 <div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-800 inline-block mb-1">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-info-soft text-info inline-block mb-1">
                     {t('adminHouseDetailModalTenantTitle')}
                   </span>
-                  <h3 className="text-base font-black text-zinc-900">{selectedSender.name}</h3>
-                  <p className="text-[11px] text-zinc-400 font-mono">ID: {selectedSender.id}</p>
+                  <h3 className="text-base font-black text-foreground">{selectedSender.name}</h3>
+                  <p className="text-[11px] text-muted font-mono">ID: {selectedSender.id}</p>
                 </div>
               </div>
               <Button
@@ -942,51 +942,51 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelFullName')}
                 </span>
-                <span className="font-bold text-zinc-900">{selectedSender.name}</span>
+                <span className="font-bold text-foreground">{selectedSender.name}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelRentedRoom')}
                 </span>
-                <span className="font-black text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-lg border border-orange-200">
+                <span className="font-black text-orange-600 bg-accent-soft px-2.5 py-0.5 rounded-lg border border-accent-subtle">
                   {selectedSender.roomNumber || 'P.302'}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelPhoneNumber')}
                 </span>
-                <span className="font-bold text-zinc-900">{selectedSender.phoneNumber}</span>
+                <span className="font-bold text-foreground">{selectedSender.phoneNumber}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">Email</span>
-                <span className="font-bold text-zinc-900 truncate max-w-[200px]">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">Email</span>
+                <span className="font-bold text-foreground truncate max-w-[200px]">
                   {selectedSender.email}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelCitizenId')}
                 </span>
-                <span className="font-bold font-mono text-zinc-900 flex items-center gap-1.5">
+                <span className="font-bold font-mono text-foreground flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span>{selectedSender.idCardNumber || '079302008192'}</span>
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <span className="text-zinc-500 font-medium">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+                <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelRentalContract')}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-success-soft text-success">
                   {t('adminHouseDetailStatusValidContract')}
                 </span>
               </div>
@@ -1012,24 +1012,24 @@ export default function AdminBoardingHouseDetailPage() {
           onClick={handleCloseLockModal}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
+            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">
+                <h3 className="text-base font-black text-foreground">
                   {t('adminHouseDetailModalLockTitle')}
                 </h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {house.name}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('adminHouseDetailModalLockDesc')}
             </p>
 
@@ -1048,12 +1048,12 @@ export default function AdminBoardingHouseDetailPage() {
                 className={
                   lockReasonError
                     ? 'border-red-400 bg-red-50/20'
-                    : 'border-zinc-200 focus:border-red-500'
+                    : 'border-line focus:border-red-500'
                 }
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 type="button"
                 variant="secondary"
@@ -1085,28 +1085,28 @@ export default function AdminBoardingHouseDetailPage() {
           onClick={() => setShowUnlockModal(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
+            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 text-emerald-600">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
                 <Unlock className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">
+                <h3 className="text-base font-black text-foreground">
                   {t('adminHouseDetailModalUnlockTitle')}
                 </h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {house.name}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('adminHouseDetailModalUnlockDesc')}
             </p>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 type="button"
                 variant="secondary"
@@ -1134,15 +1134,15 @@ export default function AdminBoardingHouseDetailPage() {
       {/* Confirmation Modal for Discarding Unsaved Draft (Rule #10) */}
       {confirmDiscardModal.isOpen && (
         <div className="fixed inset-0 z-60 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <div className="bg-card rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
+            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-base font-black text-zinc-900">
+              <h4 className="text-base font-black text-foreground">
                 {t('adminHouseDetailDiscardTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+              <p className="text-xs text-muted mt-1 leading-relaxed">
                 {t('adminHouseDetailDiscardDesc')}
               </p>
             </div>

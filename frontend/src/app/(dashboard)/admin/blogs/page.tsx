@@ -476,16 +476,16 @@ export default function AdminPostModerationPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-accent-soft text-accent tracking-wide uppercase">
               <ShieldAlert className="w-3.5 h-3.5" />
               {t('adminModBadge')}
             </span>
-            <span className="text-xs font-semibold text-zinc-400">• {t('adminBlogsLiveDb')}</span>
+            <span className="text-xs font-semibold text-muted">• {t('adminBlogsLiveDb')}</span>
           </div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
+          <h1 className="text-2xl font-black text-foreground tracking-tight mt-1">
             {t('adminModTitle')}
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{t('adminModSubtitle')}</p>
+          <p className="text-xs text-muted mt-0.5">{t('adminModSubtitle')}</p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -514,8 +514,8 @@ export default function AdminPostModerationPage() {
         <div
           className={`p-4 rounded-2xl text-xs flex items-center justify-between gap-3 animate-fadeIn ${
             feedbackMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
+              ? 'bg-success-soft border border-success-subtle text-success'
+              : 'bg-danger-soft border border-danger-subtle text-danger'
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -534,7 +534,7 @@ export default function AdminPostModerationPage() {
 
       {/* Error banner */}
       {error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between gap-3 animate-fadeIn">
+        <div className="p-4 rounded-2xl bg-danger-soft border border-danger-subtle text-danger text-xs flex items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
             <span className="font-semibold">{error}</span>
@@ -551,7 +551,7 @@ export default function AdminPostModerationPage() {
 
       {/* Post count summary */}
       {!loading && (
-        <span className="text-xs font-semibold text-zinc-500 pl-2">
+        <span className="text-xs font-semibold text-muted pl-2">
           {t('adminBlogsShowingCount', { total: totalItems })}
         </span>
       )}
@@ -559,20 +559,20 @@ export default function AdminPostModerationPage() {
       {/* Main Table View with Direct Column Filters */}
       {loading ? (
         /* Loading skeleton for table */
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+        <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-hidden">
           <div className="p-6 space-y-3.5 animate-pulse">
-            <div className="h-10 bg-zinc-100 rounded-xl w-full" />
+            <div className="h-10 bg-card-hover rounded-xl w-full" />
             {[1, 2, 3, 4, 5, 6].map(idx => (
-              <div key={idx} className="h-12 bg-zinc-50 rounded-xl w-full" />
+              <div key={idx} className="h-12 bg-surface rounded-xl w-full" />
             ))}
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-x-auto">
+        <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse min-w-[950px]">
             <thead>
               {/* Row 1: Column Titles */}
-              <tr className="border-b border-zinc-200 bg-zinc-50/80 text-zinc-500 uppercase tracking-wider font-bold">
+              <tr className="border-b border-line bg-surface/80 text-muted uppercase tracking-wider font-bold">
                 <th className="p-3.5 w-1/3 min-w-[280px]">{t('adminBlogsColArticle')}</th>
                 <th className="p-3.5 min-w-[180px]">{t('adminBlogsColCategory')}</th>
                 <th className="p-3.5 min-w-[130px]">{t('adminBlogsColEngagement')}</th>
@@ -582,7 +582,7 @@ export default function AdminPostModerationPage() {
               </tr>
 
               {/* Row 2: Direct In-Table Column Filters */}
-              <tr className="border-b border-zinc-200 bg-zinc-100/60 text-zinc-700">
+              <tr className="border-b border-line bg-card-hover/60 text-foreground/90">
                 {/* 1. Filter Article / Post */}
                 <th className="p-2.5 font-normal">
                   <div className="relative">
@@ -595,8 +595,8 @@ export default function AdminPostModerationPage() {
                       }}
                       placeholder={t('adminBlogsFilterArticlePlaceholder')}
                       containerClassName="space-y-0"
-                      className="py-1.5 bg-white border-zinc-200 rounded-lg text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
-                      leftIcon={<Search className="w-3.5 h-3.5 text-zinc-400" />}
+                      className="py-1.5 bg-card border-line rounded-lg text-xs font-medium text-foreground placeholder:text-muted focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                      leftIcon={<Search className="w-3.5 h-3.5 text-muted" />}
                       rightIcon={
                         filterArticle ? (
                           <Button
@@ -624,7 +624,7 @@ export default function AdminPostModerationPage() {
                       setCurrentPage(1)
                     }}
                     containerClassName="space-y-0"
-                    className="w-full py-1.5 px-2 bg-white border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                    className="w-full py-1.5 px-2 bg-card border-line rounded-lg text-xs font-medium text-foreground/90 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
                     <option value="all">{t('adminBlogsFilterPropertyAll')}</option>
                     {availableProperties.map(propName => (
@@ -636,7 +636,7 @@ export default function AdminPostModerationPage() {
                 </th>
 
                 {/* 3. Engagement Column */}
-                <th className="p-2.5 font-normal text-center text-zinc-400 text-[11px]">—</th>
+                <th className="p-2.5 font-normal text-center text-muted text-[11px]">—</th>
 
                 {/* 4. Filter Deposit / Price */}
                 <th className="p-2.5 font-normal">
@@ -647,7 +647,7 @@ export default function AdminPostModerationPage() {
                       setCurrentPage(1)
                     }}
                     containerClassName="space-y-0"
-                    className="w-full py-1.5 px-2 bg-white border-zinc-200 rounded-lg text-xs font-medium text-zinc-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                    className="w-full py-1.5 px-2 bg-card border-line rounded-lg text-xs font-medium text-foreground/90 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
                     <option value="all">{t('adminBlogsFilterDepositAll')}</option>
                     <option value="free">{t('adminBlogsFilterDepositFree')}</option>
@@ -666,7 +666,7 @@ export default function AdminPostModerationPage() {
                       setCurrentPage(1)
                     }}
                     containerClassName="space-y-0"
-                    className="w-full py-1.5 px-2 bg-white border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
+                    className="w-full py-1.5 px-2 bg-card border-line rounded-lg text-xs font-bold text-foreground/90 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer"
                   >
                     <option value="all">{t('adminModFilterAll')}</option>
                     <option value="posted">{t('adminModFilterPosted')}</option>
@@ -694,20 +694,20 @@ export default function AdminPostModerationPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-line">
               {posts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-zinc-400">
+                  <td colSpan={6} className="p-12 text-center text-muted">
                     <div className="space-y-3">
-                      <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+                      <div className="w-12 h-12 rounded-2xl bg-card-hover text-muted flex items-center justify-center mx-auto">
                         <Newspaper className="w-6 h-6" />
                       </div>
-                      <h3 className="text-base font-bold text-zinc-800">
+                      <h3 className="text-base font-bold text-foreground">
                         {isAnyFilterActive
                            ? t('adminBlogsFilterNoMatchTitle')
                           : t('adminBlogsNoPosts')}
                       </h3>
-                      <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                      <p className="text-xs text-muted max-w-sm mx-auto">
                         {isAnyFilterActive
                           ? t('adminBlogsFilterNoMatchDesc')
                           : t('adminBlogsNoPostsDesc')}
@@ -760,13 +760,13 @@ export default function AdminPostModerationPage() {
                           <img
                             src={coverImg}
                             alt=""
-                            className="w-12 h-12 rounded-xl object-cover shrink-0 border border-zinc-200 group-hover:border-orange-500 transition-colors"
+                            className="w-12 h-12 rounded-xl object-cover shrink-0 border border-line group-hover:border-orange-500 transition-colors"
                           />
                           <div className="space-y-0.5">
-                            <span className="font-bold text-zinc-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                            <span className="font-bold text-foreground line-clamp-1 group-hover:text-orange-600 transition-colors">
                               {item.title}
                             </span>
-                            <div className="text-[11px] text-zinc-400">
+                            <div className="text-[11px] text-muted">
                               {item.poster?.username || 'Admin'} • {formattedDate}
                             </div>
                           </div>
@@ -774,8 +774,8 @@ export default function AdminPostModerationPage() {
                       </td>
 
                       <td className="p-3.5">
-                        <span className="font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                          <Building2 className="w-3 h-3 text-zinc-500" />
+                        <span className="font-semibold text-foreground/90 bg-card-hover px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                          <Building2 className="w-3 h-3 text-muted" />
                           <span>{categoryText}</span>
                         </span>
                       </td>
@@ -796,7 +796,7 @@ export default function AdminPostModerationPage() {
                       </td>
 
                       <td className="p-3.5">
-                        <div className="font-bold text-zinc-800">
+                        <div className="font-bold text-foreground">
                           {item.depositAmount
                             ? `${Number(item.depositAmount).toLocaleString('vi-VN')} ₫`
                             : '0 ₫'}
@@ -807,12 +807,12 @@ export default function AdminPostModerationPage() {
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-block ${
                             item.status === 'posted'
-                              ? 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-success-soft text-success'
                               : item.status === 'draft'
-                                ? 'bg-amber-100 text-amber-800'
+                                ? 'bg-warning-soft text-warning'
                                 : item.status === 'locked'
-                                  ? 'bg-red-100 text-red-800 ring-1 ring-red-300'
-                                  : 'bg-zinc-100 text-zinc-700'
+                                  ? 'bg-danger-soft text-danger ring-1 ring-red-300'
+                                  : 'bg-card-hover text-foreground/90'
                           }`}
                         >
                           {item.status === 'posted'
@@ -826,7 +826,7 @@ export default function AdminPostModerationPage() {
 
                         {isReported && (
                           <div>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 inline-flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning-soft text-warning inline-flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3 text-amber-600" />
                               <span>
                                 {t('adminModBadgeReported', { count: item.reportsCount })}
@@ -898,7 +898,7 @@ export default function AdminPostModerationPage() {
       )}
 
       {/* Standardized Pagination Bar (Rule #9) */}
-      <div className="bg-white px-4 py-3 rounded-2xl border border-zinc-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-zinc-600">
+      <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
         <div className="flex items-center gap-2">
           <span>{t('adminBlogsPaginationShowing')}</span>
           <NumberInput
@@ -911,7 +911,7 @@ export default function AdminPostModerationPage() {
               setCurrentPage(1)
             }}
             containerClassName="space-y-0 w-14"
-            className="w-14 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg font-bold text-zinc-900 focus:outline-none focus:border-orange-500"
+            className="w-14 px-2 py-1 text-center bg-surface border border-line rounded-lg font-bold text-foreground focus:outline-none focus:border-orange-500"
           />
           <span>{t('adminBlogsPaginationPerPage')}</span>
           <span className="text-zinc-300">|</span>
@@ -981,24 +981,24 @@ export default function AdminPostModerationPage() {
       {/* ─── MODAL 2: LOCK POST MODAL ─── */}
       {lockTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
+          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
             <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">{t('adminModLockTitle')}</h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <h3 className="text-base font-black text-foreground">{t('adminModLockTitle')}</h3>
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {lockTarget.id}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">{t('adminModLockSubtitle')}</p>
+            <p className="text-xs text-muted leading-relaxed">{t('adminModLockSubtitle')}</p>
 
             {/* Presets */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-zinc-500 block">
+              <label className="text-[11px] font-bold text-muted block">
                 {t('adminModLockPresetLabel')}
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -1036,12 +1036,12 @@ export default function AdminPostModerationPage() {
                 className={
                   lockReasonError
                     ? 'border-red-400 bg-red-50/20'
-                    : 'border-zinc-200 focus:border-red-500'
+                    : 'border-line focus:border-red-500'
                 }
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1067,24 +1067,24 @@ export default function AdminPostModerationPage() {
       {/* ─── MODAL 3: UNLOCK POST MODAL ─── */}
       {unlockTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
+          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
             <div className="flex items-center gap-3 text-emerald-600">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
                 <Unlock className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">{t('adminModUnlockTitle')}</h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <h3 className="text-base font-black text-foreground">{t('adminModUnlockTitle')}</h3>
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {unlockTarget.id}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('adminModUnlockConfirm', { title: unlockTarget.title })}
             </p>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1114,19 +1114,19 @@ export default function AdminPostModerationPage() {
           onClick={handleRequestCloseCreate}
         >
           <div
-            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8 animate-scaleIn max-h-[90vh] overflow-y-auto"
+            className="bg-card rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8 animate-scaleIn max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600">
+                <div className="w-10 h-10 rounded-2xl bg-accent-soft border border-accent-subtle flex items-center justify-center text-orange-600">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-zinc-900">
+                  <h3 className="text-base font-black text-foreground">
                     {t('adminBlogsCreateModalTitle')}
                   </h3>
-                  <p className="text-xs text-zinc-400">{t('adminBlogsCreateModalSubtitle')}</p>
+                  <p className="text-xs text-muted">{t('adminBlogsCreateModalSubtitle')}</p>
                 </div>
               </div>
               <Button
@@ -1139,7 +1139,7 @@ export default function AdminPostModerationPage() {
             </div>
 
             {createError && (
-              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+              <div className="p-3.5 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-semibold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
                 <span>{createError}</span>
               </div>
@@ -1153,7 +1153,7 @@ export default function AdminPostModerationPage() {
                 value={createTitle}
                 onChange={e => setCreateTitle(e.target.value)}
                 placeholder={t('adminBlogsFieldTitlePlaceholder')}
-                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+                className="px-3 py-2 bg-surface border border-line rounded-xl text-xs font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
               />
 
               <TextInput
@@ -1162,7 +1162,7 @@ export default function AdminPostModerationPage() {
                 value={createCoverImage}
                 onChange={e => setCreateCoverImage(e.target.value)}
                 placeholder={t('adminBlogsFieldCoverImagePlaceholder')}
-                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+                className="px-3 py-2 bg-surface border border-line rounded-xl text-xs font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
               />
 
               <TextareaInput
@@ -1172,7 +1172,7 @@ export default function AdminPostModerationPage() {
                 value={createContent}
                 onChange={e => setCreateContent(e.target.value)}
                 placeholder={t('adminBlogsFieldContentPlaceholder')}
-                className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
+                className="p-3 bg-surface border border-line rounded-xl text-xs font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1182,14 +1182,14 @@ export default function AdminPostModerationPage() {
                   step={50000}
                   value={createDepositAmount}
                   onChange={e => setCreateDepositAmount(Number(e.target.value) || 0)}
-                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+                  className="px-3 py-2 bg-surface border border-line rounded-xl text-xs font-medium text-foreground focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
                 />
 
                 <SelectInput
                   label={t('adminBlogsFieldStatus')}
                   value={createStatus}
                   onChange={e => setCreateStatus(e.target.value as any)}
-                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-bold text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
+                  className="px-3 py-2 bg-surface border border-line rounded-xl text-xs font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white transition-all"
                   options={[
                     { value: 'posted', label: t('adminBlogsStatusOptionPublished') },
                     { value: 'draft', label: t('adminBlogsStatusOptionDraft') },
@@ -1197,7 +1197,7 @@ export default function AdminPostModerationPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-line">
                 <Button
                   type="button"
                   variant="secondary"
@@ -1227,20 +1227,20 @@ export default function AdminPostModerationPage() {
       {/* ─── MODAL 6: DELETE POST MODAL ─── */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
+          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
             <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
                 <Trash2 className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-zinc-900">{t('adminBlogsDeleteTitle')}</h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">
+                <h3 className="text-base font-black text-foreground">{t('adminBlogsDeleteTitle')}</h3>
+                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
                   {deleteTarget.id}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {t('adminBlogsDeleteConfirm', { title: deleteTarget.title })}
             </p>
 
@@ -1259,12 +1259,12 @@ export default function AdminPostModerationPage() {
                 className={
                   deleteReasonError
                     ? 'border-red-400 bg-red-50/20'
-                    : 'border-zinc-200 focus:border-orange-500'
+                    : 'border-line focus:border-orange-500'
                 }
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
                 size="sm"
@@ -1290,15 +1290,15 @@ export default function AdminPostModerationPage() {
       {/* ─── RULE #10: MODAL RESET CONFIRMATION POP-UP ─── */}
       {confirmCloseModal.isOpen && (
         <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+          <div className="bg-card rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
+            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-zinc-900">
+              <h3 className="text-base font-black text-foreground">
                 {t('adminBlogsDiscardModalTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+              <p className="text-xs text-muted mt-1 leading-relaxed">
                 {t('adminBlogsDiscardModalDesc')}
               </p>
             </div>

@@ -121,7 +121,7 @@ export default function AdminDashboardPage() {
           growth: `${overview.userGrowthRate >= 0 ? '+' : ''}${overview.userGrowthRate || 0}%`,
           isPositive: (overview.userGrowthRate || 0) >= 0,
           icon: Users,
-          color: 'text-blue-600 bg-blue-50 border-blue-100',
+          color: 'text-blue-600 bg-info-soft border-info-subtle',
           link: '/admin/users',
         },
         {
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
           growth: `${overview.propertyGrowthRate >= 0 ? '+' : ''}${overview.propertyGrowthRate || 0}%`,
           isPositive: (overview.propertyGrowthRate || 0) >= 0,
           icon: Building2,
-          color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+          color: 'text-emerald-600 bg-success-soft border-success-subtle',
           link: '/admin/boarding-houses',
         },
         {
@@ -147,7 +147,7 @@ export default function AdminDashboardPage() {
           growth: `${overview.revenueGrowthRate >= 0 ? '+' : ''}${overview.revenueGrowthRate || 0}%`,
           isPositive: (overview.revenueGrowthRate || 0) >= 0,
           icon: Wallet,
-          color: 'text-orange-600 bg-orange-50 border-orange-100',
+          color: 'text-orange-600 bg-accent-soft border-accent-subtle',
           link: '/admin/analytics',
         },
         {
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
           growth: t('adminStatActionNeeded'),
           isPositive: false,
           icon: AlertTriangle,
-          color: 'text-orange-600 bg-orange-50 border-orange-100',
+          color: 'text-orange-600 bg-accent-soft border-accent-subtle',
           badge: t('adminStatUrgentBadge', { count: overview.urgentGrievancesCount || 0 }),
           link: '/admin/grievances',
         },
@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
           growth: t('adminStatNeedsReview'),
           isPositive: false,
           icon: ShieldAlert,
-          color: 'text-amber-600 bg-amber-50 border-amber-100',
+          color: 'text-amber-600 bg-warning-soft border-warning-subtle',
           badge: t('adminStatItemsBadge', { count: overview.reportedItemsCount || 0 }),
           link: '/admin/blogs',
         },
@@ -252,7 +252,7 @@ export default function AdminDashboardPage() {
 
       {/* Error Banner with Retry */}
       {error && !isLoading && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-danger-soft border border-danger-subtle text-danger">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
             <Text size="sm" weight="semibold">
@@ -276,16 +276,16 @@ export default function AdminDashboardPage() {
           {[1, 2, 3, 4, 5].map(i => (
             <div
               key={i}
-              className="bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs animate-pulse space-y-4"
+              className="bg-card rounded-2xl border border-line p-5 shadow-xs animate-pulse space-y-4"
             >
               <div className="flex items-center justify-between">
-                <div className="w-9 h-9 bg-zinc-200 rounded-xl" />
-                <div className="w-16 h-5 bg-zinc-200 rounded-full" />
+                <div className="w-9 h-9 bg-line rounded-xl" />
+                <div className="w-16 h-5 bg-line rounded-full" />
               </div>
               <div className="space-y-2">
-                <div className="w-20 h-3 bg-zinc-200 rounded" />
-                <div className="w-28 h-7 bg-zinc-200 rounded" />
-                <div className="w-full h-3 bg-zinc-100 rounded" />
+                <div className="w-20 h-3 bg-line rounded" />
+                <div className="w-28 h-7 bg-line rounded" />
+                <div className="w-full h-3 bg-card-hover rounded" />
               </div>
             </div>
           ))}
@@ -297,7 +297,7 @@ export default function AdminDashboardPage() {
             return (
               <div
                 key={item.id}
-                className="group relative bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
+                className="group relative bg-card rounded-2xl border border-line p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -310,8 +310,8 @@ export default function AdminDashboardPage() {
                       <span
                         className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
                           item.isPositive
-                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
-                            : 'text-orange-700 bg-orange-50 border-orange-200/80'
+                            ? 'text-success bg-success-soft border-success-subtle'
+                            : 'text-accent bg-accent-soft border-accent-subtle'
                         }`}
                       >
                         {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
@@ -331,12 +331,12 @@ export default function AdminDashboardPage() {
                     {item.label}
                   </Text>
 
-                  <div className="flex items-baseline gap-1 text-zinc-900 leading-none whitespace-nowrap">
+                  <div className="flex items-baseline gap-1 text-foreground leading-none whitespace-nowrap">
                     <span className="text-2xl sm:text-[26px] font-black tracking-tight">
                       {item.value}
                     </span>
                     {item.unit && (
-                      <span className="text-sm font-extrabold text-zinc-500 select-none">
+                      <span className="text-sm font-extrabold text-muted select-none">
                         {item.unit}
                       </span>
                     )}
@@ -355,13 +355,13 @@ export default function AdminDashboardPage() {
                 {item.link ? (
                   <Link
                     href={item.link}
-                    className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
+                    className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
                   >
                     <span>{t('adminStatHandleNow')}</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 ) : (
-                  <div className="mt-4 pt-3 border-t border-zinc-100/70 flex items-center justify-between text-[11px] font-medium text-zinc-400">
+                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-[11px] font-medium text-muted">
                     <span>{t('adminStatVerified')}</span>
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                   </div>
@@ -375,11 +375,11 @@ export default function AdminDashboardPage() {
       {/* Operational Highlights Section (Grievance Queue & Moderation Queue) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Panel 1: Urgent Tenant Grievances */}
-        <div className="bg-white rounded-3xl border border-zinc-200/90 p-6 shadow-xs flex flex-col justify-between">
+        <div className="bg-card rounded-3xl border border-line p-6 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-zinc-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-line">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-200/60 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
@@ -388,7 +388,7 @@ export default function AdminDashboardPage() {
                     variant="heading"
                     size="base"
                     weight="black"
-                    className="text-zinc-900"
+                    className="text-foreground"
                   >
                     {t('adminUrgentGrievancesTitle')}
                   </Text>
@@ -399,7 +399,7 @@ export default function AdminDashboardPage() {
               </div>
               <Link
                 href="/admin/grievances"
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-orange-700 hover:text-orange-800 bg-orange-50 hover:bg-orange-100 border border-orange-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-accent hover:text-orange-800 bg-accent-soft hover:bg-orange-100 border border-accent-subtle px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <span>
                   {isLoading
@@ -417,18 +417,18 @@ export default function AdminDashboardPage() {
                 {[1, 2, 3].map(i => (
                   <div
                     key={i}
-                    className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 animate-pulse space-y-2"
+                    className="p-4 rounded-2xl bg-surface border border-line animate-pulse space-y-2"
                   >
-                    <div className="h-4 bg-zinc-200 rounded w-1/3" />
-                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
-                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                    <div className="h-4 bg-line rounded w-1/3" />
+                    <div className="h-5 bg-line rounded w-3/4" />
+                    <div className="h-3 bg-line rounded w-1/2" />
                   </div>
                 ))}
               </div>
             ) : urgentGrievances.length === 0 ? (
-              <div className="p-8 text-center flex flex-col items-center justify-center bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
+              <div className="p-8 text-center flex flex-col items-center justify-center bg-surface/50 rounded-2xl border border-dashed border-line">
                 <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-2.5" />
-                <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+                <Text as="h3" size="sm" weight="bold" className="text-foreground">
                   {t('adminUrgentGrievancesEmpty')}
                 </Text>
                 <Text as="p" size="xs" color="secondary" className="mt-1 max-w-sm">
@@ -440,7 +440,7 @@ export default function AdminDashboardPage() {
                 {urgentGrievances.map(item => (
                   <div
                     key={item.id}
-                    className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                    className="p-4 rounded-2xl bg-surface/70 border border-line hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
                   >
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -459,21 +459,21 @@ export default function AdminDashboardPage() {
                               ? t('adminPriorityMedium')
                               : t('adminPriorityLow')}
                         </span>
-                        <span className="text-xs font-mono font-bold text-zinc-600">
+                        <span className="text-xs font-mono font-bold text-muted">
                           {item.id.slice(0, 8).toUpperCase()}
                         </span>
-                        <span className="text-[11px] text-zinc-400">
+                        <span className="text-[11px] text-muted">
                           • {formatDisplayDate(item.createdAt, locale)}
                         </span>
                       </div>
-                      <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
+                      <Text as="h3" size="sm" weight="bold" className="text-foreground leading-snug">
                         {item.title}
                       </Text>
-                      <p className="text-xs text-zinc-600 leading-relaxed">
-                        <span className="font-semibold text-zinc-800">{item.tenantName}</span> (
+                      <p className="text-xs text-muted leading-relaxed">
+                        <span className="font-semibold text-foreground">{item.tenantName}</span> (
                         {item.tenantPhone || t('adminNoPhone')}){' '}
-                        <span className="text-zinc-400">→</span>{' '}
-                        <span className="text-zinc-700 font-medium">
+                        <span className="text-muted">→</span>{' '}
+                        <span className="text-foreground/90 font-medium">
                           {item.boardingHouseName
                             ? `${item.boardingHouseName}${item.roomNumber ? ` (Phòng ${item.roomNumber})` : ''}`
                             : '---'}
@@ -499,11 +499,11 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Panel 2: Flagged / Reported Listings */}
-        <div className="bg-white rounded-3xl border border-zinc-200/90 p-6 shadow-xs flex flex-col justify-between">
+        <div className="bg-card rounded-3xl border border-line p-6 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-zinc-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-line">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-warning-soft text-amber-600 border border-warning-subtle flex items-center justify-center shrink-0">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
@@ -512,7 +512,7 @@ export default function AdminDashboardPage() {
                     variant="heading"
                     size="base"
                     weight="black"
-                    className="text-zinc-900"
+                    className="text-foreground"
                   >
                     {t('adminSuspiciousListingsTitle')}
                   </Text>
@@ -523,7 +523,7 @@ export default function AdminDashboardPage() {
               </div>
               <Link
                 href="/admin/blogs"
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-warning hover:text-amber-900 bg-warning-soft hover:bg-amber-100 border border-warning-subtle px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <span>
                   {isLoading
@@ -541,18 +541,18 @@ export default function AdminDashboardPage() {
                 {[1, 2, 3].map(i => (
                   <div
                     key={i}
-                    className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 animate-pulse space-y-2"
+                    className="p-4 rounded-2xl bg-surface border border-line animate-pulse space-y-2"
                   >
-                    <div className="h-4 bg-zinc-200 rounded w-1/3" />
-                    <div className="h-5 bg-zinc-200 rounded w-3/4" />
-                    <div className="h-3 bg-zinc-200 rounded w-1/2" />
+                    <div className="h-4 bg-line rounded w-1/3" />
+                    <div className="h-5 bg-line rounded w-3/4" />
+                    <div className="h-3 bg-line rounded w-1/2" />
                   </div>
                 ))}
               </div>
             ) : flaggedListings.length === 0 ? (
-              <div className="p-8 text-center flex flex-col items-center justify-center bg-zinc-50/50 rounded-2xl border border-dashed border-zinc-200">
+              <div className="p-8 text-center flex flex-col items-center justify-center bg-surface/50 rounded-2xl border border-dashed border-line">
                 <ShieldCheck className="w-10 h-10 text-emerald-500 mb-2.5" />
-                <Text as="h3" size="sm" weight="bold" className="text-zinc-900">
+                <Text as="h3" size="sm" weight="bold" className="text-foreground">
                   {t('adminSuspiciousListingsEmpty')}
                 </Text>
                 <Text as="p" size="xs" color="secondary" className="mt-1 max-w-sm">
@@ -564,27 +564,27 @@ export default function AdminDashboardPage() {
                 {flaggedListings.map(item => (
                   <div
                     key={item.id}
-                    className="p-4 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                    className="p-4 rounded-2xl bg-surface/70 border border-line hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
                   >
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200 uppercase">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle uppercase">
                           {item.status}
                         </span>
-                        <span className="text-xs font-mono font-bold text-zinc-600">
+                        <span className="text-xs font-mono font-bold text-muted">
                           {item.id.slice(0, 8).toUpperCase()}
                         </span>
-                        <span className="text-[11px] text-zinc-400">
+                        <span className="text-[11px] text-muted">
                           • {formatDisplayDate(item.createdAt, locale)}
                         </span>
                       </div>
-                      <Text as="h3" size="sm" weight="bold" className="text-zinc-900 leading-snug">
+                      <Text as="h3" size="sm" weight="bold" className="text-foreground leading-snug">
                         {item.title}
                       </Text>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                         {item.room?.boardingHouseName && (
-                          <span className="flex items-center gap-1 font-medium text-zinc-700">
-                            <Building className="w-3.5 h-3.5 text-zinc-400" />
+                          <span className="flex items-center gap-1 font-medium text-foreground/90">
+                            <Building className="w-3.5 h-3.5 text-muted" />
                             {item.room.boardingHouseName}
                             {item.room.roomNumber ? ` • P.${item.room.roomNumber}` : ''}
                           </span>
@@ -617,7 +617,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Direct Access to Admin Submodules */}
-      <div className="bg-zinc-100/80 rounded-3xl p-6 sm:p-7 border border-zinc-200/80">
+      <div className="bg-card-hover/80 rounded-3xl p-6 sm:p-7 border border-line">
         <div className="flex items-center justify-between mb-4">
           <Text
             as="h2"
@@ -636,11 +636,11 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <Link
             href="/admin/users"
-            className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Users className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
@@ -649,7 +649,7 @@ export default function AdminDashboardPage() {
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-orange-600 transition-colors"
               >
                 {t('adminModUsersTitle')}
               </Text>
@@ -661,11 +661,11 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/boarding-houses"
-            className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
@@ -674,7 +674,7 @@ export default function AdminDashboardPage() {
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-orange-600 transition-colors"
               >
                 {t('adminModHousesTitle')}
               </Text>
@@ -686,11 +686,11 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/grievances"
-            className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
@@ -699,7 +699,7 @@ export default function AdminDashboardPage() {
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-orange-600 transition-colors"
               >
                 {t('adminModGrievancesTitle')}
               </Text>
@@ -711,11 +711,11 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/notifications"
-            className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Megaphone className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
@@ -724,7 +724,7 @@ export default function AdminDashboardPage() {
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-orange-600 transition-colors"
               >
                 {t('adminModBroadcastTitle')}
               </Text>
@@ -736,11 +736,11 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/blogs"
-            className="group p-5 rounded-2xl bg-white border border-zinc-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Newspaper className="w-5 h-5" />
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
@@ -749,7 +749,7 @@ export default function AdminDashboardPage() {
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-zinc-900 group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-orange-600 transition-colors"
               >
                 {t('adminModBlogsTitle')}
               </Text>
