@@ -32,6 +32,17 @@ import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
 import { Button, Text, Modal, TextInput, NumberInput } from '@/components/ui'
 
+interface UserMenuItem {
+  key: string
+  label: string
+  href?: string
+  onClick?: () => void
+  icon: React.ReactNode
+  className?: string
+  dividerAbove?: boolean
+  isDanger?: boolean
+}
+
 export function PublicHeader() {
   const pathname = usePathname()
   const router = useRouter()
@@ -169,11 +180,90 @@ export function PublicHeader() {
     { href: '/contact', label: tNav('contact') },
   ]
 
+  const userMenuItems: UserMenuItem[] = user
+    ? [
+        ...(user.role === 'employee'
+          ? [
+              {
+                key: 'staff-portal',
+                label: tNav('staffPortalLink'),
+                href: '/staff',
+                icon: <Clock className="w-4 h-4 text-[#2AC1BC]" />,
+                className: 'text-[#2AC1BC] hover:bg-[#2AC1BC]/10',
+              },
+            ]
+          : []),
+        {
+          key: 'profile',
+          label: tNav('myProfile'),
+          href: '/profile',
+          icon: <UserCheck className="w-4 h-4 text-[#2AC1BC]" />,
+        },
+        {
+          key: 'send-application',
+          label: tNav('sendApplication'),
+          href: '/send-application',
+          icon: <FileText className="w-4 h-4 text-amber-500" />,
+        },
+        {
+          key: 'rented-rooms',
+          label:
+            user.role === 'landlord'
+              ? tNav('manageHouses')
+              : user.role === 'employee'
+                ? tNav('myShifts')
+                : tNav('myRentedRooms'),
+          href:
+            user.role === 'landlord'
+              ? '/landlord/rooms'
+              : user.role === 'employee'
+                ? '/staff'
+                : '/tenant',
+          icon: <Building className="w-4 h-4 text-blue-500" />,
+        },
+        ...(FEATURE_FLAGS.ENABLE_BHRP
+          ? [
+              {
+                key: 'saved-rooms',
+                label: tNav('mySavedRooms'),
+                href: '/saved-posts',
+                icon: <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />,
+              },
+              {
+                key: 'post-listing',
+                label: tNav('postListing'),
+                href: '/posts/create',
+                icon: <PlusCircle className="w-4 h-4 text-[#FF6B35]" />,
+                dividerAbove: true,
+              },
+              {
+                key: 'post-analytics',
+                label: tNav('postAnalytics'),
+                href: '/posts/analytics',
+                icon: <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />,
+              },
+            ]
+          : []),
+        {
+          key: 'logout',
+          label: tNav('logout'),
+          onClick: () => {
+            setIsUserMenuOpen(false)
+            setIsMobileMenuOpen(false)
+            logout()
+          },
+          icon: <LogOut className="w-4 h-4 text-rose-500" />,
+          isDanger: true,
+          dividerAbove: true,
+        },
+      ]
+    : []
+
   return (
     <>
       {/* Public Header */}
       <header className="sticky top-0 z-40 w-full border-b border-line bg-card/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 md:h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Logo size="md" />
 
@@ -257,130 +347,53 @@ export function PublicHeader() {
                           {user.name}
                         </Text>
                         <Text as="p" size="3xs" color="subtle" weight="medium" className="truncate">
-                          {user.email}
+                          {user.phone}
                         </Text>
                       </div>
 
-                      {/* Staff Portal Link */}
-                      {user.role === 'employee' && (
-                        <Link
-                          href="/staff"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-xl transition-all"
-                        >
-                          <Clock className="w-4 h-4 text-[#2AC1BC]" />
-                          <Text as="span" size="xs" weight="bold" color="inherit">
-                            {tNav('staffPortalLink')}
-                          </Text>
-                        </Link>
-                      )}
-
-                      {/* 1. Profile */}
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
-                      >
-                        <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {tNav('myProfile')}
-                        </Text>
-                      </Link>
-
-                      {/* Send Application */}
-                      <Link
-                        href="/send-application"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
-                      >
-                        <FileText className="w-4 h-4 text-amber-500" />
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {tNav('sendApplication')}
-                        </Text>
-                      </Link>
-
-                      {/* 2. Rented Rooms / Manage Houses */}
-                      <Link
-                        href={
-                          user.role === 'landlord'
-                            ? '/landlord/rooms'
-                            : user.role === 'employee'
-                              ? '/staff'
-                              : '/tenant'
-                        }
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
-                      >
-                        <Building className="w-4 h-4 text-blue-500" />
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {user.role === 'landlord'
-                            ? tNav('manageHouses')
-                            : user.role === 'employee'
-                              ? tNav('myShifts')
-                              : tNav('myRentedRooms')}
-                        </Text>
-                      </Link>
-
-                      {/* 3. Saved Rooms (BHRP only) */}
-                      {FEATURE_FLAGS.ENABLE_BHRP && (
-                        <Link
-                          href="/saved-posts"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
-                        >
-                          <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                          <Text as="span" size="xs" weight="bold" color="inherit">
-                            {tNav('mySavedRooms')}
-                          </Text>
-                        </Link>
-                      )}
-
-                      {/* 4. Create Post & Analytics (BHRP only) */}
-                      {FEATURE_FLAGS.ENABLE_BHRP && (
-                        <div className="border-t border-line pt-1">
-                          <Link
-                            href="/posts/create"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
-                          >
-                            <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                            <Text as="span" size="xs" weight="bold" color="inherit">
-                              {tNav('postListing')}
-                            </Text>
-                          </Link>
-
-                          <Link
-                            href="/posts/analytics"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-foreground/90 hover:text-foreground hover:bg-card-hover rounded-xl transition-all"
-                          >
-                            <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                            <Text as="span" size="xs" weight="bold" color="inherit">
-                              {tNav('postAnalytics')}
-                            </Text>
-                          </Link>
-                        </div>
-                      )}
-
-                      <div className="border-t border-line pt-1">
-                        {/* 6. Logout */}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="xs"
-                          fullWidth
-                          onClick={() => {
-                            setIsUserMenuOpen(false)
-                            logout()
-                          }}
-                          leftIcon={<LogOut className="w-4 h-4 text-rose-500" />}
-                          className="justify-start px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-xl h-auto"
-                        >
-                          <Text as="span" size="xs" weight="bold" color="danger">
-                            {tNav('logout')}
-                          </Text>
-                        </Button>
-                      </div>
+                      {userMenuItems.map(item => (
+                        <React.Fragment key={item.key}>
+                          {item.dividerAbove && <div className="border-t border-line my-1" />}
+                          {item.href ? (
+                            <Link
+                              href={item.href}
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all ${
+                                item.className ||
+                                'text-foreground/90 hover:text-foreground hover:bg-card-hover'
+                              }`}
+                            >
+                              {item.icon}
+                              <Text as="span" size="xs" weight="bold" color="inherit">
+                                {item.label}
+                              </Text>
+                            </Link>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              fullWidth
+                              onClick={item.onClick}
+                              leftIcon={item.icon}
+                              className={`justify-start px-3 py-2 rounded-xl h-auto ${
+                                item.isDanger
+                                  ? 'text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20'
+                                  : item.className || ''
+                              }`}
+                            >
+                              <Text
+                                as="span"
+                                size="xs"
+                                weight="bold"
+                                color={item.isDanger ? 'danger' : 'inherit'}
+                              >
+                                {item.label}
+                              </Text>
+                            </Button>
+                          )}
+                        </React.Fragment>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -479,122 +492,52 @@ export function PublicHeader() {
 
                   {/* Inner Profile Links for Mobile/Tablet */}
                   <div className="bg-surface rounded-2xl p-2 border border-line space-y-1">
-                    {/* 1. Profile */}
-                    <Link
-                      href="/profile"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <UserCheck className="w-4 h-4 text-[#2AC1BC]" />
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {tNav('myProfile')}
-                        </Text>
-                      </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                    </Link>
-
-                    {/* Send Application */}
-                    <Link
-                      href="/send-application"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <FileText className="w-4 h-4 text-amber-500" />
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {tNav('sendApplication')}
-                        </Text>
-                      </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                    </Link>
-
-                    {/* 2. Rented Rooms / Manage Houses */}
-                    <Link
-                      href={user.role === 'landlord' ? '/landlord/rooms' : '/tenant'}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Building className="w-4 h-4 text-blue-500" />
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {user.role === 'landlord'
-                            ? tNav('manageHouses')
-                            : user.role === 'employee'
-                              ? tNav('myShifts')
-                              : tNav('myRentedRooms')}
-                        </Text>
-                      </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                    </Link>
-
-                    {/* 3. Saved Rooms (BHRP only) */}
-                    {FEATURE_FLAGS.ENABLE_BHRP && (
-                      <Link
-                        href="/saved-posts"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />
-                          <Text as="span" size="xs" weight="bold" color="inherit">
-                            {tNav('mySavedRooms')}
-                          </Text>
-                        </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                      </Link>
-                    )}
-
-                    {/* 4. Create Post & Analytics (BHRP only) */}
-                    {FEATURE_FLAGS.ENABLE_BHRP && (
-                      <>
-                        <Link
-                          href="/posts/create"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <PlusCircle className="w-4 h-4 text-[#FF6B35]" />
-                            <Text as="span" size="xs" weight="bold" color="inherit">
-                              {tNav('postListing')}
+                    {userMenuItems.map(item => (
+                      <React.Fragment key={`mobile-${item.key}`}>
+                        {item.dividerAbove && <div className="border-t border-line my-1" />}
+                        {item.href ? (
+                          <Link
+                            href={item.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {item.icon}
+                              <Text as="span" size="xs" weight="bold" color="inherit">
+                                {item.label}
+                              </Text>
+                            </div>
+                            <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
+                          </Link>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            fullWidth
+                            onClick={() => {
+                              setIsMobileMenuOpen(false)
+                              if (item.onClick) item.onClick()
+                            }}
+                            leftIcon={item.icon}
+                            className={`justify-start p-2.5 rounded-xl h-auto ${
+                              item.isDanger
+                                ? 'text-rose-600 hover:bg-rose-100/50'
+                                : item.className || ''
+                            }`}
+                          >
+                            <Text
+                              as="span"
+                              size="xs"
+                              weight="bold"
+                              color={item.isDanger ? 'danger' : 'inherit'}
+                            >
+                              {item.label}
                             </Text>
-                          </div>
-                          <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                        </Link>
-
-                        <Link
-                          href="/posts/analytics"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold text-foreground/90 hover:bg-card-hover transition-all"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />
-                            <Text as="span" size="xs" weight="bold" color="inherit">
-                              {tNav('postAnalytics')}
-                            </Text>
-                          </div>
-                          <ArrowRight className="w-3.5 h-3.5 text-zinc-300" />
-                        </Link>
-                      </>
-                    )}
-
-                    {/* 6. Logout */}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      fullWidth
-                      onClick={() => {
-                        setIsMobileMenuOpen(false)
-                        logout()
-                      }}
-                      leftIcon={<LogOut className="w-4 h-4 text-rose-500" />}
-                      className="justify-start p-2.5 rounded-xl text-rose-600 hover:bg-rose-100/50 h-auto"
-                    >
-                      <Text as="span" size="xs" weight="bold" color="danger">
-                        {tNav('logout')}
-                      </Text>
-                    </Button>
+                          </Button>
+                        )}
+                      </React.Fragment>
+                    ))}
                   </div>
                 </div>
               ) : (
