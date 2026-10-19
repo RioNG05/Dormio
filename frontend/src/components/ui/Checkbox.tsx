@@ -133,7 +133,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             variant === 'card' &&
               cn(
                 'p-3.5 rounded-2xl border transition-all duration-200',
-                'border-zinc-200 dark:border-line bg-white dark:bg-card hover:border-[#2AC1BC]/60 hover:bg-zinc-50/50 dark:hover:bg-card-hover',
+                'border-zinc-200 dark:border-line bg-card hover:border-[#2AC1BC]/60 hover:bg-zinc-50/50 dark:hover:bg-card-hover',
                 isChecked && 'border-[#2AC1BC] bg-[#2AC1BC]/5 dark:bg-[#2AC1BC]/15 shadow-xs',
                 hasError && 'border-rose-300 dark:border-rose-500/60 bg-rose-50/20',
               ),
@@ -164,7 +164,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 'flex items-center justify-center transition-all duration-200 border',
                 sizeConfig.box,
                 // Unchecked baseline
-                'border-zinc-300 dark:border-line bg-white dark:bg-input group-hover:border-[#2AC1BC]',
+                'border-zinc-300 dark:border-line bg-input group-hover:border-[#2AC1BC]',
                 // Focus styling
                 'peer-focus-visible:ring-2 peer-focus-visible:ring-[#2AC1BC]/40 peer-focus-visible:ring-offset-1',
                 // Checked or Indeterminate styling

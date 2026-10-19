@@ -843,10 +843,10 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               disabled
                 ? 'bg-zinc-100 dark:bg-surface text-zinc-400 dark:text-slate-500 border-zinc-200 dark:border-line cursor-not-allowed shadow-none'
                 : error
-                  ? 'bg-white dark:bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
+                  ? 'bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
                   : isOpen
-                    ? 'bg-white dark:bg-input border-[#2AC1BC] ring-3 ring-[#2AC1BC]/20 text-zinc-900 dark:text-foreground shadow-sm'
-                    : 'bg-white dark:bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
+                    ? 'bg-input border-[#2AC1BC] ring-3 ring-[#2AC1BC]/20 text-zinc-900 dark:text-foreground shadow-sm'
+                    : 'bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
               className,
             )}
           />
@@ -885,7 +885,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               onClick={() => setIsOpen(false)}
             >
               <div
-                className="w-full max-w-sm bg-white dark:bg-card rounded-t-3xl p-4 shadow-2xl border-t border-zinc-200 dark:border-line animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-sm bg-card rounded-t-3xl p-4 shadow-2xl border-t border-zinc-200 dark:border-line animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
               >
                 {/* Mobile Header Handle & Title */}

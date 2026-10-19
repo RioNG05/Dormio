@@ -43,7 +43,7 @@ export interface FormProps extends Omit<React.FormHTMLAttributes<HTMLFormElement
 
 const formVariantClasses: Record<NonNullable<FormProps['variant']>, string> = {
   plain: 'space-y-5 w-full',
-  card: 'bg-white dark:bg-card rounded-3xl p-5 sm:p-8 border border-zinc-200/80 dark:border-line shadow-xs space-y-6 w-full',
+  card: 'bg-card rounded-3xl p-5 sm:p-8 border border-zinc-200/80 dark:border-line shadow-xs space-y-6 w-full',
   modal: 'space-y-5 w-full',
   compact: 'space-y-3.5 w-full',
 }

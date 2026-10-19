@@ -117,7 +117,7 @@ export function ModalHeader({
     return (
       <div
         className={cn(
-          'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-line shrink-0 bg-white dark:bg-card',
+          'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-line shrink-0 bg-card',
           className,
         )}
       >
@@ -142,7 +142,7 @@ export function ModalHeader({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-line shrink-0 bg-white dark:bg-card',
+        'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-line shrink-0 bg-card',
         className,
       )}
     >
@@ -297,7 +297,7 @@ function ModalRoot({
       aria-modal="true"
       onClick={e => e.stopPropagation()}
       className={cn(
-        'bg-white dark:bg-card rounded-2xl w-full shadow-2xl overflow-hidden border border-zinc-200/80 dark:border-line transition-all duration-200 ease-out max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col',
+        'bg-card rounded-2xl w-full shadow-2xl overflow-hidden border border-zinc-200/80 dark:border-line transition-all duration-200 ease-out max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col',
         sizeClasses[size],
         isVisible
           ? 'opacity-100 scale-100 translate-y-0'
@@ -308,7 +308,7 @@ function ModalRoot({
       {header ? (
         <div
           className={cn(
-            'p-4 sm:p-5 border-b border-zinc-100 dark:border-line flex items-center justify-between bg-white dark:bg-card shrink-0 z-10',
+            'p-4 sm:p-5 border-b border-zinc-100 dark:border-line flex items-center justify-between bg-card shrink-0 z-10',
             headerClassName,
           )}
         >

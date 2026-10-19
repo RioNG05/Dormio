@@ -37,23 +37,23 @@ export default function UnauthorizedPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4 py-12">
       {/* Card */}
-      <div className="max-w-md w-full text-center bg-white rounded-2xl shadow-sm border border-zinc-100 px-8 py-10 space-y-6">
+      <div className="max-w-md w-full text-center bg-card rounded-2xl shadow-sm border border-line px-8 py-10 space-y-6">
         {/* Badge */}
         <Text
           as="div"
           variant="badge"
           size="2xs"
           weight="black"
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-500 tracking-widest"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-danger-soft border border-danger-subtle text-red-500 tracking-widest"
         >
           <ShieldOff className="w-3.5 h-3.5" />
           {t('unauthorizedTagCode')}
         </Text>
 
         {/* Icon */}
-        <div className="mx-auto w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shadow-sm">
+        <div className="mx-auto w-20 h-20 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shadow-sm">
           <ShieldOff className="w-10 h-10 text-red-400" strokeWidth={1.5} />
         </div>
 
@@ -73,7 +73,7 @@ export default function UnauthorizedPage() {
         </Text>
 
         {/* Divider */}
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-card-hover" />
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
@@ -98,7 +98,7 @@ export default function UnauthorizedPage() {
                 size="md"
                 fullWidth
                 leftIcon={<Home className="w-4 h-4" strokeWidth={2} />}
-                className="font-semibold text-sm text-zinc-700"
+                className="font-semibold text-sm text-foreground/90"
               >
                 {t('unauthorizedBtnHome')}
               </Button>
@@ -113,7 +113,7 @@ export default function UnauthorizedPage() {
               size="md"
               fullWidth
               leftIcon={<LogIn className="w-4 h-4" />}
-              className="font-semibold text-sm text-zinc-700"
+              className="font-semibold text-sm text-foreground/90"
             >
               {t('unauthorizedBtnLogin')}
             </Button>
@@ -127,7 +127,7 @@ export default function UnauthorizedPage() {
             fullWidth
             onClick={handleSwitchAccount}
             leftIcon={<LogOut className="w-4 h-4" />}
-            className="bg-red-50 border border-red-100 text-red-500 font-semibold text-sm hover:bg-red-100 hover:text-red-600"
+            className="bg-danger-soft border border-danger-subtle text-red-500 font-semibold text-sm hover:bg-red-100 hover:text-red-600"
           >
             {t('unauthorizedBtnSwitchAcc')}
           </Button>
