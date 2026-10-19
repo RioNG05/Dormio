@@ -108,45 +108,45 @@ export default function HomePage() {
   const processSteps =
     processTab === 'tenant' && FEATURE_FLAGS.ENABLE_BHRP
       ? [
-          {
-            num: '01',
-            title: t('guestHomeTenantStep1Title'),
-            desc: t('guestHomeTenantStep1Desc'),
-            accent: 'brand' as const,
-          },
-          {
-            num: '02',
-            title: t('guestHomeTenantStep2Title'),
-            desc: t('guestHomeTenantStep2Desc'),
-            accent: 'orange' as const,
-          },
-          {
-            num: '03',
-            title: t('guestHomeTenantStep3Title'),
-            desc: t('guestHomeTenantStep3Desc'),
-            accent: 'brand' as const,
-          },
-        ]
+        {
+          num: '01',
+          title: t('guestHomeTenantStep1Title'),
+          desc: t('guestHomeTenantStep1Desc'),
+          accent: 'brand' as const,
+        },
+        {
+          num: '02',
+          title: t('guestHomeTenantStep2Title'),
+          desc: t('guestHomeTenantStep2Desc'),
+          accent: 'orange' as const,
+        },
+        {
+          num: '03',
+          title: t('guestHomeTenantStep3Title'),
+          desc: t('guestHomeTenantStep3Desc'),
+          accent: 'brand' as const,
+        },
+      ]
       : [
-          {
-            num: '01',
-            title: t('guestHomeLandlordStep1Title'),
-            desc: t('guestHomeLandlordStep1Desc'),
-            accent: 'brand' as const,
-          },
-          {
-            num: '02',
-            title: t('guestHomeLandlordStep2Title'),
-            desc: t('guestHomeLandlordStep2Desc'),
-            accent: 'orange' as const,
-          },
-          {
-            num: '03',
-            title: t('guestHomeLandlordStep3Title'),
-            desc: t('guestHomeLandlordStep3Desc'),
-            accent: 'brand' as const,
-          },
-        ]
+        {
+          num: '01',
+          title: t('guestHomeLandlordStep1Title'),
+          desc: t('guestHomeLandlordStep1Desc'),
+          accent: 'brand' as const,
+        },
+        {
+          num: '02',
+          title: t('guestHomeLandlordStep2Title'),
+          desc: t('guestHomeLandlordStep2Desc'),
+          accent: 'orange' as const,
+        },
+        {
+          num: '03',
+          title: t('guestHomeLandlordStep3Title'),
+          desc: t('guestHomeLandlordStep3Desc'),
+          accent: 'brand' as const,
+        },
+      ]
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -176,34 +176,33 @@ export default function HomePage() {
           </div>
 
           {/* Headline with Single Continuous Gradient from Teal to Orange on 'dễ dàng, tiện lợi' */}
-          <Text
-            as="h1"
-            variant="heading"
-            size="3xl"
-            weight="black"
-            color="white"
-            className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md"
-          >
-            <Text as="span" color="inherit" className="inline-block whitespace-nowrap">
+          <div>
+            <Text
+              as="h1"
+              variant="heading"
+              weight="black"
+              color="white" className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md inline-block whitespace-nowrap">
               {t('guestHomeTitleLine1')}
             </Text>{' '}
             <br />
             <Text
-              as="span"
-              color="inherit"
-              className="bg-gradient-to-r from-[#2AC1BC] via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap"
+              as="h1"
+              variant="heading"
+              weight="black"
+              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap"
             >
               {t('guestHomeTitleLine2')}
             </Text>{' '}
             <br />
             <Text
-              as="span"
-              color="inherit"
-              className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap"
+              as="h1"
+              variant="heading"
+              weight="black"
+              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap"
             >
               {t('guestHomeTitleLine3')}
             </Text>
-          </Text>
+          </div>
 
           {/* Sub-headline */}
           <Text
@@ -411,11 +410,10 @@ export default function HomePage() {
                 variant={processTab === 'tenant' ? 'primary' : 'ghost'}
                 rounded="full"
                 onClick={() => setProcessTab('tenant')}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${
-                  processTab === 'tenant'
-                    ? 'shadow-md shadow-[#2AC1BC]/25'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'tenant'
+                  ? 'shadow-md shadow-[#2AC1BC]/25'
+                  : 'text-zinc-500 hover:text-zinc-900'
+                  }`}
               >
                 {t('guestHomeForTenant')}
               </Button>
@@ -423,11 +421,10 @@ export default function HomePage() {
                 variant={processTab === 'landlord' ? 'primary' : 'ghost'}
                 rounded="full"
                 onClick={() => setProcessTab('landlord')}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${
-                  processTab === 'landlord'
-                    ? 'shadow-md shadow-[#2AC1BC]/25'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'landlord'
+                  ? 'shadow-md shadow-[#2AC1BC]/25'
+                  : 'text-zinc-500 hover:text-zinc-900'
+                  }`}
               >
                 {t('guestHomeForLandlord')}
               </Button>
@@ -441,20 +438,18 @@ export default function HomePage() {
             {processSteps.map(step => (
               <div
                 key={step.num}
-                className={`bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${
-                  step.accent === 'orange'
-                    ? 'hover:border-[#FF6B35]/30'
-                    : 'hover:border-[#2AC1BC]/30'
-                }`}
+                className={`bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${step.accent === 'orange'
+                  ? 'hover:border-[#FF6B35]/30'
+                  : 'hover:border-[#2AC1BC]/30'
+                  }`}
               >
                 <Text
                   as="div"
                   size="sm"
                   weight="black"
                   color={step.accent}
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    step.accent === 'orange' ? 'bg-[#FF6B35]/10' : 'bg-[#2AC1BC]/10'
-                  }`}
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center ${step.accent === 'orange' ? 'bg-[#FF6B35]/10' : 'bg-[#2AC1BC]/10'
+                    }`}
                 >
                   {step.num}
                 </Text>
@@ -657,16 +652,14 @@ export default function HomePage() {
                 return (
                   <div
                     key={idx}
-                    className={`group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${
-                      isOrange ? 'hover:border-[#FF6B35]/40' : 'hover:border-[#2AC1BC]/40'
-                    }`}
+                    className={`group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${isOrange ? 'hover:border-[#FF6B35]/40' : 'hover:border-[#2AC1BC]/40'
+                      }`}
                   >
                     <div
-                      className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${
-                        isOrange
-                          ? 'bg-[#FF6B35]/10 text-[#FF6B35]'
-                          : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
-                      }`}
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${isOrange
+                        ? 'bg-[#FF6B35]/10 text-[#FF6B35]'
+                        : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
+                        }`}
                     >
                       <Icon className="w-7 h-7" />
                     </div>
@@ -676,11 +669,10 @@ export default function HomePage() {
                         variant="heading"
                         size="xl"
                         weight="extrabold"
-                        className={`transition-colors ${
-                          isOrange
-                            ? 'group-hover:text-[#FF6B35]'
-                            : 'group-hover:text-[#2AC1BC]'
-                        }`}
+                        className={`transition-colors ${isOrange
+                          ? 'group-hover:text-[#FF6B35]'
+                          : 'group-hover:text-[#2AC1BC]'
+                          }`}
                       >
                         {feature.title}
                       </Text>
