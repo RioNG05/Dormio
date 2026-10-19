@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
@@ -58,6 +58,51 @@ function UniversalProfilePage() {
   const isLandlord = user?.role === 'landlord'
   const isAdmin = user?.role === 'admin'
   const isTenant = !isLandlord && !isAdmin
+
+  interface ProfileTabItem {
+    key: TabKey
+    labelLine1: string
+    labelLine2?: string
+    icon: React.ReactNode
+  }
+
+  const navTabs: ProfileTabItem[] = useMemo(
+    () => [
+      {
+        key: 'info',
+        labelLine1: t('guestProfileTabInfo1'),
+        labelLine2: t('guestProfileTabInfo2'),
+        icon: <UserCheck className="w-4 h-4 shrink-0" />,
+      },
+      {
+        key: 'role_data',
+        labelLine1: isLandlord
+          ? t('guestProfileTabLandlordRole1')
+          : t('guestProfileTabTenantRole1'),
+        labelLine2: isLandlord
+          ? t('guestProfileTabLandlordRole2')
+          : t('guestProfileTabTenantRole2'),
+        icon: isLandlord ? (
+          <Building2 className="w-4 h-4 shrink-0" />
+        ) : (
+          <Building className="w-4 h-4 shrink-0" />
+        ),
+      },
+      {
+        key: 'bank',
+        labelLine1: t('guestProfileTabBank1'),
+        labelLine2: t('guestProfileTabBank2'),
+        icon: <CreditCard className="w-4 h-4 shrink-0" />,
+      },
+      {
+        key: 'security',
+        labelLine1: t('guestProfileTabSecurity1'),
+        labelLine2: t('guestProfileTabSecurity2'),
+        icon: <Lock className="w-4 h-4 shrink-0" />,
+      },
+    ],
+    [t, isLandlord],
+  )
 
   const fullName = user?.name || t('guestProfileDefaultFullName')
   const phone = user?.phone || '0987.654.321'
@@ -328,100 +373,28 @@ function UniversalProfilePage() {
         {/* 100% Mobile & Desktop Responsive Tab Navigation Bar */}
         <div className="w-full border-b border-line pb-3">
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-stretch sm:items-center gap-2 w-full">
-            {/* Tab 1 */}
-            <Button
-              type="button"
-              variant={activeTab === 'info' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('info')}
-              leftIcon={<UserCheck className="w-4 h-4 shrink-0" />}
-              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
-            >
-              <Text as="span" color="inherit">
-                <Text as="span" color="inherit" className="block sm:inline">
-                  {t('guestProfileTabInfo1')}
-                </Text>
-                <Text as="span" color="inherit" className="block sm:inline">
-                  {t('guestProfileTabInfo2')}
-                </Text>
-              </Text>
-            </Button>
-
-            {/* Tab 2 */}
-            <Button
-              type="button"
-              variant={activeTab === 'role_data' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('role_data')}
-              leftIcon={
-                isLandlord ? (
-                  <Building2 className="w-4 h-4 shrink-0" />
-                ) : (
-                  <Building className="w-4 h-4 shrink-0" />
-                )
-              }
-              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
-            >
-              <Text as="span" color="inherit">
-                {isLandlord ? (
-                  <>
+            {navTabs.map(tab => (
+              <Button
+                key={tab.key}
+                type="button"
+                variant={activeTab === tab.key ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => setActiveTab(tab.key)}
+                leftIcon={tab.icon}
+                className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
+              >
+                <Text as="span" color="inherit">
+                  <Text as="span" color="inherit" className="block sm:inline">
+                    {tab.labelLine1}
+                  </Text>
+                  {tab.labelLine2 && (
                     <Text as="span" color="inherit" className="block sm:inline">
-                      {t('guestProfileTabLandlordRole1')}
+                      {tab.labelLine2}
                     </Text>
-                    <Text as="span" color="inherit" className="block sm:inline">
-                      {t('guestProfileTabLandlordRole2')}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text as="span" color="inherit" className="block sm:inline">
-                      {t('guestProfileTabTenantRole1')}
-                    </Text>
-                    <Text as="span" color="inherit" className="block sm:inline">
-                      {t('guestProfileTabTenantRole2')}
-                    </Text>
-                  </>
-                )}
-              </Text>
-            </Button>
-
-            {/* Tab 3 */}
-            <Button
-              type="button"
-              variant={activeTab === 'bank' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('bank')}
-              leftIcon={<CreditCard className="w-4 h-4 shrink-0" />}
-              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
-            >
-              <Text as="span" color="inherit">
-                <Text as="span" color="inherit" className="block sm:inline">
-                  {t('guestProfileTabBank1')}
+                  )}
                 </Text>
-                <Text as="span" color="inherit" className="block sm:inline">
-                  {t('guestProfileTabBank2')}
-                </Text>
-              </Text>
-            </Button>
-
-            {/* Tab 4 */}
-            <Button
-              type="button"
-              variant={activeTab === 'security' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('security')}
-              leftIcon={<Lock className="w-4 h-4 shrink-0" />}
-              className="w-full sm:w-auto rounded-2xl text-[11px] sm:text-xs justify-center sm:justify-start text-center sm:text-left leading-tight"
-            >
-              <Text as="span" color="inherit">
-                <Text as="span" color="inherit" className="block sm:inline">
-                  {t('guestProfileTabSecurity1')}
-                </Text>
-                <Text as="span" color="inherit" className="block sm:inline">
-                  {t('guestProfileTabSecurity2')}
-                </Text>
-              </Text>
-            </Button>
+              </Button>
+            ))}
           </div>
         </div>
 
