@@ -39,7 +39,7 @@ import {
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
 import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
-import { LandlordPageHeader } from '@/components/landlord'
+import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
   const year = date.getFullYear()
@@ -318,7 +318,7 @@ export default function AttendancePage() {
     }
   }
 
-  // ─── Status Badge Styler ───────────────────────────────────────────────
+  // ─── Status Badge Styler ───────────────────────────────────────────
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'on_time':
@@ -416,6 +416,84 @@ export default function AttendancePage() {
     showToast('success', t('landlordAttendanceExportSuccess'))
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordAttendanceStatTotal'),
+        value: summary.totalShifts,
+        icon: <Clock className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[130px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'onTime',
+        label: t('landlordAttendanceStatOnTime'),
+        value: summary.onTimeCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'late',
+        label: t('landlordAttendanceStatLate'),
+        value: summary.lateCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[130px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'absent',
+        label: isEn ? 'Absent' : 'Vắng mặt',
+        value: summary.absentCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[130px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'notYet',
+        label: isEn ? 'Upcoming' : 'Chưa tới giờ',
+        value: summary.notYetCount,
+        icon: <HelpCircle className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[130px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'rate',
+        label: isEn ? 'Diligence' : 'Chuyên cần',
+        value: `${summary.attendanceRate}%`,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 lg:w-[130px]',
+        labelClassName: 'text-emerald-400',
+        valueClassName: 'text-emerald-400 text-base sm:text-lg leading-none mt-1',
+      },
+    ],
+    [t, isEn, summary],
+  )
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {/* Toast Feedback */}
@@ -453,77 +531,11 @@ export default function AttendancePage() {
         }
       />
 
-      {/* ─── Metric Overview Cards ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-muted mb-1">
-            {t('landlordAttendanceStatTotal')}
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-foreground">{summary.totalShifts}</div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {isEn ? 'Within filter' : 'Trong kỳ lọc'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-emerald-600 mb-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>{t('landlordAttendanceStatOnTime')}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600">
-            {summary.onTimeCount}
-          </div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {isEn ? 'On-time check-in' : 'Check-in chuẩn'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-amber-600 mb-1 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>{t('landlordAttendanceStatLate')}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-amber-600">{summary.lateCount}</div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {isEn ? 'Over scheduled time' : 'Quá giờ quy định'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-rose-600 mb-1 flex items-center gap-1">
-            <XCircle className="w-3 h-3" />
-            <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-rose-600">{summary.absentCount}</div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {isEn ? 'No check-in' : 'Không check-in'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-muted mb-1 flex items-center gap-1">
-            <HelpCircle className="w-3 h-3" />
-            <span>{isEn ? 'Upcoming' : 'Chưa tới giờ'}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-foreground/90">{summary.notYetCount}</div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {isEn ? 'Upcoming shift' : 'Ca sắp tới'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-[#2AC1BC]/30 rounded-2xl shadow-sm bg-[#2AC1BC]/[0.02]">
-          <div className="text-[11px] font-bold uppercase text-[#2AC1BC] mb-1 flex items-center gap-1">
-            <Percent className="w-3 h-3" />
-            <span>{isEn ? 'Diligence' : 'Chuyên cần'}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-[#2AC1BC]">
-            {summary.attendanceRate}%
-          </div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {isEn ? 'On-time / Checked in' : 'Đúng giờ / Đã điểm danh'}
-          </p>
-        </div>
-      </div>
+      {/* ─── Stat Banner ────────────────────────────────────────────────────── */}
+      <LandlordStatBanner
+        watermarkIcon={<Clock className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Filter & Control Bar ───────────────────────────────────────── */}
       <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">

@@ -557,11 +557,7 @@ function DepositsContent() {
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Actions Bar */}
       <LandlordPageHeader
-        title={
-          <span className="flex items-center gap-2">
-            <PiggyBank className="w-8 h-8 text-[#2AC1BC] shrink-0" /> {t('landlordDepositsTitle')}
-          </span>
-        }
+        title={t('landlordDepositsTitle')}
         subtitle={t('landlordDepositsSubtitle')}
         actions={
           <Button

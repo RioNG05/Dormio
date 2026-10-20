@@ -274,83 +274,25 @@ export default function ShiftsPage() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
-            <Clock className="w-4 h-4" />
-            <span> · {t('landlordScheduleStaffManagement')}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-            {t('landlordShiftsTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5">
-            {t('landlordShiftsSubtitle')}:{' '}
-            <strong className="text-foreground">
-              {activeBuilding?.name || t('landlordRoomsBuildingDefault')}
-            </strong>
-          </p>
-        </div>
+      <LandlordPageHeader
+        title={t('landlordShiftsTitle')}
+        subtitle={`${t('landlordShiftsSubtitle')}: ${activeBuilding?.name || t('landlordRoomsBuildingDefault')}`}
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            onClick={openCreateModal}
+            className="shrink-0"
+          >
+            <Plus className="w-4 h-4" /> {t('landlordShiftsAddNewBtn')}
+          </Button>
+        }
+      />
 
-        <Button size="xs"
-          onClick={openCreateModal}
-          className="shrink-0"
-        >
-          <Plus className="w-4 h-4" /> {t('landlordShiftsAddNewBtn')}
-        </Button>
-      </div>
-
-      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Layers className="w-64 h-64" />
-        </div>
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10">
-            <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-              {t('landlordShiftsTotalShiftsCount')}
-            </span>
-            <span className="font-black text-white text-xl sm:text-2xl mt-1">{shifts.length}</span>
-          </div>
-          <div className="flex flex-col p-3.5 bg-amber-500/10 rounded-2xl border border-amber-500/30">
-            <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-              {t('landlordShiftsMorningShift')}
-            </span>
-            <span className="font-black text-amber-400 text-xl sm:text-2xl mt-1">
-              {
-                shifts.filter(s => {
-                  const h = parseInt(s.startTime.split(':')[0])
-                  return h >= 5 && h < 12
-                }).length
-              }
-            </span>
-          </div>
-          <div className="flex flex-col p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/30">
-            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
-              {t('landlordShiftsAfternoonShift')}
-            </span>
-            <span className="font-black text-blue-400 text-xl sm:text-2xl mt-1">
-              {
-                shifts.filter(s => {
-                  const h = parseInt(s.startTime.split(':')[0])
-                  return h >= 12 && h < 18
-                }).length
-              }
-            </span>
-          </div>
-          <div className="flex flex-col p-3.5 bg-purple-500/10 rounded-2xl border border-purple-500/30">
-            <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">
-              {t('landlordShiftsNightShift')}
-            </span>
-            <span className="font-black text-purple-400 text-xl sm:text-2xl mt-1">
-              {
-                shifts.filter(s => {
-                  const h = parseInt(s.startTime.split(':')[0])
-                  return h < 5 || h >= 18
-                }).length
-              }
-            </span>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Layers className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       <div className="relative max-w-sm">
         <SearchInput

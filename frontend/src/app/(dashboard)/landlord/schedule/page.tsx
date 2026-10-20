@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { LandlordPageHeader } from '@/components/landlord'
+import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -590,6 +590,62 @@ export default function WorkforceSchedulePage() {
     }
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordScheduleStatTotalShifts'),
+        value: summary.totalSchedules,
+        icon: <Layers className="w-5 h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[150px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'assigned',
+        label: t('landlordScheduleStatusAssigned'),
+        value: summary.scheduledCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[150px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'recurring',
+        label: t('landlordScheduleStatRecurringShifts'),
+        value: summary.recurringCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[150px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'adhoc',
+        label: t('landlordScheduleStatAdhocShifts'),
+        value: summary.adhocCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[150px]',
+        labelClassName: 'text-amber-400',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+    ],
+    [t, summary],
+  )
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {/* Toast notification */}
@@ -655,66 +711,11 @@ export default function WorkforceSchedulePage() {
         }
       />
 
-      {/* ─── Metric Summary Cards ───────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-muted mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatTotalShifts')}
-            </span>
-            <Layers className="w-4 h-4 text-[#2AC1BC]" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-foreground">
-            {summary.totalSchedules}
-          </div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {t('landlordScheduleStatWithinTimeframe')}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-muted mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatusAssigned')}
-            </span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600">
-            {summary.scheduledCount}
-          </div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {t('landlordScheduleStatReadyForDuty')}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-muted mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatRecurringShifts')}
-            </span>
-            <Repeat className="w-4 h-4 text-blue-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-blue-600">
-            {summary.recurringCount}
-          </div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {t('landlordScheduleStatWeeklyRecurring')}
-          </p>
-        </div>
-
-        <div className="p-4 bg-card border border-line rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-muted mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatAdhocShifts')}
-            </span>
-            <Clock className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-amber-600">{summary.adhocCount}</div>
-          <p className="text-[11px] text-muted mt-0.5">
-            {t('landlordScheduleStatOnDemand')}
-          </p>
-        </div>
-      </div>
+      {/* ─── Stat Banner ────────────────────────────────────────────────────── */}
+      <LandlordStatBanner
+        watermarkIcon={<CalendarDays className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Control Bar: Date Navigator, Filters & View Mode Switcher ───── */}
       <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">

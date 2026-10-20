@@ -497,122 +497,51 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* ─── Top Header & Actions Bar ────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#2AC1BC]" /> {t('landlordExpensesTitle')}
-          </h1>
-          <p className="text-xs text-muted font-semibold mt-0.5">
-            {t('landlordExpensesSubtitle')}
-          </p>
-        </div>
+      <LandlordPageHeader
+        title={t('landlordExpensesTitle')}
+        subtitle={t('landlordExpensesSubtitle')}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={fetchExpenses}
+              disabled={isLoading}
+              isLoading={isLoading}
+              leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-[#2AC1BC]')} />}
+            >
+              {t('landlordExpensesReload')}
+            </Button>
 
-        <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={fetchExpenses}
-            disabled={isLoading}
-            isLoading={isLoading}
-            leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-[#2AC1BC]')} />}
-          >
-            {t('landlordExpensesReload')}
-          </Button>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={handleExportCSV}
+              leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+            >
+              {t('landlordExpensesExportExcel')}
+            </Button>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleExportCSV}
-            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
-          >
-            {t('landlordExpensesExportExcel')}
-          </Button>
-
-          <Button variant="dark"
-            size="sm"
-            onClick={() => {
-              resetForm()
-              setShowCreateModal(true)
-            }}
-            leftIcon={<Plus className="shrink-0" />}
-          >
-            {t('landlordExpensesAddNew')}
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => {
+                resetForm()
+                setShowCreateModal(true)
+              }}
+              leftIcon={<Plus className="shrink-0" />}
+            >
+              {t('landlordExpensesAddNew')}
+            </Button>
+          </>
+        }
+      />
 
       {/* ─── Dark Hero Summary Banner ────────────────────────────────────────── */}
-      <div className="bg-zinc-900 rounded-3xl p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Wallet className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          {/* Left Title, Address Pill */}
-          <div className="space-y-3 max-w-xl">
-            <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding?.name || t('landlordExpensesBuildingFallback')}
-            </h2>
-
-            {activeBuilding?.address && (
-              <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all max-w-full">
-                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate max-w-[200px] sm:max-w-none">
-                  {activeBuilding.address}
-                </span>
-              </div>
-            )}
-
-            <p className="text-muted text-xs sm:text-sm leading-relaxed">
-              {t('landlordExpensesHeroSubtitle')}
-            </p>
-          </div>
-
-          {/* Right Stat Cards */}
-          <div className="w-full lg:w-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 w-full">
-              {/* Card 1: Tổng Chi Phí */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">
-                    {t('landlordExpensesTotalExpenses')}
-                  </span>
-                  <span className="font-black text-rose-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(summary.totalAmount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 2: Đã Thanh Toán */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-2xl border border-[#2AC1BC]/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">
-                    {t('landlordExpensesPaidExpenses')}
-                  </span>
-                  <span className="font-black text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(summary.paidAmount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Chờ Thanh Toán */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">
-                    {t('landlordExpensesPendingExpenses')}
-                  </span>
-                  <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(summary.pendingAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Wallet className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Main Filter & Control Bar ───────────────────────────────────────── */}
       <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-sm space-y-3.5">

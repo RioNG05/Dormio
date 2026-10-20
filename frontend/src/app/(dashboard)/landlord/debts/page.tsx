@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   AlertTriangle,
   Search,
@@ -37,7 +37,7 @@ import {
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
 import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput } from '@/components/ui'
-import { LandlordPageHeader } from '@/components/landlord'
+import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
@@ -377,20 +377,66 @@ export default function LandlordDebtsPage() {
     )
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'totalDebt',
+        label: t('landlordDebtsTotalDebt'),
+        value: formatCurrency(summary.totalDebtAmount),
+        icon: <DollarSign className="w-5 h-5 text-rose-500 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[160px]',
+        labelClassName: 'text-rose-400',
+        valueClassName: 'text-rose-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'overdueDebt',
+        label: t('landlordDebtsOverdueDebt'),
+        value: formatCurrency(summary.overdueDebtAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[160px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'badDebt',
+        label: t('landlordDebtsBadDebt3Months'),
+        value: formatCurrency(summary.badDebtAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 lg:w-[160px]',
+        labelClassName: 'text-purple-400',
+        valueClassName: 'text-purple-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'debtorRooms',
+        label: t('landlordDebtsDebtorRooms'),
+        value: `${summary.debtorRoomsCount} ${t('landlordDebtsRoomUnit')}`,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[160px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-sm sm:text-base leading-none mt-1 tracking-tight',
+      },
+    ],
+    [t, summary],
+  )
+
   if (!isMounted) return null
 
   return (
     <div className="space-y-6 pb-20">
       {/* ─── Page Header ──────────────────────────────────────────────────────── */}
       <LandlordPageHeader
-        title={
-          <span className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-linear-to-br from-rose-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-rose-500/20 shrink-0">
-              <AlertTriangle className="w-5 h-5" />
-            </span>
-            <span>{t('landlordDebtsTitle')}</span>
-          </span>
-        }
+        title={t('landlordDebtsTitle')}
         subtitle={t('landlordDebtsSubtitle')}
         actions={
           <>
@@ -419,95 +465,11 @@ export default function LandlordDebtsPage() {
         }
       />
 
-      {/* ─── Metric KPI Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Debt */}
-        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              {t('landlordDebtsTotalDebt')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-danger-soft text-rose-600 flex items-center justify-center font-bold text-xs">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-rose-600 tracking-tight block">
-              {formatCurrency(summary.totalDebtAmount)}
-            </span>
-            <span className="text-[11px] text-muted font-medium mt-1 block">
-              {t('landlordDebtsInvoicesUncollected', { count: summary.totalInvoicesCount })}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-rose-500/10 transition-all" />
-        </div>
-
-        {/* Overdue Debt */}
-        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              {t('landlordDebtsOverdueDebt')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-warning-soft text-amber-600 flex items-center justify-center font-bold text-xs">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-amber-600 tracking-tight block">
-              {formatCurrency(summary.overdueDebtAmount)}
-            </span>
-            <span className="text-[11px] text-muted font-medium mt-1 block">
-              {t('landlordDebtsOverdueNotice')}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-amber-500/10 transition-all" />
-        </div>
-
-        {/* Bad Debt (>60 days) */}
-        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              {t('landlordDebtsBadDebt3Months')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-deposit-soft text-purple-600 flex items-center justify-center font-bold text-xs">
-              <ShieldAlert className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-purple-600 tracking-tight block">
-              {formatCurrency(summary.badDebtAmount)}
-            </span>
-            <span className="text-[11px] text-muted font-medium mt-1 block">
-              {t('landlordDebtsBadDebtRooms', { count: summary.agingDistribution.over60Days })}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-purple-500/10 transition-all" />
-        </div>
-
-        {/* Debtor Rooms */}
-        <div className="bg-card rounded-2xl p-5 border border-line shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
-              {t('landlordDebtsDebtorRooms')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-primary-soft text-teal-600 flex items-center justify-center font-bold text-xs">
-              <Building2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-foreground tracking-tight block">
-              {summary.debtorRoomsCount}{' '}
-              <span className="text-sm font-bold text-muted">{t('landlordDebtsRoomUnit')}</span>
-            </span>
-            <span className="text-[11px] text-teal-600 font-bold mt-1 block">
-              {t('landlordDebtsAtBuilding', {
-                building: activeBuilding?.name || (isEn ? 'current' : 'hiện tại'),
-              })}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-teal-500/10 transition-all" />
-        </div>
-      </div>
+      {/* ─── Stat Banner ────────────────────────────────────────────────────── */}
+      <LandlordStatBanner
+        watermarkIcon={<AlertTriangle className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Filter & Control Bar ─────────────────────────────────────────────── */}
       <div className="bg-card p-4 rounded-2xl border border-line shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">

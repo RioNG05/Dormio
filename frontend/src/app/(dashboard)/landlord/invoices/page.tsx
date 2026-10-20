@@ -5,55 +5,34 @@ import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } fro
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Plus,
-  Search,
-  Filter,
   FileText,
-  Download,
-  MoreHorizontal,
   Receipt,
-  Building2,
-  ChevronDown,
   Sparkles,
-  MapPin,
   FileSpreadsheet,
   Eye,
   Calendar,
-  DollarSign,
-  CheckCircle2,
-  Clock,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  Copy,
   QrCode,
-  Printer,
   X,
   Check,
   LayoutGrid,
   List,
   Zap,
   Droplets,
-  Wifi,
   ShieldCheck,
   Send,
-  Smartphone,
-  ArrowUpRight,
-  User,
-  RefreshCw,
-  Loader2,
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
   TextInput,
   NumberInput,
   SelectInput,
-  TextareaInput,
-  Checkbox,
-  Form,
   SearchInput,
   ChipGroup,
 } from '@/components/ui'
@@ -243,7 +222,6 @@ function InvoicesContent() {
     }
   }, [urlId, urlSearch, invoices])
 
-  if (!isMounted) return null
 
   // Calculate Metrics from serverSummary
   const totalInvoicesCount = serverSummary.totalInvoicesCount
@@ -448,15 +426,13 @@ function InvoicesContent() {
     [t, totalInvoicesCount, overdueCount, paidCount, totalPaidAmount, unpaidCount, totalUnpaidAmount],
   )
 
+  if (!isMounted) return null
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Actions Bar */}
       <LandlordPageHeader
-        title={
-          <span className="flex items-center gap-2">
-            <Receipt className="w-8 h-8 text-[#2AC1BC] shrink-0" /> {t('landlordInvoicesTitle')}
-          </span>
-        }
+        title={t('landlordInvoicesTitle')}
         subtitle={t('landlordInvoicesSubtitle')}
         actions={
           <>
@@ -669,13 +645,12 @@ function InvoicesContent() {
             return (
               <div
                 key={inv.id}
-                className={`bg-card border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${
-                  isPaid
+                className={`bg-card border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${isPaid
                     ? 'border-success-subtle hover:border-emerald-300'
                     : isOverdue
                       ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
                       : 'border-line hover:border-[#2AC1BC]/40'
-                }`}
+                  }`}
               >
                 {/* Header info */}
                 <div className="space-y-2">
@@ -684,13 +659,12 @@ function InvoicesContent() {
                       <FileText className="w-4 h-4 text-[#2AC1BC]" /> {inv.roomName}
                     </span>
                     <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
-                        isPaid
+                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${isPaid
                           ? 'bg-success-soft text-success border-success-subtle'
                           : isOverdue
                             ? 'bg-danger-soft text-danger border-danger-subtle'
                             : 'bg-warning-soft text-warning border-warning-subtle'
-                      }`}
+                        }`}
                     >
                       {inv.status}
                     </span>
@@ -776,7 +750,7 @@ function InvoicesContent() {
                       size="sm"
                       onClick={() => setSelectedInvoice(inv)}
                       className="flex-1"
-                      leftIcon={<Eye  />}
+                      leftIcon={<Eye />}
                     >
                       {t('landlordInvoicesBtnViewDetail')}
                     </Button>
@@ -785,7 +759,7 @@ function InvoicesContent() {
                         size="sm"
                         onClick={() => handleMarkAsPaid(inv.id)}
                         title={t('landlordInvoicesTooltipMarkPaid')}
-                        leftIcon={<Check  />}
+                        leftIcon={<Check />}
                       >
                         {t('landlordInvoicesBtnCollect')}
                       </Button>
@@ -835,13 +809,12 @@ function InvoicesContent() {
                     </td>
                     <td className="px-4 py-3.5">
                       <span
-                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
-                          inv.status === 'Đã thu'
+                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${inv.status === 'Đã thu'
                             ? 'bg-success-soft text-success border-success-subtle'
                             : inv.status === 'Quá hạn'
                               ? 'bg-danger-soft text-danger border-danger-subtle'
                               : 'bg-warning-soft text-warning border-warning-subtle'
-                        }`}
+                          }`}
                       >
                         {getInvoiceStatusLabel(inv.status)}
                       </span>
@@ -851,7 +824,7 @@ function InvoicesContent() {
                         variant="secondary"
                         size="sm"
                         onClick={() => setSelectedInvoice(inv)}
-                        leftIcon={<Eye  />}
+                        leftIcon={<Eye />}
                       >
                         {t('landlordInvoicesBtnViewDetail')}
                       </Button>
@@ -969,13 +942,12 @@ function InvoicesContent() {
                       selectedInvoice.roomName,
                     )}
                     <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
-                        selectedInvoice.status === 'Đã thu'
+                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${selectedInvoice.status === 'Đã thu'
                           ? 'bg-success-soft text-success border-success-subtle'
                           : selectedInvoice.status === 'Quá hạn'
                             ? 'bg-danger-soft text-danger border-danger-subtle'
                             : 'bg-warning-soft text-warning border-warning-subtle'
-                      }`}
+                        }`}
                     >
                       {getInvoiceStatusLabel(selectedInvoice.status)}
                     </span>
@@ -1075,7 +1047,7 @@ function InvoicesContent() {
                         </td>
                         <td className="px-4 py-3 text-muted">
                           {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} (
-                            {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
+                          {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.elecRate.toLocaleString('vi-VN')} ₫
@@ -1096,7 +1068,7 @@ function InvoicesContent() {
                         </td>
                         <td className="px-4 py-3 text-muted">
                           {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} (
-                            {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
+                          {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.waterRate.toLocaleString('vi-VN')} ₫
@@ -1205,7 +1177,7 @@ function InvoicesContent() {
                       `/landlord/messages?room=${encodeURIComponent(roomNum)}&tenant=${encodeURIComponent(tenantName)}&invId=${encodeURIComponent(selectedInvoice.id)}&amount=${selectedInvoice.totalAmount}&period=${encodeURIComponent(selectedInvoice.period)}&autoSend=true`,
                     )
                   }}
-                  leftIcon={<Send  />}
+                  leftIcon={<Send />}
                 >
                   {t('landlordInvoicesBtnRemindChat')}
                 </Button>
@@ -1229,7 +1201,7 @@ function InvoicesContent() {
                     onClick={() =>
                       handleMarkAsPaid(selectedInvoice.id, t('landlordInvoicesPaymentMethodManual'))
                     }
-                    leftIcon={<Check  />}
+                    leftIcon={<Check />}
                   >
                     {t('landlordInvoicesBtnConfirmPaid')}
                   </Button>
@@ -1395,7 +1367,7 @@ function InvoicesContent() {
                       createForm.rentAmount +
                       Math.max(0, createForm.elecNew - createForm.elecOld) * createForm.elecRate +
                       Math.max(0, createForm.waterNew - createForm.waterOld) *
-                        createForm.waterRate +
+                      createForm.waterRate +
                       createForm.wifiFee +
                       createForm.trashFee -
                       createForm.discount

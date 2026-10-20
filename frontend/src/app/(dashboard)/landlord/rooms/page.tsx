@@ -132,7 +132,7 @@ const ROOM_STATUS_CONFIG: Record<string, RoomStatusVisual> = {
 const DEFAULT_ROOM_STATUS_VISUAL = {
   gridContainer: 'bg-card border-line hover:border-line',
   gridText: 'text-foreground',
-  gridBadge: 'text-muted bg-card-hover',
+  gridBadge: 'text-muted bg-card-hover text-center',
   tableBadge: 'bg-card-hover text-muted',
 }
 
@@ -1092,7 +1092,7 @@ export default function RoomsPage() {
                     return (
                       <tr
                         key={`${room.building}-${room.id}`}
-                        className="hover:bg-zinc-50/80 transition-colors"
+                        className="hover:bg-card-hover transition-colors"
                       >
                         <td className="p-3 font-black text-foreground text-sm">
                           <Text as="span" weight="black" size="sm" className="text-foreground">

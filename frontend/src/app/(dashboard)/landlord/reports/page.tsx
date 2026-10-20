@@ -316,17 +316,7 @@ export default function ReportsPage() {
 
       {/* Header Bar */}
       <LandlordPageHeader
-        title={
-          <span className="flex items-center gap-2.5">
-            <span>{t('landlordReportsTitle')}</span>
-            <span className="px-2.5 py-0.5 text-[11px] font-black bg-[#2AC1BC]/15 text-[#138e89] rounded-full border border-[#2AC1BC]/30 flex items-center gap-1">
-              <Layers className="w-3 h-3" />
-              {reportMode === 'portfolio'
-                ? t('landlordReportsBadgePortfolio')
-                : activeBuilding?.name || t('landlordReportsBadgeSingleFallback')}
-            </span>
-          </span>
-        }
+        title={t('landlordReportsTitle')}
         subtitle={
           reportMode === 'portfolio'
             ? t('landlordReportsSubtitlePortfolio')
