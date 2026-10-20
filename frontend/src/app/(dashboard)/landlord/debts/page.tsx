@@ -37,6 +37,7 @@ import {
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
 import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput } from '@/components/ui'
+import { LandlordPageHeader } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
@@ -381,45 +382,42 @@ export default function LandlordDebtsPage() {
   return (
     <div className="space-y-6 pb-20">
       {/* ─── Page Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-rose-500/20">
+      <LandlordPageHeader
+        title={
+          <span className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-linear-to-br from-rose-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-rose-500/20 shrink-0">
               <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-foreground">
-                {t('landlordDebtsTitle')}
-              </h1>
-              <p className="text-xs text-muted font-medium">{t('landlordDebtsSubtitle')}</p>
-            </div>
-          </div>
-        </div>
+            </span>
+            <span>{t('landlordDebtsTitle')}</span>
+          </span>
+        }
+        subtitle={t('landlordDebtsSubtitle')}
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={handleTriggerFlip}
+              disabled={isRefreshing}
+              title={t('landlordDebtsSyncTooltip')}
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-600' : ''}`} />
+              <span>{isRefreshing ? t('landlordDebtsSyncing') : t('landlordDebtsSyncBtn')}</span>
+            </Button>
 
-        <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleTriggerFlip}
-            disabled={isRefreshing}
-            title={t('landlordDebtsSyncTooltip')}
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-600' : ''}`} />
-            <span>{isRefreshing ? t('landlordDebtsSyncing') : t('landlordDebtsSyncBtn')}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleExportCSV}
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>{t('landlordDebtsExportExcel')}</span>
-          </Button>
-        </div>
-      </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={handleExportCSV}
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>{t('landlordDebtsExportExcel')}</span>
+            </Button>
+          </>
+        }
+      />
 
       {/* ─── Metric KPI Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

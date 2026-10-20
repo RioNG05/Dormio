@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Wrench,
   Plus,
@@ -40,6 +40,7 @@ import {
   ServiceAssignedRoom,
 } from '@/services/service.service'
 import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup } from '@/components/ui'
+import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth()
@@ -463,151 +464,113 @@ export default function ServicesPage() {
     }
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordServicesTotalServices'),
+        value: summary.totalServices,
+        icon: <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'metered',
+        label: t('landlordServicesFilterMetered'),
+        value: summary.meteredCount,
+        icon: <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />,
+        containerClassName:
+          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'roomFixed',
+        label: t('landlordServicesFixedRoom'),
+        value: summary.roomFixedCount,
+        icon: <Wifi className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />,
+        containerClassName:
+          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
+        labelClassName: 'text-[#FF6B35]',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'other',
+        label: t('landlordServicesFixedPerson'),
+        value: summary.otherCount,
+        icon: <CarFront className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />,
+        containerClassName:
+          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+    ],
+    [t, summary],
+  )
+
   // Calculation for pagination
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Top Bar Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-            {t('landlordServicesTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5 font-medium">
-            {t('landlordServicesSubtitle')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => showAlert(t('landlordServicesAlertImportDeveloping'), 'info')}
-            className="sm:px-3.5"
-          >
-            <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => showAlert(t('landlordServicesAlertExportSuccess'), 'success')}
-            className="sm:px-3.5"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={fetchServices}
-            title={t('landlordServicesRefresh')}
-          >
-            <RefreshCw className={`w-4 h-4 text-muted ${isLoading ? 'animate-spin' : ''}`} />{' '}
-            {t('landlordServicesRefresh')}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={handleOpenAddModal}
-            className="sm:w-auto sm:text-sm"
-          >
-            <Plus className="w-4 h-4" /> {t('landlordServicesAddNew')}
-          </Button>
-        </div>
-      </div>
+      <LandlordPageHeader
+        title={t('landlordServicesTitle')}
+        subtitle={t('landlordServicesSubtitle')}
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => showAlert(t('landlordServicesAlertImportDeveloping'), 'info')}
+              className="sm:px-3.5"
+            >
+              <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={() => showAlert(t('landlordServicesAlertExportSuccess'), 'success')}
+              className="sm:px-3.5"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              onClick={fetchServices}
+              title={t('landlordServicesRefresh')}
+            >
+              <RefreshCw className={`w-4 h-4 text-muted ${isLoading ? 'animate-spin' : ''}`} />{' '}
+              {t('landlordServicesRefresh')}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={handleOpenAddModal}
+              className="sm:w-auto"
+            >
+              <Plus className="w-4 h-4" /> {t('landlordServicesAddNew')}
+            </Button>
+          </>
+        }
+      />
 
-      {/* DARK HERO BANNER CARD */}
-      <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Wrench className="w-48 sm:w-64 h-48 sm:h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
-          <div className="space-y-2.5 max-w-xl w-full">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding?.name || t('landlordServicesBuildingFallback')}
-              </h2>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-              <div className="flex items-center gap-2 min-w-0">
-                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                  {activeBuilding?.address || t('landlordServicesNoAddress')}
-                </span>
-              </div>
-              {activeBuilding?.address && (
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                >
-                  <span>{t('landlordServicesViewMap')}</span> &rarr;
-                </a>
-              )}
-            </div>
-
-            <p className="text-muted text-xs sm:text-sm leading-relaxed">
-              {t('landlordServicesHeroSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full md:w-auto mt-2 md:mt-0">
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full md:w-[135px]">
-              <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
-                  {t('landlordServicesTotalServices')}
-                </span>
-                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
-                  {summary.totalServices}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full md:w-[135px]">
-              <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                  {t('landlordServicesFilterMetered')}
-                </span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                  {summary.meteredCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full md:w-[135px]">
-              <Wifi className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
-                  {t('landlordServicesFixedRoom')}
-                </span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                  {summary.roomFixedCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full md:w-[135px]">
-              <CarFront className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                  {t('landlordServicesFixedPerson')}
-                </span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                  {summary.otherCount}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Dark Hero Banner */}
+      <LandlordStatBanner
+        watermarkIcon={<Wrench className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* Guidance Alert Banner */}
       <div className="bg-[#2AC1BC]/5 border border-[#2AC1BC]/20 rounded-2xl p-3.5 sm:p-4 flex items-start gap-3">

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Clock,
   Plus,
@@ -21,6 +21,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
 import { Button, TextInput, SearchInput } from '@/components/ui'
+import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ShiftsPage() {
   const { activeBuilding } = useAuth()
@@ -193,6 +194,66 @@ export default function ShiftsPage() {
   const filteredShifts = shifts.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  const statChips: LandlordStatChipItem[] = useMemo(() => {
+    const morningCount = shifts.filter(s => {
+      const h = parseInt(s.startTime.split(':')[0])
+      return h >= 5 && h < 12
+    }).length
+    const afternoonCount = shifts.filter(s => {
+      const h = parseInt(s.startTime.split(':')[0])
+      return h >= 12 && h < 18
+    }).length
+    const nightCount = shifts.filter(s => {
+      const h = parseInt(s.startTime.split(':')[0])
+      return h < 5 || h >= 18
+    }).length
+
+    return [
+      {
+        key: 'total',
+        label: t('landlordShiftsTotalShiftsCount'),
+        value: shifts.length,
+        icon: <Clock className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[135px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'morning',
+        label: t('landlordShiftsMorningShift'),
+        value: morningCount,
+        icon: <Sunrise className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-amber-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[135px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'afternoon',
+        label: t('landlordShiftsAfternoonShift'),
+        value: afternoonCount,
+        icon: <Sun className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[135px]',
+        labelClassName: 'text-blue-400',
+        valueClassName: 'text-blue-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'night',
+        label: t('landlordShiftsNightShift'),
+        value: nightCount,
+        icon: <Moon className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-purple-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 lg:w-[135px]',
+        labelClassName: 'text-purple-400',
+        valueColor: 'white',
+        valueClassName: 'text-purple-400 text-base sm:text-lg leading-none mt-1',
+      },
+    ]
+  }, [shifts, t])
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">

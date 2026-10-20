@@ -26,6 +26,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
 import { Button, Text } from '@/components/ui'
+import { LandlordPageHeader } from '@/components/landlord'
 import { cn } from '@/lib/utils'
 import {
   getBoardingHouseOverview,
@@ -149,33 +150,20 @@ export default function LandlordDashboardPage() {
   return (
     <div className="flex flex-col gap-6 pb-16 animate-in fade-in duration-500">
       {/* Top Header Title & Create Building Button */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-line pb-4">
-        <div>
-          <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-foreground">
-            {t('landlordOverviewHeaderTitle', { name: activeBuilding.name })}
-          </Text>
-          <Text variant="subtitle" size="xs" color="secondary" className="mt-0.5">
-            {activeBuilding.address || t('landlordOverviewNoAddress')}
-          </Text>
-        </div>
-
-        <div className="flex items-center gap-2.5">
+      <LandlordPageHeader
+        title={t('landlordOverviewHeaderTitle', { name: activeBuilding.name })}
+        subtitle={activeBuilding.address || t('landlordOverviewNoAddress')}
+        actions={
           <Button
             variant="primary"
-            size="sm"
+            size="md"
             onClick={() => router.push('/landlord/setup')}
-            leftIcon={<Plus  />}
+            leftIcon={<Plus className="w-4 h-4" />}
           >
             {t('landlordOverviewBtnCreateHouse')}
           </Button>
-          <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <Text as="span" size="2xs" weight="black" color="success">
-              {t('landlordOverviewVietqrActive')}
-            </Text>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {isLoading && !overview ? (
         <div className="py-16 text-center text-muted space-y-3">
@@ -279,7 +267,7 @@ export default function LandlordDashboardPage() {
             <div className="lg:col-span-2 bg-card rounded-3xl p-5 border border-line shadow-xs space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-2.5">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <TrendingUp className="w-4 h-4 text-[#2AC1BC]" />
                     <Text as="h2" variant="heading" size="sm" weight="black" className="sm:text-base">
                       {t('landlordOverviewMonthlyRevenueTitle')}
@@ -459,8 +447,8 @@ export default function LandlordDashboardPage() {
                     <Text as="span" size="3xs" weight="bold" color="success" className="block">
                       {financial.paidInvoicesCount > 0
                         ? t('landlordOverviewPaidInvoicesCount', {
-                            count: financial.paidInvoicesCount,
-                          })
+                          count: financial.paidInvoicesCount,
+                        })
                         : t('landlordOverviewNoPaidInvoicesThisMonth')}
                     </Text>
                   </div>
@@ -475,8 +463,8 @@ export default function LandlordDashboardPage() {
                     <Text as="span" size="3xs" weight="bold" color="secondary" className="block">
                       {financial.unpaidInvoicesCount > 0
                         ? t('landlordOverviewUnpaidInvoicesCount', {
-                            count: financial.unpaidInvoicesCount,
-                          })
+                          count: financial.unpaidInvoicesCount,
+                        })
                         : t('landlordOverviewNoOverdueDebt')}
                     </Text>
                   </div>

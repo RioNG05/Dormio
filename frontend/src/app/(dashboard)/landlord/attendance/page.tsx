@@ -39,6 +39,7 @@ import {
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
 import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
+import { LandlordPageHeader } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
   const year = date.getFullYear()
@@ -436,36 +437,21 @@ export default function AttendancePage() {
       )}
 
       {/* ─── Top Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
-            <Clock className="w-4 h-4" />
-            <span>{isEn ? ' · Staff Management' : ' · Quản lý nhân sự'}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-            {t('landlordAttendanceTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5">
-            {t('landlordAttendanceSubtitleFull')}:{' '}
-            <strong className="text-foreground">
-              {activeBuilding?.name || (isEn ? 'property' : 'Tòa nhà')}
-            </strong>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
+      <LandlordPageHeader
+        title={t('landlordAttendanceTitle')}
+        subtitle={`${t('landlordAttendanceSubtitleFull')}: ${activeBuilding?.name || (isEn ? 'property' : 'Tòa nhà')}`}
+        actions={
           <Button
             type="button"
             variant="outline"
-            size="sm"
+            size="md"
             onClick={handleExportData}
-            leftIcon={<Download  />}
-            
- >
+            leftIcon={<Download className="w-4 h-4" />}
+          >
             <span>{t('landlordAttendanceBtnExport')} (CSV)</span>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ─── Metric Overview Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

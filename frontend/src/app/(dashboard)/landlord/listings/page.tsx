@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Plus,
   Search,
@@ -20,7 +20,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import { FEATURE_FLAGS } from '@/config/features'
 import {
   postService,
@@ -30,11 +30,13 @@ import {
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
+import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
     redirect('/landlord')
   }
+  const router = useRouter()
   const t = useTranslations('landlord')
   const { currentLocale } = useLanguage()
 
@@ -155,6 +157,45 @@ export default function ListingsPage() {
     pageNumbers.push(i)
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'freeToday',
+        label: t('landlordListingsFreeToday'),
+        value: quota ? `${quota.freePostsRemainingToday} / ${quota.dailyPostQuota}` : '1 / 1',
+        icon: <Coins className="w-5 h-5 text-[#FF6B35] shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[150px]',
+        labelClassName: 'text-[#FF6B35]',
+        valueColor: 'white',
+        valueClassName: 'text-base leading-none mt-1',
+      },
+      {
+        key: 'paidCredits',
+        label: t('landlordListingsPaidCredits'),
+        value: t('landlordListingsPaidUnit', { count: quota?.purchasedCreditsAvailable ?? 0 }),
+        icon: <Sparkles className="w-5 h-5 text-[#2ac1bc] shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[150px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base leading-none mt-1',
+      },
+      {
+        key: 'published',
+        label: t('landlordListingsTotalPublished'),
+        value: t('landlordListingsPaidUnit', { count: totalItems }),
+        icon: <Eye className="w-5 h-5 text-blue-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[150px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-base leading-none mt-1',
+      },
+    ],
+    [t, quota, totalItems],
+  )
+
   const startIndex = totalItems === 0 ? 0 : (page - 1) * pageSize + 1
   const endIndex = Math.min(page * pageSize, totalItems)
 
@@ -179,90 +220,26 @@ export default function ListingsPage() {
       )}
 
       {/* Top Header & Action */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">
-            {t('landlordListingsPageTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5">
-            {t('landlordListingsPageSubtitle')}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/landlord/listings/create"
-            className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+      <LandlordPageHeader
+        title={t('landlordListingsPageTitle')}
+        subtitle={t('landlordListingsPageSubtitle')}
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => router.push('/landlord/listings/create')}
+            className="bg-[#FF6B35] hover:bg-[#ff5518] text-white"
           >
             <Plus className="w-4 h-4" /> {t('landlordListingsNewListingBtn')}
-          </Link>
-        </div>
-      </div>
+          </Button>
+        }
+      />
 
       {/* Dark Banner Card Hero */}
-      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <ImageIcon className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="space-y-2 max-w-xl">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-wider backdrop-blur-md">
-                {quota?.isLandlord
-                  ? t('landlordListingsQuotaLandlord', { plan: quota.planName || 'Free' })
-                  : t('landlordListingsQuotaBroker')}
-              </span>
-              <span className="text-xs text-muted">{t('landlordListingsQuotaResetNotice')}</span>
-            </div>
-            <h2 className="text-xl md:text-3xl font-black tracking-tight text-white">
-              {t('landlordListingsBhrpBannerTitle')}
-            </h2>
-            <p className="text-muted text-xs sm:text-sm leading-relaxed">
-              {t('landlordListingsBhrpBannerDesc')}
-            </p>
-          </div>
-
-          {/* Quota & Reach Statistics */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
-              <Coins className="w-5 h-5 text-[#FF6B35] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-muted tracking-wider">
-                  {t('landlordListingsFreeToday')}
-                </span>
-                <span className="font-black text-white text-base leading-none mt-1">
-                  {quota ? `${quota.freePostsRemainingToday} / ${quota.dailyPostQuota}` : '1 / 1'}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
-              <Sparkles className="w-5 h-5 text-[#2ac1bc] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-muted tracking-wider">
-                  {t('landlordListingsPaidCredits')}
-                </span>
-                <span className="font-black text-[#2ac1bc] text-base leading-none mt-1">
-                  {t('landlordListingsPaidUnit', { count: quota?.purchasedCreditsAvailable ?? 0 })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[140px]">
-              <Eye className="w-5 h-5 text-blue-400 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-muted tracking-wider">
-                  {t('landlordListingsTotalPublished')}
-                </span>
-                <span className="font-black text-white text-base leading-none mt-1">
-                  {t('landlordListingsPaidUnit', { count: totalItems })}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<ImageIcon className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* AI Rental Post Suggestions for Unlisted Vacant Rooms */}
       {unlistedRooms.length > 0 && (

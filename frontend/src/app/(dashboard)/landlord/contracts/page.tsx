@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
@@ -401,6 +402,64 @@ export default function ContractsPage() {
     [t],
   )
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordContractsStatTotal'),
+        value: contracts.length,
+        icon: <FileSignature className="w-5 h-5 text-rose-500 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'active',
+        label: t('landlordContractsStatActive'),
+        value: contracts.filter(
+          c => c.status === 'Còn hiệu lực' || c.status === 'Đang hiệu lực',
+        ).length,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'expiring',
+        label: t('landlordContractsStatExpiring'),
+        value: contracts.filter(c => c.status === 'Sắp hết hạn' || c.status === 'Quá hạn').length,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
+        labelClassName: 'text-[#FF6B35]',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'ended',
+        label: t('landlordContractsStatEnded'),
+        value: contracts.filter(c => c.status === 'Chấm dứt' || c.status === 'Đã chấm dứt').length,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+    ],
+    [t, contracts],
+  )
+
   if (!isMounted) {
     return null
   }
@@ -444,128 +503,25 @@ export default function ContractsPage() {
       </Modal>
 
       <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-        {/* Top Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <Text as="h1" variant="heading" size="2xl" weight="black" className="tracking-tight text-foreground">
-              {t('landlordContractsTitle')}
-            </Text>
-            <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5">
-              {t('landlordContractsSubtitle')}
-            </Text>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => router.push('/landlord/contracts/create')}
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            {t('landlordContractsCreateBtn')}
-          </Button>
-        </div>
+              <LandlordPageHeader
+          title={t('landlordContractsTitle')}
+          subtitle={t('landlordContractsSubtitle')}
+          actions={
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => router.push('/landlord/contracts/create')}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              {t('landlordContractsCreateBtn')}
+            </Button>
+          }
+        />
 
-        {/* Building Overview Banner Card */}
-        <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-            <FileSignature className="w-64 h-64" />
-          </div>
-
-          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
-            <div className="space-y-3 max-w-xl w-full">
-              <div className="flex flex-wrap items-center gap-2">
-                <Text as="h2" weight="black" color="white" className="text-xl sm:text-2xl md:text-3xl tracking-tight">
-                  {activeBuilding?.name || 'Dormio Building'}
-                </Text>
-                <Text as="span" variant="overline" size="3xs" weight="black" className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-full tracking-wider shrink-0">
-                  {t('landlordContractsBannerOperating')}
-                </Text>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-                <div className="flex items-center gap-2 min-w-0">
-                  <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                  <Text as="span" size="xs" weight="bold" className="text-zinc-200 truncate sm:whitespace-normal">
-                    {activeBuilding?.address || ''}
-                  </Text>
-                </div>
-                {activeBuilding?.address && (
-                  <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                  >
-                    <Text as="span" size="3xs" weight="black">{t('landlordOverviewViewMap')}</Text> &rarr;
-                  </a>
-                )}
-              </div>
-
-              <Text variant="body" size="sm" color="subtle" className="text-muted text-xs sm:text-sm leading-relaxed">
-                {t('landlordContractsBannerDesc')}
-              </Text>
-            </div>
-
-            {/* 4 Stat Chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                <FileSignature className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-                <div className="flex flex-col">
-                  <Text as="span" variant="overline" size="3xs" weight="bold" className="text-rose-400 tracking-wider">
-                    {t('landlordContractsStatTotal')}
-                  </Text>
-                  <Text as="span" size="lg" weight="black" className="text-rose-500 leading-none mt-1">
-                    {contracts.length}
-                  </Text>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <Text as="span" variant="overline" size="3xs" weight="bold" color="brand" className="tracking-wider">
-                    {t('landlordContractsStatActive')}
-                  </Text>
-                  <Text as="span" size="lg" weight="black" color="white" className="leading-none mt-1">
-                    {
-                      contracts.filter(
-                        c => c.status === 'Còn hiệu lực' || c.status === 'Đang hiệu lực',
-                      ).length
-                    }
-                  </Text>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <Text as="span" variant="overline" size="3xs" weight="bold" className="text-[#FF6B35] tracking-wider">
-                    {t('landlordContractsStatExpiring')}
-                  </Text>
-                  <Text as="span" size="lg" weight="black" color="white" className="leading-none mt-1">
-                    {
-                      contracts.filter(c => c.status === 'Sắp hết hạn' || c.status === 'Quá hạn')
-                        .length
-                    }
-                  </Text>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <Text as="span" variant="overline" size="3xs" weight="bold" className="text-blue-400 tracking-wider">
-                    {t('landlordContractsStatEnded')}
-                  </Text>
-                  <Text as="span" size="lg" weight="black" color="white" className="leading-none mt-1">
-                    {
-                      contracts.filter(c => c.status === 'Chấm dứt' || c.status === 'Đã chấm dứt').length
-                    }
-                  </Text>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LandlordStatBanner
+          chips={statChips}
+          watermarkIcon={<FileSignature className="w-64 h-64" />}
+        />
 
         {/* Single Row Toolbar (Filter Pills + Search Bar + View Mode) */}
         <div className="bg-card border border-line rounded-2xl p-3 shadow-2xs">

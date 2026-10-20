@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { LandlordPageHeader } from '@/components/landlord'
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -610,58 +611,49 @@ export default function WorkforceSchedulePage() {
       )}
 
       {/* ─── Top Header & Primary Actions ───────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
-            <CalendarDays className="w-4 h-4" />
-            <span> · {t('landlordScheduleStaffManagementTag')}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-            {t('landlordScheduleTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5">
-            {t('landlordScheduleSubtitleFull')} ({' '}
-            <strong className="text-foreground">
-              {activeBuilding?.name || t('landlordScheduleCurrentProperty')}
-            </strong>
-            )
-          </p>
-        </div>
+      <LandlordPageHeader
+        title={t('landlordScheduleTitle')}
+        subtitle={`${t('landlordScheduleSubtitleFull')} (${activeBuilding?.name || t('landlordScheduleCurrentProperty')})`}
+        actions={
+          <>
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => {
+                setIsDirty(false)
+                setIsShiftsModalOpen(true)
+              }}
+            >
+              <Settings className="w-4 h-4 text-muted" />
+              <span>{t('landlordScheduleBtnShiftTemplates')}</span>
+            </Button>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button size="xs"
-            variant="outline"
-            onClick={() => {
-              setIsDirty(false)
-              setIsShiftsModalOpen(true)
-            }}
-          >
-            <Settings className="w-3.5 h-3.5 text-muted" />
-            <span>{t('landlordScheduleBtnShiftTemplates')}</span>
-          </Button>
+            <Button
+              size="md"
+              variant="secondary"
+              onClick={() => {
+                setIsDirty(false)
+                setIsAdhocModalOpen(true)
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t('landlordScheduleBtnAssign')}</span>
+            </Button>
 
-          <Button size="xs"
-            variant="secondary"
-            onClick={() => {
-              setIsDirty(false)
-              setIsAdhocModalOpen(true)
-            }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('landlordScheduleBtnAssign')}</span>
-          </Button>
-
-          <Button size="xs"
-            onClick={() => {
-              setIsDirty(false)
-              setIsRecurringModalOpen(true)
-            }}
-          >
-            <Repeat className="w-3.5 h-3.5" />
-            <span>{t('landlordScheduleBtnRecurring')}</span>
-          </Button>
-        </div>
-      </div>
+            <Button
+              size="md"
+              variant="primary"
+              onClick={() => {
+                setIsDirty(false)
+                setIsRecurringModalOpen(true)
+              }}
+            >
+              <Repeat className="w-4 h-4" />
+              <span>{t('landlordScheduleBtnRecurring')}</span>
+            </Button>
+          </>
+        }
+      />
 
       {/* ─── Metric Summary Cards ───────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

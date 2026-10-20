@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -43,6 +43,7 @@ import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/servic
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
 import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup } from '@/components/ui'
+import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth()
@@ -332,122 +333,85 @@ export default function AssetsPage() {
     return sum + dep.currentValue
   }, 0)
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordAssetsTotalAssetsShort'),
+        value: t('landlordAssetsItemsCount', { count: summary.totalItems }),
+        icon: <Package className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'inUse',
+        label: t('landlordAssetsInUse'),
+        value: summary.goodConditionCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'maintenance',
+        label: t('landlordAssetsUnderMaintenance'),
+        value: summary.needsRepairCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
+        labelClassName: 'text-[#FF6B35]',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'quantity',
+        label: t('landlordAssetsTotalQuantity'),
+        value: summary.totalQuantity,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+    ],
+    [t, summary],
+  )
+
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Top Bar / Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-            {t('landlordAssetsPageTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5 font-medium">
-            {t('landlordAssetsPageSubtitle')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      <LandlordPageHeader
+        title={t('landlordAssetsPageTitle')}
+        subtitle={t('landlordAssetsPageSubtitle')}
+        actions={
           <Button
             type="button"
             variant="primary"
-            size="sm"
+            size="md"
             onClick={handleOpenAddModal}
           >
             <Plus className="w-4 h-4" /> {t('landlordAssetsAddBtn')}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Building Overview Banner Card */}
-      <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Package className="w-48 sm:w-64 h-48 sm:h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
-          <div className="space-y-2.5 max-w-xl w-full">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding?.name || 'Dormio'}
-              </h2>
-              <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                {t('landlordAssetsCodePrefix', { code: buildingPrefix })}
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-              <div className="flex items-center gap-2 min-w-0">
-                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                  {activeBuilding?.address || t('landlordAssetsNoAddress')}
-                </span>
-              </div>
-              {activeBuilding?.address && (
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                >
-                  <span>{t('landlordAssetsBtnViewMap')}</span> &rarr;
-                </a>
-              )}
-            </div>
-
-            <p className="text-muted text-xs sm:text-sm leading-relaxed">
-              {t('landlordAssetsBannerSub')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full md:w-auto mt-2 md:mt-0">
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full md:w-[135px]">
-              <Package className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
-                  {t('landlordAssetsTotalAssetsShort')}
-                </span>
-                <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
-                  {t('landlordAssetsItemsCount', { count: summary.totalItems })}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full md:w-[135px]">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                  {t('landlordAssetsInUse')}
-                </span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                  {summary.goodConditionCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full md:w-[135px]">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
-                  {t('landlordAssetsUnderMaintenance')}
-                </span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                  {summary.needsRepairCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full md:w-[135px]">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                  {t('landlordAssetsTotalQuantity')}
-                </span>
-                <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                  {summary.totalQuantity}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Package className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* Category Tabs & Financial Valuation Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-line shadow-xs">

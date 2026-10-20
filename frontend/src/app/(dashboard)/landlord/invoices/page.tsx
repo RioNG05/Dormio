@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react'
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react'
+import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Plus,
@@ -394,143 +395,106 @@ function InvoicesContent() {
     return `https://img.vietqr.io/image/${bankBin}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=DORMIO%20BHMS`
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordInvoicesTotalInvoicesShort'),
+        value: totalInvoicesCount,
+        icon: <Receipt className="w-5 h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[150px]',
+        labelColor: 'subtle',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'overdue',
+        label: t('landlordInvoicesOverdueShort'),
+        value: overdueCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueClassName: 'text-rose-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'paid',
+        label: t('landlordInvoicesPaidShort').replace('{count}', String(paidCount)),
+        value: formatLargeMoney(totalPaidAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 lg:w-[160px]',
+        labelClassName: 'text-emerald-400',
+        valueClassName: 'text-emerald-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'unpaid',
+        label: t('landlordInvoicesUnpaidShort').replace('{count}', String(unpaidCount)),
+        value: formatLargeMoney(totalUnpaidAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[160px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+    ],
+    [t, totalInvoicesCount, overdueCount, paidCount, totalPaidAmount, unpaidCount, totalUnpaidAmount],
+  )
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Actions Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-[#2AC1BC]" /> {t('landlordInvoicesTitle')}
-          </h1>
-          <p className="text-xs text-muted font-semibold mt-0.5">
-            {t('landlordInvoicesSubtitle')}
-          </p>
-        </div>
+      <LandlordPageHeader
+        title={
+          <span className="flex items-center gap-2">
+            <Receipt className="w-8 h-8 text-[#2AC1BC] shrink-0" /> {t('landlordInvoicesTitle')}
+          </span>
+        }
+        subtitle={t('landlordInvoicesSubtitle')}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={handleOpenOcrModal}
+              leftIcon={<Sparkles className="fill-amber-500 shrink-0" />}
+            >
+              {t('landlordInvoicesBtnOcrScan')}
+            </Button>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenOcrModal}
-            className="flex-1 sm:flex-none"
-            leftIcon={<Sparkles className="fill-amber-500 shrink-0" />}
-          >
-            {t('landlordInvoicesBtnOcrScan')}
-          </Button>
+            <Button
+              variant="outline"
+              size="md"
+              leftIcon={<FileSpreadsheet className="shrink-0" />}
+            >
+              {t('landlordInvoicesBtnExportExcel')}
+            </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            leftIcon={<FileSpreadsheet className="shrink-0" />}
-          >
-            {t('landlordInvoicesBtnExportExcel')}
-          </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleOpenCreateModal}
+              className="sm:w-auto"
+              leftIcon={<Plus className="shrink-0" />}
+            >
+              {t('landlordInvoicesBtnCreateInvoice')}
+            </Button>
+          </>
+        }
+      />
 
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleOpenCreateModal}
-            className="sm:w-auto"
-            leftIcon={<Plus className="shrink-0" />}
-          >
-            {t('landlordInvoicesBtnCreateInvoice')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Dark Hero Summary Banner (Matching Image 2 Design) */}
-      <div className="bg-zinc-900 rounded-3xl p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Receipt className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          {/* Left Title, Address Pill with Map button, and Description */}
-          <div className="space-y-3 max-w-xl">
-            <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding.name}
-            </h2>
-
-            {/* Address Pill with Integrated Map Link */}
-            <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all max-w-full">
-              <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-              <span className="text-xs font-bold text-zinc-200 truncate max-w-[200px] sm:max-w-none">
-                {activeBuilding.address}
-              </span>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-              >
-                <span>{t('landlordInvoicesViewMap')}</span> &rarr;
-              </a>
-            </div>
-
-            <p className="text-muted text-xs sm:text-sm leading-relaxed">
-              {t('landlordInvoicesBannerSub')}
-            </p>
-          </div>
-
-          {/* Right Stat Cards (2 Rows, 2 Cards per Row, Non-wrapping Money Amounts) */}
-          <div className="flex flex-col items-stretch sm:items-end gap-3 w-full lg:w-auto">
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto">
-              {/* Card 1: Tổng Hóa Đơn */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-muted shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-muted tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesTotalInvoicesShort')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">
-                    {totalInvoicesCount}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 2: Quá Hạn */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesOverdueShort')}
-                  </span>
-                  <span className="font-black text-rose-400 text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">
-                    {overdueCount}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Đã Thu */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors rounded-2xl border border-emerald-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesPaidShort').replace('{count}', String(paidCount))}
-                  </span>
-                  <span className="font-black text-emerald-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(totalPaidAmount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 4: Chưa Thu */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesUnpaidShort').replace('{count}', String(unpaidCount))}
-                  </span>
-                  <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(totalUnpaidAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Dark Hero Summary Banner */}
+      <LandlordStatBanner
+        chips={statChips}
+        watermarkIcon={<Receipt className="w-64 h-64" />}
+      />
 
       {/* Main Filter & Tabs Control Bar */}
       <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3">

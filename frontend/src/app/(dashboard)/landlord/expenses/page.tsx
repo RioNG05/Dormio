@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Plus,
   Search,
@@ -448,6 +449,48 @@ export default function ExpensesPage() {
       </span>
     )
   }
+
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordExpensesTotalExpenses'),
+        value: formatLargeMoney(summary.totalAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[160px]',
+        labelClassName: 'text-rose-400',
+        valueClassName: 'text-rose-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'paid',
+        label: t('landlordExpensesPaidExpenses'),
+        value: formatLargeMoney(summary.paidAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[160px]',
+        labelColor: 'brand',
+        valueClassName: 'text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'pending',
+        label: t('landlordExpensesPendingExpenses'),
+        value: formatLargeMoney(summary.pendingAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[160px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+    ],
+    [t, summary],
+  )
 
   if (!isMounted) return null
 

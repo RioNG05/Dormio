@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Users,
   Plus,
@@ -40,6 +40,7 @@ import {
   Avatar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
+import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { staffService, StaffItem, JobPosition, StaffSummary } from '@/services/staff.service'
 
 export default function StaffPage() {
@@ -480,6 +481,61 @@ export default function StaffPage() {
     setTimeout(() => setCopiedPassword(false), 2500)
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordStaffStatTotal'),
+        value: summary.totalStaff,
+        icon: <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[135px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'active',
+        label: t('landlordStaffStatActive'),
+        value: summary.activeStaff,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[135px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'inactive',
+        label: t('landlordStaffStatInactive'),
+        value: summary.inactiveStaff,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-zinc-500 shadow-[0_0_8px_rgba(113,113,122,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-zinc-800/80 hover:bg-zinc-800 border-zinc-700 lg:w-[135px]',
+        labelColor: 'secondary',
+        valueColor: 'secondary',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'positions',
+        label: t('landlordStaffStatPositions'),
+        value: summary.positionsCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[135px]',
+        labelClassName: 'text-blue-400',
+        valueClassName: 'text-blue-400 text-base sm:text-lg leading-none mt-1',
+      },
+    ],
+    [t, summary],
+  )
+
   // Pagination calculations (Rule #9)
   const totalPages = Math.ceil(totalItems / pageSize) || 1
   const windowSize = 5
@@ -493,103 +549,47 @@ export default function StaffPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-16">
       {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-            {t('landlordStaffTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5">{t('landlordStaffSubtitle')}</p>
-        </div>
+      <LandlordPageHeader
+        title={t('landlordStaffTitle')}
+        subtitle={t('landlordStaffSubtitle')}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                setEditingPosition(null)
+                setIsAddingPositionInline(false)
+                setPosFormName('')
+                setPosFormDesc('')
+                setPosErrorMessage('')
+                setIsPositionsModalOpen(true)
+              }}
+              leftIcon={<Briefcase className="w-4 h-4 text-[#2AC1BC]" />}
+            >
+              {t('landlordStaffManagePositions', { count: positions.length })}
+            </Button>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setEditingPosition(null)
-              setIsAddingPositionInline(false)
-              setPosFormName('')
-              setPosFormDesc('')
-              setPosErrorMessage('')
-              setIsPositionsModalOpen(true)
-            }}
-            leftIcon={<Briefcase className="w-4 h-4 text-[#2AC1BC]" />}
-          >
-            {t('landlordStaffManagePositions', { count: positions.length })}
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => {
-              resetOnboardForm()
-              setIsOnboardModalOpen(true)
-            }}
-            leftIcon={<Plus  />}
-          >
-            {t('landlordStaffAddNew')}
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => {
+                resetOnboardForm()
+                setIsOnboardModalOpen(true)
+              }}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              {t('landlordStaffAddNew')}
+            </Button>
+          </>
+        }
+      />
 
       {/* Dark Hero Stats Banner */}
-      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Users className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-[#2AC1BC] border border-[#2AC1BC]/30">
-              <Building2 className="w-3.5 h-3.5" />
-              <span>{activeBuilding?.name || t('landlordStaffNoBuilding')}</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              {t('landlordStaffHeroTitle')}
-            </h2>
-            <p className="text-muted text-xs sm:text-sm leading-relaxed">
-              {t('landlordStaffHeroSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
-            <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-                {t('landlordStaffStatTotal')}
-              </span>
-              <span className="font-black text-white text-xl sm:text-2xl mt-1">
-                {summary.totalStaff}
-              </span>
-            </div>
-
-            <div className="flex flex-col p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                {t('landlordStaffStatActive')}
-              </span>
-              <span className="font-black text-[#2AC1BC] text-xl sm:text-2xl mt-1">
-                {summary.activeStaff}
-              </span>
-            </div>
-
-            <div className="flex flex-col p-3.5 bg-zinc-800/80 rounded-2xl border border-zinc-700 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-                {t('landlordStaffStatInactive')}
-              </span>
-              <span className="font-black text-zinc-300 text-xl sm:text-2xl mt-1">
-                {summary.inactiveStaff}
-              </span>
-            </div>
-
-            <div className="flex flex-col p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/30 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
-                {t('landlordStaffStatPositions')}
-              </span>
-              <span className="font-black text-blue-400 text-xl sm:text-2xl mt-1">
-                {summary.positionsCount}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Users className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* Filter & Toolbar Bar */}
       <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">

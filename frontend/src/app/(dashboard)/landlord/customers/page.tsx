@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -27,6 +27,7 @@ import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, TextInput, SelectInput, NumberInput, SearchInput, ChipGroup } from '@/components/ui'
+import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
   const { activeBuilding } = useAuth()
@@ -239,6 +240,68 @@ export default function CustomersPage() {
     }
   }, [router])
 
+
+  const totalCustomers = customers.length
+  const stayingCount = customers.filter(c => c.status === 'Đang ở').length
+  const expiringCount = customers.filter(c => c.status === 'Sắp hết hợp đồng').length
+  const leftCount = customers.filter(c => c.status === 'Đã rời').length
+
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordCustomersStatTotalShort'),
+        value: totalCustomers,
+        icon: <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'staying',
+        label: t('landlordCustomersStatStayingShort'),
+        value: stayingCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'expiring',
+        label: t('landlordCustomersStatExpiringShort'),
+        value: expiringCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
+        labelClassName: 'text-[#FF6B35]',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'left',
+        label: t('landlordCustomersStatLeftShort'),
+        value: leftCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+    ],
+    [t, totalCustomers, stayingCount, expiringCount, leftCount],
+  )
+
   if (!isMounted) {
     return null
   }
@@ -263,128 +326,32 @@ export default function CustomersPage() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedCustomers = sortedCustomers.slice(startIndex, startIndex + itemsPerPage)
 
-  const totalCustomers = customers.length
-  const stayingCount = customers.filter(c => c.status === 'Đang ở').length
-  const expiringCount = customers.filter(c => c.status === 'Sắp hết hợp đồng').length
-  const leftCount = customers.filter(c => c.status === 'Đã rời').length
-
+  
   return (
     <div className="space-y-6">
       {/* Top Bar / Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-            {t('landlordCustomersPageHeading')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-0.5 font-medium">
-            {t('landlordCustomersPageSubheading')}
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => router.push('/landlord/contracts/create')}
-          className="sm:w-auto sm:text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('landlordCustomersBtnAddContract')}</span>
-        </Button>
-      </div>
+      <LandlordPageHeader
+        title={t('landlordCustomersPageHeading')}
+        subtitle={t('landlordCustomersPageSubheading')}
+        actions={
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => router.push('/landlord/contracts/create')}
+            className="sm:w-auto text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('landlordCustomersBtnAddContract')}</span>
+          </Button>
+        }
+      />
 
       {/* Building Overview Banner */}
       {activeBuilding && (
-        <div className="bg-zinc-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl relative overflow-hidden">
-          {/* Background Decoration */}
-          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-            <Users className="w-64 h-64" />
-          </div>
-
-          <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
-            <div className="space-y-3 max-w-xl w-full">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                  {activeBuilding.name}
-                </h2>
-                <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                  {t('landlordContractsBannerOperating')}
-                </span>
-              </div>
-
-              {/* Separated Address Line with Integrated Map Link */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-                <div className="flex items-center gap-2 min-w-0">
-                  <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                  <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                    {activeBuilding.address}
-                  </span>
-                </div>
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                >
-                  <span>{t('landlordInvoicesViewMap')}</span> &rarr;
-                </a>
-              </div>
-
-              <p className="text-muted text-xs sm:text-sm leading-relaxed">
-                {t('landlordCustomersBannerSub')}
-              </p>
-            </div>
-
-            {/* 4 Unified Stat Chips (Aesthetic Single Row matching Assets & Services) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:flex md:flex-row md:justify-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
-                    {t('landlordCustomersStatTotalShort')}
-                  </span>
-                  <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
-                    {totalCustomers}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-xl border border-[#2AC1BC]/30 backdrop-blur-md w-full lg:w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                    {t('landlordCustomersStatStayingShort')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                    {stayingCount}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 transition-colors rounded-xl border border-[#FF6B35]/30 backdrop-blur-md w-full lg:w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
-                    {t('landlordCustomersStatExpiringShort')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                    {expiringCount}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 transition-colors rounded-xl border border-blue-500/30 backdrop-blur-md w-full lg:w-[135px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                    {t('landlordCustomersStatLeftShort')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                    {leftCount}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LandlordStatBanner
+          watermarkIcon={<Users className="w-64 h-64" />}
+          chips={statChips}
+        />
       )}
 
       {/* SINGLE ROW TOOLBAR (Filter Pills + Search + Sort + View Switcher all in 1 Row) */}
