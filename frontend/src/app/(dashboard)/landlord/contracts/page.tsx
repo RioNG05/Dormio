@@ -5,18 +5,11 @@ import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } fro
 import { useRouter } from 'next/navigation'
 import {
   Plus,
-  Search,
   FileSignature,
-  X,
-  LayoutGrid,
-  List,
   CalendarDays,
   Ban,
-  Copy,
-  Printer,
   Users,
   Gauge,
-  MapPin,
   CreditCard,
   Eye,
   Loader2,
@@ -31,7 +24,6 @@ import { getLandlordContracts, ContractItem, exportContract } from '@/services/c
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import {
   Button,
-  TextInput,
   DateInput,
   NumberInput,
   SelectInput,
@@ -250,94 +242,6 @@ export default function ContractsPage() {
     return dateStr
   }
 
-  // Export current contract list as CSV
-  const handleExportCsv = () => {
-    const headers = [
-      t('landlordContractsCsvHeaderId'),
-      t('landlordContractsCsvHeaderRoom'),
-      t('landlordContractsCsvHeaderTenant'),
-      t('landlordContractsCsvHeaderStartDate'),
-      t('landlordContractsCsvHeaderEndDate'),
-      t('landlordContractsCsvHeaderRentPrice'),
-      t('landlordContractsCsvHeaderDeposit'),
-      t('landlordContractsCsvHeaderStatus'),
-    ]
-    const rows = contracts.map((c: any) => [
-      c.id,
-      c.room,
-      c.tenant,
-      c.startDate,
-      c.endDate,
-      c.price,
-      c.deposit,
-      getContractStatusLabel(c.status),
-    ])
-    const csv = [headers, ...rows]
-      .map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `contracts_${activeBuilding?.name || 'export'}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    showToast(t('landlordContractsToastCsvExportSuccess'), 'success')
-  }
-
-  // Handle print/preview modal
-  const handlePrintContract = (contract: any) => {
-    if (
-      !requireTier(
-        'plus',
-        t('landlordContractDetailTierRequiredMsg') ||
-        'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
-      )
-    ) {
-      return
-    }
-    setPreviewModal({
-      isOpen: true,
-      contractId: contract.id,
-      roomNumber: contract.room,
-      tenantName: contract.tenant,
-    })
-  }
-
-  // Direct export of contract document (HTML/PDF)
-  const handleExportContract = async (contract: any) => {
-    if (
-      !requireTier(
-        'plus',
-        t('landlordContractDetailTierRequiredMsg') ||
-        'Tính năng in và xuất văn bản hợp đồng pháp lý yêu cầu nâng cấp lên gói Plus.',
-      )
-    ) {
-      return
-    }
-    if (!activeBuilding?.id) return
-    try {
-      showToast(t('landlordContractsToastDocExporting'), 'info')
-      const res = await exportContract(activeBuilding.id, contract.id)
-      if (res?.data) {
-        showToast(t('landlordContractsToastDocExportSuccess'), 'success')
-        fetchContracts()
-        const blob = new Blob([res.data.html || ''], { type: 'text/html;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `hop-dong-phong-${String(contract.room).replace(/[^a-zA-Z0-9_-]/g, '_')}-${contract.id.substring(0, 8)}.html`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      }
-    } catch (err: any) {
-      console.error('Failed to export contract:', err)
-      showToast(err.message || t('landlordContractsToastDocExportFailed'), 'error')
-    }
-  }
-
   const handleTerminateContract = () => {
     if (!selectedContract) return
     const updated = contracts.map(c =>
@@ -381,7 +285,6 @@ export default function ContractsPage() {
   })
 
   const totalItems = filteredContracts.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage))
   const paginatedContracts = filteredContracts.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage,
@@ -605,7 +508,7 @@ export default function ContractsPage() {
                       <div
                         key={c.id || idx}
                         onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                        className="bg-card border border-line hover:border-[#2AC1BC]/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                        className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
                       >
                         <div>
                           {/* Card Header: Room & Status */}
@@ -716,49 +619,38 @@ export default function ContractsPage() {
                         {/* Card Footer Actions */}
                         <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                           <Button
-                            variant="outline"
-                            size="md"
+                            variant="secondary"
+                            size="sm"
                             onClick={e => {
                               e.stopPropagation()
                               router.push(`/landlord/contracts/${c.id}`)
                             }}
-                            leftIcon={<Eye className='w-4 h-4' />}
+                            leftIcon={<Eye />}
                           >
                             {t('landlordContractsBtnDetail')}
                           </Button>
                           <div className="flex items-center gap-1.5">
                             <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={e => {
-                                e.stopPropagation()
-                                handlePrintContract(c)
-                              }}
-                              title={t('landlordContractsPrintExportTitle')}
-                            >
-                              <Printer className='w-4 h-4 text-foreground/90' />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="md"
+                              variant="secondary"
+                              size="sm"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
                                 setIsExtendModalOpen(true)
                               }}
-                              leftIcon={<CalendarDays className='w-4 h-4' />}
+                              leftIcon={<CalendarDays />}
                             >
                               {t('landlordContractsBtnExtend')}
                             </Button>
                             <Button
-                              variant="outline"
-                              size="md"
+                              variant="danger"
+                              size="sm"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
                                 setIsTerminateModalOpen(true)
                               }}
-                              leftIcon={<Ban className='w-4 h-4' />}
+                              leftIcon={<Ban />}
                             >
                               {t('landlordContractsBtnTerminate')}
                             </Button>
@@ -828,20 +720,12 @@ export default function ContractsPage() {
                             <tr
                               key={c.id || idx}
                               onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                              className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
+                              className="hover:bg-card-hover transition-colors group cursor-pointer"
                             >
                               <td className="px-5 py-4 whitespace-nowrap">
-                                <div className="flex flex-col gap-0.5">
-                                  <div className="flex items-center gap-2">
-                                    <Text as="span" size="sm" weight="black" color="brand">
-                                      {t('landlordRoomDetailRoomPrefix')} {c.room}
-                                    </Text>
-                                    <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-info-soft text-info border border-info-subtle">
-                                      {activeBuilding?.name || 'Dormio'}
-                                    </Text>
-                                  </div>
-                                  <Text as="span" size="2xs" weight="bold" color="subtle">{c.id}</Text>
-                                </div>
+                                <Text as="span" size="sm" weight="black" color="brand">
+                                  {t('landlordRoomDetailRoomPrefix')} {c.room}
+                                </Text>
                               </td>
                               <td className="px-5 py-4 whitespace-nowrap">
                                 <div className="flex flex-col">
@@ -923,7 +807,7 @@ export default function ContractsPage() {
                                     }}
                                     title={t('landlordContractsBtnDetail')}
                                   >
-                                    <Eye className="w-4 h-4" />
+                                    <Eye className='w-4 h-4' />
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -935,21 +819,10 @@ export default function ContractsPage() {
                                     }}
                                     title={t('landlordContractsBtnExtend')}
                                   >
-                                    <CalendarDays className="w-4 h-4" />
+                                    <CalendarDays className='w-4 h-4' />
                                   </Button>
                                   <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={e => {
-                                      e.stopPropagation()
-                                      handlePrintContract(c)
-                                    }}
-                                    title={t('landlordContractsPrintExportTitle')}
-                                  >
-                                    <Printer className="w-4 h-4 text-[#2AC1BC]" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
+                                    variant="ghost-danger"
                                     size="icon"
                                     onClick={e => {
                                       e.stopPropagation()
@@ -958,7 +831,7 @@ export default function ContractsPage() {
                                     }}
                                     title={t('landlordContractsBtnTerminate')}
                                   >
-                                    <Ban className="w-4 h-4" />
+                                    <Ban className='w-4 h-4' />
                                   </Button>
                                 </div>
                               </td>
@@ -981,7 +854,6 @@ export default function ContractsPage() {
               onPageSizeChange={setRowsPerPage}
               unitLabel={t('landlordContractsPaginationTotalContracts')}
             />
-
 
           </>
         )}
