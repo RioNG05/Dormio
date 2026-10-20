@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import {
   Gauge,
   Zap,
@@ -393,25 +392,14 @@ export default function LandlordRoomMeterReadingPage({
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
       {/* Top Navigation Back Link */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push(`/landlord/rooms/${roomId}`)}
-          leftIcon={<ArrowLeft className="w-4 h-4" />}
-        >
-          <Text as="span" size="xs" weight="bold">
-            {t('landlordMeterRecordBackToRoom')}
-          </Text>
-        </Button>
-
-        <div className="flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-[#2AC1BC]" />
-          <Text size="xs" weight="semibold" color="secondary">
-            {activeBuilding?.name || 'Dormio Boarding House'}
-          </Text>
-        </div>
-      </div>
+      <Button
+        variant="outline"
+        size="md"
+        onClick={() => router.push(`/landlord/rooms/${roomId}`)}
+        leftIcon={<ArrowLeft className="w-4 h-4" />}
+      >
+        {t('landlordMeterRecordBackToRoom')}
+      </Button>
 
       {/* Header Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-800 rounded-3xl p-6 sm:p-7 text-white shadow-xl">
@@ -456,11 +444,10 @@ export default function LandlordRoomMeterReadingPage({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${
-                isReadyToConfirm
+              className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${isReadyToConfirm
                   ? 'bg-success-soft text-success'
                   : 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
-              }`}
+                }`}
             >
               {completedCount}/{servicesList.length}
             </div>
@@ -472,19 +459,18 @@ export default function LandlordRoomMeterReadingPage({
                 {isReadyToConfirm
                   ? t('landlordMeterRecordProgressAllDone')
                   : t('landlordMeterRecordProgressRemaining', {
-                      count: servicesList.length - completedCount,
-                    })}
+                    count: servicesList.length - completedCount,
+                  })}
               </Text>
             </div>
           </div>
 
           <div>
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                isReadyToConfirm
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isReadyToConfirm
                   ? 'bg-success-soft text-success border border-success-subtle'
                   : 'bg-warning-soft text-warning border border-warning-subtle'
-              }`}
+                }`}
             >
               {isReadyToConfirm ? (
                 <>
@@ -504,15 +490,13 @@ export default function LandlordRoomMeterReadingPage({
         {/* Progress bar line */}
         <div className="w-full bg-card-hover h-2.5 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-500 rounded-full ${
-              isReadyToConfirm
+            className={`h-full transition-all duration-500 rounded-full ${isReadyToConfirm
                 ? 'bg-emerald-500'
                 : 'bg-gradient-to-r from-[#2AC1BC] to-teal-500'
-            }`}
+              }`}
             style={{
-              width: `${
-                servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
-              }%`,
+              width: `${servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
+                }%`,
             }}
           />
         </div>
@@ -554,13 +538,12 @@ export default function LandlordRoomMeterReadingPage({
             return (
               <div
                 key={service.serviceId}
-                className={`bg-card border rounded-3xl p-5 sm:p-6 transition-all shadow-sm space-y-5 ${
-                  state.readingValue !== null
+                className={`bg-card border rounded-3xl p-5 sm:p-6 transition-all shadow-sm space-y-5 ${state.readingValue !== null
                     ? isAnomaly
                       ? 'border-danger-subtle ring-2 ring-rose-100'
                       : 'border-success-subtle ring-2 ring-emerald-100'
                     : 'border-line hover:border-line'
-                }`}
+                  }`}
               >
                 {/* Service Card Top Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
@@ -625,9 +608,8 @@ export default function LandlordRoomMeterReadingPage({
                         <img
                           src={state.imageUrl}
                           alt={service.serviceName}
-                          className={`w-full h-full object-cover transition-opacity ${
-                            state.isScanning ? 'opacity-40' : 'opacity-90'
-                          }`}
+                          className={`w-full h-full object-cover transition-opacity ${state.isScanning ? 'opacity-40' : 'opacity-90'
+                            }`}
                         />
 
                         {state.isScanning && (

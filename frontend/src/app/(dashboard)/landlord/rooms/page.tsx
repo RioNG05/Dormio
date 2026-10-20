@@ -36,6 +36,7 @@ import {
   ViewModeToggle,
   type TextColor,
 } from '@/components/ui'
+import { ImageUpload } from '@/components/ImageUpload'
 import { formatCurrency } from '@/utils'
 import {
   bulkGenerateRooms,
@@ -231,6 +232,7 @@ export default function RoomsPage() {
   const [formMaxOccupants, setFormMaxOccupants] = useState('2')
   const [formStatus, setFormStatus] = useState('available')
   const [formImageUrl, setFormImageUrl] = useState('')
+  const [isImageUploading, setIsImageUploading] = useState(false)
   const [formPrice, setFormPrice] = useState('3.500.000')
   const [formNotes, setFormNotes] = useState('')
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
@@ -335,6 +337,7 @@ export default function RoomsPage() {
     setFormMaxOccupants('2')
     setFormStatus('available')
     setFormImageUrl('')
+    setIsImageUploading(false)
     setFormPrice('3.500.000')
     setFormNotes('')
     setSingleError(null)
@@ -449,6 +452,7 @@ export default function RoomsPage() {
   // Handle single room submit
   const handleSingleRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isImageUploading) return
     setSingleError(null)
 
     if (!formRoomNumber.trim()) {
@@ -859,14 +863,6 @@ export default function RoomsPage() {
         {/* Toolbar Header */}
         <div className="p-4 border-b border-line flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {/* Search Input */}
-            <SearchInput
-              placeholder={t('landlordRoomsSearchInputPlaceholder')}
-              value={searchQuery}
-              onChange={val => setSearchQuery(val)}
-              containerClassName="w-full sm:w-72"
-            />
-
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
               <SelectInput
@@ -896,12 +892,20 @@ export default function RoomsPage() {
             </div>
           </div>
 
-          {/* View Switcher: Grid vs Table */}
-          <ViewModeToggle
-            value={viewMode}
-            onChange={handleViewModeChange}
-            showLabels
-          />
+          <div className="flex items-center gap-3">
+            {/* Search Input */}
+            <SearchInput
+              placeholder={t('landlordRoomsSearchInputPlaceholder')}
+              value={searchQuery}
+              onChange={val => setSearchQuery(val)}
+              containerClassName="w-full sm:w-72"
+            />
+            {/* View Switcher: Grid vs Table */}
+            <ViewModeToggle
+              value={viewMode}
+              onChange={handleViewModeChange}
+            />
+          </div>
         </div>
 
         {/* Content Section: Grid View vs Table View */}
@@ -982,6 +986,7 @@ export default function RoomsPage() {
                           <Button
                             type="button"
                             variant="ghost"
+                            rounded='full'
                             size="sm"
                             onClick={e => {
                               e.stopPropagation()
@@ -1475,14 +1480,14 @@ export default function RoomsPage() {
               type="button"
               variant="outline"
               onClick={handleCloseSingleModal}
-              disabled={isSingleSubmitting}
+              disabled={isSingleSubmitting || isImageUploading}
             >
               {t('landlordRoomsSingleBtnCancel')}
             </Button>
             <Button
               type="submit"
               variant="primary"
-              disabled={isSingleSubmitting}
+              disabled={isSingleSubmitting || isImageUploading}
               isLoading={isSingleSubmitting}
               leftIcon={
                 selectedRoomId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />
@@ -1521,7 +1526,10 @@ export default function RoomsPage() {
                     <Text as="label" size="xs" weight="bold" className="text-foreground/90">
                       {t('landlordRoomsSingleBuildingLabel')}
                     </Text>
-                    <Text as="div" size="xs" weight="medium" className="w-full px-3.5 py-2.5 border border-line bg-surface rounded-xl text-foreground/90 truncate">
+                    <Text
+                      as="div" size="xs" color='subtle' weight="medium"
+                      className="w-full px-3.5 py-2.5 border border-line bg-surface rounded-xl truncate"
+                    >
                       {activeBuilding?.name || 'Dormio Boarding House'}
                     </Text>
                   </div>
@@ -1626,14 +1634,30 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="pt-1">
-                  <TextInput
+                  <ImageUpload
                     label={t('landlordRoomsSingleImageLabel')}
+                    helperText={t('landlordRoomsSingleImageHelper')}
+                    loadingText={t('landlordRoomsSingleImageUploading')}
                     value={formImageUrl}
-                    onChange={e => {
-                      setFormImageUrl(e.target.value)
+                    onChange={url => {
+                      setFormImageUrl(url)
                       setIsSingleDirty(true)
                     }}
-                    placeholder="https://images.unsplash.com/photo-..."
+                    onRemove={() => {
+                      setFormImageUrl('')
+                      setIsSingleDirty(true)
+                    }}
+                    onUploadingChange={setIsImageUploading}
+                    folder="dormio/rooms"
+                    aspectRatio="video"
+                    className="max-h-[220px]"
+                    disabled={isSingleSubmitting}
+                    showInspectButton={Boolean(formImageUrl)}
+                    onInspect={url => {
+                      if (typeof window !== 'undefined' && url) {
+                        window.open(url, '_blank')
+                      }
+                    }}
                   />
                 </div>
               </div>

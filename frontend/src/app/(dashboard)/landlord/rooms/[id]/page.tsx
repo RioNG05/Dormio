@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, use, useMemo } from 'react'
+import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -15,26 +15,23 @@ import {
   Banknote,
   Sparkles,
   Wrench,
-  X,
   ChevronDown,
   AlertTriangle,
   Eye,
   History,
   Wallet,
   Plus,
-  Upload,
-  RefreshCw,
   Filter,
   Building2,
   AlertCircle,
   Users,
-  CheckCircle2,
   ShieldCheck,
   Phone,
+  MessageSquare,
   FileText,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
@@ -51,8 +48,6 @@ import {
   getRoomDashboard,
   updateRoom,
   RoomDashboardResponse,
-  RoomDashboardContract,
-  RoomDashboardTenant,
 } from '@/services/room.service'
 import {
   meterReadingService,
@@ -164,7 +159,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const router = useRouter()
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const { currentLocale } = useLanguage()
 
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -194,24 +188,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
   // Modals & form state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isMeterModalOpen, setIsMeterModalOpen] = useState(false)
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false)
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
   const [discardConfirmModal, setDiscardConfirmModal] = useState<{
     isOpen: boolean
     onConfirm: () => void
   }>({
     isOpen: false,
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
-
-  const [isOcrScanning, setIsOcrScanning] = useState(false)
-  const [ocrSuccessMsg, setOcrSuccessMsg] = useState('')
 
   // Filter state for Month/Year
   const [selectedFilterPeriod, setSelectedFilterPeriod] = useState<string>('all')
@@ -287,17 +277,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     area: '',
     floor: '',
   })
-
-  // Current date for default picker
-  const currentMonthNum = new Date().getMonth() + 1
-  const currentYearNum = new Date().getFullYear()
-
-  // Meter modal input states
-  const [selectedMonth, setSelectedMonth] = useState(`Tháng ${currentMonthNum}`)
-  const [selectedYear, setSelectedYear] = useState(currentYearNum.toString())
-  const [formElec, setFormElec] = useState('')
-  const [formWater, setFormWater] = useState('')
-  const [isSubmittingMeter, setIsSubmittingMeter] = useState(false)
 
   // Meter Readings History & Active Services Data
   const [meterHistory, setMeterHistory] = useState<MeterHistoryRecord[]>([])
@@ -478,12 +457,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               const water = meterServicesRes.services.find(s =>
                 s.serviceName.toLowerCase().includes('nước'),
               )
-              if (elec?.unbilledReading?.readingValue != null) {
-                setFormElec(elec.unbilledReading.readingValue.toString())
-              }
-              if (water?.unbilledReading?.readingValue != null) {
-                setFormWater(water.unbilledReading.readingValue.toString())
-              }
             }
 
             if (meterHistoryRes?.history) {
@@ -557,7 +530,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           setEditArea(initialEditValues.area)
           setEditFloor(initialEditValues.floor)
           setIsEditModalOpen(false)
-          setDiscardConfirmModal({ isOpen: false, onConfirm: () => {} })
+          setDiscardConfirmModal({ isOpen: false, onConfirm: () => { } })
         },
       })
     } else {
@@ -580,14 +553,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         setRoom(prev =>
           prev
             ? {
-                ...prev,
-                roomNumber: editRoomNumber || prev.roomNumber,
-                price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
-                area: editArea || prev.area,
-                floor: editFloor || prev.floor,
-                amenities: editAmenities,
-                notes: editNotes,
-              }
+              ...prev,
+              roomNumber: editRoomNumber || prev.roomNumber,
+              price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
+              area: editArea || prev.area,
+              floor: editFloor || prev.floor,
+              amenities: editAmenities,
+              notes: editNotes,
+            }
             : null,
         )
         setInitialEditValues({
@@ -606,14 +579,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       setRoom(prev =>
         prev
           ? {
-              ...prev,
-              roomNumber: editRoomNumber || prev.roomNumber,
-              price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
-              area: editArea || prev.area,
-              floor: editFloor || prev.floor,
-              amenities: editAmenities,
-              notes: editNotes,
-            }
+            ...prev,
+            roomNumber: editRoomNumber || prev.roomNumber,
+            price: editPrice.includes('₫') ? editPrice : `${editPrice} ₫`,
+            area: editArea || prev.area,
+            floor: editFloor || prev.floor,
+            amenities: editAmenities,
+            notes: editNotes,
+          }
           : null,
       )
       setInitialEditValues({
@@ -682,31 +655,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     showToast(t('landlordRoomDetailToastIncidentSuccess'), 'success')
   }
 
-  // Helper for restricted Meter month & year selection (current & next month only)
-  const getAvailableMeterPeriods = () => {
-    const now = new Date()
-    const currentMonth = now.getMonth() + 1 // 1 to 12
-    const currentYear = now.getFullYear()
-
-    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1
-    const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear
-
-    const monthOptions = [
-      {
-        label: t('landlordRoomDetailFilterMonth').replace('{month}', String(currentMonth)),
-        value: `Tháng ${currentMonth}`,
-      },
-      {
-        label: t('landlordRoomDetailFilterMonth').replace('{month}', String(nextMonth)),
-        value: `Tháng ${nextMonth}`,
-      },
-    ]
-
-    const yearOptions = Array.from(new Set([currentYear.toString(), nextMonthYear.toString()]))
-
-    return { monthOptions, yearOptions }
-  }
-
   // Open correction modal for a specific period
   const handleOpenCorrectionModal = (record: MeterHistoryRecord) => {
     setCorrectModal({
@@ -722,23 +670,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false)
-
-  // Close meter modal with unsaved confirmation check (Rule 10)
-  const handleCloseMeterModal = () => {
-    if (formElec.trim() !== '' || formWater.trim() !== '') {
-      setDiscardConfirmModal({
-        isOpen: true,
-        onConfirm: () => {
-          setFormElec('')
-          setFormWater('')
-          setIsMeterModalOpen(false)
-          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))
-        },
-      })
-    } else {
-      setIsMeterModalOpen(false)
-    }
-  }
 
   // Close correction modal with unsaved confirmation check (Rule 10)
   const handleCloseCorrectionModal = () => {
@@ -895,131 +826,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     }
   }
 
-  // Simulate AI OCR scanning
-  const handleSimulateAiOcr = () => {
-    setIsOcrScanning(true)
-    setOcrSuccessMsg('')
-    setTimeout(() => {
-      const elecService = roomMeteredServices.find(s =>
-        s.serviceName.toLowerCase().includes('điện'),
-      )
-      const waterService = roomMeteredServices.find(s =>
-        s.serviceName.toLowerCase().includes('nước'),
-      )
-      const baseElec = elecService?.lastReading?.readingValue ?? (meterHistory[0]?.newElec || 1400)
-      const baseWater = waterService?.lastReading?.readingValue ?? (meterHistory[0]?.newWater || 40)
-      const scannedElec = baseElec + Math.floor(Math.random() * 40) + 60
-      const scannedWater = baseWater + Math.floor(Math.random() * 4) + 3
-      setFormElec(scannedElec.toString())
-      setFormWater(scannedWater.toString())
-      setIsOcrScanning(false)
-      setOcrSuccessMsg(
-        t('landlordRoomDetailToastOcrSuccess')
-          .replace('{elec}', String(scannedElec))
-          .replace('{water}', String(scannedWater)),
-      )
-    }, 800)
-  }
-
-  // Save new meter reading from main modal
-  const handleSaveNewMeterReading = async () => {
-    if (!formElec && !formWater) {
-      showToast(t('landlordRoomDetailToastMeterInputRequired'), 'error')
-      return
-    }
-
-    if (!activeBuilding?.id || !resolvedParams.id) {
-      showToast(t('landlordRoomDetailToastRoomNotFound'), 'error')
-      return
-    }
-
-    const elecService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))
-    const waterService = roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))
-
-    const readings: Array<{ serviceId: string; readingValue: number; imageUrl?: string }> = []
-    if (elecService && formElec.trim() !== '') {
-      readings.push({
-        serviceId: elecService.serviceId,
-        readingValue: parseFloat(formElec),
-      })
-    }
-    if (waterService && formWater.trim() !== '') {
-      readings.push({
-        serviceId: waterService.serviceId,
-        readingValue: parseFloat(formWater),
-      })
-    }
-
-    if (readings.length === 0) {
-      showToast(t('landlordRoomDetailToastMeterServiceNotFound'), 'error')
-      return
-    }
-
-    try {
-      setIsSubmittingMeter(true)
-      const parsedMonth = parseInt(selectedMonth.replace('Tháng ', '').trim(), 10)
-      const parsedYear = parseInt(selectedYear.trim(), 10)
-
-      await meterReadingService.recordLandlordMeterReading(activeBuilding.id, {
-        roomId: resolvedParams.id,
-        month: isNaN(parsedMonth) ? undefined : parsedMonth,
-        year: isNaN(parsedYear) ? undefined : parsedYear,
-        readings,
-      })
-
-      const periodFull = `Tháng ${selectedMonth.replace('Tháng ', '').padStart(2, '0')}/${selectedYear}`
-      showToast(
-        t('landlordRoomDetailToastMeterLogSuccess').replace('{period}', periodFull),
-        'success',
-      )
-      setIsMeterModalOpen(false)
-
-      // Refresh meter services & history
-      const [newServicesRes, newHistoryRes] = await Promise.all([
-        meterReadingService.getLandlordRoomMeteredServices(activeBuilding.id, resolvedParams.id),
-        meterReadingService.getLandlordRoomMeterHistory(activeBuilding.id, resolvedParams.id),
-      ])
-
-      if (newServicesRes?.services) {
-        setRoomMeteredServices(newServicesRes.services)
-      }
-      if (newHistoryRes?.history) {
-        setMeterHistoryRaw(newHistoryRes.history)
-        const mapped = newHistoryRes.history.map((h, idx) => {
-          const elec = h.services.find(
-            s => s.serviceName.toLowerCase().includes('điện') || s.unit.toLowerCase() === 'kwh',
-          )
-          const water = h.services.find(
-            s =>
-              s.serviceName.toLowerCase().includes('nước') ||
-              s.unit.toLowerCase().includes('m3') ||
-              s.unit.toLowerCase().includes('m³'),
-          )
-          return {
-            id: h.id || `cycle_${h.period}_${idx}`,
-            period: h.period,
-            date: h.date,
-            oldElec: elec?.oldReading ?? 0,
-            newElec: elec?.newReading ?? 0,
-            oldWater: water?.oldReading ?? 0,
-            newWater: water?.newReading ?? 0,
-            isOpen: idx === 0,
-            editReason: h.editReason,
-            editedAt: h.editedAt,
-            editHistory: h.editHistory,
-            editActions: h.editActions,
-          }
-        })
-        setMeterHistory(mapped)
-      }
-    } catch (err: any) {
-      console.error('Failed to record meter readings:', err)
-      showToast(err.message || t('landlordRoomDetailToastMeterLogError'), 'error')
-    } finally {
-      setIsSubmittingMeter(false)
-    }
-  }
-
   if (!isMounted || isLoading) {
     return (
       <div className="space-y-6 animate-pulse p-4">
@@ -1133,43 +939,34 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
             <Text as="h1" variant="heading" size="2xl" weight="black" color="default" className="tracking-tight sm:text-2xl">
               {t('landlordRoomDetailRoomPrefix')} {room.roomNumber}
             </Text>
             <span
-              className={`px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${
-                isOccupied
-                  ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30'
-                  : isMaintenance
-                    ? 'text-[#FF6B35] bg-[#FF6B35]/10 border-[#FF6B35]/30'
-                    : isReserved
-                      ? 'text-purple-600 bg-purple-500/10 border-purple-500/30'
-                      : isVacant
-                        ? 'text-blue-600 bg-blue-500/10 border-blue-500/30'
-                        : 'text-muted bg-card-hover border-line'
-              }`}
+              className={`px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${isOccupied
+                ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30'
+                : isMaintenance
+                  ? 'text-[#FF6B35] bg-[#FF6B35]/10 border-[#FF6B35]/30'
+                  : isReserved
+                    ? 'text-purple-600 bg-purple-500/10 border-purple-500/30'
+                    : isVacant
+                      ? 'text-blue-600 bg-blue-500/10 border-blue-500/30'
+                      : 'text-muted bg-card-hover border-line'
+                }`}
             >
-              <Text as="span" variant="badge" size="3xs" weight="extrabold" color="inherit" className="tracking-wider">
+              <Text as="span" variant="badge" size="3xs" weight="extrabold" color="inherit" className="tracking-wider flex items-center">
                 {getStatusLabel(room.status)}
               </Text>
             </span>
-            <span className="bg-card-hover px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-line truncate max-w-[170px] sm:max-w-none">
-              <Text as="span" size="3xs" weight="bold" color="secondary" className="truncate">
-                {activeBuilding?.name ||
-                  (room.building === 'b2' ? 'Dormio Campus Cầu Giấy' : 'Dormio Premier Quận 1')}
-              </Text>
-            </span>
             {dashboardData?.room?.roomType?.name && (
-              <span className="bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle">
-                <Text as="span" size="3xs" weight="bold" color="success">
-                  {dashboardData.room.roomType.name}
-                </Text>
-              </span>
+              <Text
+                as="span" size="3xs" weight="bold" color="success"
+                className='bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle flex items-center'
+              >
+                {dashboardData.room.roomType.name}
+              </Text>
             )}
-            <Text as="span" size="2xs" weight="bold" color="subtle">
-              ID: {room.id.slice(0, 8)}
-            </Text>
           </div>
         </div>
 
@@ -1183,9 +980,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               leftIcon={<Gauge className="w-4 h-4" />}
               className="flex-1 md:flex-initial"
             >
-              <Text as="span" size="xs" weight="bold" color="inherit">
-                {t('landlordRoomDetailBtnLogMeter')}
-              </Text>
+              {t('landlordRoomDetailBtnLogMeter')}
             </Button>
           )}
 
@@ -1203,9 +998,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 variant="outline"
                 leftIcon={<Eye className="w-4 h-4" />}
               >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailBtnViewContract')}
-                </Text>
+                {t('landlordRoomDetailBtnViewContract')}
               </Button>
             </Link>
           ) : (
@@ -1218,9 +1011,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 variant="outline"
                 leftIcon={<FileSignature className="w-4 h-4" />}
               >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('landlordRoomDetailBtnCreateContract')}
-                </Text>
+                {t('landlordRoomDetailBtnCreateContract')}
               </Button>
             </Link>
           )}
@@ -1232,9 +1023,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             leftIcon={<Edit className="w-4 h-4" />}
             className="flex-1 md:flex-initial"
           >
-            <Text as="span" size="xs" weight="bold" color="inherit">
-              {t('landlordRoomDetailBtnEdit')}
-            </Text>
+            {t('landlordRoomDetailBtnEdit')}
           </Button>
 
           <Button
@@ -1257,9 +1046,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             leftIcon={<Trash2 className="w-4 h-4" />}
             className="flex-1 md:flex-initial"
           >
-            <Text as="span" size="xs" weight="bold" color="inherit">
-              {t('landlordRoomDetailBtnDelete')}
-            </Text>
+            {t('landlordRoomDetailBtnDelete')}
           </Button>
         </div>
       </div>
@@ -1277,10 +1064,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               {isOccupied && currentContract && (
                 <Link
                   href={`/landlord/contracts/${currentContract.id}`}
-                  className="px-2.5 py-1 text-[11px] font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-2 text-[11px] font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <Text as="span" size="2xs" weight="bold" color="brand">
+                  <Text as="span" size="xs" weight="bold" color="brand">
                     {t('landlordRoomDetailContractDetailBtn')}
                   </Text>
                 </Link>
@@ -1329,23 +1116,39 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                      <a
-                        href={`tel:${primaryTenant?.phoneNumber || room.tenantPhone || '0977815704'}`}
-                        className="px-3 py-1.5 bg-red-600 text-white border border-line rounded-xl text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs text-center flex items-center justify-center gap-1 cursor-pointer"
-                      >
-                        <Phone className="w-3 h-3" />
-                        <Text as="span" size="xs" weight="bold" color="white">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                      <a href={`tel:${primaryTenant?.phoneNumber || room.tenantPhone || '0977815704'}`}>
+                        <Button
+                          size='sm'
+                          variant='success'
+                          leftIcon={<Phone />}
+                        >
                           {t('landlordRoomDetailCallNow')}
-                        </Text>
+                        </Button>
                       </a>
                       <Link
-                        href={`/landlord/customers/${primaryTenant?.identityNumber || room.tenantCccd || '00109313040168'}`}
-                        className="px-3.5 py-1.5 bg-[#2AC1BC] text-white rounded-xl text-xs font-bold hover:bg-[#25ad87] transition-all shadow-xs text-center flex items-center justify-center gap-1 cursor-pointer"
+                        href={`/landlord/messages?${new URLSearchParams({
+                          ...(primaryTenant?.id ? { userId: primaryTenant.id } : {}),
+                          ...((primaryTenant?.fullName || room.tenant) ? { tenant: primaryTenant?.fullName || room.tenant || '' } : {}),
+                          ...(room.roomNumber ? { room: room.roomNumber } : {}),
+                        }).toString()}`}
                       >
-                        <Text as="span" size="xs" weight="bold" color="white">
+                        <Button
+                          size='sm'
+                          variant='primary'
+                          leftIcon={<MessageSquare />}
+                        >
+                          {t('landlordRoomDetailMessageBtn')}
+                        </Button>
+                      </Link>
+                      <Link href={`/landlord/customers/${primaryTenant?.id || ''}`}>
+                        <Button
+                          size='sm'
+                          variant='white'
+                          leftIcon={<User />}
+                        >
                           {t('landlordRoomDetailProfileBtn')}
-                        </Text>
+                        </Button>
                       </Link>
                     </div>
                   </div>
@@ -1361,18 +1164,25 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </Text>
                       <div className="flex flex-wrap gap-2">
                         {otherTenants.map(ot => (
-                          <div
+                          <Link
                             key={ot.id}
-                            className="px-2.5 py-1 bg-card border border-line rounded-lg flex items-center gap-1.5 shadow-2xs"
+                            href={`/landlord/messages?${new URLSearchParams({
+                              ...(ot.id ? { userId: ot.id } : {}),
+                              ...(ot.fullName ? { tenant: ot.fullName } : {}),
+                              ...(room.roomNumber ? { room: room.roomNumber } : {}),
+                            }).toString()}`}
+                            className="px-2.5 py-1 bg-card hover:bg-card-hover border border-line rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer group"
+                            title={t('landlordRoomDetailMessageBtn')}
                           >
-                            <Users className="w-3 h-3 text-muted" />
+                            <Users className="w-3 h-3 text-muted group-hover:text-primary transition-colors" />
                             <Text as="span" size="2xs" weight="bold" color="default">
                               {ot.fullName}
                             </Text>
                             <Text as="span" size="2xs" weight="normal" color="subtle">
                               ({ot.phoneNumber})
                             </Text>
-                          </div>
+                            <MessageSquare className="w-3 h-3 text-muted group-hover:text-primary transition-colors ml-0.5" />
+                          </Link>
                         ))}
                       </div>
                     </div>
@@ -1386,15 +1196,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   <Button
                     size="sm"
                     variant="primary"
+                    leftIcon={<Plus />}
                     onClick={() =>
                       router.push(
                         `/landlord/contracts/create?roomId=${dashboardData?.room.id || room?.id || resolvedParams.id}`,
                       )
                     }
                   >
-                    <Text as="span" size="xs" weight="bold" color="inherit">
-                      {t('landlordRoomDetailCreateContractNew')}
-                    </Text>
+                    {t('landlordRoomDetailCreateContractNew')}
                   </Button>
                 </div>
               )}
@@ -1486,46 +1295,32 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   return (
                     <div
                       key={inv.id}
-                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 ${
-                        isUnpaid
-                          ? 'bg-rose-500/5 border-rose-500/30'
-                          : 'bg-surface border-line hover:bg-zinc-100/60'
-                      }`}
+                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all space-y-3 ${isUnpaid
+                        ? 'bg-rose-500/5 border-rose-500/30'
+                        : 'bg-surface border-line'
+                        }`}
                     >
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={`p-2 sm:p-2.5 text-white rounded-xl shadow-xs shrink-0 ${isUnpaid ? 'bg-rose-500' : 'bg-[#2AC1BC]'}`}
-                          >
-                            <Text as="span" size="xs" weight="black" color="white">
-                              {inv.monthSeq}
-                            </Text>
-                          </div>
-                          <div>
-                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                              <Text as="span" size="xs" weight="black" color="default">
-                                {inv.id}-{room.roomNumber}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <div className='flex items-center justify-center gap-2'>
+                              <Text as="span" weight="bold" color={isUnpaid ? 'danger' : 'subtle'}>
+                                {inv.period}
                               </Text>
-                              <Text as="span" size="3xs" weight="bold" color={isUnpaid ? 'danger' : 'subtle'}>
-                                ({inv.period})
+                              <Text as="span" variant="badge" size="3xs" weight="black" color={isUnpaid ? 'danger' : 'success'}
+                                className={`px-2 py-0.5 rounded-full ${isUnpaid ? 'bg-danger-soft' : 'bg-success-soft'}`}>
+                                {isUnpaid
+                                  ? t('landlordRoomDetailInvoiceStatusUnpaid')
+                                  : t('landlordRoomDetailInvoiceStatusPaid')}
                               </Text>
-                              <span
-                                className={`px-2 py-0.5 rounded-full ${isUnpaid ? 'bg-danger-soft' : 'bg-success-soft'}`}
-                              >
-                                <Text as="span" variant="badge" size="3xs" weight="black" color={isUnpaid ? 'danger' : 'success'}>
-                                  {isUnpaid
-                                    ? t('landlordRoomDetailInvoiceStatusUnpaid')
-                                    : t('landlordRoomDetailInvoiceStatusPaid')}
-                                </Text>
-                              </span>
                             </div>
-                            <Text size="3xs" weight="semibold" color="subtle" className="mt-0.5">
-                              {t('landlordRoomDetailInvoiceDeadline')}{' '}
-                              <Text as="strong" size="3xs" weight="bold" color={isUnpaid ? 'danger' : 'secondary'}>
-                                {inv.deadline}
-                              </Text>
-                            </Text>
                           </div>
+                          <Text size="3xs" weight="semibold" color="subtle" className="mt-0.5">
+                            {t('landlordRoomDetailInvoiceDeadline')}{' '}
+                            <Text as="strong" size="3xs" weight="bold" color={isUnpaid ? 'danger' : 'secondary'}>
+                              {inv.deadline}
+                            </Text>
+                          </Text>
                         </div>
 
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-line">
@@ -1538,25 +1333,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           >
                             {fin.grandInvoiceTotal.toLocaleString('vi-VN')} ₫
                           </Text>
-                          {isUnpaid ? (
-                            <div className="flex items-center gap-2 shrink-0">
-                              <Button size="sm" variant="primary">
-                                <Text as="span" size="xs" weight="bold" color="inherit">
-                                  VietQR
-                                </Text>
-                              </Button>
-                              <a
-                                href="https://zalo.me"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="px-3 py-1.5 bg-[#0068FF] hover:bg-[#0052cc] text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 cursor-pointer shadow-2xs shrink-0 whitespace-nowrap"
-                              >
-                                <Text as="span" size="xs" weight="bold" color="white">
-                                  Zalo
-                                </Text>
-                              </a>
-                            </div>
-                          ) : (
+                          {isUnpaid ?? (
                             <span className="bg-line/60 px-2 py-0.5 rounded-md whitespace-nowrap">
                               <Text as="span" variant="badge" size="3xs" weight="extrabold" color="secondary">
                                 {inv.method}
@@ -1711,17 +1488,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   return (
                     <div
                       key={hist.id}
-                      className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                        isActive
-                          ? 'bg-[#2AC1BC]/5 border-[#2AC1BC]/30'
-                          : 'bg-surface border-line'
-                      }`}
+                      className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isActive
+                        ? 'bg-[#2AC1BC]/5 border-[#2AC1BC]/30'
+                        : 'bg-surface border-line'
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                            isActive ? 'bg-[#2AC1BC]' : 'bg-line'
-                          }`}
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-[#2AC1BC]' : 'bg-line'
+                            }`}
                         >
                           <Text as="span" size="xs" weight="black" className={isActive ? 'text-white' : 'text-foreground/90'}>
                             {hist.primaryTenantName.charAt(0)}
@@ -1733,11 +1508,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                               {hist.primaryTenantName}
                             </Text>
                             <span
-                              className={`px-2 py-0.5 rounded-full ${
-                                isActive
-                                  ? 'bg-success-soft'
-                                  : 'bg-line'
-                              }`}
+                              className={`px-2 py-0.5 rounded-full ${isActive
+                                ? 'bg-success-soft'
+                                : 'bg-line'
+                                }`}
                             >
                               <Text as="span" size="2xs" weight="black" color={isActive ? 'success' : 'secondary'}>
                                 {isActive
@@ -1764,13 +1538,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           {parseInt(hist.rentPrice).toLocaleString('vi-VN')}{' '}
                           {t('landlordRoomDetailRentPerMonth')}
                         </Text>
-                        <Link
-                          href={`/landlord/contracts/${hist.id}`}
-                          className="px-2.5 py-1 bg-card border border-line rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
-                        >
-                          <Text as="span" size="xs" weight="bold" color="default">
+                        <Link href={`/landlord/contracts/${hist.id}`}>
+                          <Button size='sm' variant='white'>
                             {t('landlordRoomDetailViewContractShort')}
-                          </Text>
+                          </Button>
                         </Link>
                       </div>
                     </div>
@@ -1789,15 +1560,10 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* SECTION 2: LỊCH SỬ CHỐT ĐIỆN NƯỚC */}
           <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-line pb-3">
-              <div>
-                <Text as="h2" weight="black" color="default" className="text-xs sm:text-sm flex items-center gap-2">
-                  <History className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                  {t('landlordRoomDetailMeterHistoryTitle')}
-                </Text>
-                <Text size="xs" color="secondary" weight="medium" className="mt-0.5">
-                  {t('landlordRoomDetailMeterHistoryDesc')}
-                </Text>
-              </div>
+              <Text as="h2" weight="black" color="default" className="text-xs sm:text-sm flex items-center gap-2">
+                <History className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                {t('landlordRoomDetailMeterHistoryTitle')}
+              </Text>
 
               <Button
                 size="sm"
@@ -1882,7 +1648,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                                 e.stopPropagation()
                                 handleOpenCorrectionModal(item)
                               }}
-                              leftIcon={<Edit  />}
+                              leftIcon={<Edit className='w-4 h-4' />}
                             >
                               <Text as="span" size="xs" weight="bold" color="inherit">
                                 {t('landlordRoomDetailEditMeterBtn')}
@@ -2110,7 +1876,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </Text>
                   <Button
                     size="sm"
-                    variant="secondary"
+                    variant="accent"
                     onClick={() => setIsIncidentModalOpen(true)}
                   >
                     <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2132,22 +1898,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       .map(item => (
                         <div
                           key={item.id}
-                          className={`p-3 rounded-xl border min-h-[86px] flex flex-col justify-between ${
-                            item.status === 'Đang xử lý'
-                              ? 'bg-amber-500/5 border-amber-500/20'
-                              : 'bg-surface border-line'
-                          }`}
+                          className={`p-3 rounded-xl border min-h-[86px] flex flex-col justify-between ${item.status === 'Đang xử lý'
+                            ? 'bg-amber-500/5 border-amber-500/20'
+                            : 'bg-surface border-line'
+                            }`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <Text as="span" size="xs" weight="black" color="default" className="line-clamp-1">
                               {item.title}
                             </Text>
                             <span
-                              className={`px-2 py-0.5 rounded-full shrink-0 ${
-                                item.status === 'Đang xử lý'
-                                  ? 'bg-warning-soft'
-                                  : 'bg-success-soft'
-                              }`}
+                              className={`px-2 py-0.5 rounded-full shrink-0 ${item.status === 'Đang xử lý'
+                                ? 'bg-warning-soft'
+                                : 'bg-success-soft'
+                                }`}
                             >
                               <Text as="span" size="2xs" weight="black" color={item.status === 'Đang xử lý' ? 'warning' : 'success'}>
                                 {item.status === 'Đang xử lý'
@@ -2169,13 +1933,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             <Text as="span" size="2xs" color="secondary" weight="bold">
                               {item.completedDate
                                 ? t('landlordRoomDetailMaintenanceCompletedDate').replace(
-                                    '{date}',
-                                    item.completedDate,
-                                  )
+                                  '{date}',
+                                  item.completedDate,
+                                )
                                 : t('landlordRoomDetailMaintenanceReportDate').replace(
-                                    '{date}',
-                                    item.reportDate,
-                                  )}
+                                  '{date}',
+                                  item.reportDate,
+                                )}
                             </Text>
                             <Text
                               as="span"
@@ -2231,30 +1995,23 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             {/* 2. Quản Lý Tiền Đặt Cọc */}
             <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4 flex flex-col justify-between">
               <div>
-                <div className="flex justify-between items-center border-b border-line pb-3">
-                  <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-purple-600" />{' '}
-                    {t('landlordRoomDetailDepositTitle')}
-                  </Text>
-                  <span className="px-2.5 py-0.5 bg-deposit-soft border border-deposit-subtle rounded-full">
-                    <Text as="span" size="2xs" weight="black" className="text-deposit">
-                      Escrow
-                    </Text>
-                  </span>
-                </div>
+                <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2">
+                  <Wallet className="w-4 h-4 text-purple-600" />{' '}
+                  {t('landlordRoomDetailDepositTitle')}
+                </Text>
 
                 <div className="mt-3 p-4 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-indigo-500/10 rounded-2xl border border-deposit-subtle space-y-3">
                   <div className="flex items-center justify-between">
                     <Text as="span" size="2xs" weight="black" className="text-deposit uppercase tracking-wider">
                       {t('landlordRoomDetailDepositSafeBadge')}
                     </Text>
-                    <span className="px-2 py-0.5 bg-success-soft rounded-full border border-success-subtle">
-                      <Text as="span" size="2xs" weight="black" color="success">
-                        {currentContract?.deposit?.status === 'active'
-                          ? t('landlordRoomDetailDepositLocked')
-                          : t('landlordRoomDetailDepositLabel')}
-                      </Text>
-                    </span>
+                    <Text as="span" size="2xs" weight="black" color="success"
+                      className="px-2 py-0.5 bg-success-soft rounded-full border border-success-subtle"
+                    >
+                      {currentContract?.deposit?.status === 'active'
+                        ? t('landlordRoomDetailDepositLocked')
+                        : t('landlordRoomDetailDepositLabel')}
+                    </Text>
                   </div>
 
                   <div className="flex items-baseline justify-between">
@@ -2295,15 +2052,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="space-y-2 pt-1">
                 <Button fullWidth
-                  size="md"
+                  size="sm"
                   variant="primary"
                   onClick={() => showToast(t('landlordRoomDetailRefundToast'), 'success')}
-                  leftIcon={<Wallet  />}
+                  leftIcon={<Wallet className='w-5 h-5' />}
                   className="from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                 >
-                  <Text as="span" size="sm" weight="bold" color="inherit">
-                    {t('landlordRoomDetailRefundDepositBtn')}
-                  </Text>
+                  {t('landlordRoomDetailRefundDepositBtn')}
                 </Button>
               </div>
             </div>
@@ -2331,9 +2086,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <Text as="span" size="2xs" color="secondary">
                   {currentContract
                     ? t('landlordRoomDetailMonthlyDueDay').replace(
-                        '{day}',
-                        String(currentContract.monthlyPaymentDate),
-                      )
+                      '{day}',
+                      String(currentContract.monthlyPaymentDate),
+                    )
                     : t('landlordRoomDetailStartOfMonth')}
                 </Text>
               </div>
@@ -2376,9 +2131,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <Text as="span" size="2xs" color="secondary">
                   {dashboardData?.room.maxOccupants
                     ? t('landlordRoomDetailMaxOccupantsText').replace(
-                        '{count}',
-                        String(dashboardData.room.maxOccupants),
-                      )
+                      '{count}',
+                      String(dashboardData.room.maxOccupants),
+                    )
                     : t('landlordRoomDetailBalconyText')}
                 </Text>
               </div>
@@ -2616,140 +2371,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </Modal.Footer>
       </Modal>
 
-      {/* MODAL 2: CHỐT SỐ ĐIỆN NƯỚC / AI OCR SỐ MỚI */}
-      <Modal
-        isOpen={isMeterModalOpen}
-        onClose={handleCloseMeterModal}
-        size="lg"
-      >
-        <Modal.Header
-          title={t('landlordRoomDetailModalLogMeterTitle')}
-          description={t('landlordRoomDetailModalLogMeterDesc').replace(
-            '{roomNumber}',
-            room.roomNumber,
-          )}
-          icon={
-            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-              <Gauge className="w-5 h-5" />
-            </div>
-          }
-        />
-
-        <Modal.Body className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <SelectInput
-              label={t('landlordRoomDetailMonthLabel')}
-              value={selectedMonth}
-              onChange={e => setSelectedMonth(e.target.value)}
-              options={getAvailableMeterPeriods().monthOptions}
-            />
-            <SelectInput
-              label={t('landlordRoomDetailYearLabel')}
-              value={selectedYear}
-              onChange={e => setSelectedYear(e.target.value)}
-              options={getAvailableMeterPeriods().yearOptions.map(y => ({ value: y, label: String(y) }))}
-            />
-          </div>
-
-          {/* AI OCR UPLOAD BOX */}
-          <div className="p-4 bg-gradient-to-br from-[#2AC1BC]/10 to-teal-500/5 rounded-2xl border border-[#2AC1BC]/30 space-y-2 text-center">
-            <div className="flex justify-center">
-              <div className="w-10 h-10 rounded-full bg-card shadow-xs text-[#2AC1BC] flex items-center justify-center">
-                <Sparkles className="w-5 h-5" />
-              </div>
-            </div>
-            <Text as="h3" weight="black" color="default" size="xs">
-              {t('landlordRoomDetailOcrTitle')}
-            </Text>
-            <Text size="2xs" color="secondary" weight="semibold">
-              {t('landlordRoomDetailOcrDesc')}
-            </Text>
-            <Button
-              type="button"
-              size="sm"
-              variant="primary"
-              onClick={handleSimulateAiOcr}
-              isLoading={isOcrScanning}
-              leftIcon={!isOcrScanning ? <Upload className="w-3.5 h-3.5" /> : undefined}
-            >
-              <Text as="span" size="xs" weight="bold" color="inherit">
-                {isOcrScanning
-                  ? t('landlordRoomDetailOcrScanning')
-                  : t('landlordRoomDetailOcrUploadBtn')}
-              </Text>
-            </Button>
-            {ocrSuccessMsg && (
-              <div className="bg-card/80 p-2 rounded-xl border border-success-subtle animate-in fade-in">
-                <Text size="xs" weight="bold" color="success">
-                  {ocrSuccessMsg}
-                </Text>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-1">
-            <div className="p-3 bg-amber-500/5 rounded-xl border border-amber-500/20">
-              <NumberInput
-                label={t('landlordRoomDetailNewElecLabel')}
-                helperText={
-                  roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('điện'))
-                    ?.lastReading
-                    ? `${t('landlordRoomDetailOldReadingPrefix')} ${
-                        roomMeteredServices.find(s =>
-                          s.serviceName.toLowerCase().includes('điện'),
-                        )?.lastReading?.readingValue
-                      }`
-                    : undefined
-                }
-                value={formElec}
-                placeholder={t('landlordRoomDetailElecPlaceholder')}
-                onChange={e => setFormElec(e.target.value)}
-              />
-            </div>
-            <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/20">
-              <NumberInput
-                label={t('landlordRoomDetailNewWaterLabel')}
-                helperText={
-                  roomMeteredServices.find(s => s.serviceName.toLowerCase().includes('nước'))
-                    ?.lastReading
-                    ? `${t('landlordRoomDetailOldReadingPrefix')} ${
-                        roomMeteredServices.find(s =>
-                          s.serviceName.toLowerCase().includes('nước'),
-                        )?.lastReading?.readingValue
-                      }`
-                    : undefined
-                }
-                value={formWater}
-                placeholder={t('landlordRoomDetailWaterPlaceholder')}
-                onChange={e => setFormWater(e.target.value)}
-              />
-            </div>
-          </div>
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCloseMeterModal}
-          >
-            <Text as="span" size="xs" weight="bold" color="inherit">
-              {t('landlordRoomDetailModalCancelBtn')}
-            </Text>
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSaveNewMeterReading}
-            isLoading={isSubmittingMeter}
-          >
-            <Text as="span" size="xs" weight="bold" color="inherit">
-              {t('landlordRoomDetailSaveAndLogMeter')}
-            </Text>
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
       {/* MODAL 3: EDIT ROOM INFO MODAL */}
       <Modal
         isOpen={isEditModalOpen}
@@ -2838,7 +2459,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Cấu hình dịch vụ phòng */}
           <div className="border border-line rounded-xl p-4 bg-surface/50 space-y-3">
-            <div className="flex justify-between items-center mb-1">
+            <div className="flex justify-between items-center mb-2">
               <Text as="h3" weight="bold" color="default" size="xs" className="uppercase tracking-wider flex items-center gap-1.5">
                 <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
                 {t('landlordRoomDetailRecurringServicesTitle')}
@@ -2878,27 +2499,18 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <Text as="span" size="2xs" weight="bold" color="secondary">
-                        {t('landlordRoomDetailCustomToggle')}
-                      </Text>
-                      <Button rounded="full"
-                        variant="ghost"
-                        size="sm"
-                        type="button"
-                        onClick={() =>
-                          setEditServices(prev =>
-                            prev.map(s =>
-                              s.id === service.id ? { ...s, isCustom: !s.isCustom } : s,
-                            ),
-                          )
-                        }
-                      >
-                        <div
-                          className={`w-3.5 h-3.5 bg-white rounded-full absolute transition-transform ${service.isCustom ? 'translate-x-4' : 'translate-x-0.5'}`}
-                        ></div>
-                      </Button>
-                    </div>
+                    <Checkbox
+                      size="sm"
+                      label={t('landlordRoomDetailCustomToggle')}
+                      checked={Boolean(service.isCustom)}
+                      onChange={e =>
+                        setEditServices(prev =>
+                          prev.map(s =>
+                            s.id === service.id ? { ...s, isCustom: e.target.checked } : s,
+                          ),
+                        )
+                      }
+                    />
 
                     <div className="relative w-28 flex items-center">
                       <TextInput
@@ -2935,9 +2547,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <Button fullWidth
               type="button"
-              variant="outline"
-              size="sm"
-              leftIcon={<Plus  />}
+              variant="primary"
+              size="md"
+              leftIcon={<Plus />}
               onClick={() =>
                 setEditServices(prev => [
                   ...prev,

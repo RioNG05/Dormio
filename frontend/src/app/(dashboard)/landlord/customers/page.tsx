@@ -260,10 +260,10 @@ export default function CustomersPage() {
         label: t('landlordCustomersStatStayingShort'),
         value: stayingCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+          'px-3 py-2 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[130px]',
         labelColor: 'brand',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -322,7 +322,7 @@ export default function CustomersPage() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedCustomers = sortedCustomers.slice(startIndex, startIndex + itemsPerPage)
 
-  
+
   return (
     <div className="space-y-6">
       {/* Top Bar / Header */}
@@ -395,14 +395,14 @@ export default function CustomersPage() {
               placeholder={t('landlordCustomersSearchPlaceholder')}
               value={searchQuery}
               onChange={setSearchQuery}
-              containerClassName="w-full sm:w-52 shrink-0 space-y-0"
+              containerClassName="w-full min-w-80 sm:w-52 shrink-0 space-y-0"
             />
 
             {/* Sort Select using Base Component */}
             <SelectInput
               value={sortFilter}
               onChange={e => setSortFilter(e.target.value)}
-              containerClassName="w-auto shrink-0 space-y-0"
+              containerClassName="min-w-34 w-auto shrink-0 space-y-0"
               options={[
                 { value: '', label: t('landlordCustomersSort') },
                 { value: 'name_asc', label: t('landlordCustomersSortName') },
@@ -429,7 +429,7 @@ export default function CustomersPage() {
             <div className="col-span-full py-14 text-center bg-card rounded-2xl border border-line text-muted">
               {isLoading ? (
                 <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   <span className="text-xs font-bold">{t('landlordCustomersLoading')}</span>
                 </div>
               ) : (
@@ -459,13 +459,13 @@ export default function CustomersPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-sm uppercase shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm uppercase shrink-0">
                       {customer.name.charAt(0)}
                     </div>
                     <div className="min-w-0">
                       <Link
-                        href={`/landlord/customers/${customer.contractId || customer.id}`}
-                        className="font-bold text-foreground text-sm hover:text-[#2AC1BC] cursor-pointer transition-colors truncate block"
+                        href={`/landlord/customers/${customer.userId || customer.id}`}
+                        className="font-bold text-foreground text-sm hover:text-primary cursor-pointer transition-colors truncate block"
                       >
                         {customer.name}
                       </Link>
@@ -477,7 +477,7 @@ export default function CustomersPage() {
                   </div>
                   <span
                     className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
-                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
+                      ? 'bg-primary/10 text-primary border border-primary/30'
                       : customer.status === 'Sắp hết hợp đồng'
                         ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
                         : 'bg-info-soft text-info border border-info-subtle'
@@ -528,27 +528,39 @@ export default function CustomersPage() {
                   <a
                     href={`tel:${customer.phone}`}
                     onClick={e => e.stopPropagation()}
-                    className="py-1.5 bg-red-600 text-white border border-line rounded-xl text-[11px] font-extrabold hover:bg-red-500 transition-colors text-center flex items-center justify-center gap-1 shadow-2xs whitespace-nowrap"
                   >
-                    <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
+                    <Button
+                      variant='success'
+                      size='sm'
+                      leftIcon={<PhoneCall />}
+                      fullWidth
+                    >
+                      {t('landlordCustomersCallBtn')}
+                    </Button>
                   </a>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="primary"
                     size="sm"
+                    leftIcon={<MessageCircle />}
+                    fullWidth
                     onClick={e => {
                       e.stopPropagation()
                       handleOpenChat(customer)
                     }}
                     className="whitespace-nowrap"
                   >
-                    <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
+                    {t('landlordCustomersMessageBtn')}
                   </Button>
-                  <Link
-                    href={`/landlord/customers/${customer.contractId || customer.id}`}
-                    className="py-1.5 bg-accent-soft text-[#FF6B35] border border-accent-subtle rounded-xl text-[11px] font-extrabold hover:bg-[#FF6B35] hover:text-white transition-colors text-center flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
-                  >
-                    <Eye className="w-3 h-3" /> {t('landlordCustomersViewBtn')}
+                  <Link href={`/landlord/customers/${customer.userId || customer.id}`}>
+                    <Button
+                      size='sm'
+                      variant='secondary'
+                      leftIcon={<Eye />}
+                      fullWidth
+                    >
+                      {t('landlordCustomersViewBtn')}
+                    </Button>
                   </Link>
                 </div>
               </div>
@@ -581,7 +593,7 @@ export default function CustomersPage() {
                     <td colSpan={6} className="px-6 py-12 text-center text-muted">
                       {isLoading ? (
                         <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+                          <Loader2 className="w-5 h-5 animate-spin text-primary" />
                           <span className="text-xs font-bold">{t('landlordCustomersLoading')}</span>
                         </div>
                       ) : (
@@ -603,15 +615,15 @@ export default function CustomersPage() {
                       key={customer.id}
                       className="hover:bg-card-hover transition-colors group cursor-pointer"
                       onClick={() =>
-                        router.push(`/landlord/customers/${customer.contractId || customer.id}`)
+                        router.push(`/landlord/customers/${customer.userId || customer.id}`)
                       }
                     >
                       <td className="px-6 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-xs uppercase shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs uppercase shrink-0">
                             {customer.name.charAt(0)}
                           </div>
-                          <span className="font-bold text-foreground group-hover:text-[#2AC1BC] transition-colors">
+                          <span className="font-bold text-foreground group-hover:text-primary transition-colors">
                             {customer.name}
                           </span>
                         </div>
@@ -628,7 +640,7 @@ export default function CustomersPage() {
                       <td className="px-6 py-3.5 whitespace-nowrap">
                         <span
                           className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
-                            ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                            ? 'bg-primary/10 text-primary border-primary/30'
                             : customer.status === 'Sắp hết hợp đồng'
                               ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
                               : 'bg-info-soft text-info border border-info-subtle'
@@ -642,27 +654,23 @@ export default function CustomersPage() {
                           className="flex items-center justify-end gap-1.5"
                           onClick={e => e.stopPropagation()}
                         >
-                          <a
-                            href={`tel:${customer.phone}`}
-                            title={t('landlordCustomersCallNow')}
-                            className="px-2.5 py-1 bg-red-600 text-white border border-line rounded-lg text-xs font-bold hover:bg-red-500 transition-colors shadow-2xs flex items-center gap-1 whitespace-nowrap"
-                          >
-                            <PhoneCall className="w-3 h-3" /> {t('landlordCustomersCallBtn')}
+                          <a href={`tel:${customer.phone}`} onClick={e => e.stopPropagation()}>
+                            <Button variant='success' size='sm' leftIcon={<PhoneCall />}>
+                              {t('landlordCustomersCallBtn')}
+                            </Button>
                           </a>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenChat(customer)}
-                            title={t('landlordCustomersMessageBtn')}
+                          <Button type="button" variant="primary" size="sm" leftIcon={<MessageCircle />} className="whitespace-nowrap"
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleOpenChat(customer)
+                            }}
                           >
-                            <MessageCircle className="w-3 h-3" /> {t('landlordCustomersMessageBtn')}
+                            {t('landlordCustomersMessageBtn')}
                           </Button>
-                          <Link
-                            href={`/landlord/customers/${customer.contractId || customer.id}`}
-                            className="px-2.5 py-1 bg-accent-soft text-[#FF6B35] border border-accent-subtle rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
-                          >
-                            <Eye className="w-3 h-3" /> {t('landlordCustomersViewBtn')}
+                          <Link href={`/landlord/customers/${customer.userId || customer.id}`}>
+                            <Button size='sm' variant='secondary' leftIcon={<Eye />} >
+                              {t('landlordCustomersViewBtn')}
+                            </Button>
                           </Link>
                         </div>
                       </td>

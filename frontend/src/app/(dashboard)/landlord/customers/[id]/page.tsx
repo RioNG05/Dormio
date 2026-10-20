@@ -116,6 +116,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         return
       }
 
+      // Strictly accept ONLY userId on param (cannot be a CCCD/CMND number)
+      const isCccd = /^\d{9,12}$/.test(rawId)
+      if (isCccd) {
+        setCustomer(null)
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(true)
       try {
         const res = await getLandlordContracts(activeBuilding.id, { limit: 100 })
@@ -127,18 +135,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         const cleanRawId = rawId.replace(/^cust_/, '')
 
         for (const c of contracts) {
-          // Check tenantContracts list
+          // Check tenantContracts list - ONLY match by tenant's userId
           const tContracts = c.tenantContracts || []
           for (const tc of tContracts) {
             const tu = tc.tenant
-            if (
-              tu &&
-              (tu.id === rawId ||
-                tu.id === cleanRawId ||
-                tu.phoneNumber === rawId ||
-                tu.userIdentification?.identityNumber === rawId ||
-                tc.id === rawId)
-            ) {
+            if (tu && (tu.id === rawId || tu.id === cleanRawId)) {
               matchedContract = c
               matchedTenantUser = tu
               break
@@ -146,23 +147,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           }
           if (matchedContract) break
 
-          // Check primary tenant
-          if (
-            c.tenant &&
-            (c.tenant.id === rawId ||
-              c.tenant.id === cleanRawId ||
-              c.tenant.phoneNumber === rawId ||
-              c.tenant.userIdentification?.identityNumber === rawId)
-          ) {
+          // Check primary tenant - ONLY match by tenant's userId
+          if (c.tenant && (c.tenant.id === rawId || c.tenant.id === cleanRawId)) {
             matchedContract = c
             matchedTenantUser = c.tenant
-            break
-          }
-
-          // Check contract ID
-          if (c.id === cleanRawId || c.id === rawId || `cust_${c.id}` === rawId) {
-            matchedContract = c
-            matchedTenantUser = c.tenant || c.tenantContracts?.[0]?.tenant || null
             break
           }
         }
@@ -275,64 +263,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     loadCustomerDetail()
   }, [resolvedParams.id, activeBuilding?.id])
 
-  if (!isMounted) return null
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-card rounded-2xl border border-line shadow-xs">
-        <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
-        <p className="text-sm font-bold text-muted">{t('landlordCustomersLoading')}</p>
-      </div>
-    )
-  }
-
-  if (!customer) {
-    return (
-      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6 space-y-3 shadow-xs">
-        <div className="w-12 h-12 rounded-full bg-card-hover flex items-center justify-center mx-auto text-muted">
-          <User className="w-6 h-6" />
-        </div>
-        <p className="font-bold text-lg text-foreground">{t('landlordCustomersTenantNotFound')}</p>
-        <p className="text-xs text-muted">
-          {t('landlordCustomersCccdOrCode')}:{' '}
-          <span className="font-mono font-bold text-foreground/90">{resolvedParams.id}</span>
-        </p>
-        <Link
-          href="/landlord/customers"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors shadow-2xs"
-        >
-          &larr; {t('landlordCustomersBackToList')}
-        </Link>
-      </div>
-    )
-  }
-
-  const isStaying = customer.status === 'Đang ở' || customer.status === 'Sắp hết hợp đồng'
-
-  const handleOpenChat = () => {
-    const targetUserId =
-      customer.userId || (customer.id && !customer.id.startsWith('cust_') ? customer.id : '')
-    if (!targetUserId && !customer.hasAccount) {
-      showAlert(
-        `Khách thuê ${customer.name} chưa có tài khoản trên hệ thống Dormio để nhắn tin trực tiếp. Vui lòng liên hệ qua số điện thoại ${customer.phone !== '—' ? customer.phone : 'đã lưu'}.`,
-        'info',
-        'Chưa có tài khoản liên kết',
-      )
-      return
-    }
-    const query = new URLSearchParams()
-    if (targetUserId) {
-      query.set('userId', targetUserId)
-    }
-    if (customer.name) {
-      query.set('tenant', customer.name)
-    }
-    if (customer.room && customer.room !== '—') {
-      query.set('room', customer.room)
-    }
-    router.push(`/landlord/messages?${query.toString()}`)
-  }
-
   // Track initial values for dirty check (Rule 10)
   const initialEditValues = React.useMemo(() => {
     if (!customer) return null
@@ -355,7 +285,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     onConfirm: () => void
   }>({
     isOpen: false,
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   const resetEditForm = () => {
@@ -427,6 +357,63 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     setIsEditModalOpen(false)
   }
 
+  const isStaying = customer ? (customer.status === 'Đang ở' || customer.status === 'Sắp hết hợp đồng') : false
+
+  const handleOpenChat = () => {
+    if (!customer) return
+    const targetUserId =
+      customer.userId || (customer.id && !customer.id.startsWith('cust_') ? customer.id : '')
+    if (!targetUserId && !customer.hasAccount) {
+      showAlert(
+        `Khách thuê ${customer.name} chưa có tài khoản trên hệ thống Dormio để nhắn tin trực tiếp. Vui lòng liên hệ qua số điện thoại ${customer.phone !== '—' ? customer.phone : 'đã lưu'}.`,
+        'info',
+        'Chưa có tài khoản liên kết',
+      )
+      return
+    }
+    const query = new URLSearchParams()
+    if (targetUserId) {
+      query.set('userId', targetUserId)
+    }
+    if (customer.name) {
+      query.set('tenant', customer.name)
+    }
+    if (customer.room && customer.room !== '—') {
+      query.set('room', customer.room)
+    }
+    router.push(`/landlord/messages?${query.toString()}`)
+  }
+
+  if (!isMounted || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-card rounded-2xl border border-line shadow-xs">
+        <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
+        <p className="text-sm font-bold text-muted">{t('landlordCustomersLoading')}</p>
+      </div>
+    )
+  }
+
+  if (!customer) {
+    return (
+      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6 space-y-3 shadow-xs">
+        <div className="w-12 h-12 rounded-full bg-card-hover flex items-center justify-center mx-auto text-muted">
+          <User className="w-6 h-6" />
+        </div>
+        <p className="font-bold text-lg text-foreground">{t('landlordCustomersTenantNotFound')}</p>
+        <p className="text-xs text-muted">
+          {t('landlordCustomersUserId')}:{' '}
+          <span className="font-mono font-bold text-foreground/90">{resolvedParams.id}</span>
+        </p>
+        <Link
+          href="/landlord/customers"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors shadow-2xs"
+        >
+          &larr; {t('landlordCustomersBackToList')}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6 pb-24 w-full">
       {/* Top Header Bar */}
@@ -460,17 +447,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   {getCustomerStatusLabel(customer.status)}
                 </span>
               </div>
-              <p className="text-xs text-muted font-semibold mt-0.5">
+              <Text size='xs' className="text-xs text-muted font-semibold mt-0.5">
                 {t('landlordCustomersPhone')}:{' '}
                 <span className="font-bold text-foreground">{customer.phone}</span>
-                {customer.cccd && customer.cccd !== '—' && (
-                  <>
-                    {' '}
-                    • {t('landlordCustomersCccd')}:{' '}
-                    <span className="font-bold text-foreground">{customer.cccd}</span>
-                  </>
-                )}
-              </p>
+              </Text>
             </div>
           </div>
         </div>
@@ -479,9 +459,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <Button
             type="button"
-            variant="outline"
-            size="md"
-            leftIcon={<PhoneCall className="w-3.5 h-3.5 text-primary" />}
+            variant="success"
+            size="sm"
+            leftIcon={<PhoneCall />}
             onClick={() => {
               if (customer.phone && customer.phone !== '—') {
                 window.location.href = `tel:${customer.phone}`
@@ -493,17 +473,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="primary"
-            size="md"
-            leftIcon={<MessageCircle className="w-3.5 h-3.5" />}
+            size="sm"
+            leftIcon={<MessageCircle />}
             onClick={handleOpenChat}
           >
             {t('landlordCustomersMessageBtn')}
           </Button>
           <Button
             type="button"
-            variant="outline"
-            size="md"
-            leftIcon={<Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+            variant="secondary"
+            size="sm"
+            leftIcon={<Edit2 />}
             onClick={() => setIsEditModalOpen(true)}
           >
             {t('landlordCustomersEditInfo')}
@@ -511,8 +491,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="danger"
-            size="md"
-            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+            size="sm"
+            leftIcon={<Trash2 />}
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
