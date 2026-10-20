@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
@@ -326,32 +326,13 @@ export default function ListingsPage() {
           />
 
           {/* View Toggle (Grid / Table) */}
-          <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setViewMode('grid')
-                setPageSize(6)
-                setPage(1)
-              }}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" /> {t('landlordListingsViewGrid')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setViewMode('table')
-                setPageSize(10)
-                setPage(1)
-              }}
-            >
-              <List className="w-3.5 h-3.5" /> {t('landlordListingsViewList')}
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            onPageSizeChange={setPageSize}
+            onPageChange={setPage}
+            showLabels
+          />
         </div>
       </div>
 

@@ -49,6 +49,7 @@ import { TextareaInput } from '@/components/ui/TextareaInput'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { Pagination } from '@/components/ui/Pagination'
+import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
 import { Avatar } from '@/components/ui/Avatar'
 
 export default function AdminUsersManagementPage() {
@@ -732,26 +733,10 @@ export default function AdminUsersManagementPage() {
           />
 
           {/* View Mode Toggle using Button base components */}
-          <div className="flex items-center bg-card-hover p-1 rounded-2xl border border-line">
-            <Button
-              type="button"
-              variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-              title={t('adminUsersGridView')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('table')}
-              title={t('adminUsersTableView')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={handleViewModeChange}
+          />
         </div>
       </div>
 

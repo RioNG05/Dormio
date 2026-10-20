@@ -41,6 +41,7 @@ import {
   ChipGroup,
   Modal,
   Pagination,
+  ViewModeToggle,
 } from '@/components/ui'
 
 export default function NotificationsPage() {
@@ -444,32 +445,12 @@ export default function NotificationsPage() {
           </div>
 
           {/* View Switcher (Rule #9: Grid is Default) */}
-          <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              onClick={() => {
-                setViewMode('grid')
-                if (itemsPerPage === 10) setItemsPerPage(6)
-              }}
-              title={t('landlordNotificationsViewGrid')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              onClick={() => {
-                setViewMode('list')
-                if (itemsPerPage === 6) setItemsPerPage(10)
-              }}
-              title={t('landlordNotificationsViewList')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            onPageSizeChange={setItemsPerPage}
+            onPageChange={setPage}
+          />
 
           </div>
       </div>

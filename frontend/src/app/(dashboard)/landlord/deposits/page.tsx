@@ -36,6 +36,7 @@ import {
   Modal,
   Text,
   Pagination,
+  ViewModeToggle,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -669,32 +670,10 @@ function DepositsContent() {
             </div>
 
             {/* View Switcher (Grid vs Table) */}
-            <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                className={cn(
-                  'h-7 w-7 rounded-lg',
-                  viewMode === 'grid' ? 'bg-card shadow-2xs' : 'text-muted hover:text-foreground',
-                )}
-                title={t('landlordDepositsViewGrid')}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('table')}
-                className={cn(
-                  'h-7 w-7 rounded-lg',
-                  viewMode === 'table' ? 'bg-card shadow-2xs' : 'text-muted hover:text-foreground',
-                )}
-                title={t('landlordDepositsViewTable')}
-              >
-                <List className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+            />
           </div>
         </div>
 

@@ -36,7 +36,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -522,26 +522,10 @@ export default function LandlordDebtsPage() {
           />
 
           {/* View Mode Toggle per Rule #9 */}
-          <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              title={t('landlordDebtsViewGrid')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode('table')}
-              title={t('landlordDebtsViewTable')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
         </div>
       </div>
 

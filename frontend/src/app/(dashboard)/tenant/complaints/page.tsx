@@ -26,7 +26,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react'
-import { Button, TextInput, TextareaInput, Pagination } from '@/components/ui'
+import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
@@ -410,26 +410,12 @@ export default function TenantAdminComplaintsPage() {
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             {/* View Mode Toggle: Grid vs Table (Rule #9) */}
-            <div className="flex items-center gap-1 p-1 bg-card border border-line rounded-xl shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => { setViewMode('grid'); setPageSize(6); setCurrentPage(1); }}
-                title={t('tenantGridView')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => { setViewMode('table'); setPageSize(10); setCurrentPage(1); }}
-                title={t('tenantTableView')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              onPageSizeChange={setPageSize}
+              onPageChange={setCurrentPage}
+            />
 
             <TextInput
               type="text"

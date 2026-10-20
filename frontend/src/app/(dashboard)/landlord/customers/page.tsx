@@ -22,7 +22,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, SelectInput, NumberInput, SearchInput, ChipGroup, Pagination } from '@/components/ui'
+import { Button, SelectInput, NumberInput, SearchInput, ChipGroup, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
@@ -412,32 +412,13 @@ export default function CustomersPage() {
           </div>
 
           {/* Right Controls: View Mode Switcher */}
-          <div className="flex items-center justify-end gap-1 bg-card-hover p-1 rounded-xl border border-line shrink-0 self-end lg:self-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setViewMode('grid')
-                setItemsPerPage(6)
-                setCurrentPage(1)
-              }}
-              title={t('landlordCustomersViewGrid')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setViewMode('list')
-                setItemsPerPage(10)
-                setCurrentPage(1)
-              }}
-              title={t('landlordCustomersViewList')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            onPageSizeChange={setItemsPerPage}
+            onPageChange={setCurrentPage}
+            className="self-end lg:self-auto"
+          />
         </div>
       </div>
 

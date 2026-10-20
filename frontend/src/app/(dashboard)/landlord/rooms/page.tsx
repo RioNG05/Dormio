@@ -33,6 +33,7 @@ import {
   SearchInput,
   Text,
   Modal,
+  ViewModeToggle,
   type TextColor,
 } from '@/components/ui'
 import { formatCurrency } from '@/utils'
@@ -896,42 +897,11 @@ export default function RoomsPage() {
           </div>
 
           {/* View Switcher: Grid vs Table */}
-          <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
-            <Button
-              type="button"
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="xs"
-              onClick={() => handleViewModeChange('grid')}
-              leftIcon={<Grid className='w-4 h-4 mr-1' />}
-              className={
-                viewMode === 'grid'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted hover:text-foreground'
-              }
-              title={t('landlordRoomsViewGridTooltip')}
-            >
-              <Text as="span" size="xs" weight="medium" className="hidden sm:inline">
-                {t('landlordRoomsViewGrid')}
-              </Text>
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="xs"
-              onClick={() => handleViewModeChange('table')}
-              leftIcon={<List className='w-4 h-4 mr-1' />}
-              className={
-                viewMode === 'table'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted hover:text-foreground'
-              }
-              title={t('landlordRoomsViewTableTooltip')}
-            >
-              <Text as="span" size="xs" weight="medium" className="hidden sm:inline">
-                {t('landlordRoomsViewTable')}
-              </Text>
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={handleViewModeChange}
+            showLabels
+          />
         </div>
 
         {/* Content Section: Grid View vs Table View */}

@@ -42,6 +42,7 @@ import {
   Text,
   Modal,
   Pagination,
+  ViewModeToggle,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -550,32 +551,12 @@ export default function ContractsPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl border border-line shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setViewMode('grid')
-                    setRowsPerPage(6)
-                    setCurrentPage(1)
-                  }}
-                  title={t('landlordContractsGridView')}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setViewMode('list')
-                    setRowsPerPage(10)
-                    setCurrentPage(1)
-                  }}
-                  title={t('landlordContractsListView')}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
+              <ViewModeToggle
+                value={viewMode}
+                onChange={setViewMode}
+                onPageSizeChange={setRowsPerPage}
+                onPageChange={setCurrentPage}
+              />
             </div>
           </div>
         </div>

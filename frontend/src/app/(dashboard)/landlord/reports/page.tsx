@@ -60,7 +60,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
-import { Button, SelectInput, NumberInput, Pagination } from '@/components/ui'
+import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader } from '@/components/landlord'
 import {
   getBoardingHouseOverview,
@@ -180,13 +180,6 @@ export default function ReportsPage() {
     const start = (page - 1) * pageSize
     return propertiesList.slice(start, start + pageSize)
   }, [propertiesList, page, pageSize])
-
-  // Switch view mode and update default pageSize per Rule #9
-  const handleViewModeChange = (mode: 'grid' | 'table') => {
-    setViewMode(mode)
-    setPage(1)
-    setPageSize(mode === 'grid' ? 6 : 10)
-  }
 
   // Export CSV Data
   const handleExportCsv = () => {
@@ -717,26 +710,12 @@ export default function ReportsPage() {
                   </div>
 
                   {/* Rule #9 View Toggle Buttons: Grid & Table */}
-                  <div className="flex items-center gap-2 bg-card-hover p-1 rounded-xl border border-line shadow-2xs">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewModeChange('grid')}
-                      title={t('landlordReportsTooltipGrid')}
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewModeChange('table')}
-                      title={t('landlordReportsTooltipTable')}
-                    >
-                      <List className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <ViewModeToggle
+                    value={viewMode}
+                    onChange={setViewMode}
+                    onPageSizeChange={setPageSize}
+                    onPageChange={setPage}
+                  />
                 </div>
 
                 {displayedProperties.length === 0 ? (

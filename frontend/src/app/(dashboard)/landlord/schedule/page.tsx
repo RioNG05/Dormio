@@ -20,6 +20,7 @@ import {
   X,
   Edit3,
   Trash2,
+  Calendar,
   CalendarDays,
   LayoutGrid,
   List,
@@ -50,6 +51,7 @@ import {
   Checkbox,
   SearchInput,
   Pagination,
+  ViewModeToggle,
 } from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
@@ -737,26 +739,16 @@ export default function WorkforceSchedulePage() {
           </div>
 
           {/* View Mode Switcher (Rule #9) */}
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('calendar')}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>{t('landlordScheduleViewCalendar')}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="w-3.5 h-3.5" />
-                <span>{t('landlordScheduleViewList')}</span>
-              </Button>
-            </div>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            options={[
+              { value: 'calendar', label: t('landlordScheduleViewCalendar'), title: t('landlordScheduleViewCalendar'), icon: <Calendar className="w-3.5 h-3.5" /> },
+              { value: 'list', label: t('landlordScheduleViewList'), title: t('landlordScheduleViewList'), icon: <List className="w-3.5 h-3.5" /> }
+            ]}
+            showLabels
+            className="self-end md:self-auto"
+          />
         </div>
 
         {/* Filter row */}

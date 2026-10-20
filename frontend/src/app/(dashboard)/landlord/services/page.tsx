@@ -39,7 +39,7 @@ import {
   ServicesSummary,
   ServiceAssignedRoom,
 } from '@/services/service.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup, Pagination } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ServicesPage() {
@@ -605,34 +605,12 @@ export default function ServicesPage() {
 
           {/* Right Toolbar: View Mode Toggle */}
           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl border border-line">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setViewMode('grid')
-                  setItemsPerPage(6)
-                  setCurrentPage(1)
-                }}
-                title={t('landlordServicesViewGrid')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setViewMode('list')
-                  setItemsPerPage(10)
-                  setCurrentPage(1)
-                }}
-                title={t('landlordServicesViewTable')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              onPageSizeChange={setItemsPerPage}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
 

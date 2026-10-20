@@ -38,7 +38,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
@@ -374,26 +374,10 @@ function PaymentsContent() {
             />
 
             {/* View Switcher (Rule 9) */}
-            <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                title="Dạng Lưới (Grid - Mặc định)"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('table')}
-                title="Dạng Bảng (Table)"
-              >
-                <List className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+            />
           </div>
         </div>
 

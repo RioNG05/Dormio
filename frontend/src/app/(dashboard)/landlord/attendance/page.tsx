@@ -38,7 +38,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, Pagination } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -589,28 +589,12 @@ export default function AttendancePage() {
           </div>
 
           {/* View Mode Toggle (Rule #9: Grid default) */}
-          <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line self-end md:self-auto">
-            <Button
-              type="button"
-              variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-              leftIcon={<LayoutGrid  />}
-              
- >
-              <span>{isEn ? 'Grid' : 'Lưới'}</span>
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('table')}
-              leftIcon={<List  />}
-              
- >
-              <span>{isEn ? 'Table' : 'Bảng'}</span>
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={handleViewModeChange}
+            showLabels
+            className="self-end md:self-auto"
+          />
         </div>
 
         {/* Filters Row */}

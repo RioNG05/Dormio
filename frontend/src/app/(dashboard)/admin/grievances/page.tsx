@@ -23,7 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { grievanceService, GrievanceQueueCounts } from '@/services/grievance.service'
-import { Button, Checkbox, TextareaInput, TextInput, NumberInput, Pagination } from '@/components/ui'
+import { Button, Checkbox, TextareaInput, TextInput, NumberInput, Pagination, ViewModeToggle } from '@/components/ui'
 
 interface GrievanceItem {
   id: string
@@ -629,24 +629,10 @@ export default function AdminGrievancesPage() {
             <span className="hidden sm:inline">{t('adminGrievancesRefresh')}</span>
           </Button>
 
-          <div className="flex items-center bg-card-hover p-1 rounded-xl">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-              title={t('adminGrievancesGridViewTooltip')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleViewModeChange('table')}
-              title={t('adminGrievancesTableViewTooltip')}
-            >
-              <TableIcon className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={handleViewModeChange}
+          />
         </div>
       </div>
 

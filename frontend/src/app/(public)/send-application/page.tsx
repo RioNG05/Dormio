@@ -34,6 +34,7 @@ import {
   Text,
   TextareaInput,
   TextInput,
+  ViewModeToggle,
 } from '@/components/ui'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
@@ -593,26 +594,10 @@ export default function SendApplicationPage() {
                   </div>
 
                   {/* Grid vs Table View Toggle (Rule #9) */}
-                  <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl border border-line shrink-0">
-                    <Button
-                      type="button"
-                      variant={viewMode === 'grid' ? 'white' : 'ghost'}
-                      size="icon-xs"
-                      onClick={() => setViewMode('grid')}
-                      title="Grid View"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={viewMode === 'table' ? 'white' : 'ghost'}
-                      size="icon-xs"
-                      onClick={() => setViewMode('table')}
-                      title="Table View"
-                    >
-                      <List className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <ViewModeToggle
+                    value={viewMode}
+                    onChange={setViewMode}
+                  />
                 </div>
               </div>
             </div>

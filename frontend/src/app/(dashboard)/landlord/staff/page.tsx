@@ -39,6 +39,7 @@ import {
   SearchInput,
   Avatar,
   Pagination,
+  ViewModeToggle,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
@@ -627,44 +628,12 @@ export default function StaffPage() {
             </div>
 
             {/* View Mode Toggle (Rule #9) */}
-            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl border border-line shrink-0">
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setViewMode('grid')
-                  setPageSize(6)
-                  setCurrentPage(1)
-                }}
-                className={cn(
-                  'p-1.5 h-auto rounded-lg',
-                  viewMode === 'grid'
-                    ? 'bg-card text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-muted hover:text-foreground',
-                )}
-                title={t('landlordStaffViewGrid')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setViewMode('table')
-                  setPageSize(10)
-                  setCurrentPage(1)
-                }}
-                className={cn(
-                  'p-1.5 h-auto rounded-lg',
-                  viewMode === 'table'
-                    ? 'bg-card text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-muted hover:text-foreground',
-                )}
-                title={t('landlordStaffViewTable')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              onPageSizeChange={setPageSize}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </div>
 

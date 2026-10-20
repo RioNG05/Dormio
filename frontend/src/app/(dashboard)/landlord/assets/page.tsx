@@ -42,7 +42,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/services/asset.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup, Pagination } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function AssetsPage() {
@@ -452,34 +452,12 @@ export default function AssetsPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
-            <Button
-              type="button"
-              variant={viewMode === 'grid' ? 'white' : 'ghost'}
-              size="icon-sm"
-              onClick={() => {
-                setViewMode('grid')
-                setItemsPerPage(6)
-                setCurrentPage(1)
-              }}
-              title={t('landlordAssetsViewGrid')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'list' ? 'white' : 'ghost'}
-              size="icon-sm"
-              onClick={() => {
-                setViewMode('list')
-                setItemsPerPage(10)
-                setCurrentPage(1)
-              }}
-              title={t('landlordAssetsViewTable')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            onPageSizeChange={setItemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </div>
 

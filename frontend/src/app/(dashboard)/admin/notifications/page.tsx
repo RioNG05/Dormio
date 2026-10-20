@@ -35,6 +35,7 @@ import { TextareaInput } from '@/components/ui/TextareaInput'
 import { SelectInput } from '@/components/ui/SelectInput'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { Pagination } from '@/components/ui/Pagination'
+import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
 
 interface NotificationCampaign {
   id: string
@@ -641,24 +642,10 @@ export default function AdminNotificationsPage() {
             <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
           </Button>
 
-          <div className="flex items-center bg-card-hover p-1 rounded-xl">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-              title={t('adminNotifyGridViewTooltip')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleViewModeChange('table')}
-              title={t('adminNotifyTableViewTooltip')}
-            >
-              <TableIcon className="w-4 h-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={handleViewModeChange}
+          />
         </div>
       </div>
 

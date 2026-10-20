@@ -41,7 +41,7 @@ import {
   FALLBACK_PROVINCES,
 } from '@/services/vietnam-address.service'
 
-import { Avatar } from '@/components/ui'
+import { Avatar, ViewModeToggle } from '@/components/ui'
 
 const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
@@ -933,30 +933,15 @@ function RoomsContent() {
               </div>
 
               {/* List / Map View Mode Toggle Buttons */}
-              <div className="flex items-center p-1 bg-card-hover rounded-2xl border border-line">
-                <button
-                  id="view-list-btn"
-                  onClick={() => setViewMode('list')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    viewMode === 'list'
-                      ? 'bg-card text-foreground shadow-xs'
-                      : 'text-muted hover:text-foreground'
-                  }`}
-                >
-                  <Filter className="w-3.5 h-3.5" /> {t('guestRoomsListView')}
-                </button>
-                <button
-                  id="view-map-btn"
-                  onClick={() => setViewMode('map')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    viewMode === 'map'
-                      ? 'bg-[#2AC1BC] text-white shadow-xs'
-                      : 'text-muted hover:text-foreground'
-                  }`}
-                >
-                  <MapPin className="w-3.5 h-3.5" /> {t('guestRoomsMapView')}
-                </button>
-              </div>
+              <ViewModeToggle
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'list', label: t('guestRoomsListView'), icon: <Filter className="w-3.5 h-3.5" /> },
+                  { value: 'map', label: t('guestRoomsMapView'), icon: <MapPin className="w-3.5 h-3.5" /> },
+                ]}
+                showLabels
+              />
             </div>
 
             {/* Map view */}

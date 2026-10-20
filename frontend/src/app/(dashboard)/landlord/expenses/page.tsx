@@ -36,6 +36,7 @@ import {
   SearchInput,
   ChipGroup,
   Pagination,
+  ViewModeToggle,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -582,24 +583,10 @@ export default function ExpensesPage() {
           </div>
 
           {/* View Switcher (Grid vs Table) per Rule #9 */}
-          <div className="flex items-center bg-card-hover p-1 rounded-xl border border-line shrink-0">
-            <Button
-              variant={viewMode === 'grid' ? 'white' : 'ghost'}
-              size="icon-sm"
-              onClick={() => setViewMode('grid')}
-              title={t('landlordExpensesViewGrid')}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'white' : 'ghost'}
-              size="icon-sm"
-              onClick={() => setViewMode('table')}
-              title={t('landlordExpensesViewTable')}
-            >
-              <List className="w-3.5 h-3.5" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
         </div>
 
         {/* Status Filter Pills Row */}
