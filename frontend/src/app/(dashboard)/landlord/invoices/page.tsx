@@ -35,6 +35,7 @@ import {
   SelectInput,
   SearchInput,
   ChipGroup,
+  Pagination,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -839,85 +840,15 @@ function InvoicesContent() {
 
       {/* Pagination Bar (Standard Dormio Rule #9) */}
       {totalItems > 0 && (
-        <div className="p-4 bg-card border border-line rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
-          <div className="flex items-center gap-2 text-muted">
-            <span>{t('landlordInvoicesPaginationShow')}</span>
-            <NumberInput
-              min={1}
-              max={50}
-              value={pageSize}
-              onChange={e => {
-                const val = parseInt(e.target.value) || 1
-                setPageSize(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16"
-              className="text-center font-black py-1 text-xs"
-            />
-            <span>{t('landlordInvoicesPaginationPerPage')}</span>
-            <span className="text-muted">|</span>
-            <span>
-              {totalItems === 0 ? '0' : `${startIndex + 1}-${endIndex}`}{' '}
-              {t('landlordInvoicesPaginationOf')} {totalItems}{' '}
-              {t('landlordInvoicesPaginationItems')}
-            </span>
-          </div>
-
-          {/* Page Jumping Controls */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            >
-              <ChevronLeft className="w-4 h-4 text-muted" />
-            </Button>
-
-            {windowStart > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                title={t('landlordInvoicesTooltipPrev5')}
-              >
-                &laquo;
-              </Button>
-            )}
-
-            {visiblePages.map(p => (
-              <Button
-                key={p}
-                variant={currentPage === p ? 'primary' : 'outline'}
-                size="icon"
-                onClick={() => setCurrentPage(p)}
-                className={cn('h-8 w-8 text-xs', currentPage !== p && 'text-foreground/90')}
-              >
-                {p}
-              </Button>
-            ))}
-
-            {windowStart + windowSize <= totalPages && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                title={t('landlordInvoicesTooltipNext5')}
-              >
-                &raquo;
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            >
-              <ChevronRight className="w-4 h-4 text-muted" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={50}
+          unitLabel={t('landlordInvoicesPaginationItems')}
+        />
       )}
 
       {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}

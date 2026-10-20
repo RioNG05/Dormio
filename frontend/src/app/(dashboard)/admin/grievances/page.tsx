@@ -23,7 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { grievanceService, GrievanceQueueCounts } from '@/services/grievance.service'
-import { Button, Checkbox, TextareaInput, TextInput, NumberInput } from '@/components/ui'
+import { Button, Checkbox, TextareaInput, TextInput, NumberInput, Pagination } from '@/components/ui'
 
 interface GrievanceItem {
   id: string
@@ -208,14 +208,6 @@ export default function AdminGrievancesPage() {
     const start = (safeCurrentPage - 1) * validPageSize
     return currentDataset.slice(start, start + validPageSize)
   }, [currentDataset, safeCurrentPage, validPageSize])
-
-  // 5-page window jumping (Rule #9)
-  const windowStart = Math.floor((safeCurrentPage - 1) / 5) * 5 + 1
-  const windowEnd = Math.min(windowStart + 4, totalPages)
-  const pageNumbers = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
-  }
 
   // Open Resolution Modal
   const handleOpenResolveModal = (item: GrievanceItem, type: 'resolve' | 'reject') => {
@@ -960,92 +952,14 @@ export default function AdminGrievancesPage() {
       )}
 
       {/* Standardized Pagination Bar (Rule #9) */}
-      {loading ? (
-        <div className="bg-card px-4 py-3.5 rounded-2xl border border-line shadow-2xs flex items-center justify-between animate-pulse">
-          <div className="h-4 bg-line rounded w-48" />
-          <div className="h-7 bg-line rounded w-56" />
-        </div>
-      ) : paginatedItems.length > 0 ? (
-        <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
-          <div className="flex items-center gap-2">
-            <span>{t('adminGrievancesPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = parseInt(e.target.value) || 1
-                setPageSize(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="space-y-0 w-14 inline-block"
-              className="px-2 py-1 text-center bg-surface border-line rounded-lg font-bold text-foreground focus:border-orange-500"
-            />
-            <span>{t('adminGrievancesPaginationPerPage')}</span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              {totalItems === 0
-                ? '0'
-                : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
-                    safeCurrentPage * validPageSize,
-                    totalItems,
-                  )}`}{' '}
-              {t('adminGrievancesPaginationOfGrievances', { total: totalItems })}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 self-end sm:self-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(1)}
-              disabled={safeCurrentPage === 1}
-              title={t('adminGrievancesFirstPage')}
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
-              disabled={safeCurrentPage <= 1}
-              title={t('adminGrievancesPrev5')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {pageNumbers.map(num => (
-              <Button
-                key={num}
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage(num)}
-              >
-                {num}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
-              disabled={safeCurrentPage >= totalPages}
-              title={t('adminGrievancesNext5')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={safeCurrentPage === totalPages}
-              title={t('adminGrievancesLastPage')}
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      <Pagination
+        currentPage={safeCurrentPage}
+        totalItems={totalItems}
+        pageSize={validPageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+      />
 
       {/* INSPECT DETAIL MODAL */}
       {inspectItem && (

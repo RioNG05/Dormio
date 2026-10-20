@@ -22,7 +22,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, SelectInput, NumberInput, SearchInput, ChipGroup } from '@/components/ui'
+import { Button, SelectInput, NumberInput, SearchInput, ChipGroup, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
@@ -695,81 +695,14 @@ export default function CustomersPage() {
       )}
 
       {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
-          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
-            <span>{t('landlordCustomersPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={500}
-              value={itemsPerPage || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value)
-                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-14 space-y-0"
-              className="text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 text-xs h-7"
-            />
-            <span>{t('landlordCustomersPaginationPerPage')}</span>
-          </div>
-
-          <span className="hidden sm:inline text-zinc-300">|</span>
-
-          <div>
-            <span className="font-extrabold text-foreground">
-              {sortedCustomers.length === 0 ? 0 : startIndex + 1}
-            </span>{' '}
-            -{' '}
-            <span className="font-extrabold text-foreground">
-              {Math.min(startIndex + itemsPerPage, sortedCustomers.length)}
-            </span>{' '}
-            {t('landlordCustomersPaginationOf')}{' '}
-            <span className="font-extrabold text-foreground">{sortedCustomers.length}</span>{' '}
-            {t('landlordCustomersTotalCustomers').toLowerCase()}
-          </div>
-        </div>
-        {(() => {
-          const windowSize = 5
-          const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-          const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-          const visiblePages = Array.from(
-            { length: windowEnd - windowStart + 1 },
-            (_, i) => windowStart + i,
-          )
-
-          return (
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-              >
-                &larr; {t('landlordCustomersPaginationPrev')}
-              </Button>
-              {visiblePages.map(page => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? 'primary' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-              >
-                {t('landlordCustomersPaginationNext')} &rarr;
-              </Button>
-            </div>
-          )
-        })()}
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={sortedCustomers.length}
+        pageSize={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setItemsPerPage}
+        unitLabel={t('landlordCustomersTotalCustomers').toLowerCase()}
+      />
 
       <AlertModal
         isOpen={alertModal.isOpen}

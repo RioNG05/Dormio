@@ -28,7 +28,7 @@ import {
   CheckCircle2,
   Newspaper,
 } from 'lucide-react'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Pagination } from '@/components/ui'
 
 const HOUSE_PLACEHOLDER = '/house-placeholder.jpg'
 
@@ -250,14 +250,6 @@ export default function AdminPostModerationPage() {
     setFilterDeposit('all')
     setStatusFilter('all')
     setCurrentPage(1)
-  }
-
-  // 5-page window jumping (Rule #9)
-  const windowStart = Math.floor((currentPage - 1) / 5) * 5 + 1
-  const windowEnd = Math.min(windowStart + 4, totalPages)
-  const pageNumbers = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
   }
 
   // --- Lock Post Flow ---
@@ -898,85 +890,14 @@ export default function AdminPostModerationPage() {
       )}
 
       {/* Standardized Pagination Bar (Rule #9) */}
-      <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
-        <div className="flex items-center gap-2">
-          <span>{t('adminBlogsPaginationShowing')}</span>
-          <NumberInput
-            min={1}
-            max={100}
-            value={pageSize}
-            onChange={e => {
-              const val = parseInt(e.target.value) || 1
-              setPageSize(val)
-              setCurrentPage(1)
-            }}
-            containerClassName="space-y-0 w-14"
-            className="w-14 px-2 py-1 text-center bg-surface border border-line rounded-lg font-bold text-foreground focus:outline-none focus:border-orange-500"
-          />
-          <span>{t('adminBlogsPaginationPerPage')}</span>
-          <span className="text-zinc-300">|</span>
-          <span>
-            {totalItems === 0
-              ? '0'
-              : `${(currentPage - 1) * pageSize + 1}-${Math.min(
-                  currentPage * pageSize,
-                  totalItems,
-                )}`}{' '}
-            {t('adminBlogsPaginationOfPosts', { total: totalItems })}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1 self-end sm:self-auto">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            title={t('adminBlogsFirstPage')}
-          >
-            <ChevronsLeft className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
-            disabled={currentPage <= 1}
-            title={t('adminBlogsPrev5Pages')}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          {pageNumbers.map(num => (
-            <Button
-              key={num}
-              variant={currentPage === num ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setCurrentPage(num)}
-            >
-              {num}
-            </Button>
-          ))}
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
-            disabled={currentPage >= totalPages}
-            title={t('adminBlogsNext5Pages')}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            title={t('adminBlogsLastPage')}
-          >
-            <ChevronsRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+      />
 
       {/* ─── MODAL 2: LOCK POST MODAL ─── */}
       {lockTarget && (

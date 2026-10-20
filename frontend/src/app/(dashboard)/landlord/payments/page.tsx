@@ -38,7 +38,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
@@ -189,18 +189,6 @@ function PaymentsContent() {
       return dateStr
     }
   }
-
-  // Pagination Logic with 5-page window jumping (Rule #9)
-  const totalPages = Math.ceil(totalRecords / pageSize) || 1
-  const windowSize = 5
-  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-  const visiblePages = Array.from(
-    { length: windowEnd - windowStart + 1 },
-    (_, i) => windowStart + i,
-  )
-  const startIndex = totalRecords > 0 ? (currentPage - 1) * pageSize + 1 : 0
-  const endIndex = Math.min(currentPage * pageSize, totalRecords)
 
   const statChips: LandlordStatChipItem[] = useMemo(
     () => [
@@ -779,100 +767,14 @@ function PaymentsContent() {
       )}
 
       {/* Standardized View & Pagination Bar (Rule #9) */}
-      {totalRecords > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-card border border-line rounded-2xl text-xs font-bold text-muted shadow-2xs">
-          {/* Left: Displayed Range & Custom Page Size Input */}
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              Hiển thị{' '}
-              <NumberInput
-                min={1}
-                max={500}
-                value={pageSize || ''}
-                onChange={e => {
-                  const val = parseInt(e.target.value)
-                  setPageSize(isNaN(val) || val <= 0 ? 1 : val)
-                  setCurrentPage(1)
-                }}
-                containerClassName="w-16 space-y-0"
-                className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
-              />{' '}
-              / trang
-            </span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              <span className="text-foreground font-black">
-                {startIndex}-{endIndex}
-              </span>{' '}
-              trên <span className="text-foreground font-black">{totalRecords}</span> giao dịch
-            </span>
-          </div>
-
-          {/* Right: 5-Page Window Jumping Pagination Controls */}
-          <div className="flex items-center gap-1">
-            {/* First Page Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              title="Về trang đầu"
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </Button>
-
-            {/* Jump -5 Pages */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 5))}
-              disabled={currentPage <= 5}
-              title="Lùi 5 trang"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {/* 5-Page Window Number Buttons */}
-            {visiblePages.map(pageNum => (
-              <Button
-                key={pageNum}
-                type="button"
-                variant={currentPage === pageNum ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-              >
-                {pageNum}
-              </Button>
-            ))}
-
-            {/* Jump +5 Pages */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 5))}
-              disabled={currentPage + 5 > totalPages}
-              title="Tiến 5 trang"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-
-            {/* Last Page Button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              title="Đến trang cuối"
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalRecords}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={500}
+      />
 
       {/* Electronic Receipt & Detail Modal */}
       {selectedPayment && (

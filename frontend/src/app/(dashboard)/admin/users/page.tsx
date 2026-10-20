@@ -48,6 +48,7 @@ import { SelectInput } from '@/components/ui/SelectInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { Pagination } from '@/components/ui/Pagination'
 import { Avatar } from '@/components/ui/Avatar'
 
 export default function AdminUsersManagementPage() {
@@ -77,7 +78,6 @@ export default function AdminUsersManagementPage() {
   // Pagination state (Rule 9: Grid=6, Table=10 default, 5-page window jumping)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(viewMode === 'grid' ? 6 : 10)
-  const [pageInput, setPageInput] = useState(String(viewMode === 'grid' ? 6 : 10))
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -96,7 +96,6 @@ export default function AdminUsersManagementPage() {
     setViewMode(mode)
     const newSize = mode === 'grid' ? 6 : 10
     setPageSize(newSize)
-    setPageInput(String(newSize))
     setCurrentPage(1)
   }
 
@@ -478,21 +477,6 @@ export default function AdminUsersManagementPage() {
     const start = (safeCurrentPage - 1) * validPageSize
     return users.slice(start, start + validPageSize)
   }, [users, safeCurrentPage, validPageSize])
-
-  // Pagination Window (Rule 9: 5-page window jumping)
-  const paginationRange = useMemo(() => {
-    const windowSize = 5
-    const windowStart = Math.floor((safeCurrentPage - 1) / windowSize) * windowSize + 1
-    const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-    const pages: number[] = []
-    for (let i = windowStart; i <= windowEnd; i++) {
-      pages.push(i)
-    }
-    return { pages, windowStart, windowEnd }
-  }, [safeCurrentPage, totalPages])
-
-  const startIndex = totalItems === 0 ? 0 : (safeCurrentPage - 1) * validPageSize + 1
-  const endIndex = Math.min(safeCurrentPage * validPageSize, totalItems)
 
   return (
     <div className="space-y-6 pb-12">
@@ -1087,103 +1071,14 @@ export default function AdminUsersManagementPage() {
 
       {/* Standardized Pagination Bar using Button base component */}
       {!loading && totalItems > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-line text-xs text-muted bg-card p-4 rounded-3xl shadow-xs">
-          {/* Left: Hiển thị [NumberInput] / trang | X-Y trên Z người dùng */}
-          <div className="flex items-center gap-2 font-medium">
-            <Text as="span" size="xs">
-              {t('adminUsersShowing')}
-            </Text>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageInput}
-              onChange={e => setPageInput(e.target.value)}
-              onBlur={() => {
-                const val = parseInt(pageInput, 10)
-                if (!isNaN(val) && val >= 1 && val <= 100) {
-                  setPageSize(val)
-                  setCurrentPage(1)
-                } else {
-                  setPageInput(String(pageSize))
-                }
-              }}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  const val = parseInt(pageInput, 10)
-                  if (!isNaN(val) && val >= 1 && val <= 100) {
-                    setPageSize(val)
-                    setCurrentPage(1)
-                  } else {
-                    setPageInput(String(pageSize))
-                  }
-                }
-              }}
-              containerClassName="space-y-0 w-14 inline-block"
-              className="px-2 py-1 text-center font-bold text-foreground border-line rounded-xl"
-            />
-            <Text as="span" size="xs">
-              {t('adminUsersPerPage')}
-            </Text>
-            <span className="text-zinc-300">|</span>
-            <Text as="span" size="xs" weight="bold" className="text-foreground">
-              {startIndex}-{endIndex} {t('adminUsersOf')} {totalItems} {t('adminUsersItems')}
-            </Text>
-          </div>
-
-          {/* Right: 5-page window jumping with Button base components */}
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(1)}
-              disabled={safeCurrentPage === 1}
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 5))}
-              disabled={safeCurrentPage <= 5}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {/* Window Page Numbers */}
-            {paginationRange.pages.map(page => (
-              <Button
-                key={page}
-                type="button"
-                variant={safeCurrentPage === page ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </Button>
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 5))}
-              disabled={safeCurrentPage + 5 > totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={safeCurrentPage === totalPages}
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={safeCurrentPage}
+          totalItems={totalItems}
+          pageSize={validPageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+        />
       )}
 
       {/* USER DETAIL MODAL (Tabs: Profile, Activity History, Admin Actions) */}

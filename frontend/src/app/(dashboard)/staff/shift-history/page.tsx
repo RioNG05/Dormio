@@ -37,7 +37,7 @@ import {
   getLocalizedExplanation,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, NumberInput, SelectInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, Pagination } from '@/components/ui'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -148,7 +148,6 @@ function StaffShiftHistoryContent() {
     setAppliedShift(modalShift)
     setAppliedStatus(modalStatus)
     setCurrentPage(1)
-    setWindowStart(1)
     setIsFilterModalOpen(false)
   }
 
@@ -169,7 +168,6 @@ function StaffShiftHistoryContent() {
     setModalShift('all')
     setModalStatus('all')
     setCurrentPage(1)
-    setWindowStart(1)
   }
 
   // Data & loading state
@@ -188,7 +186,6 @@ function StaffShiftHistoryContent() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalItems, setTotalItems] = useState<number>(0)
-  const [windowStart, setWindowStart] = useState<number>(1)
 
   // Preview watermark photo modal
   const [previewImageModal, setPreviewImageModal] = useState<{
@@ -248,32 +245,6 @@ function StaffShiftHistoryContent() {
       window.removeEventListener('storage', handleSync)
     }
   }, [fetchHistory])
-
-  // Pagination window helpers (Rule #9: 5-page window jumping)
-  const validPageSize = Math.max(1, pageSizeInput || 10)
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
-  const startIndex = (safeCurrentPage - 1) * validPageSize
-  const endIndex = Math.min(startIndex + validPageSize, totalItems)
-
-  const windowEnd = Math.min(windowStart + 4, totalPages)
-  const pageNumbers: number[] = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
-  }
-
-  const handleNextWindow = () => {
-    const nextStart = windowStart + 5
-    if (nextStart <= totalPages) {
-      setWindowStart(nextStart)
-      setCurrentPage(nextStart)
-    }
-  }
-
-  const handlePrevWindow = () => {
-    const prevStart = Math.max(1, windowStart - 5)
-    setWindowStart(prevStart)
-    setCurrentPage(prevStart)
-  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -421,7 +392,6 @@ function StaffShiftHistoryContent() {
                       setAppliedStartDate('')
                       setAppliedEndDate('')
                       setCurrentPage(1)
-                      setWindowStart(1)
                     }}
                     className="ml-0.5"
                     title={t('titleRemoveDateFilter')}
@@ -443,7 +413,6 @@ function StaffShiftHistoryContent() {
                     onClick={() => {
                       setAppliedShift('all')
                       setCurrentPage(1)
-                      setWindowStart(1)
                     }}
                     className="ml-0.5"
                     title={t('titleRemoveShiftFilter')}
@@ -469,7 +438,6 @@ function StaffShiftHistoryContent() {
                     onClick={() => {
                       setAppliedStatus('all')
                       setCurrentPage(1)
-                      setWindowStart(1)
                     }}
                     className="ml-0.5"
                     title={t('titleRemoveStatusFilter')}
@@ -741,92 +709,14 @@ function StaffShiftHistoryContent() {
       )}
 
       {/* RULE #9 STANDARDIZED PAGINATION BAR */}
-      <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-xs text-muted font-medium">
-          <div className="flex items-center gap-1.5">
-            <span>{t('paginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSizeInput}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                setPageSizeInput(isNaN(val) ? 0 : val)
-                setCurrentPage(1)
-                setWindowStart(1)
-              }}
-              containerClassName="w-14 space-y-0"
-              className="w-14 px-2 py-1 text-center font-bold text-foreground border border-line rounded-lg focus:outline-none focus:border-[#2AC1BC]"
-            />
-            <span>{t('paginationPerPage')}</span>
-          </div>
-
-          <span className="text-zinc-300">|</span>
-
-          <span>
-            {totalItems > 0 ? startIndex + 1 : 0}-{endIndex} {t('paginationOf')} {totalItems}{' '}
-            {t('paginationItems')}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={handlePrevWindow}
-            disabled={windowStart === 1}
-            title={t('paginationJumpBack5')}
-          >
-            <ChevronsLeft className="w-4 h-4 text-muted" />
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={safeCurrentPage === 1}
-            title={t('paginationPrev')}
-          >
-            <ChevronLeft className="w-4 h-4 text-muted" />
-          </Button>
-
-          {pageNumbers.map(num => (
-            <Button
-              key={num}
-              variant={safeCurrentPage === num ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
-              onClick={() => setCurrentPage(num)}
-            >
-              {num}
-            </Button>
-          ))}
-
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={safeCurrentPage >= totalPages}
-            title={t('paginationNext')}
-          >
-            <ChevronRight className="w-4 h-4 text-muted" />
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={handleNextWindow}
-            disabled={windowStart + 5 > totalPages}
-            title={t('paginationJumpForward5')}
-          >
-            <ChevronsRight className="w-4 h-4 text-muted" />
-          </Button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSizeInput}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSizeInput}
+        pageSizeMax={100}
+      />
 
       {/* WATERMARK PHOTO MODAL */}
       {previewImageModal && previewImageModal.isOpen && (

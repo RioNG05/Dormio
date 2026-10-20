@@ -40,6 +40,7 @@ import {
   Text,
   ChipGroup,
   Modal,
+  Pagination,
 } from '@/components/ui'
 
 export default function NotificationsPage() {
@@ -739,86 +740,14 @@ export default function NotificationsPage() {
         )}
 
         {/* 4. Standardized Pagination Footer (Rule #9) */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs">
-          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
-            <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
-              <span>{t('landlordNotificationsPaginationShowing')}</span>
-              <NumberInput
-                min={1}
-                max={100}
-                value={itemsPerPage || ''}
-                onChange={e => {
-                  const val = parseInt(e.target.value)
-                  setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val)
-                  setPage(1)
-                }}
-                containerClassName="w-16 space-y-0"
-                className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
-              />
-              <span>{t('landlordNotificationsPaginationPerPage')}</span>
-            </div>
-
-            <span className="hidden sm:inline text-zinc-300">|</span>
-
-            <div>
-              <span className="font-extrabold text-foreground">
-                {totalItems === 0 ? 0 : (page - 1) * itemsPerPage + 1}
-              </span>
-              {' - '}
-              <span className="font-extrabold text-foreground">
-                {Math.min(page * itemsPerPage, totalItems)}
-              </span>
-              {` ${t('landlordNotificationsPaginationOf')} `}
-              <span className="font-extrabold text-foreground">{totalItems}</span>
-              {` ${t('landlordNotificationsPaginationAnnouncements')}`}
-            </div>
-          </div>
-
-          {/* 5-Page Window Pagination (Rule #9) */}
-          {(() => {
-            const windowSize = 5
-            const windowStart = Math.floor((page - 1) / windowSize) * windowSize + 1
-            const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-            const visiblePages = Array.from(
-              { length: windowEnd - windowStart + 1 },
-              (_, i) => windowStart + i,
-            )
-
-            return (
-              <div className="flex items-center gap-1.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 1}
-                  onClick={() => setPage(Math.max(windowStart - windowSize, 1))}
-                >
-                  &larr; {t('landlordNotificationsPaginationPrev')}
-                </Button>
-                {visiblePages.map(p => (
-                  <Button
-                    type="button"
-                    variant={page === p ? 'primary' : 'outline'}
-                    size="sm"
-                    key={p}
-                    onClick={() => setPage(p)}
-                  >
-                    {p}
-                  </Button>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={page === totalPages || windowStart + windowSize > totalPages}
-                  onClick={() => setPage(Math.min(windowStart + windowSize, totalPages))}
-                >
-                  {t('landlordNotificationsPaginationNext')} &rarr;
-                </Button>
-              </div>
-            )
-          })()}
-        </div>
+        <Pagination
+          currentPage={page}
+          totalItems={totalItems}
+          pageSize={itemsPerPage}
+          onPageChange={setPage}
+          onPageSizeChange={setItemsPerPage}
+          pageSizeMax={100}
+        />
       </div>
 
       {/* 5. MODAL: Create Broadcast Announcement Modal */}

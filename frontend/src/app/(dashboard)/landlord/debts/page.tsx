@@ -36,7 +36,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -913,69 +913,15 @@ export default function LandlordDebtsPage() {
 
       {/* ─── Rule #9 Pagination Bar ───────────────────────────────────────────── */}
       {debtRooms.length > 0 && (
-        <div className="bg-card p-4 rounded-2xl border border-line shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-muted font-medium">
-            <span>{t('landlordDebtsPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value)
-                setPageSize(isNaN(val) || val <= 0 ? 1 : val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-bold text-foreground bg-surface border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-teal-500 text-xs h-7"
-            />
-            <span>{t('landlordDebtsPaginationPerPage')}</span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              {startIndex} - {endIndex} {t('landlordDebtsPaginationOf')}{' '}
-              <span className="font-bold text-foreground">{totalRecords}</span>{' '}
-              {t('landlordDebtsPaginationRooms')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              title={t('landlordDebtsPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {visiblePages.map(pageNum => (
-              <Button
-                key={pageNum}
-                type="button"
-                variant={pageNum === currentPage ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                style={{
-                  backgroundColor: pageNum === currentPage ? '#2AC1BC' : undefined,
-                }}
-              >
-                {pageNum}
-              </Button>
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              title={t('landlordDebtsPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalRecords}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+          unitLabel={t('landlordDebtsPaginationRooms')}
+        />
       )}
 
       {/* ─── Modal 1: Invoices List for Room ──────────────────────────────────── */}

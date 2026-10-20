@@ -49,6 +49,7 @@ import {
   TextareaInput,
   Checkbox,
   SearchInput,
+  Pagination,
 } from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
@@ -98,7 +99,6 @@ export default function WorkforceSchedulePage() {
   const [listPage, setListPage] = useState<number>(1)
   const [listPageSize, setListPageSize] = useState<number>(10)
   const [totalListItems, setTotalListItems] = useState<number>(0)
-  const [windowStart, setWindowStart] = useState<number>(1)
 
   // ─── Filter States ─────────────────────────────────────────────────────
   const [filterEmployeeId, setFilterEmployeeId] = useState<string>('')
@@ -570,24 +570,6 @@ export default function WorkforceSchedulePage() {
       return 'bg-deposit-soft text-deposit border-deposit-subtle'
     }
     return 'bg-success-soft text-success border-success-subtle'
-  }
-
-  // ─── Rule #9: List View Pagination Calculation ─────────────────────────
-  const totalListPages = Math.ceil(totalListItems / listPageSize) || 1
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = []
-    for (let i = windowStart; i < windowStart + 5 && i <= totalListPages; i++) {
-      pages.push(i)
-    }
-    return pages
-  }, [windowStart, totalListPages])
-
-  const handlePageJump = (delta: number) => {
-    const nextWindow = windowStart + delta
-    if (nextWindow >= 1 && nextWindow <= totalListPages) {
-      setWindowStart(nextWindow)
-      setListPage(nextWindow)
-    }
   }
 
   const statChips: LandlordStatChipItem[] = useMemo(
@@ -1080,78 +1062,14 @@ export default function WorkforceSchedulePage() {
               </table>
 
               {/* Rule #9: Standardized Pagination Bar */}
-              <div className="p-4 border-t border-line bg-surface/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-muted font-semibold">
-                  <span>{t('landlordSchedulePaginationShowing')}</span>
-                  <NumberInput
-                    min={1}
-                    max={100}
-                    value={listPageSize}
-                    onChange={e => {
-                      const val = Number(e.target.value)
-                      if (val > 0) setListPageSize(val)
-                    }}
-                    className="w-14 px-2 py-1 text-center font-bold border border-line rounded-lg bg-card"
-                  />
-                  <span>{t('landlordSchedulePaginationPerPage')}</span>
-                  <span className="text-zinc-300">|</span>
-                  <span>
-                    {(listPage - 1) * listPageSize + 1}-
-                    {Math.min(listPage * listPageSize, totalListItems)} {t('landlordSchedulePaginationOf')}{' '}
-                    {totalListItems} {t('landlordSchedulePaginationItems')}
-                  </span>
-                </div>
-
-                {/* 5-page window jumping */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={windowStart <= 1}
-                    onClick={() => handlePageJump(-5)}
-                    title={t('landlordScheduleBack5Pages')}
-                  >
-                    «
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={listPage <= 1}
-                    onClick={() => setListPage(p => Math.max(p - 1, 1))}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-
-                  {pageNumbers.map(p => (
-                    <Button
-                      key={p}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setListPage(p)}
-                    >
-                      {p}
-                    </Button>
-                  ))}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={listPage >= totalListPages}
-                    onClick={() => setListPage(p => Math.min(p + 1, totalListPages))}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={windowStart + 5 > totalListPages}
-                    onClick={() => handlePageJump(5)}
-                    title={t('landlordScheduleForward5Pages')}
-                  >
-                    »
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                currentPage={listPage}
+                totalItems={totalListItems}
+                pageSize={listPageSize}
+                onPageChange={setListPage}
+                onPageSizeChange={setListPageSize}
+                pageSizeMax={100}
+              />
             </div>
           )}
         </div>

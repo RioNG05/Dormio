@@ -35,6 +35,7 @@ import {
   TextareaInput,
   SearchInput,
   ChipGroup,
+  Pagination,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -885,64 +886,15 @@ export default function ExpensesPage() {
 
       {/* ─── Rule #9 Pagination Bar ───────────────────────────────────────────── */}
       {expensesList.length > 0 && (
-        <div className="p-4 bg-card border border-line rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-sm">
-          <div className="flex items-center gap-2 text-muted font-medium">
-            <span>{t('landlordExpensesPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = Number(e.target.value)
-                if (val >= 1 && val <= 100) {
-                  setPageSize(val)
-                  setCurrentPage(1)
-                }
-              }}
-              className="w-16 text-center font-bold"
-            />
-            <span>{t('landlordExpensesPaginationPerPage')}</span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              {startIndex} - {endIndex} {t('landlordExpensesPaginationOf')}{' '}
-              <span className="font-bold text-foreground">{totalRecords}</span>{' '}
-              {t('landlordExpensesPaginationItems')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage <= 1}
-              title={t('landlordExpensesPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {visiblePages.map(pageNum => (
-              <Button
-                key={pageNum}
-                variant={pageNum === currentPage ? 'primary' : 'outline'}
-                size="icon-sm"
-                onClick={() => setCurrentPage(pageNum)}
-              >
-                {pageNum}
-              </Button>
-            ))}
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage >= totalPages}
-              title={t('landlordExpensesPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalRecords}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+          unitLabel={t('landlordExpensesPaginationItems')}
+        />
       )}
 
       {/* ─── Modal 1: View Detail Lightbox ───────────────────────────────────── */}

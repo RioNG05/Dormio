@@ -34,7 +34,7 @@ import {
   Eye,
   Sparkles,
 } from 'lucide-react'
-import { Button, TextInput } from '@/components/ui'
+import { Button, TextInput, Pagination } from '@/components/ui'
 import {
   LineChart,
   Line,
@@ -75,7 +75,7 @@ export default function TenantInvoicesPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = viewMode === 'grid' ? 6 : 10
+  const [pageSize, setPageSize] = useState<number>(6)
 
   // Chart line toggles
   const [visibleLines, setVisibleLines] = useState({
@@ -206,10 +206,9 @@ export default function TenantInvoicesPage() {
     })
   }, [activeInvoices, filterText, statusFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / itemsPerPage))
   const paginatedInvoices = filteredInvoices.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   )
 
   const toggleRow = (id: string) => {
@@ -509,7 +508,7 @@ export default function TenantInvoicesPage() {
                 variant="ghost"
                 size="sm"
                 type="button"
-                onClick={() => setViewMode('grid')}
+                onClick={() => { setViewMode('grid'); setPageSize(6); setCurrentPage(1); }}
                 title={t('gridView')}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -518,7 +517,7 @@ export default function TenantInvoicesPage() {
                 variant="ghost"
                 size="sm"
                 type="button"
-                onClick={() => setViewMode('table')}
+                onClick={() => { setViewMode('table'); setPageSize(10); setCurrentPage(1); }}
                 title={t('tableView')}
               >
                 <List className="w-4 h-4" />
@@ -801,47 +800,14 @@ export default function TenantInvoicesPage() {
 
         {/* Standard Pagination Bar (Rule #9) */}
         {filteredInvoices.length > 0 && (
-          <div className="p-4 sm:p-6 border-t border-line flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface/50">
-            <div className="text-xs font-medium text-muted">
-              {t('showingInvoicesRange', {
-                from: (currentPage - 1) * itemsPerPage + 1,
-                to: Math.min(currentPage * itemsPerPage, filteredInvoices.length),
-                total: filteredInvoices.length,
-              })}
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <Button
-                  key={i}
-                  variant={currentPage === i + 1 ? 'primary' : 'ghost'}
-                  size="sm"
-                  type="button"
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredInvoices.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeMax={100}
+          />
         )}
       </div>
 

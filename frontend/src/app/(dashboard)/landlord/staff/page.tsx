@@ -38,6 +38,7 @@ import {
   TextareaInput,
   SearchInput,
   Avatar,
+  Pagination,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
@@ -975,74 +976,15 @@ export default function StaffPage() {
       )}
 
       {/* Standardized Dormio Pagination Footer (Rule #9) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
-          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
-            <span>{t('landlordStaffPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                setPageSize(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100))
-                setCurrentPage(1)
-              }}
-              className="w-14 text-center font-extrabold text-foreground bg-card"
-            />
-            <span>{t('landlordStaffPaginationPerPage')}</span>
-          </div>
-
-          <span className="hidden sm:inline text-zinc-300">|</span>
-
-          <div>
-            <span className="font-extrabold text-foreground">
-              {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}
-            </span>{' '}
-            -{' '}
-            <span className="font-extrabold text-foreground">
-              {Math.min(currentPage * pageSize, totalItems)}
-            </span>{' '}
-            {t('landlordStaffPaginationTotal', { total: totalItems })}
-          </div>
-        </div>
-
-        {/* 5-Page Window Jumping Pagination */}
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-          >
-            &larr; {t('landlordStaffPaginationPrev')}
-          </Button>
-          {visiblePages.map(page => (
-            <Button
-              key={page}
-              variant={currentPage === page ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setCurrentPage(page)}
-              className={cn(
-                'w-8 h-8 p-0 text-xs font-extrabold rounded-xl',
-                currentPage === page
-                  ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-card border border-line text-foreground/90 hover:bg-card-hover',
-              )}
-            >
-              {page}
-            </Button>
-          ))}
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-            onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-          >
-            {t('landlordStaffPaginationNext')} &rarr;
-          </Button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+        unitLabel={t('landlordStaffPaginationTotal', { total: '' }).trim()}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL: ONBOARD STAFF */}

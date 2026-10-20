@@ -42,7 +42,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/services/asset.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function AssetsPage() {
@@ -772,85 +772,14 @@ export default function AssetsPage() {
       </div>
 
       {/* Standardized Dormio Pagination Footer with Custom Rows Per Page */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
-          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
-            <span>{t('landlordAssetsShowing')}</span>
-            <NumberInput
-              min={1}
-              max={500}
-              value={itemsPerPage || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value)
-                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
-            />
-            <span>{t('landlordAssetsPerPage')}</span>
-          </div>
-
-          <span className="hidden sm:inline text-zinc-300">|</span>
-
-          <div>
-            <span className="font-extrabold text-foreground">
-              {totalRecords === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
-            </span>{' '}
-            -{' '}
-            <span className="font-extrabold text-foreground">
-              {Math.min(currentPage * itemsPerPage, totalRecords)}
-            </span>{' '}
-            {t('landlordAssetsOfTotal')}{' '}
-            <span className="font-extrabold text-foreground">{totalRecords}</span>{' '}
-            {t('landlordAssetsAssetsUnit')}
-          </div>
-        </div>
-
-        {(() => {
-          const windowSize = 5
-          const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-          const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-          const visiblePages = Array.from(
-            { length: Math.max(0, windowEnd - windowStart + 1) },
-            (_, i) => windowStart + i,
-          )
-
-          return (
-            <div className="flex items-center gap-1.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-              >
-                &larr; {t('landlordAssetsPrev')}
-              </Button>
-              {visiblePages.map(page => (
-                <Button
-                  type="button"
-                  variant={currentPage === page ? 'primary' : 'outline'}
-                  size="icon-sm"
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
-                disabled={currentPage >= totalPages || windowStart + windowSize > totalPages}
-                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-              >
-                {t('landlordAssetsNext')} &rarr;
-              </Button>
-            </div>
-          )
-        })()}
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalRecords}
+        pageSize={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setItemsPerPage}
+        unitLabel={t('landlordAssetsAssetsUnit')}
+      />
 
       {/* ADD / EDIT ASSET MODAL */}
       {isModalOpen && (

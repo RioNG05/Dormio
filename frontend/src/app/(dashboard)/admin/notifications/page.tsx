@@ -34,6 +34,7 @@ import { TextInput } from '@/components/ui/TextInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
 import { SelectInput } from '@/components/ui/SelectInput'
 import { NumberInput } from '@/components/ui/NumberInput'
+import { Pagination } from '@/components/ui/Pagination'
 
 interface NotificationCampaign {
   id: string
@@ -202,14 +203,6 @@ export default function AdminNotificationsPage() {
     const start = (safeCurrentPage - 1) * validPageSize
     return currentDataset.slice(start, start + validPageSize)
   }, [currentDataset, safeCurrentPage, validPageSize])
-
-  // 5-page window jumping
-  const windowStart = Math.floor((safeCurrentPage - 1) / 5) * 5 + 1
-  const windowEnd = Math.min(windowStart + 4, totalPages)
-  const pageNumbers = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
-  }
 
   // Selection
   const isAllCurrentSelected =
@@ -906,92 +899,14 @@ export default function AdminNotificationsPage() {
       )}
 
       {/* Standardized Pagination Bar (Rule #9) */}
-      {loading ? (
-        <div className="bg-card px-4 py-3.5 rounded-2xl border border-line shadow-2xs flex items-center justify-between animate-pulse">
-          <div className="h-4 bg-line rounded w-48" />
-          <div className="h-7 bg-line rounded w-56" />
-        </div>
-      ) : paginatedItems.length > 0 ? (
-        <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
-          <div className="flex items-center gap-2">
-            <span>{t('adminNotifyPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = parseInt(e.target.value) || 1
-                setPageSize(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="space-y-0 w-14 inline-block"
-              className="px-2 py-1 text-center bg-surface border-line rounded-lg font-bold text-foreground focus:border-orange-500"
-            />
-            <span>{t('adminNotifyPaginationPerPage')}</span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              {totalItems === 0
-                ? '0'
-                : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
-                    safeCurrentPage * validPageSize,
-                    totalItems,
-                  )}`}{' '}
-              {t('adminNotifyPaginationOfCampaigns', { total: totalItems })}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1 self-end sm:self-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(1)}
-              disabled={safeCurrentPage === 1}
-              title={t('adminNotifyFirstPage')}
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
-              disabled={safeCurrentPage <= 1}
-              title={t('adminNotifyPrev5')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {pageNumbers.map(num => (
-              <Button
-                key={num}
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage(num)}
-              >
-                {num}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
-              disabled={safeCurrentPage >= totalPages}
-              title={t('adminNotifyNext5')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={safeCurrentPage === totalPages}
-              title={t('adminNotifyLastPage')}
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      <Pagination
+        currentPage={safeCurrentPage}
+        totalItems={totalItems}
+        pageSize={validPageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+      />
 
       {/* COMPOSE CAMPAIGN MODAL (Rule #10 compliant) */}
       {isComposeOpen && (

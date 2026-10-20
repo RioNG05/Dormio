@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
@@ -147,16 +147,6 @@ export default function ListingsPage() {
     }
   }
 
-  // Window jumping pagination (5 pages window)
-  const windowSize = 5
-  const currentWindow = Math.floor((page - 1) / windowSize)
-  const windowStart = currentWindow * windowSize + 1
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-  const pageNumbers = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
-  }
-
   const statChips: LandlordStatChipItem[] = useMemo(
     () => [
       {
@@ -195,9 +185,6 @@ export default function ListingsPage() {
     ],
     [t, quota, totalItems],
   )
-
-  const startIndex = totalItems === 0 ? 0 : (page - 1) * pageSize + 1
-  const endIndex = Math.min(page * pageSize, totalItems)
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
@@ -601,96 +588,14 @@ export default function ListingsPage() {
       )}
 
       {/* Standardized Pagination Bar */}
-      {totalItems > 0 && (
-        <div className="bg-card border border-line rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          {/* Items per page and range display */}
-          <div className="flex items-center gap-2 text-muted">
-            <span>{t('landlordListingsItemsPerPage')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = Math.max(1, parseInt(e.target.value) || 1)
-                setPageSize(val)
-                setPage(1)
-              }}
-              containerClassName="w-16 space-y-0"
-              className="py-1 text-center font-bold border border-line rounded-lg focus:outline-none focus:border-[#FF6B35]"
-            />
-            <span>{t('landlordListingsPerPageUnit')} | </span>
-            <span className="font-bold text-foreground">
-              {startIndex}-{endIndex} {t('landlordListingsPaginationOf')} {totalItems}{' '}
-              {t('landlordListingsPaginationItems')}
-            </span>
-          </div>
-
-          {/* 5-Page Window Jumping Controls */}
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              title={t('landlordListingsPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {windowStart > 1 && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(1)}
-                >
-                  1
-                </Button>
-                {windowStart > 2 && <span className="px-1 text-muted">...</span>}
-              </>
-            )}
-
-            {pageNumbers.map(num => (
-              <Button
-                key={num}
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setPage(num)}
-              >
-                {num}
-              </Button>
-            ))}
-
-            {windowEnd < totalPages && (
-              <>
-                {windowEnd < totalPages - 1 && <span className="px-1 text-muted">...</span>}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(totalPages)}
-                >
-                  {totalPages}
-                </Button>
-              </>
-            )}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              title={t('landlordListingsPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={page}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+      />
     </div>
   )
 }

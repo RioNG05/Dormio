@@ -27,7 +27,7 @@ import {
   Check,
   ChevronDown,
 } from 'lucide-react'
-import { Button, TextInput, NumberInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, TextareaInput, Pagination } from '@/components/ui'
 
 export type HouseModerationItem = AdminHouseModerationItem
 
@@ -206,14 +206,6 @@ export default function AdminBoardingHouseModerationPage() {
 
   const validPageSize = Math.max(1, Number(pageSize) || 10)
   const safeCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages))
-
-  // 5-page window jumping
-  const windowStart = Math.floor((safeCurrentPage - 1) / 5) * 5 + 1
-  const windowEnd = Math.min(windowStart + 4, Math.max(1, totalPages))
-  const pageNumbers = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
-  }
 
   // Lock handler
   const handleOpenLock = (item: HouseModerationItem) => {
@@ -747,85 +739,14 @@ export default function AdminBoardingHouseModerationPage() {
       </div>
 
       {/* Standardized Pagination Bar */}
-      <div className="bg-card px-4 py-3 rounded-2xl border border-line shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-muted">
-        <div className="flex items-center gap-2">
-          <span>{t('adminBlogsPaginationShowing')}</span>
-          <NumberInput
-            min={1}
-            max={100}
-            value={pageSize}
-            onChange={e => {
-              const val = parseInt(e.target.value) || 1
-              setPageSize(val)
-              setCurrentPage(1)
-            }}
-            containerClassName="space-y-0 w-14 inline-block"
-            className="px-2 py-1 text-center bg-surface border-line rounded-lg font-bold text-foreground focus:border-orange-500"
-          />
-          <span>{t('adminBlogsPaginationPerPage')}</span>
-          <span className="text-zinc-300">|</span>
-          <span>
-            {totalItems === 0
-              ? '0'
-              : `${(safeCurrentPage - 1) * validPageSize + 1}-${Math.min(
-                  safeCurrentPage * validPageSize,
-                  totalItems,
-                )}`}{' '}
-            {t('adminBlogsPaginationOfPosts', { total: totalItems })}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1 self-end sm:self-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(1)}
-            disabled={safeCurrentPage === 1}
-            title={t('adminBlogsFirstPage') || 'Trang đầu'}
-          >
-            <ChevronsLeft className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 5))}
-            disabled={safeCurrentPage <= 1}
-            title={t('adminBlogsPrev5') || 'Lùi 5 trang'}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          {pageNumbers.map(num => (
-            <Button
-              key={num}
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(num)}
-            >
-              {num}
-            </Button>
-          ))}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(Math.min(totalPages, safeCurrentPage + 5))}
-            disabled={safeCurrentPage >= totalPages}
-            title={t('adminBlogsNext5') || 'Tiến 5 trang'}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={safeCurrentPage === totalPages}
-            title={t('adminBlogsLastPage') || 'Trang cuối'}
-          >
-            <ChevronsRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={safeCurrentPage}
+        totalItems={totalItems}
+        pageSize={validPageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+      />
 
       {/* LOCK HOUSE MODAL */}
       {lockTarget && (

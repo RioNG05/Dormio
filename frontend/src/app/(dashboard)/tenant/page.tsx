@@ -34,6 +34,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Pagination } from '@/components/ui/Pagination'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
@@ -278,7 +279,6 @@ export default function TenantOverviewPage() {
 
   // Pagination for announcements (4 items per page)
   const itemsPerPage = 4
-  const totalPages = Math.max(1, Math.ceil(allAnnouncements.length / itemsPerPage))
   const currentAnnouncements = allAnnouncements.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
@@ -654,47 +654,15 @@ export default function TenantOverviewPage() {
                 </div>
 
                 {/* Pagination Controls - 4 items per page */}
-                <div className="px-4 py-2.5 border-t border-line flex items-center justify-between bg-surface/50 rounded-b-3xl">
-                  <div className="text-[11px] font-semibold text-muted">
-                    {t('showingRange', {
-                      from: (currentPage - 1) * itemsPerPage + 1,
-                      to: Math.min(currentPage * itemsPerPage, allAnnouncements.length),
-                      total: allAnnouncements.length,
-                    })}
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <Button
-                        key={i}
-                        variant={currentPage === i + 1 ? 'primary' : 'ghost'}
-                        size="sm"
-                        type="button"
-                        onClick={() => setCurrentPage(i + 1)}
-                      >
-                        {i + 1}
-                      </Button>
-                    ))}
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={allAnnouncements.length}
+                  pageSize={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  showPageSizeInput={false}
+                  variant="flat"
+                  className="px-4 py-2.5 border-t border-line bg-surface/50 rounded-b-3xl"
+                />
               </>
             )}
           </div>

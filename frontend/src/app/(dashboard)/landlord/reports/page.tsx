@@ -60,7 +60,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
-import { Button, SelectInput, NumberInput } from '@/components/ui'
+import { Button, SelectInput, NumberInput, Pagination } from '@/components/ui'
 import { LandlordPageHeader } from '@/components/landlord'
 import {
   getBoardingHouseOverview,
@@ -100,7 +100,6 @@ export default function ReportsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(6)
-  const [windowStart, setWindowStart] = useState(1)
 
   // Toast feedback state
   const [toast, setToast] = useState<{
@@ -177,22 +176,6 @@ export default function ReportsPage() {
   // Pagination for Properties Breakdown (Rule #9)
   const propertiesList = portfolioOverview?.propertiesBreakdown ?? []
   const totalItems = propertiesList.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-
-  // Reset page when pageSize or totalItems change
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages)
-  }, [page, totalPages])
-
-  // Adjust windowStart for 5-page window jumping
-  useEffect(() => {
-    if (page < windowStart) {
-      setWindowStart(Math.max(1, page - 4))
-    } else if (page > windowStart + 4) {
-      setWindowStart(page)
-    }
-  }, [page, windowStart])
-
   const displayedProperties = useMemo(() => {
     const start = (page - 1) * pageSize
     return propertiesList.slice(start, start + pageSize)
@@ -202,7 +185,6 @@ export default function ReportsPage() {
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
     setPage(1)
-    setWindowStart(1)
     setPageSize(mode === 'grid' ? 6 : 10)
   }
 
@@ -940,94 +922,15 @@ export default function ReportsPage() {
                 )}
 
                 {/* Rule #9 Standardized Pagination */}
-                {totalItems > 0 && (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-line text-xs font-bold text-muted">
-                    {/* Items per page & range */}
-                    <div className="flex items-center gap-2">
-                      <span>{t('landlordReportsPaginationShowing')}</span>
-                      <NumberInput
-                        min={1}
-                        max={100}
-                        value={pageSize}
-                        onChange={e => {
-                          const val = parseInt(e.target.value, 10)
-                          if (val > 0) setPageSize(val)
-                        }}
-                        containerClassName="w-16 space-y-0"
-                        className="py-1 bg-surface border border-line rounded-lg text-center text-xs font-bold focus:outline-none focus:border-[#2AC1BC]"
-                      />
-                      <span>{t('landlordReportsPaginationPerPage')}</span>
-                      <span className="text-muted mx-1">|</span>
-                      <span>
-                        {t('landlordReportsPaginationRange', {
-                          start: Math.min(totalItems, (page - 1) * pageSize + 1),
-                          end: Math.min(totalItems, page * pageSize),
-                          total: totalItems,
-                        })}
-                      </span>
-                    </div>
-
-                    {/* Window Jumping 5-page buttons */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(1)}
-                        title={t('landlordReportsPaginationFirst')}
-                      >
-                        <ChevronsLeft className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        title={t('landlordReportsPaginationPrev')}
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                      </Button>
-
-                      {Array.from({ length: Math.min(5, totalPages - windowStart + 1) }, (_, i) => {
-                        const pNum = windowStart + i
-                        return (
-                          <Button
-                            key={pNum}
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPage(pNum)}
-                          >
-                            {pNum}
-                          </Button>
-                        )
-                      })}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        title={t('landlordReportsPaginationNext')}
-                      >
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(totalPages)}
-                        title={t('landlordReportsPaginationLast')}
-                      >
-                        <ChevronsRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <Pagination
+                  currentPage={page}
+                  totalItems={totalItems}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  pageSizeMax={100}
+                  className="pt-4 border-t border-line"
+                />
               </div>
 
               {/* Expiring Contracts Across All Properties */}

@@ -41,6 +41,7 @@ import {
   ChipGroup,
   Text,
   Modal,
+  Pagination,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -362,13 +363,6 @@ export default function ContractsPage() {
     showToast(t('landlordContractsToastExtendSuccess'), 'success')
   }
 
-
-  const copyToClipboard = (e: React.MouseEvent, text: string) => {
-    e.stopPropagation()
-    navigator.clipboard.writeText(text)
-    showToast(t('landlordContractsToastCodeCopied'), 'success')
-  }
-
   const filteredContracts = contracts.filter(c => {
     if (
       searchQuery &&
@@ -503,7 +497,7 @@ export default function ContractsPage() {
       </Modal>
 
       <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-              <LandlordPageHeader
+        <LandlordPageHeader
           title={t('landlordContractsTitle')}
           subtitle={t('landlordContractsSubtitle')}
           actions={
@@ -553,7 +547,6 @@ export default function ContractsPage() {
                     setSearchQuery(val)
                     setCurrentPage(1)
                   }}
-                  className="bg-surface focus:bg-white text-xs"
                 />
               </div>
 
@@ -636,30 +629,9 @@ export default function ContractsPage() {
                         <div>
                           {/* Card Header: Room & Status */}
                           <div className="flex items-start justify-between gap-3 pb-3 border-b border-line">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-[#2AC1BC] transition-colors">
-                                  {t('landlordRoomDetailRoomPrefix')} {c.room}
-                                </Text>
-                                <Text as="span" size="3xs" weight="extrabold" className="px-2 py-0.5 rounded-full bg-info-soft text-info border border-info-subtle">
-                                  {activeBuilding?.name || 'Dormio'}
-                                </Text>
-                              </div>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <Text as="span" variant="caption" size="2xs" weight="bold" color="subtle">
-                                  {t('landlordContractsContractCodeShort')} {c.id}
-                                </Text>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={e => copyToClipboard(e, c.id)}
-                                  className="rounded"
-                                  title={t('landlordContractsCopyCodeTitle')}
-                                >
-                                  <Copy className="w-3 h-3 text-muted hover:text-[#2AC1BC]" />
-                                </Button>
-                              </div>
-                            </div>
+                            <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-[#2AC1BC] transition-colors">
+                              {t('landlordRoomDetailRoomPrefix')} {c.room}
+                            </Text>
 
                             <Text
                               as="span"
@@ -764,18 +736,18 @@ export default function ContractsPage() {
                         <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="md"
                             onClick={e => {
                               e.stopPropagation()
                               router.push(`/landlord/contracts/${c.id}`)
                             }}
-                            leftIcon={<Eye  />}
+                            leftIcon={<Eye className='w-4 h-4' />}
                           >
                             {t('landlordContractsBtnDetail')}
                           </Button>
                           <div className="flex items-center gap-1.5">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon"
                               onClick={e => {
                                 e.stopPropagation()
@@ -783,29 +755,29 @@ export default function ContractsPage() {
                               }}
                               title={t('landlordContractsPrintExportTitle')}
                             >
-                              <Printer className="w-3.5 h-3.5 text-foreground/90" />
+                              <Printer className='w-4 h-4 text-foreground/90' />
                             </Button>
                             <Button
                               variant="outline"
-                              size="sm"
+                              size="md"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
                                 setIsExtendModalOpen(true)
                               }}
-                              leftIcon={<CalendarDays  />}
+                              leftIcon={<CalendarDays className='w-4 h-4' />}
                             >
                               {t('landlordContractsBtnExtend')}
                             </Button>
                             <Button
                               variant="outline"
-                              size="sm"
+                              size="md"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
                                 setIsTerminateModalOpen(true)
                               }}
-                              leftIcon={<Ban  />}
+                              leftIcon={<Ban className='w-4 h-4' />}
                             >
                               {t('landlordContractsBtnTerminate')}
                             </Button>
@@ -887,18 +859,7 @@ export default function ContractsPage() {
                                       {activeBuilding?.name || 'Dormio'}
                                     </Text>
                                   </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <Text as="span" size="2xs" weight="bold" color="subtle">{c.id}</Text>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={e => copyToClipboard(e, c.id)}
-                                      className="rounded"
-                                      title={t('landlordContractsCopyCodeTitle')}
-                                    >
-                                      <Copy className="w-3 h-3 text-muted hover:text-[#2AC1BC]" />
-                                    </Button>
-                                  </div>
+                                  <Text as="span" size="2xs" weight="bold" color="subtle">{c.id}</Text>
                                 </div>
                               </td>
                               <td className="px-5 py-4 whitespace-nowrap">
@@ -1031,89 +992,14 @@ export default function ContractsPage() {
             )}
 
             {/* Standardized Pagination Footer (Rule #9) */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
-              <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
-                <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
-                  <Text as="span" size="xs" weight="semibold" color="secondary">
-                    {t('landlordContractsPaginationShowing')}
-                  </Text>
-                  <NumberInput
-                    min={1}
-                    max={500}
-                    value={rowsPerPage || 1}
-                    onChange={e => {
-                      const val = parseInt(e.target.value)
-                      setRowsPerPage(isNaN(val) || val <= 0 ? 1 : val)
-                      setCurrentPage(1)
-                    }}
-                    className="w-14 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 text-xs"
-                  />
-                  <Text as="span" size="xs" weight="semibold" color="secondary">
-                    {t('landlordContractsPaginationPerPage')}
-                  </Text>
-                </div>
-
-                <span className="hidden sm:inline text-zinc-300">|</span>
-
-                <div className="text-xs font-semibold text-muted">
-                  <Text as="span" weight="extrabold" color="default">
-                    {totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1}
-                  </Text>{' '}
-                  -{' '}
-                  <Text as="span" weight="extrabold" color="default">
-                    {Math.min(currentPage * rowsPerPage, totalItems)}
-                  </Text>{' '}
-                  {t('landlordContractsPaginationOf')}{' '}
-                  <Text as="span" weight="extrabold" color="default">
-                    {totalItems}
-                  </Text>{' '}
-                  {t('landlordContractsPaginationTotalContracts')}
-                </div>
-              </div>
-
-              {(() => {
-                const windowSize = 5
-                const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-                const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-                const visiblePages = Array.from(
-                  { length: windowEnd - windowStart + 1 },
-                  (_, i) => windowStart + i,
-                )
-
-                return (
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                    >
-                      &larr; {t('landlordContractsPaginationPrev')}
-                    </Button>
-                    {visiblePages.map(page => (
-                      <Button
-                        key={page}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </Button>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-                      onClick={() =>
-                        setCurrentPage(Math.min(windowStart + windowSize, totalPages))
-                      }
-                    >
-                      {t('landlordContractsPaginationNext')} &rarr;
-                    </Button>
-                  </div>
-                )
-              })()}
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalItems}
+              pageSize={rowsPerPage}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setRowsPerPage}
+              unitLabel={t('landlordContractsPaginationTotalContracts')}
+            />
 
 
           </>

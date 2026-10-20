@@ -26,7 +26,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react'
-import { Button, TextInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, TextareaInput, Pagination } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
@@ -47,7 +47,7 @@ export default function TenantAdminComplaintsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = viewMode === 'grid' ? 6 : 10
+  const [pageSize, setPageSize] = useState<number>(6)
 
   // Create form state
   const [title, setTitle] = useState('')
@@ -228,10 +228,9 @@ export default function TenantAdminComplaintsPage() {
     })
   }, [complaints, searchQuery, statusFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredComplaints.length / itemsPerPage))
   const paginatedComplaints = filteredComplaints.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   )
 
   const formatDate = (dateStr?: string | null) => {
@@ -416,7 +415,7 @@ export default function TenantAdminComplaintsPage() {
                 variant="ghost"
                 size="sm"
                 type="button"
-                onClick={() => setViewMode('grid')}
+                onClick={() => { setViewMode('grid'); setPageSize(6); setCurrentPage(1); }}
                 title={t('tenantGridView')}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -425,7 +424,7 @@ export default function TenantAdminComplaintsPage() {
                 variant="ghost"
                 size="sm"
                 type="button"
-                onClick={() => setViewMode('table')}
+                onClick={() => { setViewMode('table'); setPageSize(10); setCurrentPage(1); }}
                 title={t('tenantTableView')}
               >
                 <List className="w-4 h-4" />
@@ -560,47 +559,14 @@ export default function TenantAdminComplaintsPage() {
         )}
 
         {/* Standard Pagination Bar (Rule #9) */}
-        <div className="p-4 sm:p-6 border-t border-line flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface/50">
-          <div className="text-xs font-medium text-muted">
-            {t('tenantShowingGrievancesRange', {
-              from: (currentPage - 1) * itemsPerPage + 1,
-              to: Math.min(currentPage * itemsPerPage, filteredComplaints.length),
-              total: filteredComplaints.length,
-            })}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <Button
-                key={i}
-                variant={currentPage === i + 1 ? 'primary' : 'ghost'}
-                size="sm"
-                type="button"
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </Button>
-            ))}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredComplaints.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+        />
       </div>
 
       {/* Modal 1: Create New Grievance Modal */}

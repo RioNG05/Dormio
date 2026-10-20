@@ -38,7 +38,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -73,7 +73,6 @@ export default function AttendancePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [pageSize, setPageSize] = useState<number>(6) // Default Grid = 6
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [windowStart, setWindowStart] = useState<number>(1)
 
   // ─── Filter & Date Range States ────────────────────────────────────────
   const [datePreset, setDatePreset] = useState<'today' | 'week' | 'month' | 'custom'>('month')
@@ -132,8 +131,7 @@ export default function AttendancePage() {
     setViewMode(mode)
     setPageSize(mode === 'grid' ? 6 : 10)
     setCurrentPage(1)
-    setWindowStart(1)
-  }
+      }
 
   // ─── Date Preset Handler ───────────────────────────────────────────────
   const handleDatePresetChange = (preset: 'today' | 'week' | 'month' | 'custom') => {
@@ -159,8 +157,7 @@ export default function AttendancePage() {
       setEndDate(formatDateString(last))
     }
     setCurrentPage(1)
-    setWindowStart(1)
-  }
+      }
 
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text })
@@ -349,24 +346,6 @@ export default function AttendancePage() {
             <span>{isEn ? 'Not checked in' : 'Chưa chấm công'}</span>
           </span>
         )
-    }
-  }
-
-  // ─── Rule #9: Standardized 5-page window jumping ────────────────────────
-  const totalPages = Math.ceil(totalItems / pageSize) || 1
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = []
-    for (let i = windowStart; i < windowStart + 5 && i <= totalPages; i++) {
-      pages.push(i)
-    }
-    return pages
-  }, [windowStart, totalPages])
-
-  const handlePageJump = (delta: number) => {
-    const nextWindow = windowStart + delta
-    if (nextWindow >= 1 && nextWindow <= totalPages) {
-      setWindowStart(nextWindow)
-      setCurrentPage(nextWindow)
     }
   }
 
@@ -836,87 +815,15 @@ export default function AttendancePage() {
           </div>
 
           {/* Rule #9: Standardized Pagination Bar */}
-          <div className="mt-4 p-4 bg-card border border-line rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-            <div className="flex items-center gap-2 text-xs text-muted font-semibold">
-              <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-              <NumberInput
-                min={1}
-                max={100}
-                value={pageSize}
-                onChange={e => {
-                  const val = Number(e.target.value)
-                  if (val > 0) setPageSize(val)
-                }}
-                containerClassName="w-14 space-y-0"
-                className="w-14 px-2 py-1 text-center font-bold border border-line rounded-lg bg-card h-7 text-xs"
-              />
-              <span>/ trang</span>
-              <span className="text-zinc-300">|</span>
-              <span>
-                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalItems)}{' '}
-                {isEn ? 'of' : 'trên'} {totalItems} {isEn ? 'items' : 'mục'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart <= 1}
-                onClick={() => handlePageJump(-5)}
-                
-                title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
- >
-                «
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                
- >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-
-              {pageNumbers.map(p => (
-                <Button
-                  key={p}
-                  type="button"
-                  variant={currentPage === p ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCurrentPage(p)}
-                  
- >
-                  {p}
-                </Button>
-              ))}
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                
- >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart + 5 > totalPages}
-                onClick={() => handlePageJump(5)}
-                
-                title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
- >
-                »
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeMax={100}
+            className="mt-4"
+          />
         </div>
       ) : (
         /* ═══════════════════════════════════════════════════════════════════
@@ -985,87 +892,14 @@ export default function AttendancePage() {
           </div>
 
           {/* Rule #9: Standardized Pagination Bar */}
-          <div className="p-4 border-t border-line bg-surface/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs text-muted font-semibold">
-              <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-              <NumberInput
-                min={1}
-                max={100}
-                value={pageSize}
-                onChange={e => {
-                  const val = Number(e.target.value)
-                  if (val > 0) setPageSize(val)
-                }}
-                containerClassName="w-14 space-y-0"
-                className="w-14 px-2 py-1 text-center font-bold border border-line rounded-lg bg-card h-7 text-xs"
-              />
-              <span>/ trang</span>
-              <span className="text-zinc-300">|</span>
-              <span>
-                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalItems)}{' '}
-                {isEn ? 'of' : 'trên'} {totalItems} {isEn ? 'items' : 'mục'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart <= 1}
-                onClick={() => handlePageJump(-5)}
-                
-                title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
- >
-                «
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                
- >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-
-              {pageNumbers.map(p => (
-                <Button
-                  key={p}
-                  type="button"
-                  variant={currentPage === p ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCurrentPage(p)}
-                  
- >
-                  {p}
-                </Button>
-              ))}
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                
- >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart + 5 > totalPages}
-                onClick={() => handlePageJump(5)}
-                
-                title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
- >
-                »
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeMax={100}
+          />
         </div>
       )}
 

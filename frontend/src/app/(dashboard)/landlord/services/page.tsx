@@ -39,7 +39,7 @@ import {
   ServicesSummary,
   ServiceAssignedRoom,
 } from '@/services/service.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup, Pagination } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ServicesPage() {
@@ -515,7 +515,6 @@ export default function ServicesPage() {
   )
 
   // Calculation for pagination
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
@@ -976,83 +975,15 @@ export default function ServicesPage() {
       ) : null}
 
       {/* Standardized Dormio Pagination Footer (Rule #9) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-card border border-line rounded-2xl shadow-xs mt-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted">
-          <div className="flex items-center gap-1.5 bg-surface px-2.5 py-1 rounded-xl border border-line">
-            <span>{t('landlordServicesPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={itemsPerPage || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                setItemsPerPage(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100))
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-extrabold text-foreground bg-card border border-line rounded-lg px-1 py-0.5 focus:outline-none focus:border-[#2AC1BC] text-xs h-7"
-            />
-            <span>{t('landlordServicesPaginationPerPage')}</span>
-          </div>
-
-          <span className="hidden sm:inline text-zinc-300">|</span>
-
-          <div>
-            <span className="font-extrabold text-foreground">
-              {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
-            </span>{' '}
-            -{' '}
-            <span className="font-extrabold text-foreground">
-              {Math.min(currentPage * itemsPerPage, totalItems)}
-            </span>{' '}
-            {t('landlordServicesPaginationTotal', { total: totalItems })}
-          </div>
-        </div>
-
-        {(() => {
-          const windowSize = 5
-          const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-          const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-          const visiblePages = Array.from(
-            { length: windowEnd - windowStart + 1 },
-            (_, i) => windowStart + i,
-          )
-
-          return (
-            <div className="flex items-center gap-1.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-              >
-                &larr; {t('landlordServicesPaginationPrev')}
-              </Button>
-              {visiblePages.map(page => (
-                <Button
-                  key={page}
-                  type="button"
-                  variant={currentPage === page ? 'primary' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </Button>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-              >
-                {t('landlordServicesPaginationNext')} &rarr;
-              </Button>
-            </div>
-          )
-        })()}
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setItemsPerPage}
+        pageSizeMax={100}
+        className="mt-4"
+      />
 
       {/* ADD / EDIT SERVICE MODAL */}
       {isModalOpen && (

@@ -35,6 +35,7 @@ import {
   ChipGroup,
   Modal,
   Text,
+  Pagination,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -1073,69 +1074,15 @@ function DepositsContent() {
 
       {/* Rule #9 Standardized Pagination Control */}
       {totalItems > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-xs text-muted">
-          <div className="flex items-center gap-2">
-            <Text as="span" size="xs" color="secondary">
-              {t('landlordDepositsShowing')}
-            </Text>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = Math.max(1, parseInt(e.target.value) || 1)
-                setPageSize(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16"
-              className="text-center font-bold py-1 text-xs"
-            />
-            <Text as="span" size="xs" color="secondary">
-              {t('landlordDepositsPerPage')}
-            </Text>
-            <span className="text-zinc-300">|</span>
-            <Text as="span" size="xs" color="secondary">
-              {startIndex + 1}-{endIndex} {t('landlordDepositsOf')} {totalItems}{' '}
-              {t('landlordDepositsItems')}
-            </Text>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              title={t('landlordDepositsTooltipPrevPage')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {pageNumbers.map(num => (
-              <Button
-                key={num}
-                variant={currentPage === num ? 'primary' : 'outline'}
-                size="icon"
-                onClick={() => setCurrentPage(num)}
-                className={cn('h-8 w-8 text-xs', currentPage !== num && 'text-foreground/90')}
-              >
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {num}
-                </Text>
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage >= totalPages}
-              title={t('landlordDepositsTooltipNextPage')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+          unitLabel={t('landlordDepositsItems')}
+        />
       )}
 
       {/* ─── MODALS ──────────────────────────────────────────────────────────── */}
