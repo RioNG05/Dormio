@@ -171,7 +171,7 @@ export default function ContractPreviewModal({
       header={
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 flex items-center justify-center text-[#2AC1BC]">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -179,10 +179,10 @@ export default function ContractPreviewModal({
                 {t('landlordContractsExportTitle', { roomNumber })}
               </Text>
               <Text size="xs" color="subtle" weight="medium">
-                {tenantName ? `${t('landlordContractsExportRep', { tenantName })} • ` : ''}
-                <Text as="span" mono weight="bold" color="default">
-                  {contractId.substring(0, 12)}...
-                </Text>
+                {tenantName ? `${t('landlordContractsExportRep', { tenantName })}` : ''}
+              </Text>
+              <Text as="span" mono weight="bold" color="default">
+                {contractId}...
               </Text>
             </div>
           </div>
@@ -193,12 +193,10 @@ export default function ContractPreviewModal({
               size="sm"
               onClick={handlePrint}
               disabled={isLoading || !!error}
-              leftIcon={<Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+              leftIcon={<Printer className=" text-primary" />}
               title={t('landlordContractsExportPrintTooltip')}
             >
-              <Text as="span" size="sm" weight="semibold" color="inherit" className="hidden sm:inline">
-                {t('landlordContractsExportPrintBtn')}
-              </Text>
+              {t('landlordContractsExportPrintBtn')}
             </Button>
 
             <Button
@@ -207,14 +205,12 @@ export default function ContractPreviewModal({
               onClick={handleExportDocument}
               disabled={isLoading || isExporting || !!error}
               isLoading={isExporting}
-              leftIcon={<FileDown className="w-3.5 h-3.5" />}
+              leftIcon={<FileDown />}
               title={t('landlordContractsExportExportTooltip')}
             >
-              <Text as="span" size="sm" weight="semibold" color="inherit">
-                {isExporting
-                  ? t('landlordContractsExportExporting')
-                  : t('landlordContractsExportExportBtn')}
-              </Text>
+              {isExporting
+                ? t('landlordContractsExportExporting')
+                : t('landlordContractsExportExportBtn')}
             </Button>
           </div>
         </div>
@@ -254,7 +250,7 @@ export default function ContractPreviewModal({
     >
       {isLoading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-card/80 backdrop-blur-xs">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <Text size="sm" weight="semibold" className="text-muted">
             {t('landlordContractsExportPreparing')}
           </Text>
@@ -275,7 +271,7 @@ export default function ContractPreviewModal({
               variant="outline"
               size="sm"
               onClick={fetchContractHtml}
-              leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+              leftIcon={<RefreshCw />}
             >
               <Text as="span" size="sm" weight="semibold" color="inherit">
                 Thử lại

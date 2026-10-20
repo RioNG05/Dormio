@@ -211,6 +211,34 @@ export async function getContractById(
   })
 }
 
+export interface UpdateContractPayload {
+  rentPrice?: number
+  depositAmount?: number
+  monthlyPaymentDate?: number
+  endDate?: string
+  note?: string
+  reason: string
+}
+
+/**
+ * Updates contract details (rent price, deposit, payment date, end date, reason)
+ */
+export async function updateContract(
+  buildingId: string,
+  contractId: string,
+  payload: UpdateContractPayload,
+): Promise<{ success: boolean; data: any }> {
+  return api.patch<{ success: boolean; data: any }>(
+    `/v1/landlord/contracts/${contractId}`,
+    payload,
+    {
+      headers: {
+        'X-Boarding-House-Id': buildingId,
+      },
+    },
+  )
+}
+
 export interface ExportContractResponse {
   documentId: string
   contractId: string

@@ -31,6 +31,7 @@ describe('LandlordContractsController - Tier Guards', () => {
             getContractPrintHtml: jest.fn(),
             getContractDocuments: jest.fn(),
             getContractDocumentDownload: jest.fn(),
+            updateContract: jest.fn(),
           },
         },
       ],
@@ -61,6 +62,31 @@ describe('LandlordContractsController - Tier Guards', () => {
         controller.downloadContractDocument,
       )
       expect(tier).toBe(SubscriptionPackage.plus)
+    })
+  })
+
+  describe('updateContract', () => {
+    it('should delegate to contractsService.updateContract', async () => {
+      const mockResult = { id: 'c-1', rentPrice: 4000000 }
+      const contractsService = (controller as any).contractsService
+      contractsService.updateContract.mockResolvedValue(mockResult)
+
+      const result = await controller.updateContract(
+        'bh-1',
+        'c-1',
+        { rentPrice: 4000000, reason: 'Tăng giá thuê' },
+        { id: 'landlord-1', role: 'landlord' } as any,
+        '127.0.0.1',
+      )
+
+      expect(contractsService.updateContract).toHaveBeenCalledWith(
+        'landlord-1',
+        'bh-1',
+        'c-1',
+        { rentPrice: 4000000, reason: 'Tăng giá thuê' },
+        '127.0.0.1',
+      )
+      expect(result).toEqual({ success: true, data: mockResult })
     })
   })
 })

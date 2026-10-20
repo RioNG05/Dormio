@@ -20,6 +20,7 @@ import { CreateContractPlatformDto } from './dto/create-contract-platform.dto'
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto'
 import { QueryContractsDto } from './dto/query-contracts.dto'
 import { ExportContractResponseDto } from './dto/export-contract-response.dto'
+import { UpdateContractDto } from './dto/update-contract.dto'
 import { ContractTemplateRenderer, ContractTemplateData } from './contract-template.renderer'
 import { Prisma } from '@prisma'
 import { randomUUID } from 'crypto'
@@ -732,7 +733,10 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Contract does not exist or does not belong to this property.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
     }
 
     const primaryTenant =
@@ -802,6 +806,166 @@ export class ContractsService {
       })),
       createdAt: contract.createdAt,
     }
+  }
+
+  /**
+   * Updates contract details (rent price, deposit, payment date, end date, note/reason).
+   * Validates contract exists and belongs to the specified boarding house.
+   * Updates contract and linked deposit within a single transaction.
+   * Records AuditLog mutations in the same transaction (Rule 4).
+   *
+   * @param landlordId Authenticated landlord ID
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Contract UUID
+   * @param dto UpdateContractDto payload
+   * @param ipAddress Client IP address for audit logging
+   * @returns Updated contract aggregate
+   */
+  async updateContract(
+    landlordId: string,
+    boardingHouseId: string,
+    contractId: string,
+    dto: UpdateContractDto,
+    ipAddress?: string,
+  ) {
+    const existingContract = await this.prisma.contract.findFirst({
+      where: {
+        id: contractId,
+        room: { boardingHouseId },
+      },
+      include: {
+        deposit: true,
+      },
+    })
+
+    if (!existingContract) {
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
+    }
+
+    if (existingContract.status === 'canceled') {
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_INVALID_STATUS,
+        'Cannot modify a canceled contract.',
+      )
+    }
+
+    await this.prisma.$transaction(async tx => {
+      // 1. Prepare contract update payload
+      const contractUpdateData: Prisma.ContractUpdateInput = {}
+      if (dto.rentPrice !== undefined) {
+        contractUpdateData.rentPrice = new Prisma.Decimal(dto.rentPrice)
+      }
+      if (dto.monthlyPaymentDate !== undefined) {
+        contractUpdateData.monthlyPaymentDate = dto.monthlyPaymentDate
+      }
+      if (dto.endDate !== undefined) {
+        contractUpdateData.endDate = new Date(dto.endDate)
+      }
+      if (dto.note !== undefined) {
+        contractUpdateData.note = dto.note
+      }
+
+      await tx.contract.update({
+        where: { id: contractId },
+        data: contractUpdateData,
+      })
+
+      // 2. AuditLog for Contract update (Rule 4)
+      await tx.auditLog.create({
+        data: {
+          action: 'update',
+          entityType: 'CONTRACT',
+          entityId: contractId,
+          boardingHouseId,
+          userId: landlordId,
+          ipAddress: ipAddress || '127.0.0.1',
+          oldValue: {
+            rentPrice: Number(existingContract.rentPrice),
+            monthlyPaymentDate: existingContract.monthlyPaymentDate,
+            endDate: existingContract.endDate,
+            note: existingContract.note,
+          },
+          newValue: {
+            rentPrice: dto.rentPrice !== undefined ? dto.rentPrice : Number(existingContract.rentPrice),
+            monthlyPaymentDate:
+              dto.monthlyPaymentDate !== undefined
+                ? dto.monthlyPaymentDate
+                : existingContract.monthlyPaymentDate,
+            endDate: dto.endDate !== undefined ? dto.endDate : existingContract.endDate,
+            note: dto.note !== undefined ? dto.note : existingContract.note,
+            reason: dto.reason,
+          },
+        },
+      })
+
+      // 3. Deposit update / creation if depositAmount is provided
+      if (dto.depositAmount !== undefined) {
+        if (existingContract.deposit) {
+          if (Number(existingContract.deposit.amount) !== dto.depositAmount) {
+            await tx.deposit.update({
+              where: { id: existingContract.deposit.id },
+              data: {
+                amount: new Prisma.Decimal(dto.depositAmount),
+              },
+            })
+
+            await tx.auditLog.create({
+              data: {
+                action: 'update',
+                entityType: 'DEPOSIT',
+                entityId: existingContract.deposit.id,
+                boardingHouseId,
+                userId: landlordId,
+                ipAddress: ipAddress || '127.0.0.1',
+                oldValue: {
+                  amount: Number(existingContract.deposit.amount),
+                },
+                newValue: {
+                  amount: dto.depositAmount,
+                  reason: dto.reason,
+                },
+              },
+            })
+          }
+        } else if (dto.depositAmount > 0) {
+          const newDeposit = await tx.deposit.create({
+            data: {
+              contractId: existingContract.id,
+              roomId: existingContract.roomId,
+              boardingHouseId,
+              type: 'contract',
+              amount: new Prisma.Decimal(dto.depositAmount),
+              status: 'paid',
+              recordedManually: true,
+              recordedBy: landlordId,
+              note: `Deposit created during contract update: ${dto.reason}`,
+            },
+          })
+
+          await tx.auditLog.create({
+            data: {
+              action: 'create',
+              entityType: 'DEPOSIT',
+              entityId: newDeposit.id,
+              boardingHouseId,
+              userId: landlordId,
+              ipAddress: ipAddress || '127.0.0.1',
+              newValue: {
+                amount: Number(newDeposit.amount),
+                type: newDeposit.type,
+                status: newDeposit.status,
+                reason: dto.reason,
+              },
+            },
+          })
+        }
+      }
+    })
+
+    return this.getContractById(boardingHouseId, contractId)
   }
 
   // ─── UC-T-06: View Tenancy Details ──────────────────────────────────────────
@@ -1034,7 +1198,10 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Contract does not exist or does not belong to this property.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
     }
 
     const primaryTenantContract =
@@ -1241,7 +1408,10 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Contract does not exist or does not belong to this property.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
     }
 
     const docs = await this.prisma.contractDocument.findMany({

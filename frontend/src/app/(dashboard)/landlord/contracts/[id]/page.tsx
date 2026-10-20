@@ -9,29 +9,27 @@ import {
   Trash2,
   User,
   Phone,
-  CreditCard,
   Home,
   Clock,
   FileText,
   CalendarDays,
   Ban,
   Printer,
-  Crown,
   Copy,
   Plus,
-  X,
-  Search,
   Banknote,
   Building2,
   AlertTriangle,
   Users,
+  MessageSquare,
 } from 'lucide-react'
 import { getContractById, Contract, ContractMember } from '../data'
 import { Customer } from '../../customers/data'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { useSubscriptionTier } from '@/hooks'
-import { getContractById as getContractByIdApi } from '@/services/contract.service'
+import { getContractById as getContractByIdApi, updateContract as updateContractApi } from '@/services/contract.service'
+import { resolveErrorMessage } from '@/utils'
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import {
   Button,
@@ -50,16 +48,17 @@ import {
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
-  const router = useRouter()
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
+  const tErrors = useTranslations('errors')
+  const [isUpdatingContract, setIsUpdatingContract] = useState(false)
 
   const [contract, setContract] = useState<Contract | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
 
   // Subscription tier guard (Requires Plus tier for printing & exporting contracts)
-  const { isPlusOrHigher, requireTier, isLoading: isTierLoading } = useSubscriptionTier()
+  const { requireTier, isLoading: isTierLoading } = useSubscriptionTier()
 
   const handlePrintContract = () => {
     if (
@@ -272,38 +271,108 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     setIsDirty(true)
   }
 
-  const handleSaveContractEdit = () => {
+  const handleSaveContractEdit = async () => {
     if (!editReason.trim()) {
       showToast(t('landlordContractDetailToastEditReasonRequired'), 'error')
       return
     }
 
+    const contractId = resolvedParams.id ? decodeURIComponent(resolvedParams.id) : ''
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(contractId)
     const todayStr = new Date().toLocaleDateString('vi-VN')
-    const formattedPrice = `${Number(editPrice.replace(/[^\d]/g, '') || 0).toLocaleString('vi-VN')} ₫`
-    const formattedDeposit = `${Number(editDeposit.replace(/[^\d]/g, '') || 0).toLocaleString('vi-VN')} ₫`
+    const parsedPrice = Number(editPrice.replace(/[^\d]/g, '') || 0)
+    const parsedDeposit = Number(editDeposit.replace(/[^\d]/g, '') || 0)
+    const parsedPaymentDate = Number(editPaymentDate) || 5
+    const formattedPrice = `${parsedPrice.toLocaleString('vi-VN')} ₫`
+    const formattedDeposit = `${parsedDeposit.toLocaleString('vi-VN')} ₫`
 
-    setContract(prev =>
-      prev
-        ? {
-          ...prev,
-          price: formattedPrice,
-          priceNumber: Number(editPrice.replace(/[^\d]/g, '') || 0),
-          deposit: formattedDeposit,
-          depositNumber: Number(editDeposit.replace(/[^\d]/g, '') || 0),
-          paymentDate: editPaymentDate,
-          endDate: editEndDate || prev.endDate,
-          history: [
-            { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
-            ...(prev.history || []),
-          ],
+    if (activeBuilding?.id && isUuid) {
+      setIsUpdatingContract(true)
+      try {
+        const res = await updateContractApi(activeBuilding.id, contractId, {
+          rentPrice: parsedPrice,
+          depositAmount: parsedDeposit,
+          monthlyPaymentDate: parsedPaymentDate,
+          reason: editReason.trim(),
+        })
+
+        if (res?.data) {
+          const d = res.data
+          setContract(prev =>
+            prev
+              ? {
+                  ...prev,
+                  price: `${Number(d.rentPrice).toLocaleString('vi-VN')} ₫`,
+                  priceNumber: Number(d.rentPrice),
+                  deposit: `${Number(d.deposit?.amount ?? parsedDeposit).toLocaleString('vi-VN')} ₫`,
+                  depositNumber: Number(d.deposit?.amount ?? parsedDeposit),
+                  paymentDate: String(d.monthlyPaymentDate),
+                  endDate: new Date(d.endDate).toLocaleDateString('vi-VN'),
+                  history: [
+                    { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+                    ...(prev.history || []),
+                  ],
+                }
+              : null,
+          )
+        } else {
+          setContract(prev =>
+            prev
+              ? {
+                  ...prev,
+                  price: formattedPrice,
+                  priceNumber: parsedPrice,
+                  deposit: formattedDeposit,
+                  depositNumber: parsedDeposit,
+                  paymentDate: editPaymentDate,
+                  endDate: editEndDate || prev.endDate,
+                  history: [
+                    { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+                    ...(prev.history || []),
+                  ],
+                }
+              : null,
+          )
         }
-        : null,
-    )
 
-    setIsEditModalOpen(false)
-    setIsDirty(false)
-    setEditReason('')
-    showToast(t('landlordContractDetailToastEditSuccess'), 'success')
+        setIsEditModalOpen(false)
+        setIsDirty(false)
+        setEditReason('')
+        showToast(t('landlordContractDetailToastEditSuccess'), 'success')
+      } catch (err: any) {
+        const errorMsg = resolveErrorMessage(
+          err,
+          tErrors,
+          t('landlordContractDetailToastEditError') || 'Cập nhật hợp đồng thất bại',
+        )
+        showToast(errorMsg, 'error')
+      } finally {
+        setIsUpdatingContract(false)
+      }
+    } else {
+      setContract(prev =>
+        prev
+          ? {
+              ...prev,
+              price: formattedPrice,
+              priceNumber: parsedPrice,
+              deposit: formattedDeposit,
+              depositNumber: parsedDeposit,
+              paymentDate: editPaymentDate,
+              endDate: editEndDate || prev.endDate,
+              history: [
+                { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+                ...(prev.history || []),
+              ],
+            }
+          : null,
+      )
+
+      setIsEditModalOpen(false)
+      setIsDirty(false)
+      setEditReason('')
+      showToast(t('landlordContractDetailToastEditSuccess'), 'success')
+    }
   }
 
   const handleSaveExtension = () => {
@@ -447,7 +516,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </p>
         <Link
           href="/landlord/contracts"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors"
         >
           &larr; {t('landlordContractDetailBack')}
         </Link>
@@ -477,20 +546,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </h1>
               <span
                 className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${contract.status === 'Đang hiệu lực'
-                    ? 'bg-success-soft text-success border-success-subtle'
-                    : contract.status === 'Quá hạn'
-                      ? 'bg-danger-soft text-danger border-danger-subtle'
-                      : contract.status === 'Sắp hết hạn'
-                        ? 'bg-warning-soft text-warning border-warning-subtle'
-                        : 'bg-card-hover text-muted border-line'
+                  ? 'bg-success-soft text-success border-success-subtle'
+                  : contract.status === 'Quá hạn'
+                    ? 'bg-danger-soft text-danger border-danger-subtle'
+                    : contract.status === 'Sắp hết hạn'
+                      ? 'bg-warning-soft text-warning border-warning-subtle'
+                      : 'bg-card-hover text-muted border-line'
                   }`}
               >
                 {contract.status}
               </span>
             </div>
             <p className="text-xs text-muted font-semibold mt-0.5 flex flex-wrap items-center gap-2">
-              <span>{contract.buildingName}</span>
-              <span>•</span>
               <span>{t('landlordContractDetailContractId', { id: contract.id })}</span>
               <Button
                 variant="ghost"
@@ -513,6 +580,15 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <Button
             type="button"
             variant="primary"
+            onClick={handlePrintContract}
+            leftIcon={<Printer className="w-3.5 h-3.5" />}
+          >
+            {t('landlordContractDetailBtnPrint')}
+          </Button>
+
+          <Button
+            type="button"
+            variant="secondary"
             onClick={openExtendModal}
             leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
           >
@@ -521,25 +597,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
           <Button
             type="button"
-            variant="outline"
-            onClick={openEditModal}
-            leftIcon={<Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-          >
-            {t('landlordContractDetailBtnEdit')}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePrintContract}
-            leftIcon={<Printer className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-          >
-            {t('landlordContractDetailBtnPrint')}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
+            variant="secondary"
             onClick={() => setIsTerminateModalOpen(true)}
             leftIcon={<Ban className="w-3.5 h-3.5" />}
           >
@@ -551,16 +609,76 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* CARD 1: THÔNG TIN HỢP ĐỒNG & GIÁ THUÊ */}
+
+          {/* CARD 1: BÊN B - KHÁCH THUÊ CHÍNH */}
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />{' '}
+                {t('landlordContractDetailTenantSection')}
+              </h3>
+              <Link href={`/landlord/customers/${contract.tenantId || ''}`}>
+                <Button size='sm' variant='secondary'>
+                  {t('landlordContractDetailTenantSection')}
+                </Button>
+              </Link>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface rounded-2xl border border-line">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+                  {contract.tenant.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-foreground">{contract.tenant}</h4>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted font-semibold mt-0.5">
+                    <span>{t('landlordContractDetailMemberPhoneLabel')} {contract.tenantPhone}</span>
+                    <span>•</span>
+                    <span>{t('landlordContractDetailMemberCccdLabel')} {contract.tenantCccd}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <Link
+                  href={`/landlord/messages?${new URLSearchParams({
+                    ...(contract.tenantId ? { userId: contract.tenantId } : {}),
+                    ...(contract.tenant ? { tenant: contract.tenant } : {}),
+                    ...(contract.room ? { room: contract.room } : {}),
+                  }).toString()}`}
+                >
+                  <Button size="sm" variant="primary" leftIcon={<MessageSquare />}>
+                    {t('landlordContractDetailMessageBtn')}
+                  </Button>
+                </Link>
+                <a href={`tel:${contract.tenantPhone}`}>
+                  <Button size='sm' variant='success' leftIcon={<Phone />}>
+                    {t('landlordContractDetailCallBtn')}
+                  </Button>
+                </a>
+                <a
+                  href={`https://zalo.me/${contract.tenantPhone}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Button size='sm' className='bg-[#0068FF]'>
+                    Zalo
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD 2: THÔNG TIN HỢP ĐỒNG & GIÁ THUÊ */}
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <FileText className="w-4 h-4 text-primary" />{' '}
                 {t('landlordContractDetailFinancialSection')}
               </h3>
               <Button
                 type="button"
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={openEditModal}
                 leftIcon={<Edit2 />}
@@ -574,7 +692,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordContractDetailContractId', { id: '' }).replace(':', '').trim()}
                 </span>
-                <p className="font-black text-[#2AC1BC] text-sm tracking-wide">{contract.id}</p>
+                <p className="font-black text-primary text-sm tracking-wide">{contract.id}</p>
               </div>
 
               <div className="p-3.5 bg-surface rounded-xl border border-line space-y-1">
@@ -608,10 +726,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="p-3.5 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-1">
-                <span className="text-[10px] font-bold text-purple-600 uppercase">
+                <span className="text-[10px] font-bold text-deposit uppercase">
                   {t('landlordContractDetailDeposit')}
                 </span>
-                <p className="font-black text-purple-600 text-base">{contract.deposit}</p>
+                <p className="font-black text-deposit text-base">{contract.deposit}</p>
               </div>
 
               <div className="sm:col-span-2 p-3.5 bg-surface rounded-xl border border-line flex items-center justify-between">
@@ -632,61 +750,38 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          {/* CARD 2: BÊN B - KHÁCH THUÊ CHÍNH */}
+          {/* CARD 3: CẤU HÌNH DỊCH VỤ ĐỊNH KỲ */}
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-line pb-3">
-              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
-                <User className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                {t('landlordContractDetailTenantSection')}
-              </h3>
-              <Link
-                href={`/landlord/customers/${contract.tenantCccd}`}
-                className="px-3 py-1 bg-[#2AC1BC] text-white text-xs font-bold rounded-lg hover:bg-[#25ad87] transition-all shadow-xs flex items-center gap-1 cursor-pointer"
-              >
-                {t('landlordContractDetailTenantSection')} &rarr;
-              </Link>
-            </div>
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
+              <Banknote className="w-4 h-4 text-primary" />{' '}
+              {t('landlordContractDetailServicesSection')}
+            </h3>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface rounded-2xl border border-line">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#2AC1BC] text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
-                  {contract.tenant.charAt(0)}
-                </div>
-                <div>
-                  <h4 className="text-base font-black text-foreground">{contract.tenant}</h4>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted font-semibold mt-0.5">
-                    <span>{t('landlordContractDetailMemberPhoneLabel')} {contract.tenantPhone}</span>
-                    <span>•</span>
-                    <span>{t('landlordContractDetailMemberCccdLabel')} {contract.tenantCccd}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {contract.services.map(svc => (
+                <div
+                  key={svc.id}
+                  className="flex items-center justify-between p-3 bg-surface rounded-xl border border-line text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-foreground">{svc.name}</span>
+                    <span className="text-[9px] bg-line text-muted px-1.5 py-0.5 rounded font-semibold">
+                      {svc.type}
+                    </span>
                   </div>
+                  <span className="font-black text-primary">
+                    {svc.price.toLocaleString('vi-VN')} {svc.unit}
+                  </span>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                <a
-                  href={`tel:${contract.tenantPhone}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors shadow-2xs cursor-pointer"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>{t('landlordContractDetailCallBtn')}</span>
-                </a>
-                <a
-                  href={`https://zalo.me/${contract.tenantPhone}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0068FF] text-white rounded-xl text-xs font-bold hover:bg-[#0052cc] transition-colors shadow-2xs cursor-pointer"
-                >
-                  Zalo
-                </a>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* CARD 3: THÀNH VIÊN Ở CÙNG */}
+          {/* CARD 4: THÀNH VIÊN Ở CÙNG */}
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex justify-between items-center border-b border-line pb-3">
               <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <Users className="w-4 h-4 text-primary" />{' '}
                 {t('landlordContractDetailMembersSection', {
                   count: contract.members?.length || 0,
                 })}
@@ -745,37 +840,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             )}
           </div>
 
-          {/* CARD 4: CẤU HÌNH DỊCH VỤ ĐỊNH KỲ */}
-          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
-              {t('landlordContractDetailServicesSection')}
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {contract.services.map(svc => (
-                <div
-                  key={svc.id}
-                  className="flex items-center justify-between p-3 bg-surface rounded-xl border border-line text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-foreground">{svc.name}</span>
-                    <span className="text-[9px] bg-line text-muted px-1.5 py-0.5 rounded font-semibold">
-                      {svc.type}
-                    </span>
-                  </div>
-                  <span className="font-black text-[#2AC1BC]">
-                    {svc.price.toLocaleString('vi-VN')} {svc.unit}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* CARD 5: NHẬT KÝ LỊCH SỬ THAY ĐỔI */}
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <Clock className="w-4 h-4 text-[#2AC1BC]" />{' '}
+              <Clock className="w-4 h-4 text-primary" />{' '}
               {t('landlordContractDetailHistorySection')}
             </h3>
 
@@ -804,7 +872,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD BÊN A (CHỦ TRỌ / BQL) */}
           <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
             <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
+              <Building2 className="w-4 h-4 text-primary" />{' '}
               {t('landlordContractDetailPartyA')}
             </h3>
 
@@ -836,19 +904,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2">
-                <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <Home className="w-4 h-4 text-primary" />{' '}
                 {t('landlordContractDetailRentedRoom')}
               </h3>
-              <span className="text-sm font-black text-[#2AC1BC] bg-[#2AC1BC]/10 border border-[#2AC1BC]/20 px-2.5 py-0.5 rounded-lg">
+              <span className="text-sm font-black text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-lg">
                 {t('landlordContractDetailRoomPrefix')} {contract.room}
               </span>
             </div>
 
-            <Link
-              href={`/landlord/rooms/${fullRoomId}`}
-              className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
-            >
-              <Home className="w-4 h-4" /> {t('landlordContractDetailViewRoomBtn')}
+            <Link href={`/landlord/rooms/${fullRoomId}`}>
+              <Button size='md' variant='secondary' leftIcon={<Home />} fullWidth>
+                {t('landlordContractDetailViewRoomBtn')}
+              </Button>
             </Link>
           </div>
         </div>
@@ -861,7 +928,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         size="md"
         header={
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <CalendarDays className="w-5 h-5" />
             </div>
             <div>
@@ -880,7 +947,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="md"
               onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
             >
               {t('landlordContractsCreateCancelBtn')}
@@ -888,7 +955,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <Button
               type="button"
               variant="primary"
-              size="sm"
+              size="md"
               onClick={handleSaveExtension}
             >
               {t('landlordContractDetailModalExtendSubmit')}
@@ -920,7 +987,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         size="lg"
         header={
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <Edit2 className="w-5 h-5" />
             </div>
             <div>
@@ -940,6 +1007,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               type="button"
               variant="outline"
               size="sm"
+              disabled={isUpdatingContract}
               onClick={() => requestCloseModal(() => setIsEditModalOpen(false))}
             >
               {t('landlordContractsCreateCancelBtn')}
@@ -948,6 +1016,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               type="button"
               variant="primary"
               size="sm"
+              isLoading={isUpdatingContract}
+              disabled={isUpdatingContract}
               onClick={handleSaveContractEdit}
             >
               {t('landlordContractDetailModalEditSubmit')}
@@ -959,6 +1029,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <NumberInput
             label={t('landlordContractDetailRentPriceMonthly')}
             required
+            disabled={isUpdatingContract}
             suffixText="₫"
             value={editPrice}
             onChange={e => {
@@ -970,6 +1041,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           <NumberInput
             label={t('landlordContractDetailDepositAmount')}
             required
+            disabled={isUpdatingContract}
             suffixText="₫"
             value={editDeposit}
             onChange={e => {
@@ -981,6 +1053,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
         <SelectInput
           label={t('landlordContractDetailPaymentDayOfMonth')}
+          disabled={isUpdatingContract}
           value={editPaymentDate}
           onChange={e => {
             setEditPaymentDate(e.target.value)
@@ -995,6 +1068,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         <TextareaInput
           label={t('landlordContractDetailEditReasonHint')}
           required
+          disabled={isUpdatingContract}
           rows={3}
           placeholder={t('landlordContractDetailModalEditReasonPh')}
           value={editReason}
@@ -1012,7 +1086,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         size="lg"
         header={
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -1133,7 +1207,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                       <div
                         key={`quick-${cust.id}-${idx}`}
                         onClick={() => handleSelectExistingCustomer(cust.id)}
-                        className="p-2.5 hover:bg-[#2AC1BC]/10 cursor-pointer transition-colors flex items-center justify-between text-xs"
+                        className="p-2.5 hover:bg-primary/10 cursor-pointer transition-colors flex items-center justify-between text-xs"
                       >
                         <div>
                           <span className="font-bold text-foreground block">{cust.name}</span>
@@ -1142,7 +1216,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                             {t('landlordContractDetailMemberCccdLabel')} {cust.cccd}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                           {t('landlordContractDetailSelectAction')}
                         </span>
                       </div>
@@ -1307,7 +1381,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="md"
               onClick={() => setIsTerminateModalOpen(false)}
             >
               {t('landlordContractsCreateCancelBtn')}
@@ -1315,7 +1389,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             <Button
               type="button"
               variant="danger"
-              size="sm"
+              size="md"
               onClick={handleTerminate}
             >
               {t('landlordContractDetailTerminateConfirmBtn')}
