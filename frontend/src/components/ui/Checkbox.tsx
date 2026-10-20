@@ -92,6 +92,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     const isChecked = isControlled ? checked : undefined
     const hasError = Boolean(error)
     const errorMessage = typeof error === 'string' ? error : undefined
+    const hasDescription = Boolean(description)
 
     const sizeConfig = {
       sm: {
@@ -118,7 +119,13 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     }[size]
 
     return (
-      <div className={cn('flex flex-col gap-1 w-full', containerClassName)}>
+      <div
+        className={cn(
+          'flex flex-col gap-1',
+          variant === 'card' ? 'w-full' : 'w-fit max-w-full',
+          containerClassName,
+        )}
+      >
         <label
           htmlFor={inputId}
           onClick={e => {
@@ -128,11 +135,12 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             }
           }}
           className={cn(
-            'group inline-flex items-start gap-2.5 select-none transition-all',
+            'group inline-flex select-none transition-all',
+            hasDescription ? 'items-start gap-2.5' : 'items-center gap-2',
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
             variant === 'card' &&
               cn(
-                'p-3.5 rounded-2xl border transition-all duration-200',
+                'p-3.5 rounded-2xl border transition-all duration-200 w-full',
                 'border-zinc-200 dark:border-line bg-card hover:border-[#2AC1BC]/60 hover:bg-zinc-50/50 dark:hover:bg-card-hover',
                 isChecked && 'border-[#2AC1BC] bg-[#2AC1BC]/5 dark:bg-[#2AC1BC]/15 shadow-xs',
                 hasError && 'border-rose-300 dark:border-rose-500/60 bg-rose-50/20',
@@ -142,7 +150,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         >
           {/* Custom Checkbox Square + Accessible Hidden Native Input */}
           <div
-            className={cn('relative shrink-0 flex items-center justify-center', sizeConfig.offset)}
+            className={cn(
+              'relative shrink-0 flex items-center justify-center',
+              hasDescription && sizeConfig.offset,
+            )}
           >
             <input
               ref={innerRef}
@@ -173,10 +184,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 isChecked && 'bg-[#2AC1BC] border-[#2AC1BC] text-white',
                 // Error styling
                 hasError &&
-                  'border-rose-400 bg-rose-50/20 peer-checked:bg-rose-500 peer-checked:border-rose-500',
+                'border-rose-400 bg-rose-50/20 peer-checked:bg-rose-500 peer-checked:border-rose-500',
                 // Disabled styling
                 disabled &&
-                  'bg-zinc-100 dark:bg-surface border-zinc-200 dark:border-line text-zinc-400 group-hover:border-zinc-200 cursor-not-allowed peer-checked:bg-zinc-400 peer-checked:border-zinc-400',
+                'bg-zinc-100 dark:bg-surface border-zinc-200 dark:border-line text-zinc-400 group-hover:border-zinc-200 cursor-not-allowed peer-checked:bg-zinc-400 peer-checked:border-zinc-400',
                 boxClassName,
                 className,
               )}
@@ -204,14 +215,23 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 
           {/* Label and Description */}
           {(label || description) && (
-            <div className="flex flex-col text-left flex-1 min-w-0">
+            <div
+              className={cn(
+                'flex flex-col text-left min-w-0',
+                hasDescription ? 'flex-1' : 'justify-center',
+              )}
+            >
               {label && (
                 <Text
                   as="span"
                   size={size === 'sm' ? 'xs' : 'sm'}
                   weight="medium"
                   color={disabled ? 'subtle' : hasError ? 'danger' : 'secondary'}
-                  className={cn('leading-snug break-words', sizeConfig.text)}
+                  className={cn(
+                    'break-words',
+                    hasDescription ? 'leading-snug' : 'leading-none inline-flex items-center',
+                    sizeConfig.text,
+                  )}
                 >
                   {label}
                   {required && (

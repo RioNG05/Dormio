@@ -26,6 +26,18 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   justify?: 'start' | 'center' | 'between' | 'end'
 }
 
+const iconSizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
+  xs: 'w-3.5 h-3.5',
+  sm: 'w-3.5 h-3.5',
+  md: 'w-4 h-4',
+  lg: 'w-5 h-5',
+  xl: 'w-6 h-6',
+  'icon-xs': 'w-3.5 h-3.5',
+  'icon-sm': 'w-4 h-4',
+  icon: 'w-5 h-5',
+  'icon-lg': 'w-6 h-6',
+}
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -97,28 +109,41 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
     )
 
+    const targetIconSize = iconSizeClasses[size] || 'w-4 h-4'
+
+    const renderIcon = (icon: React.ReactNode) => {
+      if (!icon) return null
+
+      if (React.isValidElement(icon)) {
+        const iconElement = icon as React.ReactElement<{ className?: string }>
+        return (
+          <span className="shrink-0 inline-flex items-center justify-center">
+            {React.cloneElement(iconElement, {
+              className: cn(iconElement.props?.className, targetIconSize, 'shrink-0'),
+            })}
+          </span>
+        )
+      }
+
+      return <span className="shrink-0 inline-flex items-center justify-center">{icon}</span>
+    }
+
+    const loaderIcon = <Loader2 className={cn('animate-spin shrink-0', targetIconSize)} />
+
     const content = (
       <>
         {justify === 'between' ? (
           <span className="inline-flex items-center gap-2 min-w-0">
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-            ) : (
-              leftIcon && <span className="shrink-0">{leftIcon}</span>
-            )}
+            {isLoading ? loaderIcon : renderIcon(leftIcon)}
             {children}
           </span>
         ) : (
           <>
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-            ) : (
-              leftIcon && <span className="shrink-0">{leftIcon}</span>
-            )}
+            {isLoading ? loaderIcon : renderIcon(leftIcon)}
             {children}
           </>
         )}
-        {!isLoading && rightIcon && <span className="shrink-0">{rightIcon}</span>}
+        {!isLoading && renderIcon(rightIcon)}
       </>
     )
 

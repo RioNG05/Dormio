@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { UploadCloud, Camera, Trash2, Loader2, AlertCircle, Eye, Sparkles } from 'lucide-react'
 import { Button, Text } from '@/components/ui'
@@ -16,6 +16,7 @@ export interface ImageUploadProps {
   onRemove?: () => void
   onInspect?: (url: string) => void
   onError?: (errorMessage: string) => void
+  onUploadingChange?: (isUploading: boolean) => void
 
   // Loading & AI states
   isLoading?: boolean
@@ -48,6 +49,7 @@ export function ImageUpload({
   onRemove,
   onInspect,
   onError,
+  onUploadingChange,
   isLoading = false,
   loadingText,
   folder = 'dormio/uploads',
@@ -74,6 +76,13 @@ export function ImageUpload({
 
   const isBusy = isLoading || isInternalUploading
   const activeError = externalError || internalError
+
+  const onUploadingChangeRef = useRef(onUploadingChange)
+  onUploadingChangeRef.current = onUploadingChange
+
+  useEffect(() => {
+    onUploadingChangeRef.current?.(isBusy)
+  }, [isBusy])
 
   const aspectRatioClass = {
     card: 'aspect-[16/10]',
@@ -131,7 +140,15 @@ export function ImageUpload({
             onChange?.(res.url)
           }
         } catch (uploadErr: any) {
-          console.warn('Backend image upload deferred or failed, using local preview:', uploadErr)
+          console.warn('Backend image upload failed, using local preview:', uploadErr)
+          const err =
+            uploadErr?.response?.data?.message ||
+            uploadErr?.message ||
+            tGuest('guestDepositImageUploadError') ||
+            'Không thể tải ảnh lên máy chủ. Vui lòng thử lại.'
+          setInternalError(err)
+          onError?.(err)
+          onChange?.('')
         } finally {
           setIsInternalUploading(false)
         }

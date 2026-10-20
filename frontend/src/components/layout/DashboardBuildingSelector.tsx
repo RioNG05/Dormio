@@ -32,28 +32,27 @@ export function DashboardBuildingSelector() {
         fullWidth
         type="button"
         variant="ghost"
-        size="sm"
+        size="md"
         onClick={() => setBuildingDropdownOpen(prev => !prev)}
-        className="justify-between"
+        className="justify-between h-auto py-1.5"
         title={tNav('switchPropertyTooltip')}
       >
-        <div className="min-w-0 flex-1 pr-1.5 text-left">
-          <div className="flex items-center gap-1.5">
-            <Building2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-            <Text as="span" size="xs" weight="black" color="default" truncate>
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1.5 text-left">
+          <Building2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+          <div className="min-w-0 flex-1">
+            <Text as="p" size="xs" weight="black" color="default" truncate className="block">
               {activeBuilding?.name || tNav('selectBuildingPlaceholder')}
             </Text>
+            {activeBuilding?.address && (
+              <Text as="p" size="3xs" weight="medium" color="subtle" truncate className="mt-0.5 block">
+                {activeBuilding.address}
+              </Text>
+            )}
           </div>
-          {activeBuilding?.address && (
-            <Text size="3xs" weight="medium" color="subtle" truncate className="mt-0.5 pl-5">
-              {activeBuilding.address}
-            </Text>
-          )}
         </div>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-muted shrink-0 transition-transform duration-200 ${
-            buildingDropdownOpen ? 'rotate-180 text-[#2AC1BC]' : ''
-          }`}
+          className={`w-3.5 h-3.5 text-muted shrink-0 transition-transform duration-200 ${buildingDropdownOpen ? 'rotate-180 text-[#2AC1BC]' : ''
+            }`}
         />
       </Button>
 
@@ -75,34 +74,25 @@ export function DashboardBuildingSelector() {
                     key={b.id}
                     type="button"
                     variant="ghost"
-                    size="sm"
+                    size="xl"
+                    className='px-2'
                     onClick={() => {
                       selectBuilding(b.id)
                       setBuildingDropdownOpen(false)
                     }}
                   >
-                    <div className="min-w-0 flex-1 pr-2 text-left">
-                      <div className="flex items-center gap-1.5">
-                        <Building
-                          className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-[#2AC1BC]' : 'text-muted'
-                          }`}
-                        />
-                        <Text
-                          as="span"
-                          size="xs"
-                          weight={isActive ? 'black' : 'bold'}
-                          color="inherit"
-                          truncate
-                        >
+                    <div className="min-w-0 flex-1 pr-2 text-left flex items-center gap-1.5">
+                      <Building className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`} />
+                      <div className="min-w-0 flex-1">
+                        <Text as="p" size="xs" weight="black" color="default" truncate className="block">
                           {b.name}
                         </Text>
+                        <Text as="p" size="3xs" weight="medium" color="subtle" truncate className="mt-0.5 block">
+                          {b.address || tNav('roomsCount', { count: b.totalRooms })}
+                        </Text>
                       </div>
-                      <Text size="3xs" color="subtle" truncate className="mt-0.5 pl-5">
-                        {b.address || tNav('roomsCount', { count: b.totalRooms })}
-                      </Text>
                     </div>
-                    {isActive && <Check className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
+                    {isActive && <Check className="w-4 h-4 text-primary shrink-0" />}
                   </Button>
                 )
               })}
