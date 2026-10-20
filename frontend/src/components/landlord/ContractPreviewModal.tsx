@@ -237,12 +237,10 @@ export default function ContractPreviewModal({
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="md"
               onClick={onClose}
             >
-              <Text as="span" size="xs" weight="medium" color="inherit">
-                {t('landlordContractsExportCloseBtn')}
-              </Text>
+              {t('landlordContractsExportCloseBtn')}
             </Button>
           </div>
         </div>
