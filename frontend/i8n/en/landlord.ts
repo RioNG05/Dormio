@@ -77,6 +77,7 @@ export const enLandlord = {
     landlordContractsColStatus: "STATUS",
     landlordContractsColTenant: "TENANT",
     landlordContractsCopyCodeSuccess: "Contract ID copied to clipboard!",
+    landlordContractsCopyCodeTitle: "Copy contract code",
     landlordContractsEmptyNotFound: "No contracts found matching your filter.",
     landlordContractsEndDate: "End Date",
     landlordContractsExpired: "Expired",

@@ -77,6 +77,7 @@ export const viLandlord = {
     landlordContractsColStatus: "TRẠNG THÁI",
     landlordContractsColTenant: "KHÁCH THUÊ",
     landlordContractsCopyCodeSuccess: "Đã sao chép mã hợp đồng!",
+    landlordContractsCopyCodeTitle: "Sao chép mã hợp đồng",
     landlordContractsEmptyNotFound: "Không tìm thấy hợp đồng nào phù hợp với bộ lọc.",
     landlordContractsEndDate: "Ngày kết thúc",
     landlordContractsExpired: "Đã hết hạn",
