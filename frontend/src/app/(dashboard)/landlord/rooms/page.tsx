@@ -1032,7 +1032,7 @@ export default function RoomsPage() {
                             {room.id}
                           </Text>
 
-                          <Text.Badge className={`mt-1 px-2 py-0.5 rounded-md ${statusMeta.gridBadge}`}>
+                          <Text.Badge className={`mt-1 px-2 py-0.5 rounded-md text-center ${statusMeta.gridBadge}`}>
                             {statusMeta.label}
                           </Text.Badge>
                         </div>
@@ -1201,7 +1201,7 @@ export default function RoomsPage() {
             </div>
           </div>
         }
-        bodyClassName="p-6 space-y-6 bg-zinc-50/40 custom-scrollbar"
+        bodyClassName="p-6 space-y-6 custom-scrollbar"
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button

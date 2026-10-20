@@ -15,7 +15,6 @@ import {
   Image as ImageIcon,
   FileSignature,
   AlertTriangle,
-  CheckCircle2,
   X,
   ExternalLink,
   Loader2,
@@ -27,7 +26,15 @@ import { Customer } from '../data'
 import { getLandlordContracts, getContractById } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, TextInput, DateInput, SelectInput, TextareaInput } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  DateInput,
+  SelectInput,
+  TextareaInput,
+  Modal,
+  Text,
+} from '@/components/ui'
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -64,7 +71,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   const [alertModal, setAlertModal] = useState<{
@@ -178,11 +185,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           const ident = matchedTenantUser?.userIdentification
           const daysRemaining = fullContract.endDate
             ? Math.max(
-                0,
-                Math.ceil(
-                  (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-                ),
-              )
+              0,
+              Math.ceil(
+                (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+              ),
+            )
             : undefined
           const contractStatus =
             fullContract.status === 'active'
@@ -326,30 +333,102 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     router.push(`/landlord/messages?${query.toString()}`)
   }
 
+  // Track initial values for dirty check (Rule 10)
+  const initialEditValues = React.useMemo(() => {
+    if (!customer) return null
+    return {
+      name: customer.name || '',
+      phone: customer.phone !== '—' ? customer.phone : '',
+      cccd: customer.cccd !== '—' ? customer.cccd : '',
+      dob: customer.dob || '',
+      gender: customer.gender || 'nam',
+      address: customer.address || '',
+      email: customer.email || '',
+      job: customer.job || '',
+      workplace: customer.workplace || '',
+      note: customer.note || '',
+    }
+  }, [customer])
+
+  const [discardConfirmModal, setDiscardConfirmModal] = useState<{
+    isOpen: boolean
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    onConfirm: () => {},
+  })
+
+  const resetEditForm = () => {
+    if (initialEditValues) {
+      setEditName(initialEditValues.name)
+      setEditPhone(initialEditValues.phone)
+      setEditCccd(initialEditValues.cccd)
+      setEditDob(initialEditValues.dob)
+      setEditGender(initialEditValues.gender)
+      setEditAddress(initialEditValues.address)
+      setEditEmail(initialEditValues.email)
+      setEditJob(initialEditValues.job)
+      setEditWorkplace(initialEditValues.workplace)
+      setEditNote(initialEditValues.note)
+    }
+  }
+
+  const handleCloseEditModal = () => {
+    if (!initialEditValues) {
+      setIsEditModalOpen(false)
+      return
+    }
+    const hasChanges =
+      editName !== initialEditValues.name ||
+      editPhone !== initialEditValues.phone ||
+      editCccd !== initialEditValues.cccd ||
+      editDob !== initialEditValues.dob ||
+      editGender !== initialEditValues.gender ||
+      editAddress !== initialEditValues.address ||
+      editEmail !== initialEditValues.email ||
+      editJob !== initialEditValues.job ||
+      editWorkplace !== initialEditValues.workplace ||
+      editNote !== initialEditValues.note
+
+    if (hasChanges) {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          resetEditForm()
+          setIsEditModalOpen(false)
+          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))
+        },
+      })
+    } else {
+      resetEditForm()
+      setIsEditModalOpen(false)
+    }
+  }
+
   const handleSaveCustomer = () => {
     setCustomer(prev =>
       prev
         ? {
-            ...prev,
-            name: editName || prev.name,
-            phone: editPhone || prev.phone,
-            cccd: editCccd || prev.cccd,
-            dob: editDob || prev.dob,
-            gender: editGender || prev.gender,
-            address: editAddress || prev.address,
-            email: editEmail || prev.email,
-            job: editJob || prev.job,
-            workplace: editWorkplace || prev.workplace,
-            note: editNote || prev.note,
-            updatedAt: new Date().toLocaleDateString('vi-VN'),
-          }
+          ...prev,
+          name: editName || prev.name,
+          phone: editPhone || prev.phone,
+          cccd: editCccd || prev.cccd,
+          dob: editDob || prev.dob,
+          gender: editGender || prev.gender,
+          address: editAddress || prev.address,
+          email: editEmail || prev.email,
+          job: editJob || prev.job,
+          workplace: editWorkplace || prev.workplace,
+          note: editNote || prev.note,
+          updatedAt: new Date().toLocaleDateString('vi-VN'),
+        }
         : null,
     )
     setIsEditModalOpen(false)
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="space-y-6 pb-24 w-full">
       {/* Top Header Bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -371,13 +450,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   {customer.name}
                 </h1>
                 <span
-                  className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${
-                    customer.status === 'Đang ở'
-                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                      : customer.status === 'Sắp hết hợp đồng'
-                        ? 'bg-warning-soft text-warning border-warning-subtle'
-                        : 'bg-card-hover text-muted border-line'
-                  }`}
+                  className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${customer.status === 'Đang ở'
+                    ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                    : customer.status === 'Sắp hết hợp đồng'
+                      ? 'bg-warning-soft text-warning border-warning-subtle'
+                      : 'bg-card-hover text-muted border-line'
+                    }`}
                 >
                   {getCustomerStatusLabel(customer.status)}
                 </span>
@@ -399,32 +477,42 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Action Buttons Toolbar */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
-          <a
-            href={`tel:${customer.phone}`}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
-          >
-            <PhoneCall className="w-3.5 h-3.5" /> {t('landlordCustomersCallBtn')}
-          </a>
           <Button
-            variant="primary"
-            size="sm"
             type="button"
-            onClick={handleOpenChat}
-            className="flex-1 sm:flex-initial whitespace-nowrap"
-          >
-            <MessageCircle className="w-3.5 h-3.5" /> {t('landlordCustomersMessageBtn')}
-          </Button>
-          <Button
             variant="outline"
-            size="sm"
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex-1 sm:flex-initial whitespace-nowrap"
+            size="md"
+            leftIcon={<PhoneCall className="w-3.5 h-3.5 text-primary" />}
+            onClick={() => {
+              if (customer.phone && customer.phone !== '—') {
+                window.location.href = `tel:${customer.phone}`
+              }
+            }}
           >
-            <Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t('landlordCustomersEditInfo')}
+            {t('landlordCustomersCallBtn')}
           </Button>
           <Button
+            type="button"
+            variant="primary"
+            size="md"
+            leftIcon={<MessageCircle className="w-3.5 h-3.5" />}
+            onClick={handleOpenChat}
+          >
+            {t('landlordCustomersMessageBtn')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            leftIcon={<Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+            onClick={() => setIsEditModalOpen(true)}
+          >
+            {t('landlordCustomersEditInfo')}
+          </Button>
+          <Button
+            type="button"
             variant="danger"
-            size="sm"
+            size="md"
+            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
@@ -438,9 +526,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 },
               })
             }}
-            className="flex-1 sm:flex-initial whitespace-nowrap"
           >
-            <Trash2 className="w-3.5 h-3.5" /> {t('landlordCustomersDeleteBtn')}
+            {t('landlordCustomersDeleteBtn')}
           </Button>
         </div>
       </div>
@@ -717,13 +804,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     {t('landlordCustomersRoomWord')} {customer.room} ({customer.building})
                   </span>
                   <span
-                    className={`px-2 py-0.5 text-[9px] font-black rounded-full ${
-                      customer.status === 'Đang ở'
-                        ? 'bg-success-soft text-success'
-                        : customer.status === 'Sắp hết hợp đồng'
-                          ? 'bg-accent-soft text-accent'
-                          : 'bg-info-soft text-info'
-                    }`}
+                    className={`px-2 py-0.5 text-[9px] font-black rounded-full ${customer.status === 'Đang ở'
+                      ? 'bg-success-soft text-success'
+                      : customer.status === 'Sắp hết hợp đồng'
+                        ? 'bg-accent-soft text-accent'
+                        : 'bg-info-soft text-info'
+                      }`}
                   >
                     {getCustomerStatusLabel(customer.status)}
                   </span>
@@ -766,224 +852,250 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* MODAL 1: CHỈNH SỬA THÔNG TIN KHÁCH THUÊ */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsEditModalOpen(false)
-          }}
-        >
-          <div className="bg-card rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-line">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Edit2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-foreground">
-                    {t('landlordCustomersEditTenantTitlePrefix')} {customer.name}
-                  </h2>
-                  <p className="text-xs text-muted font-medium">
-                    {t('landlordCustomersEditTenantSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        size="2xl"
+      >
+        <Modal.Header
+          icon={<Edit2 className="w-5 h-5 text-[#2AC1BC]" />}
+          title={`${t('landlordCustomersEditTenantTitlePrefix')} ${customer.name}`}
+          description={t('landlordCustomersEditTenantSubtitle')}
+        />
+
+        <Modal.Body className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextInput
+              label={t('landlordCustomersFullNameLabel')}
+              required
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+            />
+
+            <TextInput
+              label={t('landlordCustomersPhoneLabel')}
+              required
+              value={editPhone}
+              onChange={e => setEditPhone(e.target.value)}
+            />
+
+            <TextInput
+              label={t('landlordCustomersCccdLabel')}
+              value={editCccd}
+              onChange={e => setEditCccd(e.target.value)}
+              className="font-bold text-[#2AC1BC]"
+            />
+
+            <DateInput
+              label={t('landlordCustomersDobLabel')}
+              value={editDob}
+              onChange={e => setEditDob(e.target.value)}
+            />
+
+            <SelectInput
+              label={t('landlordCustomersGenderLabel')}
+              value={editGender}
+              onChange={e => setEditGender(e.target.value)}
+              options={[
+                { value: 'nam', label: t('landlordCustomersGenderMale') },
+                { value: 'nu', label: t('landlordCustomersGenderFemale') },
+              ]}
+            />
+
+            <TextInput
+              label={t('landlordCustomersEmailLabel')}
+              type="email"
+              value={editEmail}
+              onChange={e => setEditEmail(e.target.value)}
+            />
+
+            <div className="md:col-span-2">
+              <TextInput
+                label={t('landlordCustomersPermanentAddressLabel')}
+                value={editAddress}
+                onChange={e => setEditAddress(e.target.value)}
+              />
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[75vh] space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput
-                  label={t('landlordCustomersFullNameLabel')}
-                  required
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                />
+            <TextInput
+              label={t('landlordCustomersJobLabel')}
+              value={editJob}
+              onChange={e => setEditJob(e.target.value)}
+            />
 
-                <TextInput
-                  label={t('landlordCustomersPhoneLabel')}
-                  required
-                  value={editPhone}
-                  onChange={e => setEditPhone(e.target.value)}
-                />
+            <TextInput
+              label={t('landlordCustomersWorkplaceLabel')}
+              value={editWorkplace}
+              onChange={e => setEditWorkplace(e.target.value)}
+            />
 
-                <TextInput
-                  label={t('landlordCustomersCccdLabel')}
-                  value={editCccd}
-                  onChange={e => setEditCccd(e.target.value)}
-                  className="font-bold text-[#2AC1BC]"
-                />
-
-                <DateInput
-                  label={t('landlordCustomersDobLabel')}
-                  value={editDob}
-                  onChange={e => setEditDob(e.target.value)}
-                />
-
-                <SelectInput
-                  label={t('landlordCustomersGenderLabel')}
-                  value={editGender}
-                  onChange={e => setEditGender(e.target.value)}
-                  options={[
-                    { value: 'nam', label: t('landlordCustomersGenderMale') },
-                    { value: 'nu', label: t('landlordCustomersGenderFemale') },
-                  ]}
-                />
-
-                <TextInput
-                  label={t('landlordCustomersEmailLabel')}
-                  type="email"
-                  value={editEmail}
-                  onChange={e => setEditEmail(e.target.value)}
-                />
-
-                <div className="md:col-span-2">
-                  <TextInput
-                    label={t('landlordCustomersPermanentAddressLabel')}
-                    value={editAddress}
-                    onChange={e => setEditAddress(e.target.value)}
-                  />
-                </div>
-
-                <TextInput
-                  label={t('landlordCustomersJobLabel')}
-                  value={editJob}
-                  onChange={e => setEditJob(e.target.value)}
-                />
-
-                <TextInput
-                  label={t('landlordCustomersWorkplaceLabel')}
-                  value={editWorkplace}
-                  onChange={e => setEditWorkplace(e.target.value)}
-                />
-
-                <div className="md:col-span-2">
-                  <TextareaInput
-                    label={t('landlordCustomersNotesLabel')}
-                    rows={3}
-                    value={editNote}
-                    onChange={e => setEditNote(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-line flex justify-end gap-3 bg-surface/50">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                {t('landlordCustomersCancelBtn')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveCustomer}
-              >
-                {t('landlordCustomersSaveChangesBtn')}
-              </Button>
+            <div className="md:col-span-2">
+              <TextareaInput
+                label={t('landlordCustomersNotesLabel')}
+                rows={3}
+                value={editNote}
+                onChange={e => setEditNote(e.target.value)}
+              />
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCloseEditModal}
+          >
+            {t('landlordCustomersCancelBtn')}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSaveCustomer}
+          >
+            {t('landlordCustomersSaveChangesBtn')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* UNSAVED CHANGES CONFIRMATION MODAL (RULE 10) */}
+      <Modal
+        isOpen={discardConfirmModal.isOpen}
+        onClose={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4">
+          <div className="flex items-center gap-3 text-amber-600">
+            <div className="p-3 bg-warning-soft rounded-full shrink-0">
+              <AlertTriangle className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <Text as="h3" weight="black" color="default" size="base">
+                Xác nhận đóng form
+              </Text>
+              <Text size="xs" color="secondary" weight="medium">
+                Bạn có các thay đổi chưa lưu. Bạn có chắc chắn muốn hủy bỏ và đóng biểu mẫu không?
+              </Text>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            >
+              Tiếp tục chỉnh sửa
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={discardConfirmModal.onConfirm}
+            >
+              Hủy thay đổi & Đóng
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       {/* MODAL 2: XEM ẢNH CCCD PHÓNG TO */}
-      {isImagePreviewOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsImagePreviewOpen(null)
-          }}
-        >
-          <div className="relative max-w-3xl w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl p-2 flex flex-col items-center">
-            <Button rounded="full"
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsImagePreviewOpen(null)}
-              className="absolute top-4 right-4 z-10"
-            >
-              <X className="w-6 h-6" />
-            </Button>
+      <Modal
+        isOpen={!!isImagePreviewOpen}
+        onClose={() => setIsImagePreviewOpen(null)}
+        size="3xl"
+        className="bg-zinc-950 border-zinc-800 p-2 overflow-hidden"
+      >
+        <div className="relative w-full flex flex-col items-center">
+          <Button
+            rounded="full"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsImagePreviewOpen(null)}
+            className="absolute top-2 right-2 z-10 text-white hover:bg-white/20"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+          {isImagePreviewOpen && (
             <img
               src={isImagePreviewOpen}
               alt={t('landlordCustomersCccdEnlargedAlt')}
               className="w-full h-auto max-h-[80vh] object-contain rounded-xl"
             />
-          </div>
+          )}
         </div>
-      )}
+      </Modal>
 
       {/* MODAL 3: CONFIRM DELETE */}
-      {confirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setConfirmModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-card rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="p-3 bg-danger-soft rounded-full">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-foreground">{confirmModal.title}</h3>
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4">
+          <div className="flex items-center gap-3 text-rose-600">
+            <div className="p-3 bg-danger-soft rounded-full shrink-0">
+              <AlertTriangle className="w-6 h-6 text-rose-600" />
             </div>
-            <p className="text-xs text-muted font-medium">{confirmModal.message}</p>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-              >
-                {t('landlordCustomersCancelBtn')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={confirmModal.onConfirm}
-              >
-                {t('landlordCustomersConfirmDeleteBtn')}
-              </Button>
-            </div>
+            <Text as="h3" weight="black" color="default" size="base">
+              {confirmModal.title}
+            </Text>
           </div>
-        </div>
-      )}
-
-      {/* MODAL 4: ALERT NOTIFICATION */}
-      {alertModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setAlertModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-accent-soft text-[#FF6B35] border-accent-subtle">
-              <Info className="w-7 h-7 text-[#FF6B35]" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-foreground">{alertModal.title}</h3>
-              <p className="text-xs text-muted font-medium leading-relaxed">
-                {alertModal.message}
-              </p>
-            </div>
-
-            <Button fullWidth size="xs" variant="dark"
-              onClick={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+          <Text size="xs" color="secondary" weight="medium">
+            {confirmModal.message}
+          </Text>
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             >
-              {t('landlordCustomersUnderstood')}
+              {t('landlordCustomersCancelBtn')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={confirmModal.onConfirm}
+            >
+              {t('landlordCustomersConfirmDeleteBtn')}
             </Button>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+      </Modal>
+
+      {/* MODAL 4: ALERT NOTIFICATION */}
+      <Modal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+        size="sm"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-accent-soft text-[#FF6B35] border-accent-subtle">
+            <Info className="w-7 h-7 text-[#FF6B35]" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Text as="h3" weight="black" color="default" size="base">
+              {alertModal.title}
+            </Text>
+            <Text size="xs" color="secondary" weight="medium" className="leading-relaxed">
+              {alertModal.message}
+            </Text>
+          </div>
+
+          <Button
+            fullWidth
+            size="sm"
+            variant="dark"
+            onClick={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+          >
+            {t('landlordCustomersUnderstood')}
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }

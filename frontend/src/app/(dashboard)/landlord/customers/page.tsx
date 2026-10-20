@@ -4,17 +4,13 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Search,
-  UploadCloud,
   Plus,
   LayoutGrid,
   List,
   Users,
-  MapPin,
   AlertCircle,
   CheckCircle2,
   Info,
-  FileSpreadsheet,
   PhoneCall,
   Phone,
   MessageCircle,
@@ -26,7 +22,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput, ChipGroup } from '@/components/ui'
+import { Button, SelectInput, NumberInput, SearchInput, ChipGroup } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
@@ -400,7 +396,6 @@ export default function CustomersPage() {
               value={searchQuery}
               onChange={setSearchQuery}
               containerClassName="w-full sm:w-52 shrink-0 space-y-0"
-              className="py-1.5 text-xs font-semibold bg-surface border-line focus:bg-white rounded-xl"
             />
 
             {/* Sort Select using Base Component */}
@@ -408,7 +403,6 @@ export default function CustomersPage() {
               value={sortFilter}
               onChange={e => setSortFilter(e.target.value)}
               containerClassName="w-auto shrink-0 space-y-0"
-              className="py-1.5 pl-3 pr-8 text-xs font-semibold text-foreground/90 bg-surface border-line rounded-xl"
               options={[
                 { value: '', label: t('landlordCustomersSort') },
                 { value: 'name_asc', label: t('landlordCustomersSortName') },
@@ -480,7 +474,7 @@ export default function CustomersPage() {
             paginatedCustomers.map(customer => (
               <div
                 key={customer.id}
-                className="bg-card rounded-2xl border border-line p-4 shadow-xs hover:shadow-md transition-all space-y-3 relative group"
+                className="bg-card rounded-2xl border border-line p-4 shadow-xs hover:bg-card-hover transition-all space-y-3 relative group"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -626,7 +620,7 @@ export default function CustomersPage() {
                   paginatedCustomers.map(customer => (
                     <tr
                       key={customer.id}
-                      className="hover:bg-zinc-50/80 transition-colors group cursor-pointer"
+                      className="hover:bg-card-hover transition-colors group cursor-pointer"
                       onClick={() =>
                         router.push(`/landlord/customers/${customer.contractId || customer.id}`)
                       }
