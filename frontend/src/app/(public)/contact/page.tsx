@@ -9,7 +9,9 @@ import {
   Send,
   CheckCircle2,
   ExternalLink,
-  PhoneCall
+  PhoneCall,
+  MoveRight,
+  SquareArrowOutUpRight
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from '@/context/LanguageContext'
@@ -288,9 +290,7 @@ export default function ContactPage() {
                   variant="primary"
                   size="lg"
                   fullWidth
-                  leftIcon={<Send className="w-4 h-4" />}
-                  rightIcon={<span>&rarr;</span>}
-                  className="py-4 sm:text-sm rounded-2xl shadow-lg shadow-primary/25 hover:scale-[1.01]"
+                  rightIcon={<Send />}
                 >
                   {t('guestContactSubmitBtn')}
                 </Button>
@@ -325,17 +325,18 @@ export default function ContactPage() {
               <Button
                 variant="primary"
                 size="lg"
-                rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/30 hover:scale-105"
+                rightIcon={<SquareArrowOutUpRight />}
+                className="w-full sm:w-auto"
               >
                 {t('guestContactUseFreeBtn')}
               </Button>
             </Link>
             <Link href="/pricing" className="w-full sm:w-auto">
               <Button
-                variant="dark"
+                variant="accent"
                 size="lg"
-                className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 rounded-2xl"
+                rightIcon={<MoveRight />}
+                className="w-full sm:w-auto"
               >
                 {t('guestFeaturesViewPricingBtn')}
               </Button>

@@ -65,7 +65,7 @@ function MenuItemRenderer({
       fullWidth
       justify={isMobile ? 'between' : 'start'}
       leftIcon={item.icon}
-      rightIcon={isMobile ? <ArrowRight className="w-3.5 h-3.5 text-zinc-300" /> : undefined}
+      rightIcon={isMobile ? <ArrowRight /> : undefined}
     >
       <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
         {item.label}
@@ -170,28 +170,28 @@ export function PublicHeader() {
   const searchResults = [
     ...(FEATURE_FLAGS.ENABLE_BHRP
       ? [
-          {
-            type: 'room',
-            title: tNav('searchMockRoom1Title'),
-            href: '/rooms/1',
-            price: tNav('searchMockRoom1Price'),
-            location: tNav('searchMockRoom1Location'),
-          },
-          {
-            type: 'room',
-            title: tNav('searchMockRoom2Title'),
-            href: '/rooms/2',
-            price: tNav('searchMockRoom2Price'),
-            location: tNav('searchMockRoom2Location'),
-          },
-          {
-            type: 'room',
-            title: tNav('searchMockRoom3Title'),
-            href: '/rooms/3',
-            price: tNav('searchMockRoom3Price'),
-            location: tNav('searchMockRoom3Location'),
-          },
-        ]
+        {
+          type: 'room',
+          title: tNav('searchMockRoom1Title'),
+          href: '/rooms/1',
+          price: tNav('searchMockRoom1Price'),
+          location: tNav('searchMockRoom1Location'),
+        },
+        {
+          type: 'room',
+          title: tNav('searchMockRoom2Title'),
+          href: '/rooms/2',
+          price: tNav('searchMockRoom2Price'),
+          location: tNav('searchMockRoom2Location'),
+        },
+        {
+          type: 'room',
+          title: tNav('searchMockRoom3Title'),
+          href: '/rooms/3',
+          price: tNav('searchMockRoom3Price'),
+          location: tNav('searchMockRoom3Location'),
+        },
+      ]
       : []),
     {
       type: 'blog',
@@ -226,77 +226,77 @@ export function PublicHeader() {
 
   const userMenuItems: UserMenuItem[] = user
     ? [
-        ...(user.role === 'employee'
-          ? [
-              {
-                key: 'staff-portal',
-                label: tNav('staffPortalLink'),
-                href: '/staff',
-                icon: <Clock className="w-4 h-4 text-primary" />,
-                className: 'text-primary hover:bg-primary/10',
-              },
-            ]
-          : []),
-        {
-          key: 'profile',
-          label: tNav('myProfile'),
-          href: '/profile',
-          icon: <UserCheck className="w-4 h-4 text-primary" />,
-        },
-        {
-          key: 'send-application',
-          label: tNav('sendApplication'),
-          href: '/send-application',
-          icon: <FileText className="w-4 h-4 text-amber-500" />,
-        },
-        {
-          key: 'rented-rooms',
-          label:
-            user.role === 'landlord'
-              ? tNav('manageHouses')
-              : user.role === 'employee'
-                ? tNav('myShifts')
-                : tNav('myRentedRooms'),
-          href:
-            user.role === 'landlord'
-              ? '/landlord/rooms'
-              : user.role === 'employee'
-                ? '/staff'
-                : '/tenant',
-          icon: <Building className="w-4 h-4 text-vacant" />,
-        },
-        ...(FEATURE_FLAGS.ENABLE_BHRP
-          ? [
-              {
-                key: 'saved-rooms',
-                label: tNav('mySavedRooms'),
-                href: '/saved-posts',
-                icon: <Heart className="w-4 h-4 text-danger fill-danger/10" />,
-              },
-              {
-                key: 'post-listing',
-                label: tNav('postListing'),
-                href: '/posts/create',
-                icon: <PlusCircle className="w-4 h-4 text-accent" />,
-                dividerAbove: true,
-              },
-              {
-                key: 'post-analytics',
-                label: tNav('postAnalytics'),
-                href: '/posts/analytics',
-                icon: <BarChart3 className="w-4 h-4 text-primary" />,
-              },
-            ]
-          : []),
-        {
-          key: 'logout',
-          label: tNav('logout'),
-          onClick: logout,
-          icon: <LogOut className="w-4 h-4 text-danger" />,
-          isDanger: true,
-          dividerAbove: true,
-        },
-      ]
+      ...(user.role === 'employee'
+        ? [
+          {
+            key: 'staff-portal',
+            label: tNav('staffPortalLink'),
+            href: '/staff',
+            icon: <Clock className="w-4 h-4 text-primary" />,
+            className: 'text-primary hover:bg-primary/10',
+          },
+        ]
+        : []),
+      {
+        key: 'profile',
+        label: tNav('myProfile'),
+        href: '/profile',
+        icon: <UserCheck className="w-4 h-4 text-primary" />,
+      },
+      {
+        key: 'send-application',
+        label: tNav('sendApplication'),
+        href: '/send-application',
+        icon: <FileText className="w-4 h-4 text-amber-500" />,
+      },
+      {
+        key: 'rented-rooms',
+        label:
+          user.role === 'landlord'
+            ? tNav('manageHouses')
+            : user.role === 'employee'
+              ? tNav('myShifts')
+              : tNav('myRentedRooms'),
+        href:
+          user.role === 'landlord'
+            ? '/landlord/rooms'
+            : user.role === 'employee'
+              ? '/staff'
+              : '/tenant',
+        icon: <Building className="w-4 h-4 text-vacant" />,
+      },
+      ...(FEATURE_FLAGS.ENABLE_BHRP
+        ? [
+          {
+            key: 'saved-rooms',
+            label: tNav('mySavedRooms'),
+            href: '/saved-posts',
+            icon: <Heart className="w-4 h-4 text-danger fill-danger/10" />,
+          },
+          {
+            key: 'post-listing',
+            label: tNav('postListing'),
+            href: '/posts/create',
+            icon: <PlusCircle className="w-4 h-4 text-accent" />,
+            dividerAbove: true,
+          },
+          {
+            key: 'post-analytics',
+            label: tNav('postAnalytics'),
+            href: '/posts/analytics',
+            icon: <BarChart3 className="w-4 h-4 text-primary" />,
+          },
+        ]
+        : []),
+      {
+        key: 'logout',
+        label: tNav('logout'),
+        onClick: logout,
+        icon: <LogOut className="w-4 h-4 text-danger" />,
+        isDanger: true,
+        dividerAbove: true,
+      },
+    ]
     : []
 
   return (
@@ -317,11 +317,10 @@ export function PublicHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`text-xs font-bold transition-all relative py-1 ${
-                    isActive
-                      ? 'text-primary font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full'
-                      : 'text-foreground/90 hover:text-primary'
-                  }`}
+                  className={`text-xs font-bold transition-all relative py-1 ${isActive
+                    ? 'text-primary font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full'
+                    : 'text-foreground/90 hover:text-primary'
+                    }`}
                 >
                   <Text as="span" size="xs" weight={isActive ? 'extrabold' : 'bold'} color="inherit">
                     {item.label}
@@ -335,11 +334,9 @@ export function PublicHeader() {
           <div className="hidden lg:flex items-center gap-3">
             <Button
               variant="primary"
-              size="sm"
               rounded="full"
               onClick={handleManageBoardingHouse}
-              leftIcon={<Building2 className="w-3.5 h-3.5" />}
-              className="shadow-md shadow-primary/20 hover:scale-105"
+              leftIcon={<Building2 />}
             >
               {tNav('manageYourHouse')}
             </Button>
@@ -350,7 +347,6 @@ export function PublicHeader() {
                 {/* User Avatar & Dropdown Menu */}
                 <div ref={userMenuRef} className="relative pl-2 border-l border-line">
                   <Button
-                    type="button"
                     variant="ghost"
                     size="xs"
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -375,9 +371,8 @@ export function PublicHeader() {
                       </Text>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-muted transition-transform ${
-                        isUserMenuOpen ? 'rotate-180' : ''
-                      }`}
+                      className={`w-3.5 h-3.5 text-muted transition-transform ${isUserMenuOpen ? 'rotate-180' : ''
+                        }`}
                     />
                   </Button>
 
@@ -428,7 +423,6 @@ export function PublicHeader() {
             <ThemeSwitcher />
             <LanguageSwitcher />
             <Button
-              type="button"
               variant="secondary"
               size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

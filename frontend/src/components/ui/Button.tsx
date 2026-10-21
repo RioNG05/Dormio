@@ -69,7 +69,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size === 'icon' || size === 'icon-xs' || size === 'icon-sm' || size === 'icon-lg'
 
     const buttonClasses = cn(
-      'inline-flex items-center font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
+      'relative inline-flex items-center font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
       {
         // Justify
         'justify-center': justify === 'center',

@@ -20,13 +20,11 @@ export default function LanguageSwitcher({ className = '' }: LanguageSwitcherPro
 
   return (
     <Button
-      type="button"
-      variant="outline"
-      size="sm"
+      variant="ghost"
+      size='icon-sm'
       onClick={toggleLanguage}
       title={label}
       aria-label={label}
-      className={`!h-8 !w-9 !p-0 select-none border-line hover:border-primary/50 ${className}`}
     >
       <Text as="span" size="xs" weight="bold" color="inherit">
         {isVi ? tCommon('langVi') : tCommon('langEn')}

@@ -32,7 +32,6 @@ export default function NotificationBell({
   className = '',
 }: NotificationBellProps) {
   const router = useRouter()
-  const { locale } = useLanguage()
   const t = useTranslations('common')
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState<InAppNotification[]>([])
@@ -186,18 +185,16 @@ export default function NotificationBell({
     <div ref={containerRef} className={`relative inline-block ${className}`}>
       {/* Bell Trigger Button */}
       <Button
-        type="button"
         variant="ghost"
-        size="icon"
+        size="icon-sm"
         onClick={() => {
           setIsOpen(!isOpen)
           if (!isOpen) loadNotifications()
         }}
-        className="relative text-muted hover:text-foreground hover:bg-card-hover"
         aria-label={t('notifications')}
         title={t('notifications')}
       >
-        <Bell className="w-5 h-5 transition-transform duration-200 active:scale-90" />
+        <Bell className='w-4 h-4' />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -208,9 +205,8 @@ export default function NotificationBell({
       {/* Floating Popover Panel */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 w-80 sm:w-96 bg-card rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
+          className={`absolute top-full mt-2 w-80 sm:w-96 bg-card rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn ${align === 'right' ? 'right-0' : 'left-0'
+            }`}
         >
           {/* Popover Header */}
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-line bg-surface/70">
@@ -219,7 +215,7 @@ export default function NotificationBell({
                 {t('notifications')}
               </Text>
               {unreadCount > 0 && (
-                <Chip variant="warning" size="sm" className="font-bold text-[10px]">
+                <Chip variant="warning" size="sm">
                   {unreadCount} {t('notificationsNew')}
                 </Chip>
               )}
@@ -227,14 +223,12 @@ export default function NotificationBell({
 
             {unreadCount > 0 && (
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size='xs'
                 onClick={handleMarkAllAsRead}
-                className="!h-auto !p-0 text-orange-600 hover:text-orange-700 hover:bg-transparent"
-                leftIcon={<CheckCheck className="w-3.5 h-3.5 text-orange-600" />}
+                leftIcon={<CheckCheck className='text-primary' />}
               >
-                <Text as="span" size="2xs" weight="bold" color="orange">
+                <Text color='brand' size='xs'>
                   {t('notificationsMarkAllRead')}
                 </Text>
               </Button>
@@ -271,11 +265,7 @@ export default function NotificationBell({
                   <div
                     key={item.id}
                     onClick={() => handleNotificationClick(item)}
-                    className={`p-3.5 transition-colors cursor-pointer flex items-start gap-3 text-left ${
-                      item.isRead
-                        ? 'bg-card hover:bg-zinc-50/80'
-                        : 'bg-orange-50/30 hover:bg-orange-50/60'
-                    }`}
+                    className={'p-3.5 transition-colors flex items-start gap-3 text-left bg-card hover:bg-card-hover'}
                   >
                     {getNotificationIcon(item.type)}
 
@@ -305,27 +295,16 @@ export default function NotificationBell({
                         </Text>
 
                         {hasRedirect ? (
-                          <Text
-                            as="span"
-                            size="3xs"
-                            weight="bold"
-                            color="orange"
-                            className="hover:underline flex items-center gap-0.5"
-                          >
-                            <Text as="span">{t('viewDetail')}</Text>
-                            <ChevronRight className="w-3 h-3" />
-                          </Text>
+                          <Button variant='ghost' rightIcon={<ChevronRight className='text-accent' />}>
+                            <Text color='orange' size='xs' className='hover:underline'>
+                              {t('viewDetail')}
+                            </Text>
+                          </Button>
                         ) : (
-                          <Text
-                            as="span"
-                            size="3xs"
-                            color="subtle"
-                            weight="medium"
-                            className="flex items-center gap-1"
-                          >
-                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            <Text as="span">{t('notificationsSystemAnnouncement')}</Text>
-                          </Text>
+                          <Button variant='ghost' leftIcon={<CheckCircle2 className='text-success' />}>
+                            <Text color='success' size='xs'>
+                              {t('notificationsSystemAnnouncement')}</Text>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -338,15 +317,11 @@ export default function NotificationBell({
           {/* Footer */}
           <div className="p-2 border-t border-line bg-surface/50 text-center">
             <Button
-              type="button"
               variant="ghost"
-              size="sm"
               onClick={() => setIsOpen(false)}
-              className="w-full text-muted hover:text-foreground"
+              className="w-full "
             >
-              <Text as="span" size="2xs" weight="bold" color="inherit">
-                {t('close')}
-              </Text>
+              {t('close')}
             </Button>
           </div>
         </div>

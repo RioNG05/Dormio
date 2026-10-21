@@ -17,6 +17,7 @@ import {
   Scale,
   MapPin,
   ShieldCheck,
+  MoveRight,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -271,9 +272,8 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
             <div className="flex flex-col sm:flex-row p-2 sm:p-1.5 bg-card-hover rounded-3xl border border-line max-w-xl w-full gap-2 sm:gap-0">
               <Button
                 id="tab-bhms"
-                size="sm"
                 variant={isBhms ? 'primary' : 'ghost'}
-                leftIcon={<Building2 className="w-4 h-4" />}
+                leftIcon={<Building2 />}
                 onClick={() => router.push('/pricing/management-system', { scroll: false })}
                 className="flex-1 rounded-2xl"
               >
@@ -282,9 +282,8 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
 
               <Button
                 id="tab-bhrp"
-                size="sm"
                 variant={!isBhms ? 'accent' : 'ghost'}
-                leftIcon={<QrCode className="w-4 h-4" />}
+                leftIcon={<QrCode />}
                 onClick={() => router.push('/pricing/rental-platform', { scroll: false })}
                 className="flex-1 rounded-2xl"
               >
@@ -344,7 +343,6 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1.5 p-1.5 bg-card-hover rounded-2xl border border-line w-full sm:w-auto">
                 <Button
                   id="billing-monthly"
-                  size="sm"
                   variant={billingCycle === 'monthly' ? 'dark' : 'ghost'}
                   onClick={() => setBillingCycle('monthly')}
                   fullWidth="responsive"
@@ -353,7 +351,6 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 </Button>
                 <Button
                   id="billing-yearly"
-                  size="sm"
                   variant={billingCycle === 'yearly' ? 'dark' : 'ghost'}
                   onClick={() => setBillingCycle('yearly')}
                   fullWidth="responsive"
@@ -567,7 +564,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                       fullWidth
                       size="md"
                       variant={plan.popular ? (isBhms ? 'primary' : 'accent') : 'dark'}
-                      rightIcon={<span>&rarr;</span>}
+                      rightIcon={<MoveRight />}
                     >
                       {plan.cta}
                     </Button>
@@ -788,8 +785,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
             <Button
               variant="primary"
               size="lg"
-              rightIcon={<span>&rarr;</span>}
-              className="rounded-2xl shadow-lg shadow-primary/30 hover:scale-105"
+              rightIcon={<MoveRight />}
             >
               {t('guestPricingCtaBtn')}
             </Button>

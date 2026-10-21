@@ -40,15 +40,13 @@ export default function ThemeSwitcher({ className = '' }: ThemeSwitcherProps) {
 
   return (
     <Button
-      type="button"
-      variant="outline"
-      size="sm"
+      variant="ghost"
+      size="icon-sm"
       onClick={handleToggleTheme}
       title={tCommon('toggleTheme')}
       aria-label={tCommon('toggleTheme')}
-      className={`!h-8 !w-9 !p-0 select-none group relative overflow-hidden border-line hover:border-primary/50 ${className}`}
     >
-      <span className="relative flex items-center justify-center w-4 h-4">
+      <span className="relative flex items-center justify-center">
         {/* Sun icon shown in Light Mode (Warm Accent Orange #FF6B35) */}
         <Sun className="theme-switcher-icon w-4 h-4 text-accent transition-all duration-300 ease-out rotate-0 scale-100 opacity-100 group-hover:rotate-12 group-hover:scale-110 dark:-rotate-90 dark:scale-0 dark:opacity-0" />
         {/* Moon icon shown in Dark Mode (Brand Primary Teal #2AC1BC) */}

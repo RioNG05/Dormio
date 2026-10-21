@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Sparkles, Calendar, User, ArrowRight } from 'lucide-react'
+import { Sparkles, Calendar, User, ArrowRight, MoveRight, SquareArrowOutUpRight } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, ChipGroup, SearchInput, Text } from '@/components/ui'
@@ -264,7 +264,6 @@ export default function BlogPage() {
             onChange={setSearchQuery}
             placeholder={t('guestBlogSearchPlaceholder')}
             containerClassName="w-full md:w-72"
-            className="bg-surface rounded-full"
           />
         </div>
 
@@ -398,17 +397,18 @@ export default function BlogPage() {
               <Button
                 variant="primary"
                 size="lg"
-                rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/30 hover:scale-105"
+                rightIcon={<SquareArrowOutUpRight />}
+                className="w-full sm:w-auto"
               >
                 {t('guestFeaturesTrialBtn')}
               </Button>
             </Link>
             <Link href="/pricing" className="w-full sm:w-auto">
               <Button
-                variant="dark"
+                variant="accent"
                 size="lg"
-                className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 rounded-2xl"
+                rightIcon={<MoveRight />}
+                className="w-full sm:w-auto"
               >
                 {t('guestFeaturesViewPricingBtn')}
               </Button>

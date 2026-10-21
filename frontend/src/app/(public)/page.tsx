@@ -16,6 +16,8 @@ import {
   Users,
   BarChart3,
   CheckCircle2,
+  SquareArrowOutUpRight,
+  Send,
 } from 'lucide-react'
 import { formatVND } from '@/utils'
 import { useTranslations } from '@/context/LanguageContext'
@@ -284,7 +286,7 @@ export default function HomePage() {
                     type="submit"
                     variant="accent"
                     fullWidth
-                    leftIcon={<Search className="w-3.5 h-3.5" />}
+                    leftIcon={<Search />}
                     className="h-11 rounded-2xl text-xs font-extrabold shadow-md shadow-accent/25 hover:scale-[1.02]"
                   >
                     {t('guestHomeSearchNow')}
@@ -300,8 +302,7 @@ export default function HomePage() {
                     variant="primary"
                     size="lg"
                     rounded="full"
-                    leftIcon={<Sparkles className="w-4 h-4" />}
-                    className="w-full sm:w-auto px-8 py-3.5 shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all duration-300"
+                    rightIcon={<SquareArrowOutUpRight />}
                   >
                     {t('guestHomeTrialBtn')}
                   </Button>
@@ -311,8 +312,8 @@ export default function HomePage() {
                     variant="ghost"
                     size="lg"
                     rounded="full"
-                    rightIcon={<ArrowRight className="w-4 h-4 text-primary" />}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300"
+                    rightIcon={<ArrowRight />}
+                    className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md transition-all duration-300"
                   >
                     {t('guestFeaturesViewPricingBtn')}
                   </Button>
@@ -587,7 +588,7 @@ export default function HomePage() {
                             <Button
                               variant="dark"
                               size="xs"
-                              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                              rightIcon={<ArrowRight />}
                               className="px-4 py-2 rounded-xl"
                             >
                               {t('guestHomeViewDetail')}
@@ -814,16 +815,18 @@ export default function HomePage() {
               <Button
                 variant="primary"
                 size="lg"
-                className="px-8 py-3.5 bg-gradient-to-r from-primary to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] rounded-xl text-xs font-bold shadow-lg shadow-primary/20"
+                className="px-8 py-3.5"
+                rightIcon={<SquareArrowOutUpRight />}
               >
                 {t('guestHomeCtaTrialBtn')}
               </Button>
             </Link>
             <Link href="/contact">
               <Button
-                variant="dark"
+                variant="accent"
                 size="lg"
-                className="px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-xs font-bold"
+                className="px-8 py-3.5"
+                rightIcon={<Send />}
               >
                 {t('guestHomeCtaConsultBtn')}
               </Button>
