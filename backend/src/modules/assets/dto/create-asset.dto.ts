@@ -93,10 +93,11 @@ export class CreateAssetDto {
   @ApiPropertyOptional({
     description: 'Image URL of the asset photo',
     example: 'https://storage.example.com/assets/fan.jpg',
+    nullable: true,
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string
+  imageUrl?: string | null
 
   @ApiPropertyOptional({
     description: 'Additional notes or warranty info',

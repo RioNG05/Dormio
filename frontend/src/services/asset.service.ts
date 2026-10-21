@@ -26,7 +26,7 @@ export interface AssetItem {
   condition: AssetCondition
   purchasePrice?: number | null
   purchaseDate?: string | null
-  imageUrl?: string | null
+  imageUrl?: string | null | null
   note?: string | null
   depreciationYears?: number | null
   modelCode?: string | null
@@ -88,7 +88,7 @@ export interface CreateAssetPayload {
   condition?: AssetCondition
   purchasePrice?: number
   purchaseDate?: string
-  imageUrl?: string
+  imageUrl?: string | null
   note?: string
   depreciationYears?: number
   modelCode?: string

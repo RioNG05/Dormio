@@ -33,6 +33,8 @@ import {
   Modal,
   Text,
 } from '@/components/ui'
+import { ImageUpload } from '@/components/ImageUpload'
+import { uploadImageToBackend } from '@/services/upload.service'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function AssetsPage() {
@@ -86,7 +88,10 @@ export default function AssetsPage() {
   const [formCondition, setFormCondition] = useState<AssetCondition>('good')
   const [formValue, setFormValue] = useState('3.000.000 ₫')
   const [formPurchaseDate, setFormPurchaseDate] = useState(new Date().toISOString().split('T')[0])
+  const [formImageUrl, setFormImageUrl] = useState('')
+  const [formImagePreview, setFormImagePreview] = useState('')
   const [formNote, setFormNote] = useState('')
+  const [inspectImageUrl, setInspectImageUrl] = useState<string | null>(null)
 
   // Initial Form Snapshot for dirty tracking (Rule #10)
   const [initialFormState, setInitialFormState] = useState({
@@ -98,6 +103,8 @@ export default function AssetsPage() {
     condition: 'good' as AssetCondition,
     value: '3.000.000 ₫',
     purchaseDate: new Date().toISOString().split('T')[0],
+    imageUrl: '',
+    imagePreview: '',
     note: '',
   })
 
@@ -204,6 +211,8 @@ export default function AssetsPage() {
       formCondition !== initialFormState.condition ||
       formValue !== initialFormState.value ||
       formPurchaseDate !== initialFormState.purchaseDate ||
+      formImageUrl !== initialFormState.imageUrl ||
+      formImagePreview !== initialFormState.imagePreview ||
       formNote !== initialFormState.note
     )
   }, [
@@ -217,6 +226,8 @@ export default function AssetsPage() {
     formCondition,
     formValue,
     formPurchaseDate,
+    formImageUrl,
+    formImagePreview,
     formNote,
   ])
 
@@ -232,6 +243,8 @@ export default function AssetsPage() {
     setFormCondition('good')
     setFormValue('3.000.000 ₫')
     setFormPurchaseDate(new Date().toISOString().split('T')[0])
+    setFormImageUrl('')
+    setFormImagePreview('')
     setFormNote('')
   }
 
@@ -260,6 +273,8 @@ export default function AssetsPage() {
     setFormCondition('good')
     setFormValue('3.000.000 ₫')
     setFormPurchaseDate(initDate)
+    setFormImageUrl('')
+    setFormImagePreview('')
     setFormNote('')
 
     setInitialFormState({
@@ -271,6 +286,8 @@ export default function AssetsPage() {
       condition: 'good',
       value: '3.000.000 ₫',
       purchaseDate: initDate,
+      imageUrl: '',
+      imagePreview: '',
       note: '',
     })
 
@@ -290,6 +307,7 @@ export default function AssetsPage() {
     const initRoomId = asset.roomId || ''
     const initQuantity = asset.quantity || 1
     const initCondition = asset.condition || 'good'
+    const initImageUrl = asset.imageUrl || ''
     const initNote = asset.note || ''
 
     setSelectedAsset(asset)
@@ -301,6 +319,8 @@ export default function AssetsPage() {
     setFormCondition(initCondition)
     setFormValue(initVal)
     setFormPurchaseDate(initDate)
+    setFormImageUrl(initImageUrl)
+    setFormImagePreview('')
     setFormNote(initNote)
 
     setInitialFormState({
@@ -312,10 +332,28 @@ export default function AssetsPage() {
       condition: initCondition,
       value: initVal,
       purchaseDate: initDate,
+      imageUrl: initImageUrl,
+      imagePreview: '',
       note: initNote,
     })
 
     setIsModalOpen(true)
+  }
+
+  const handleImageSelect = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const base64 = e.target?.result as string
+      if (base64) {
+        setFormImagePreview(base64)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleImageRemove = () => {
+    setFormImagePreview('')
+    setFormImageUrl('')
   }
 
   const handleSaveAsset = async () => {
@@ -329,6 +367,27 @@ export default function AssetsPage() {
 
     setIsSubmitting(true)
     try {
+      let finalImageUrl: string | null | undefined = undefined
+
+      // If user selected a new preview image (base64 data), upload it to Cloudinary now upon submit
+      if (formImagePreview) {
+        try {
+          const uploadRes = await uploadImageToBackend(formImagePreview, 'dormio/assets')
+          if (uploadRes?.url) {
+            finalImageUrl = uploadRes.url
+          }
+        } catch (uploadErr: any) {
+          console.error('Image upload failed on submit:', uploadErr)
+          toast.error(uploadErr?.message || 'Không thể tải ảnh lên máy chủ. Vui lòng thử lại.')
+          setIsSubmitting(false)
+          return
+        }
+      } else if (selectedAsset) {
+        finalImageUrl = formImageUrl.trim() ? formImageUrl.trim() : null
+      } else {
+        finalImageUrl = undefined
+      }
+
       const payload = {
         name: formName.trim(),
         category: formCategory,
@@ -338,6 +397,7 @@ export default function AssetsPage() {
         condition: formCondition,
         purchasePrice: numVal,
         purchaseDate: formPurchaseDate ? new Date(formPurchaseDate).toISOString() : undefined,
+        imageUrl: finalImageUrl,
         note: formNote.trim() || undefined,
       }
 
@@ -438,7 +498,7 @@ export default function AssetsPage() {
           <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-vacant/10 hover:bg-vacant-hover border-vacant/30 lg:w-[130px]',
+          'px-3 py-2 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[130px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -488,7 +548,7 @@ export default function AssetsPage() {
       </LandlordStatBanner>
 
       {/* Category Tabs & Financial Valuation Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-line shadow-xs">
+      <div className="flex flex-col items-center sm:flex-row justify-between gap-3 bg-card p-3 rounded-2xl border border-line shadow-xs">
         {/* Category & Status Dropdowns */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <SelectInput
@@ -505,7 +565,7 @@ export default function AssetsPage() {
               { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
               { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
             ]}
-            containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[160px]"
+            containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[150px]"
             className="py-2 text-xs font-semibold"
           />
 
@@ -575,32 +635,50 @@ export default function AssetsPage() {
                   <div
                     key={asset.id}
                     onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all space-y-4 cursor-pointer relative group flex flex-col justify-between"
+                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all space-y-3.5 cursor-pointer relative group flex flex-col justify-between"
                   >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-card-hover text-foreground/90 border border-line">
-                            {getCategoryLabel(asset.category)}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/10 text-primary border border-primary/30">
-                            {asset.code}
-                          </span>
+                    {/* Top Asset Photo Banner */}
+                    <div className="w-full aspect-[16/10] rounded-xl overflow-hidden relative border border-line bg-surface shrink-0 group/img">
+                      {asset.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={asset.imageUrl}
+                          alt={asset.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted/50 bg-surface/50 gap-1.5">
+                          <Package className="w-8 h-8 text-zinc-300" />
+                          <span className="text-[10px] font-bold text-muted">{t('landlordAssetsNoImage')}</span>
                         </div>
+                      )}
+                      {/* Floating Category & SKU Chips */}
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-card/90 backdrop-blur-xs text-foreground/90 border border-line shadow-xs">
+                          {getCategoryLabel(asset.category)}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/90 text-white shadow-xs font-mono">
+                          {asset.code}
+                        </span>
+                      </div>
+                      {/* Floating Condition Badge */}
+                      <div className="absolute top-2 right-2 z-10">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${asset.condition === 'good'
-                            ? 'bg-primary/10 text-primary border-primary/30'
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shadow-xs backdrop-blur-xs ${asset.condition === 'good'
+                            ? 'bg-primary/90 text-white border-primary'
                             : asset.condition === 'new'
-                              ? 'bg-info-soft text-info border-info-subtle'
+                              ? 'bg-info/90 text-white border-info'
                               : asset.condition === 'under_repair'
-                                ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
-                                : 'bg-danger-soft text-danger border-danger-subtle'
+                                ? 'bg-accent/90 text-white border-accent animate-pulse'
+                                : 'bg-danger/90 text-white border-danger'
                             }`}
                         >
                           {getStatusLabel(asset.condition)}
                         </span>
                       </div>
+                    </div>
 
+                    <div className="space-y-3">
                       <div>
                         <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors leading-snug">
                           {asset.name}
@@ -663,7 +741,7 @@ export default function AssetsPage() {
                           onClick={e => handleOpenDeleteModal(asset, e)}
                           title={t('landlordAssetsBtnDelete')}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 />
                         </Button>
                       </div>
                       <span className="text-xs font-black text-primary group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
@@ -682,6 +760,7 @@ export default function AssetsPage() {
               <thead className="bg-surface text-muted uppercase font-extrabold border-b border-line whitespace-nowrap">
                 <tr>
                   <th className="px-4 sm:px-6 py-3.5">{t('landlordAssetsFieldSku')}</th>
+                  <th className="px-4 sm:px-6 py-3.5 min-w-[70px]">{t('landlordAssetsColImage')}</th>
                   <th className="px-4 sm:px-6 py-3.5">{t('landlordAssetsColName')}</th>
                   <th className="px-4 sm:px-6 py-3.5 min-w-[120px]">
                     {t('landlordAssetsColCategory')}
@@ -706,7 +785,7 @@ export default function AssetsPage() {
               <tbody className="divide-y divide-line font-medium">
                 {assets.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-muted">
+                    <td colSpan={9} className="px-6 py-8 text-center text-muted">
                       {t('landlordAssetsEmptyTitle')}
                     </td>
                   </tr>
@@ -721,12 +800,35 @@ export default function AssetsPage() {
                       <tr
                         key={asset.id}
                         onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                        className="hover:bg-zinc-50/80 transition-colors cursor-pointer group"
+                        className="hover:bg-card-hover transition-colors cursor-pointer group"
                       >
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span className="font-black text-primary block font-mono">
                             {asset.code}
                           </span>
+                        </td>
+                        <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
+                          {asset.imageUrl ? (
+                            <div
+                              onClick={e => {
+                                e.stopPropagation()
+                                setInspectImageUrl(asset.imageUrl || null)
+                              }}
+                              className="w-10 h-10 rounded-xl overflow-hidden border border-line bg-surface cursor-pointer hover:border-primary transition-all relative group/thumb shadow-2xs"
+                              title={t('landlordAssetsInspectImage')}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={asset.imageUrl}
+                                alt={asset.name}
+                                className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-200"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl border border-dashed border-line bg-surface/50 flex items-center justify-center text-muted/40">
+                              <Package className="w-4 h-4 text-zinc-300" />
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 sm:px-6 py-4 font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
                           {asset.name}
@@ -767,30 +869,31 @@ export default function AssetsPage() {
                             className="flex items-center justify-end gap-1.5"
                             onClick={e => e.stopPropagation()}
                           >
+                            <Link href={`/landlord/assets/${asset.id}`}>
+                              <Button
+                                size='icon-sm'
+                                variant='secondary'
+                                title={t('landlordAssetsBtnViewDetail')}
+                              >
+                                <Eye />
+                              </Button>
+                            </Link>
                             <Button
-                              type="button"
                               variant="secondary"
-                              size="xs"
+                              size="icon-sm"
                               onClick={e => handleOpenEditModal(asset, e)}
-                              leftIcon={<Edit3 className="w-3 h-3 text-primary" />}
+                              title={t('landlordAssetsBtnEdit')}
                             >
-                              {t('landlordAssetsBtnEdit')}
+                              <Edit3 />
                             </Button>
                             <Button
-                              type="button"
                               variant="ghost-danger"
-                              size="icon-xs"
+                              size="icon-sm"
                               onClick={e => handleOpenDeleteModal(asset, e)}
                               title={t('landlordAssetsBtnDelete')}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 />
                             </Button>
-                            <Link
-                              href={`/landlord/assets/${asset.id}`}
-                              className="px-2.5 py-1 bg-accent-soft text-accent border border-accent-subtle rounded-lg text-xs font-bold hover:bg-accent hover:text-white transition-colors flex items-center gap-1"
-                            >
-                              <Eye className="w-3 h-3" /> {t('landlordAssetsBtnViewDetail')}
-                            </Link>
                           </div>
                         </td>
                       </tr>
@@ -967,6 +1070,21 @@ export default function AssetsPage() {
               containerClassName="sm:col-span-2"
               className="resize-none"
             />
+
+            {/* Asset Photo Upload (1 image - deferred preview until submit) */}
+            <div className="sm:col-span-2 pt-1">
+              <ImageUpload
+                label={t('landlordAssetsFieldImage')}
+                helperText={t('landlordAssetsFieldImageHelper')}
+                value={formImagePreview || formImageUrl}
+                onFileSelect={handleImageSelect}
+                onRemove={handleImageRemove}
+                aspectRatio="video"
+                disabled={isSubmitting}
+                showInspectButton={Boolean(formImagePreview || formImageUrl)}
+                onInspect={url => setInspectImageUrl(url)}
+              />
+            </div>
           </div>
         </Modal.Body>
 
@@ -976,6 +1094,7 @@ export default function AssetsPage() {
             variant="outline"
             size="sm"
             onClick={handleRequestCloseModal}
+            disabled={isSubmitting}
           >
             {t('landlordAssetsBtnCancel')}
           </Button>
@@ -1099,6 +1218,29 @@ export default function AssetsPage() {
               {t('landlordAssetsDeleteConfirmBtn')}
             </Button>
           </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* 4. ASSET IMAGE LIGHTBOX PREVIEW MODAL */}
+      <Modal
+        isOpen={Boolean(inspectImageUrl)}
+        onClose={() => setInspectImageUrl(null)}
+        size="lg"
+        zIndex={80}
+      >
+        <Modal.Header
+          title={t('landlordAssetsInspectImage')}
+          onClose={() => setInspectImageUrl(null)}
+        />
+        <Modal.Body className="p-4 flex items-center justify-center bg-black/5 dark:bg-black/40">
+          {inspectImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={inspectImageUrl}
+              alt="Asset full size"
+              className="max-h-[75vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+            />
+          )}
         </Modal.Body>
       </Modal>
     </div>
