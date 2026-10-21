@@ -2,38 +2,8 @@
 
 import React, { useState, useRef, useEffect, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import {
-  Send,
-  Paperclip,
-  Smile,
-  ImageIcon,
-  Phone,
-  Search,
-  Info,
-  Building2,
-  User,
-  FileText,
-  CheckCheck,
-  Sparkles,
-  ChevronRight,
-  MessageSquare,
-  ShieldCheck,
-  ExternalLink,
-  Plus,
-  X,
-  Eye,
-  AlertCircle,
-  ArrowRight,
-  DoorOpen,
-  FileImage,
-  File,
-  ArrowLeft,
-  Loader2,
-  Download,
-} from 'lucide-react'
-
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import {
   ConversationItem,
   MessageItem,
@@ -46,61 +16,16 @@ import {
   getContacts,
   initMessagesSocket,
 } from '@/services/message.service'
-import { TextInput, Button, SearchInput, ChipGroup } from '@/components/ui'
 import { dispatchMessagesUpdated } from '@/hooks'
-
-const AVATAR_COLORS = [
-  'bg-teal-600',
-  'bg-primary',
-  'bg-info',
-  'bg-indigo-600',
-  'bg-success',
-  'bg-deposit',
-  'bg-warning',
-  'bg-danger',
-]
-
-function getAvatarBg(str: string): string {
-  if (!str) return 'bg-teal-600'
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function formatMessageTime(isoString: string): string {
-  try {
-    const d = new Date(isoString)
-    return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return ''
-  }
-}
-
-function formatConversationTime(isoString: string): string {
-  try {
-    const d = new Date(isoString)
-    const now = new Date()
-    const isToday = d.toDateString() === now.toDateString()
-    if (isToday) {
-      return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-    }
-    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
-  } catch {
-    return ''
-  }
-}
-
-function appendOrUpdateMessage(list: MessageItem[], newMsg: MessageItem): MessageItem[] {
-  const index = list.findIndex(m => m.id === newMsg.id)
-  if (index >= 0) {
-    const updated = [...list]
-    updated[index] = newMsg
-    return updated
-  }
-  return [...list, newMsg]
-}
+import { appendOrUpdateMessage, formatConversationTime } from './utils'
+import {
+  ConversationList,
+  ConversationTab,
+  ChatStream,
+  ContextualDetailDrawer,
+  NewChatModal,
+  ImageLightboxModal,
+} from './components'
 
 function MessagesContent() {
   const { user, activeBuilding } = useAuth()
@@ -129,7 +54,7 @@ function MessagesContent() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [isSending, setIsSending] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'read' | 'tenant' | 'lead'>('all')
+  const [activeTab, setActiveTab] = useState<ConversationTab>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [showRightDrawer, setShowRightDrawer] = useState(false)
   const [mobileShowChat, setMobileShowChat] = useState(false)
@@ -137,8 +62,6 @@ function MessagesContent() {
 
   // New Chat Modal state
   const [showNewChatModal, setShowNewChatModal] = useState(false)
-  const [newChatSearch, setNewChatSearch] = useState('')
-  const [showCloseModalConfirm, setShowCloseModalConfirm] = useState(false)
   const [isCreatingChat, setIsCreatingChat] = useState(false)
 
   // Message input state
@@ -633,7 +556,6 @@ function MessagesContent() {
         return exists ? prev : [conv, ...prev]
       })
       setShowNewChatModal(false)
-      setNewChatSearch('')
       handleSelectConversation(conv)
     } catch (error) {
       console.error('Failed to create conversation:', error)
@@ -642,26 +564,21 @@ function MessagesContent() {
     }
   }
 
-  // Filtered contacts for modal
-  const filteredContacts = useMemo(() => {
-    return contacts.filter(c => {
-      const q = newChatSearch.toLowerCase().trim()
-      if (!q) return true
-      return (
-        c.fullName.toLowerCase().includes(q) ||
-        (c.roomName && c.roomName.toLowerCase().includes(q)) ||
-        (c.phoneNumber && c.phoneNumber.includes(q))
-      )
-    })
-  }, [contacts, newChatSearch])
+  const handleBackToList = () => {
+    activeChatRef.current = null
+    setActiveChat(null)
+    setMobileShowChat(false)
+    router.replace('/landlord/messages', { scroll: false })
+  }
 
-  const handleCloseNewChatModal = () => {
-    if (newChatSearch.trim()) {
-      setShowCloseModalConfirm(true)
-    } else {
-      setShowNewChatModal(false)
-      setNewChatSearch('')
-    }
+  const handleNavigateRoom = (roomName?: string | null) => {
+    const roomNo = roomName?.replace('Phòng ', '') || ''
+    router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`)
+  }
+
+  const handleNavigateContract = (roomName?: string | null) => {
+    const roomNo = roomName?.replace('Phòng ', '') || ''
+    router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
   }
 
   if (!isMounted) return null
@@ -669,917 +586,72 @@ function MessagesContent() {
   return (
     <div className="-m-4 sm:-m-6 lg:-m-8 h-[calc(100dvh-3.5rem)] lg:h-screen bg-card border-y border-line overflow-hidden flex">
       {/* PANE 1: Left Conversation List */}
-      <div
-        className={`w-full lg:w-96 border-r border-line flex-col bg-surface/50 shrink-0 ${
-          mobileShowChat ? 'hidden lg:flex' : 'flex'
-        }`}
-      >
-        {/* Top Search & Filter Tabs */}
-        <div className="p-3.5 border-b border-line space-y-3 bg-card">
-          <div className="flex items-center gap-2">
-            <SearchInput
-              placeholder={t('landlordMessagesSearchPlaceholder')}
-              value={searchTerm}
-              onChange={setSearchTerm}
-              className="py-2 text-xs font-semibold bg-surface border-line focus:bg-white rounded-xl"
-              containerClassName="flex-1"
-            />
-            <Button
-              size="icon"
-              variant="primary"
-              onClick={() => setShowNewChatModal(true)}
-              title={t('landlordMessagesTooltipNewChat')}
-              className="shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="py-0.5">
-            <ChipGroup<'all' | 'unread' | 'read' | 'tenant' | 'lead'>
-              value={activeTab}
-              onChange={val => setActiveTab(val)}
-              scrollable
-              size="sm"
-              options={[
-                {
-                  value: 'all',
-                  label: t('landlordMessagesTabAll'),
-                  count: conversations.length,
-                  variant: 'default',
-                },
-                {
-                  value: 'unread',
-                  label: t('landlordMessagesTabUnread'),
-                  count: conversations.filter(c => c.unreadCount > 0).length,
-                  variant: 'warning',
-                },
-                {
-                  value: 'read',
-                  label: t('landlordMessagesTabRead'),
-                  count: conversations.filter(c => c.unreadCount === 0).length,
-                  variant: 'neutral',
-                },
-                {
-                  value: 'tenant',
-                  label: t('landlordMessagesTabTenant'),
-                  count: conversations.filter(c => c.participant.role === 'tenant').length,
-                  variant: 'info',
-                },
-                {
-                  value: 'lead',
-                  label: t('landlordMessagesTabLead'),
-                  count: conversations.filter(c => c.participant.role !== 'tenant').length,
-                  variant: 'purple',
-                },
-              ]}
-            />
-          </div>
-        </div>
-
-        {/* Conversation List Stream */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-line">
-          {isLoadingConversations ? (
-            <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              <span>{t('landlordMessagesLoadingConversations')}</span>
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="p-8 text-center text-xs font-bold text-muted space-y-2">
-              <MessageSquare className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
-              <p>{t('landlordMessagesEmptyConversations')}</p>
-              {contacts.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowNewChatModal(true)}
-                  leftIcon={<Plus  />}
-                  className="mt-2"
-                >
-                  {t('landlordMessagesBtnStartChat')}
-                </Button>
-              )}
-            </div>
-          ) : (
-            filteredConversations.map((chat, chatIdx) => {
-              const isSelected = activeChat?.id === chat.id
-              const p = chat.participant
-              const avatarBg = getAvatarBg(p.id || p.fullName)
-              const isTenant = p.role === 'tenant'
-
-              return (
-                <div
-                  key={`conv-${chat.id}-${chatIdx}`}
-                  onClick={() => handleSelectConversation(chat)}
-                  className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${
-                    isSelected
-                      ? 'bg-primary/10 border-l-4 border-l-primary'
-                      : 'hover:bg-card-hover'
-                  }`}
-                >
-                  {/* Avatar with Status */}
-                  <div className="relative shrink-0 pt-0.5">
-                    <div
-                      className={`w-10 h-10 rounded-2xl ${avatarBg} text-white font-black text-sm flex items-center justify-center shadow-2xs`}
-                    >
-                      {p.fullName ? p.fullName.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                  </div>
-
-                  {/* Meta & Last Message */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="font-extrabold text-xs text-foreground truncate">
-                        {p.roomName || p.fullName}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold shrink-0 ${
-                          chat.unreadCount > 0 ? 'text-primary' : 'text-muted'
-                        }`}
-                      >
-                        {chat.lastMessage
-                          ? formatConversationTime(chat.lastMessage.sentAt)
-                          : formatConversationTime(chat.updatedAt)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold text-foreground/90 truncate">
-                        {p.fullName}
-                      </span>
-                      {isTenant ? (
-                        <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-success-soft text-success border border-success-subtle shrink-0">
-                          {t('landlordMessagesRoleTenant')}
-                        </span>
-                      ) : (
-                        <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-info-soft text-info border border-info-subtle shrink-0">
-                          {t('landlordMessagesRoleGuest')}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                      <p
-                        className={`text-xs truncate ${
-                          chat.unreadCount > 0
-                            ? 'font-extrabold text-foreground'
-                            : 'font-medium text-muted'
-                        }`}
-                      >
-                        {chat.lastMessage?.content || t('landlordMessagesNoMessageYet')}
-                      </p>
-                      {chat.unreadCount > 0 && (
-                        <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">
-                          {chat.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-      </div>
+      <ConversationList
+        conversations={conversations}
+        filteredConversations={filteredConversations}
+        activeChatId={activeChat?.id}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        isLoading={isLoadingConversations}
+        onSelectConversation={handleSelectConversation}
+        onOpenNewChat={() => setShowNewChatModal(true)}
+        mobileShowChat={mobileShowChat}
+        hasContacts={contacts.length > 0}
+      />
 
       {/* PANE 2: Center Main Chat Stream */}
-      <div
-        className={`flex-1 flex-col min-w-0 bg-card ${mobileShowChat ? 'flex' : 'hidden lg:flex'}`}
-      >
-        {activeChat ? (
-          <>
-            {/* Active Chat Header */}
-            <div className="p-3 sm:px-5 sm:py-3 border-b border-line flex items-center justify-between gap-2 bg-card z-10 shadow-2xs">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                {/* Mobile Back Button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    activeChatRef.current = null
-                    setActiveChat(null)
-                    setMobileShowChat(false)
-                    router.replace('/landlord/messages', { scroll: false })
-                  }}
-                  className="lg:hidden -ml-1 shrink-0"
-                  title={t('landlordMessagesTooltipBackToList')}
-                >
-                  <ArrowLeft className="w-5 h-5 text-foreground/90" />
-                </Button>
+      <ChatStream
+        activeChat={activeChat}
+        messages={messages}
+        isLoadingMessages={isLoadingMessages}
+        isSending={isSending}
+        currentUserId={user?.id}
+        quickReplies={quickReplies}
+        pendingAttachments={pendingAttachments}
+        onRemovePendingAttachment={index =>
+          setPendingAttachments(prev => prev.filter((_, i) => i !== index))
+        }
+        inputMessage={inputMessage}
+        onInputChange={setInputMessage}
+        onSendMessage={handleSendMessage}
+        onFileUpload={handleFileUpload}
+        onPreviewImage={setPreviewImage}
+        onToggleRightDrawer={() => setShowRightDrawer(!showRightDrawer)}
+        onBackToList={handleBackToList}
+        mobileShowChat={mobileShowChat}
+        messagesEndRef={messagesEndRef}
+        fileInputRef={fileInputRef}
+        imageInputRef={imageInputRef}
+        onNavigateContract={handleNavigateContract}
+      />
 
-                <div className="relative shrink-0">
-                  <div
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${getAvatarBg(
-                      activeChat.participant.id || activeChat.participant.fullName,
-                    )} text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-2xs`}
-                  >
-                    {activeChat.participant.fullName.charAt(0).toUpperCase()}
-                  </div>
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <h2 className="font-black text-xs sm:text-sm text-foreground truncate shrink-0">
-                      {activeChat.participant.roomName || activeChat.participant.fullName}
-                    </h2>
-                    <span className="text-[11px] sm:text-xs font-bold text-muted truncate">
-                      • {activeChat.participant.fullName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-muted truncate">
-                    {activeChat.participant.phoneNumber && (
-                      <span>
-                        {t('landlordMessagesPhonePrefix')} {activeChat.participant.phoneNumber}
-                      </span>
-                    )}
-                    {activeChat.participant.boardingHouseName && (
-                      <span className="hidden sm:inline">
-                        • {activeChat.participant.boardingHouseName}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Top Action Controls */}
-              <div className="flex items-center gap-1 shrink-0">
-                {activeChat.participant.phoneNumber && (
-                  <a
-                    href={`tel:${activeChat.participant.phoneNumber}`}
-                    className="p-1.5 sm:p-2 hover:bg-card-hover text-muted rounded-xl transition-colors cursor-pointer"
-                    title={t('landlordMessagesTooltipCall')}
-                  >
-                    <Phone className="w-4 h-4" />
-                  </a>
-                )}
-                {activeChat.participant.roomName && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
-                      router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
-                    }}
-                    leftIcon={<FileText  />}
-                    className="hidden md:inline-flex"
-                  >
-                    {t('landlordMessagesBtnContract')}
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowRightDrawer(!showRightDrawer)}
-                  title={t('landlordMessagesTooltipInfo')}
-                >
-                  <Info className="w-4.5 h-4.5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-5 space-y-4 bg-surface/60">
-              {isLoadingMessages ? (
-                <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  <span>{t('landlordMessagesLoadingMessages')}</span>
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="p-8 text-center text-xs font-bold text-muted space-y-2">
-                  <MessageSquare className="w-10 h-10 mx-auto text-zinc-300 stroke-1" />
-                  <p>{t('landlordMessagesEmptyChatTitle')}</p>
-                  <p className="text-[11px] font-semibold text-muted">
-                    {t('landlordMessagesEmptyChatDesc')}
-                  </p>
-                </div>
-              ) : (
-                messages.map((msg, idx) => {
-                  const isMe =
-                    msg.senderId === user?.id || msg.senderId !== activeChat.participant.id
-                  const isSystemAlert =
-                    msg.content.startsWith('📌 THÔNG BÁO') || msg.content.startsWith('💳 THÔNG BÁO')
-
-                  if (isSystemAlert) {
-                    return (
-                      <div
-                        key={`sys-${msg.id}-${idx}`}
-                        className="max-w-md mx-auto my-3 p-3.5 bg-card border border-primary/30 rounded-2xl shadow-2xs text-center space-y-2"
-                      >
-                        <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-primary">
-                          <Sparkles className="w-4 h-4" /> {t('landlordMessagesSystemNoticeBadge')}
-                        </div>
-                        <p className="text-xs text-foreground/90 font-semibold leading-relaxed">
-                          {msg.content}
-                        </p>
-                        <div className="text-[10px] font-bold text-muted">
-                          {formatMessageTime(msg.sentAt)}
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <div
-                      key={`msg-${msg.id}-${idx}`}
-                      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`}
-                    >
-                      <div
-                        className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${
-                          isMe
-                            ? 'bg-primary text-white rounded-br-xs font-medium'
-                            : 'bg-card border border-line text-foreground rounded-bl-xs font-medium'
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-
-                        {/* Attachments within bubble */}
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <div className="mt-2 space-y-1.5">
-                            {msg.attachments.map((att, attIdx) => {
-                              if (att.type === 'image') {
-                                return (
-                                  <div
-                                    key={`att-img-${att.id || att.url}-${attIdx}`}
-                                    onClick={() => setPreviewImage(att.url)}
-                                    className="cursor-pointer rounded-xl overflow-hidden border border-black/10 max-w-xs hover:opacity-95 transition-opacity"
-                                  >
-                                    <img
-                                      src={att.url}
-                                      alt={t('landlordMessagesAttachmentAlt')}
-                                      className="w-full max-h-60 object-cover"
-                                    />
-                                  </div>
-                                )
-                              }
-                              return (
-                                <a
-                                  key={`att-file-${att.id || att.url}-${attIdx}`}
-                                  href={att.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`flex items-center gap-2 p-2 rounded-xl text-xs font-bold transition-colors ${
-                                    isMe
-                                      ? 'bg-white/20 text-white hover:bg-white/30'
-                                      : 'bg-card-hover text-foreground hover:bg-line'
-                                  }`}
-                                >
-                                  <File className="w-4 h-4 shrink-0" />
-                                  <span className="truncate flex-1">
-                                    {att.url.split('/').pop() ||
-                                      t('landlordMessagesDefaultAttachment')}
-                                  </span>
-                                  <Download className="w-3.5 h-3.5 shrink-0" />
-                                </a>
-                              )
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      <div
-                        className={`flex items-center gap-1 text-[10px] font-bold ${
-                          isMe ? 'text-muted' : 'text-muted'
-                        }`}
-                      >
-                        <span>{formatMessageTime(msg.sentAt)}</span>
-                        {isMe && (
-                          <span
-                            title={
-                              msg.readAt
-                                ? t('landlordMessagesStatusSeen')
-                                : t('landlordMessagesStatusSent')
-                            }
-                          >
-                            <CheckCheck
-                              className={`w-3 h-3 ${
-                                msg.readAt ? 'text-primary' : 'text-zinc-300'
-                              }`}
-                            />
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Preset Smart Quick Reply Chips */}
-            <div className="px-4 py-2 bg-card-hover/80 border-t border-line flex items-center gap-2 overflow-x-auto custom-scrollbar">
-              <span className="text-[10px] font-black text-muted uppercase tracking-wider shrink-0 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-primary" />
-                {t('landlordMessagesQuickRepliesTitle')}:
-              </span>
-              {quickReplies.map((reply, idx) => (
-                <Button
-                  key={idx}
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleSendMessage(reply)}
-                  disabled={isSending}
-                  className="shrink-0"
-                >
-                  {reply}
-                </Button>
-              ))}
-            </div>
-
-            {/* Pending Attachments Preview */}
-            {pendingAttachments.length > 0 && (
-              <div className="px-4 py-2 bg-surface border-t border-line flex items-center gap-2 overflow-x-auto">
-                <span className="text-[10px] font-extrabold text-muted uppercase shrink-0">
-                  {t('landlordMessagesAttachmentsCount').replace(
-                    '{count}',
-                    String(pendingAttachments.length),
-                  )}
-                </span>
-                {pendingAttachments.map((att, index) => (
-                  <div
-                    key={index}
-                    className="relative group bg-card border border-line rounded-xl p-1.5 flex items-center gap-2 text-xs shrink-0"
-                  >
-                    {att.type === 'image' ? (
-                      <img
-                        src={att.url}
-                        alt={att.name}
-                        className="w-8 h-8 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <File className="w-5 h-5 text-primary" />
-                    )}
-                    <span className="max-w-[120px] truncate font-semibold text-foreground/90">
-                      {att.name}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setPendingAttachments(prev => prev.filter((_, i) => i !== index))
-                      }
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Message Input Bar reusing Base Components */}
-            <div className="p-3 sm:p-4 bg-card border-t border-line">
-              <form
-                onSubmit={e => {
-                  e.preventDefault()
-                  handleSendMessage()
-                }}
-                className="flex items-center gap-2"
-              >
-                {/* Hidden File Inputs */}
-                <TextInput
-                  type="file"
-                  ref={fileInputRef}
-                  containerClassName="hidden"
-                  className="hidden"
-                  onChange={e => handleFileUpload(e, 'file')}
-                />
-                <TextInput
-                  type="file"
-                  accept="image/*"
-                  ref={imageInputRef}
-                  containerClassName="hidden"
-                  className="hidden"
-                  onChange={e => handleFileUpload(e, 'image')}
-                />
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  title={t('landlordMessagesTooltipAttachFile')}
-                >
-                  <Paperclip className="w-4.5 h-4.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => imageInputRef.current?.click()}
-                  title={t('landlordMessagesTooltipSendImage')}
-                >
-                  <ImageIcon className="w-4.5 h-4.5" />
-                </Button>
-
-                <TextInput
-                  placeholder={t('landlordMessagesComposePlaceholder').replace(
-                    '{name}',
-                    activeChat.participant.roomName || activeChat.participant.fullName,
-                  )}
-                  value={inputMessage}
-                  onChange={e => setInputMessage(e.target.value)}
-                  disabled={isSending}
-                  className="py-2.5 text-xs sm:text-sm font-semibold bg-surface border-line focus:bg-white rounded-xl"
-                  containerClassName="flex-1"
-                  rightIcon={
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Smile className="w-4 h-4" />
-                    </Button>
-                  }
-                />
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  disabled={isSending || (!inputMessage.trim() && pendingAttachments.length === 0)}
-                  isLoading={isSending}
-                  rightIcon={<Send  />}
-                  className="shrink-0"
-                >
-                  {t('landlordMessagesSendBtn')}
-                </Button>
-              </form>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center p-8 text-center">
-            <p className="text-sm font-medium text-muted">{t('landlordMessagesSelectPrompt')}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Mobile Backdrop Overlay for Right Drawer */}
-      {showRightDrawer && (
-        <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setShowRightDrawer(false)}
+      {/* PANE 3: Right Contextual Tenant & Room Panel */}
+      {activeChat && (
+        <ContextualDetailDrawer
+          isOpen={showRightDrawer}
+          onClose={() => setShowRightDrawer(false)}
+          activeChat={activeChat}
+          activeBuildingName={activeBuilding?.name}
+          activeChatMedia={activeChatMedia}
+          onPreviewImage={setPreviewImage}
+          onNavigateRoom={handleNavigateRoom}
+          onNavigateContract={handleNavigateContract}
         />
       )}
 
-      {/* PANE 3: Right Contextual Tenant & Room Panel */}
-      {showRightDrawer && activeChat && (
-        <div className="fixed lg:relative inset-y-0 right-0 z-50 lg:z-auto w-full sm:w-80 lg:w-80 border-l border-line bg-card flex flex-col shrink-0 overflow-y-auto custom-scrollbar animate-in slide-in-from-right duration-200 shadow-2xl lg:shadow-none">
-          {/* Panel Header */}
-          <div className="p-4 border-b border-line flex items-center justify-between">
-            <h3 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-primary" /> {t('landlordMessagesDrawerTitle')}
-            </h3>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowRightDrawer(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="p-4 space-y-4 text-xs">
-            {/* Tenant Profile Card */}
-            <div className="p-4 bg-surface border border-line rounded-2xl text-center space-y-2">
-              <div
-                className={`w-14 h-14 rounded-2xl ${getAvatarBg(
-                  activeChat.participant.id || activeChat.participant.fullName,
-                )} text-white font-black text-xl flex items-center justify-center mx-auto shadow-sm`}
-              >
-                {activeChat.participant.fullName.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h4 className="font-black text-sm text-foreground">
-                  {activeChat.participant.fullName}
-                </h4>
-                <p className="text-muted text-[11px] font-semibold mt-0.5">
-                  {activeChat.participant.phoneNumber || t('landlordMessagesNoPhone')}
-                </p>
-              </div>
-
-              <div className="pt-2 flex justify-center">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-success-soft text-success border border-success-subtle">
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" />{' '}
-                  {t('landlordMessagesDormioAccount')}
-                </span>
-              </div>
-            </div>
-
-            {/* Room & Building Info */}
-            <div className="p-4 bg-card border border-line rounded-2xl space-y-3 shadow-2xs">
-              <div className="flex items-center justify-between pb-2 border-b border-line">
-                <span className="font-extrabold text-sm text-primary">
-                  {activeChat.participant.roomName || t('landlordMessagesNoRoom')}
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-info-soft text-info rounded-md border border-info-subtle">
-                  {activeChat.participant.boardingHouseName ||
-                    activeBuilding?.name ||
-                    t('landlordMessagesDefaultBuilding')}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted font-semibold">
-                    {t('landlordMessagesRoleLabel')}
-                  </span>
-                  <span className="font-extrabold text-foreground">
-                    {activeChat.participant.role === 'tenant'
-                      ? t('landlordMessagesRoleTenant')
-                      : t('landlordMessagesRoleProspect')}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            {activeChat.participant.roomName && (
-              <div className="space-y-2 pt-1">
-                <Button fullWidth size="icon"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
-                    router.push(`/landlord/rooms?search=${encodeURIComponent(roomNo)}`)
-                  }}
-                  className="justify-between group"
-                >
-                  <span className="flex items-center gap-2">
-                    <DoorOpen className="w-4 h-4 text-primary" />{' '}
-                    {t('landlordMessagesViewRoomDetail').replace(
-                      '{room}',
-                      activeChat.participant.roomName || '',
-                    )}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-muted group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-
-                <Button fullWidth size="icon"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    const roomNo = activeChat.participant.roomName?.replace('Phòng ', '') || ''
-                    router.push(`/landlord/contracts?search=${encodeURIComponent(roomNo)}`)
-                  }}
-                  className="justify-between group"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />{' '}
-                    {t('landlordMessagesViewContract').replace(
-                      '{room}',
-                      activeChat.participant.roomName || '',
-                    )}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-muted group-hover:translate-x-0.5 transition-transform" />
-                </Button>
-              </div>
-            )}
-
-            {/* Media & Attachments Storage Section */}
-            <div className="p-4 bg-card border border-line rounded-2xl space-y-3 shadow-2xs">
-              <div className="flex items-center justify-between pb-2 border-b border-line">
-                <span className="font-extrabold text-xs text-foreground flex items-center gap-1.5">
-                  <FileImage className="w-4 h-4 text-primary" />{' '}
-                  {t('landlordMessagesMediaStorageTitle')}
-                </span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-card-hover text-muted rounded-md">
-                  {activeChatMedia.total}
-                </span>
-              </div>
-
-              {activeChatMedia.total > 0 ? (
-                <div className="space-y-3">
-                  {/* Images Grid */}
-                  {activeChatMedia.images.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {activeChatMedia.images.map((img, imgIdx) => (
-                        <div
-                          key={`drawer-img-${img.id || img.url}-${imgIdx}`}
-                          onClick={() => setPreviewImage(img.url)}
-                          className="relative aspect-video rounded-xl overflow-hidden border border-line group cursor-pointer bg-card-hover"
-                        >
-                          <img
-                            src={img.url}
-                            alt={img.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                            <Eye className="w-4 h-4" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Files List */}
-                  {activeChatMedia.files.length > 0 && (
-                    <div className="space-y-1.5">
-                      {activeChatMedia.files.map((file, fileIdx) => (
-                        <div
-                          key={`drawer-file-${file.id || file.url}-${fileIdx}`}
-                          className="p-2 bg-surface border border-line rounded-xl flex items-center justify-between gap-2"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <File className="w-4 h-4 text-primary shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-bold text-foreground truncate">
-                                {file.name}
-                              </p>
-                              <p className="text-[9px] text-muted font-medium">
-                                {file.size} • {file.time}
-                              </p>
-                            </div>
-                          </div>
-                          <a
-                            href={file.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 hover:bg-line rounded-lg text-muted cursor-pointer"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="py-4 text-center text-[11px] font-bold text-muted space-y-1">
-                  <FileImage className="w-6 h-6 mx-auto text-zinc-300 stroke-1" />
-                  <p>{t('landlordMessagesNoMedia')}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* New Chat Modal */}
-      {showNewChatModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseNewChatModal()
-          }}
-        >
-          <div className="bg-card rounded-3xl max-w-md w-full shadow-2xl border border-line overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between">
-              <div>
-                <h3 className="font-extrabold text-sm text-foreground">
-                  {t('landlordMessagesNewModalTitle')}
-                </h3>
-                <p className="text-xs text-muted mt-0.5">{t('landlordMessagesNewModalSub')}</p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseNewChatModal}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="p-4 border-b border-line bg-surface/50">
-              <SearchInput
-                placeholder={t('landlordMessagesNewModalSearch')}
-                value={newChatSearch}
-                onChange={setNewChatSearch}
-                className="py-2 text-xs font-semibold bg-card border-line rounded-xl"
-              />
-            </div>
-
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 divide-y divide-zinc-50">
-              {isCreatingChat ? (
-                <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  <span>{t('landlordMessagesOpeningChat')}</span>
-                </div>
-              ) : filteredContacts.length === 0 ? (
-                <div className="p-8 text-center text-xs font-bold text-muted space-y-1">
-                  <User className="w-8 h-8 mx-auto text-zinc-300 stroke-1" />
-                  <p>{t('landlordMessagesNoContactsTitle')}</p>
-                  <p className="text-[10px] text-muted">{t('landlordMessagesNoContactsDesc')}</p>
-                </div>
-              ) : (
-                filteredContacts.map((contact, contactIdx) => (
-                  <div
-                    key={`contact-${contact.id}-${contactIdx}`}
-                    onClick={() => handleSelectContactToChat(contact)}
-                    className="p-3 hover:bg-card-hover rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-10 h-10 rounded-2xl ${getAvatarBg(
-                          contact.id,
-                        )} text-white font-black text-sm flex items-center justify-center shrink-0 shadow-2xs`}
-                      >
-                        {contact.fullName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="font-extrabold text-xs text-foreground group-hover:text-primary transition-colors truncate">
-                            {contact.fullName}
-                          </h4>
-                          {contact.roomName && (
-                            <span className="px-1.5 py-0.2 text-[9px] font-black rounded-md bg-success-soft text-success border border-success-subtle shrink-0">
-                              {contact.roomName}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-muted font-medium truncate mt-0.5">
-                          {contact.phoneNumber || t('landlordDepositsNoPhoneShort')} •{' '}
-                          {contact.boardingHouseName || t('landlordMessagesDefaultBuilding')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="group-hover:text-primary group-hover:bg-primary/10 shrink-0"
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Modal when Closing Form with Unsaved Inputs (Rule 10) */}
-      {showCloseModalConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-card rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-line space-y-4">
-            <div className="flex items-center gap-3 text-warning">
-              <div className="p-2 bg-warning-soft rounded-xl">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-sm text-foreground">
-                {t('landlordMessagesConfirmCloseTitle')}
-              </h4>
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              {t('landlordMessagesConfirmCloseDesc')}
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowCloseModalConfirm(false)}
-              >
-                {t('landlordMessagesConfirmCloseKeep')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => {
-                  setShowCloseModalConfirm(false)
-                  setShowNewChatModal(false)
-                  setNewChatSearch('')
-                }}
-              >
-                {t('landlordMessagesConfirmCloseDiscard')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NewChatModal
+        isOpen={showNewChatModal}
+        onClose={() => setShowNewChatModal(false)}
+        contacts={contacts}
+        isCreatingChat={isCreatingChat}
+        onSelectContact={handleSelectContactToChat}
+      />
 
       {/* Image Preview Lightbox Modal */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setPreviewImage(null)
-          }}
-        >
-          <div className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center">
-            <Button rounded="full"
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setPreviewImage(null)}
-              className="absolute -top-10 right-0"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-            <img
-              src={previewImage}
-              alt={t('landlordMessagesImagePreviewAlt')}
-              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
-            />
-          </div>
-        </div>
-      )}
+      <ImageLightboxModal imageUrl={previewImage} onClose={() => setPreviewImage(null)} />
     </div>
   )
 }
