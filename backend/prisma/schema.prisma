@@ -291,14 +291,14 @@ model UserIdentification {
 }
 
 model BankAccount {
-  id             String    @id @default(uuid()) @db.Uuid
-  userId         String    @unique @map("user_id") @db.Uuid
-  user           User      @relation(fields: [userId], references: [id])
-  bankName       String    @map("bank_name") @db.VarChar(255)
-  accountNumber  String    @map("account_number") @db.VarChar(50)
-  accountName    String    @map("account_name") @db.VarChar(255)
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime? @updatedAt @map("updated_at")
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @unique @map("user_id") @db.Uuid
+  user          User      @relation(fields: [userId], references: [id])
+  bankName      String    @map("bank_name") @db.VarChar(255)
+  accountNumber String    @map("account_number") @db.VarChar(50)
+  accountName   String    @map("account_name") @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime? @updatedAt @map("updated_at")
 
   @@map("bank_accounts")
 }
@@ -324,21 +324,22 @@ model BoardingHouse {
   updatedAt   DateTime?           @updatedAt @map("updated_at")
   deletedAt   DateTime            @map("deleted_at")
 
-  roomTypes           RoomType[]
-  rooms               Room[]
-  expenses            Expense[]
-  services            Service[]
-  deposits            Deposit[]
-  aiConversations     AiConversation[]
-  auditLogs           AuditLog[]
-  notifications       Notification[]
-  grievences          Grievance[]
-  jobPositions        JobPosition[]
-  employeeAssignments EmployeeAssignment[]
-  shifts              Shift[]
-  workSchedules       WorkSchedule[]
-  recurrencePatterns  RecurrencePattern[]
-  assets              Asset[]
+  roomTypes            RoomType[]
+  rooms                Room[]
+  expenses             Expense[]
+  services             Service[]
+  deposits             Deposit[]
+  aiConversations      AiConversation[]
+  auditLogs            AuditLog[]
+  notifications        Notification[]
+  grievences           Grievance[]
+  jobPositions         JobPosition[]
+  employeeAssignments  EmployeeAssignment[]
+  shifts               Shift[]
+  workSchedules        WorkSchedule[]
+  recurrencePatterns   RecurrencePattern[]
+  assets               Asset[]
+  assetMaintenanceLogs AssetMaintenanceLog[]
 
   @@map("boarding_houses")
 }
@@ -1011,25 +1012,50 @@ model OtpCode {
 }
 
 model Asset {
-  id              String         @id @default(uuid()) @db.Uuid
-  boardingHouseId String         @map("boarding_house_id") @db.Uuid
-  roomId          String?        @map("room_id") @db.Uuid
-  name            String         @db.VarChar(255)
-  category        String?        @db.VarChar(100)
-  location        String         @db.VarChar(255)
-  quantity        Int            @default(1)
-  condition       AssetCondition @default(good)
-  purchasePrice   Decimal?       @map("purchase_price") @db.Decimal(12, 2)
-  purchaseDate    DateTime?      @map("purchase_date")
-  imageUrl        String?        @map("image_url")
-  note            String?
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  id                String         @id @default(uuid()) @db.Uuid
+  boardingHouseId   String         @map("boarding_house_id") @db.Uuid
+  roomId            String?        @map("room_id") @db.Uuid
+  name              String         @db.VarChar(255)
+  category          String?        @db.VarChar(100)
+  location          String         @db.VarChar(255)
+  quantity          Int            @default(1)
+  condition         AssetCondition @default(good)
+  purchasePrice     Decimal?       @map("purchase_price") @db.Decimal(12, 2)
+  purchaseDate      DateTime?      @map("purchase_date")
+  depreciationYears Int            @default(5) @map("depreciation_years")
+  modelCode         String?        @map("model_code") @db.VarChar(100)
+  serialNumber      String?        @map("serial_number") @db.VarChar(100)
+  warrantyPeriod    String?        @map("warranty_period") @db.VarChar(100)
+  supplier          String?        @db.VarChar(255)
+  imageUrl          String?        @map("image_url")
+  note              String?
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
 
-  boardingHouse BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
-  room          Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  boardingHouse   BoardingHouse         @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+  room            Room?                 @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  maintenanceLogs AssetMaintenanceLog[]
 
   @@index([boardingHouseId])
   @@index([boardingHouseId, condition])
   @@map("assets")
+}
+
+model AssetMaintenanceLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  assetId         String   @map("asset_id") @db.Uuid
+  boardingHouseId String   @map("boarding_house_id") @db.Uuid
+  type            String   @db.VarChar(100)
+  description     String   @db.Text
+  cost            Decimal  @default(0) @db.Decimal(12, 2)
+  performer       String?  @db.VarChar(255)
+  performedAt     DateTime @default(now()) @map("performed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  asset         Asset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  boardingHouse BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([boardingHouseId])
+  @@map("asset_maintenance_logs")
 }

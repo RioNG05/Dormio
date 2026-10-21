@@ -1,10 +1,18 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common'
-import { Prisma, AssetCondition, AuditLogAction } from '@prisma'
+import { Prisma, AssetCondition, AuditLogAction, ContractStatus } from '@prisma'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { CreateAssetDto } from './dto/create-asset.dto'
 import { UpdateAssetDto } from './dto/update-asset.dto'
 import { QueryAssetsDto } from './dto/query-assets.dto'
-import { AssetItemDto, AssetsListResponseDto, AssetsSummaryDto } from './dto/asset-response.dto'
+import { CreateMaintenanceLogDto } from './dto/create-maintenance-log.dto'
+import {
+  AssetItemDto,
+  AssetsListResponseDto,
+  AssetsSummaryDto,
+  AssetTenantDto,
+  MaintenanceLogItemDto,
+  MaintenanceLogsListResponseDto,
+} from './dto/asset-response.dto'
 
 @Injectable()
 export class AssetsService {
@@ -23,23 +31,31 @@ export class AssetsService {
   /**
    * Maps Prisma Asset entity to AssetItemDto
    */
-  private mapToAssetDto(asset: {
-    id: string
-    boardingHouseId: string
-    roomId: string | null
-    name: string
-    category: string | null
-    location: string
-    quantity: number
-    condition: AssetCondition
-    purchasePrice: Prisma.Decimal | null
-    purchaseDate: Date | null
-    imageUrl: string | null
-    note: string | null
-    createdAt: Date
-    updatedAt: Date
-    room?: { id: string; roomNumber: string } | null
-  }): AssetItemDto {
+  private mapToAssetDto(
+    asset: {
+      id: string
+      boardingHouseId: string
+      roomId: string | null
+      name: string
+      category: string | null
+      location: string
+      quantity: number
+      condition: AssetCondition
+      purchasePrice: Prisma.Decimal | null
+      purchaseDate: Date | null
+      imageUrl: string | null
+      note: string | null
+      depreciationYears?: number | null
+      modelCode?: string | null
+      serialNumber?: string | null
+      warrantyPeriod?: string | null
+      supplier?: string | null
+      createdAt: Date
+      updatedAt: Date
+      room?: { id: string; roomNumber: string } | null
+    },
+    tenant?: AssetTenantDto | null,
+  ): AssetItemDto {
     const roomName = asset.room ? `Room ${asset.room.roomNumber}` : 'Common Area / Unassigned'
 
     return {
@@ -57,6 +73,12 @@ export class AssetsService {
       purchaseDate: asset.purchaseDate ? asset.purchaseDate.toISOString() : null,
       imageUrl: asset.imageUrl,
       note: asset.note,
+      depreciationYears: asset.depreciationYears ?? null,
+      modelCode: asset.modelCode ?? null,
+      serialNumber: asset.serialNumber ?? null,
+      warrantyPeriod: asset.warrantyPeriod ?? null,
+      supplier: asset.supplier ?? null,
+      tenant: tenant ?? null,
       createdAt: asset.createdAt.toISOString(),
       updatedAt: asset.updatedAt.toISOString(),
       boardingHouseId: asset.boardingHouseId,
@@ -98,6 +120,11 @@ export class AssetsService {
         purchaseDate: dto.purchaseDate ? new Date(dto.purchaseDate) : null,
         imageUrl: dto.imageUrl || null,
         note: dto.note || null,
+        depreciationYears: dto.depreciationYears ?? 5,
+        modelCode: dto.modelCode?.trim() || null,
+        serialNumber: dto.serialNumber?.trim() || null,
+        warrantyPeriod: dto.warrantyPeriod?.trim() || null,
+        supplier: dto.supplier?.trim() || null,
       },
       include: {
         room: {
@@ -164,15 +191,15 @@ export class AssetsService {
       where.condition = condition
     }
 
-    if (roomId) {
-      const lower = roomId.trim().toLowerCase()
-      if (lower === 'unassigned' || lower === 'none' || lower === 'null') {
+    if (roomId !== undefined) {
+      if (roomId === 'null' || roomId === '') {
         where.roomId = null
       } else {
         where.roomId = roomId
       }
     }
 
+    // Determine orderBy
     const orderBy: Prisma.AssetOrderByWithRelationInput = {}
     if (sortBy === 'name') {
       orderBy.name = sortOrder
@@ -180,8 +207,6 @@ export class AssetsService {
       orderBy.purchasePrice = sortOrder
     } else if (sortBy === 'condition') {
       orderBy.condition = sortOrder
-    } else if (sortBy === 'quantity') {
-      orderBy.quantity = sortOrder
     } else {
       orderBy.createdAt = sortOrder
     }
@@ -238,14 +263,45 @@ export class AssetsService {
   }
 
   /**
-   * UC-L-25: Get asset details by ID
+   * UC-L-25: Get asset details by ID (including room tenant resolution)
    */
   async getAssetDetail(boardingHouseId: string, id: string): Promise<AssetItemDto> {
     const asset = await this.prisma.asset.findFirst({
       where: { id, boardingHouseId },
       include: {
         room: {
-          select: { id: true, roomNumber: true },
+          select: {
+            id: true,
+            roomNumber: true,
+            contracts: {
+              where: { status: ContractStatus.active },
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+              select: {
+                id: true,
+                startDate: true,
+                endDate: true,
+                tenantContracts: {
+                  where: { isPrimary: true },
+                  take: 1,
+                  select: {
+                    tenant: {
+                      select: {
+                        id: true,
+                        username: true,
+                        phoneNumber: true,
+                        email: true,
+                        avatarUrl: true,
+                        userIdentification: {
+                          select: { fullName: true },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     })
@@ -254,7 +310,24 @@ export class AssetsService {
       throw new NotFoundException('Asset not found.')
     }
 
-    return this.mapToAssetDto(asset)
+    let tenantDto: AssetTenantDto | null = null
+    const activeContract = asset.room?.contracts?.[0]
+    const primaryTenantContract = activeContract?.tenantContracts?.[0]
+    if (primaryTenantContract?.tenant && activeContract) {
+      const t = primaryTenantContract.tenant
+      tenantDto = {
+        id: t.id,
+        name: t.userIdentification?.fullName || t.username || 'Khách thuê',
+        phone: t.phoneNumber || null,
+        email: t.email || null,
+        avatarUrl: t.avatarUrl || null,
+        contractId: activeContract.id,
+        startDate: activeContract.startDate ? activeContract.startDate.toISOString() : null,
+        endDate: activeContract.endDate ? activeContract.endDate.toISOString() : null,
+      }
+    }
+
+    return this.mapToAssetDto(asset, tenantDto)
   }
 
   /**
@@ -309,6 +382,12 @@ export class AssetsService {
             : undefined,
         imageUrl: dto.imageUrl !== undefined ? dto.imageUrl || null : undefined,
         note: dto.note !== undefined ? dto.note || null : undefined,
+        depreciationYears: dto.depreciationYears !== undefined ? dto.depreciationYears : undefined,
+        modelCode: dto.modelCode !== undefined ? dto.modelCode?.trim() || null : undefined,
+        serialNumber: dto.serialNumber !== undefined ? dto.serialNumber?.trim() || null : undefined,
+        warrantyPeriod:
+          dto.warrantyPeriod !== undefined ? dto.warrantyPeriod?.trim() || null : undefined,
+        supplier: dto.supplier !== undefined ? dto.supplier?.trim() || null : undefined,
       },
       include: {
         room: {
@@ -380,6 +459,162 @@ export class AssetsService {
     return {
       success: true,
       message: 'Asset deleted successfully.',
+    }
+  }
+
+  /**
+   * UC-L-25: Retrieve maintenance logs for an asset
+   */
+  async getMaintenanceLogs(
+    boardingHouseId: string,
+    assetId: string,
+  ): Promise<MaintenanceLogsListResponseDto> {
+    const asset = await this.prisma.asset.findFirst({
+      where: { id: assetId, boardingHouseId },
+      select: { id: true },
+    })
+
+    if (!asset) {
+      throw new NotFoundException('Asset not found.')
+    }
+
+    const logs = await this.prisma.assetMaintenanceLog.findMany({
+      where: { assetId, boardingHouseId },
+      orderBy: { performedAt: 'desc' },
+    })
+
+    const totalCost = logs.reduce((sum, log) => sum + Number(log.cost), 0)
+
+    return {
+      success: true,
+      data: logs.map(l => ({
+        id: l.id,
+        assetId: l.assetId,
+        boardingHouseId: l.boardingHouseId,
+        type: l.type,
+        description: l.description,
+        cost: Number(l.cost),
+        performer: l.performer,
+        performedAt: l.performedAt.toISOString(),
+        createdAt: l.createdAt.toISOString(),
+      })),
+      totalCost,
+    }
+  }
+
+  /**
+   * UC-L-25: Create a new maintenance / repair log for an asset
+   */
+  async createMaintenanceLog(
+    boardingHouseId: string,
+    assetId: string,
+    dto: CreateMaintenanceLogDto,
+    landlordId: string,
+  ): Promise<MaintenanceLogItemDto> {
+    this.logger.log(
+      `Landlord ${landlordId} creating maintenance log for asset ${assetId} in house ${boardingHouseId}`,
+    )
+
+    const asset = await this.prisma.asset.findFirst({
+      where: { id: assetId, boardingHouseId },
+    })
+
+    if (!asset) {
+      throw new NotFoundException('Asset not found.')
+    }
+
+    const performedAt = dto.performedAt ? new Date(dto.performedAt) : new Date()
+
+    const log = await this.prisma.$transaction(async tx => {
+      const createdLog = await tx.assetMaintenanceLog.create({
+        data: {
+          assetId,
+          boardingHouseId,
+          type: dto.type.trim(),
+          description: dto.description.trim(),
+          cost: dto.cost != null ? new Prisma.Decimal(dto.cost) : new Prisma.Decimal(0),
+          performer: dto.performer?.trim() || null,
+          performedAt,
+        },
+      })
+
+      if (dto.setCondition && dto.setCondition !== asset.condition) {
+        await tx.asset.update({
+          where: { id: assetId },
+          data: { condition: dto.setCondition },
+        })
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: AuditLogAction.create,
+          entityType: 'ASSET_MAINTENANCE_LOG',
+          entityId: createdLog.id,
+          userId: landlordId,
+          boardingHouseId,
+          ipAddress: '127.0.0.1',
+          newValue: createdLog,
+        },
+      })
+
+      return createdLog
+    })
+
+    return {
+      id: log.id,
+      assetId: log.assetId,
+      boardingHouseId: log.boardingHouseId,
+      type: log.type,
+      description: log.description,
+      cost: Number(log.cost),
+      performer: log.performer,
+      performedAt: log.performedAt.toISOString(),
+      createdAt: log.createdAt.toISOString(),
+    }
+  }
+
+  /**
+   * UC-L-25: Delete a maintenance log
+   */
+  async deleteMaintenanceLog(
+    boardingHouseId: string,
+    assetId: string,
+    logId: string,
+    landlordId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    this.logger.log(
+      `Landlord ${landlordId} deleting maintenance log ${logId} for asset ${assetId} in house ${boardingHouseId}`,
+    )
+
+    const existing = await this.prisma.assetMaintenanceLog.findFirst({
+      where: { id: logId, assetId, boardingHouseId },
+    })
+
+    if (!existing) {
+      throw new NotFoundException('Maintenance log not found.')
+    }
+
+    await this.prisma.$transaction(async tx => {
+      await tx.assetMaintenanceLog.delete({
+        where: { id: logId },
+      })
+
+      await tx.auditLog.create({
+        data: {
+          action: AuditLogAction.delete,
+          entityType: 'ASSET_MAINTENANCE_LOG',
+          entityId: logId,
+          userId: landlordId,
+          boardingHouseId,
+          ipAddress: '127.0.0.1',
+          oldValue: existing,
+        },
+      })
+    })
+
+    return {
+      success: true,
+      message: 'Maintenance log deleted successfully.',
     }
   }
 }

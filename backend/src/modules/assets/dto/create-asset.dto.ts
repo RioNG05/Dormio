@@ -105,4 +105,51 @@ export class CreateAssetDto {
   @IsOptional()
   @IsString()
   note?: string
+
+  @ApiPropertyOptional({
+    description: 'Depreciation lifespan in years',
+    example: 5,
+    default: 5,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  depreciationYears?: number
+
+  @ApiPropertyOptional({
+    description: 'Model code or model number of the equipment',
+    example: 'CU/CS-PU12XKH-8M',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  modelCode?: string
+
+  @ApiPropertyOptional({
+    description: 'Serial number of the unit',
+    example: 'SN-2024-AC-00192',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  serialNumber?: string
+
+  @ApiPropertyOptional({
+    description: 'Warranty duration or expiration detail',
+    example: '24 tháng chính hãng',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  warrantyPeriod?: string
+
+  @ApiPropertyOptional({
+    description: 'Supplier or vendor name',
+    example: 'Điện Máy Xanh Q.1',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  supplier?: string
 }
