@@ -36,6 +36,13 @@ export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
   onRemove?: (e: React.MouseEvent) => void
+  /**
+   * When true, disables hover styling, pointer cursor, and hover actions.
+   * Useful when using Chip as a non-interactive badge or static label.
+   */
+  preventHover?: boolean
+  /** Alias for preventHover */
+  disableHover?: boolean
 }
 
 /* -------------------------------------------------------------------------- */
@@ -43,37 +50,43 @@ export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 /* -------------------------------------------------------------------------- */
 
 const activeVariantStyles: Record<ChipVariant, string> = {
-  default:
-    'bg-primary text-white border-primary shadow-2xs shadow-primary/20 hover:bg-primary-hover hover:border-primary-hover',
-  neutral:
-    'bg-foreground text-background border-foreground shadow-2xs hover:opacity-90',
-  success:
-    'bg-success text-white border-success shadow-2xs hover:opacity-90',
-  warning:
-    'bg-warning text-white border-warning shadow-2xs hover:opacity-90',
-  danger:
-    'bg-danger text-white border-danger shadow-2xs hover:opacity-90',
-  info:
-    'bg-info text-white border-info shadow-2xs hover:opacity-90',
-  purple:
-    'bg-deposit text-white border-deposit shadow-2xs hover:opacity-90',
+  default: 'bg-primary text-white border-primary shadow-2xs shadow-primary/20',
+  neutral: 'bg-foreground text-background border-foreground shadow-2xs',
+  success: 'bg-success text-white border-success shadow-2xs',
+  warning: 'bg-warning text-white border-warning shadow-2xs',
+  danger: 'bg-danger text-white border-danger shadow-2xs',
+  info: 'bg-info text-white border-info shadow-2xs',
+  purple: 'bg-deposit text-white border-deposit shadow-2xs',
+}
+
+const activeHoverStyles: Record<ChipVariant, string> = {
+  default: 'hover:bg-primary-hover hover:border-primary-hover',
+  neutral: 'hover:opacity-90',
+  success: 'hover:opacity-90',
+  warning: 'hover:opacity-90',
+  danger: 'hover:opacity-90',
+  info: 'hover:opacity-90',
+  purple: 'hover:opacity-90',
 }
 
 const inactiveVariantStyles: Record<ChipVariant, string> = {
-  default:
-    'bg-surface text-muted border-line hover:bg-card-hover hover:text-foreground',
-  neutral:
-    'bg-surface text-muted border-line hover:bg-card-hover hover:text-foreground',
-  success:
-    'bg-success-soft text-success border-success-subtle hover:opacity-85',
-  warning:
-    'bg-warning-soft text-warning border-warning-subtle hover:opacity-85',
-  danger:
-    'bg-danger-soft text-danger border-danger-subtle hover:opacity-85',
-  info:
-    'bg-info-soft text-info border-info-subtle hover:opacity-85',
-  purple:
-    'bg-deposit-soft text-deposit border-deposit-subtle hover:opacity-85',
+  default: 'bg-surface text-muted border-line',
+  neutral: 'bg-surface text-muted border-line',
+  success: 'bg-success-soft text-success border-success-subtle',
+  warning: 'bg-warning-soft text-warning border-warning-subtle',
+  danger: 'bg-danger-soft text-danger border-danger-subtle',
+  info: 'bg-info-soft text-info border-info-subtle',
+  purple: 'bg-deposit-soft text-deposit border-deposit-subtle',
+}
+
+const inactiveHoverStyles: Record<ChipVariant, string> = {
+  default: 'hover:bg-card-hover hover:text-foreground',
+  neutral: 'hover:bg-card-hover hover:text-foreground',
+  success: 'hover:opacity-85',
+  warning: 'hover:opacity-85',
+  danger: 'hover:opacity-85',
+  info: 'hover:opacity-85',
+  purple: 'hover:opacity-85',
 }
 
 const sizeStyles: Record<ChipSize, string> = {
@@ -116,26 +129,34 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
       onRemove,
       className,
       disabled,
+      preventHover = false,
+      disableHover = false,
       children,
       type = 'button',
+      tabIndex,
       ...props
     },
     ref,
   ) => {
     const isSelected = Boolean(active ?? selected)
+    const isHoverPrevented = Boolean(preventHover || disableHover)
 
     return (
       <button
         ref={ref}
         type={type}
         disabled={disabled}
+        tabIndex={tabIndex ?? (isHoverPrevented ? -1 : undefined)}
         aria-pressed={isSelected}
         className={cn(
-          'inline-flex items-center justify-center font-bold border transition-all duration-150 cursor-pointer whitespace-nowrap select-none shrink-0',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+          'inline-flex items-center justify-center font-bold border transition-all duration-150 whitespace-nowrap select-none shrink-0',
+          isHoverPrevented
+            ? 'cursor-default pointer-events-none'
+            : 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
           'disabled:pointer-events-none disabled:opacity-50',
           sizeStyles[size],
           isSelected ? activeVariantStyles[variant] : inactiveVariantStyles[variant],
+          !isHoverPrevented && (isSelected ? activeHoverStyles[variant] : inactiveHoverStyles[variant]),
           className,
         )}
         {...props}
@@ -175,7 +196,7 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
               }
             }}
             className={cn(
-              'ml-0.5 -mr-1 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer',
+              'ml-0.5 -mr-1 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer pointer-events-auto',
               isSelected &&
                 (variant === 'neutral' ? 'hover:bg-white/25 dark:hover:bg-black/15' : 'hover:bg-white/25'),
             )}

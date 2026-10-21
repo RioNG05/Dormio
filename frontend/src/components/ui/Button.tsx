@@ -27,7 +27,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const iconSizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
-  xs: 'w-3.5 h-3.5',
+  xs: 'w-3 h-3',
   sm: 'w-3.5 h-3.5',
   md: 'w-4 h-4',
   lg: 'w-5 h-5',
@@ -38,12 +38,20 @@ const iconSizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
   'icon-lg': 'w-6 h-6',
 }
 
+const cleanIconClassName = (className?: string): string => {
+  if (!className) return ''
+  return className
+    .split(/\s+/)
+    .filter(cls => !/^(w-|h-|size-)/.test(cls))
+    .join(' ')
+}
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
       variant = 'primary',
-      size = 'md',
+      size = 'sm',
       isLoading = false,
       leftIcon,
       rightIcon,
@@ -57,6 +65,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
+    const isIconSize =
+      size === 'icon' || size === 'icon-xs' || size === 'icon-sm' || size === 'icon-lg'
+
     const buttonClasses = cn(
       'inline-flex items-center font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
       {
@@ -91,36 +102,43 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variant === 'white',
 
         // Sizes (default rounded applied per size if rounded !== 'full')
-        'h-6 px-2 text-xs gap-1.2 rounded-lg': size === 'xs',
+        'h-6 px-2.5 text-[11px] leading-none gap-2 rounded-lg': size === 'xs',
         'h-7 px-2.5 text-xs gap-1.5 rounded-lg': size === 'sm',
         'h-9 px-3 text-xs sm:text-sm gap-2 rounded-xl': size === 'md',
         'h-10 px-4 py-2 text-base sm:text-base gap-2 rounded-xl': size === 'lg',
         'h-12 px-6 text-base gap-2.5 rounded-2xl': size === 'xl',
-        'h-6 w-6 p-0 shrink-0 rounded-lg': size === 'icon-xs',
-        'h-8 w-8 p-0 shrink-0 rounded-lg': size === 'icon-sm',
-        'h-10 w-10 p-0 shrink-0 rounded-xl': size === 'icon',
-        'h-12 w-12 p-0 shrink-0 rounded-2xl': size === 'icon-lg',
+        'h-6 w-6 p-0 shrink-0 rounded-full': size === 'icon-xs',
+        'h-8 w-8 p-0 shrink-0 rounded-full': size === 'icon-sm',
+        'h-10 w-10 p-0 shrink-0 rounded-full': size === 'icon',
+        'h-12 w-12 p-0 shrink-0 rounded-full': size === 'icon-lg',
 
         // Full width & Pill shape
         'w-full': fullWidth === true,
         'w-full sm:w-auto': fullWidth === 'responsive',
-        'rounded-full': rounded === 'full',
+        'rounded-full': rounded === 'full' || isIconSize,
       },
       className,
     )
 
     const targetIconSize = iconSizeClasses[size] || 'w-4 h-4'
 
-    const renderIcon = (icon: React.ReactNode) => {
+    const renderIcon = (icon: React.ReactNode, isStandalone = false) => {
       if (!icon) return null
 
       if (React.isValidElement(icon)) {
         const iconElement = icon as React.ReactElement<{ className?: string }>
+        const baseClass = cleanIconClassName(iconElement.props?.className)
+        const cloned = React.cloneElement(iconElement, {
+          className: cn(baseClass, targetIconSize, 'shrink-0'),
+        })
+
+        if (isStandalone) {
+          return cloned
+        }
+
         return (
           <span className="shrink-0 inline-flex items-center justify-center">
-            {React.cloneElement(iconElement, {
-              className: cn(iconElement.props?.className, targetIconSize, 'shrink-0'),
-            })}
+            {cloned}
           </span>
         )
       }
@@ -137,13 +155,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             {isLoading ? loaderIcon : renderIcon(leftIcon)}
             {children}
           </span>
+        ) : isIconSize ? (
+          isLoading ? (
+            loaderIcon
+          ) : leftIcon ? (
+            renderIcon(leftIcon, true)
+          ) : React.isValidElement(children) ? (
+            renderIcon(children, true)
+          ) : (
+            children
+          )
         ) : (
           <>
             {isLoading ? loaderIcon : renderIcon(leftIcon)}
             {children}
           </>
         )}
-        {!isLoading && renderIcon(rightIcon)}
+        {!isLoading && !isIconSize && renderIcon(rightIcon)}
       </>
     )
 
