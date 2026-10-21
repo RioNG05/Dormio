@@ -44,6 +44,7 @@ import {
   ViewModeToggle,
   Modal,
   Text,
+  Switch,
 } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { formatCurrency, resolveErrorMessage, localizeDbEnum } from '@/utils'
@@ -724,25 +725,16 @@ export default function ServicesPage() {
                         </Text>
                       </div>
 
-                      <Button rounded="full"
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={e => handleToggleActive(service, e)}
-                        className="shrink-0"
+                      <Switch
+                        checked={isActive}
+                        onClick={(e: React.MouseEvent) => handleToggleActive(service, e)}
                         title={
                           isActive
                             ? t('landlordServicesClickToDisable')
                             : t('landlordServicesClickToEnable')
                         }
-                      >
-                        <span className="sr-only">{t('landlordServicesToggleStatusSr')}</span>
-                        <span
-                          className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                            isActive ? 'translate-x-5' : 'translate-x-0'
-                          }`}
-                        />
-                      </Button>
+                        srLabel={t('landlordServicesToggleStatusSr')}
+                      />
                     </div>
 
                     {/* Service Specification Table */}
@@ -923,24 +915,17 @@ export default function ServicesPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <Button rounded="full"
-                              type="button"
-                              variant="ghost"
+                            <Switch
                               size="sm"
-                              onClick={e => handleToggleActive(service, e)}
-                              className="shrink-0"
+                              checked={isActive}
+                              onClick={(e: React.MouseEvent) => handleToggleActive(service, e)}
                               title={
                                 isActive
-                              ? t('landlordServicesClickToDisable')
-                              : t('landlordServicesClickToEnable')
+                                  ? t('landlordServicesClickToDisable')
+                                  : t('landlordServicesClickToEnable')
                               }
-                            >
-                              <span
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-2xs ring-0 transition duration-200 ease-in-out ${
-                                  isActive ? 'translate-x-5' : 'translate-x-0'
-                                }`}
-                              />
-                            </Button>
+                              srLabel={t('landlordServicesToggleStatusSr')}
+                            />
                             <Text
                               as="span"
                               size="xs"

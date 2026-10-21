@@ -217,7 +217,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
                 <Text
                   as="span"
                   size={config.desc as any}
-                  color="muted"
+                  color="secondary"
                   className="mt-0.5"
                 >
                   {description}
@@ -232,7 +232,7 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           </Text>
         )}
         {!hasError && helperText && (
-          <Text as="span" size="xs" color="muted" className="mt-0.5">
+          <Text as="span" size="xs" color="secondary" className="mt-0.5">
             {helperText}
           </Text>
         )}
