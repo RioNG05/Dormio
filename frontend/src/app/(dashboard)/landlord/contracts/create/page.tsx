@@ -4,7 +4,7 @@ import React, { Suspense } from 'react'
 import { Building2, Loader2 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { ToastContainer } from '@/components/ui'
+import { ToastContainer, Breadcrumb } from '@/components/ui'
 import { ContractCreateProvider, useContractCreate } from './context/ContractCreateContext'
 import { ContractWizardProgress } from './components/ContractWizardProgress'
 import { Step1RoomTenant } from './components/Step1RoomTenant'
@@ -36,6 +36,13 @@ function CreateContractPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        backHref="/landlord/contracts"
+        backLabel={t('landlordContractDetailBack')}
+        current={t('landlordContractsCreateTitle')}
+      />
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-line shadow-2xs">
         <div>

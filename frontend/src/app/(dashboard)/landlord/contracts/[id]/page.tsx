@@ -44,6 +44,7 @@ import {
   ToastType,
   Modal,
   Text,
+  Breadcrumb,
 } from '@/components/ui'
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -528,17 +529,16 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        backHref="/landlord/contracts"
+        backLabel={t('landlordContractDetailBack')}
+        current={`${t('landlordContractDetailRoomPrefix')} ${contract.room}`}
+      />
+
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Link
-            href="/landlord/contracts"
-            className="p-2 -ml-2 text-muted hover:bg-card-hover hover:text-foreground rounded-full transition-colors cursor-pointer shrink-0"
-            title={t('landlordContractDetailBack')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">

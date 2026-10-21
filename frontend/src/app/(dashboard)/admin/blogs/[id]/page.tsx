@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { postService, PublicPostListing } from '@/services/post.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb } from '@/components/ui'
 import {
   ArrowLeft,
   Newspaper,
@@ -425,17 +425,11 @@ export default function AdminPostDetailPage() {
     <div className="space-y-6 pb-16">
       {/* Top Breadcrumb & Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs">
-          <Link
-            href="/admin/blogs"
-            className="inline-flex items-center gap-1 font-bold text-muted hover:text-orange-600 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>{t('adminBlogsDetailBack')}</span>
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-muted truncate max-w-[260px]">{post.title}</span>
-        </div>
+        <Breadcrumb
+          backHref="/admin/blogs"
+          backLabel={t('adminBlogsDetailBack')}
+          current={post.title}
+        />
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">

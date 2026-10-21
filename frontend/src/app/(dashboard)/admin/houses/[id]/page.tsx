@@ -9,7 +9,7 @@ import {
   AdminBoardingHouseDetail,
   UserProfileDetails,
 } from '@/services/boarding-house.service'
-import { Button, TextareaInput } from '@/components/ui'
+import { Button, TextareaInput, Breadcrumb } from '@/components/ui'
 import {
   Building2,
   MapPin,
@@ -225,50 +225,37 @@ export default function AdminBoardingHouseDetailPage() {
         </div>
       )}
 
-      {/* Breadcrumb & Navigation Bar */}
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        items={[
+          { label: t('adminHouseDetailBreadcrumbAdmin'), href: '/admin' },
+          { label: t('adminHouseDetailBreadcrumbHouses'), href: '/admin/boarding-houses' },
+          { label: house.name },
+        ]}
+      />
+
+      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-muted mb-1 font-medium">
-            <Link href="/admin" className="hover:text-orange-600 transition-colors">
-              {t('adminHouseDetailBreadcrumbAdmin')}
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-muted" />
-            <Link href="/admin/boarding-houses" className="hover:text-orange-600 transition-colors">
-              {t('adminHouseDetailBreadcrumbHouses')}
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-muted" />
-            <span className="text-foreground font-bold truncate max-w-[200px]">{house.name}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/boarding-houses"
-              className="p-2 rounded-xl border border-line bg-card hover:bg-card-hover text-muted transition-colors cursor-pointer"
-              title={t('adminHouseDetailBackTooltip')}
+          <h1 className="text-xl font-black text-foreground tracking-tight flex items-center gap-2.5">
+            <span>{house.name}</span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-2xs ${
+                house.status === 'active'
+                  ? 'bg-success-soft text-success border border-emerald-300'
+                  : house.status === 'locked'
+                    ? 'bg-danger-soft text-danger border border-red-300 ring-2 ring-red-200'
+                    : 'bg-warning-soft text-warning border border-amber-300'
+              }`}
             >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div>
-              <h1 className="text-xl font-black text-foreground tracking-tight flex items-center gap-2.5">
-                <span>{house.name}</span>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-2xs ${
-                    house.status === 'active'
-                      ? 'bg-success-soft text-success border border-emerald-300'
-                      : house.status === 'locked'
-                        ? 'bg-danger-soft text-danger border border-red-300 ring-2 ring-red-200'
-                        : 'bg-warning-soft text-warning border border-amber-300'
-                  }`}
-                >
-                  {house.status === 'active'
-                    ? t('adminHouseDetailStatusActive')
-                    : house.status === 'locked'
-                      ? t('adminHouseDetailStatusSuspended')
-                      : t('adminHouseDetailStatusReported')}
-                </span>
-              </h1>
-              <p className="text-xs text-muted font-mono mt-0.5">ID: {house.id}</p>
-            </div>
-          </div>
+              {house.status === 'active'
+                ? t('adminHouseDetailStatusActive')
+                : house.status === 'locked'
+                  ? t('adminHouseDetailStatusSuspended')
+                  : t('adminHouseDetailStatusReported')}
+            </span>
+          </h1>
+          <p className="text-xs text-muted font-mono mt-0.5">ID: {house.id}</p>
         </div>
 
         {/* Top Actions */}

@@ -21,13 +21,12 @@ import {
   AlertTriangle,
   QrCode,
   Printer,
-  CheckCircle2,
   Copy,
   Check,
   Phone,
   Mail,
-  ShieldCheck,
   Building,
+  Eye,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
@@ -47,7 +46,12 @@ import {
   TextareaInput,
   Modal,
   Text,
+  Chip,
+  Breadcrumb,
 } from '@/components/ui'
+import { ImageUpload } from '@/components/ImageUpload'
+import { uploadImageToBackend } from '@/services/upload.service'
+import { cn } from '@/lib/utils'
 import { resolveErrorMessage, formatCurrency, formatDate } from '@/utils'
 
 export default function AssetDetailPage() {
@@ -68,7 +72,6 @@ export default function AssetDetailPage() {
   // Maintenance Logs State
   const [maintenanceLogs, setMaintenanceLogs] = useState<AssetMaintenanceLog[]>([])
   const [totalMaintenanceCost, setTotalMaintenanceCost] = useState<number>(0)
-  const [isLoadingLogs, setIsLoadingLogs] = useState<boolean>(false)
 
   // Maintenance Action Status Updating
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false)
@@ -89,7 +92,10 @@ export default function AssetDetailPage() {
   const [editSerialNumber, setEditSerialNumber] = useState('')
   const [editWarrantyPeriod, setEditWarrantyPeriod] = useState('')
   const [editSupplier, setEditSupplier] = useState('')
+  const [editImageUrl, setEditImageUrl] = useState('')
+  const [editImagePreview, setEditImagePreview] = useState('')
   const [editNote, setEditNote] = useState('')
+  const [inspectImageUrl, setInspectImageUrl] = useState<string | null>(null)
 
   // 2. Maintenance Log Modal (Create / Finish Maintenance)
   const [isLogModalOpen, setIsLogModalOpen] = useState(false)
@@ -109,11 +115,7 @@ export default function AssetDetailPage() {
   const [logToDelete, setLogToDelete] = useState<AssetMaintenanceLog | null>(null)
   const [isDeletingLog, setIsDeletingLog] = useState(false)
 
-  // 5. QR Code / Tag Modal
-  const [showTagModal, setShowTagModal] = useState(false)
-  const [hasCopiedCode, setHasCopiedCode] = useState(false)
-
-  // 6. Unsaved Changes Confirmation Modal (Rule #10)
+  // 5. Unsaved Changes Confirmation Modal (Rule #10)
   const [showConfirmCloseEditModal, setShowConfirmCloseEditModal] = useState(false)
   const [showConfirmCloseLogModal, setShowConfirmCloseLogModal] = useState(false)
 
@@ -358,6 +360,8 @@ export default function AssetDetailPage() {
     setEditSerialNumber(asset.serialNumber || '')
     setEditWarrantyPeriod(asset.warrantyPeriod || '')
     setEditSupplier(asset.supplier || '')
+    setEditImageUrl(asset.imageUrl || '')
+    setEditImagePreview('')
     setEditNote(asset.note || '')
     setIsEditModalOpen(true)
   }
@@ -376,6 +380,8 @@ export default function AssetDetailPage() {
       editSerialNumber !== (asset.serialNumber || '') ||
       editWarrantyPeriod !== (asset.warrantyPeriod || '') ||
       editSupplier !== (asset.supplier || '') ||
+      editImageUrl !== (asset.imageUrl || '') ||
+      Boolean(editImagePreview) ||
       editNote !== (asset.note || '')
     )
   }, [
@@ -391,6 +397,8 @@ export default function AssetDetailPage() {
     editSerialNumber,
     editWarrantyPeriod,
     editSupplier,
+    editImageUrl,
+    editImagePreview,
     editNote,
   ])
 
@@ -405,6 +413,24 @@ export default function AssetDetailPage() {
   const handleDiscardAndCloseEdit = () => {
     setShowConfirmCloseEditModal(false)
     setIsEditModalOpen(false)
+    setEditImageUrl('')
+    setEditImagePreview('')
+  }
+
+  const handleEditImageSelect = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const base64 = e.target?.result as string
+      if (base64) {
+        setEditImagePreview(base64)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleEditImageRemove = () => {
+    setEditImagePreview('')
+    setEditImageUrl('')
   }
 
   const handleSaveEditAsset = async () => {
@@ -419,6 +445,25 @@ export default function AssetDetailPage() {
     setIsSavingEdit(true)
 
     try {
+      let finalImageUrl: string | null = null
+
+      // If user selected a new preview image (base64 data), upload it to Cloudinary now upon submit
+      if (editImagePreview) {
+        try {
+          const uploadRes = await uploadImageToBackend(editImagePreview, 'dormio/assets')
+          if (uploadRes?.url) {
+            finalImageUrl = uploadRes.url
+          }
+        } catch (uploadErr: any) {
+          console.error('Image upload failed on submit:', uploadErr)
+          toast.error(uploadErr?.message || 'Không thể tải ảnh lên máy chủ. Vui lòng thử lại.')
+          setIsSavingEdit(false)
+          return
+        }
+      } else {
+        finalImageUrl = editImageUrl.trim() ? editImageUrl.trim() : null
+      }
+
       const res = await assetService.updateAsset(activeBuilding.id, String(id), {
         name: editName.trim(),
         category: editCategory,
@@ -432,6 +477,7 @@ export default function AssetDetailPage() {
         serialNumber: editSerialNumber.trim() || undefined,
         warrantyPeriod: editWarrantyPeriod.trim() || undefined,
         supplier: editSupplier.trim() || undefined,
+        imageUrl: finalImageUrl,
         note: editNote.trim() || undefined,
       })
 
@@ -441,6 +487,7 @@ export default function AssetDetailPage() {
 
       setIsEditModalOpen(false)
       setShowConfirmCloseEditModal(false)
+      setEditImagePreview('')
       toast.success(t('landlordAssetsToastEditSuccess'))
     } catch (err: unknown) {
       const errorMsg = resolveErrorMessage(err, tErrors, t('landlordAssetsSaveFailed'))
@@ -464,17 +511,6 @@ export default function AssetDetailPage() {
       toast.error(errorMsg)
       setIsDeleting(false)
     }
-  }
-
-  // ─── Actions: Copy Asset Tag URL ──────────────────────────────────────────
-  const handleCopyTagCode = () => {
-    if (!asset) return
-    const textToCopy = `${asset.code} - ${asset.name} (${asset.roomName})`
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      setHasCopiedCode(true)
-      toast.success(t('landlordAssetsDetailTagCopySuccess'))
-      setTimeout(() => setHasCopiedCode(false), 2000)
-    })
   }
 
   // Loading state
@@ -501,7 +537,7 @@ export default function AssetDetailPage() {
           <p className="text-xs text-muted font-medium">{t('landlordAssetsEmptySub')}</p>
         </div>
         <Link href="/landlord/assets">
-          <Button variant="primary" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
+          <Button variant="primary" size="sm" leftIcon={<ArrowLeft />}>
             {t('landlordAssetsDetailBack')}
           </Button>
         </Link>
@@ -521,56 +557,73 @@ export default function AssetDetailPage() {
   const isReady = asset.condition === 'new'
   const isBroken = asset.condition === 'damaged'
 
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-    `DORMIO:${asset.boardingHouseId}:${asset.id}:${asset.code}`,
-  )}`
-
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-muted flex-wrap">
-        <Link
-          href="/landlord/assets"
-          className="hover:text-primary flex items-center gap-1 transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> {t('landlordAssetsDetailBack')}
-        </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-line shrink-0" />
-        <span className="text-foreground font-extrabold truncate">
-          {asset.name} (SKU: {asset.code})
-        </span>
-      </div>
+      <Breadcrumb
+        backHref="/landlord/assets"
+        backLabel={t('landlordAssetsDetailBack')}
+        current={`${asset.name} (SKU: ${asset.code})`}
+      />
 
       {/* Main Asset Header Card */}
       <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
         <div className="flex items-start gap-3.5 sm:gap-4 min-w-0 flex-1">
-          <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-2xl bg-accent-soft border border-accent-subtle text-accent flex items-center justify-center shrink-0 shadow-2xs">
-            <Package className="w-7 sm:w-8 h-7 sm:h-8" />
-          </div>
+          {asset.imageUrl ? (
+            <div
+              onClick={() => setInspectImageUrl(asset.imageUrl || null)}
+              className="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl overflow-hidden border border-line bg-surface shrink-0 shadow-2xs relative group cursor-pointer"
+              title={t('landlordAssetsInspectImage')}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={asset.imageUrl}
+                alt={asset.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                <Eye className="w-5 h-5" />
+              </div>
+            </div>
+          ) : (
+            <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-accent-soft border border-accent-subtle text-accent flex items-center justify-center shrink-0 shadow-2xs">
+              <Package className="w-8 h-8" />
+            </div>
+          )}
 
           <div className="space-y-2 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-surface text-foreground/90 border border-line">
+              <Chip
+                size="sm"
+                variant="neutral"
+                preventHover
+              >
                 {getCategoryLabel(asset.category)}
-              </span>
-              <span className="text-[10px] sm:text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/30 font-mono">
+              </Chip>
+              <Chip
+                size="sm"
+                variant="default"
+                preventHover
+              >
                 SKU: {asset.code}
-              </span>
-              <span
-                className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold border ${
+              </Chip>
+              <Chip
+                size="sm"
+                variant={
                   isGood
-                    ? 'bg-primary/10 text-primary border-primary/30'
+                    ? 'default'
                     : isReady
-                      ? 'bg-info-soft text-info border-info-subtle'
+                      ? 'info'
                       : isMaintenance
-                        ? 'bg-warning-soft text-warning border-warning-subtle animate-pulse'
+                        ? 'warning'
                         : isBroken
-                          ? 'bg-danger-soft text-danger border-danger-subtle'
-                          : 'bg-surface text-muted border-line'
-                }`}
+                          ? 'danger'
+                          : 'neutral'
+                }
+                preventHover
               >
                 {getStatusLabel(asset.condition)}
-              </span>
+              </Chip>
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-snug">
@@ -599,11 +652,10 @@ export default function AssetDetailPage() {
               {/* Resolved Active Tenant from Room */}
               {asset.roomId && (
                 <div
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
-                    asset.tenant
-                      ? 'bg-success-soft border-success-subtle text-success'
-                      : 'bg-surface border-line text-muted'
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${asset.tenant
+                    ? 'bg-success-soft border-success-subtle text-success'
+                    : 'bg-surface border-line text-muted'
+                    }`}
                 >
                   <User className="w-4 h-4 shrink-0" />
                   {asset.tenant ? (
@@ -637,13 +689,13 @@ export default function AssetDetailPage() {
           {/* Notice / Finish Maintenance Action Button */}
           <Button
             variant={isMaintenance ? 'success' : 'warning'}
-            size="sm"
+            size="md"
             onClick={handleInitiateMaintenanceWorkflow}
             leftIcon={
               isUpdatingStatus ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Wrench className="w-4 h-4" />
+                <Wrench />
               )
             }
             isLoading={isUpdatingStatus}
@@ -654,22 +706,12 @@ export default function AssetDetailPage() {
               : t('landlordAssetsDetailBtnSendMaintenance')}
           </Button>
 
-          {/* QR / Inventory Tag Modal Trigger */}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowTagModal(true)}
-            leftIcon={<QrCode className="w-4 h-4 text-primary" />}
-          >
-            {t('landlordAssetsBtnTagQr')}
-          </Button>
-
           {/* Edit Asset Button */}
           <Button
             variant="secondary"
-            size="sm"
+            size="md"
             onClick={handleOpenEditModal}
-            leftIcon={<Edit3 className="w-4 h-4 text-primary" />}
+            leftIcon={<Edit3 className="text-primary" />}
           >
             {t('landlordAssetsBtnEdit')}
           </Button>
@@ -677,9 +719,9 @@ export default function AssetDetailPage() {
           {/* Delete Asset Button */}
           <Button
             variant="danger"
-            size="sm"
+            size="md"
             onClick={() => setShowDeleteModal(true)}
-            leftIcon={<Trash2 className="w-4 h-4" />}
+            leftIcon={<Trash2 />}
           >
             {t('landlordAssetsBtnDelete')}
           </Button>
@@ -933,7 +975,7 @@ export default function AssetDetailPage() {
                   </h2>
                 </div>
                 <Button
-                  variant="primary"
+                  variant="warning"
                   size="sm"
                   onClick={() => {
                     setLogType('routine')
@@ -944,7 +986,7 @@ export default function AssetDetailPage() {
                     setLogSetCondition('')
                     setIsLogModalOpen(true)
                   }}
-                  leftIcon={<Plus className="w-3.5 h-3.5" />}
+                  leftIcon={<Plus />}
                 >
                   {t('landlordAssetsDetailAddMaintenanceBtn')}
                 </Button>
@@ -1034,7 +1076,7 @@ export default function AssetDetailPage() {
       <Modal
         isOpen={isEditModalOpen}
         onClose={handleRequestCloseEditModal}
-        size="lg"
+        size="3xl"
         zIndex={50}
         showCloseButton={true}
       >
@@ -1181,6 +1223,21 @@ export default function AssetDetailPage() {
                 className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none resize-none"
               />
             </div>
+
+            {/* Asset Photo Upload (1 image - deferred preview until submit) */}
+            <div className="sm:col-span-2 pt-1">
+              <ImageUpload
+                label={t('landlordAssetsFieldImage')}
+                helperText={t('landlordAssetsFieldImageHelper')}
+                value={editImagePreview || editImageUrl}
+                onFileSelect={handleEditImageSelect}
+                onRemove={handleEditImageRemove}
+                aspectRatio="video"
+                disabled={isSavingEdit}
+                showInspectButton={Boolean(editImagePreview || editImageUrl)}
+                onInspect={url => setInspectImageUrl(url)}
+              />
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer className="flex items-center justify-end gap-3 p-4 bg-surface border-t border-line">
@@ -1197,6 +1254,7 @@ export default function AssetDetailPage() {
             size="sm"
             onClick={handleSaveEditAsset}
             isLoading={isSavingEdit}
+            disabled={isSavingEdit}
           >
             {t('landlordAssetsBtnSave')}
           </Button>
@@ -1207,7 +1265,7 @@ export default function AssetDetailPage() {
       <Modal
         isOpen={isLogModalOpen}
         onClose={() => setIsLogModalOpen(false)}
-        size="md"
+        size="lg"
         zIndex={50}
         showCloseButton={true}
       >
@@ -1239,7 +1297,8 @@ export default function AssetDetailPage() {
           />
 
           <TextareaInput
-            label={`${t('landlordAssetsDetailLogDesc')} *`}
+            label={`${t('landlordAssetsDetailLogDesc')}`}
+            required
             rows={2}
             placeholder={t('landlordAssetsDetailLogDescPh')}
             value={logDescription}
@@ -1439,69 +1498,7 @@ export default function AssetDetailPage() {
         </Modal.Body>
       </Modal>
 
-      {/* ─── MODAL 5: ASSET TAG & QR CODE MODAL ────────────────────────────── */}
-      <Modal
-        isOpen={showTagModal}
-        onClose={() => setShowTagModal(false)}
-        size="md"
-        zIndex={50}
-        showCloseButton={true}
-      >
-        <Modal.Header
-          title={t('landlordAssetsTagModalTitle')}
-          description={t('landlordAssetsDetailPrintTagDesc')}
-          icon={<QrCode className="w-5 h-5 text-primary" />}
-        />
-        <Modal.Body className="p-4 sm:p-6 space-y-4">
-          <div className="p-4 sm:p-6 bg-card border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center space-y-3.5 text-center shadow-xs">
-            <div className="flex items-center gap-1.5 text-primary font-black text-xs uppercase tracking-wider">
-              <Building className="w-4 h-4" />
-              <span>{activeBuilding?.name || 'Dormio Boarding House'}</span>
-            </div>
-
-            <div className="p-3 bg-white rounded-2xl shadow-sm border border-line">
-              <img
-                src={qrImageUrl}
-                alt={`QR code for ${asset.code}`}
-                width={160}
-                height={160}
-                className="w-36 h-36 object-contain"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <span className="text-xs font-mono font-black text-primary bg-primary/10 px-3 py-1 rounded-md border border-primary/20">
-                {asset.code}
-              </span>
-              <h3 className="font-black text-base text-foreground pt-1">{asset.name}</h3>
-              <p className="text-xs text-muted font-bold">{asset.roomName}</p>
-            </div>
-
-            <p className="text-[11px] text-muted max-w-xs">{t('landlordAssetsTagScanNote')}</p>
-          </div>
-        </Modal.Body>
-        <Modal.Footer className="flex items-center justify-between p-4 bg-surface border-t border-line">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyTagCode}
-            leftIcon={hasCopiedCode ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
-          >
-            {hasCopiedCode ? t('landlordAssetsDetailTagCopySuccess') : asset.code}
-          </Button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => window.print()}
-            leftIcon={<Printer className="w-4 h-4" />}
-          >
-            {t('landlordAssetsTagPrintBtn')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* ─── MODAL 6: CONFIRM CLOSE MODAL FOR EDIT (Rule #10) ──────────────── */}
+      {/* ─── MODAL 5: CONFIRM CLOSE MODAL FOR EDIT (Rule #10) ──────────────── */}
       <Modal
         isOpen={showConfirmCloseEditModal}
         onClose={() => setShowConfirmCloseEditModal(false)}
@@ -1541,6 +1538,29 @@ export default function AssetDetailPage() {
               {t('landlordAssetsConfirmCloseDiscard')}
             </Button>
           </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* ─── MODAL 6: IMAGE LIGHTBOX INSPECT MODAL ─────────────────────────── */}
+      <Modal
+        isOpen={Boolean(inspectImageUrl)}
+        onClose={() => setInspectImageUrl(null)}
+        size="lg"
+        zIndex={80}
+      >
+        <Modal.Header
+          title={t('landlordAssetsInspectImage')}
+          onClose={() => setInspectImageUrl(null)}
+        />
+        <Modal.Body className="p-4 flex items-center justify-center bg-black/5 dark:bg-black/40">
+          {inspectImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={inspectImageUrl}
+              alt={asset.name}
+              className="max-h-[75vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+            />
+          )}
         </Modal.Body>
       </Modal>
     </div>

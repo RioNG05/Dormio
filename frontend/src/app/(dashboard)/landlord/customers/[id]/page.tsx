@@ -34,6 +34,7 @@ import {
   TextareaInput,
   Modal,
   Text,
+  Breadcrumb,
 } from '@/components/ui'
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -416,17 +417,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6 pb-24 w-full">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        backHref="/landlord/customers"
+        backLabel={t('landlordCustomersBackToList')}
+        current={customer.name}
+      />
+
       {/* Top Header Bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Link
-            href="/landlord/customers"
-            className="p-2 -ml-2 text-muted hover:bg-card-hover hover:text-foreground rounded-full transition-colors cursor-pointer shrink-0"
-            title={t('landlordCustomersBackToList')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
               {customer.name.charAt(0)}

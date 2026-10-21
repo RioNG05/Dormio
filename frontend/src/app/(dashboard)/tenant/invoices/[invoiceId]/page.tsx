@@ -27,7 +27,7 @@ import {
   FileQuestion,
   AlertCircle,
 } from 'lucide-react'
-import { Button, NumberInput, TextInput } from '@/components/ui'
+import { Button, NumberInput, TextInput, Breadcrumb } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
@@ -566,28 +566,17 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-16 animate-in fade-in duration-300 max-w-5xl mx-auto">
       {/* Top Breadcrumb & Navigation */}
+      <Breadcrumb
+        backHref="/tenant/invoices"
+        backLabel={t('invoicesTitle')}
+        current={t('paymentPageTitle')}
+      />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={handleBackClick}
-            title={t('backToInvoices')}
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground/90" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-              <Link href="/tenant/invoices" className="hover:text-foreground transition-colors">
-                {t('invoicesTitle')}
-              </Link>
-              <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-foreground/90 font-bold">{t('paymentPageTitle')}</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mt-0.5">
-              {t('paymentPageTitle')}
-            </h1>
-          </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight mt-0.5">
+            {t('paymentPageTitle')}
+          </h1>
         </div>
 
         {/* Invoice Summary Pill */}

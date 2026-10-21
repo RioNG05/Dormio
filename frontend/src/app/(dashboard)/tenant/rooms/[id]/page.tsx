@@ -24,6 +24,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { Breadcrumb } from '@/components/ui'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 
@@ -169,16 +170,14 @@ export default function TenantRoomDetailPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-in fade-in duration-300">
-      {/* Top Breadcrumb / Back Button */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/tenant"
-          className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground transition-colors bg-card px-3.5 py-2 rounded-xl border border-line shadow-sm"
-        >
-          <ArrowLeft className="w-4 h-4 text-primary" />
-          <span>{t('tenantBackToDashboard')}</span>
-        </Link>
-        <span className="px-3 py-1 bg-success-soft text-success text-[11px] font-bold rounded-full border border-success-subtle flex items-center gap-1.5">
+      {/* Top Breadcrumb & Status */}
+      <div className="flex items-center justify-between gap-4">
+        <Breadcrumb
+          backHref="/tenant"
+          backLabel={t('tenantBackToDashboard')}
+          current={`${room.roomNumber} - ${house.name}`}
+        />
+        <span className="px-3 py-1 bg-success-soft text-success text-[11px] font-bold rounded-full border border-success-subtle flex items-center gap-1.5 shrink-0">
           <ShieldCheck className="w-3.5 h-3.5 text-success" />
           {t('tenantActiveTenancyBadge')}
         </span>

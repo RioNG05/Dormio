@@ -31,7 +31,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { getRooms, type RoomItem } from '@/services/room.service'
 import { getMyBoardingHouses } from '@/services/boarding-house.service'
 import { formatCurrency } from '@/utils'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb } from '@/components/ui'
 
 function CreateListingForm() {
   const router = useRouter()
@@ -335,26 +335,28 @@ function CreateListingForm() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        backHref="/landlord/listings"
+        backLabel={t('landlordListingsCreateBackBtn')}
+        current={t('landlordListingsCreatePageTitle')}
+        onBack={e => {
+          if (isDirty) {
+            e.preventDefault()
+            setIsConfirmCloseModalOpen(true)
+          }
+        }}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between bg-card p-6 rounded-3xl border border-line shadow-sm">
-        <div className="flex items-center gap-4">
-          <Button rounded="full"
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleCancelClick}
-            title={t('landlordListingsCreateBackBtn')}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-black text-foreground tracking-tight">
-              {t('landlordListingsCreatePageTitle')}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted mt-0.5">
-              {t('landlordListingsCreatePageSubtitle')}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">
+            {t('landlordListingsCreatePageTitle')}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted mt-0.5">
+            {t('landlordListingsCreatePageSubtitle')}
+          </p>
         </div>
 
         {/* Quota Badge */}

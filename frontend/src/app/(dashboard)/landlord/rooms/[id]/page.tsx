@@ -43,6 +43,7 @@ import {
   Form,
   Text,
   Modal,
+  Breadcrumb,
 } from '@/components/ui'
 import {
   getRoomDashboard,
@@ -929,16 +930,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        backHref="/landlord/rooms"
+        backLabel={t('landlordRoomDetailBack')}
+        current={`${t('landlordRoomDetailRoomPrefix')} ${room.roomNumber}`}
+      />
+
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link
-            href="/landlord/rooms"
-            className="p-2 -ml-2 text-muted hover:bg-card-hover hover:text-foreground rounded-full transition-colors cursor-pointer shrink-0"
-            title={t('landlordRoomDetailBack')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
             <Text as="h1" variant="heading" size="2xl" weight="black" color="default" className="tracking-tight sm:text-2xl">
               {t('landlordRoomDetailRoomPrefix')} {room.roomNumber}

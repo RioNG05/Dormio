@@ -25,6 +25,7 @@ import {
   TextareaInput,
   Modal,
   Text,
+  Breadcrumb,
 } from '@/components/ui'
 import {
   meterReadingService,
@@ -391,15 +392,17 @@ export default function LandlordRoomMeterReadingPage({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
-      {/* Top Navigation Back Link */}
-      <Button
-        variant="outline"
-        size="md"
-        onClick={() => router.push(`/landlord/rooms/${roomId}`)}
-        leftIcon={<ArrowLeft className="w-4 h-4" />}
-      >
-        {t('landlordMeterRecordBackToRoom')}
-      </Button>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        items={[
+          { label: t('landlordRoomDetailBack'), href: '/landlord/rooms' },
+          {
+            label: `${t('landlordRoomDetailRoomPrefix')} ${roomNumber || roomId}`,
+            href: `/landlord/rooms/${roomId}`,
+          },
+          { label: t('landlordMeterRecordTitle', { room: roomNumber || roomId }) },
+        ]}
+      />
 
       {/* Header Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-800 rounded-3xl p-6 sm:p-7 text-white shadow-xl">
