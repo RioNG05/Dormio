@@ -1438,6 +1438,7 @@ export const viLandlord = {
     landlordContractsExportPrintBtn: "In hợp đồng",
     landlordContractsExportPrintTooltip: "In trực tiếp theo định dạng văn bản chuẩn",
     landlordContractsExportRep: "Đại diện thuê: {tenantName}",
+    landlordContractsExportId: "Mã HĐ: {contractId}",
     landlordContractsExportTitle: "Văn Bản Hợp Đồng Thuê Phòng {roomNumber}",
     landlordContractsExportToastDownloadSuccess: "Đã tải xuống tệp hợp đồng!",
     landlordContractsExportToastExportFailed: "Không thể xuất tài liệu hợp đồng.",

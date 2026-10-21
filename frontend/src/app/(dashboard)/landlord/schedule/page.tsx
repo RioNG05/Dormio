@@ -592,10 +592,10 @@ export default function WorkforceSchedulePage() {
         label: t('landlordScheduleStatusAssigned'),
         value: summary.scheduledCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[150px]',
         labelColor: 'brand',
         valueColor: 'brand',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -733,7 +733,7 @@ export default function WorkforceSchedulePage() {
             </Button>
 
             <div className="flex items-center gap-2 pl-2 text-sm font-bold text-foreground">
-              <CalendarIcon className="w-4 h-4 text-[#2AC1BC]" />
+              <CalendarIcon className="w-4 h-4 text-primary" />
               <span>{weekRangeLabel}</span>
             </div>
           </div>
@@ -798,7 +798,7 @@ export default function WorkforceSchedulePage() {
       {/* ─── Main Content Views ─────────────────────────────────────────── */}
       {isLoading ? (
         <div className="bg-card border border-line rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
           <p className="text-xs font-bold text-muted">
             {t('landlordScheduleLoading')}
           </p>
@@ -816,7 +816,7 @@ export default function WorkforceSchedulePage() {
                 key={day.dateString}
                 className={`flex flex-col bg-card border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${
                   day.isToday
-                    ? 'border-[#2AC1BC] ring-2 ring-[#2AC1BC]/20 bg-[#2AC1BC]/[0.01]'
+                    ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.01]'
                     : 'border-line'
                 }`}
               >
@@ -824,7 +824,7 @@ export default function WorkforceSchedulePage() {
                 <div
                   className={`p-3 text-center border-b transition-colors ${
                     day.isToday
-                      ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 text-[#1fa8a3]'
+                      ? 'bg-primary/10 border-primary/30 text-[#1fa8a3]'
                       : 'bg-surface/80 border-line text-foreground/90'
                   }`}
                 >
@@ -833,7 +833,7 @@ export default function WorkforceSchedulePage() {
                       {day.label}
                     </span>
                     {day.isToday && (
-                      <span className="px-1.5 py-0.2 text-[9px] font-black uppercase bg-[#2AC1BC] text-white rounded-full">
+                      <span className="px-1.5 py-0.2 text-[9px] font-black uppercase bg-primary text-white rounded-full">
                         {t('landlordScheduleBtnToday')}
                       </span>
                     )}
@@ -864,7 +864,7 @@ export default function WorkforceSchedulePage() {
                         className={`p-3 rounded-xl border text-left transition-all relative group ${
                           schedule.status === 'canceled'
                             ? 'bg-surface/60 border-line opacity-60 line-through'
-                            : 'bg-card border-line hover:border-[#2AC1BC]/60 hover:shadow-md'
+                            : 'bg-card border-line hover:border-primary/60 hover:shadow-md'
                         }`}
                       >
                         {/* Status & Recurring Badge */}
@@ -944,7 +944,7 @@ export default function WorkforceSchedulePage() {
         <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           {schedules.length === 0 ? (
             <div className="py-20 text-center flex flex-col items-center justify-center">
-              <div className="w-14 h-14 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-center text-[#2AC1BC] mb-3">
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-3">
                 <CalendarIcon className="w-7 h-7" />
               </div>
               <h3 className="text-base font-extrabold text-foreground mb-1">
@@ -1085,7 +1085,7 @@ export default function WorkforceSchedulePage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
                   <Repeat className="w-5 h-5" />
                 </div>
                 <div>
@@ -1153,7 +1153,7 @@ export default function WorkforceSchedulePage() {
                           key={s.employeeId}
                           className={`p-2 rounded-lg border text-xs transition-all ${
                             isChecked
-                              ? 'bg-card border-[#2AC1BC] text-foreground shadow-sm'
+                              ? 'bg-card border-primary text-foreground shadow-sm'
                               : 'bg-transparent border-transparent hover:bg-card-hover text-muted'
                           }`}
                         >
@@ -1526,7 +1526,7 @@ export default function WorkforceSchedulePage() {
                 className="p-4 bg-surface border border-line rounded-2xl space-y-3"
               >
                 <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <Plus className="w-3.5 h-3.5 text-primary" />
                   <span>{t('landlordShiftsAddNewBtn')}</span>
                 </div>
 
@@ -1640,7 +1640,7 @@ export default function WorkforceSchedulePage() {
           >
             <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -1715,14 +1715,14 @@ export default function WorkforceSchedulePage() {
                     }}
                     className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
                       editScope === 'single'
-                        ? 'bg-card border-[#2AC1BC] shadow-xs'
+                        ? 'bg-card border-primary shadow-xs'
                         : 'bg-surface border-line hover:bg-card-hover'
                     }`}
                   >
                     <div
                       className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
                         editScope === 'single'
-                          ? 'border-[#2AC1BC] bg-[#2AC1BC]'
+                          ? 'border-primary bg-primary'
                           : 'border-line bg-card'
                       }`}
                     >

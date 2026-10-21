@@ -32,10 +32,10 @@ export default function DemoControlBar() {
         size="sm"
         rounded="full"
         onClick={() => setIsDismissed(false)}
-        className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-[#2AC1BC] border border-zinc-700 shadow-lg text-[10px] font-bold hover:bg-zinc-800"
+        className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-primary border border-zinc-700 shadow-lg text-[10px] font-bold hover:bg-zinc-800"
         title="Mở lại bảng thử nghiệm"
       >
-        <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" />
+        <Sparkles className="w-3.5 h-3.5 fill-primary" />
         <Text as="span" size="3xs" weight="bold" color="inherit">
           Thử nghiệm
         </Text>
@@ -88,7 +88,7 @@ export default function DemoControlBar() {
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-[#2AC1BC] text-white flex items-center justify-center font-black">
+              <div className="w-7 h-7 rounded-xl bg-primary text-white flex items-center justify-center font-black">
                 <Sparkles className="w-4 h-4 fill-white" />
               </div>
               <div>
@@ -151,7 +151,7 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('tenant', '/tenant')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'tenant'
-                    ? 'border-[#FF6B35] bg-[#FF6B35] text-white shadow-md'
+                    ? 'border-accent bg-accent text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
@@ -166,7 +166,7 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('staff', '/staff')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'staff'
-                    ? 'border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md'
+                    ? 'border-primary bg-primary text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
@@ -235,8 +235,8 @@ export default function DemoControlBar() {
         className="px-4 py-3 bg-zinc-950/95 hover:bg-zinc-900 text-white rounded-full border border-zinc-700 shadow-2xl flex items-center gap-2.5 transition-all cursor-pointer hover:scale-105 group"
       >
         <span className="relative flex h-2.5 w-2.5 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2AC1BC] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2AC1BC]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
         </span>
 
         <Text as="span" size="xs" weight="black" color="brand">

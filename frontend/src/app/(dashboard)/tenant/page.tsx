@@ -320,7 +320,7 @@ export default function TenantOverviewPage() {
               onClick={() => setIsContractOpen(true)}
               className="sm:text-sm"
             >
-              <FileSignature className="w-4 h-4 text-[#2AC1BC]" />
+              <FileSignature className="w-4 h-4 text-primary" />
               <span>{t('viewContract')}</span>
             </Button>
           )}
@@ -343,7 +343,7 @@ export default function TenantOverviewPage() {
       {latestInvoice && (
         <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#FF6B35]/30">
+            <div className="w-11 h-11 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
@@ -394,7 +394,7 @@ export default function TenantOverviewPage() {
                       <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                         {t('roomNumber')} {roomInfo.roomNumber}
                       </h2>
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-extrabold uppercase">
+                      <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-extrabold uppercase">
                         {roomInfo.roomType}
                       </span>
                     </div>
@@ -411,7 +411,7 @@ export default function TenantOverviewPage() {
                   <div className="text-[11px] font-extrabold text-muted uppercase tracking-wider">
                     {t('rentPrice')}
                   </div>
-                  <div className="text-2xl font-black text-[#2AC1BC] mt-0.5">
+                  <div className="text-2xl font-black text-primary mt-0.5">
                     {formatCurrency(roomInfo.rentPrice, locale)}
                     <span className="text-xs font-normal text-muted"> {t('monthUnit')}</span>
                   </div>
@@ -422,7 +422,7 @@ export default function TenantOverviewPage() {
               <div className="px-6 sm:px-8 py-4 bg-surface/70 border-b border-line flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-muted flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+                    <Calendar className="w-4 h-4 text-primary" />
                     {t('contractDuration')}: {roomInfo.contractStart} &ndash; {roomInfo.contractEnd}
                   </span>
                   <span className="text-success">
@@ -431,7 +431,7 @@ export default function TenantOverviewPage() {
                 </div>
                 <div className="w-full bg-line rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-[#2AC1BC] h-2 rounded-full transition-all duration-500"
+                    className="bg-primary h-2 rounded-full transition-all duration-500"
                     style={{
                       width: `${Math.round(
                         (roomInfo.daysElapsed / Math.max(1, roomInfo.totalDays)) * 100,
@@ -458,7 +458,7 @@ export default function TenantOverviewPage() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                       <Phone className="w-4 h-4" />
                     </div>
                     <div>
@@ -466,7 +466,7 @@ export default function TenantOverviewPage() {
                       <div className="flex items-center gap-2 mt-0.5">
                         <a
                           href={`tel:${roomInfo.phone}`}
-                          className="text-sm font-bold text-[#2AC1BC] hover:underline"
+                          className="text-sm font-bold text-primary hover:underline"
                         >
                           {roomInfo.phoneDisplay}
                         </a>
@@ -506,7 +506,7 @@ export default function TenantOverviewPage() {
 
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl bg-card-hover text-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <AlertCircle className="w-4 h-4 text-[#2AC1BC]" />
+                      <AlertCircle className="w-4 h-4 text-primary" />
                     </div>
                     <div>
                       <div className="text-xs font-semibold text-muted">
@@ -531,7 +531,7 @@ export default function TenantOverviewPage() {
                       key={idx}
                       className="px-3 py-1.5 rounded-xl bg-surface border border-line text-xs font-semibold text-foreground/90 flex items-center gap-1.5"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                       <span>{item}</span>
                     </span>
                   ))}
@@ -566,7 +566,7 @@ export default function TenantOverviewPage() {
                 </h3>
                 <p className="text-xs text-muted mt-0.5">{t('servicesSubtitle')}</p>
               </div>
-              <span className="text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
                 {t('activeServices', { count: services.length })}
               </span>
             </div>
@@ -605,7 +605,7 @@ export default function TenantOverviewPage() {
           <div className="rounded-3xl border border-line bg-card shadow-xs flex flex-col h-fit">
             <div className="px-5 py-3.5 border-b border-line flex items-center justify-between bg-surface/50 rounded-t-3xl">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                <div className="p-1.5 rounded-xl bg-primary/10 text-primary">
                   <Speaker className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm sm:text-base font-black text-foreground">
@@ -631,7 +631,7 @@ export default function TenantOverviewPage() {
                     <div
                       key={item.id}
                       onClick={() => setSelectedNotice(item)}
-                      className="p-3 rounded-2xl bg-surface/70 border border-line hover:border-[#2AC1BC]/50 hover:bg-card hover:shadow-xs transition-all cursor-pointer space-y-1.5 group"
+                      className="p-3 rounded-2xl bg-surface/70 border border-line hover:border-primary/50 hover:bg-card hover:shadow-xs transition-all cursor-pointer space-y-1.5 group"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] sm:text-[11px] font-bold text-muted flex items-center gap-1">
@@ -643,7 +643,7 @@ export default function TenantOverviewPage() {
                           {item.tag}
                         </span>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-foreground leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                      <h4 className="text-xs sm:text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1">
                         {item.title}
                       </h4>
                       <p className="text-[11px] sm:text-xs text-muted leading-relaxed line-clamp-1">
@@ -729,7 +729,7 @@ export default function TenantOverviewPage() {
           <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-line">
             <div className="p-6 border-b border-line flex items-center justify-between bg-surface/60">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <FileSignature className="w-5 h-5" />
                 </div>
                 <div>
@@ -802,15 +802,15 @@ export default function TenantOverviewPage() {
                 </h4>
                 <div className="space-y-2 text-xs text-muted">
                   <p className="flex items-start gap-2">
-                    <span className="font-bold text-[#2AC1BC]">1.</span>
+                    <span className="font-bold text-primary">1.</span>
                     <span>{t('term1')}</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="font-bold text-[#2AC1BC]">2.</span>
+                    <span className="font-bold text-primary">2.</span>
                     <span>{t('term2')}</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="font-bold text-[#2AC1BC]">3.</span>
+                    <span className="font-bold text-primary">3.</span>
                     <span>{t('term3')}</span>
                   </p>
                 </div>
@@ -821,7 +821,7 @@ export default function TenantOverviewPage() {
                   <tbody className="divide-y divide-line">
                     <tr className="bg-surface/50">
                       <td className="px-4 py-2.5 font-bold text-muted">{t('rentPrice')}</td>
-                      <td className="px-4 py-2.5 font-black text-[#2AC1BC]">
+                      <td className="px-4 py-2.5 font-black text-primary">
                         {formatCurrency(roomInfo.rentPrice, locale)} {t('monthUnit')}
                       </td>
                     </tr>
@@ -846,14 +846,14 @@ export default function TenantOverviewPage() {
               {roomInfo.documentUrl && (
                 <div className="p-3 bg-surface border border-line rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-foreground/90">
-                    <FileText className="w-4 h-4 text-[#2AC1BC]" />
+                    <FileText className="w-4 h-4 text-primary" />
                     <span>{t('contractAttachedFile')}</span>
                   </div>
                   <a
                     href={roomInfo.documentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-line hover:bg-card-hover rounded-xl text-xs font-bold text-[#2AC1BC] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-line hover:bg-card-hover rounded-xl text-xs font-bold text-primary transition-colors cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>{t('contractDownload')}</span>

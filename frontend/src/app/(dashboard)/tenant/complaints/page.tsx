@@ -305,7 +305,7 @@ export default function TenantAdminComplaintsPage() {
       {/* Top Header with Protected Escrow Badge */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft border border-primary-subtle text-[#2AC1BC] text-[11px] font-bold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft border border-primary-subtle text-primary text-[11px] font-bold mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>{t('tenantEscrowProtectedBadge')}</span>
           </div>
@@ -322,7 +322,7 @@ export default function TenantAdminComplaintsPage() {
             resetForm()
             setIsModalOpen(true)
           }}
-          className="sm:w-auto from-[#2AC1BC] to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] sm:text-sm shrink-0"
+          className="sm:w-auto from-primary to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] sm:text-sm shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>{t('tenantBtnNewComplaint')}</span>
@@ -426,7 +426,7 @@ export default function TenantAdminComplaintsPage() {
               }}
               placeholder={t('tenantSearchGrievancePlaceholder')}
               leftIcon={<Search className="w-4 h-4 text-muted" />}
-              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-primary transition-colors"
               containerClassName="w-full sm:w-64 space-y-0"
             />
           </div>
@@ -445,7 +445,7 @@ export default function TenantAdminComplaintsPage() {
                 <div
                   key={item.id}
                   onClick={() => setSelectedGrievance(item)}
-                  className="rounded-2xl border border-line bg-card p-5 shadow-xs hover:shadow-md hover:border-[#2AC1BC]/50 transition-all duration-200 flex flex-col justify-between cursor-pointer space-y-4 group"
+                  className="rounded-2xl border border-line bg-card p-5 shadow-xs hover:shadow-md hover:border-primary/50 transition-all duration-200 flex flex-col justify-between cursor-pointer space-y-4 group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -453,14 +453,14 @@ export default function TenantAdminComplaintsPage() {
                         <span className="text-[11px] font-mono text-muted font-bold bg-card-hover px-2 py-0.5 rounded-md">
                           {item.id}
                         </span>
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-accent-soft text-[#FF6B35] border border-accent-subtle">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-accent-soft text-accent border border-accent-subtle">
                           {t('tenantBqtDormioBadge')}
                         </span>
                       </div>
                       {getPriorityBadge(item.priority)}
                     </div>
 
-                    <h3 className="text-sm font-bold text-foreground group-hover:text-[#2AC1BC] transition-colors line-clamp-2 leading-snug">
+                    <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {item.title}
                     </h3>
 
@@ -567,7 +567,7 @@ export default function TenantAdminComplaintsPage() {
           >
             <div className="p-5 border-b border-line flex items-center justify-between bg-surface/60">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -637,7 +637,7 @@ export default function TenantAdminComplaintsPage() {
                   onChange={e => setTitle(e.target.value)}
                   placeholder={t('tenantFieldTitlePlaceholder')}
                   containerClassName="space-y-0"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-line font-medium focus:outline-none focus:border-[#2AC1BC] text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-line font-medium focus:outline-none focus:border-primary text-xs"
                 />
               </div>
 
@@ -652,7 +652,7 @@ export default function TenantAdminComplaintsPage() {
                   onChange={e => setDescription(e.target.value)}
                   placeholder={t('tenantFieldDescPlaceholder')}
                   containerClassName="space-y-0"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-line font-medium focus:outline-none focus:border-[#2AC1BC] text-xs leading-relaxed"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-line font-medium focus:outline-none focus:border-primary text-xs leading-relaxed"
                 />
               </div>
 

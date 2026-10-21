@@ -23,7 +23,7 @@ export default function RoleDataTab() {
         <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-line pb-4 gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
@@ -140,13 +140,13 @@ export default function RoleDataTab() {
                   href={`https://maps.google.com/?q=${encodeURIComponent('123 Nguyen Hue Ben Nghe District 1 HCMC')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 px-3 py-1.5 rounded-xl border border-[#2AC1BC]/20 transition-all"
+                  className="hover:underline inline-flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20 transition-all"
                 >
-                  <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                  <MapPin className="w-4 h-4 text-primary shrink-0" />
                   <Text as="span" size="xs" weight="bold" color="brand">
                     {t('guestProfileTenantMockRoomAddress')}
                   </Text>
-                  <ExternalLink className="w-3.5 h-3.5 text-[#2AC1BC] ml-1 shrink-0" />
+                  <ExternalLink className="w-3.5 h-3.5 text-primary ml-1 shrink-0" />
                 </a>
               </div>
             </div>
@@ -158,7 +158,7 @@ export default function RoleDataTab() {
                 size="lg"
                 leftIcon={<Home className="w-4 h-4 shrink-0" />}
                 rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-[#2AC1BC]/25 hover:scale-105"
+                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
               >
                 {t('guestProfileTenantRoomDashboard')}
               </Button>
@@ -262,7 +262,7 @@ export default function RoleDataTab() {
               </Text>
             </div>
             <div className="w-full h-3 bg-line rounded-full overflow-hidden">
-              <div className="h-full bg-[#2AC1BC] rounded-full" style={{ width: '66%' }} />
+              <div className="h-full bg-primary rounded-full" style={{ width: '66%' }} />
             </div>
           </div>
 
@@ -284,7 +284,7 @@ export default function RoleDataTab() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <a
                   href="tel:0901234567"
-                  className="px-4 py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white rounded-xl transition-all shadow-md shadow-[#FF6B35]/20 inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+                  className="px-4 py-2.5 bg-accent hover:bg-[#ff5518] text-white rounded-xl transition-all shadow-md shadow-accent/20 inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
                 >
                   <Phone className="w-3.5 h-3.5 shrink-0" />
                   <Text as="span" size="xs" weight="extrabold" color="white">
@@ -296,7 +296,7 @@ export default function RoleDataTab() {
                   type="button"
                   variant="dark"
                   size="sm"
-                  leftIcon={<FileText className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />}
+                  leftIcon={<FileText className="w-3.5 h-3.5 text-primary shrink-0" />}
                   onClick={() => toast.info(t('guestProfileAlertDownloadPdf'))}
                   className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700"
                 >

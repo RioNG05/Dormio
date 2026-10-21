@@ -273,11 +273,11 @@ export default function CustomersPage() {
         label: t('landlordCustomersStatExpiringShort'),
         value: expiringCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
-        labelClassName: 'text-[#FF6B35]',
+          'px-3 py-2 bg-accent/10 hover:bg-accent/20 border-accent/30 lg:w-[130px]',
+        labelClassName: 'text-accent',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
       },
@@ -737,9 +737,9 @@ function AlertModal({
       btnColor: 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20',
     },
     info: {
-      bgColor: 'bg-accent-soft text-[#FF6B35] border-accent-subtle',
-      icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: 'bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20',
+      bgColor: 'bg-accent-soft text-accent border-accent-subtle',
+      icon: <Info className="w-7 h-7 text-accent" />,
+      btnColor: 'bg-accent hover:bg-[#e05a2b] text-white shadow-accent/20',
     },
   }[type]
 

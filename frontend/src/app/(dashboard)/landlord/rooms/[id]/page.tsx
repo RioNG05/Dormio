@@ -855,7 +855,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         </Text>
         <Link
           href="/landlord/rooms"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors"
         >
           <Text as="span" size="xs" weight="bold" color="white">
             &larr; {t('landlordRoomDetailBack')}
@@ -945,9 +945,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </Text>
             <span
               className={`px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${isOccupied
-                ? 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30'
+                ? 'text-primary bg-primary/10 border-primary/30'
                 : isMaintenance
-                  ? 'text-[#FF6B35] bg-[#FF6B35]/10 border-[#FF6B35]/30'
+                  ? 'text-accent bg-accent/10 border-accent/30'
                   : isReserved
                     ? 'text-purple-600 bg-purple-500/10 border-purple-500/30'
                     : isVacant
@@ -1058,13 +1058,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="bg-card rounded-2xl border border-line shadow-xs overflow-hidden">
             <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-line">
               <Text as="h2" size="xs" weight="black" color="default" className="uppercase tracking-wider flex items-center gap-2 sm:text-sm">
-                <User className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <User className="w-4 h-4 text-primary" />{' '}
                 {t('landlordRoomDetailCurrentTenantTitle')}
               </Text>
               {isOccupied && currentContract && (
                 <Link
                   href={`/landlord/contracts/${currentContract.id}`}
-                  className="px-3 py-2 text-[11px] font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-2 text-[11px] font-bold text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <Text as="span" size="xs" weight="bold" color="brand">
@@ -1077,9 +1077,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <div className="p-3.5 sm:p-5">
               {room.tenant || primaryTenant ? (
                 <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 sm:p-4 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/20">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 sm:p-4 bg-primary/5 rounded-2xl border border-primary/20">
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#2AC1BC] text-white flex items-center justify-center shadow-md shrink-0">
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-md shrink-0">
                         <Text as="span" size="base" weight="black" color="white" className="sm:text-lg">
                           {(primaryTenant?.fullName || room.tenant || 'K').charAt(0)}
                         </Text>
@@ -1213,7 +1213,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* GLOBAL FILTER BAR FOR MONTH/YEAR */}
           <div className="bg-card p-3.5 sm:p-4 rounded-2xl border border-line shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#2AC1BC]" />
+              <Filter className="w-4 h-4 text-primary" />
               <Text as="span" size="xs" weight="black" color="default">
                 {t('landlordRoomDetailFilterPeriodLabel')}
               </Text>
@@ -1245,7 +1245,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-3">
               <Text as="h2" size="xs" weight="black" color="default" className="uppercase tracking-wider flex items-center gap-2 sm:text-sm">
-                <Receipt className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <Receipt className="w-4 h-4 text-primary" />{' '}
                 {t('landlordRoomDetailInvoicesTitle')}
               </Text>
               {unpaidInvoice && unpaidFinancials && (
@@ -1470,7 +1470,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <Text as="h2" weight="black" color="default" className="text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
-                <History className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <History className="w-4 h-4 text-primary" />{' '}
                 {t('landlordRoomDetailRentalHistoryTitle').replace(
                   '{count}',
                   String(dashboardData?.rentalHistory?.length || (room?.tenant ? 1 : 0)),
@@ -1489,13 +1489,13 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div
                       key={hist.id}
                       className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isActive
-                        ? 'bg-[#2AC1BC]/5 border-[#2AC1BC]/30'
+                        ? 'bg-primary/5 border-primary/30'
                         : 'bg-surface border-line'
                         }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-[#2AC1BC]' : 'bg-line'
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-primary' : 'bg-line'
                             }`}
                         >
                           <Text as="span" size="xs" weight="black" className={isActive ? 'text-white' : 'text-foreground/90'}>
@@ -1561,7 +1561,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="bg-card rounded-2xl border border-line shadow-xs p-3.5 sm:p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-line pb-3">
               <Text as="h2" weight="black" color="default" className="text-xs sm:text-sm flex items-center gap-2">
-                <History className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <History className="w-4 h-4 text-primary" />{' '}
                 {t('landlordRoomDetailMeterHistoryTitle')}
               </Text>
 
@@ -1868,7 +1868,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="flex justify-between items-center border-b border-line pb-3">
                   <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2">
-                    <Wrench className="w-4 h-4 text-[#FF6B35]" />{' '}
+                    <Wrench className="w-4 h-4 text-accent" />{' '}
                     {t('landlordRoomDetailMaintenanceTitle').replace(
                       '{count}',
                       String(maintenanceHistory.length),
@@ -2070,7 +2070,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* COMPACT SIDEBAR 4 ROOM METRIC CARDS */}
           <div className="bg-card rounded-2xl border border-line shadow-xs p-4 space-y-3">
             <Text as="h2" weight="black" color="default" className="flex items-center gap-2 text-xs uppercase tracking-wider border-b border-line pb-2">
-              <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
+              <Home className="w-4 h-4 text-primary" />{' '}
               <Text as="span" color="inherit">
                 {t('landlordRoomDetailSpecsTitle').replace('{roomNumber}', room.roomNumber)}
               </Text>
@@ -2143,7 +2143,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* Giá dịch vụ định kỳ với Badge màu sắc */}
           <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
             <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-line pb-3">
-              <Banknote className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordRoomDetailServicesTitle')}
+              <Banknote className="w-4 h-4 text-primary" /> {t('landlordRoomDetailServicesTitle')}
             </Text>
             <div className="space-y-2.5">
               {(editServices && editServices.length > 0 ? editServices : defaultRoomServices).map(
@@ -2187,7 +2187,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               return (
                 <>
                   <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-line pb-3">
-                    <Sparkles className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                    <Sparkles className="w-4 h-4 text-primary" />{' '}
                     {t('landlordRoomDetailAmenitiesTitle').replace(
                       '{count}',
                       String(amenitiesList.length),
@@ -2214,7 +2214,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           {/* Quản lý trạng thái phòng */}
           <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
             <Text as="h2" weight="black" color="default" size="sm" className="flex items-center gap-2 border-b border-line pb-3">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
+              <Building2 className="w-4 h-4 text-primary" />{' '}
               {t('landlordRoomDetailRoomStatusTitle')}
             </Text>
 
@@ -2237,7 +2237,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <Button
                   size="sm"
                   variant={isOccupied ? 'primary' : 'secondary'}
-                  className={isOccupied ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white' : ''}
+                  className={isOccupied ? 'bg-primary hover:bg-[#25ad87] text-white' : ''}
                   onClick={() => handleUpdateStatus('Đang thuê')}
                 >
                   <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2248,7 +2248,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 <Button
                   size="sm"
                   variant={isMaintenance ? 'primary' : 'secondary'}
-                  className={isMaintenance ? 'bg-[#FF6B35] hover:bg-[#e05a2b] text-white' : ''}
+                  className={isMaintenance ? 'bg-accent hover:bg-[#e05a2b] text-white' : ''}
                   onClick={() => handleUpdateStatus('Bảo trì')}
                 >
                   <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2384,7 +2384,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           )}
           description={t('landlordRoomDetailModalEditRoomDesc')}
           icon={
-            <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <Edit className="w-5 h-5" />
             </div>
           }
@@ -2440,7 +2440,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   variant={editAmenities.includes(item) ? 'primary' : 'outline'}
                   className={
                     editAmenities.includes(item)
-                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/40 hover:bg-[#2AC1BC]/20 text-xs'
+                      ? 'bg-primary/10 text-primary border border-primary/40 hover:bg-primary/20 text-xs'
                       : 'bg-card text-muted hover:bg-card-hover text-xs'
                   }
                   onClick={() =>
@@ -2461,7 +2461,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="border border-line rounded-xl p-4 bg-surface/50 space-y-3">
             <div className="flex justify-between items-center mb-2">
               <Text as="h3" weight="bold" color="default" size="xs" className="uppercase tracking-wider flex items-center gap-1.5">
-                <Banknote className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <Banknote className="w-4 h-4 text-primary" />{' '}
                 {t('landlordRoomDetailRecurringServicesTitle')}
               </Text>
               <Text as="span" size="2xs" color="secondary" weight="medium">
@@ -2619,11 +2619,11 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             room.roomNumber,
           )}
           icon={
-            <div className="p-2 bg-[#FF6B35] text-white rounded-xl">
+            <div className="p-2 bg-accent text-white rounded-xl">
               <Wrench className="w-5 h-5" />
             </div>
           }
-          className="bg-[#FF6B35]/10"
+          className="bg-accent/10"
         />
 
         <Modal.Body className="space-y-4">

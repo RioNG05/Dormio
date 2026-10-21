@@ -105,7 +105,7 @@ export default function LandlordDashboardPage() {
   if (isBuildingsLoading || buildings.length === 0 || !activeBuilding?.id) {
     return (
       <div className="py-24 text-center text-muted space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
         <Text size="xs" weight="semibold" color="subtle">
           {buildings.length === 0
             ? t('landlordOverviewRedirectingSetup')
@@ -167,7 +167,7 @@ export default function LandlordDashboardPage() {
 
       {isLoading && !overview ? (
         <div className="py-16 text-center text-muted space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <Text size="xs" weight="semibold" color="subtle">{t('landlordOverviewLoadingOverview')}</Text>
         </div>
       ) : (
@@ -191,7 +191,7 @@ export default function LandlordDashboardPage() {
             </div>
 
             {/* 2. OCCUPIED ROOMS */}
-            <div className="px-3.5 py-3 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
                 <Text as="span" variant="overline" size="3xs" weight="black" color="brand" className="tracking-wider block">
                   {t('landlordOverviewStatOccupied')}
@@ -199,13 +199,13 @@ export default function LandlordDashboardPage() {
                 <Text as="div" size="lg" weight="black" color="brand" className="leading-tight mt-0.5">
                   {rooms.occupiedRooms} {t('landlordOverviewRoomUnitCapital')}
                 </Text>
-                <Text as="span" size="3xs" weight="bold" className="text-[#2AC1BC]/80 block">
+                <Text as="span" size="3xs" weight="bold" className="text-primary/80 block">
                   {rooms.occupiedRooms > 0
                     ? t('landlordOverviewStatActiveContract')
                     : t('landlordOverviewNoTenant')}
                 </Text>
               </div>
-              <Users className="w-5 h-5 text-[#2AC1BC] shrink-0 opacity-80" />
+              <Users className="w-5 h-5 text-primary shrink-0 opacity-80" />
             </div>
 
             {/* 3. PHÒNG TRỐNG */}
@@ -225,21 +225,21 @@ export default function LandlordDashboardPage() {
             </div>
 
             {/* 4. BẢO TRÌ */}
-            <div className="px-3.5 py-3 bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-accent/10 border border-accent/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <Text as="span" variant="overline" size="3xs" weight="black" className="text-[#FF6B35] tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-accent tracking-wider block">
                   {t('landlordOverviewStatMaintenance')}
                 </Text>
-                <Text as="div" size="lg" weight="black" className="text-[#FF6B35] leading-tight mt-0.5">
+                <Text as="div" size="lg" weight="black" className="text-accent leading-tight mt-0.5">
                   {rooms.maintenanceRooms} {t('landlordOverviewRoomUnitCapital')}
                 </Text>
-                <Text as="span" size="3xs" weight="bold" className="text-[#FF6B35]/80 block">
+                <Text as="span" size="3xs" weight="bold" className="text-accent/80 block">
                   {rooms.maintenanceRooms > 0
                     ? t('landlordOverviewHandlingIssues')
                     : t('landlordOverviewNoIssues')}
                 </Text>
               </div>
-              <Wrench className="w-5 h-5 text-[#FF6B35] shrink-0 opacity-80" />
+              <Wrench className="w-5 h-5 text-accent shrink-0 opacity-80" />
             </div>
 
             {/* 5. RESERVED DEPOSITS */}
@@ -268,7 +268,7 @@ export default function LandlordDashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-2.5">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-[#2AC1BC]" />
+                    <TrendingUp className="w-4 h-4 text-primary" />
                     <Text as="h2" variant="heading" size="sm" weight="black" className="sm:text-base">
                       {t('landlordOverviewMonthlyRevenueTitle')}
                     </Text>
@@ -428,16 +428,16 @@ export default function LandlordDashboardPage() {
               <div>
                 <div className="flex items-center justify-between border-b border-line pb-2.5">
                   <Text as="span" size="xs" weight="black" color="default" className="flex items-center gap-1.5">
-                    <BarChart2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                    <BarChart2 className="w-4 h-4 text-primary" />{' '}
                     {t('landlordOverviewCashflowOverview')}
                   </Text>
-                  <Text as="span" variant="badge" size="3xs" weight="black" color="brand" className="px-2 py-0.5 bg-[#2AC1BC]/10 rounded-full">
+                  <Text as="span" variant="badge" size="3xs" weight="black" color="brand" className="px-2 py-0.5 bg-primary/10 rounded-full">
                     {t('landlordOverviewCollectionRate', { rate: collection.collectionRate })}
                   </Text>
                 </div>
 
                 <div className="space-y-3 mt-3">
-                  <div className="p-3.5 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/15 space-y-1">
+                  <div className="p-3.5 bg-primary/5 rounded-2xl border border-primary/15 space-y-1">
                     <Text as="span" variant="overline" size="3xs" weight="extrabold" color="subtle" className="block">
                       {t('landlordOverviewCurrentMonthRevenue')}
                     </Text>
@@ -543,16 +543,16 @@ export default function LandlordDashboardPage() {
             {/* 2. YÊU CẦU BẢO TRÌ */}
             <div
               onClick={() => router.push('/landlord/complaints')}
-              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-[#FF6B35]/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-accent/40 transition-all cursor-pointer group space-y-3"
             >
               <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Wrench className="w-4 h-4 text-[#FF6B35] shrink-0" />
-                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-[#FF6B35] transition-colors">
+                  <Wrench className="w-4 h-4 text-accent shrink-0" />
+                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-accent transition-colors">
                     {t('landlordOverviewMaintRequestTitle')}
                   </Text>
                 </div>
-                <Text as="span" variant="badge" size="3xs" weight="black" color="orange" className="px-2 py-0.5 bg-[#FF6B35]/10 rounded-full">
+                <Text as="span" variant="badge" size="3xs" weight="black" color="orange" className="px-2 py-0.5 bg-accent/10 rounded-full">
                   {t('landlordOverviewIssuesCount', { count: maintenanceRequests.length })}
                 </Text>
               </div>
@@ -574,7 +574,7 @@ export default function LandlordDashboardPage() {
                   {maintenanceRequests.map(item => (
                     <div
                       key={item.id}
-                      className="p-3 bg-[#FF6B35]/5 hover:bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/15 flex items-center justify-between text-xs transition-colors"
+                      className="p-3 bg-accent/5 hover:bg-accent/10 rounded-2xl border border-accent/15 flex items-center justify-between text-xs transition-colors"
                     >
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -602,7 +602,7 @@ export default function LandlordDashboardPage() {
                               : t('landlordOverviewPrioLow')}
                         </Text>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-[#FF6B35] group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -694,7 +694,7 @@ export default function LandlordDashboardPage() {
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordOverviewAddRoomBtn')}
               </Text>
-              <span className="p-1 bg-[#2AC1BC]/10 text-[#2AC1BC] group-hover:bg-white/20 group-hover:text-white rounded-full">
+              <span className="p-1 bg-primary/10 text-primary group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <Plus className="w-3.5 h-3.5" />
               </span>
             </Button>

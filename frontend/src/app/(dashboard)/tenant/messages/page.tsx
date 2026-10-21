@@ -52,7 +52,7 @@ import { dispatchMessagesUpdated } from '@/hooks'
 
 // Avatar colors based on user identity
 const AVATAR_COLORS = [
-  'bg-[#2AC1BC]',
+  'bg-primary',
   'bg-teal-600',
   'bg-blue-600',
   'bg-indigo-600',
@@ -63,7 +63,7 @@ const AVATAR_COLORS = [
 ]
 
 function getAvatarBg(str: string): string {
-  if (!str) return 'bg-[#2AC1BC]'
+  if (!str) return 'bg-primary'
   let hash = 0
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash)
@@ -482,7 +482,7 @@ export default function TenantMessagesPage() {
             <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
               {t('tenantMessagesTitle')}
             </h2>
-            <span className="px-2 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-black uppercase">
+            <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase">
               {t('tenantChannelsCount', { count: conversations.length })}
             </span>
           </div>
@@ -506,7 +506,7 @@ export default function TenantMessagesPage() {
                   </Button>
                 ) : undefined
               }
-              className="py-2 rounded-xl bg-surface border border-line text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              className="py-2 rounded-xl bg-surface border border-line text-xs font-medium focus:outline-none focus:border-primary transition-colors"
               containerClassName="space-y-0"
             />
           </div>
@@ -537,7 +537,7 @@ export default function TenantMessagesPage() {
         <div className="flex-1 overflow-y-auto divide-y divide-line custom-scrollbar">
           {isLoadingConversations ? (
             <div className="p-8 text-center text-xs font-semibold text-muted flex flex-col items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
               <span>{t('tenantLoadingConversations')}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
@@ -582,7 +582,7 @@ export default function TenantMessagesPage() {
                   }}
                   className={`p-3.5 flex items-start gap-3 transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]'
+                      ? 'bg-primary/10 border-l-4 border-l-primary'
                       : 'hover:bg-zinc-100/70'
                   }`}
                 >
@@ -632,7 +632,7 @@ export default function TenantMessagesPage() {
                   </div>
 
                   {conv.unreadCount > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-[#FF6B35] text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-accent text-white text-[10px] font-black flex items-center justify-center shrink-0">
                       {conv.unreadCount}
                     </span>
                   )}
@@ -704,7 +704,7 @@ export default function TenantMessagesPage() {
                     <span className="hidden sm:inline text-zinc-300">•</span>
                     <a
                       href={`tel:${activeChat.participant?.phoneNumber}`}
-                      className="hidden sm:inline text-[#2AC1BC] hover:underline font-bold truncate"
+                      className="hidden sm:inline text-primary hover:underline font-bold truncate"
                     >
                       {formatPhoneDisplay(activeChat.participant?.phoneNumber)}
                     </a>
@@ -715,7 +715,7 @@ export default function TenantMessagesPage() {
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <a
                   href={`tel:${activeChat.participant?.phoneNumber}`}
-                  className="p-1.5 sm:p-2 rounded-xl bg-surface border border-line text-foreground/90 hover:bg-[#2AC1BC] hover:text-white hover:border-[#2AC1BC] transition-all cursor-pointer shadow-2xs"
+                  className="p-1.5 sm:p-2 rounded-xl bg-surface border border-line text-foreground/90 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer shadow-2xs"
                   title={t('tenantCallLandlord')}
                 >
                   <Phone className="w-4 h-4" />
@@ -735,7 +735,7 @@ export default function TenantMessagesPage() {
             <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 space-y-3.5 bg-zinc-50/40 custom-scrollbar">
               {isLoadingMessages ? (
                 <div className="flex items-center justify-center h-full text-muted text-xs gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
                   <span>{t('tenantLoadingMessages')}</span>
                 </div>
               ) : messages.length === 0 ? (
@@ -781,7 +781,7 @@ export default function TenantMessagesPage() {
                       <div
                         className={`max-w-xs sm:max-w-md p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                           isMe
-                            ? 'bg-[#2AC1BC] text-white rounded-br-xs shadow-xs'
+                            ? 'bg-primary text-white rounded-br-xs shadow-xs'
                             : 'bg-card text-foreground border border-line rounded-bl-xs shadow-2xs'
                         }`}
                       >
@@ -792,7 +792,7 @@ export default function TenantMessagesPage() {
                           <div className="mt-2.5 p-3 rounded-xl bg-warning-soft border border-warning-subtle space-y-2 text-foreground shadow-2xs">
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] font-black uppercase text-warning flex items-center gap-1">
-                                <Receipt className="w-3.5 h-3.5 text-[#FF6B35]" />
+                                <Receipt className="w-3.5 h-3.5 text-accent" />
                                 {t('tenantCurrentRoomBillCard')}
                               </span>
                               <span className="px-1.5 py-0.5 rounded bg-amber-200/60 text-warning text-[9px] font-bold">
@@ -804,7 +804,7 @@ export default function TenantMessagesPage() {
                             </p>
                             <Link
                               href="/tenant/invoices"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold transition-all shadow-xs"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent hover:bg-[#e85a26] text-white text-xs font-bold transition-all shadow-xs"
                             >
                               <span>{t('tenantViewAndPayBtn')}</span>
                               <ArrowRight className="w-3.5 h-3.5" />
@@ -874,7 +874,7 @@ export default function TenantMessagesPage() {
             {/* Quick Prompt Pills */}
             <div className="px-3.5 py-1.5 border-t border-line bg-card flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
               <span className="text-[10px] font-black uppercase text-muted flex items-center gap-1 shrink-0">
-                <Sparkles className="w-3.5 h-3.5 text-[#FF6B35]" />
+                <Sparkles className="w-3.5 h-3.5 text-accent" />
                 {t('tenantQuickPillsTitle')}:
               </span>
               {quickReplies.map((pill, idx) => (
@@ -965,7 +965,7 @@ export default function TenantMessagesPage() {
                 onChange={e => setInputMessage(e.target.value)}
                 placeholder={t('tenantTypeMessagePlaceholder')}
                 containerClassName="flex-1 space-y-0"
-                className="py-2 sm:py-2.5 rounded-xl bg-surface border border-line text-xs sm:text-sm font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+                className="py-2 sm:py-2.5 rounded-xl bg-surface border border-line text-xs sm:text-sm font-medium focus:outline-none focus:border-primary transition-colors"
               />
 
               <Button size="xs"
@@ -1037,7 +1037,7 @@ export default function TenantMessagesPage() {
 
               <div className="pt-2 border-t border-line flex items-center justify-between text-xs">
                 <span className="text-muted">{t('tenantRentPrice')}</span>
-                <span className="font-bold text-[#2AC1BC]">4.500.000 ₫/{t('tenantPerMonth')}</span>
+                <span className="font-bold text-primary">4.500.000 ₫/{t('tenantPerMonth')}</span>
               </div>
             </div>
 

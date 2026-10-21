@@ -178,10 +178,10 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
           return (
             <div
               key={sec.id}
-              className="p-3.5 sm:p-4 rounded-xl bg-card border border-line shadow-2xs hover:border-[#2AC1BC]/40 transition-all space-y-1.5"
+              className="p-3.5 sm:p-4 rounded-xl bg-card border border-line shadow-2xs hover:border-primary/40 transition-all space-y-1.5"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <Icon className="w-3.5 h-3.5" />
                 </div>
                 <Text as="h3" variant="heading" size="sm" className="text-foreground">
@@ -204,7 +204,7 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
         {activeTab === 'privacy' && (
           <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-white border border-emerald-500/20 space-y-2.5 mt-2">
             <div className="flex items-center gap-2 text-success">
-              <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
+              <ShieldCheck className="w-4 h-4 text-primary" />
               <Text as="h4" variant="heading" size="sm">
                 {t('authPrivacySec7Title')}
               </Text>

@@ -273,7 +273,7 @@ function GuestMessagesContent() {
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col min-h-screen bg-card items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mb-6 shadow-inner border border-[#2AC1BC]/20">
+        <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-6 shadow-inner border border-primary/20">
           <Lock className="w-10 h-10" />
         </div>
         <Text as="h2" variant="heading" size="2xl" weight="black" className="mb-2">
@@ -292,7 +292,7 @@ function GuestMessagesContent() {
             variant="primary"
             size="lg"
             rightIcon={<span>&rarr;</span>}
-            className="rounded-2xl shadow-lg shadow-[#2AC1BC]/25 hover:scale-105"
+            className="rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
           >
             {t('guestMessagesLoginBtn')}
           </Button>
@@ -346,7 +346,7 @@ function GuestMessagesContent() {
           <div className="flex-1 overflow-y-auto divide-y divide-line">
             {isLoadingConversations ? (
               <div className="p-8 text-center space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2AC1BC]" />
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
                 <Text variant="caption" size="xs" weight="semibold" color="subtle">
                   {t('guestMessagesLoadingList')}
                 </Text>
@@ -379,7 +379,7 @@ function GuestMessagesContent() {
                     onClick={() => setActiveChat(conv)}
                     className={`w-full text-left p-4 flex gap-3 transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-card shadow-xs border-l-4 border-l-[#2ac1bc]'
+                        ? 'bg-card shadow-xs border-l-4 border-l-primary'
                         : 'hover:bg-zinc-100/60'
                     }`}
                   >
@@ -439,7 +439,7 @@ function GuestMessagesContent() {
                         size="3xs"
                         weight="black"
                         color="white"
-                        className="self-center px-1.5 py-0.5 bg-[#2AC1BC] rounded-full"
+                        className="self-center px-1.5 py-0.5 bg-primary rounded-full"
                       >
                         {conv.unreadCount}
                       </Text>
@@ -495,7 +495,7 @@ function GuestMessagesContent() {
                       <Text as="span" variant="heading" size="sm" weight="extrabold">
                         {activeChat.participant?.fullName || activeChat.participant?.username}
                       </Text>
-                      <ShieldCheck className="w-4 h-4 text-[#2ac1bc]" />
+                      <ShieldCheck className="w-4 h-4 text-primary" />
                     </Text>
                     <Text variant="subtitle" size="xs" weight="medium" truncate className="max-w-xs">
                       {activeChat.participant?.boardingHouseName ||
@@ -511,7 +511,7 @@ function GuestMessagesContent() {
                     href={`tel:${activeChat.participant.phoneNumber}`}
                     className="p-2 hover:bg-card-hover rounded-xl transition-colors text-muted flex items-center gap-1.5"
                   >
-                    <Phone className="w-4 h-4 text-[#2AC1BC]" />
+                    <Phone className="w-4 h-4 text-primary" />
                     <Text
                       as="span"
                       size="xs"
@@ -529,7 +529,7 @@ function GuestMessagesContent() {
               <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-zinc-50/40">
                 {isLoadingMessages ? (
                   <div className="flex items-center justify-center h-full text-muted">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
@@ -568,7 +568,7 @@ function GuestMessagesContent() {
                           {isMe && (
                             <CheckCheck
                               className={`w-3 h-3 ${
-                                msg.readAt ? 'text-[#2AC1BC]' : 'text-zinc-300'
+                                msg.readAt ? 'text-primary' : 'text-zinc-300'
                               }`}
                             />
                           )}
@@ -617,7 +617,7 @@ export default function GuestMessagesPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       }
     >

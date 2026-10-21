@@ -136,8 +136,8 @@ export default function SavedPostsPage() {
 
         {/* Lock Screen Body */}
         <div className="mx-auto max-w-xl px-4 py-16 text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto shadow-inner border border-[#2AC1BC]/20">
-            <Lock className="w-10 h-10 text-[#2AC1BC]" />
+          <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-inner border border-primary/20">
+            <Lock className="w-10 h-10 text-primary" />
           </div>
 
           <div className="space-y-2">
@@ -149,7 +149,7 @@ export default function SavedPostsPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link href="/login" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all cursor-pointer hover:scale-105">
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-primary hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-primary/25 transition-all cursor-pointer hover:scale-105">
                 {t('guestSavedPostsLoginBtn')} &rarr;
               </button>
             </Link>
@@ -177,7 +177,7 @@ export default function SavedPostsPage() {
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
             <span className="inline-block whitespace-nowrap">{t('guestSavedPostsTitle1')}</span>{' '}
             <br />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+            <span className="bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent inline-block whitespace-nowrap">
               {t('guestSavedPostsTitle2')}
             </span>
           </h1>
@@ -221,7 +221,7 @@ export default function SavedPostsPage() {
             <h3 className="text-xl font-black text-foreground">{t('guestSavedPostsEmptyTitle')}</h3>
             <p className="text-xs text-muted font-medium">{t('guestSavedPostsEmptySub')}</p>
             <Link href="/rooms">
-              <button className="px-6 py-3 bg-[#2AC1BC] text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-[#72b3a3] transition-all cursor-pointer">
+              <button className="px-6 py-3 bg-primary text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-[#72b3a3] transition-all cursor-pointer">
                 {t('guestSavedPostsExploreRooms')} &rarr;
               </button>
             </Link>
@@ -231,7 +231,7 @@ export default function SavedPostsPage() {
             {/* Fixed Floating Bottom Compare Action Bar */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-4xl w-[calc(100%-2rem)] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 text-white p-4 sm:px-6 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.5)] flex items-center justify-between gap-4 animate-in slide-in-from-bottom-5 duration-300">
               <div className="flex items-center gap-3 text-xs font-bold text-zinc-300">
-                <span className="w-8 h-8 rounded-full bg-[#2AC1BC]/20 text-[#2AC1BC] flex items-center justify-center font-black">
+                <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-black">
                   {selectedForCompare.length}
                 </span>
                 <span className="hidden sm:inline">
@@ -251,7 +251,7 @@ export default function SavedPostsPage() {
               <button
                 onClick={() => setIsCompareModalOpen(true)}
                 disabled={selectedForCompare.length === 0}
-                className="px-6 py-3 bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#2AC1BC]/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
+                className="px-6 py-3 bg-gradient-to-r from-primary via-[#3BDAC8] to-accent disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-primary/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
               >
                 <Scale className="w-4 h-4" />{' '}
                 {t('guestSavedPostsCompareBtn', { count: selectedForCompare.length })} &rarr;
@@ -271,7 +271,7 @@ export default function SavedPostsPage() {
                     key={room.id}
                     className={`bg-card rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col justify-between group relative ${
                       isSelected
-                        ? 'border-[#2AC1BC] shadow-lg ring-2 ring-[#2AC1BC]/20'
+                        ? 'border-primary shadow-lg ring-2 ring-primary/20'
                         : 'border-line shadow-sm hover:shadow-md'
                     }`}
                   >
@@ -284,7 +284,7 @@ export default function SavedPostsPage() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => {}} // handled by div click
-                        className="w-4 h-4 accent-[#2AC1BC] cursor-pointer"
+                        className="w-4 h-4 accent-primary cursor-pointer"
                       />
                       <span>
                         {isSelected
@@ -315,7 +315,7 @@ export default function SavedPostsPage() {
                     <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
                       <div className="space-y-2">
                         <Link href={`/rooms/${room.id}`}>
-                          <h3 className="font-extrabold text-foreground text-base leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-2">
+                          <h3 className="font-extrabold text-foreground text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
                             {roomTitle}
                           </h3>
                         </Link>
@@ -326,10 +326,10 @@ export default function SavedPostsPage() {
                             )}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center text-xs text-muted font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
+                            className="flex items-center text-xs text-muted font-semibold gap-1 hover:text-primary hover:underline cursor-pointer transition-colors"
                             title={t('guestSavedPostsMapTitle')}
                           >
-                            <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                             <span className="truncate">{roomAddress}</span>
                           </a>
                         )}
@@ -356,12 +356,12 @@ export default function SavedPostsPage() {
 
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Link href={`/rooms/${room.id}`}>
-                            <button className="w-full py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold text-xs rounded-xl transition-all cursor-pointer text-center">
+                            <button className="w-full py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-extrabold text-xs rounded-xl transition-all cursor-pointer text-center">
                               {t('guestSavedPostsViewDetails')}
                             </button>
                           </Link>
                           <Link href={`/rooms/${room.id}`}>
-                            <button className="w-full py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center">
+                            <button className="w-full py-2.5 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center">
                               {t('guestSavedPostsDepositNow')}
                             </button>
                           </Link>
@@ -388,7 +388,7 @@ export default function SavedPostsPage() {
             <div className="flex justify-between items-center pb-4 border-b border-line">
               <div>
                 <h3 className="text-xl font-black text-foreground flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-[#2AC1BC]" />{' '}
+                  <Scale className="w-5 h-5 text-primary" />{' '}
                   {t('guestSavedPostsModalTitle', {
                     count: selectedRoomsData.length,
                   })}
@@ -506,7 +506,7 @@ export default function SavedPostsPage() {
                     {selectedRoomsData.map(room => (
                       <td key={room.id} className="p-3">
                         <Link href={`/rooms/${room.id}`}>
-                          <button className="w-full py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all">
+                          <button className="w-full py-2 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all">
                             {t('guestSavedPostsViewAndDeposit')} &rarr;
                           </button>
                         </Link>

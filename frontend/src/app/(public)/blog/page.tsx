@@ -120,7 +120,7 @@ export default function BlogPage() {
             <br className="hidden sm:inline" />
             <Text
               as="h1" variant='heading' weight='extrabold'
-              className='text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent'
+              className='text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent'
             >
               {t('guestBlogTitle2')}
             </Text>
@@ -141,7 +141,7 @@ export default function BlogPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12 w-full">
         {/* Featured Article Spotlight Card */}
         {featuredPost && (
-          <div className="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 rounded-3xl p-5 sm:p-8 text-white shadow-2xl border border-[#FF6B35]/30 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center group cursor-pointer hover:border-[#FF6B35] hover:shadow-xl hover:shadow-[#FF6B35]/15 transition-all duration-300">
+          <div className="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 rounded-3xl p-5 sm:p-8 text-white shadow-2xl border border-accent/30 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center group cursor-pointer hover:border-accent hover:shadow-xl hover:shadow-accent/15 transition-all duration-300">
             <div className="lg:col-span-7 space-y-3.5 sm:space-y-4">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <div>
@@ -152,13 +152,13 @@ export default function BlogPage() {
                     color="white"
                     size='xs'
                     uppercase
-                    className="px-3 py-1 bg-[#FF6B35] rounded-full tracking-wider shadow-lg shadow-[#FF6B35]/30 shrink-0"
+                    className="px-3 py-1 bg-accent rounded-full tracking-wider shadow-lg shadow-accent/30 shrink-0"
                   >
                     {t('guestBlogFeaturedBadge')}
                   </Text>
                 </div>
                 <div className='flex items-center justify-center gap-1'>
-                  <Calendar className="w-3.5 h-3.5 text-[#FF6B35]" />
+                  <Calendar className="w-3.5 h-3.5 text-accent" />
                   <Text
                     as="span"
                     size="xs"
@@ -175,7 +175,7 @@ export default function BlogPage() {
                 variant="heading"
                 weight="black"
                 color="white"
-                className="text-xl sm:text-3xl lg:text-4xl leading-snug group-hover:text-[#FF6B35] transition-colors"
+                className="text-xl sm:text-3xl lg:text-4xl leading-snug group-hover:text-accent transition-colors"
               >
                 {featuredPost.title}
               </Text>
@@ -199,7 +199,7 @@ export default function BlogPage() {
                     color="subtle"
                     className="flex items-center gap-1"
                   >
-                    <User className="w-3.5 h-3.5 text-[#FF6B35]" />
+                    <User className="w-3.5 h-3.5 text-accent" />
                     <Text as="span" color="inherit">
                       {t('guestBlogAuthorLabel')} {featuredPost.author}
                     </Text>
@@ -214,7 +214,7 @@ export default function BlogPage() {
 
                 <Link
                   href={`/blog/${featuredPost.id}`}
-                  className="inline-flex items-center gap-1.5 text-[#FF6B35] group-hover:translate-x-1.5 transition-transform"
+                  className="inline-flex items-center gap-1.5 text-accent group-hover:translate-x-1.5 transition-transform"
                 >
                   <Text as="span" size="xs" weight="black" color="orange">
                     {t('guestBlogReadNow')}
@@ -224,7 +224,7 @@ export default function BlogPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 aspect-video overflow-hidden rounded-2xl bg-zinc-800 border border-[#FF6B35]/20 shadow-lg relative group">
+            <div className="lg:col-span-5 aspect-video overflow-hidden rounded-2xl bg-zinc-800 border border-accent/20 shadow-lg relative group">
               <img
                 src={featuredPost.image}
                 alt={featuredPost.title}
@@ -236,7 +236,7 @@ export default function BlogPage() {
                 size="3xs"
                 weight="black"
                 color="orange"
-                className="absolute bottom-3 right-3 px-3 py-1 bg-zinc-950/80 backdrop-blur-md rounded-full border border-[#FF6B35]/30"
+                className="absolute bottom-3 right-3 px-3 py-1 bg-zinc-950/80 backdrop-blur-md rounded-full border border-accent/30"
               >
                 {t('guestBlogHotTopic')}
               </Text>
@@ -315,7 +315,7 @@ export default function BlogPage() {
                         color="subtle"
                         className="flex items-center gap-1"
                       >
-                        <User className="w-3 h-3 text-[#2AC1BC]" />
+                        <User className="w-3 h-3 text-primary" />
                         <Text as="span" color="inherit">
                           {article.author}
                         </Text>
@@ -344,7 +344,7 @@ export default function BlogPage() {
                       size="base"
                       weight="extrabold"
                       clamp={2}
-                      className="leading-snug group-hover:text-[#2AC1BC] transition-colors"
+                      className="leading-snug group-hover:text-primary transition-colors"
                     >
                       {article.title}
                     </Text>
@@ -362,7 +362,7 @@ export default function BlogPage() {
                   </div>
                 </div>
 
-                <div className="p-5 sm:p-6 pt-0 border-t border-line mt-4 flex items-center justify-between text-[#2AC1BC]">
+                <div className="p-5 sm:p-6 pt-0 border-t border-line mt-4 flex items-center justify-between text-primary">
                   <Text as="span" size="xs" weight="bold" color="brand">
                     {article.readTime}
                   </Text>
@@ -399,7 +399,7 @@ export default function BlogPage() {
                 variant="primary"
                 size="lg"
                 rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-[#2AC1BC]/30 hover:scale-105"
+                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/30 hover:scale-105"
               >
                 {t('guestFeaturesTrialBtn')}
               </Button>

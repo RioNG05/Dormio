@@ -321,7 +321,7 @@ export default function AssetDetailPage() {
       <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-muted flex-wrap">
         <Link
           href="/landlord/assets"
-          className="hover:text-[#2AC1BC] flex items-center gap-1 transition-colors"
+          className="hover:text-primary flex items-center gap-1 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> {t('landlordAssetsDetailBack')}
         </Link>
@@ -334,7 +334,7 @@ export default function AssetDetailPage() {
       {/* Main Asset Header Card (With Sub-bar for Location & Tenant right under Title) */}
       <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
         <div className="flex items-start gap-3.5 sm:gap-4 min-w-0">
-          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-2xl bg-accent-soft border border-accent-subtle text-[#FF6B35] flex items-center justify-center shrink-0 shadow-2xs">
+          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-2xl bg-accent-soft border border-accent-subtle text-accent flex items-center justify-center shrink-0 shadow-2xs">
             <Package className="w-6 sm:w-8 h-6 sm:h-8" />
           </div>
           <div className="space-y-2 min-w-0">
@@ -342,17 +342,17 @@ export default function AssetDetailPage() {
               <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-card-hover text-foreground/90 border border-line">
                 {getCategoryLabel(asset.category)}
               </span>
-              <span className="text-[10px] sm:text-xs font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
+              <span className="text-[10px] sm:text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/30">
                 SKU: {asset.sku || asset.id}
               </span>
               <span
                 className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold border ${
                   asset.status === 'Đang sử dụng'
-                    ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                    ? 'bg-primary/10 text-primary border-primary/30'
                     : asset.status === 'Sẵn sàng'
                       ? 'bg-info-soft text-blue-600 border-info-subtle'
                       : asset.status === 'Bảo trì'
-                        ? 'bg-accent-soft text-[#FF6B35] border-accent-subtle animate-pulse'
+                        ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
                         : 'bg-danger-soft text-rose-600 border-danger-subtle'
                 }`}
               >
@@ -367,13 +367,13 @@ export default function AssetDetailPage() {
             {/* LOCATION & TENANT SUB-BAR DIRECTLY UNDER TITLE (Links integrated into Room Name & Tenant Name) */}
             <div className="flex flex-wrap items-center gap-3.5 text-xs font-semibold text-muted pt-2 border-t border-line">
               <div className="flex items-center gap-1.5 bg-surface px-3 py-1.5 rounded-xl border border-line">
-                <Home className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                <Home className="w-4 h-4 text-primary shrink-0" />
                 <span>
                   {t('landlordAssetsDetailLocation')}{' '}
                   {hasRoomLink ? (
                     <Link
                       href={`/landlord/rooms?id=${asset.room}`}
-                      className="font-extrabold text-[#2AC1BC] hover:underline hover:text-[#25ad87] transition-colors"
+                      className="font-extrabold text-primary hover:underline hover:text-[#25ad87] transition-colors"
                     >
                       {isEn ? `Room ${asset.room}` : `Phòng ${asset.room}`}
                     </Link>
@@ -420,7 +420,7 @@ export default function AssetDetailPage() {
             variant="outline"
             size="sm"
             onClick={handleOpenEditModal}
-            leftIcon={<Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" />}
+            leftIcon={<Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-primary" />}
           >
             {t('landlordAssetsBtnEdit')}
           </Button>
@@ -442,7 +442,7 @@ export default function AssetDetailPage() {
           {/* General Information Card */}
           <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-line">
-              <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC]" />
+              <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-primary" />
               <h2 className="text-sm sm:text-base font-black text-foreground">
                 {t('landlordAssetsDetailGeneral')}
               </h2>
@@ -559,7 +559,7 @@ export default function AssetDetailPage() {
               <div className="w-full h-3 bg-warning-soft rounded-full overflow-hidden flex p-0.5 border border-line">
                 <div
                   style={{ width: `${dep.remainingPercent}%` }}
-                  className="h-full bg-[#2AC1BC] rounded-full transition-all duration-500 shadow-xs"
+                  className="h-full bg-primary rounded-full transition-all duration-500 shadow-xs"
                 />
               </div>
             </div>
@@ -654,8 +654,8 @@ export default function AssetDetailPage() {
           <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
             <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-accent-soft text-[#FF6B35] rounded-xl">
-                  <Edit3 className="w-5 h-5 text-[#2AC1BC]" />
+                <div className="p-2 bg-accent-soft text-accent rounded-xl">
+                  <Edit3 className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-foreground">
@@ -681,7 +681,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editSku}
                   onChange={e => setEditSku(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-bold border border-line rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
+                  className="px-3.5 py-2.5 text-xs font-bold border border-line rounded-xl focus:border-primary outline-none uppercase font-mono"
                 />
 
                 <TextInput
@@ -689,14 +689,14 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
                 />
 
                 <SelectInput
                   label={t('landlordAssetsFieldCategory')}
                   value={editCategory}
                   onChange={e => setEditCategory(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
                     { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
@@ -710,7 +710,7 @@ export default function AssetDetailPage() {
                   label={t('landlordAssetsFieldRoom')}
                   value={editRoom}
                   onChange={e => setEditRoom(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     {
                       value: '101',
@@ -760,7 +760,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editPurchaseValue}
                   onChange={e => setEditPurchaseValue(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
                 />
 
                 <TextInput
@@ -769,14 +769,14 @@ export default function AssetDetailPage() {
                   placeholder="VD: 10/01/2024"
                   value={editPurchaseDate}
                   onChange={e => setEditPurchaseDate(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
                 />
 
                 <SelectInput
                   label={t('landlordAssetsFieldDepreciationYears')}
                   value={editDepreciationYears}
                   onChange={e => setEditDepreciationYears(Number(e.target.value))}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     { value: 3, label: `3 ${isEn ? 'years (36 months)' : 'năm (36 tháng)'}` },
                     { value: 5, label: `5 ${isEn ? 'years (60 months)' : 'năm (60 tháng)'}` },
@@ -789,7 +789,7 @@ export default function AssetDetailPage() {
                   label={t('landlordAssetsFieldStatus')}
                   value={editStatus}
                   onChange={e => setEditStatus(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-card cursor-pointer"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none appearance-none bg-card cursor-pointer"
                   options={[
                     { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
                     { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
@@ -803,7 +803,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editModelCode}
                   onChange={e => setEditModelCode(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
                 />
 
                 <TextInput
@@ -811,7 +811,7 @@ export default function AssetDetailPage() {
                   type="text"
                   value={editWarrantyPeriod}
                   onChange={e => setEditWarrantyPeriod(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-[#2AC1BC] outline-none"
+                  className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
                 />
               </div>
             </div>
@@ -1023,9 +1023,9 @@ function AlertModal({
       btnColor: 'bg-emerald-500 text-white',
     },
     info: {
-      bgColor: 'bg-accent-soft text-[#FF6B35] border-accent-subtle',
-      icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: 'bg-[#FF6B35] text-white',
+      bgColor: 'bg-accent-soft text-accent border-accent-subtle',
+      icon: <Info className="w-7 h-7 text-accent" />,
+      btnColor: 'bg-accent text-white',
     },
   }[type]
 

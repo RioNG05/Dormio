@@ -418,10 +418,10 @@ export default function LandlordDebtsPage() {
         label: t('landlordDebtsDebtorRooms'),
         value: `${summary.debtorRoomsCount} ${t('landlordDebtsRoomUnit')}`,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[160px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[160px]',
         labelColor: 'brand',
         valueColor: 'brand',
         valueClassName: 'text-sm sm:text-base leading-none mt-1 tracking-tight',

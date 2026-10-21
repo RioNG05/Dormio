@@ -501,10 +501,10 @@ export default function StaffPage() {
         label: t('landlordStaffStatActive'),
         value: summary.activeStaff,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[135px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[135px]',
         labelColor: 'brand',
         valueColor: 'brand',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -567,7 +567,7 @@ export default function StaffPage() {
                 setPosErrorMessage('')
                 setIsPositionsModalOpen(true)
               }}
-              leftIcon={<Briefcase className="w-4 h-4 text-[#2AC1BC]" />}
+              leftIcon={<Briefcase className="w-4 h-4 text-primary" />}
             >
               {t('landlordStaffManagePositions', { count: positions.length })}
             </Button>
@@ -655,7 +655,7 @@ export default function StaffPage() {
               className={cn(
                 'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
                 statusFilter === tab.val
-                  ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/20'
+                  ? 'bg-primary hover:bg-[#25aba6] text-white shadow-xs shadow-primary/20'
                   : 'bg-card-hover text-muted hover:bg-zinc-200/70',
               )}
             >
@@ -676,12 +676,12 @@ export default function StaffPage() {
       {/* Main Content Area */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-card rounded-3xl border border-line">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs text-muted font-medium">{t('landlordStaffLoading')}</p>
         </div>
       ) : staffList.length === 0 ? (
         <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
+          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center">
             <Users className="w-8 h-8" />
           </div>
           <div className="max-w-sm space-y-1">
@@ -726,12 +726,12 @@ export default function StaffPage() {
                         zoomOnHover
                       />
                       <div>
-                        <h3 className="font-extrabold text-foreground text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                        <h3 className="font-extrabold text-foreground text-base group-hover:text-primary transition-colors line-clamp-1">
                           {staff.fullName}
                         </h3>
                         <div className="inline-flex items-center gap-1 mt-0.5">
-                          <Briefcase className="w-3 h-3 text-[#2AC1BC]" />
-                          <span className="text-xs font-bold text-[#2AC1BC]">
+                          <Briefcase className="w-3 h-3 text-primary" />
+                          <span className="text-xs font-bold text-primary">
                             {staff.positionName}
                           </span>
                         </div>
@@ -741,7 +741,7 @@ export default function StaffPage() {
                     <span
                       className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border shrink-0 ${
                         isActive
-                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                          ? 'bg-primary/10 text-primary border-primary/30'
                           : 'bg-card-hover text-muted border-line'
                       }`}
                     >
@@ -819,7 +819,7 @@ export default function StaffPage() {
                       'text-xs font-bold',
                       isActive
                         ? 'text-rose-600 bg-danger-soft hover:bg-rose-100/80 border border-danger-subtle'
-                        : 'text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30',
+                        : 'text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30',
                     )}
                     leftIcon={<Power  />}
                   >
@@ -886,7 +886,7 @@ export default function StaffPage() {
                         <span
                           className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border ${
                             isActive
-                              ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                              ? 'bg-primary/10 text-primary border-primary/30'
                               : 'bg-card-hover text-muted border-line'
                           }`}
                         >
@@ -923,7 +923,7 @@ export default function StaffPage() {
                               'p-1.5 h-auto rounded-lg border',
                               isActive
                                 ? 'text-rose-600 bg-danger-soft border-danger-subtle hover:bg-rose-100'
-                                : 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20',
+                                : 'text-primary bg-primary/10 border-primary/30 hover:bg-primary/20',
                             )}
                             title={
                               isActive
@@ -972,7 +972,7 @@ export default function StaffPage() {
           >
             <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+                <div className="p-2 bg-primary/10 text-primary rounded-xl">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -1082,7 +1082,7 @@ export default function StaffPage() {
                 {hasSearched && !foundUser && (
                   <div className="p-4 rounded-2xl bg-accent-soft border border-accent-subtle space-y-3">
                     <div className="flex items-center gap-2 text-accent text-xs font-extrabold">
-                      <Info className="w-4 h-4 text-[#FF6B35] shrink-0" />
+                      <Info className="w-4 h-4 text-accent shrink-0" />
                       <span>{t('landlordStaffOnboardNewAccountTitle')}</span>
                     </div>
 
@@ -1230,7 +1230,7 @@ export default function StaffPage() {
           >
             <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+                <div className="p-2 bg-primary/10 text-primary rounded-xl">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
@@ -1272,7 +1272,7 @@ export default function StaffPage() {
                   <h4 className="text-xs font-extrabold text-foreground">{selectedStaff.fullName}</h4>
                   <p className="text-[11px] text-muted">
                     {t('landlordStaffAssignCurrentLabel', { phone: selectedStaff.phoneNumber })}{' '}
-                    <strong className="text-[#2AC1BC]">{selectedStaff.positionName}</strong>
+                    <strong className="text-primary">{selectedStaff.positionName}</strong>
                   </p>
                 </div>
               </div>
@@ -1395,7 +1395,7 @@ export default function StaffPage() {
           >
             <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+                <div className="p-2 bg-primary/10 text-primary rounded-xl">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
@@ -1625,7 +1625,7 @@ export default function StaffPage() {
                 <span className="text-muted font-semibold">
                   {t('landlordStaffCredPasswordLabel')}
                 </span>
-                <span className="font-mono font-black text-sm text-[#FF6B35] bg-accent-soft px-2 py-0.5 rounded-lg border border-accent-subtle">
+                <span className="font-mono font-black text-sm text-accent bg-accent-soft px-2 py-0.5 rounded-lg border border-accent-subtle">
                   {credentialModal.password}
                 </span>
               </div>
@@ -1684,7 +1684,7 @@ export default function StaffPage() {
                   <h3 className="font-extrabold text-foreground text-base">
                     {selectedStaff.fullName}
                   </h3>
-                  <p className="text-xs font-bold text-[#2AC1BC]">{selectedStaff.positionName}</p>
+                  <p className="text-xs font-bold text-primary">{selectedStaff.positionName}</p>
                 </div>
               </div>
 

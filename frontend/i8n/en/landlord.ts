@@ -1438,6 +1438,7 @@ export const enLandlord = {
     landlordContractsExportPrintBtn: "Print Contract",
     landlordContractsExportPrintTooltip: "Direct print with standard template format",
     landlordContractsExportRep: "Primary Tenant: {tenantName}",
+    landlordContractsExportId: "Contract ID: {contractId}",
     landlordContractsExportTitle: "Tenancy Contract Document - Room {roomNumber}",
     landlordContractsExportToastDownloadSuccess: "Contract file downloaded successfully!",
     landlordContractsExportToastExportFailed: "Failed to export contract document.",

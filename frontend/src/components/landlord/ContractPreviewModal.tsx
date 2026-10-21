@@ -181,8 +181,8 @@ export default function ContractPreviewModal({
               <Text size="xs" color="subtle" weight="medium">
                 {tenantName ? `${t('landlordContractsExportRep', { tenantName })}` : ''}
               </Text>
-              <Text as="span" mono weight="bold" color="default">
-                {contractId}...
+              <Text size="xs" color="subtle" weight="medium">
+                {contractId ? `${t('landlordContractsExportId', { contractId })}` : ''}
               </Text>
             </div>
           </div>

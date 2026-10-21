@@ -272,7 +272,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
   if (isHydrating || (!isLoggedIn && !isSuccess)) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
-        <Lock className="w-8 h-8 text-[#2AC1BC] animate-pulse" />
+        <Lock className="w-8 h-8 text-primary animate-pulse" />
         <Text variant="body" size="sm" weight="semibold" color="secondary">
           {t('guestPricingCheckoutAuthVerifying')}
         </Text>
@@ -326,7 +326,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                 size="xs"
                 weight="black"
                 color="white"
-                className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#2AC1BC] to-teal-600 shadow-sm"
+                className="px-3 py-1 rounded-xl bg-gradient-to-r from-primary to-teal-600 shadow-sm"
               >
                 {planParam}
               </Text>
@@ -350,7 +350,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
 
       {isLoading ? (
         <div className="bg-card rounded-3xl border border-line p-16 flex flex-col items-center justify-center gap-4">
-          <RefreshCw className="w-8 h-8 animate-spin text-[#2AC1BC]" />
+          <RefreshCw className="w-8 h-8 animate-spin text-primary" />
           <Text variant="body" size="sm" weight="medium" color="subtle">
             {t('guestPricingCheckoutLoading')}
           </Text>
@@ -765,7 +765,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-primary-soft border border-primary-subtle flex items-center justify-center gap-3">
-                    <RefreshCw className="w-4 h-4 text-[#2AC1BC] animate-spin shrink-0" />
+                    <RefreshCw className="w-4 h-4 text-primary animate-spin shrink-0" />
                     <Text as="span" size="xs" weight="semibold" className="text-primary">
                       {t('guestPricingCheckoutWaitingTransfer')}
                     </Text>

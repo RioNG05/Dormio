@@ -73,7 +73,7 @@ export default function CompareRoomsPage() {
                 {roomsToCompare.map(r => (
                   <th key={r.id} className="px-6 py-4 min-w-[280px]">
                     <div className="space-y-1">
-                      <span className="text-[#2ac1bc] font-extrabold text-xs block">
+                      <span className="text-primary font-extrabold text-xs block">
                         {t('guestCompareRoomNumber', { id: r.id })}
                       </span>
                       <h3 className="font-extrabold text-foreground text-sm normal-case line-clamp-2">
@@ -132,7 +132,7 @@ export default function CompareRoomsPage() {
                 {roomsToCompare.map(r => (
                   <td key={r.id} className="px-6 py-4">
                     {r.ac ? (
-                      <Check className="w-5 h-5 text-[#2ac1bc]" />
+                      <Check className="w-5 h-5 text-primary" />
                     ) : (
                       <X className="w-5 h-5 text-zinc-300" />
                     )}
@@ -146,7 +146,7 @@ export default function CompareRoomsPage() {
                 {roomsToCompare.map(r => (
                   <td key={r.id} className="px-6 py-4">
                     {r.fridge ? (
-                      <Check className="w-5 h-5 text-[#2ac1bc]" />
+                      <Check className="w-5 h-5 text-primary" />
                     ) : (
                       <X className="w-5 h-5 text-zinc-300" />
                     )}
@@ -160,7 +160,7 @@ export default function CompareRoomsPage() {
                 {roomsToCompare.map(r => (
                   <td key={r.id} className="px-6 py-4">
                     {r.elevator ? (
-                      <Check className="w-5 h-5 text-[#2ac1bc]" />
+                      <Check className="w-5 h-5 text-primary" />
                     ) : (
                       <X className="w-5 h-5 text-zinc-300" />
                     )}
@@ -174,7 +174,7 @@ export default function CompareRoomsPage() {
                 {roomsToCompare.map(r => (
                   <td key={r.id} className="px-6 py-4">
                     {r.fingerprint ? (
-                      <Check className="w-5 h-5 text-[#2ac1bc]" />
+                      <Check className="w-5 h-5 text-primary" />
                     ) : (
                       <X className="w-5 h-5 text-zinc-300" />
                     )}
@@ -188,7 +188,7 @@ export default function CompareRoomsPage() {
                 {roomsToCompare.map(r => (
                   <td key={r.id} className="px-6 py-4">
                     <Link href={`/rooms/${r.id}`}>
-                      <button className="px-4 py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-[#FF6B35]/20 cursor-pointer">
+                      <button className="px-4 py-2 bg-accent hover:bg-[#ff5518] text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-accent/20 cursor-pointer">
                         {t('guestCompareDepositNowBtn')}
                       </button>
                     </Link>

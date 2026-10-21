@@ -236,7 +236,7 @@ export default function ServicesPage() {
 
     return {
       iconName: 'Wrench',
-      color: 'text-[#2AC1BC]',
+      color: 'text-primary',
       bg: 'bg-primary-soft border-primary-subtle',
       typeLabel,
     }
@@ -481,9 +481,9 @@ export default function ServicesPage() {
         key: 'metered',
         label: t('landlordServicesFilterMetered'),
         value: summary.meteredCount,
-        icon: <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />,
+        icon: <Zap className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-primary shrink-0" />,
         containerClassName:
-          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+          'px-3 py-2 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[130px]',
         labelColor: 'brand',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -492,10 +492,10 @@ export default function ServicesPage() {
         key: 'roomFixed',
         label: t('landlordServicesFixedRoom'),
         value: summary.roomFixedCount,
-        icon: <Wifi className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#FF6B35] shrink-0" />,
+        icon: <Wifi className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-accent shrink-0" />,
         containerClassName:
-          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
-        labelClassName: 'text-[#FF6B35]',
+          'px-3 py-2 bg-accent/10 hover:bg-accent/20 border-accent/30 lg:w-[130px]',
+        labelClassName: 'text-accent',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
       },
@@ -572,8 +572,8 @@ export default function ServicesPage() {
       />
 
       {/* Guidance Alert Banner */}
-      <div className="bg-[#2AC1BC]/5 border border-[#2AC1BC]/20 rounded-2xl p-3.5 sm:p-4 flex items-start gap-3">
-        <div className="bg-[#2AC1BC]/10 p-1.5 rounded-xl text-[#2AC1BC] shrink-0 mt-0.5">
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-3.5 sm:p-4 flex items-start gap-3">
+        <div className="bg-primary/10 p-1.5 rounded-xl text-primary shrink-0 mt-0.5">
           <Info className="w-4 h-4" />
         </div>
         <div className="space-y-0.5 text-xs">
@@ -599,7 +599,7 @@ export default function ServicesPage() {
                 setCurrentPage(1)
               }}
               containerClassName="w-full space-y-0"
-              className="w-full text-xs font-semibold bg-surface border border-line rounded-xl focus:bg-white focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+              className="w-full text-xs font-semibold bg-surface border border-line rounded-xl focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
             />
           </div>
 
@@ -634,7 +634,7 @@ export default function ServicesPage() {
       {/* Loading Indicator */}
       {isLoading && (
         <div className="py-12 flex flex-col items-center justify-center space-y-2">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs text-muted font-medium">{t('landlordServicesLoading')}</p>
         </div>
       )}
@@ -667,7 +667,7 @@ export default function ServicesPage() {
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-[10px] font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
+                            <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/30">
                               {service.id.substring(0, 8).toUpperCase()}
                             </span>
                             <span
@@ -761,7 +761,7 @@ export default function ServicesPage() {
                       onClick={() => handleOpenRoomsModal(service)}
                       title={t('landlordServicesAppliedRooms')}
                     >
-                      <Home className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
+                      <Home className="w-3.5 h-3.5 text-primary" />{' '}
                       {t('landlordServicesRoomsCount', { count: service.appliedRoomsCount })}
                     </Button>
 
@@ -849,7 +849,7 @@ export default function ServicesPage() {
                               <span className="font-black text-foreground block text-xs sm:text-sm whitespace-nowrap">
                                 {service.name}
                               </span>
-                              <span className="text-[10px] font-mono text-[#2AC1BC] font-bold block">
+                              <span className="text-[10px] font-mono text-primary font-bold block">
                                 {service.id.substring(0, 8).toUpperCase()}
                               </span>
                             </div>
@@ -928,7 +928,7 @@ export default function ServicesPage() {
                               size="sm"
                               onClick={() => handleOpenEditModal(service)}
                             >
-                              <Edit3 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                              <Edit3 className="w-3 h-3 text-primary" />{' '}
                               {t('landlordServicesEdit')}
                             </Button>
                             <Button
@@ -974,8 +974,8 @@ export default function ServicesPage() {
           <div className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
             <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-accent-soft text-[#FF6B35] rounded-xl">
-                  <Wrench className="w-5 h-5 text-[#2AC1BC]" />
+                <div className="p-2 bg-accent-soft text-accent rounded-xl">
+                  <Wrench className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-foreground">
@@ -1011,7 +1011,7 @@ export default function ServicesPage() {
                 }}
                 containerClassName="w-full space-y-1"
                 labelClassName="block font-extrabold text-foreground/90"
-                className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1028,7 +1028,7 @@ export default function ServicesPage() {
                   ]}
                   containerClassName="w-full space-y-1"
                   labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-card cursor-pointer"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
                 />
 
                 <SelectInput
@@ -1044,7 +1044,7 @@ export default function ServicesPage() {
                   ]}
                   containerClassName="w-full space-y-1"
                   labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-card cursor-pointer"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
                 />
               </div>
 
@@ -1061,7 +1061,7 @@ export default function ServicesPage() {
                   }}
                   containerClassName="w-full space-y-1"
                   labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                 />
 
                 <NumberInput
@@ -1077,7 +1077,7 @@ export default function ServicesPage() {
                   }}
                   containerClassName="w-full space-y-1"
                   labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none transition-all"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                 />
               </div>
 
@@ -1095,7 +1095,7 @@ export default function ServicesPage() {
                   ]}
                   containerClassName="w-full space-y-1"
                   labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 outline-none bg-card cursor-pointer"
+                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
                 />
               </div>
             </div>
@@ -1135,7 +1135,7 @@ export default function ServicesPage() {
           <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-primary-soft border-primary-subtle text-[#2AC1BC]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-primary-soft border-primary-subtle text-primary">
                   <Wrench className="w-5 h-5" />
                 </div>
                 <div>
@@ -1183,7 +1183,7 @@ export default function ServicesPage() {
 
               {isLoadingRooms ? (
                 <div className="py-8 flex justify-center items-center">
-                  <Loader2 className="w-6 h-6 text-[#2AC1BC] animate-spin" />
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
                 </div>
               ) : serviceRooms.length === 0 ? (
                 <div className="py-6 text-center text-muted text-xs">
@@ -1387,9 +1387,9 @@ function AlertModal({
       btnColor: 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20',
     },
     info: {
-      bgColor: 'bg-accent-soft text-[#FF6B35] border-accent-subtle',
-      icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: 'bg-[#FF6B35] hover:bg-[#e05a2b] text-white shadow-[#FF6B35]/20',
+      bgColor: 'bg-accent-soft text-accent border-accent-subtle',
+      icon: <Info className="w-7 h-7 text-accent" />,
+      btnColor: 'bg-accent hover:bg-[#e05a2b] text-white shadow-accent/20',
     },
   }[type]
 

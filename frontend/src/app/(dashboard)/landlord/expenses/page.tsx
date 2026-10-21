@@ -433,7 +433,7 @@ export default function ExpensesPage() {
   const renderStatusBadge = (status: ExpenseItem['status']) => {
     if (status === 'paid') {
       return (
-        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#2AC1BC]/15 text-[#0d6e6b] border border-[#2AC1BC]/30 flex items-center gap-1 shrink-0">
+        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-primary/15 text-[#0d6e6b] border border-primary/30 flex items-center gap-1 shrink-0">
           <Check className="w-3 h-3" /> {t('landlordExpensesStatusPaid')}
         </span>
       )
@@ -471,12 +471,12 @@ export default function ExpensesPage() {
         label: t('landlordExpensesPaidExpenses'),
         value: formatLargeMoney(summary.paidAmount),
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[160px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[160px]',
         labelColor: 'brand',
-        valueClassName: 'text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 tracking-tight',
+        valueClassName: 'text-primary text-xs sm:text-base leading-none mt-1 tracking-tight',
       },
       {
         key: 'pending',
@@ -510,7 +510,7 @@ export default function ExpensesPage() {
               onClick={fetchExpenses}
               disabled={isLoading}
               isLoading={isLoading}
-              leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-[#2AC1BC]')} />}
+              leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-primary')} />}
             >
               {t('landlordExpensesReload')}
             </Button>
@@ -627,7 +627,7 @@ export default function ExpensesPage() {
       {/* ─── Main Content Display (Grid or Table View) ───────────────────────── */}
       {isLoading ? (
         <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
           <p className="text-sm font-bold text-foreground/90">{t('landlordExpensesLoading')}</p>
         </div>
       ) : expensesList.length === 0 ? (
@@ -652,13 +652,13 @@ export default function ExpensesPage() {
           {expensesList.map(exp => (
             <div
               key={exp.id}
-              className="bg-card border border-line hover:border-[#2AC1BC]/40 rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
+              className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
             >
               {/* Header Info */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-2.5 border-b border-line">
                   <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                    <Receipt className="w-4 h-4 text-primary shrink-0" />
                     <span className="font-black text-xs text-foreground">{exp.code}</span>
                   </div>
                   {renderStatusBadge(exp.status)}
@@ -782,7 +782,7 @@ export default function ExpensesPage() {
                   <tr key={exp.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <Receipt className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                        <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span>{exp.code}</span>
                       </div>
                     </td>
@@ -894,9 +894,9 @@ export default function ExpensesPage() {
         >
           <div className="bg-card border border-line rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between bg-[#2AC1BC]/5 shrink-0">
+            <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between bg-primary/5 shrink-0">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
-                <div className="p-2 sm:p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shadow-xs shrink-0">
+                <div className="p-2 sm:p-2.5 bg-primary/10 text-primary rounded-2xl shadow-xs shrink-0">
                   <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div className="min-w-0">
@@ -935,7 +935,7 @@ export default function ExpensesPage() {
                   </span>
                 </div>
 
-                <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-[#2AC1BC] tracking-tight whitespace-nowrap">
+                <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-primary tracking-tight whitespace-nowrap">
                   <span>-{formatCurrency(selectedExpense.amount)}</span>
                 </div>
 
@@ -1044,7 +1044,7 @@ export default function ExpensesPage() {
             {/* Header */}
             <div className="p-5 border-b border-line flex items-center justify-between bg-gradient-to-r from-teal-50/50 via-white to-teal-50/50">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shadow-xs">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl shadow-xs">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div>

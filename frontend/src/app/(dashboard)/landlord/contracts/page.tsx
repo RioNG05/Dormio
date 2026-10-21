@@ -320,10 +320,10 @@ export default function ContractsPage() {
           c => c.status === 'Còn hiệu lực' || c.status === 'Đang hiệu lực',
         ).length,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+          'px-3 py-2 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[130px]',
         labelColor: 'brand',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -333,11 +333,11 @@ export default function ContractsPage() {
         label: t('landlordContractsStatExpiring'),
         value: contracts.filter(c => c.status === 'Sắp hết hạn' || c.status === 'Quá hạn').length,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
-        labelClassName: 'text-[#FF6B35]',
+          'px-3 py-2 bg-accent/10 hover:bg-accent/20 border-accent/30 lg:w-[130px]',
+        labelClassName: 'text-accent',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
       },
@@ -467,7 +467,7 @@ export default function ContractsPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 bg-card border border-line rounded-2xl">
-            <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
             <Text size="sm" weight="semibold" color="secondary">
               {t('landlordContractsLoading')}
             </Text>
@@ -513,7 +513,7 @@ export default function ContractsPage() {
                         <div>
                           {/* Card Header: Room & Status */}
                           <div className="flex items-start justify-between gap-3 pb-3 border-b border-line">
-                            <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-[#2AC1BC] transition-colors">
+                            <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-primary transition-colors">
                               {t('landlordRoomDetailRoomPrefix')} {c.room}
                             </Text>
 
@@ -958,7 +958,7 @@ export default function ContractsPage() {
 
         <div className="border border-line rounded-xl p-4 bg-surface/50 space-y-4">
           <div className="flex items-center gap-2">
-            <Gauge className="w-4 h-4 text-[#2AC1BC]" />
+            <Gauge className="w-4 h-4 text-primary" />
             <Text as="span" size="sm" weight="medium" color="brand">
               {t('landlordContractsTerminateEndIndexTitle')}
             </Text>

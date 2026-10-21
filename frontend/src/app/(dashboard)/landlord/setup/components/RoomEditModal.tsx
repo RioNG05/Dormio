@@ -50,7 +50,7 @@ export function RoomEditModal({
         {/* Modal Header */}
         <div className="flex items-start justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -66,7 +66,7 @@ export function RoomEditModal({
                     as="span"
                     variant="badge"
                     color="brand-dark"
-                    className="bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/20"
+                    className="bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20"
                   >
                     {t('landlordSetupPreviewCustomBadge')}
                   </Text>

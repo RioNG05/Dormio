@@ -253,7 +253,7 @@ function PaymentsContent() {
       <LandlordPageHeader
         title={
           <span className="flex items-center gap-2">
-            <CreditCard className="w-8 h-8 text-[#2AC1BC]" /> Lịch Sử Thu Tiền & Thanh Toán
+            <CreditCard className="w-8 h-8 text-primary" /> Lịch Sử Thu Tiền & Thanh Toán
           </span>
         }
         subtitle="Theo dõi tất cả giao dịch thanh toán thành công, biên nhận điện tử và hình ảnh công tơ điện nước."
@@ -429,13 +429,13 @@ function PaymentsContent() {
       {/* Main Content Display (Grid or Table View) */}
       {isLoading ? (
         <div className="py-20 text-center space-y-3 bg-card border border-line rounded-3xl">
-          <div className="inline-block animate-spin w-8 h-8 border-4 border-[#2AC1BC] border-t-transparent rounded-full" />
+          <div className="inline-block animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
           <p className="text-xs text-muted font-bold">Đang tải lịch sử giao dịch...</p>
         </div>
       ) : payments.length === 0 ? (
         /* Clean Empty State (No Mockup Data!) */
         <div className="py-16 px-6 text-center bg-card border border-line rounded-3xl space-y-4 shadow-2xs">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <CreditCard className="w-8 h-8" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
@@ -464,7 +464,7 @@ function PaymentsContent() {
             </Button>
             <Link
               href="/landlord/invoices?status=unpaid"
-              className="px-4 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm transition-all"
+              className="px-4 py-2 bg-primary hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm transition-all"
             >
               Xem hóa đơn cần thu
             </Link>
@@ -480,7 +480,7 @@ function PaymentsContent() {
             return (
               <div
                 key={p.id}
-                className="bg-card border border-line hover:border-[#2AC1BC]/50 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
+                className="bg-card border border-line hover:border-primary/50 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
               >
                 {/* Method Accent Stripe */}
                 <div
@@ -776,7 +776,7 @@ function PaymentsContent() {
                   </span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-                  <Receipt className="w-6 h-6 text-[#2AC1BC]" /> Biên Nhận Điện Tử
+                  <Receipt className="w-6 h-6 text-primary" /> Biên Nhận Điện Tử
                 </h3>
                 <p className="text-xs text-muted font-mono">
                   Mã biên nhận:{' '}
@@ -849,7 +849,7 @@ function PaymentsContent() {
                 )}
                 <div className="text-foreground/90">
                   Kỳ thanh toán:{' '}
-                  <span className="font-black text-[#2AC1BC]">{selectedPayment.period}</span>
+                  <span className="font-black text-primary">{selectedPayment.period}</span>
                 </div>
               </div>
             </div>

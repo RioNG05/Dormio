@@ -127,7 +127,7 @@ export function PublicFooter() {
             {tFooter('contactTitle')}
           </Text>
           <Text as="p" size="xs" color="subtle" weight="medium">
-            <a href="tel:0344265925" className="hover:text-[#2AC1BC] transition-colors">
+            <a href="tel:0344265925" className="hover:text-primary transition-colors">
               <Text as="span" size="xs" color="inherit">
                 {tFooter('hotline')}
               </Text>
@@ -136,7 +136,7 @@ export function PublicFooter() {
           <Text as="p" size="xs" color="subtle" weight="medium">
             <a
               href="mailto:contact@dormio.site"
-              className="hover:text-[#2AC1BC] transition-colors"
+              className="hover:text-primary transition-colors"
             >
               <Text as="span" size="xs" color="inherit">
                 {tFooter('email')}

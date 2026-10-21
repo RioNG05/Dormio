@@ -51,7 +51,7 @@ import { dispatchMessagesUpdated } from '@/hooks'
 
 const AVATAR_COLORS = [
   'bg-teal-600',
-  'bg-[#2AC1BC]',
+  'bg-primary',
   'bg-blue-600',
   'bg-indigo-600',
   'bg-emerald-600',
@@ -742,7 +742,7 @@ function MessagesContent() {
         <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-line">
           {isLoadingConversations ? (
             <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
               <span>{t('landlordMessagesLoadingConversations')}</span>
             </div>
           ) : filteredConversations.length === 0 ? (
@@ -774,7 +774,7 @@ function MessagesContent() {
                   onClick={() => handleSelectConversation(chat)}
                   className={`p-3.5 flex items-start gap-3 cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-[#2AC1BC]/10 border-l-4 border-l-[#2AC1BC]'
+                      ? 'bg-primary/10 border-l-4 border-l-primary'
                       : 'hover:bg-card-hover'
                   }`}
                 >
@@ -795,7 +795,7 @@ function MessagesContent() {
                       </span>
                       <span
                         className={`text-[10px] font-bold shrink-0 ${
-                          chat.unreadCount > 0 ? 'text-[#2AC1BC]' : 'text-muted'
+                          chat.unreadCount > 0 ? 'text-primary' : 'text-muted'
                         }`}
                       >
                         {chat.lastMessage
@@ -830,7 +830,7 @@ function MessagesContent() {
                         {chat.lastMessage?.content || t('landlordMessagesNoMessageYet')}
                       </p>
                       {chat.unreadCount > 0 && (
-                        <span className="w-4 h-4 rounded-full bg-[#2AC1BC] text-white text-[10px] font-black flex items-center justify-center shrink-0">
+                        <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shrink-0">
                           {chat.unreadCount}
                         </span>
                       )}
@@ -944,7 +944,7 @@ function MessagesContent() {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-5 space-y-4 bg-surface/60">
               {isLoadingMessages ? (
                 <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#2AC1BC]" />
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
                   <span>{t('landlordMessagesLoadingMessages')}</span>
                 </div>
               ) : messages.length === 0 ? (
@@ -966,9 +966,9 @@ function MessagesContent() {
                     return (
                       <div
                         key={`sys-${msg.id}-${idx}`}
-                        className="max-w-md mx-auto my-3 p-3.5 bg-card border border-[#2AC1BC]/30 rounded-2xl shadow-2xs text-center space-y-2"
+                        className="max-w-md mx-auto my-3 p-3.5 bg-card border border-primary/30 rounded-2xl shadow-2xs text-center space-y-2"
                       >
-                        <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#2AC1BC]">
+                        <div className="flex items-center justify-center gap-1.5 text-xs font-extrabold text-primary">
                           <Sparkles className="w-4 h-4" /> {t('landlordMessagesSystemNoticeBadge')}
                         </div>
                         <p className="text-xs text-foreground/90 font-semibold leading-relaxed">
@@ -989,7 +989,7 @@ function MessagesContent() {
                       <div
                         className={`max-w-[85%] sm:max-w-[70%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-2xs ${
                           isMe
-                            ? 'bg-[#2AC1BC] text-white rounded-br-xs font-medium'
+                            ? 'bg-primary text-white rounded-br-xs font-medium'
                             : 'bg-card border border-line text-foreground rounded-bl-xs font-medium'
                         }`}
                       >
@@ -1055,7 +1055,7 @@ function MessagesContent() {
                           >
                             <CheckCheck
                               className={`w-3 h-3 ${
-                                msg.readAt ? 'text-[#2AC1BC]' : 'text-zinc-300'
+                                msg.readAt ? 'text-primary' : 'text-zinc-300'
                               }`}
                             />
                           </span>
@@ -1071,7 +1071,7 @@ function MessagesContent() {
             {/* Preset Smart Quick Reply Chips */}
             <div className="px-4 py-2 bg-card-hover/80 border-t border-line flex items-center gap-2 overflow-x-auto custom-scrollbar">
               <span className="text-[10px] font-black text-muted uppercase tracking-wider shrink-0 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#2AC1BC]" />
+                <Sparkles className="w-3 h-3 text-primary" />
                 {t('landlordMessagesQuickRepliesTitle')}:
               </span>
               {quickReplies.map((reply, idx) => (
@@ -1110,7 +1110,7 @@ function MessagesContent() {
                         className="w-8 h-8 rounded-lg object-cover"
                       />
                     ) : (
-                      <File className="w-5 h-5 text-[#2AC1BC]" />
+                      <File className="w-5 h-5 text-primary" />
                     )}
                     <span className="max-w-[120px] truncate font-semibold text-foreground/90">
                       {att.name}
@@ -1231,7 +1231,7 @@ function MessagesContent() {
           {/* Panel Header */}
           <div className="p-4 border-b border-line flex items-center justify-between">
             <h3 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordMessagesDrawerTitle')}
+              <Building2 className="w-4 h-4 text-primary" /> {t('landlordMessagesDrawerTitle')}
             </h3>
             <Button
               type="button"
@@ -1273,7 +1273,7 @@ function MessagesContent() {
             {/* Room & Building Info */}
             <div className="p-4 bg-card border border-line rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-line">
-                <span className="font-extrabold text-sm text-[#2AC1BC]">
+                <span className="font-extrabold text-sm text-primary">
                   {activeChat.participant.roomName || t('landlordMessagesNoRoom')}
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-info-soft text-info rounded-md border border-info-subtle">
@@ -1310,7 +1310,7 @@ function MessagesContent() {
                   className="justify-between group"
                 >
                   <span className="flex items-center gap-2">
-                    <DoorOpen className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                    <DoorOpen className="w-4 h-4 text-primary" />{' '}
                     {t('landlordMessagesViewRoomDetail').replace(
                       '{room}',
                       activeChat.participant.roomName || '',
@@ -1329,7 +1329,7 @@ function MessagesContent() {
                   className="justify-between group"
                 >
                   <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                    <FileText className="w-4 h-4 text-primary" />{' '}
                     {t('landlordMessagesViewContract').replace(
                       '{room}',
                       activeChat.participant.roomName || '',
@@ -1344,7 +1344,7 @@ function MessagesContent() {
             <div className="p-4 bg-card border border-line rounded-2xl space-y-3 shadow-2xs">
               <div className="flex items-center justify-between pb-2 border-b border-line">
                 <span className="font-extrabold text-xs text-foreground flex items-center gap-1.5">
-                  <FileImage className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                  <FileImage className="w-4 h-4 text-primary" />{' '}
                   {t('landlordMessagesMediaStorageTitle')}
                 </span>
                 <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-card-hover text-muted rounded-md">
@@ -1385,7 +1385,7 @@ function MessagesContent() {
                           className="p-2 bg-surface border border-line rounded-xl flex items-center justify-between gap-2"
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <File className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                            <File className="w-4 h-4 text-primary shrink-0" />
                             <div className="min-w-0">
                               <p className="text-[11px] font-bold text-foreground truncate">
                                 {file.name}
@@ -1457,7 +1457,7 @@ function MessagesContent() {
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 divide-y divide-zinc-50">
               {isCreatingChat ? (
                 <div className="p-8 text-center text-xs font-bold text-muted flex flex-col items-center gap-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#2AC1BC]" />
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   <span>{t('landlordMessagesOpeningChat')}</span>
                 </div>
               ) : filteredContacts.length === 0 ? (
@@ -1483,7 +1483,7 @@ function MessagesContent() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="font-extrabold text-xs text-foreground group-hover:text-[#2AC1BC] transition-colors truncate">
+                          <h4 className="font-extrabold text-xs text-foreground group-hover:text-primary transition-colors truncate">
                             {contact.fullName}
                           </h4>
                           {contact.roomName && (
@@ -1503,7 +1503,7 @@ function MessagesContent() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="group-hover:text-[#2AC1BC] group-hover:bg-[#2AC1BC]/10 shrink-0"
+                      className="group-hover:text-primary group-hover:bg-primary/10 shrink-0"
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Button>

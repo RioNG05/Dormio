@@ -232,8 +232,8 @@ export function PublicHeader() {
                 key: 'staff-portal',
                 label: tNav('staffPortalLink'),
                 href: '/staff',
-                icon: <Clock className="w-4 h-4 text-[#2AC1BC]" />,
-                className: 'text-[#2AC1BC] hover:bg-[#2AC1BC]/10',
+                icon: <Clock className="w-4 h-4 text-primary" />,
+                className: 'text-primary hover:bg-primary/10',
               },
             ]
           : []),
@@ -241,7 +241,7 @@ export function PublicHeader() {
           key: 'profile',
           label: tNav('myProfile'),
           href: '/profile',
-          icon: <UserCheck className="w-4 h-4 text-[#2AC1BC]" />,
+          icon: <UserCheck className="w-4 h-4 text-primary" />,
         },
         {
           key: 'send-application',
@@ -277,14 +277,14 @@ export function PublicHeader() {
                 key: 'post-listing',
                 label: tNav('postListing'),
                 href: '/posts/create',
-                icon: <PlusCircle className="w-4 h-4 text-[#FF6B35]" />,
+                icon: <PlusCircle className="w-4 h-4 text-accent" />,
                 dividerAbove: true,
               },
               {
                 key: 'post-analytics',
                 label: tNav('postAnalytics'),
                 href: '/posts/analytics',
-                icon: <BarChart3 className="w-4 h-4 text-[#2AC1BC]" />,
+                icon: <BarChart3 className="w-4 h-4 text-primary" />,
               },
             ]
           : []),
@@ -319,8 +319,8 @@ export function PublicHeader() {
                   href={item.href}
                   className={`text-xs font-bold transition-all relative py-1 ${
                     isActive
-                      ? 'text-[#2AC1BC] font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#2AC1BC] after:rounded-full'
-                      : 'text-foreground/90 hover:text-[#2AC1BC]'
+                      ? 'text-primary font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full'
+                      : 'text-foreground/90 hover:text-primary'
                   }`}
                 >
                   <Text as="span" size="xs" weight={isActive ? 'extrabold' : 'bold'} color="inherit">
@@ -339,7 +339,7 @@ export function PublicHeader() {
               rounded="full"
               onClick={handleManageBoardingHouse}
               leftIcon={<Building2 className="w-3.5 h-3.5" />}
-              className="shadow-md shadow-[#2AC1BC]/20 hover:scale-105"
+              className="shadow-md shadow-primary/20 hover:scale-105"
             >
               {tNav('manageYourHouse')}
             </Button>
@@ -564,8 +564,8 @@ export function PublicHeader() {
           ) : (
             <form onSubmit={handleUpgradeSubmit} className="space-y-5">
               <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-danger-soft text-[#FF6B35] text-[10px] font-black rounded-full uppercase tracking-wider">
-                  <Sparkles className="w-3 h-3 fill-[#FF6B35]" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-danger-soft text-accent text-[10px] font-black rounded-full uppercase tracking-wider">
+                  <Sparkles className="w-3 h-3 fill-accent" />
                   <Text as="span" size="3xs" weight="black" color="orange">
                     {tUpgrade('badge')}
                   </Text>
@@ -610,7 +610,7 @@ export function PublicHeader() {
                 variant="primary"
                 size="md"
                 rounded="full"
-                className="w-full bg-[#FF6B35] hover:bg-[#ff5518] shadow-lg shadow-[#FF6B35]/25 border-none justify-center"
+                className="w-full bg-accent hover:bg-[#ff5518] shadow-lg shadow-accent/25 border-none justify-center"
               >
                 {tUpgrade('confirmBtn')}
               </Button>
@@ -629,7 +629,7 @@ export function PublicHeader() {
         >
           <div className="bg-card rounded-3xl max-w-xl w-full p-4 shadow-2xl space-y-4 border border-line cursor-default">
             <div className="relative flex items-center border-b border-line pb-3">
-              <Search className="w-5 h-5 text-[#2AC1BC] absolute left-3" />
+              <Search className="w-5 h-5 text-primary absolute left-3" />
               <input
                 type="text"
                 autoFocus
@@ -682,7 +682,7 @@ export function PublicHeader() {
                     className="flex items-center justify-between p-3 rounded-2xl hover:bg-card-hover transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                         {item.type === 'room' ? (
                           <Building className="w-4 h-4" />
                         ) : (
@@ -695,7 +695,7 @@ export function PublicHeader() {
                           size="xs"
                           weight="extrabold"
                           color="default"
-                          className="group-hover:text-[#2AC1BC] transition-colors"
+                          className="group-hover:text-primary transition-colors"
                         >
                           {item.title}
                         </Text>

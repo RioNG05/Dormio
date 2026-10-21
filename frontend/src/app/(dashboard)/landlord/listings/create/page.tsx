@@ -359,22 +359,22 @@ function CreateListingForm() {
 
         {/* Quota Badge */}
         {!isLoadingQuota && quota && (
-          <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#FF6B35]/10 to-[#2ac1bc]/10 border border-[#FF6B35]/20 rounded-2xl">
-            <Coins className="w-5 h-5 text-[#FF6B35]" />
+          <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-2xl">
+            <Coins className="w-5 h-5 text-accent" />
             <div className="text-right">
               <div className="text-[10px] font-bold uppercase text-muted tracking-wider">
                 {t('landlordListingsCreateQuotaLabel')}
               </div>
               <div className="text-xs font-black text-foreground">
                 {quota.freePostsRemainingToday > 0 ? (
-                  <span className="text-[#2ac1bc]">
+                  <span className="text-primary">
                     {t('landlordListingsCreateFreePostsRemaining', {
                       remaining: quota.freePostsRemainingToday,
                       total: quota.dailyPostQuota,
                     })}
                   </span>
                 ) : quota.purchasedCreditsAvailable > 0 ? (
-                  <span className="text-[#FF6B35]">
+                  <span className="text-accent">
                     {t('landlordListingsCreatePaidCreditsRemaining', {
                       count: quota.purchasedCreditsAvailable,
                     })}
@@ -409,7 +409,7 @@ function CreateListingForm() {
         {/* 1. Basic Info */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 border-b border-line pb-3">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35] text-white text-xs font-black">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-white text-xs font-black">
               1
             </span>
             <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
@@ -433,7 +433,7 @@ function CreateListingForm() {
                 {/* Select Boarding House */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-foreground/90 flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4 text-[#2AC1BC]" />
+                    <Building2 className="w-4 h-4 text-primary" />
                     {t('landlordListingsCreateBuildingLabel')}
                   </label>
 
@@ -466,7 +466,7 @@ function CreateListingForm() {
                       {t('landlordListingsCreateLinkedRoom')}
                     </label>
                     {isLoadingRooms && (
-                      <span className="text-xs text-[#2AC1BC] flex items-center gap-1 font-semibold">
+                      <span className="text-xs text-primary flex items-center gap-1 font-semibold">
                         <Loader2 className="w-3 h-3 animate-spin" />{' '}
                         {t('landlordListingsCreateLoadingRooms')}
                       </span>
@@ -514,7 +514,7 @@ function CreateListingForm() {
                         <span>
                           {t('landlordListingsCreateRoomPrefix')} {selectedRoom.roomNumber}
                         </span>
-                        <span className="text-[#2AC1BC] font-extrabold">
+                        <span className="text-primary font-extrabold">
                           {selectedRoom.roomType?.name || t('landlordListingsCreateRoomStandard')}
                         </span>
                       </div>
@@ -562,7 +562,7 @@ function CreateListingForm() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-line pb-3">
             <div className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35] text-white text-xs font-black">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-white text-xs font-black">
                 2
               </span>
               <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
@@ -576,7 +576,7 @@ function CreateListingForm() {
               variant="outline"
               size="sm"
               onClick={handleOpenAiModal}
-              className="from-teal-600 to-[#2AC1BC] hover:opacity-95"
+              className="from-teal-600 to-primary hover:opacity-95"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>{t('landlordListingsCreateAiSuggestBtn')}</span>
@@ -598,7 +598,7 @@ function CreateListingForm() {
         {/* 3. Images */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 border-b border-line pb-3">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#FF6B35] text-white text-xs font-black">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-accent text-white text-xs font-black">
               3
             </span>
             <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
@@ -693,7 +693,7 @@ function CreateListingForm() {
             size="sm"
             onClick={() => handleSubmit('posted')}
             disabled={isSubmitting}
-            className="from-[#FF6B35] to-orange-600 hover:opacity-95"
+            className="from-accent to-orange-600 hover:opacity-95"
           >
             {isSubmitting ? (
               <>
@@ -719,13 +719,13 @@ function CreateListingForm() {
             {/* Modal Header */}
             <div className="p-5 sm:p-6 border-b border-line flex items-center justify-between sticky top-0 bg-card z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-[#2AC1BC] to-teal-700 text-white flex items-center justify-center shadow-sm">
+                <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-primary to-teal-700 text-white flex items-center justify-center shadow-sm">
                   <Sparkles className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h3 className="text-base font-black text-foreground flex items-center gap-2">
                     <span>{t('landlordListingsCreateAiModalTitle')}</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#2AC1BC]/15 text-[#138e89]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-primary/15 text-[#138e89]">
                       Plus Tier
                     </span>
                   </h3>
@@ -834,7 +834,7 @@ function CreateListingForm() {
                   variant="primary"
                   disabled={isGeneratingAi}
                   onClick={handleGenerateAi}
-                  className="from-teal-600 to-[#2AC1BC] hover:opacity-95"
+                  className="from-teal-600 to-primary hover:opacity-95"
                 >
                   {isGeneratingAi ? (
                     <>
@@ -902,7 +902,7 @@ function CreateListingForm() {
                     <span className="font-bold text-muted">
                       {t('landlordListingsCreateAiResultDeposit')}:
                     </span>
-                    <span className="font-extrabold text-[#2AC1BC]">
+                    <span className="font-extrabold text-primary">
                       {formatCurrency(aiDraftResult.depositAmount)}
                     </span>
                   </div>
@@ -1006,7 +1006,7 @@ export default function CreateListingPage() {
     <Suspense
       fallback={
         <div className="py-20 text-center text-muted space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
           <p className="text-xs font-semibold">{t('landlordListingsCreateLoadingPage')}</p>
         </div>
       }

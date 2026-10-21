@@ -342,7 +342,7 @@ export default function LandlordSettingsPage() {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4">
         <div className="rounded-3xl border border-line bg-card p-8 sm:p-12 text-center shadow-xs space-y-5">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <Building2 className="w-8 h-8" />
           </div>
           <div className="space-y-1">
@@ -441,7 +441,7 @@ export default function LandlordSettingsPage() {
           </div>
           <Link
             href="/landlord/rooms"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#2AC1BC] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
           >
             {t('landlordSettingsManageRoomsBtn')} <ExternalLink className="w-3 h-3" />
           </Link>
@@ -467,7 +467,7 @@ export default function LandlordSettingsPage() {
           </div>
           <Link
             href="/landlord/services"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#2AC1BC] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
           >
             {t('landlordSettingsManageServicesBtn')} <ExternalLink className="w-3 h-3" />
           </Link>
@@ -499,7 +499,7 @@ export default function LandlordSettingsPage() {
 
       {isLoadingHouse ? (
         <div className="rounded-3xl border border-line bg-card p-12 text-center shadow-xs flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <Text variant="body" color="secondary">
             {t('landlordSettingsLoadingProperty')}
           </Text>
@@ -738,7 +738,7 @@ export default function LandlordSettingsPage() {
                     </div>
                     <div className="flex items-baseline justify-between text-xs">
                       <span className="text-muted font-medium">Đơn giá:</span>
-                      <span className="font-extrabold text-[#2AC1BC]">
+                      <span className="font-extrabold text-primary">
                         {Number(service.price).toLocaleString('vi-VN')} đ / {service.unit}
                       </span>
                     </div>

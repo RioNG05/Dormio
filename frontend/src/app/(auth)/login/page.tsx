@@ -143,7 +143,7 @@ export default function LoginPage() {
               <Mail className="w-4 h-4 text-muted" />
             )
           }
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* Password Field & Forgot Link */}
@@ -157,7 +157,7 @@ export default function LoginPage() {
                 variant="body"
                 size="xs"
                 weight="extrabold"
-                className="text-[#2AC1BC] hover:underline cursor-pointer"
+                className="text-primary hover:underline cursor-pointer"
               >
                 {t('authForgotPassword')}
               </Text>
@@ -179,7 +179,7 @@ export default function LoginPage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           }
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* Remember me Checkbox */}
@@ -225,7 +225,7 @@ export default function LoginPage() {
               variant="body"
               size="xs"
               weight="extrabold"
-              className="text-[#2AC1BC] hover:underline"
+              className="text-primary hover:underline"
             >
               {t('authRegisterNow')}
             </Text>

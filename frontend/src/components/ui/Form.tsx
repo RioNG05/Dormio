@@ -150,7 +150,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
     >
       <div className="flex items-start sm:items-center gap-3">
         {icon && (
-          <div className="p-2 sm:p-2.5 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] shrink-0 flex items-center justify-center">
+          <div className="p-2 sm:p-2.5 rounded-2xl bg-primary/10 text-primary shrink-0 flex items-center justify-center">
             {icon}
           </div>
         )}

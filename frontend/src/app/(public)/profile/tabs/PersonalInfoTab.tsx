@@ -135,7 +135,7 @@ export default function PersonalInfoTab() {
       <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-5">
         <div className="border-b border-line pb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-[#2AC1BC] shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
             <Text as="h3" variant="heading" size="base" weight="black">
               {t('guestProfileEkycSectionTitle')}
             </Text>
@@ -149,7 +149,7 @@ export default function PersonalInfoTab() {
             className={`px-3 py-1 rounded-full whitespace-nowrap ${
               cccdEdited
                 ? 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
-                : 'bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30'
+                : 'bg-primary/10 text-primary border border-primary/30'
             }`}
           >
             {cccdEdited ? t('guestProfileEkycPending') : t('guestProfileEkycAiVerified')}
@@ -325,7 +325,7 @@ export default function PersonalInfoTab() {
             size="lg"
             leftIcon={<Save className="w-4 h-4 shrink-0" />}
             rightIcon={<span>&rarr;</span>}
-            className="w-full sm:w-auto rounded-2xl shadow-lg shadow-[#2AC1BC]/25 hover:scale-105"
+            className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
           >
             {t('guestProfileBtnSaveProfile')}
           </Button>

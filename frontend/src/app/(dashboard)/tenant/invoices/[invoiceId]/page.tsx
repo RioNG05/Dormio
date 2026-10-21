@@ -531,7 +531,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+        <RefreshCw className="w-8 h-8 text-primary animate-spin" />
         <span className="text-xs font-semibold text-muted">{t('loading')}</span>
       </div>
     )
@@ -592,7 +592,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
 
         {/* Invoice Summary Pill */}
         <div className="flex items-center gap-2.5 px-4 py-2 bg-card rounded-2xl border border-line shadow-xs self-start sm:self-auto">
-          <Receipt className="w-4 h-4 text-[#FF6B35]" />
+          <Receipt className="w-4 h-4 text-accent" />
           <span className="text-xs font-bold text-foreground">{invoice.period}</span>
           <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-warning-soft text-warning uppercase font-mono">
             {invoice.id}
@@ -604,7 +604,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
       <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black text-sm">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
               1
             </div>
             <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
@@ -677,7 +677,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     {/* AI Status Badge */}
                     {state.isScanning ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 text-white text-[10px] font-bold shadow-xs animate-pulse">
-                        <RefreshCw className="w-3 h-3 animate-spin text-[#2AC1BC]" />
+                        <RefreshCw className="w-3 h-3 animate-spin text-primary" />
                         <span>{t('aiScanningBadge')}</span>
                       </span>
                     ) : state.isExtractedByAi ? (
@@ -832,7 +832,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                           <span className="text-[10px] text-muted block font-medium">
                             {t('estimatedFee')}
                           </span>
-                          <span className="font-black text-[#FF6B35] text-sm">
+                          <span className="font-black text-accent text-sm">
                             {formatCurrency(serviceCalc.cost, locale)}
                           </span>
                         </div>
@@ -860,7 +860,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
       <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center font-black text-sm">
+            <div className="w-8 h-8 rounded-xl bg-accent/10 text-accent flex items-center justify-center font-black text-sm">
               2
             </div>
             <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
@@ -945,7 +945,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   </span>
                 )}
             </div>
-            <span className="text-xl sm:text-2xl font-black text-[#FF6B35]">
+            <span className="text-xl sm:text-2xl font-black text-accent">
               {formatCurrency(payableAmount, locale)}
             </span>
           </div>
@@ -986,12 +986,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
       {payOsData && (
         <div
           id="payos-qr-section"
-          className="rounded-3xl border-2 border-[#2AC1BC]/80 bg-card p-6 sm:p-8 shadow-xl shadow-[#2AC1BC]/10 space-y-6 animate-in fade-in duration-500"
+          className="rounded-3xl border-2 border-primary/80 bg-card p-6 sm:p-8 shadow-xl shadow-primary/10 space-y-6 animate-in fade-in duration-500"
         >
           {/* Section Header with Countdown Timer */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
@@ -1074,7 +1074,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 </Button>
               ) : (
                 <div className="flex items-center gap-2 text-xs text-muted font-bold animate-pulse">
-                  <RefreshCw className="w-3.5 h-3.5 text-[#2AC1BC] animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 text-primary animate-spin" />
                   <span>{t('waitingForPayment')}</span>
                 </div>
               )}
@@ -1139,7 +1139,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       {t('lockedBadge')}
                     </span>
                   </div>
-                  <span className="font-black text-[#FF6B35] text-lg">
+                  <span className="font-black text-accent text-lg">
                     {formatCurrency(payOsData.amount, locale)}
                   </span>
                 </div>
@@ -1170,7 +1170,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       {t('lockedBadge')}
                     </span>
                   </div>
-                  <span className="font-mono font-black text-[#2AC1BC] text-sm tracking-wide">
+                  <span className="font-mono font-black text-primary text-sm tracking-wide">
                     {payOsData.description}
                   </span>
                 </div>

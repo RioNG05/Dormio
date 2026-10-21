@@ -259,7 +259,7 @@ function StaffShiftHistoryContent() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
+            <span className="text-xs font-black text-primary uppercase tracking-wider">
               {t('attHistoryTag')}
             </span>
           </div>
@@ -275,7 +275,7 @@ function StaffShiftHistoryContent() {
             href="/staff/schedule"
             className="px-4 py-2.5 rounded-2xl bg-card-hover hover:bg-line text-foreground text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-line cursor-pointer"
           >
-            <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+            <Calendar className="w-4 h-4 text-primary" />
             <span>{t('btnViewWorkSchedule')}</span>
             <ArrowRight className="w-3.5 h-3.5 text-muted" />
           </Link>
@@ -313,7 +313,7 @@ function StaffShiftHistoryContent() {
               <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricOnTime')}
               </span>
-              <div className="text-2xl font-black text-[#2AC1BC]">{summary.onTime}</div>
+              <div className="text-2xl font-black text-primary">{summary.onTime}</div>
               <span className="text-[10px] font-bold text-emerald-600 block">
                 {t('metricOnTimeSub')}
               </span>
@@ -363,10 +363,10 @@ function StaffShiftHistoryContent() {
             onClick={handleOpenFilterModal}
             title={t('titleFilterOpen')}
           >
-            <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
+            <Filter className="w-3.5 h-3.5 text-primary" />
             <span>{t('btnUseFilters')}</span>
             {hasAnyAppliedFilter && (
-              <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             )}
           </Button>
 
@@ -376,7 +376,7 @@ function StaffShiftHistoryContent() {
               {/* Date Range Chip */}
               {(appliedStartDate || appliedEndDate) && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
-                  <Calendar className="w-3 h-3 text-[#2AC1BC]" />
+                  <Calendar className="w-3 h-3 text-primary" />
                   <span>
                     {appliedStartDate && appliedEndDate
                       ? `${appliedStartDate} → ${appliedEndDate}`
@@ -404,7 +404,7 @@ function StaffShiftHistoryContent() {
               {/* Shift Chip */}
               {appliedShift !== 'all' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
-                  <Clock className="w-3 h-3 text-[#2AC1BC]" />
+                  <Clock className="w-3 h-3 text-primary" />
                   <span>{getShiftName(appliedShift)}</span>
                   <Button
                     variant="ghost"
@@ -425,7 +425,7 @@ function StaffShiftHistoryContent() {
               {/* Status Chip */}
               {appliedStatus !== 'all' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
-                  <ShieldCheck className="w-3 h-3 text-[#2AC1BC]" />
+                  <ShieldCheck className="w-3 h-3 text-primary" />
                   <span>
                     {appliedStatus === 'on_time' && t('tableStatusOnTime')}
                     {appliedStatus === 'late' && t('tableStatusLate')}
@@ -615,7 +615,7 @@ function StaffShiftHistoryContent() {
                         </span>
                       )}
                     </td>
-                    <td className="py-4 px-3 font-black text-[#2AC1BC]">{item.totalHours}h</td>
+                    <td className="py-4 px-3 font-black text-primary">{item.totalHours}h</td>
                     <td className="py-4 px-3 text-[11px] text-muted max-w-xs">
                       {item.checkInExplanation ? (
                         <div
@@ -730,7 +730,7 @@ function StaffShiftHistoryContent() {
           >
             <div className="p-4 border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#2AC1BC]" />
+                <Camera className="w-4 h-4 text-primary" />
                 <h3 className="text-sm font-black text-foreground truncate">
                   {previewImageModal.title}
                 </h3>
@@ -755,7 +755,7 @@ function StaffShiftHistoryContent() {
 
             {previewImageModal.watermark && (
               <div className="p-4 bg-zinc-900 text-white space-y-1.5 text-xs font-mono">
-                <div className="flex items-center justify-between text-[#2AC1BC] font-bold">
+                <div className="flex items-center justify-between text-primary font-bold">
                   <span>🕒 {previewImageModal.watermark.time}</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     AUDIT VERIFIED
@@ -809,7 +809,7 @@ function StaffShiftHistoryContent() {
             {/* Header */}
             <div className="p-5 border-b border-line flex items-center justify-between bg-surface/50">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center text-[#2AC1BC]">
+                <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center text-primary">
                   <Filter className="w-4 h-4" />
                 </div>
                 <div>
@@ -834,7 +834,7 @@ function StaffShiftHistoryContent() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <Calendar className="w-3.5 h-3.5 text-primary" />
                     <span>{t('filterDateRange')}</span>
                   </label>
                   {(modalStartDate || modalEndDate) && (
@@ -861,7 +861,7 @@ function StaffShiftHistoryContent() {
                       value={modalStartDate}
                       onChange={e => setModalStartDate(e.target.value)}
                       containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
                     />
                   </div>
                   <div>
@@ -874,7 +874,7 @@ function StaffShiftHistoryContent() {
                       min={modalStartDate || undefined}
                       onChange={e => setModalEndDate(e.target.value)}
                       containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
                     />
                   </div>
                 </div>
@@ -883,7 +883,7 @@ function StaffShiftHistoryContent() {
               {/* Ca làm việc: Dynamic from backend */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <Clock className="w-3.5 h-3.5 text-primary" />
                   <span>{t('filterShiftType')}</span>
                 </label>
                 <div className="relative">
@@ -898,7 +898,7 @@ function StaffShiftHistoryContent() {
                         label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
                       })),
                     ]}
-                    className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
+                    className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer disabled:opacity-50"
                   />
                   {isShiftsLoading && (
                     <div className="absolute right-8 top-1/2 -translate-y-1/2">
@@ -911,7 +911,7 @@ function StaffShiftHistoryContent() {
               {/* Trạng thái chấm công */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                   <span>{t('filterStatus')}</span>
                 </label>
                 <SelectInput
@@ -925,7 +925,7 @@ function StaffShiftHistoryContent() {
                     { value: 'late', label: t('tableStatusLate') },
                     { value: 'absent', label: t('tableStatusAbsent') },
                   ]}
-                  className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+                  className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
                 />
               </div>
             </div>

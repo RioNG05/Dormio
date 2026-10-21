@@ -300,18 +300,18 @@ export default function ShiftsPage() {
           value={searchQuery}
           onChange={setSearchQuery}
           containerClassName="w-full space-y-0"
-          className="w-full py-2 text-xs font-semibold bg-card border border-line rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+          className="w-full py-2 text-xs font-semibold bg-card border border-line rounded-xl focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
         />
       </div>
 
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-card rounded-3xl border border-line">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-xs text-muted font-medium">{t('landlordShiftsLoading')}</p>
         </div>
       ) : filteredShifts.length === 0 ? (
         <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
+          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center">
             <Clock className="w-8 h-8" />
           </div>
           <div className="max-w-sm space-y-1">
@@ -350,7 +350,7 @@ export default function ShiftsPage() {
                         <CategoryIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-extrabold text-foreground text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                        <h3 className="font-extrabold text-foreground text-base group-hover:text-primary transition-colors line-clamp-1">
                           {shift.name}
                         </h3>
                         <span
@@ -479,7 +479,7 @@ export default function ShiftsPage() {
               </div>
 
               {formStart && formEnd && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#2AC1BC]/5 border border-[#2AC1BC]/20 rounded-xl text-xs font-semibold text-[#2AC1BC]">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-xl text-xs font-semibold text-primary">
                   <Clock className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     {t('landlordShiftsDuration')}:{' '}

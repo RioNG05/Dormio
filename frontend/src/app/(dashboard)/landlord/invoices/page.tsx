@@ -500,7 +500,7 @@ function InvoicesContent() {
                     setSelectedMonth(e.target.value)
                     setCurrentPage(1)
                   }}
-                  leftIcon={<Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                  leftIcon={<Calendar className="w-3.5 h-3.5 text-primary" />}
                   options={[
                     { value: 'all', label: t('landlordInvoicesAllMonths') },
                     { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
@@ -587,7 +587,7 @@ function InvoicesContent() {
       {/* Main Content Display (Grid or Table View) */}
       {invoices.length === 0 ? (
         <div className="py-16 px-6 text-center bg-card border border-line rounded-3xl space-y-4 shadow-2xs">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <Receipt className="w-8 h-8" />
           </div>
           <div className="space-y-1.5 max-w-md mx-auto">
@@ -629,14 +629,14 @@ function InvoicesContent() {
                     ? 'border-success-subtle hover:border-emerald-300'
                     : isOverdue
                       ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
-                      : 'border-line hover:border-[#2AC1BC]/40'
+                      : 'border-line hover:border-primary/40'
                   }`}
               >
                 {/* Header info */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between pb-2.5 border-b border-line">
                     <span className="font-extrabold text-sm text-foreground flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-[#2AC1BC]" /> {inv.roomName}
+                      <FileText className="w-4 h-4 text-primary" /> {inv.roomName}
                     </span>
                     <span
                       className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${isPaid
@@ -713,7 +713,7 @@ function InvoicesContent() {
                       <span className="text-[10px] font-bold text-muted block uppercase tracking-wider">
                         {t('landlordInvoicesLabelTotal')}
                       </span>
-                      <span className="font-black text-base text-[#2AC1BC]">
+                      <span className="font-black text-base text-primary">
                         {inv.totalAmount.toLocaleString('vi-VN')} ₫
                       </span>
                     </div>
@@ -771,7 +771,7 @@ function InvoicesContent() {
                 {paginatedInvoices.map(inv => (
                   <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="px-4 py-3.5 font-bold font-mono text-foreground flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#2AC1BC]" />
+                      <FileText className="w-4 h-4 text-primary" />
                       {inv.id}
                     </td>
                     <td className="px-4 py-3.5 font-black text-foreground">{inv.roomName}</td>
@@ -779,7 +779,7 @@ function InvoicesContent() {
                     <td className="px-4 py-3.5 text-muted">
                       {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
                     </td>
-                    <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">
+                    <td className="px-4 py-3.5 font-black text-primary text-sm">
                       {inv.totalAmount.toLocaleString('vi-VN')} ₫
                     </td>
                     <td
@@ -842,7 +842,7 @@ function InvoicesContent() {
             {/* Modal Header */}
             <div className="p-5 border-b border-line flex items-center justify-between bg-surface/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
                   <Receipt className="w-5 h-5" />
                 </div>
                 <div>
@@ -917,7 +917,7 @@ function InvoicesContent() {
               {/* Fee Breakdown Table */}
               <div className="space-y-3">
                 <h4 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                  <FileText className="w-4 h-4 text-primary" />{' '}
                   {t('landlordInvoicesSectionFeeBreakdown')}
                 </h4>
 
@@ -1039,7 +1039,7 @@ function InvoicesContent() {
                   </div>
 
                   <div className="space-y-1 text-[11px] min-w-0">
-                    <span className="font-extrabold text-[#2AC1BC] flex items-center gap-1">
+                    <span className="font-extrabold text-primary flex items-center gap-1">
                       <QrCode className="w-3.5 h-3.5" /> {t('landlordInvoicesVietQrAuto')}
                     </span>
                     <p className="font-bold text-foreground">{t('landlordInvoicesVietQrBank')}</p>
@@ -1058,7 +1058,7 @@ function InvoicesContent() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
                     {t('landlordInvoicesGrandTotal')}
                   </span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] block">
+                  <span className="text-2xl sm:text-3xl font-black text-primary block">
                     {selectedInvoice.totalAmount.toLocaleString('vi-VN')} ₫
                   </span>
                   {selectedInvoice.paidAt && (
@@ -1134,7 +1134,7 @@ function InvoicesContent() {
             {/* Modal Header */}
             <div className="p-5 border-b border-line flex items-center justify-between bg-card">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
@@ -1267,12 +1267,12 @@ function InvoicesContent() {
               </div>
 
               {/* Total Summary preview */}
-              <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-extrabold text-muted block uppercase">
                     {t('landlordInvoicesPreviewTotal')}
                   </span>
-                  <span className="text-xl font-black text-[#2AC1BC]">
+                  <span className="text-xl font-black text-primary">
                     {(
                       createForm.rentAmount +
                       Math.max(0, createForm.elecNew - createForm.elecOld) * createForm.elecRate +
@@ -1416,7 +1416,7 @@ function InvoicesContent() {
                     </div>
                     <div className="border-t border-line pt-2 flex justify-between text-sm font-black text-foreground">
                       <span>{t('landlordInvoicesOcrAmount')}</span>
-                      <span className="text-[#2AC1BC]">
+                      <span className="text-primary">
                         {(
                           Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld) *
                           createForm.elecRate

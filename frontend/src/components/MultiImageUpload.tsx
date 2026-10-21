@@ -376,7 +376,7 @@ export function MultiImageUpload({
           size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={() => deviceInputRef.current?.click()}
-          leftIcon={<UploadCloud className="w-4 h-4 text-[#2AC1BC] shrink-0" />}
+          leftIcon={<UploadCloud className="w-4 h-4 text-primary shrink-0" />}
         >
           <Text as="span" size="xs" weight="medium" color="inherit">
             {t('guestPostsCreateUploadDevice') || 'Tải ảnh từ máy'}
@@ -389,7 +389,7 @@ export function MultiImageUpload({
           size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={openCamera}
-          leftIcon={<Camera className="w-4 h-4 text-[#FF6B35] shrink-0" />}
+          leftIcon={<Camera className="w-4 h-4 text-accent shrink-0" />}
         >
           <Text as="span" size="xs" weight="medium" color="inherit">
             {t('guestPostsCreateCaptureCamera') || 'Chụp ảnh camera'}
@@ -420,14 +420,14 @@ export function MultiImageUpload({
         className={cn(
           'relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-200 select-none',
           isDragging
-            ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 scale-[0.99]'
-            : 'border-line hover:border-[#2AC1BC] bg-surface/60 hover:bg-card-hover',
+            ? 'border-primary bg-primary/5 scale-[0.99]'
+            : 'border-line hover:border-primary bg-surface/60 hover:bg-card-hover',
           disabled || isAtMaxImages ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
         )}
       >
         <div className="flex flex-col items-center space-y-2 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-card shadow-xs border border-line flex items-center justify-center text-muted group-hover:text-[#2AC1BC] transition-colors">
-            <UploadCloud className="w-6 h-6 text-[#2AC1BC]" />
+          <div className="w-12 h-12 rounded-2xl bg-card shadow-xs border border-line flex items-center justify-center text-muted group-hover:text-primary transition-colors">
+            <UploadCloud className="w-6 h-6 text-primary" />
           </div>
           <div>
             <Text size="xs" weight="bold" color="default">
@@ -460,7 +460,7 @@ export function MultiImageUpload({
 
               {/* Cover Photo Badge */}
               {idx === 0 && (
-                <div className="absolute top-2 left-2 px-2.5 py-1 bg-[#2AC1BC] text-white text-[10px] font-black rounded-lg shadow-sm flex items-center gap-1 z-10">
+                <div className="absolute top-2 left-2 px-2.5 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-sm flex items-center gap-1 z-10">
                   <Star className="w-3 h-3 fill-current" />
                   <span>{t('guestPostsCreateCoverBadge') || 'Ảnh bìa'}</span>
                 </div>
@@ -525,7 +525,7 @@ export function MultiImageUpload({
               <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white space-y-1.5 p-2 text-center z-10">
                 {item.isUploading ? (
                   <>
-                    <Loader2 className="w-6 h-6 text-[#2AC1BC] animate-spin" />
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
                     <Text as="span" size="3xs" weight="bold" color="white" className="tracking-wide">
                       {t('guestPostsCreateUploadingText') || 'Đang tải ảnh...'}
                     </Text>
@@ -571,7 +571,7 @@ export function MultiImageUpload({
         size="lg"
         header={
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+            <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
               <Camera className="w-4 h-4" />
             </div>
             <Text as="h3" size="sm" weight="bold" color="default">
@@ -585,7 +585,7 @@ export function MultiImageUpload({
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-zinc-800">
             {cameraLoading && (
               <div className="flex flex-col items-center space-y-2 text-zinc-300">
-                <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
+                <Loader2 className="w-8 h-8 text-accent animate-spin" />
                 <Text as="span" size="xs" weight="semibold" className="text-zinc-300">Đang kết nối camera...</Text>
               </div>
             )}

@@ -79,7 +79,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variant === 'ghost-danger',
         'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-2xs shadow-rose-600/20':
           variant === 'danger',
-        'bg-[#FF6B35] text-white hover:bg-[#e85a26] dark:hover:bg-[#ff8252] active:opacity-90 shadow-2xs shadow-[#FF6B35]/20':
+        'bg-accent text-white hover:bg-[#e85a26] dark:hover:bg-[#ff8252] active:opacity-90 shadow-2xs shadow-accent/20':
           variant === 'accent' || variant === 'orange',
         'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-2xs shadow-emerald-600/20':
           variant === 'success',

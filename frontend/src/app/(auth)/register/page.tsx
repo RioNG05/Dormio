@@ -144,7 +144,7 @@ export default function RegisterPage() {
           value={phone}
           onChange={e => setPhone(e.target.value)}
           leftIcon={<Phone className="w-4 h-4 text-muted" />}
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* 2. Full Name (Optional) */}
@@ -157,7 +157,7 @@ export default function RegisterPage() {
           value={fullName}
           onChange={e => setFullName(e.target.value)}
           leftIcon={<User className="w-4 h-4 text-muted" />}
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* 3. Email (Optional) */}
@@ -170,7 +170,7 @@ export default function RegisterPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           leftIcon={<Mail className="w-4 h-4 text-muted" />}
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* 4. Password (Required) */}
@@ -193,7 +193,7 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           }
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* 5. Confirm Password (Required) */}
@@ -216,7 +216,7 @@ export default function RegisterPage() {
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           }
-          className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* 6. Terms Checkbox using Base Checkbox & Text Component */}
@@ -235,7 +235,7 @@ export default function RegisterPage() {
                     variant="body"
                     size="xs"
                     weight="extrabold"
-                    className="text-[#2AC1BC] hover:underline"
+                    className="text-primary hover:underline"
                   >
                     {t('authRegisterTermsLink')}
                   </Text>
@@ -247,7 +247,7 @@ export default function RegisterPage() {
                     variant="body"
                     size="xs"
                     weight="extrabold"
-                    className="text-[#2AC1BC] hover:underline"
+                    className="text-primary hover:underline"
                   >
                     {t('authRegisterPrivacyLink')}
                   </Text>
@@ -287,7 +287,7 @@ export default function RegisterPage() {
               variant="body"
               size="xs"
               weight="extrabold"
-              className="text-[#2AC1BC] hover:underline"
+              className="text-primary hover:underline"
             >
               {t('authRegisterLoginLink')}
             </Text>

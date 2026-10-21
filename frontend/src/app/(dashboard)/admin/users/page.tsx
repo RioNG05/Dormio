@@ -371,7 +371,7 @@ export default function AdminUsersManagementPage() {
     switch (role) {
       case 'landlord':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/30">
             <Building2 className="w-3 h-3" />
             {t('adminUsersRoleLandlord')}
           </span>
@@ -568,14 +568,14 @@ export default function AdminUsersManagementPage() {
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiLandlords')}
             </Text>
-            <div className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
             <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
-            <Text as="p" variant="heading" size="2xl" weight="black" className="text-[#2AC1BC]">
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-primary">
               {summary.landlordsCount.toLocaleString()}
             </Text>
           )}
@@ -743,7 +743,7 @@ export default function AdminUsersManagementPage() {
       {/* Content Section: Loading / Error / Empty / Grid / Table */}
       {loading ? (
         <div className="bg-card p-12 rounded-3xl border border-line text-center space-y-3 shadow-xs">
-          <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
+          <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
           <Text variant="body" size="sm" weight="bold" color="secondary">
             {t('adminUsersLoading')}
           </Text>
@@ -777,7 +777,7 @@ export default function AdminUsersManagementPage() {
             return (
               <div
                 key={user.id}
-                className="bg-card rounded-3xl border border-line hover:border-[#2AC1BC]/40 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 group"
+                className="bg-card rounded-3xl border border-line hover:border-primary/40 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 group"
               >
                 {/* Header: Avatar, Name, Role & Status */}
                 <div className="space-y-3">
@@ -1073,7 +1073,7 @@ export default function AdminUsersManagementPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-line bg-surface/50">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                <div className="p-2.5 rounded-2xl bg-primary/10 text-primary">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -1142,7 +1142,7 @@ export default function AdminUsersManagementPage() {
             <div className="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar">
               {detailLoading || !selectedUser ? (
                 <div className="py-16 text-center space-y-3">
-                  <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
+                  <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
                   <Text variant="body" size="sm" weight="bold" color="secondary">
                     {t('adminUsersRetrieving')}
                   </Text>
@@ -1386,7 +1386,7 @@ export default function AdminUsersManagementPage() {
                         {selectedUser.houseNames.map((name, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-primary/10 text-primary border border-primary/30"
                           >
                             <Building2 className="w-3.5 h-3.5" />
                             {name}
@@ -1523,7 +1523,7 @@ export default function AdminUsersManagementPage() {
                     {/* Choice 2: Change Role */}
                     <div className="p-4 rounded-2xl border border-line bg-surface/50 space-y-2">
                       <div className="flex items-center gap-2 text-foreground font-extrabold text-sm">
-                        <UserCog className="w-4 h-4 text-[#2AC1BC]" />
+                        <UserCog className="w-4 h-4 text-primary" />
                         <Text as="span" size="sm" weight="extrabold" color="inherit">
                           {t('adminUsersBtnChangeRole')}
                         </Text>

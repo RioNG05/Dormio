@@ -22,7 +22,7 @@ export function DashboardBuildingSelector() {
           as="span"
           variant="badge"
           color="brand"
-          className="bg-[#2AC1BC]/10 px-1.5 py-0.5 rounded-md"
+          className="bg-primary/10 px-1.5 py-0.5 rounded-md"
         >
           {tNav('managingPropertiesCount', { count: buildings.length })}
         </Text>
@@ -38,7 +38,7 @@ export function DashboardBuildingSelector() {
         title={tNav('switchPropertyTooltip')}
       >
         <div className="flex items-center gap-1.5 min-w-0 flex-1 pr-1.5 text-left">
-          <Building2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+          <Building2 className="w-3.5 h-3.5 text-primary shrink-0" />
           <div className="min-w-0 flex-1">
             <Text as="p" size="xs" weight="black" color="default" truncate className="block">
               {activeBuilding?.name || tNav('selectBuildingPlaceholder')}
@@ -51,7 +51,7 @@ export function DashboardBuildingSelector() {
           </div>
         </div>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-muted shrink-0 transition-transform duration-200 ${buildingDropdownOpen ? 'rotate-180 text-[#2AC1BC]' : ''
+          className={`w-3.5 h-3.5 text-muted shrink-0 transition-transform duration-200 ${buildingDropdownOpen ? 'rotate-180 text-primary' : ''
             }`}
         />
       </Button>
@@ -101,7 +101,7 @@ export function DashboardBuildingSelector() {
               <Link
                 href="/landlord/setup"
                 onClick={() => setBuildingDropdownOpen(false)}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-black text-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-black text-primary hover:bg-primary/5 rounded-xl transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <Text as="span" size="xs" weight="black" color="brand">

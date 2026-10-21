@@ -513,7 +513,7 @@ function DepositPageInner() {
         <div className="flex items-center justify-between">
           <button
             onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-[#2AC1BC] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-primary transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4" />
             {tGuest('guestRoomDetailBackToList')}
@@ -568,7 +568,7 @@ function DepositPageInner() {
                     <span
                       className={`w-6 h-6 rounded-full text-[10px] font-black inline-flex items-center justify-center transition-colors ${
                         done
-                          ? 'bg-[#2AC1BC] text-white'
+                          ? 'bg-primary text-white'
                           : active
                             ? 'bg-zinc-900 text-white'
                             : 'bg-line text-muted'
@@ -587,7 +587,7 @@ function DepositPageInner() {
                   {i < STEPS.length - 1 && (
                     <div
                       className={`h-px flex-1 mb-4 mx-1 transition-colors ${
-                        i < activeStepIndex || done ? 'bg-[#2AC1BC]' : 'bg-line'
+                        i < activeStepIndex || done ? 'bg-primary' : 'bg-line'
                       }`}
                     />
                   )}
@@ -601,14 +601,14 @@ function DepositPageInner() {
         <div className="bg-card rounded-3xl border border-line shadow-xl p-6 space-y-5">
           {/* Card Header */}
           <div className="flex items-center gap-2 pb-3 border-b border-line">
-            <div className="w-8 h-8 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
               <h1 className="text-sm font-black text-foreground">
                 {tGuest('guestRoomDetailModalTitle')}
               </h1>
-              <span className="text-[10px] font-bold text-[#2AC1BC] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
                 {tGuest('guestDepositEscrowBadge')}
               </span>
             </div>
@@ -619,7 +619,7 @@ function DepositPageInner() {
             <div className="space-y-4">
               {isCheckingIdentity ? (
                 <div className="py-12 text-center space-y-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC] mx-auto" />
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                   <p className="text-xs font-bold text-foreground/90">
                     {tGuest('guestDepositCheckingIdentity')}
                   </p>
@@ -761,7 +761,7 @@ function DepositPageInner() {
           {depositStep === 'identity_gate' && (
             <form onSubmit={handleSaveIdentity} className="space-y-4">
               <div className="p-4 bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-2xl border border-zinc-800 space-y-1.5">
-                <div className="flex items-center gap-1.5 text-[#2AC1BC] font-extrabold text-xs">
+                <div className="flex items-center gap-1.5 text-primary font-extrabold text-xs">
                   <ShieldCheck className="w-4 h-4" />
                   <span>{tGuest('guestDepositIdentityGateTitle')}</span>
                 </div>
@@ -920,7 +920,7 @@ function DepositPageInner() {
               </div>
 
               <div className="p-3.5 bg-surface rounded-2xl border border-line space-y-1.5">
-                <span className="text-[10px] font-bold text-[#2AC1BC] uppercase">
+                <span className="text-[10px] font-bold text-primary uppercase">
                   {tGuest('guestRoomDetailSelectedRoomLabel')}
                 </span>
                 <h2 className="font-extrabold text-xs text-foreground line-clamp-1">{post.title}</h2>
@@ -985,7 +985,7 @@ function DepositPageInner() {
               </div>
 
               <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-3.5 rounded-2xl text-white space-y-1.5 border border-zinc-800">
-                <span className="text-[10px] font-black text-[#2AC1BC] uppercase block">
+                <span className="text-[10px] font-black text-primary uppercase block">
                   {tGuest('guestDepositEscrowNoticeTitle')}
                 </span>
                 <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
@@ -1009,7 +1009,7 @@ function DepositPageInner() {
                   !!phoneError ||
                   !isPhoneValid(tenantPhone)
                 }
-                className="from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] mt-2"
+                className="from-accent to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] mt-2"
               >
                 {isSubmittingDeposit ? (
                   <>
@@ -1033,7 +1033,7 @@ function DepositPageInner() {
               <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
                 <div className="flex items-center gap-2">
                   <Clock
-                    className={`w-4 h-4 ${countdown < 120 ? 'text-rose-500 animate-pulse' : 'text-[#2AC1BC]'}`}
+                    className={`w-4 h-4 ${countdown < 120 ? 'text-rose-500 animate-pulse' : 'text-primary'}`}
                   />
                   <span className="text-xs font-bold text-muted">
                     {tGuest('guestDepositQrCountdown')}
@@ -1169,9 +1169,9 @@ function DepositPageInner() {
               </div>
 
               {/* Automated PayOS Verification Status Banner */}
-              <div className="p-3.5 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between text-left">
+              <div className="p-3.5 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between text-left">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-3 h-3 rounded-full bg-[#2AC1BC] animate-ping" />
+                  <div className="w-3 h-3 rounded-full bg-primary animate-ping" />
                   <div>
                     <p className="text-xs font-bold text-foreground">
                       {tGuest('guestDepositWaitingTransfer')}
@@ -1181,7 +1181,7 @@ function DepositPageInner() {
                     </p>
                   </div>
                 </div>
-                <Loader2 className="w-4 h-4 animate-spin text-[#2AC1BC] shrink-0" />
+                <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
               </div>
 
               <div className="p-3 bg-warning-soft border border-warning-subtle rounded-2xl text-[11px] text-warning font-semibold text-left flex items-start gap-2">
@@ -1201,7 +1201,7 @@ function DepositPageInner() {
           {/* Success Step */}
           {depositStep === 'success' && (
             <div className="text-center space-y-4 py-2 animate-in zoom-in-95 duration-400">
-              <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto border-2 border-[#2AC1BC]/20">
+              <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto border-2 border-primary/20">
                 <CheckCircle2 className="w-9 h-9" />
               </div>
               <div className="space-y-1">

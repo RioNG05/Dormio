@@ -176,7 +176,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
             href="/rooms"
             className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 text-[#2AC1BC]" />
+            <ArrowLeft className="w-4 h-4 text-primary" />
             <span>{t('guestPosterProfileBackToRooms')}</span>
           </Link>
           <div className="flex items-center gap-2 text-[11px] font-bold text-muted">
@@ -259,7 +259,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                     <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                       {profile.username ?? t('guestRoomsDefaultLandlord')}
                     </h1>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-extrabold rounded-full">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs font-extrabold rounded-full">
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{t('guestPosterProfileVerified')}</span>
                     </span>
@@ -268,13 +268,13 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                   {/* Metadata Chips */}
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-semibold text-muted">
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+                      <Calendar className="w-4 h-4 text-primary" />
                       {t('guestPosterProfileMemberSince', {
                         date: formattedJoinedDate,
                       })}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Building className="w-4 h-4 text-[#2AC1BC]" />
+                      <Building className="w-4 h-4 text-primary" />
                       {t('guestPosterProfileTotalListings', {
                         count: profile.postCount,
                       })}
@@ -301,13 +301,13 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                       {profile.phoneNumber && (
                         <div className="flex items-center justify-between p-2.5 bg-card rounded-xl border border-line">
                           <div className="flex items-center gap-2 text-xs font-bold text-foreground truncate">
-                            <Phone className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                            <Phone className="w-4 h-4 text-primary shrink-0" />
                             <span className="truncate">{profile.phoneNumber}</span>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <a
                               href={`tel:${profile.phoneNumber}`}
-                              className="px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                              className="px-2.5 py-1 bg-primary hover:bg-[#22a9a4] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
                             >
                               {t('guestPosterProfileCall')}
                             </a>
@@ -329,7 +329,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                       {profile.email && (
                         <div className="flex items-center justify-between p-2.5 bg-card rounded-xl border border-line">
                           <div className="flex items-center gap-2 text-xs font-bold text-foreground truncate">
-                            <Mail className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                            <Mail className="w-4 h-4 text-primary shrink-0" />
                             <span className="truncate">{profile.email}</span>
                           </div>
                           <button
@@ -352,7 +352,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                           disabled={isChatLoading}
                           className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                          <MessageSquare className="w-3.5 h-3.5 text-primary" />
                           <span>
                             {isChatLoading
                               ? t('guestPosterProfileChatLoading')
@@ -378,7 +378,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                         <button
                           onClick={handleStartChat}
                           disabled={isChatLoading}
-                          className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-2"
+                          className="w-full py-3 bg-primary hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-md shadow-primary/20 flex items-center justify-center gap-2"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>
@@ -392,7 +392,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                           href={`/login?redirect=/landlords/${posterId}`}
                           className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
                         >
-                          <Lock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                          <Lock className="w-3.5 h-3.5 text-primary" />
                           <span>{t('guestPosterProfileLoginToContact')}</span>
                         </Link>
                       )}
@@ -406,7 +406,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-line pb-3.5">
                 <h2 className="text-lg sm:text-xl font-black text-foreground flex items-center gap-2.5">
-                  <Home className="w-5 h-5 text-[#2AC1BC]" />
+                  <Home className="w-5 h-5 text-primary" />
                   <span>{t('guestPosterProfileActiveListingsTitle')}</span>
                   <span className="text-xs font-extrabold px-2.5 py-0.5 bg-line text-foreground/90 rounded-full">
                     {profile.activeListings.length}
@@ -458,11 +458,11 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                         {/* Details */}
                         <div className="p-5 flex-1 flex flex-col justify-between space-y-3.5">
                           <div className="space-y-1.5">
-                            <h3 className="font-extrabold text-foreground text-sm leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                            <h3 className="font-extrabold text-foreground text-sm leading-snug group-hover:text-primary transition-colors line-clamp-1">
                               <Link
                                 href={`/rooms/${listing.id}`}
                                 onClick={e => e.stopPropagation()}
-                                className="hover:text-[#2AC1BC] transition-colors"
+                                className="hover:text-primary transition-colors"
                               >
                                 {listing.title}
                               </Link>
@@ -470,14 +470,14 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
 
                             {address && (
                               <p className="flex items-center text-xs text-muted font-semibold gap-1 truncate">
-                                <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                                 <span className="truncate">{address}</span>
                               </p>
                             )}
 
                             {listing.room?.area && (
                               <span className="text-[11px] text-muted font-medium flex items-center gap-1">
-                                <Maximize2 className="w-3 h-3 text-[#2AC1BC] shrink-0" />
+                                <Maximize2 className="w-3 h-3 text-primary shrink-0" />
                                 {listing.room.area} m²
                               </span>
                             )}
@@ -494,7 +494,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                                 {t('guestRoomsMonth')}
                               </span>
                             </div>
-                            <span className="px-3 py-1.5 bg-zinc-900 group-hover:bg-[#2AC1BC] text-white text-[11px] font-bold rounded-xl transition-all shrink-0">
+                            <span className="px-3 py-1.5 bg-zinc-900 group-hover:bg-primary text-white text-[11px] font-bold rounded-xl transition-all shrink-0">
                               {t('guestRoomsDetailBtn')}
                             </span>
                           </div>
@@ -522,11 +522,11 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
             }`}
           >
             {toastMessage.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
             ) : toastMessage.type === 'error' ? (
               <AlertCircle className="w-4 h-4 text-white shrink-0" />
             ) : (
-              <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+              <Info className="w-4 h-4 text-primary shrink-0" />
             )}
             <span>{toastMessage.text}</span>
             <button

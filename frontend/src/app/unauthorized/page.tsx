@@ -137,7 +137,7 @@ export default function UnauthorizedPage() {
       {/* Footer branding */}
       <Text variant="caption" size="xs" weight="medium" color="subtle" className="mt-8">
         Dormio
-        <Text as="span" variant="caption" size="xs" weight="medium" className="text-[#FF6B35]">
+        <Text as="span" variant="caption" size="xs" weight="medium" className="text-accent">
           .
         </Text>
       </Text>

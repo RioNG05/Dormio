@@ -155,7 +155,7 @@ export function CoverPhotoUpload({
 
             {isUploading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white backdrop-blur-xs">
-                <Loader2 className="h-7 w-7 animate-spin text-[#2AC1BC]" />
+                <Loader2 className="h-7 w-7 animate-spin text-primary" />
                 <Text as="span" size="xs" weight="semibold" color="white" className="mt-2">
                   Đang tải ảnh lên đám mây...
                 </Text>
@@ -165,7 +165,7 @@ export function CoverPhotoUpload({
 
           <div className="mt-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 overflow-hidden">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC]">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <ImageIcon className="h-4 w-4" />
               </div>
               <div className="truncate text-xs">
@@ -214,11 +214,11 @@ export function CoverPhotoUpload({
           onClick={() => fileInputRef.current?.click()}
           className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center cursor-pointer transition-all ${
             isDragging
-              ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 scale-[0.99]'
-              : 'border-line bg-surface/50 hover:border-[#2AC1BC]/60 hover:bg-card-hover'
+              ? 'border-primary bg-primary/5 scale-[0.99]'
+              : 'border-line bg-surface/50 hover:border-primary/60 hover:bg-card-hover'
           }`}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] shadow-xs">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-xs">
             <UploadCloud className="h-6 w-6" />
           </div>
 

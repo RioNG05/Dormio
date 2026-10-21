@@ -153,10 +153,10 @@ export default function ListingsPage() {
         key: 'freeToday',
         label: t('landlordListingsFreeToday'),
         value: quota ? `${quota.freePostsRemainingToday} / ${quota.dailyPostQuota}` : '1 / 1',
-        icon: <Coins className="w-5 h-5 text-[#FF6B35] shrink-0" />,
+        icon: <Coins className="w-5 h-5 text-accent shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[150px]',
-        labelClassName: 'text-[#FF6B35]',
+          'px-3.5 py-2.5 bg-accent/10 hover:bg-accent/20 border-accent/30 lg:w-[150px]',
+        labelClassName: 'text-accent',
         valueColor: 'white',
         valueClassName: 'text-base leading-none mt-1',
       },
@@ -164,9 +164,9 @@ export default function ListingsPage() {
         key: 'paidCredits',
         label: t('landlordListingsPaidCredits'),
         value: t('landlordListingsPaidUnit', { count: quota?.purchasedCreditsAvailable ?? 0 }),
-        icon: <Sparkles className="w-5 h-5 text-[#2ac1bc] shrink-0" />,
+        icon: <Sparkles className="w-5 h-5 text-primary shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[150px]',
         labelColor: 'brand',
         valueColor: 'brand',
         valueClassName: 'text-base leading-none mt-1',
@@ -215,7 +215,7 @@ export default function ListingsPage() {
             variant="primary"
             size="md"
             onClick={() => router.push('/landlord/listings/create')}
-            className="bg-[#FF6B35] hover:bg-[#ff5518] text-white"
+            className="bg-accent hover:bg-[#ff5518] text-white"
           >
             <Plus className="w-4 h-4" /> {t('landlordListingsNewListingBtn')}
           </Button>
@@ -234,7 +234,7 @@ export default function ListingsPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 flex items-center gap-1">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/20 text-primary border border-primary/30 flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-amber-300" />{' '}
                   {t('landlordListingsVacantBannerTag')}
                 </span>
@@ -248,7 +248,7 @@ export default function ListingsPage() {
             </div>
             <Link
               href="/landlord/listings/create"
-              className="text-xs font-bold text-[#2AC1BC] hover:underline"
+              className="text-xs font-bold text-primary hover:underline"
             >
               {t('landlordListingsVacantBannerViewAll')}
             </Link>
@@ -258,7 +258,7 @@ export default function ListingsPage() {
             {unlistedRooms.slice(0, 3).map(room => (
               <div
                 key={room.roomId}
-                className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#2AC1BC]/50 transition-all flex items-center justify-between gap-3"
+                className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all flex items-center justify-between gap-3"
               >
                 <div className="space-y-1 text-xs">
                   <div className="font-bold text-white flex items-center gap-1.5">
@@ -268,7 +268,7 @@ export default function ListingsPage() {
                         floor: room.floor,
                       })}
                     </span>
-                    <span className="text-[10px] text-[#2AC1BC] font-semibold">
+                    <span className="text-[10px] text-primary font-semibold">
                       • {room.roomTypeName}
                     </span>
                   </div>
@@ -281,7 +281,7 @@ export default function ListingsPage() {
                 </div>
                 <Link
                   href={`/landlord/listings/create?roomId=${room.roomId}&aiDraft=true`}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#23a5a0] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-[#23a5a0] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   <span>{t('landlordListingsVacantAiDraftBtn')}</span>
@@ -303,7 +303,7 @@ export default function ListingsPage() {
             }}
             placeholder={t('landlordListingsSearchPlaceholder')}
             containerClassName="w-full space-y-0"
-            className="w-full py-2 text-xs border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-colors"
+            className="w-full py-2 text-xs border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
           />
         </form>
 
@@ -316,7 +316,7 @@ export default function ListingsPage() {
               setPage(1)
             }}
             containerClassName="w-auto space-y-0"
-            className="rounded-xl border border-line pl-3 pr-8 py-2 text-xs font-semibold text-foreground/90 bg-surface/50 hover:bg-card focus:outline-none focus:border-[#FF6B35] transition-colors cursor-pointer"
+            className="rounded-xl border border-line pl-3 pr-8 py-2 text-xs font-semibold text-foreground/90 bg-surface/50 hover:bg-card focus:outline-none focus:border-accent transition-colors cursor-pointer"
             options={[
               { value: '', label: t('landlordListingsFilterAllStatus') },
               { value: 'posted', label: t('landlordListingsStatusPosted') },
@@ -339,13 +339,13 @@ export default function ListingsPage() {
       {/* Loading state */}
       {isLoading ? (
         <div className="bg-card border border-line rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-3">
-          <Loader2 className="w-8 h-8 text-[#FF6B35] animate-spin" />
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
           <span className="text-xs font-bold text-muted">{t('landlordListingsLoading')}</span>
         </div>
       ) : listings.length === 0 ? (
         /* Empty State */
         <div className="bg-card border border-line rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-accent-soft text-[#FF6B35] flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-accent-soft text-accent flex items-center justify-center">
             <ImageIcon className="w-8 h-8" />
           </div>
           <div className="space-y-1 max-w-sm">
@@ -356,7 +356,7 @@ export default function ListingsPage() {
           </div>
           <Link
             href="/landlord/listings/create"
-            className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-[#FF6B35] hover:bg-[#ff5518] rounded-xl shadow-md shadow-[#FF6B35]/20 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-accent hover:bg-[#ff5518] rounded-xl shadow-md shadow-accent/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" /> {t('landlordListingsCreateFirstBtn')}
           </Link>
@@ -410,7 +410,7 @@ export default function ListingsPage() {
                   </div>
 
                   <div className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-md rounded-xl text-white text-[10px] font-bold flex items-center gap-1.5">
-                    <Eye className="w-3 h-3 text-[#2ac1bc]" />{' '}
+                    <Eye className="w-3 h-3 text-primary" />{' '}
                     {t('landlordListingsViewsBadge', { count: item.viewsCount })}
                   </div>
                 </div>
@@ -435,7 +435,7 @@ export default function ListingsPage() {
                       </span>
                     </div>
 
-                    <h3 className="text-base font-black text-foreground line-clamp-2 leading-snug group-hover:text-[#FF6B35] transition-colors">
+                    <h3 className="text-base font-black text-foreground line-clamp-2 leading-snug group-hover:text-accent transition-colors">
                       {item.title}
                     </h3>
 
@@ -450,7 +450,7 @@ export default function ListingsPage() {
                       <div className="text-[10px] font-bold uppercase text-muted">
                         {t('landlordListingsDepositHolding')}
                       </div>
-                      <div className="text-sm font-black text-[#FF6B35]">
+                      <div className="text-sm font-black text-accent">
                         {Number(item.depositAmount).toLocaleString(
                           currentLocale === 'vi' ? 'vi-VN' : 'en-US',
                         )}{' '}
@@ -517,7 +517,7 @@ export default function ListingsPage() {
                         ? `P.${item.room.roomNumber} (${item.room.boardingHouseName || t('landlordListingsRoomFallback')})`
                         : '—'}
                     </td>
-                    <td className="px-6 py-4 font-black text-[#FF6B35]">
+                    <td className="px-6 py-4 font-black text-accent">
                       {Number(item.depositAmount).toLocaleString(
                         currentLocale === 'vi' ? 'vi-VN' : 'en-US',
                       )}{' '}

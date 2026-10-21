@@ -284,7 +284,7 @@ export default function ReportsPage() {
       {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-70 bg-zinc-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-zinc-700 flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-[#2AC1BC]" />
+          <CheckCircle2 className="w-5 h-5 text-primary" />
           <span className="text-xs sm:text-sm font-bold">{toast.message}</span>
         </div>
       )}
@@ -308,7 +308,7 @@ export default function ReportsPage() {
                 onClick={() => setReportMode('portfolio')}
                 className="text-xs font-bold"
               >
-                <Layers className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                <Layers className="w-3.5 h-3.5 text-primary" />
                 <span>{t('landlordReportsTabPortfolio')}</span>
               </Button>
               <Button
@@ -329,7 +329,7 @@ export default function ReportsPage() {
                 value={activeBuilding?.id || ''}
                 onChange={e => selectBuilding(e.target.value)}
                 containerClassName="w-auto space-y-0"
-                className="pl-8.5 pr-8 py-2 text-xs font-bold text-foreground/90 bg-card border border-line rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-colors cursor-pointer shadow-2xs"
+                className="pl-8.5 pr-8 py-2 text-xs font-bold text-foreground/90 bg-card border border-line rounded-xl focus:outline-none focus:border-primary transition-colors cursor-pointer shadow-2xs"
                 leftIcon={<Building2 className="w-3.5 h-3.5 text-muted" />}
                 options={buildings.map(b => ({
                   value: b.id,
@@ -345,7 +345,7 @@ export default function ReportsPage() {
                 type="button"
                 disabled={isAiGenerating}
                 onClick={handleGenerateAiStrategy}
-                className="from-[#2AC1BC] to-teal-600 hover:opacity-95"
+                className="from-primary to-teal-600 hover:opacity-95"
               >
                 {isAiGenerating ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -365,7 +365,7 @@ export default function ReportsPage() {
               variant="outline"
               onClick={handleExportCsv}
             >
-              <FileSpreadsheet className="w-4 h-4 text-[#2AC1BC]" />
+              <FileSpreadsheet className="w-4 h-4 text-primary" />
               <span>{t('landlordReportsExportCsv')}</span>
             </Button>
           </div>
@@ -379,14 +379,14 @@ export default function ReportsPage() {
         <>
           {isPortfolioLoading ? (
             <div className="py-20 text-center text-muted space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
               <p className="text-xs font-semibold">{t('landlordReportsPortfolioLoading')}</p>
             </div>
           ) : (
             <>
               {/* AI Marketing Strategy Banner Card */}
               <div className="bg-linear-to-r from-teal-900 via-zinc-900 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden border border-teal-800/40">
-                <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-[#2AC1BC]/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
                   <div className="space-y-1.5 max-w-2xl">
                     <div className="flex items-center gap-2">
@@ -414,7 +414,7 @@ export default function ReportsPage() {
                   >
                     {isAiGenerating ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-[#2AC1BC]" />
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
                         <span>{t('landlordReportsAiBannerCalculating')}</span>
                       </>
                     ) : (
@@ -468,7 +468,7 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiOccupancyRate')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
                       <Home className="w-5 h-5" />
                     </div>
                   </div>
@@ -545,13 +545,13 @@ export default function ReportsPage() {
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>{t('landlordReportsRevenueChartTitle')}</span>
-                        <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       </h3>
                       <p className="text-xs text-muted mt-0.5">
                         {t('landlordReportsRevenueChartDesc')}
                       </p>
                     </div>
-                    <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                    <span className="p-2 rounded-xl bg-primary/10 text-primary">
                       <TrendingUp className="w-4 h-4" />
                     </span>
                   </div>
@@ -733,7 +733,7 @@ export default function ReportsPage() {
                       return (
                         <div
                           key={p.id}
-                          className="bg-card p-5 rounded-2xl border border-line hover:border-[#2AC1BC]/50 hover:shadow-md transition-all space-y-3.5"
+                          className="bg-card p-5 rounded-2xl border border-line hover:border-primary/50 hover:shadow-md transition-all space-y-3.5"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
@@ -977,7 +977,7 @@ export default function ReportsPage() {
         <>
           {isSingleLoading ? (
             <div className="py-20 text-center text-muted space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
               <p className="text-xs font-semibold">{t('landlordReportsSingleLoading')}</p>
             </div>
           ) : (
@@ -1013,12 +1013,12 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiRevenue')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-primary tracking-tight">
                       {formatVND(Number(singleFinancial.currentMonthRevenue) || 0)}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
@@ -1085,13 +1085,13 @@ export default function ReportsPage() {
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>{t('landlordReportsSingleChartTitle')}</span>
-                        <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       </h3>
                       <p className="text-xs text-muted mt-0.5">
                         {t('landlordReportsSingleChartDesc', { name: activeBuilding?.name || '' })}
                       </p>
                     </div>
-                    <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                    <span className="p-2 rounded-xl bg-primary/10 text-primary">
                       <TrendingUp className="w-4 h-4" />
                     </span>
                   </div>
@@ -1163,7 +1163,7 @@ export default function ReportsPage() {
                     </p>
 
                     <div className="space-y-3">
-                      <div className="p-3 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-between text-xs font-bold text-[#138e89]">
+                      <div className="p-3 bg-primary/10 rounded-2xl flex items-center justify-between text-xs font-bold text-[#138e89]">
                         <span>{t('landlordReportsSingleRoomOccupied')}</span>
                         <span className="text-sm font-black">
                           {t('landlordReportsSingleRoomCount', {
@@ -1201,7 +1201,7 @@ export default function ReportsPage() {
                         {t('landlordReportsSingleTotalRooms', { count: singleRooms.totalRooms })}
                       </strong>
                     </span>
-                    <span className="text-[#2AC1BC] font-extrabold">
+                    <span className="text-primary font-extrabold">
                       {t('landlordReportsSingleOccupancySuffix', {
                         rate: singleRooms.occupancyRate,
                       })}
@@ -1223,7 +1223,7 @@ export default function ReportsPage() {
             {/* Modal Header */}
             <div className="p-5 sm:p-6 border-b border-line flex items-center justify-between sticky top-0 bg-card z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-[#2AC1BC] to-teal-700 text-white flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-primary to-teal-700 text-white flex items-center justify-center shadow-md">
                   <Sparkles className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
@@ -1303,17 +1303,17 @@ export default function ReportsPage() {
               {/* 30-Day Action Plan Timeline */}
               <div className="space-y-3 pt-2">
                 <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#2AC1BC]" />
+                  <Clock className="w-4 h-4 text-primary" />
                   <span>{t('landlordReportsAiActionPlanTitle')}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {aiStrategy.actionPlan30Days.map((step, i) => (
                     <div
                       key={i}
-                      className="p-3.5 rounded-2xl border border-line bg-card hover:border-[#2AC1BC]/60 hover:shadow-xs transition-all space-y-1"
+                      className="p-3.5 rounded-2xl border border-line bg-card hover:border-primary/60 hover:shadow-xs transition-all space-y-1"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/15 text-[#138e89]">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/15 text-[#138e89]">
                           {step.dayRange}
                         </span>
                         <span className="text-[10px] text-muted font-bold">

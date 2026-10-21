@@ -416,7 +416,7 @@ function DepositsContent() {
   const renderStatusBadge = (dep: DepositItem) => {
     if (dep.status === 'paid') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full bg-[#2AC1BC]/15 text-[#0d6e6b] border border-[#2AC1BC]/30">
+        <span className="px-2.5 py-0.5 rounded-full bg-primary/15 text-[#0d6e6b] border border-primary/30">
           <Text as="span" size="xs" weight="black" color="inherit">
             {t('landlordDepositsStatusHolding')}
           </Text>
@@ -483,10 +483,10 @@ function DepositsContent() {
           locale,
         ),
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[160px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[160px]',
         labelColor: 'brand',
         valueColor: 'brand',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5 tracking-tight',
@@ -634,7 +634,7 @@ function DepositsContent() {
               className={cn(
                 'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
                 selectedDepositTypeTab === 'contract'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs'
+                  ? 'bg-primary text-white shadow-xs'
                   : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
               )}
               leftIcon={<FileText className="shrink-0 w-3.5 h-3.5" />}
@@ -728,7 +728,7 @@ function DepositsContent() {
 
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-3">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <Text size="xs" color="secondary" weight="bold">
             {t('landlordDepositsLoadingData')}
           </Text>
@@ -853,7 +853,7 @@ function DepositsContent() {
                       <Text as="span" size="xs" weight="bold" color="secondary" className="block uppercase tracking-wider">
                         {t('landlordDepositsColAmount')}
                       </Text>
-                      <Text as="span" size="base" weight="black" className="text-[#2AC1BC]">
+                      <Text as="span" size="base" weight="black" className="text-primary">
                         {dep.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                       </Text>
                     </div>
@@ -977,7 +977,7 @@ function DepositsContent() {
                           </Text>
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-black text-sm text-[#2AC1BC]">
+                      <td className="py-3.5 px-4 text-right font-black text-sm text-primary">
                         {dep.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                       </td>
                       <td className="py-3.5 px-4 text-muted font-semibold">{dep.depositDate}</td>
@@ -1078,7 +1078,7 @@ function DepositsContent() {
               title={t('landlordDepositsDetailModalTitle')}
               description={selectedDeposit.id}
               icon={
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
                   <PiggyBank className="w-5 h-5" />
                 </div>
               }
@@ -1159,7 +1159,7 @@ function DepositsContent() {
               </div>
 
               {/* Financial Summary */}
-              <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl space-y-2">
+              <div className="p-4 bg-primary/10 border border-primary/30 rounded-2xl space-y-2">
                 <div className="flex justify-between items-center text-xs">
                   <Text as="span" size="xs" weight="semibold" color="secondary">
                     {t('landlordDepositsOriginalDepositAmount')}
@@ -1191,11 +1191,11 @@ function DepositsContent() {
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-[#2AC1BC]/20 flex justify-between items-center text-xs">
+                <div className="pt-2 border-t border-primary/20 flex justify-between items-center text-xs">
                   <Text as="span" size="xs" weight="black" className="text-[#0d6e6b]">
                     {t('landlordDepositsCurrentlyHeld')}
                   </Text>
-                  <Text as="span" size="base" weight="black" className="text-[#2AC1BC]">
+                  <Text as="span" size="base" weight="black" className="text-primary">
                     {selectedDeposit.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
                   </Text>
                 </div>
@@ -1224,7 +1224,7 @@ function DepositsContent() {
                       `/landlord/messages?room=${encodeURIComponent(selectedDeposit.roomId)}&tenant=${encodeURIComponent(selectedDeposit.tenantName)}`,
                     )
                   }}
-                  leftIcon={<Send className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                  leftIcon={<Send className="w-3.5 h-3.5 text-primary" />}
                 >
                   <Text as="span" size="xs" weight="bold" color="inherit">
                     {t('landlordDepositsChatWithTenant')}
@@ -1289,7 +1289,7 @@ function DepositsContent() {
           title={t('landlordDepositsCreateModalTitle')}
           description={t('landlordDepositsCreateModalSub')}
           icon={
-            <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+            <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
               <Plus className="w-5 h-5" />
             </div>
           }
@@ -1768,7 +1768,7 @@ export default function LandlordDepositsPage() {
     <Suspense
       fallback={
         <div className="p-16 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       }
     >

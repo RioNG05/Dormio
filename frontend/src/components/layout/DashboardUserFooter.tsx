@@ -50,8 +50,8 @@ export function DashboardUserFooter() {
       href: '/landlord',
       icon: Building2,
       allowed: capabilities.isLandlord,
-      color: 'text-[#2AC1BC]',
-      bg: 'hover:bg-[#2AC1BC]/10',
+      color: 'text-primary',
+      bg: 'hover:bg-primary/10',
     },
     {
       label: tNav('userMenuTenantDashboard'),
@@ -74,8 +74,8 @@ export function DashboardUserFooter() {
       href: '/admin',
       icon: Shield,
       allowed: capabilities.isAdmin,
-      color: 'text-[#FF6B35]',
-      bg: 'hover:bg-[#FF6B35]/10',
+      color: 'text-accent',
+      bg: 'hover:bg-accent/10',
     },
   ]
 

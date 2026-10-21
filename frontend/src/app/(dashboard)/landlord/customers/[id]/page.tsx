@@ -387,7 +387,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   if (!isMounted || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-card rounded-2xl border border-line shadow-xs">
-        <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="text-sm font-bold text-muted">{t('landlordCustomersLoading')}</p>
       </div>
     )
@@ -406,7 +406,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         </p>
         <Link
           href="/landlord/customers"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors shadow-2xs"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-hover transition-colors shadow-2xs"
         >
           &larr; {t('landlordCustomersBackToList')}
         </Link>
@@ -428,7 +428,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </Link>
 
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#2AC1BC] text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
               {customer.name.charAt(0)}
             </div>
             <div>
@@ -438,7 +438,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </h1>
                 <span
                   className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${customer.status === 'Đang ở'
-                    ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                    ? 'bg-primary/10 text-primary border-primary/30'
                     : customer.status === 'Sắp hết hợp đồng'
                       ? 'bg-warning-soft text-warning border-warning-subtle'
                       : 'bg-card-hover text-muted border-line'
@@ -518,7 +518,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD 1: THÔNG TIN CÁ NHÂN */}
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
             <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <User className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersPersonalInfo')}
+              <User className="w-4 h-4 text-primary" /> {t('landlordCustomersPersonalInfo')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
@@ -532,7 +532,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersCccdLabel')}
                 </span>
-                <p className="font-black text-[#2AC1BC] text-sm tracking-wide">
+                <p className="font-black text-primary text-sm tracking-wide">
                   {customer.cccd && customer.cccd !== '—' ? customer.cccd : 'Chưa cập nhật'}
                 </p>
               </div>
@@ -567,7 +567,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD 2: THÔNG TIN LIÊN HỆ & NGHỀ NGHIỆP */}
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
             <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <Phone className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersContactAndWork')}
+              <Phone className="w-4 h-4 text-primary" /> {t('landlordCustomersContactAndWork')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
@@ -604,7 +604,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex justify-between items-center border-b border-line pb-3">
               <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <CreditCard className="w-4 h-4 text-primary" />{' '}
                 {t('landlordCustomersIdCardsSection')}
               </h3>
               {customer.cardFrontUrl && customer.cardBackUrl ? (
@@ -626,7 +626,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 {customer.cardFrontUrl ? (
                   <div
                     onClick={() => setIsImagePreviewOpen(customer.cardFrontUrl!)}
-                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
+                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-primary transition-all"
                   >
                     <img
                       src={customer.cardFrontUrl}
@@ -652,7 +652,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 {customer.cardBackUrl ? (
                   <div
                     onClick={() => setIsImagePreviewOpen(customer.cardBackUrl!)}
-                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
+                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-primary transition-all"
                   >
                     <img
                       src={customer.cardBackUrl}
@@ -679,13 +679,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD: PHÒNG ĐANG Ở & HỢP ĐỒNG */}
           <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
             <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
+              <Home className="w-4 h-4 text-primary" />{' '}
               {t('landlordCustomersContractAndCurrentRoom')}
             </h3>
 
             {isStaying ? (
               <div className="space-y-3">
-                <div className="p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 space-y-2">
+                <div className="p-3.5 bg-primary/10 rounded-2xl border border-primary/30 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-muted">
                       {t('landlordCustomersCurrentlyRenting')}
@@ -693,18 +693,18 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     {customer.roomId ? (
                       <Link
                         href={`/landlord/rooms/${customer.roomId}`}
-                        className="text-base font-black text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-base font-black text-primary hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         {t('landlordCustomersRoomWord')} {customer.room}{' '}
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Link>
                     ) : (
-                      <span className="text-base font-black text-[#2AC1BC]">
+                      <span className="text-base font-black text-primary">
                         {t('landlordCustomersRoomWord')} {customer.room}
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-muted font-semibold border-t border-[#2AC1BC]/20 pt-2 flex justify-between">
+                  <div className="text-[10px] text-muted font-semibold border-t border-primary/20 pt-2 flex justify-between">
                     <span>
                       {t('landlordCustomersBuilding')}: {customer.building}
                     </span>
@@ -721,7 +721,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       <span>{t('landlordCustomersContractCodeLabel')}</span>
                       <Link
                         href={`/landlord/contracts`}
-                        className="text-[#2AC1BC] hover:underline font-black flex items-center gap-1 cursor-pointer"
+                        className="text-primary hover:underline font-black flex items-center gap-1 cursor-pointer"
                         title={t('landlordCustomersViewContractDetail')}
                       >
                         {customer.contractId.slice(0, 8).toUpperCase()}{' '}
@@ -745,7 +745,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   )}
                   <div className="flex justify-between text-[11px] text-success font-bold pt-1 border-t border-line">
                     <span>{t('landlordCustomersHoldingDepositLabel')}</span>
-                    <span className="font-black text-purple-600">
+                    <span className="font-black text-deposit">
                       {customer.depositAmount
                         ? Number(customer.depositAmount).toLocaleString('vi-VN') + ' ₫'
                         : '0 ₫'}
@@ -756,7 +756,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 {customer.roomId && (
                   <Link
                     href={`/landlord/rooms/${customer.roomId}`}
-                    className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
                   >
                     <Home className="w-4 h-4" />{' '}
                     {t('landlordCustomersViewRoomDetailBtn').replace('{room}', customer.room)}{' '}
@@ -774,7 +774,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD: LỊCH SỬ THUÊ & THANH TOÁN */}
           <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
             <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <Clock className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersStayHistoryTitle')}
+              <Clock className="w-4 h-4 text-primary" /> {t('landlordCustomersStayHistoryTitle')}
             </h3>
 
             <div className="space-y-2.5">
@@ -821,7 +821,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           {/* CARD: GHI CHÚ CHỦ TRỌ */}
           <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-3">
             <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
-              <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
+              <FileSignature className="w-4 h-4 text-primary" />{' '}
               {t('landlordCustomersLandlordNotesTitle')}
             </h3>
             <p className="text-xs text-muted font-medium italic bg-surface p-3 rounded-xl border border-line leading-relaxed">
@@ -838,7 +838,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         size="2xl"
       >
         <Modal.Header
-          icon={<Edit2 className="w-5 h-5 text-[#2AC1BC]" />}
+          icon={<Edit2 className="w-5 h-5 text-primary" />}
           title={`${t('landlordCustomersEditTenantTitlePrefix')} ${customer.name}`}
           description={t('landlordCustomersEditTenantSubtitle')}
         />
@@ -863,7 +863,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               label={t('landlordCustomersCccdLabel')}
               value={editCccd}
               onChange={e => setEditCccd(e.target.value)}
-              className="font-bold text-[#2AC1BC]"
+              className="font-bold text-primary"
             />
 
             <DateInput
@@ -1053,8 +1053,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         showCloseButton={false}
       >
         <Modal.Body className="space-y-4 text-center">
-          <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-accent-soft text-[#FF6B35] border-accent-subtle">
-            <Info className="w-7 h-7 text-[#FF6B35]" />
+          <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-accent-soft text-accent border-accent-subtle">
+            <Info className="w-7 h-7 text-accent" />
           </div>
 
           <div className="space-y-1.5">

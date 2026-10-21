@@ -266,7 +266,7 @@ function BuyTurnsPageInner() {
   if (isHydrating || (!isLoggedIn && !isSuccess)) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-muted">
-        <Lock className="w-8 h-8 text-[#FF6B35] animate-pulse" />
+        <Lock className="w-8 h-8 text-accent animate-pulse" />
         <p className="text-sm font-semibold">{t('guestPricingCheckoutAuthVerifying')}</p>
       </div>
     )
@@ -286,7 +286,7 @@ function BuyTurnsPageInner() {
 
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-black tracking-widest uppercase text-[#FF6B35] mb-1">
+            <div className="flex items-center gap-2 text-xs font-black tracking-widest uppercase text-accent mb-1">
               <Sparkles className="w-4 h-4" />
               <span>{isVi ? 'MUA LƯỢT ĐĂNG TIN VIP' : 'BUY VIP LISTING TURNS'}</span>
             </div>
@@ -323,12 +323,12 @@ function BuyTurnsPageInner() {
                   onClick={() => handleSelectPack(p.key)}
                   className={`w-full relative text-left p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-4 ${
                     isSelected
-                      ? 'border-[#FF6B35] bg-[#FF6B35]/5 shadow-md'
+                      ? 'border-accent bg-accent/5 shadow-md'
                       : 'border-line bg-card hover:border-line hover:bg-card-hover'
                   }`}
                 >
                   {p.popular && (
-                    <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full bg-[#FF6B35] text-white shadow-sm">
+                    <span className="absolute -top-2.5 left-4 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full bg-accent text-white shadow-sm">
                       {isVi ? p.badge : 'POPULAR'}
                     </span>
                   )}
@@ -364,7 +364,7 @@ function BuyTurnsPageInner() {
 
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      isSelected ? 'border-[#FF6B35] bg-[#FF6B35]' : 'border-line bg-card'
+                      isSelected ? 'border-accent bg-accent' : 'border-line bg-card'
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -377,7 +377,7 @@ function BuyTurnsPageInner() {
           {/* Feature checklist */}
           <div className="bg-card rounded-3xl border border-line shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#FF6B35]" />
+              <Package className="w-4 h-4 text-accent" />
               <span className="text-xs font-bold uppercase tracking-wider text-muted">
                 {isVi ? 'Quyền lợi khi dùng lượt' : 'Benefits per turn'}
               </span>
@@ -457,7 +457,7 @@ function BuyTurnsPageInner() {
                   </div>
                   <div className="flex justify-between">
                     <span>{isVi ? 'Số lượt:' : 'Turns:'}</span>
-                    <strong className="text-[#FF6B35]">
+                    <strong className="text-accent">
                       +{pack.turns} {isVi ? 'lượt' : 'turns'}
                     </strong>
                   </div>
@@ -601,7 +601,7 @@ function BuyTurnsPageInner() {
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-accent-soft border border-accent-subtle flex items-center justify-center gap-3 text-xs font-semibold text-accent">
-                  <RefreshCw className="w-4 h-4 text-[#FF6B35] animate-spin shrink-0" />
+                  <RefreshCw className="w-4 h-4 text-accent animate-spin shrink-0" />
                   <span>{t('guestPricingCheckoutWaitingTransfer')}</span>
                 </div>
               </div>
@@ -621,7 +621,7 @@ function BuyTurnsPageInner() {
                       : 'Select a pack on the left then click to show your payment QR code.'}
                   </p>
                 </div>
-                <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-[#FF6B35]">
+                <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-accent">
                   <Zap className="w-4 h-4" />
                   <span>{t('guestPricingCheckoutInstantReconcile')}</span>
                 </div>

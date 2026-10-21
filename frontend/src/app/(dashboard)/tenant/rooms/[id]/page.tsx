@@ -104,7 +104,7 @@ export default function TenantRoomDetailPage() {
   if (loading) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
-        <div className="w-8 h-8 border-2 border-[#2AC1BC] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         <span className="text-xs text-muted font-medium">{t('tenantLoadingRoomDetails')}</span>
       </div>
     )
@@ -125,7 +125,7 @@ export default function TenantRoomDetailPage() {
         <div className="pt-4">
           <Link
             href="/tenant"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold transition-all shadow-xs"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-[#23a8a3] text-white text-xs font-bold transition-all shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{t('tenantBackToDashboard')}</span>
@@ -175,7 +175,7 @@ export default function TenantRoomDetailPage() {
           href="/tenant"
           className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground transition-colors bg-card px-3.5 py-2 rounded-xl border border-line shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4 text-[#2AC1BC]" />
+          <ArrowLeft className="w-4 h-4 text-primary" />
           <span>{t('tenantBackToDashboard')}</span>
         </Link>
         <span className="px-3 py-1 bg-success-soft text-success text-[11px] font-bold rounded-full border border-success-subtle flex items-center gap-1.5">
@@ -186,11 +186,11 @@ export default function TenantRoomDetailPage() {
 
       {/* Main Room Spotlight Header */}
       <div className="bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#2AC1BC]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-[#2AC1BC]/20 text-[#2AC1BC] text-[11px] font-black rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider">
+              <span className="px-3 py-1 bg-primary/20 text-primary text-[11px] font-black rounded-full border border-primary/30 uppercase tracking-wider">
                 {room.roomTypeName || 'Studio'}
               </span>
               <span className="text-xs text-muted font-semibold">
@@ -202,7 +202,7 @@ export default function TenantRoomDetailPage() {
               <span className="text-lg sm:text-xl font-normal text-muted">| {house.name}</span>
             </h1>
             <p className="text-xs sm:text-sm text-zinc-300 flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+              <MapPin className="w-4 h-4 text-primary shrink-0" />
               <span>{house.address}</span>
             </p>
           </div>
@@ -211,7 +211,7 @@ export default function TenantRoomDetailPage() {
             <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
               {t('tenantMonthlyRent')}
             </span>
-            <div className="text-2xl sm:text-3xl font-black text-[#2AC1BC]">
+            <div className="text-2xl sm:text-3xl font-black text-primary">
               {formatCurrency(contract.rentPrice)}
             </div>
             <span className="text-[11px] text-muted block font-medium">
@@ -229,7 +229,7 @@ export default function TenantRoomDetailPage() {
           <div className="bg-card rounded-3xl p-6 border border-line shadow-sm space-y-5">
             <div className="border-b border-line pb-3 flex items-center justify-between">
               <h3 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-2">
-                <Home className="w-4 h-4 text-[#2AC1BC]" />
+                <Home className="w-4 h-4 text-primary" />
                 {t('tenantRoomSpecifications')}
               </h3>
               <span className="text-xs font-bold text-muted">ID: {room.id}</span>
@@ -273,7 +273,7 @@ export default function TenantRoomDetailPage() {
           <div className="bg-card rounded-3xl p-6 border border-line shadow-sm space-y-4">
             <div className="border-b border-line pb-3 flex items-center justify-between">
               <h3 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#2AC1BC]" />
+                <Sparkles className="w-4 h-4 text-primary" />
                 {t('tenantRegisteredServices')}
               </h3>
               <span className="text-xs text-muted font-semibold">
@@ -316,7 +316,7 @@ export default function TenantRoomDetailPage() {
               {t('tenantRoleLandlord')}
             </h3>
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#2AC1BC] to-teal-400 text-white font-black text-base flex items-center justify-center shadow-md shadow-[#2AC1BC]/20">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-teal-400 text-white font-black text-base flex items-center justify-center shadow-md shadow-primary/20">
                 {(house.landlord?.name || 'C').charAt(0)}
               </div>
               <div className="space-y-0.5">
@@ -332,7 +332,7 @@ export default function TenantRoomDetailPage() {
             <div className="pt-2 flex flex-col gap-2">
               <a
                 href={`tel:${house.landlord.phoneNumber}`}
-                className="w-full py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#FF6B35]/20 flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2.5 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md shadow-accent/20 flex items-center justify-center gap-2 transition-all"
               >
                 <Phone className="w-3.5 h-3.5" />
                 <span>{t('tenantCallLandlord')}</span>
@@ -352,14 +352,14 @@ export default function TenantRoomDetailPage() {
             <div className="space-y-2">
               <Link
                 href="/tenant/invoices"
-                className="flex items-center justify-between p-3 bg-card rounded-xl border border-line hover:border-[#2AC1BC] text-xs font-bold text-foreground/90 hover:text-[#2AC1BC] transition-colors"
+                className="flex items-center justify-between p-3 bg-card rounded-xl border border-line hover:border-primary text-xs font-bold text-foreground/90 hover:text-primary transition-colors"
               >
                 <span>{t('tenantViewMonthlyInvoices')}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-muted" />
               </Link>
               <Link
                 href="/tenant/complaints"
-                className="flex items-center justify-between p-3 bg-card rounded-xl border border-line hover:border-[#2AC1BC] text-xs font-bold text-foreground/90 hover:text-[#2AC1BC] transition-colors"
+                className="flex items-center justify-between p-3 bg-card rounded-xl border border-line hover:border-primary text-xs font-bold text-foreground/90 hover:text-primary transition-colors"
               >
                 <span>{t('tenantReportIssueOrRepair')}</span>
                 <ExternalLink className="w-3.5 h-3.5 text-muted" />

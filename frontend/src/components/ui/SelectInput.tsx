@@ -356,7 +356,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                 : error
                   ? 'bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
                   : isOpen
-                    ? 'bg-input border-[#2AC1BC] ring-3 ring-[#2AC1BC]/20 text-zinc-900 dark:text-foreground shadow-sm'
+                    ? 'bg-input border-primary ring-3 ring-primary/20 text-zinc-900 dark:text-foreground shadow-sm'
                     : 'bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
               className,
             )}
@@ -377,7 +377,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
             <ChevronDown
               className={cn(
                 'w-4 h-4 text-zinc-400 dark:text-slate-400 shrink-0 transition-transform duration-200 ease-in-out',
-                isOpen && 'rotate-180 text-[#2AC1BC]',
+                isOpen && 'rotate-180 text-primary',
               )}
             />
           </button>
@@ -406,7 +406,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder="Tìm kiếm..."
                       onClick={e => e.stopPropagation()}
-                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-zinc-100/80 dark:bg-surface hover:bg-card-hover focus:bg-white dark:focus:bg-input border border-transparent focus:border-[#2AC1BC] rounded-xl outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-slate-500 text-foreground font-medium"
+                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-zinc-100/80 dark:bg-surface hover:bg-card-hover focus:bg-white dark:focus:bg-input border border-transparent focus:border-primary rounded-xl outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-slate-500 text-foreground font-medium"
                     />
                     {searchQuery && (
                       <button
@@ -449,7 +449,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                           opt.disabled
                             ? 'opacity-40 cursor-not-allowed pointer-events-none'
                             : isSelected
-                              ? 'bg-[#2AC1BC]/15 text-[#2AC1BC] font-extrabold shadow-2xs'
+                              ? 'bg-primary/15 text-primary font-extrabold shadow-2xs'
                               : 'text-zinc-700 dark:text-slate-200 hover:bg-card-hover hover:text-zinc-900 dark:hover:text-white font-semibold',
                         )}
                       >
@@ -460,7 +460,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                           </Text>
                         </div>
                         {isSelected && (
-                          <Check className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0 ml-1.5 animate-in zoom-in-75 duration-100" />
+                          <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-1.5 animate-in zoom-in-75 duration-100" />
                         )}
                       </button>
                     )

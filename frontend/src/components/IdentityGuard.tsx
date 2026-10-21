@@ -20,8 +20,8 @@ function IdentityCheckingScreen({ title, desc }: { title: string; desc: string }
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center p-6">
       <div className="text-center space-y-4 max-w-sm">
-        <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 flex items-center justify-center mx-auto">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
         <div className="space-y-1">
           <h2 className="text-base font-black text-foreground">{title}</h2>
@@ -110,8 +110,8 @@ function IdentityBlockerScreen({
         {/* CTA */}
         <button
           onClick={() => router.push('/profile?tab=bank&from=identity_guard')}
-          className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-sm
-            rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all hover:scale-[1.02] cursor-pointer"
+          className="w-full py-3.5 bg-primary hover:bg-[#23B3AE] text-white font-extrabold text-sm
+            rounded-2xl shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] cursor-pointer"
         >
           {t('identityGuardGoToProfile')}
         </button>

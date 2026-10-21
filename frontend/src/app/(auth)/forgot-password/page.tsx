@@ -30,9 +30,9 @@ export default function ForgotPasswordPage() {
           variant="caption"
           size="3xs"
           weight="black"
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full border border-primary/30 uppercase tracking-wider"
         >
-          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authForgotPassBadge')}
+          <Sparkles className="w-3.5 h-3.5 fill-primary" /> {t('authForgotPassBadge')}
         </Text>
 
         <Text as="h1" variant="heading" size="2xl" className="text-foreground tracking-tight">
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
 
       {submitted ? (
         <div className="bg-surface rounded-3xl p-6 border border-line text-center space-y-4 animate-in fade-in duration-300">
-          <div className="w-14 h-14 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
                   <Mail className="w-4 h-4 text-muted" />
                 )
               }
-              className="rounded-2xl py-3 border-line focus:border-[#2AC1BC]"
+              className="rounded-2xl py-3 border-line focus:border-primary"
             />
 
             {/* Submit Button using Base Form.Actions & Button */}
@@ -139,7 +139,7 @@ export default function ForgotPasswordPage() {
               variant="body"
               size="xs"
               weight="extrabold"
-              className="text-[#2AC1BC] hover:underline"
+              className="text-primary hover:underline"
             >
               {t('authForgotPassBackToLogin')}
             </Text>

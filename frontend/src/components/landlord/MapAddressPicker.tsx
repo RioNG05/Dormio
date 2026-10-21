@@ -366,13 +366,13 @@ export function MapAddressPicker({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <MapPin className="h-5 w-5" />
           </div>
           <div>
             <Text as="h4" size="sm" weight="bold" color="default" className="flex items-center gap-2">
               Chọn địa chỉ từ bản đồ
-              <Text.Badge className="px-2 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] font-bold">
+              <Text.Badge className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
                 {!isConfigLoaded
                   ? 'Đang tải bản đồ...'
                   : mapConfig.isGoogleAvailable && mapConfig.apiKey
@@ -455,7 +455,7 @@ export function MapAddressPicker({
 
         {isReverseGeocoding && (
           <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 shadow-md border border-line backdrop-blur-xs">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2AC1BC]" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
             <Text as="span" size="xs" weight="semibold" color="default">
               Đang nhận diện địa chỉ từ tọa độ...
             </Text>
@@ -471,11 +471,11 @@ export function MapAddressPicker({
 
       {/* Resolved Address Banner & Apply Button */}
       {resolvedAddress && (
-        <div className="mt-4 rounded-xl border border-[#2AC1BC]/25 bg-[#2AC1BC]/5 p-3.5 transition-all">
+        <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-3.5 transition-all">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-[#2AC1BC]" />
+                <MapPin className="h-3.5 w-3.5 text-primary" />
                 <Text as="span" size="xs" weight="bold" color="brand">
                   Địa chỉ đã chọn từ bản đồ:
                 </Text>

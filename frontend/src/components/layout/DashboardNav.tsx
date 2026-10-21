@@ -236,7 +236,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
         className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
       >
         <div className="px-3 pb-2 flex items-center gap-1.5">
-          <UserCircle className="w-3.5 h-3.5 text-[#2AC1BC]" />
+          <UserCircle className="w-3.5 h-3.5 text-primary" />
           <Text as="span" variant="overline" color="brand">
             {tNav('staffTag')}
           </Text>
@@ -253,15 +253,15 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               scroll={false}
               className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                 isActive
-                  ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] font-bold shadow-2xs'
+                  ? 'bg-primary/10 text-primary font-bold shadow-2xs'
                   : 'text-muted hover:bg-card-hover hover:text-foreground'
               }`}
             >
               {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-[#2AC1BC] rounded-r-full" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-primary rounded-r-full" />
               )}
               <item.icon
-                className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#2AC1BC]' : 'text-muted'}`}
+                className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
                 strokeWidth={isActive ? 2.2 : 1.75}
               />
               <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">

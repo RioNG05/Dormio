@@ -113,7 +113,7 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
           onClick={() => onPageChange(p)}
           className={`w-8 h-8 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
             p === page
-              ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30'
+              ? 'bg-primary text-white shadow-md shadow-primary/30'
               : 'text-muted hover:bg-card-hover'
           }`}
         >
@@ -599,17 +599,17 @@ function RoomsContent() {
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center text-white shadow-2xl overflow-hidden bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[#2AC1BC]/15 rounded-full blur-[120px] pointer-events-none z-0" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 shadow-[0_0_20px_rgba(42,193,188,0.2)] backdrop-blur-xl">
-            <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-zinc-900/70 px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-primary tracking-wider mb-4 shadow-[0_0_20px_rgba(42,193,188,0.2)] backdrop-blur-xl">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span>{t('guestRoomsBadge')}</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] drop-shadow-md">
             <span className="inline-block whitespace-nowrap">{t('guestRoomsTitle1')}</span> <br />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+            <span className="bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent inline-block whitespace-nowrap">
               {t('guestRoomsTitle2')}
             </span>
           </h1>
@@ -627,7 +627,7 @@ function RoomsContent() {
           <div className="lg:col-span-4 bg-card rounded-3xl p-6 border border-line shadow-xs space-y-5">
             <div className="flex items-center justify-between border-b border-line pb-3.5">
               <h2 className="font-extrabold text-foreground text-sm flex items-center gap-2">
-                <Filter className="w-4 h-4 text-[#2AC1BC]" /> {t('guestRoomsFilterTitle')}
+                <Filter className="w-4 h-4 text-primary" /> {t('guestRoomsFilterTitle')}
               </h2>
               <button
                 onClick={handleResetFilter}
@@ -645,7 +645,7 @@ function RoomsContent() {
                   id="filter-room-type"
                   value={roomType}
                   onChange={e => setRoomType(e.target.value)}
-                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-primary focus:bg-white transition-all cursor-pointer"
                 >
                   <option value="all">Tất cả loại phòng</option>
                   <option value="phong">{t('guestHomeTabRent')}</option>
@@ -670,7 +670,7 @@ function RoomsContent() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                  className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -685,7 +685,7 @@ function RoomsContent() {
                   id="filter-province"
                   value={province}
                   onChange={e => handleProvinceSelect(e.target.value)}
-                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-primary focus:bg-white transition-all cursor-pointer"
                 >
                   <option value="">{t('guestRoomsAllCities') || 'Tất cả tỉnh / thành'}</option>
                   {provinces.map(p => (
@@ -707,7 +707,7 @@ function RoomsContent() {
                   value={ward}
                   onChange={e => setWard(e.target.value)}
                   disabled={!province || isLoadingWards}
-                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-primary focus:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">
                     {isLoadingWards
@@ -738,7 +738,7 @@ function RoomsContent() {
                 value={minPrice}
                 onChange={e => setMinPrice(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
               <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsMaxPriceLabel')}
@@ -750,7 +750,7 @@ function RoomsContent() {
                 value={maxPrice}
                 onChange={e => setMaxPrice(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
             </div>
 
@@ -766,7 +766,7 @@ function RoomsContent() {
                 value={minArea}
                 onChange={e => setMinArea(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
               <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsMaxAreaLabel')}
@@ -778,7 +778,7 @@ function RoomsContent() {
                 value={maxArea}
                 onChange={e => setMaxArea(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
             </div>
 
@@ -786,7 +786,7 @@ function RoomsContent() {
             <button
               id="apply-filters-btn"
               onClick={handleApplyFilters}
-              className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-2xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-3 bg-primary hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-2xl shadow-md shadow-primary/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Search className="w-3.5 h-3.5" /> {t('guestRoomsApplyFilter')}
             </button>
@@ -809,7 +809,7 @@ function RoomsContent() {
                     onClick={() => handleSelectType(tab.id)}
                     className={`px-4 py-2 rounded-2xl text-xs font-black shrink-0 transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-102'
+                        ? 'bg-gradient-to-r from-primary to-[#3BDAC8] text-white shadow-md shadow-primary/25 scale-102'
                         : 'bg-card text-muted border border-line hover:border-line hover:text-foreground'
                     }`}
                   >
@@ -824,7 +824,7 @@ function RoomsContent() {
               <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
                 <span className="text-[11px] font-bold text-muted">Đang lọc:</span>
                 {search && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Từ khóa: &ldquo;{search}&rdquo;
                     <button
                       onClick={() => handleRemoveFilter('search')}
@@ -836,7 +836,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {roomType && roomType !== 'all' && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Loại:{' '}
                     {roomType === 'phong'
                       ? t('guestHomeTabRent')
@@ -853,7 +853,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {(minPrice || maxPrice) && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Giá: {minPrice ? formatVND(Number(minPrice)) : '0₫'} -{' '}
                     {maxPrice ? formatVND(Number(maxPrice)) : 'Vô hạn'}
                     <button
@@ -866,7 +866,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {province && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Tỉnh/Thành: {province}
                     <button
                       onClick={() => handleRemoveFilter('province')}
@@ -878,7 +878,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {district && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Quận/Huyện: {district}
                     <button
                       onClick={() => handleRemoveFilter('district')}
@@ -890,7 +890,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {ward && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Phường/Xã: {ward}
                     <button
                       onClick={() => handleRemoveFilter('ward')}
@@ -902,7 +902,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {(minArea || maxArea) && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Diện tích: {minArea || 0}m² - {maxArea || '∞'}m²
                     <button
                       onClick={() => handleRemoveFilter('area')}
@@ -968,7 +968,7 @@ function RoomsContent() {
                             : 'top-1/4 left-3/4'
                     }`}
                   >
-                    <div className="px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
+                    <div className="px-3 py-1.5 bg-accent text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
                       <MapPin className="w-3.5 h-3.5" /> {formatVND(listing.depositAmount)}
                     </div>
                   </div>
@@ -976,7 +976,7 @@ function RoomsContent() {
 
                 <div className="absolute bottom-4 left-4 right-4 bg-card/95 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-2xl text-xs font-bold text-foreground flex justify-between items-center">
                   <span>📍 {t('guestRoomsMapInfo')}</span>
-                  <span className="text-[#2AC1BC] font-extrabold">
+                  <span className="text-primary font-extrabold">
                     {t('guestRoomsMapPinTitle', { count: listings.length })}
                   </span>
                 </div>
@@ -1012,7 +1012,7 @@ function RoomsContent() {
                     <p className="text-sm text-muted font-medium">{t('guestRoomsEmptyDesc')}</p>
                     <button
                       onClick={handleResetFilter}
-                      className="px-5 py-2.5 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
+                      className="px-5 py-2.5 bg-primary text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
                     >
                       {t('guestRoomsEmptyReset')}
                     </button>
@@ -1077,7 +1077,7 @@ function RoomsContent() {
                                 e.stopPropagation()
                                 setShareModalRoom(listing)
                               }}
-                              className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
+                              className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-primary backdrop-blur-md transition-all cursor-pointer shadow-md"
                               title={t('guestRoomsShareTitle')}
                             >
                               <Share2 className="w-3.5 h-3.5" />
@@ -1093,7 +1093,7 @@ function RoomsContent() {
                             }}
                             className="absolute bottom-3 left-3 right-3 py-2 bg-card/95 hover:bg-card text-foreground backdrop-blur-md text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 cursor-pointer z-10"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
+                            <Eye className="w-3.5 h-3.5 text-primary" />{' '}
                             {t('guestRoomsQuickView')}
                           </button>
                         </div>
@@ -1101,11 +1101,11 @@ function RoomsContent() {
                         {/* Details column */}
                         <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                           <div>
-                            <h3 className="font-extrabold text-foreground text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1 mb-2">
+                            <h3 className="font-extrabold text-foreground text-lg leading-snug group-hover:text-primary transition-colors line-clamp-1 mb-2">
                               <Link
                                 href={`/rooms/${listing.id}`}
                                 onClick={e => e.stopPropagation()}
-                                className="hover:text-[#2AC1BC] transition-colors"
+                                className="hover:text-primary transition-colors"
                               >
                                 {listing.title}
                               </Link>
@@ -1117,17 +1117,17 @@ function RoomsContent() {
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={e => e.stopPropagation()}
-                                className="flex items-center text-xs text-muted font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors w-fit z-10"
+                                className="flex items-center text-xs text-muted font-semibold gap-1 hover:text-primary hover:underline cursor-pointer transition-colors w-fit z-10"
                                 title={t('guestContactMaps')}
                               >
-                                <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                                 <span className="truncate">{address}</span>
                               </a>
                             )}
 
                             {listing.room?.area && (
                               <span className="text-xs text-muted font-medium flex gap-1 mt-1">
-                                <Maximize2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                <Maximize2 className="w-3.5 h-3.5 text-primary shrink-0" />
                                 {listing.room.area} m²
                               </span>
                             )}
@@ -1142,7 +1142,7 @@ function RoomsContent() {
                             <Link
                               href={`/landlords/${listing.poster.id}`}
                               onClick={e => e.stopPropagation()}
-                              className="flex items-center gap-2 hover:text-[#2AC1BC] transition-colors w-fit z-10 cursor-pointer group/poster"
+                              className="flex items-center gap-2 hover:text-primary transition-colors w-fit z-10 cursor-pointer group/poster"
                               title="Xem hồ sơ người đăng"
                             >
                               <Avatar
@@ -1151,7 +1151,7 @@ function RoomsContent() {
                                 size="2xs"
                                 bordered
                               />
-                              <span className="text-xs text-muted font-semibold group-hover/poster:text-[#2AC1BC] transition-colors">
+                              <span className="text-xs text-muted font-semibold group-hover/poster:text-primary transition-colors">
                                 {listing.poster.username ?? t('guestRoomsDefaultLandlord')}
                               </span>
                             </Link>
@@ -1213,7 +1213,7 @@ function RoomsContent() {
             </button>
 
             <h3 className="text-base font-black text-foreground flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {t('guestRoomsShareTitle')}
+              <Share2 className="w-4 h-4 text-primary" /> {t('guestRoomsShareTitle')}
             </h3>
             <p className="text-xs text-muted font-medium line-clamp-1">{shareModalRoom.title}</p>
 
@@ -1230,7 +1230,7 @@ function RoomsContent() {
               />
               <button
                 onClick={() => handleCopyShareLink(shareModalRoom)}
-                className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+                className="px-3 py-1.5 bg-primary hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copiedLink ? t('guestRoomsCopied') : t('guestRoomsCopy')}
@@ -1269,7 +1269,7 @@ function RoomsContent() {
               </div>
 
               <div className="md:w-1/2 space-y-4">
-                <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-extrabold rounded-full inline-block">
+                <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-extrabold rounded-full inline-block">
                   {quickViewRoom.room?.roomTypeName ? `${quickViewRoom.room.roomTypeName} • ` : ''}
                   {t('guestRoomsVerifiedLandlord')}
                 </span>
@@ -1277,7 +1277,7 @@ function RoomsContent() {
                   {quickViewRoom.title}
                 </h3>
                 <div className="text-xs font-semibold text-muted flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
+                  <MapPin className="w-3.5 h-3.5 text-primary" />{' '}
                   {buildAddressString(quickViewRoom)}
                 </div>
                 <div className="text-2xl font-black text-rose-500">
@@ -1298,26 +1298,26 @@ function RoomsContent() {
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {quickViewRoom.room?.roomTypeName && (
-                      <span className="px-2.5 py-1 bg-card-hover text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />{' '}
                         {quickViewRoom.room.roomTypeName}
                       </span>
                     )}
                     {quickViewRoom.room?.area && (
-                      <span className="px-2.5 py-1 bg-card-hover text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />{' '}
                         {quickViewRoom.room.area} m²
                       </span>
                     )}
                     {quickViewRoom.room?.floor && (
-                      <span className="px-2.5 py-1 bg-card-hover text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> Tầng{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" /> Tầng{' '}
                         {quickViewRoom.room.floor}
                       </span>
                     )}
                     {quickViewRoom.room?.boardingHouseName && (
-                      <span className="px-2.5 py-1 bg-card-hover text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />{' '}
                         {quickViewRoom.room.boardingHouseName}
                       </span>
                     )}
@@ -1329,7 +1329,7 @@ function RoomsContent() {
                     href={`/rooms/${quickViewRoom.id}`}
                     className="flex-1 py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t('guestRoomsDetailBtn')}
+                    <ArrowRight className="w-3.5 h-3.5 text-primary" /> {t('guestRoomsDetailBtn')}
                   </Link>
                 </div>
               </div>

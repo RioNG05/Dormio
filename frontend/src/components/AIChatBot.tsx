@@ -113,7 +113,7 @@ export default function AIChatBot() {
           aria-label={t('aiChatBotTitle')}
         >
           <Bot className="w-7 h-7 group-hover:animate-pulse" />
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#FF6B35] border-2 border-white rounded-full" />
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-accent border-2 border-white rounded-full" />
         </Button>
       )}
 
@@ -121,7 +121,7 @@ export default function AIChatBot() {
       {isOpen && (
         <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] bg-card sm:rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden sm:border border-line animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
-          <div className="bg-[#2AC1BC] p-4 flex justify-between items-center text-white shrink-0">
+          <div className="bg-primary p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm shrink-0">
                 <Bot className="w-6 h-6 text-white" />
@@ -162,7 +162,7 @@ export default function AIChatBot() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
                       ? 'bg-line text-muted'
-                      : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
+                      : 'bg-primary/10 text-primary'
                       }`}
                   >
                     {msg.role === 'user' ? (
@@ -173,7 +173,7 @@ export default function AIChatBot() {
                   </div>
                   <div
                     className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${msg.role === 'user'
-                      ? 'bg-[#2AC1BC] text-white rounded-tr-sm prose-invert'
+                      ? 'bg-primary text-white rounded-tr-sm prose-invert'
                       : 'bg-card border border-line text-foreground rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
                       }`}
                   >
@@ -202,7 +202,7 @@ export default function AIChatBot() {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex gap-2 max-w-[85%]">
-                  <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <Bot className="w-5 h-5" />
                   </div>
                   <div className="px-4 py-3 rounded-2xl bg-card border border-line rounded-tl-sm shadow-sm flex items-center gap-1.5">

@@ -75,9 +75,9 @@ const TYPE_CONFIGS: Record<
     icon: Info,
     cardBg: 'bg-teal-50/95 dark:bg-teal-950/95',
     borderColor: 'border-teal-200/90 dark:border-teal-800/70',
-    shadowColor: 'shadow-[#2AC1BC]/10',
-    iconBg: 'bg-teal-100 text-[#2AC1BC] dark:bg-teal-900/60 dark:text-teal-400',
-    iconColor: 'text-[#2AC1BC] dark:text-[#2AC1BC]',
+    shadowColor: 'shadow-primary/10',
+    iconBg: 'bg-teal-100 text-primary dark:bg-teal-900/60 dark:text-teal-400',
+    iconColor: 'text-primary dark:text-primary',
     titleColor: 'text-teal-950 dark:text-teal-100',
     descColor: 'text-teal-800/90 dark:text-teal-300',
     closeColor:

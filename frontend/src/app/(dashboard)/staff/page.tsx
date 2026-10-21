@@ -721,7 +721,7 @@ export default function StaffOverviewPage() {
           <div
             className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white ${
               toast.type === 'success'
-                ? 'bg-[#2AC1BC]'
+                ? 'bg-primary'
                 : toast.type === 'warning'
                   ? 'bg-amber-600'
                   : 'bg-zinc-800'
@@ -737,7 +737,7 @@ export default function StaffOverviewPage() {
       <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-2 z-10">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-[#2AC1BC]/15 text-[#2AC1BC]">
+            <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-primary/15 text-primary">
               {t('badge')}
             </span>
           </div>
@@ -752,7 +752,7 @@ export default function StaffOverviewPage() {
         {/* Live Digital Clock Widget */}
         <div className="flex flex-col items-start md:items-end z-10 shrink-0">
           <div className="bg-zinc-900 text-white px-5 py-3 rounded-2xl shadow-md border border-zinc-800 flex items-center gap-3">
-            <Clock className="w-5 h-5 text-[#2AC1BC] animate-pulse" />
+            <Clock className="w-5 h-5 text-primary animate-pulse" />
             <div>
               <div className="text-xl sm:text-2xl font-black font-mono tracking-wider text-emerald-400">
                 {effectiveTimeString}
@@ -771,7 +771,7 @@ export default function StaffOverviewPage() {
         {!todaySchedule ? (
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-card rounded-3xl border border-line shadow-2xs p-8 sm:p-12 text-center space-y-6">
-              <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto shadow-inner">
+              <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-inner">
                 <Calendar className="w-8 h-8" />
               </div>
 
@@ -804,7 +804,7 @@ export default function StaffOverviewPage() {
 
                 <Link
                   href="/staff/schedule"
-                  className="py-2.5 px-4 rounded-xl bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm shadow-[#2AC1BC]/20"
+                  className="py-2.5 px-4 rounded-xl bg-primary hover:bg-[#25ad87] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm shadow-primary/20"
                 >
                   <Calendar className="w-3.5 h-3.5" />
                   <span>{t('btnViewShiftSchedule')}</span>
@@ -814,7 +814,7 @@ export default function StaffOverviewPage() {
                   href="/staff/shift-history"
                   className="py-2.5 px-4 rounded-xl border border-line hover:bg-card-hover text-foreground/90 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-2xs"
                 >
-                  <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <Clock className="w-3.5 h-3.5 text-primary" />
                   <span>{t('btnShiftHistory')}</span>
                 </Link>
               </div>
@@ -828,8 +828,8 @@ export default function StaffOverviewPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-line">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] animate-ping" />
-                    <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
+                    <span className="text-xs font-black text-primary uppercase tracking-wider">
                       {t('todayShiftTitle')}
                     </span>
                   </div>
@@ -847,7 +847,7 @@ export default function StaffOverviewPage() {
                       {t('badgeShiftCompleted')}
                     </span>
                   ) : attendance?.checkIn ? (
-                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-[#2AC1BC]/15 text-[#2AC1BC] inline-flex items-center gap-1.5">
+                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-primary/15 text-primary inline-flex items-center gap-1.5">
                       <Clock className="w-4 h-4 animate-spin" />
                       {t('badgeOnDuty')}
                     </span>
@@ -867,7 +867,7 @@ export default function StaffOverviewPage() {
                     {t('shiftLocationLabel')}
                   </span>
                   <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
-                    <Building2 className="w-4 h-4 text-[#2AC1BC]" />
+                    <Building2 className="w-4 h-4 text-primary" />
                     <span className="truncate">{todaySchedule.boardingHouseName}</span>
                   </div>
                 </div>
@@ -877,7 +877,7 @@ export default function StaffOverviewPage() {
                     {t('assignedRoleLabel')}
                   </span>
                   <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
-                    <Shield className="w-4 h-4 text-[#2AC1BC]" />
+                    <Shield className="w-4 h-4 text-primary" />
                     <span className="truncate">{getPositionName(todaySchedule.position)}</span>
                   </div>
                 </div>
@@ -887,7 +887,7 @@ export default function StaffOverviewPage() {
                     {t('shiftDurationLabel')}
                   </span>
                   <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
-                    <Clock className="w-4 h-4 text-[#2AC1BC]" />
+                    <Clock className="w-4 h-4 text-primary" />
                     <span>
                       {t('shiftDurationHours', { hours: todaySchedule.shift.durationHours })}
                     </span>
@@ -899,7 +899,7 @@ export default function StaffOverviewPage() {
               <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-line space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Camera className="w-4 h-4 text-[#2AC1BC]" />
+                    <Camera className="w-4 h-4 text-primary" />
                     <span>{t('attendanceTitle')}</span>
                   </h3>
                   <span className="text-[11px] font-semibold text-muted">
@@ -1286,7 +1286,7 @@ export default function StaffOverviewPage() {
                 {/* Explanatory Notice */}
                 <div className="p-3 rounded-xl bg-card border border-line text-[11px] text-muted space-y-1">
                   <div className="font-bold text-foreground/90 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                     <span>{t('rulesTitle')}</span>
                   </div>
                   <p className="leading-relaxed">{t('rule1')}</p>
@@ -1298,11 +1298,11 @@ export default function StaffOverviewPage() {
               <div className="space-y-4 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-foreground text-xs font-black uppercase tracking-wider">
-                    <CheckSquare className="w-4 h-4 text-[#2AC1BC]" />
+                    <CheckSquare className="w-4 h-4 text-primary" />
                     <span>{t('checklistTitle')}</span>
                   </div>
                   <div className="flex items-center gap-2.5 self-start sm:self-auto">
-                    <span className="text-[11px] font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-2.5 py-1 rounded-lg">
+                    <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
                       {t('checklistProgress', {
                         completed: completedCount,
                         total: dutyList.length,
@@ -1310,7 +1310,7 @@ export default function StaffOverviewPage() {
                     </span>
                     <Link
                       href="/staff/schedule"
-                      className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center gap-1"
+                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
                     >
                       <span>{t('viewInSchedule')}</span>
                       <ArrowRight className="w-3 h-3" />
@@ -1347,7 +1347,7 @@ export default function StaffOverviewPage() {
                         className={`p-4 rounded-2xl border transition-all ${
                           duty.completed
                             ? 'bg-success-soft border-success-subtle text-foreground'
-                            : 'bg-card border-line text-foreground hover:border-[#2AC1BC]/40'
+                            : 'bg-card border-line text-foreground hover:border-primary/40'
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -1473,11 +1473,11 @@ export default function StaffOverviewPage() {
           <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2 text-foreground text-xs font-black uppercase tracking-wider">
-                <Users className="w-4 h-4 text-[#2AC1BC]" />
+                <Users className="w-4 h-4 text-primary" />
                 <span>{t('coworkersTitle')}</span>
               </div>
               {todaySchedule && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/10 text-primary">
                   {t('coworkersCount', { count: todaySchedule.coWorkers.length })}
                 </span>
               )}
@@ -1510,7 +1510,7 @@ export default function StaffOverviewPage() {
                       <a
                         href={`tel:${cw.phone}`}
                         title={t('callCoworker', { name: cw.name })}
-                        className="p-2 rounded-xl bg-card border border-line text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors shrink-0 shadow-2xs"
+                        className="p-2 rounded-xl bg-card border border-line text-primary hover:bg-primary/10 transition-colors shrink-0 shadow-2xs"
                       >
                         <Phone className="w-3.5 h-3.5" />
                       </a>
@@ -1559,7 +1559,7 @@ export default function StaffOverviewPage() {
                   <span className="text-[10px] font-bold text-muted uppercase">
                     {t('onTimeLabel')}
                   </span>
-                  <div className="text-xl font-black text-[#2AC1BC]">
+                  <div className="text-xl font-black text-primary">
                     {monthlySummary.onTimeRate}%
                   </div>
                   <span className="text-[10px] text-muted font-bold">
@@ -1596,7 +1596,7 @@ export default function StaffOverviewPage() {
             ) : (
               <div className="p-5 rounded-2xl bg-surface border border-dashed border-line text-center space-y-2">
                 <div className="w-8 h-8 mx-auto rounded-full bg-card border border-line flex items-center justify-center text-muted">
-                  <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+                  <Calendar className="w-4 h-4 text-primary" />
                 </div>
                 <div className="text-xs font-bold text-foreground/90">
                   {t('noMonthlyAttendanceTitle')}
@@ -1612,7 +1612,7 @@ export default function StaffOverviewPage() {
               className="w-full py-2.5 px-4 rounded-xl border border-line hover:bg-card-hover text-foreground/90 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
             >
               <span>{t('viewAttendanceHistory')}</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
+              <ArrowRight className="w-3.5 h-3.5 text-primary" />
             </Link>
           </div>
         </div>
@@ -1676,7 +1676,7 @@ export default function StaffOverviewPage() {
             {/* Lightbox Header */}
             <div className="p-4 sm:p-5 flex items-center justify-between border-b border-zinc-800">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#2AC1BC]" />
+                <ShieldCheck className="w-5 h-5 text-primary" />
                 <h3 className="font-bold text-sm sm:text-base text-zinc-100">
                   {previewImageModal.title}
                 </h3>
@@ -1713,7 +1713,7 @@ export default function StaffOverviewPage() {
               {/* Stamped Watermark HUD on the Photo */}
               {previewImageModal.watermark && (
                 <div className="absolute bottom-3 left-3 right-3 bg-black/75 backdrop-blur-md rounded-2xl p-3 border border-white/15 text-white text-xs space-y-1 shadow-lg pointer-events-none">
-                  <div className="flex items-center justify-between font-black text-[#2AC1BC] text-[11px] uppercase tracking-wider">
+                  <div className="flex items-center justify-between font-black text-primary text-[11px] uppercase tracking-wider">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> {previewImageModal.watermark.time}
                     </span>
@@ -1841,7 +1841,7 @@ function LiveClockBadge() {
 
   return (
     <span className="text-[11px] font-mono font-bold text-primary bg-primary-soft border border-primary-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 tabular-nums shrink-0 shadow-2xs">
-      <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+      <Clock className="w-3.5 h-3.5 text-primary" />
       <span>{clockStr || '--/--/---- --:--:--'}</span>
     </span>
   )
@@ -2370,7 +2370,7 @@ function CheckInOutCameraModal({
         <div className="p-5 border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
-              className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-[#2AC1BC]' : 'bg-emerald-600'}`}
+              className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-primary' : 'bg-emerald-600'}`}
             >
               {mode === 'checkin' ? <Camera className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
             </div>
@@ -2410,7 +2410,7 @@ function CheckInOutCameraModal({
             {/* Stable Non-Jitter Status Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <span className="font-bold text-foreground/90 flex items-center gap-1.5 shrink-0">
-                <Camera className="w-4 h-4 text-[#2AC1BC]" />
+                <Camera className="w-4 h-4 text-primary" />
                 <span>
                   {t('cameraLabel', {
                     facing: facingMode === 'user' ? t('cameraFront') : t('cameraRear'),
@@ -2486,7 +2486,7 @@ function CheckInOutCameraModal({
                   />
                   {cameraStatus === 'starting' && (
                     <div className="text-center p-6 text-muted text-xs space-y-3">
-                      <RefreshCw className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto" />
+                      <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
                       <p className="font-semibold text-zinc-300">{t('cameraStarting')}</p>
                     </div>
                   )}
@@ -2537,12 +2537,12 @@ function CheckInOutCameraModal({
                   )}
                   <div className="absolute inset-4 border border-white/20 rounded-xl pointer-events-none flex flex-col justify-between">
                     <div className="flex justify-between p-2">
-                      <div className="w-4 h-4 border-t-2 border-l-2 border-[#2AC1BC]" />
-                      <div className="w-4 h-4 border-t-2 border-r-2 border-[#2AC1BC]" />
+                      <div className="w-4 h-4 border-t-2 border-l-2 border-primary" />
+                      <div className="w-4 h-4 border-t-2 border-r-2 border-primary" />
                     </div>
                     <div className="flex justify-between p-2">
-                      <div className="w-4 h-4 border-b-2 border-l-2 border-[#2AC1BC]" />
-                      <div className="w-4 h-4 border-b-2 border-r-2 border-[#2AC1BC]" />
+                      <div className="w-4 h-4 border-b-2 border-l-2 border-primary" />
+                      <div className="w-4 h-4 border-b-2 border-r-2 border-primary" />
                     </div>
                   </div>
                 </>
@@ -2562,7 +2562,7 @@ function CheckInOutCameraModal({
             {capturedPhoto && capturedWatermark && (
               <div className="p-3.5 bg-zinc-900 rounded-2xl text-white text-xs border border-zinc-800 space-y-1.5 animate-in fade-in">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-bold text-[#2AC1BC] flex items-center gap-1.5 font-mono">
+                  <span className="text-[12px] font-bold text-primary flex items-center gap-1.5 font-mono">
                     <Clock className="w-3.5 h-3.5" /> {capturedWatermark.time}
                   </span>
                   <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-md">
@@ -2810,7 +2810,7 @@ function DutyProofModal({
         {/* Header */}
         <div className="p-5 border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#2AC1BC] text-white">
+            <div className="p-2 rounded-xl bg-primary text-white">
               <Camera className="w-5 h-5" />
             </div>
             <div>
@@ -2833,7 +2833,7 @@ function DutyProofModal({
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-4">
           <div className="p-3 rounded-xl bg-primary-soft border border-primary-subtle text-xs text-primary flex items-start gap-2">
-            <Info className="w-4 h-4 text-[#2AC1BC] shrink-0 mt-0.5" />
+            <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <p className="leading-relaxed">{t('dutyProofNotice')}</p>
           </div>
 
@@ -2844,7 +2844,7 @@ function DutyProofModal({
 
               {/* Embedded Watermark Stamp */}
               <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-black/75 backdrop-blur-md rounded-xl p-2.5 border border-white/15 text-white text-[10px] space-y-0.5">
-                <div className="flex items-center justify-between font-black text-[#2AC1BC]">
+                <div className="flex items-center justify-between font-black text-primary">
                   <span>🕒 {proofTimeStr}</span>
                   <span className="text-emerald-400 font-bold">{t('stampedReal')}</span>
                 </div>
@@ -2863,9 +2863,9 @@ function DutyProofModal({
           ) : (
             <div
               onClick={() => fileRef.current?.click()}
-              className="rounded-2xl border-2 border-dashed border-line hover:border-[#2AC1BC] bg-surface hover:bg-[#2AC1BC]/5 aspect-16/10 flex flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer transition-colors"
+              className="rounded-2xl border-2 border-dashed border-line hover:border-primary bg-surface hover:bg-primary/5 aspect-16/10 flex flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer transition-colors"
             >
-              <div className="w-10 h-10 rounded-xl bg-card border border-line flex items-center justify-center shadow-2xs text-[#2AC1BC]">
+              <div className="w-10 h-10 rounded-xl bg-card border border-line flex items-center justify-center shadow-2xs text-primary">
                 <Camera className="w-5 h-5" />
               </div>
               <div>
@@ -2926,7 +2926,7 @@ function DutyProofModal({
               onChangeDraft()
             }}
             placeholder={t('dutyNotePlaceholder')}
-            className="w-full p-2.5 rounded-xl bg-surface border border-line text-xs text-foreground font-medium focus:outline-none focus:border-[#2AC1BC]"
+            className="w-full p-2.5 rounded-xl bg-surface border border-line text-xs text-foreground font-medium focus:outline-none focus:border-primary"
             containerClassName="space-y-1"
           />
 

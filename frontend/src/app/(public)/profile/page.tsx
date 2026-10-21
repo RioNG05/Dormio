@@ -185,7 +185,7 @@ function UniversalProfilePage() {
   if (!isLoggedIn) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6 space-y-6">
-        <div className="w-20 h-20 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shadow-inner">
+        <div className="w-20 h-20 rounded-3xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
           <Lock className="w-10 h-10" />
         </div>
         <div className="space-y-2 max-w-md">
@@ -202,7 +202,7 @@ function UniversalProfilePage() {
               variant="primary"
               size="md"
               rightIcon={<span>&rarr;</span>}
-              className="rounded-2xl shadow-lg shadow-[#2AC1BC]/20"
+              className="rounded-2xl shadow-lg shadow-primary/20"
             >
               {t('guestProfileLockLoginBtn')}
             </Button>
@@ -222,7 +222,7 @@ function UniversalProfilePage() {
       <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
         {/* Top Profile Banner Hero Spotlight */}
         <div className="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-950 rounded-3xl p-5 sm:p-8 text-white shadow-2xl border border-zinc-800 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#2AC1BC]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 text-center md:text-left">
             <div className="flex flex-col sm:flex-row items-center gap-5">
@@ -286,7 +286,7 @@ function UniversalProfilePage() {
 
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                  <div className="px-3 py-1 bg-[#2AC1BC]/20 rounded-full border border-[#2AC1BC]/30 tracking-wider whitespace-nowrap flex items-center gap-1">
+                  <div className="px-3 py-1 bg-primary/20 rounded-full border border-primary/30 tracking-wider whitespace-nowrap flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <Text
                       variant="badge"
@@ -306,7 +306,7 @@ function UniversalProfilePage() {
                     weight="black"
                     uppercase
                     className={`px-3 py-1 rounded-full border tracking-wider whitespace-nowrap ${isLandlord
-                      ? 'bg-[#FF6B35]/20 text-[#FF6B35] border-[#FF6B35]/30'
+                      ? 'bg-accent/20 text-accent border-accent/30'
                       : isAdmin
                         ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
                         : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
@@ -339,7 +339,7 @@ function UniversalProfilePage() {
                     weight="semibold"
                     className="flex items-center gap-1.5 whitespace-nowrap text-zinc-300"
                   >
-                    <Phone className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <Phone className="w-3.5 h-3.5 text-primary" />
                     <Text as="span" color="inherit">
                       {phone}
                     </Text>
@@ -353,7 +353,7 @@ function UniversalProfilePage() {
                     weight="semibold"
                     className="flex items-center gap-1.5 whitespace-nowrap text-zinc-300"
                   >
-                    <Mail className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <Mail className="w-3.5 h-3.5 text-primary" />
                     <Text as="span" color="inherit">
                       {email}
                     </Text>

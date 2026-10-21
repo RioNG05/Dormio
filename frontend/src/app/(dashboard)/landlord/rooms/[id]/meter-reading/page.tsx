@@ -372,13 +372,13 @@ export default function LandlordRoomMeterReadingPage({
     if (lower.includes('nước') || lower.includes('water')) {
       return <Droplets className="w-5 h-5 text-sky-500" />
     }
-    return <Gauge className="w-5 h-5 text-[#2AC1BC]" />
+    return <Gauge className="w-5 h-5 text-primary" />
   }
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="w-10 h-10 border-4 border-[#2AC1BC] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <Text size="sm" weight="medium" color="secondary">
           {t('landlordLoadingData')}
         </Text>
@@ -446,7 +446,7 @@ export default function LandlordRoomMeterReadingPage({
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs ${isReadyToConfirm
                   ? 'bg-success-soft text-success'
-                  : 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
+                  : 'bg-primary/15 text-primary'
                 }`}
             >
               {completedCount}/{servicesList.length}
@@ -492,7 +492,7 @@ export default function LandlordRoomMeterReadingPage({
           <div
             className={`h-full transition-all duration-500 rounded-full ${isReadyToConfirm
                 ? 'bg-emerald-500'
-                : 'bg-gradient-to-r from-[#2AC1BC] to-teal-500'
+                : 'bg-gradient-to-r from-primary to-teal-500'
               }`}
             style={{
               width: `${servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
@@ -614,9 +614,9 @@ export default function LandlordRoomMeterReadingPage({
 
                         {state.isScanning && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 backdrop-blur-2xs text-white">
-                            <div className="w-8 h-8 border-3 border-[#2AC1BC] border-t-transparent rounded-full animate-spin" />
+                            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
                             <Text size="xs" weight="bold" color="white" className="flex items-center gap-1.5">
-                              <Sparkles className="w-4 h-4 text-[#2AC1BC] animate-pulse" />
+                              <Sparkles className="w-4 h-4 text-primary animate-pulse" />
                               {t('landlordMeterRecordAiScanning')}
                             </Text>
                           </div>
@@ -637,13 +637,13 @@ export default function LandlordRoomMeterReadingPage({
                     ) : (
                       <div
                         onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                        className="h-48 border-2 border-dashed border-line hover:border-[#2AC1BC] hover:bg-[#2AC1BC]/5 rounded-2xl flex flex-col items-center justify-center gap-2.5 p-4 cursor-pointer transition-all text-center group"
+                        className="h-48 border-2 border-dashed border-line hover:border-primary hover:bg-primary/5 rounded-2xl flex flex-col items-center justify-center gap-2.5 p-4 cursor-pointer transition-all text-center group"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-card-hover group-hover:bg-[#2AC1BC]/15 text-muted group-hover:text-[#2AC1BC] flex items-center justify-center transition-colors">
+                        <div className="w-12 h-12 rounded-2xl bg-card-hover group-hover:bg-primary/15 text-muted group-hover:text-primary flex items-center justify-center transition-colors">
                           <Camera className="w-6 h-6" />
                         </div>
                         <div>
-                          <Text as="span" size="xs" weight="bold" className="block text-foreground group-hover:text-[#2AC1BC] transition-colors">
+                          <Text as="span" size="xs" weight="bold" className="block text-foreground group-hover:text-primary transition-colors">
                             {t('landlordMeterRecordTakePhoto', { name: service.serviceName })}
                           </Text>
                           <Text size="3xs" color="subtle" className="text-muted mt-0.5">
@@ -676,7 +676,7 @@ export default function LandlordRoomMeterReadingPage({
                                 },
                               }))
                             }
-                            className="text-[#2AC1BC] text-xs h-7 px-2"
+                            className="text-primary text-xs h-7 px-2"
                           >
                             {t('landlordMeterRecordManualEdit')}
                           </Button>
@@ -744,7 +744,7 @@ export default function LandlordRoomMeterReadingPage({
                         <Text size="xs" weight="bold" className="text-foreground/90">
                           {t('landlordMeterRecordCardEstimated')}
                         </Text>
-                        <Text size="sm" weight="black" className="text-[#2AC1BC]">
+                        <Text size="sm" weight="black" className="text-primary">
                           {estimatedCost !== null
                             ? formatCurrency(estimatedCost, locale)
                             : '---'}
@@ -762,7 +762,7 @@ export default function LandlordRoomMeterReadingPage({
       {/* Date & Period Notes Section */}
       <div className="bg-card border border-line rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
         <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-[#2AC1BC]" />
+          <FileText className="w-4 h-4 text-primary" />
           <Text as="h3" size="sm" weight="bold" className="text-foreground">
             Thông tin bổ sung kỳ chốt số
           </Text>
@@ -830,7 +830,7 @@ export default function LandlordRoomMeterReadingPage({
         size="lg"
         header={
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+            <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
@@ -902,7 +902,7 @@ export default function LandlordRoomMeterReadingPage({
                       <td className="p-3 text-right font-bold text-foreground">
                         {cons} {s.unit}
                       </td>
-                      <td className="p-3 text-right font-black text-[#2AC1BC]">
+                      <td className="p-3 text-right font-black text-primary">
                         {formatCurrency(subtotal, locale)}
                       </td>
                     </tr>
@@ -914,7 +914,7 @@ export default function LandlordRoomMeterReadingPage({
                   <td colSpan={4} className="p-3 text-right text-foreground/90">
                     Tổng cộng:
                   </td>
-                  <td className="p-3 text-right text-sm text-[#2AC1BC]">
+                  <td className="p-3 text-right text-sm text-primary">
                     {formatCurrency(totalEstimatedCost, locale)}
                   </td>
                 </tr>

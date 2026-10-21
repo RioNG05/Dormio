@@ -49,8 +49,8 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
           </Text>
         </div>
       ) : isStaff ? (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#2AC1BC]/10 border border-[#2AC1BC]/30">
-          <UserCircle className="w-3.5 h-3.5 text-[#2AC1BC]" />
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30">
+          <UserCircle className="w-3.5 h-3.5 text-primary" />
           <Text as="span" variant="overline" color="brand">
             {tNav('staffTag')}
           </Text>
@@ -65,7 +65,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
                 value: b.id,
                 label: b.name,
               }))}
-              className="w-full bg-card-hover border border-line rounded-xl px-2 py-1 text-[11px] font-black text-foreground focus:outline-none focus:border-[#2AC1BC] cursor-pointer pr-6 truncate h-8"
+              className="w-full bg-card-hover border border-line rounded-xl px-2 py-1 text-[11px] font-black text-foreground focus:outline-none focus:border-primary cursor-pointer pr-6 truncate h-8"
               containerClassName="space-y-0"
             />
           </div>
@@ -80,7 +80,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
             isAdmin
               ? 'bg-accent-soft text-orange-600'
               : isStaff
-                ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
+                ? 'bg-primary/15 text-primary'
                 : 'bg-primary/10 text-primary'
           }`}
           title={tNav('viewProfileTooltip')}

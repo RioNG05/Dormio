@@ -303,9 +303,9 @@ export default function NotificationsPage() {
         key: 'total',
         label: t('landlordNotificationsStatTotal'),
         value: summary.totalAnnouncements,
-        icon: <Send className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC] shrink-0" />,
+        icon: <Send className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-primary shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[155px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[155px]',
         labelColor: 'brand',
         valueColor: 'white',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -382,7 +382,7 @@ export default function NotificationsPage() {
               disabled={isLoading}
               title={t('landlordNotificationsRefreshList')}
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#2AC1BC]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary' : ''}`} />
               <span>{t('landlordNotificationsRefreshList')}</span>
             </Button>
             <Button
@@ -459,7 +459,7 @@ export default function NotificationsPage() {
       <div className="space-y-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-line text-center">
-            <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
+            <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
             <p className="text-xs font-bold text-muted">{t('landlordNotificationsLoading')}</p>
           </div>
         ) : notifications.length === 0 ? (
@@ -496,7 +496,7 @@ export default function NotificationsPage() {
                 <div
                   key={notif.id}
                   onClick={() => setSelectedNotifDetail(notif)}
-                  className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all cursor-pointer group flex flex-col justify-between"
+                  className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Category Badge + Sent Time */}
@@ -534,7 +534,7 @@ export default function NotificationsPage() {
 
                     {/* Title & Preview */}
                     <div className="py-3 space-y-1.5">
-                      <h3 className="font-extrabold text-sm text-foreground group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                      <h3 className="font-extrabold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
                         {notif.title}
                       </h3>
                       <p className="text-muted text-xs line-clamp-2 leading-relaxed whitespace-pre-line">
@@ -548,8 +548,8 @@ export default function NotificationsPage() {
                         <Building2 className="w-3.5 h-3.5 text-muted shrink-0" />
                         <span className="truncate max-w-[120px]">{notif.targetScope}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1.5 bg-[#2AC1BC]/10 text-[#2AC1BC] px-2.5 py-1 rounded-full text-[11px]">
-                        <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                      <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 py-1 rounded-full text-[11px]">
+                        <Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span>{getChannelLabel(notif.channel)}</span>
                       </span>
                     </div>
@@ -561,11 +561,11 @@ export default function NotificationsPage() {
                           {t('landlordNotificationsReadPrefix')}: {notif.readCount}/
                           {notif.totalTarget} {t('landlordNotificationsTenantsUnit')}
                         </span>
-                        <span className="text-[#2AC1BC]">{readPct}%</span>
+                        <span className="text-primary">{readPct}%</span>
                       </div>
                       <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#2AC1BC] rounded-full transition-all"
+                          className="h-full bg-primary rounded-full transition-all"
                           style={{ width: `${readPct}%` }}
                         />
                       </div>
@@ -662,7 +662,7 @@ export default function NotificationsPage() {
 
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground/90 whitespace-nowrap">
-                            <Smartphone className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                            <Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />
                             <span>{getChannelLabel(notif.channel)}</span>
                           </span>
                         </td>
@@ -674,11 +674,11 @@ export default function NotificationsPage() {
                                 {notif.readCount}/{notif.totalTarget}{' '}
                                 {t('landlordNotificationsTenantsUnit')}
                               </span>
-                              <span className="text-[#2AC1BC]">{readPct}%</span>
+                              <span className="text-primary">{readPct}%</span>
                             </div>
                             <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-[#2AC1BC] rounded-full transition-all"
+                                className="h-full bg-primary rounded-full transition-all"
                                 style={{ width: `${readPct}%` }}
                               />
                             </div>
@@ -741,7 +741,7 @@ export default function NotificationsPage() {
         headerClassName="bg-zinc-900 text-white border-zinc-800"
         header={
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#2AC1BC]/20 text-[#2AC1BC] rounded-xl border border-[#2AC1BC]/30">
+            <div className="p-2 bg-primary/20 text-primary rounded-xl border border-primary/30">
               <Send className="w-5 h-5" />
             </div>
             <div>
@@ -785,7 +785,7 @@ export default function NotificationsPage() {
         {/* Quick Templates */}
         <div className="space-y-1.5">
           <label className="flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
             <Text as="span" size="xs" weight="bold" className="text-foreground/90 uppercase tracking-wider">
               {t('landlordNotificationsTemplatesLabel')}
             </Text>
@@ -803,7 +803,7 @@ export default function NotificationsPage() {
                 }}
                 className="group flex-col items-start justify-start whitespace-normal"
               >
-                <Text size="xs" weight="bold" className="text-foreground group-hover:text-[#2AC1BC] truncate w-full text-left">
+                <Text size="xs" weight="bold" className="text-foreground group-hover:text-primary truncate w-full text-left">
                   {tmpl.title}
                 </Text>
                 <Text size="3xs" weight="medium" color="subtle" className="text-muted mt-0.5 text-left">
@@ -880,7 +880,7 @@ export default function NotificationsPage() {
         header={
           selectedNotifDetail ? (
             <div className="flex items-center gap-2.5">
-              <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 rounded-full">
+              <span className="px-2.5 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded-full">
                 <Text as="span" variant="badge" size="3xs" weight="black" color="brand">
                   {getCategoryLabel(selectedNotifDetail.category)}
                 </Text>

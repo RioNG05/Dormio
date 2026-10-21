@@ -246,7 +246,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               variant="heading"
               weight="extrabold"
               size={{ base: '3xl', sm: '4xl', lg: '6xl' }}
-              className="leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent"
+              className="leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent"
             >
               {t('guestPricingTitle2')}
             </Text>
@@ -382,7 +382,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 size="xs"
                 weight="bold"
                 color="orange"
-                className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/30"
+                className="flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-2xl border border-accent/30"
               >
                 <QrCode className="w-4 h-4" />
                 <Text as="span" color="inherit">
@@ -709,7 +709,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               weight="black"
               className="flex items-center justify-center gap-2"
             >
-              <HelpCircle className="w-5 h-5 text-[#2AC1BC]" />
+              <HelpCircle className="w-5 h-5 text-primary" />
               <Text as="span" color="inherit">
                 {t('guestPricingFaqTitle')}
               </Text>
@@ -733,7 +733,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                       {faq.q}
                     </Text>
                     <ChevronDown
-                      className={`w-4 h-4 text-muted transition-transform ${isOpen ? 'rotate-180 text-[#2AC1BC]' : ''}`}
+                      className={`w-4 h-4 text-muted transition-transform ${isOpen ? 'rotate-180 text-primary' : ''}`}
                     />
                   </div>
                   {isOpen && (
@@ -789,7 +789,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               variant="primary"
               size="lg"
               rightIcon={<span>&rarr;</span>}
-              className="rounded-2xl shadow-lg shadow-[#2AC1BC]/30 hover:scale-105"
+              className="rounded-2xl shadow-lg shadow-primary/30 hover:scale-105"
             >
               {t('guestPricingCtaBtn')}
             </Button>

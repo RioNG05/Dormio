@@ -231,7 +231,7 @@ export default function TenantInvoicesPage() {
       {currentUnpaid && (
         <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#FF6B35]/30">
+            <div className="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <Receipt className="w-6 h-6" />
             </div>
             <div>
@@ -519,7 +519,7 @@ export default function TenantInvoicesPage() {
               }}
               placeholder={t('filterByYearMonth')}
               leftIcon={<Search className="w-4 h-4 text-muted" />}
-              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
+              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-primary transition-colors"
               containerClassName="w-full sm:w-64 space-y-0"
             />
           </div>

@@ -522,7 +522,7 @@ export default function SendApplicationPage() {
         {!isLoggedIn ? (
           /* Login Notice Card for unauthenticated visitors */
           <div className="bg-card rounded-3xl p-8 sm:p-12 border border-line shadow-sm text-center max-w-xl mx-auto space-y-4 my-8">
-            <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
               <FileText className="w-8 h-8" />
             </div>
             <Text as="h2" variant="heading" size="lg" className="sm:text-xl">
@@ -605,7 +605,7 @@ export default function SendApplicationPage() {
             {/* List / Grid Display */}
             {loading ? (
               <div className="text-center py-16 bg-card rounded-3xl border border-line">
-                <Clock className="w-8 h-8 text-[#2AC1BC] animate-spin mx-auto mb-2" />
+                <Clock className="w-8 h-8 text-primary animate-spin mx-auto mb-2" />
                 <Text variant="caption" size="xs" weight="bold" color="subtle">
                   {tCommon('loading')}
                 </Text>
@@ -648,7 +648,7 @@ export default function SendApplicationPage() {
                     <div
                       key={item.id}
                       onClick={() => setSelectedApplication(item)}
-                      className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group hover:border-[#2AC1BC]"
+                      className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group hover:border-primary"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -665,7 +665,7 @@ export default function SendApplicationPage() {
                             variant="heading"
                             size="sm"
                             clamp={1}
-                            className="group-hover:text-[#2AC1BC] transition-colors"
+                            className="group-hover:text-primary transition-colors"
                           >
                             {item.title}
                           </Text>
@@ -784,7 +784,7 @@ export default function SendApplicationPage() {
                                 size="xs"
                                 weight="black"
                                 truncate
-                                className="text-foreground group-hover:text-[#2AC1BC]"
+                                className="text-foreground group-hover:text-primary"
                               >
                                 {item.title}
                               </Text>
@@ -920,7 +920,7 @@ export default function SendApplicationPage() {
               variant="badge"
               weight="black"
               color="brand"
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 rounded-full tracking-wider"
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full tracking-wider"
             >
               <FileText className="w-3 h-3" />
               <Text as="span" color="inherit">
@@ -1062,7 +1062,7 @@ export default function SendApplicationPage() {
             {uploadedImages.length < 5 && (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-line hover:border-[#2AC1BC] rounded-2xl p-4 text-center cursor-pointer transition-colors bg-surface/50 hover:bg-card-hover"
+                className="border-2 border-dashed border-line hover:border-primary rounded-2xl p-4 text-center cursor-pointer transition-colors bg-surface/50 hover:bg-card-hover"
               >
                 <UploadCloud className="w-6 h-6 text-muted mx-auto mb-1" />
                 <Text size="xs" weight="bold" color="secondary">

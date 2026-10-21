@@ -55,7 +55,7 @@ export function Step1GeneralInfo({
     <section className="space-y-6 animate-in fade-in duration-300">
       <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
         <div className="flex items-center gap-3 border-b border-line pb-4">
-          <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
             <Building2 className="w-5 h-5" />
           </div>
           <div>

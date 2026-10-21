@@ -156,13 +156,13 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
 
         {/* Soft Ambient Glow Orbs behind text */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#2AC1BC]/20 rounded-full blur-[140px] pointer-events-none z-0" />
-        <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-[#FF6B35]/15 rounded-full blur-[120px] pointer-events-none z-0" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/20 rounded-full blur-[140px] pointer-events-none z-0" />
+        <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-accent/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
           {/* Glowing Glassmorphism Pill Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
-            <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
+            <ShieldCheck className="w-4 h-4 text-primary" />
             <Text
               as="span"
               variant="badge"
@@ -189,7 +189,7 @@ export default function HomePage() {
               as="h1"
               variant="heading"
               weight="black"
-              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap"
+              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap"
             >
               {t('guestHomeTitleLine2')}
             </Text>{' '}
@@ -198,7 +198,7 @@ export default function HomePage() {
               as="h1"
               variant="heading"
               weight="black"
-              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap"
+              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent inline-block whitespace-nowrap"
             >
               {t('guestHomeTitleLine3')}
             </Text>
@@ -285,7 +285,7 @@ export default function HomePage() {
                     variant="accent"
                     fullWidth
                     leftIcon={<Search className="w-3.5 h-3.5" />}
-                    className="h-11 rounded-2xl text-xs font-extrabold shadow-md shadow-[#FF6B35]/25 hover:scale-[1.02]"
+                    className="h-11 rounded-2xl text-xs font-extrabold shadow-md shadow-accent/25 hover:scale-[1.02]"
                   >
                     {t('guestHomeSearchNow')}
                   </Button>
@@ -301,7 +301,7 @@ export default function HomePage() {
                     size="lg"
                     rounded="full"
                     leftIcon={<Sparkles className="w-4 h-4" />}
-                    className="w-full sm:w-auto px-8 py-3.5 shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300"
+                    className="w-full sm:w-auto px-8 py-3.5 shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 transition-all duration-300"
                   >
                     {t('guestHomeTrialBtn')}
                   </Button>
@@ -311,7 +311,7 @@ export default function HomePage() {
                     variant="ghost"
                     size="lg"
                     rounded="full"
-                    rightIcon={<ArrowRight className="w-4 h-4 text-[#2AC1BC]" />}
+                    rightIcon={<ArrowRight className="w-4 h-4 text-primary" />}
                     className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300"
                   >
                     {t('guestFeaturesViewPricingBtn')}
@@ -327,7 +327,7 @@ export default function HomePage() {
                   t('guestHomeBadgeSupport'),
                 ].map(badgeText => (
                   <div key={badgeText} className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
                     <Text as="span" size="xs" weight="semibold" className="text-zinc-300">
                       {badgeText}
                     </Text>
@@ -344,7 +344,7 @@ export default function HomePage() {
                 <Button
                   variant="dark"
                   rounded="full"
-                  className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300"
+                  className="px-7 py-3 bg-zinc-900/80 hover:bg-accent text-white font-black text-xs sm:text-sm border border-zinc-700/80 hover:border-accent backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300"
                 >
                   {t('guestHomeExploreBtn')}
                 </Button>
@@ -375,7 +375,7 @@ export default function HomePage() {
             as="div"
             variant="badge"
             color="brand"
-            className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#2AC1BC]/10 mb-3 border border-[#2AC1BC]/20"
+            className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-primary/10 mb-3 border border-primary/20"
           >
             {t('guestHomeProcessBadge')}
           </Text>
@@ -411,7 +411,7 @@ export default function HomePage() {
                 rounded="full"
                 onClick={() => setProcessTab('tenant')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'tenant'
-                  ? 'shadow-md shadow-[#2AC1BC]/25'
+                  ? 'shadow-md shadow-primary/25'
                   : 'text-muted hover:text-foreground'
                   }`}
               >
@@ -422,7 +422,7 @@ export default function HomePage() {
                 rounded="full"
                 onClick={() => setProcessTab('landlord')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'landlord'
-                  ? 'shadow-md shadow-[#2AC1BC]/25'
+                  ? 'shadow-md shadow-primary/25'
                   : 'text-muted hover:text-foreground'
                   }`}
               >
@@ -439,8 +439,8 @@ export default function HomePage() {
               <div
                 key={step.num}
                 className={`bg-card rounded-3xl p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${step.accent === 'orange'
-                  ? 'hover:border-[#FF6B35]/30'
-                  : 'hover:border-[#2AC1BC]/30'
+                  ? 'hover:border-accent/30'
+                  : 'hover:border-primary/30'
                   }`}
               >
                 <Text
@@ -448,7 +448,7 @@ export default function HomePage() {
                   size="sm"
                   weight="black"
                   color={step.accent}
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center ${step.accent === 'orange' ? 'bg-[#FF6B35]/10' : 'bg-[#2AC1BC]/10'
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center ${step.accent === 'orange' ? 'bg-accent/10' : 'bg-primary/10'
                     }`}
                 >
                   {step.num}
@@ -539,7 +539,7 @@ export default function HomePage() {
                           className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                           <Text as="span" size="2xs" weight="black" color="white">
                             {t('guestHomeVerified')}
                           </Text>
@@ -563,7 +563,7 @@ export default function HomePage() {
                           size="base"
                           weight="extrabold"
                           clamp={2}
-                          className="leading-snug group-hover:text-[#2AC1BC] transition-colors"
+                          className="leading-snug group-hover:text-primary transition-colors"
                         >
                           {room.title}
                         </Text>
@@ -608,7 +608,7 @@ export default function HomePage() {
                     variant="white"
                     size="lg"
                     rounded="full"
-                    rightIcon={<ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5 text-primary" />}
                     className="px-8 py-3.5 font-extrabold text-xs hover:shadow-md"
                   >
                     {t('guestHomeExploreMoreRooms')}
@@ -652,13 +652,13 @@ export default function HomePage() {
                 return (
                   <div
                     key={idx}
-                    className={`group rounded-3xl bg-card p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${isOrange ? 'hover:border-[#FF6B35]/40' : 'hover:border-[#2AC1BC]/40'
+                    className={`group rounded-3xl bg-card p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${isOrange ? 'hover:border-accent/40' : 'hover:border-primary/40'
                       }`}
                   >
                     <div
                       className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${isOrange
-                        ? 'bg-[#FF6B35]/10 text-[#FF6B35]'
-                        : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
+                        ? 'bg-accent/10 text-accent'
+                        : 'bg-primary/10 text-primary'
                         }`}
                     >
                       <Icon className="w-7 h-7" />
@@ -670,8 +670,8 @@ export default function HomePage() {
                         size="xl"
                         weight="extrabold"
                         className={`transition-colors ${isOrange
-                          ? 'group-hover:text-[#FF6B35]'
-                          : 'group-hover:text-[#2AC1BC]'
+                          ? 'group-hover:text-accent'
+                          : 'group-hover:text-primary'
                           }`}
                       >
                         {feature.title}
@@ -698,7 +698,7 @@ export default function HomePage() {
                   variant="white"
                   size="lg"
                   rounded="full"
-                  rightIcon={<ArrowRight className="w-4 h-4 text-[#2AC1BC]" />}
+                  rightIcon={<ArrowRight className="w-4 h-4 text-primary" />}
                   className="px-8 py-3.5 font-extrabold text-xs sm:text-sm hover:shadow-md"
                 >
                   {t('guestHomeBhmsViewDetails')}
@@ -814,7 +814,7 @@ export default function HomePage() {
               <Button
                 variant="primary"
                 size="lg"
-                className="px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] rounded-xl text-xs font-bold shadow-lg shadow-[#2AC1BC]/20"
+                className="px-8 py-3.5 bg-gradient-to-r from-primary to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] rounded-xl text-xs font-bold shadow-lg shadow-primary/20"
               >
                 {t('guestHomeCtaTrialBtn')}
               </Button>

@@ -181,7 +181,7 @@ export default function PublicCreatePostPage() {
                     : t('guestPostsCreateQuotaAgent')}
                   :
                 </span>
-                <span className="text-[#FF6B35] font-bold">
+                <span className="text-accent font-bold">
                   {t('guestPostsCreateRemainingFree', {
                     remaining: quota.freePostsRemainingToday,
                     total: quota.dailyPostQuota,
@@ -207,7 +207,7 @@ export default function PublicCreatePostPage() {
       {/* Quota Encouragement Banner */}
       <div className="p-4 sm:p-5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-transparent rounded-3xl border border-accent-subtle flex items-start sm:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#FF6B35]/20">
+          <div className="w-10 h-10 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-md shadow-accent/20">
             <UserCheck className="w-5 h-5" />
           </div>
           <div>
@@ -219,7 +219,7 @@ export default function PublicCreatePostPage() {
         </div>
         <Link
           href="/pricing/rental-platform"
-          className="shrink-0 px-3.5 py-2 text-xs font-bold text-[#FF6B35] hover:text-white bg-card hover:bg-[#FF6B35] border border-accent-subtle rounded-xl transition-all shadow-xs"
+          className="shrink-0 px-3.5 py-2 text-xs font-bold text-accent hover:text-white bg-card hover:bg-accent border border-accent-subtle rounded-xl transition-all shadow-xs"
         >
           Mua thêm lượt &rarr;
         </Link>
@@ -230,7 +230,7 @@ export default function PublicCreatePostPage() {
         {/* 1. Basic Information */}
         <div className="bg-card p-6 sm:p-8 rounded-3xl border border-line shadow-xs space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-line">
-            <div className="w-8 h-8 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center text-[#FF6B35]">
+            <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
               <FileText className="w-4 h-4" />
             </div>
             <div>
@@ -287,7 +287,7 @@ export default function PublicCreatePostPage() {
         {/* 2. Detailed Description */}
         <div className="bg-card p-6 sm:p-8 rounded-3xl border border-line shadow-xs space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-line">
-            <div className="w-8 h-8 rounded-xl bg-[#2ac1bc]/10 flex items-center justify-center text-[#2ac1bc]">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>

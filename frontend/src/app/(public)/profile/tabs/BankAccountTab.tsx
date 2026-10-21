@@ -174,8 +174,8 @@ export default function BankAccountTab() {
 
           {/* Live VietQR Card Preview */}
           <div className="p-6 bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-3xl border border-zinc-800 space-y-4 text-center shadow-xl relative overflow-hidden w-full">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#2AC1BC]/10 rounded-full blur-xl" />
-            <QrCode className="w-16 h-16 text-[#2AC1BC] mx-auto relative z-10 animate-pulse" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-xl" />
+            <QrCode className="w-16 h-16 text-primary mx-auto relative z-10 animate-pulse" />
             <div className="relative z-10">
               <Text as="h4" variant="heading" size="sm" weight="black" color="white">
                 {bankName || t('guestProfileBankCardNameDefault')}
@@ -247,7 +247,7 @@ export default function BankAccountTab() {
               isLoading={isSavingBank}
               leftIcon={!isSavingBank ? <Save className="w-4 h-4 shrink-0" /> : undefined}
               rightIcon={!isSavingBank ? <span>&rarr;</span> : undefined}
-              className="w-full sm:w-auto rounded-2xl shadow-lg shadow-[#2AC1BC]/25 hover:scale-105"
+              className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
             >
               {isSavingBank ? t('guestProfileBankSaving') : t('guestProfileBankBtnSave')}
             </Button>

@@ -387,7 +387,7 @@ function StaffScheduleContent() {
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             )}
             {(!toast.type || toast.type === 'info') && (
-              <Sparkles className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+              <Sparkles className="w-4 h-4 text-primary shrink-0" />
             )}
             <span>{toast.message}</span>
           </div>
@@ -405,7 +405,7 @@ function StaffScheduleContent() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
+            <span className="text-xs font-black text-primary uppercase tracking-wider">
               {t('schedTag')}
             </span>
           </div>
@@ -421,7 +421,7 @@ function StaffScheduleContent() {
             href="/staff/shift-history"
             className="px-4 py-2.5 rounded-2xl bg-card-hover hover:bg-line text-foreground text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-line cursor-pointer"
           >
-            <Clock className="w-4 h-4 text-[#2AC1BC]" />
+            <Clock className="w-4 h-4 text-primary" />
             <span>{t('btnViewAttendanceHistory')}</span>
             <ArrowRight className="w-3.5 h-3.5 text-muted" />
           </Link>
@@ -450,7 +450,7 @@ function StaffScheduleContent() {
                     label: getLocalizedPlace(house.name, isEn),
                   })),
                 ]}
-                className="px-3.5 py-1.5 bg-surface border border-line rounded-xl text-xs font-bold text-foreground focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
+                className="px-3.5 py-1.5 bg-surface border border-line rounded-xl text-xs font-bold text-foreground focus:outline-none focus:border-primary cursor-pointer"
                 containerClassName="w-auto"
               />
             )}
@@ -464,7 +464,7 @@ function StaffScheduleContent() {
               onClick={handleCurrentWeek}
               title={t('titleReturnCurrentWeek')}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-primary" />
               <span>{todayLabel}</span>
             </Button>
           </div>
@@ -502,7 +502,7 @@ function StaffScheduleContent() {
               onClick={handleCurrentWeek}
               title={t('titleTodaySchedule')}
             >
-              <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
+              <Calendar className="w-3.5 h-3.5 text-primary" />
               <span>{t('btnTodaySchedule')}</span>
             </Button>
 
@@ -551,7 +551,7 @@ function StaffScheduleContent() {
                   key={index}
                   className={`min-h-[260px] rounded-2xl border p-3 flex flex-col justify-between transition-all ${
                     day.isToday
-                      ? 'bg-[#2AC1BC]/5 border-[#2AC1BC] shadow-xs'
+                      ? 'bg-primary/5 border-primary shadow-xs'
                       : 'bg-card border-line shadow-2xs'
                   }`}
                 >
@@ -563,14 +563,14 @@ function StaffScheduleContent() {
                       </span>
                       <span
                         className={`text-base font-black ${
-                          day.isToday ? 'text-[#2AC1BC]' : 'text-foreground'
+                          day.isToday ? 'text-primary' : 'text-foreground'
                         }`}
                       >
                         {day.dayNum}/{day.date.split('-')[1] || '09'}
                       </span>
                     </div>
                     {day.isToday && (
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-[#2AC1BC] text-white">
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-primary text-white">
                         {t('todayBadge')}
                       </span>
                     )}
@@ -586,11 +586,11 @@ function StaffScheduleContent() {
                           className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all hover:scale-[1.02] shadow-2xs ${
                             item.status === 'completed'
                               ? 'bg-surface border-line text-foreground/90'
-                              : 'bg-card border-[#2AC1BC]/40 hover:border-[#2AC1BC]'
+                              : 'bg-card border-primary/40 hover:border-primary'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[10px] font-black text-[#2AC1BC] uppercase truncate">
+                            <span className="text-[10px] font-black text-primary uppercase truncate">
                               {getShiftName(item.shift.name)}
                             </span>
                           </div>
@@ -637,10 +637,10 @@ function StaffScheduleContent() {
         <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="space-y-1 max-w-xl">
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded-lg bg-[#2AC1BC]/10 text-[#2AC1BC]">
+              <span className="p-1 rounded-lg bg-primary/10 text-primary">
                 <CheckSquare className="w-4 h-4" />
               </span>
-              <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
+              <span className="text-xs font-black text-primary uppercase tracking-wider">
                 {t('todayDutiesTag')}
               </span>
               <span className="text-xs text-muted font-medium">• {todayStr}</span>
@@ -656,13 +656,13 @@ function StaffScheduleContent() {
             <div className="bg-surface border border-line rounded-2xl p-3.5 min-w-[200px] space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-muted">{t('dutyProgressLabel')}</span>
-                <span className="font-black text-[#2AC1BC] text-sm font-mono">
+                <span className="font-black text-primary text-sm font-mono">
                   {completedDuties}/{totalDuties} ({progressPercent}%)
                 </span>
               </div>
               <div className="w-full bg-line rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-linear-to-r from-[#2AC1BC] to-emerald-400 h-full rounded-full transition-all duration-300"
+                  className="bg-linear-to-r from-primary to-emerald-400 h-full rounded-full transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -686,7 +686,7 @@ function StaffScheduleContent() {
                 className={`bg-card rounded-2xl border transition-all p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   duty.completed
                     ? 'border-success-subtle bg-emerald-50/20'
-                    : 'border-line hover:border-[#2AC1BC]/50 shadow-2xs'
+                    : 'border-line hover:border-primary/50 shadow-2xs'
                 }`}
               >
                 <div className="flex items-start gap-3.5 flex-1">
@@ -744,7 +744,7 @@ function StaffScheduleContent() {
                           note: duty.note,
                         })
                       }
-                      className="flex items-center gap-2 p-1.5 rounded-xl bg-surface border border-line hover:border-[#2AC1BC] cursor-pointer group transition-colors"
+                      className="flex items-center gap-2 p-1.5 rounded-xl bg-surface border border-line hover:border-primary cursor-pointer group transition-colors"
                       title={t('titleEnlargePhoto')}
                     >
                       <img
@@ -753,7 +753,7 @@ function StaffScheduleContent() {
                         className="w-10 h-10 rounded-lg object-cover"
                       />
                       <div className="text-left pr-1 hidden sm:block">
-                        <span className="text-[10px] font-bold text-foreground/90 group-hover:text-[#2AC1BC] block flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-foreground/90 group-hover:text-primary block flex items-center gap-1">
                           <Eye className="w-2.5 h-2.5" /> {t('dutyAuditProof')}
                         </span>
                         <span className="text-[9px] text-muted font-mono">
@@ -769,7 +769,7 @@ function StaffScheduleContent() {
                     type="button"
                     onClick={() => handleOpenDutyProofModal(duty)}
                   >
-                    <FileText className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                    <FileText className="w-3.5 h-3.5 text-primary" />
                     <span>{t('btnUpdateDetails')}</span>
                   </Button>
                 </div>
@@ -805,7 +805,7 @@ function StaffScheduleContent() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-line pb-4">
               <div>
-                <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">
+                <span className="text-[10px] font-black text-primary uppercase tracking-wider block">
                   {t('detailTag')}
                 </span>
                 <h3 className="text-lg sm:text-xl font-black text-foreground">
@@ -838,7 +838,7 @@ function StaffScheduleContent() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted font-medium">{t('detailPosition')}</span>
-                  <span className="font-bold text-[#2AC1BC]">
+                  <span className="font-bold text-primary">
                     {getPositionName(selectedSchedule.position.name)}
                   </span>
                 </div>
@@ -854,7 +854,7 @@ function StaffScheduleContent() {
               {selectedSchedule.coWorkers && selectedSchedule.coWorkers.length > 0 && (
                 <div className="space-y-2.5">
                   <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-[#2AC1BC]" />
+                    <Users className="w-4 h-4 text-primary" />
                     <span>{t('detailCoworkersTitle')}</span>
                   </h4>
                   <div className="space-y-2">
@@ -886,7 +886,7 @@ function StaffScheduleContent() {
                         {cw.phone && (
                           <a
                             href={`tel:${cw.phone}`}
-                            className="p-1.5 rounded-lg bg-card border border-line text-[#2AC1BC] hover:bg-teal-50 shadow-2xs"
+                            className="p-1.5 rounded-lg bg-card border border-line text-primary hover:bg-teal-50 shadow-2xs"
                             title={`Gọi cho ${cw.name}`}
                           >
                             <Phone className="w-3.5 h-3.5" />
@@ -902,10 +902,10 @@ function StaffScheduleContent() {
               <div className="space-y-2.5 pt-2 border-t border-line">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-[#2AC1BC]" />
+                    <Shield className="w-4 h-4 text-primary" />
                     <span>{t('routineDutiesTitle')}</span>
                   </h4>
-                  <span className="text-[10px] font-bold text-[#2AC1BC] px-2.5 py-0.5 rounded-full bg-[#2AC1BC]/10 border border-[#2AC1BC]/20">
+                  <span className="text-[10px] font-bold text-primary px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
                     {getPositionName(selectedSchedule.position.name)}
                   </span>
                 </div>
@@ -913,7 +913,7 @@ function StaffScheduleContent() {
                   {getDutyLines(selectedSchedule).length > 0 ? (
                     getDutyLines(selectedSchedule).map((line, idx) => (
                       <div key={idx} className="flex items-start gap-2.5">
-                        <span className="w-2 h-2 rounded-full bg-[#2AC1BC] mt-1.5 shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
                         <span className="leading-relaxed font-medium">{line}</span>
                       </div>
                     ))
@@ -1005,7 +1005,7 @@ function StaffScheduleContent() {
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#2AC1BC]" />
+                <FileText className="w-5 h-5 text-primary" />
                 <h3 className="text-base font-black text-foreground truncate">
                   {t('dutyModalHeader')}
                 </h3>
@@ -1086,7 +1086,7 @@ function StaffScheduleContent() {
                   onClick={() => dutyFileInputRef.current?.click()}
                   className="flex-col"
                 >
-                  <Camera className="w-6 h-6 text-[#2AC1BC]" />
+                  <Camera className="w-6 h-6 text-primary" />
                   <span>{t('clickToCapturePhoto')}</span>
                   <span className="text-[10px] text-muted font-normal">
                     {t('autoTimestampDesc')}
@@ -1105,7 +1105,7 @@ function StaffScheduleContent() {
                 value={dutyDraftNote}
                 onChange={e => setDutyDraftNote(e.target.value)}
                 placeholder={t('dutyNotePlaceholder')}
-                className="w-full p-3 bg-surface border border-line rounded-xl text-xs font-medium focus:outline-none focus:border-[#2AC1BC] leading-relaxed"
+                className="w-full p-3 bg-surface border border-line rounded-xl text-xs font-medium focus:outline-none focus:border-primary leading-relaxed"
               />
             </div>
 
@@ -1157,7 +1157,7 @@ function StaffScheduleContent() {
           >
             <div className="p-4 border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#2AC1BC]" />
+                <Camera className="w-4 h-4 text-primary" />
                 <h3 className="text-sm font-black text-foreground truncate">
                   {previewPhotoModal.title}
                 </h3>

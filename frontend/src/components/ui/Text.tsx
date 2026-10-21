@@ -91,7 +91,7 @@ const variantStyles: Record<TextVariant, string> = {
   overline: 'text-[10px] font-black uppercase tracking-widest text-muted/80',
   badge: 'text-[10px] font-extrabold uppercase tracking-wide',
   code: 'font-mono text-xs bg-card-hover text-foreground px-1.5 py-0.5 rounded-md',
-  quote: 'text-sm italic border-l-2 border-[#2AC1BC] pl-3 py-1 text-muted',
+  quote: 'text-sm italic border-l-2 border-primary pl-3 py-1 text-muted',
 }
 
 const sizeStyles: Record<TextSize, string> = {
@@ -122,7 +122,7 @@ const colorStyles: Record<TextColor, string> = {
   default: 'text-foreground',
   secondary: 'text-muted',
   subtle: 'text-muted/80',
-  brand: 'text-[#2AC1BC]',
+  brand: 'text-primary',
   'brand-dark': 'text-[#138e89]',
   success: 'text-emerald-600 dark:text-emerald-400',
   warning: 'text-amber-600 dark:text-amber-400',

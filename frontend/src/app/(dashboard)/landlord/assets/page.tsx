@@ -351,10 +351,10 @@ export default function AssetsPage() {
         label: t('landlordAssetsInUse'),
         value: summary.goodConditionCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+          'px-3 py-2 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[130px]',
         labelColor: 'brand',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -364,11 +364,11 @@ export default function AssetsPage() {
         label: t('landlordAssetsUnderMaintenance'),
         value: summary.needsRepairCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20 border-[#FF6B35]/30 lg:w-[130px]',
-        labelClassName: 'text-[#FF6B35]',
+          'px-3 py-2 bg-accent/10 hover:bg-accent/20 border-accent/30 lg:w-[130px]',
+        labelClassName: 'text-accent',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
       },
@@ -497,7 +497,7 @@ export default function AssetsPage() {
         {/* Loading Indicator */}
         {isLoading ? (
           <div className="py-20 text-center text-muted font-medium">
-            <Loader2 className="w-8 h-8 mx-auto text-[#2AC1BC] animate-spin mb-3" />
+            <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin mb-3" />
             <p className="text-xs font-bold text-muted">{t('landlordAssetsLoading')}</p>
           </div>
         ) : viewMode === 'grid' ? (
@@ -519,7 +519,7 @@ export default function AssetsPage() {
                   <div
                     key={asset.id}
                     onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-[#2AC1BC]/40 transition-all space-y-4 cursor-pointer relative group flex flex-col justify-between"
+                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all space-y-4 cursor-pointer relative group flex flex-col justify-between"
                   >
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
@@ -527,18 +527,18 @@ export default function AssetsPage() {
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-card-hover text-foreground/90 border border-line">
                             {getCategoryLabel(asset.category)}
                           </span>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/10 text-[#2AC1BC] border border-[#2AC1BC]/30">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/10 text-primary border border-primary/30">
                             {asset.code}
                           </span>
                         </div>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${
                             asset.condition === 'good'
-                              ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                              ? 'bg-primary/10 text-primary border-primary/30'
                               : asset.condition === 'new'
                                 ? 'bg-info-soft text-blue-600 border-info-subtle'
                                 : asset.condition === 'under_repair'
-                                  ? 'bg-accent-soft text-[#FF6B35] border-accent-subtle animate-pulse'
+                                  ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
                                   : 'bg-danger-soft text-rose-600 border-danger-subtle'
                           }`}
                         >
@@ -547,7 +547,7 @@ export default function AssetsPage() {
                       </div>
 
                       <div>
-                        <h3 className="text-base font-black text-foreground group-hover:text-[#2AC1BC] transition-colors leading-snug">
+                        <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors leading-snug">
                           {asset.name}
                         </h3>
                         {asset.quantity > 1 && (
@@ -597,7 +597,7 @@ export default function AssetsPage() {
                           variant="secondary"
                           size="xs"
                           onClick={e => handleOpenEditModal(asset, e)}
-                          leftIcon={<Edit3 className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                          leftIcon={<Edit3 className="w-3.5 h-3.5 text-primary" />}
                         >
                           {t('landlordAssetsBtnEditSku')}
                         </Button>
@@ -611,7 +611,7 @@ export default function AssetsPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                      <span className="text-xs font-black text-[#2AC1BC] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                      <span className="text-xs font-black text-primary group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
                         {t('landlordAssetsBtnDetails')} <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
@@ -669,11 +669,11 @@ export default function AssetsPage() {
                         className="hover:bg-zinc-50/80 transition-colors cursor-pointer group"
                       >
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className="font-black text-[#2AC1BC] block font-mono">
+                          <span className="font-black text-primary block font-mono">
                             {asset.code}
                           </span>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground group-hover:text-[#2AC1BC] transition-colors whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
                           {asset.name}
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-muted whitespace-nowrap">
@@ -697,11 +697,11 @@ export default function AssetsPage() {
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${
                               asset.condition === 'good'
-                                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
+                                ? 'bg-primary/10 text-primary border-primary/30'
                                 : asset.condition === 'new'
                                   ? 'bg-info-soft text-blue-600 border-info-subtle'
                                   : asset.condition === 'under_repair'
-                                    ? 'bg-accent-soft text-[#FF6B35] border-accent-subtle animate-pulse'
+                                    ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
                                     : 'bg-danger-soft text-rose-600 border-danger-subtle'
                             }`}
                           >
@@ -718,7 +718,7 @@ export default function AssetsPage() {
                               variant="secondary"
                               size="xs"
                               onClick={e => handleOpenEditModal(asset, e)}
-                              leftIcon={<Edit3 className="w-3 h-3 text-[#2AC1BC]" />}
+                              leftIcon={<Edit3 className="w-3 h-3 text-primary" />}
                             >
                               {t('landlordAssetsBtnEdit')}
                             </Button>
@@ -733,7 +733,7 @@ export default function AssetsPage() {
                             </Button>
                             <Link
                               href={`/landlord/assets/${asset.id}`}
-                              className="px-2.5 py-1 bg-accent-soft text-[#FF6B35] border border-accent-subtle rounded-lg text-xs font-bold hover:bg-[#FF6B35] hover:text-white transition-colors flex items-center gap-1"
+                              className="px-2.5 py-1 bg-accent-soft text-accent border border-accent-subtle rounded-lg text-xs font-bold hover:bg-accent hover:text-white transition-colors flex items-center gap-1"
                             >
                               <Eye className="w-3 h-3" /> {t('landlordAssetsBtnViewDetail')}
                             </Link>
@@ -770,8 +770,8 @@ export default function AssetsPage() {
           <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
             <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-accent-soft text-[#FF6B35] rounded-xl">
-                  <Package className="w-5 h-5 text-[#2AC1BC]" />
+                <div className="p-2 bg-accent-soft text-accent rounded-xl">
+                  <Package className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-black text-base sm:text-lg text-foreground">

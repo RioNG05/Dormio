@@ -413,10 +413,10 @@ export default function AttendancePage() {
         label: t('landlordAttendanceStatOnTime'),
         value: summary.onTimeCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border-[#2AC1BC]/30 lg:w-[130px]',
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[130px]',
         labelColor: 'brand',
         valueColor: 'brand',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -672,7 +672,7 @@ export default function AttendancePage() {
       {/* ─── Content Area ──────────────────────────────────────────────── */}
       {isLoading ? (
         <div className="bg-card border border-line rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[350px]">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
           <p className="text-xs font-bold text-muted">
             {isEn ? 'Loading attendance logs...' : 'Đang tải dữ liệu chấm công...'}
           </p>
@@ -680,7 +680,7 @@ export default function AttendancePage() {
       ) : records.length === 0 ? (
         /* Empty State */
         <div className="bg-card border border-line rounded-3xl shadow-sm p-12 text-center text-muted py-20 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-center mb-4 text-[#2AC1BC]">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 text-primary">
             <Clock className="w-8 h-8" />
           </div>
           <h3 className="text-base font-extrabold text-foreground mb-1">
@@ -714,7 +714,7 @@ export default function AttendancePage() {
                   {/* Top card bar: Date & Status */}
                   <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-line">
                     <div className="flex items-center gap-1.5 text-xs font-extrabold text-foreground">
-                      <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
                       <span>{formatDisplayDate(item.workDate)}</span>
                     </div>
                     {getStatusBadge(item.attendanceStatus)}
@@ -905,7 +905,7 @@ export default function AttendancePage() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -941,7 +941,7 @@ export default function AttendancePage() {
                   <span className="text-xs font-bold text-foreground">
                     {selectedRecord.employeeName}
                   </span>
-                  <span className="text-xs font-bold text-[#2AC1BC]">
+                  <span className="text-xs font-bold text-primary">
                     {formatDisplayDate(selectedRecord.workDate)}
                   </span>
                 </div>

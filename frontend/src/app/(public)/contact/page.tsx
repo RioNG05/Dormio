@@ -56,7 +56,7 @@ export default function ContactPage() {
             <Text
               as="h1"
               weight='extrabold'
-              className="text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent"
+              className="text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent"
             >
               {t('guestContactTitle2')}
             </Text>
@@ -107,10 +107,10 @@ export default function ContactPage() {
               {/* Channel 1: Phone / Zalo */}
               <a
                 href="tel:0344265925"
-                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-[#FF6B35] transition-all group shadow-xs cursor-pointer block"
+                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-accent transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactCallTooltip')}
               >
-                <div className="p-3.5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                <div className="p-3.5 bg-accent/10 text-accent rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
@@ -142,10 +142,10 @@ export default function ContactPage() {
               {/* Channel 2: Email */}
               <a
                 href="mailto:contact@dormio.site"
-                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
+                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-primary transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactEmailTooltip')}
               >
-                <div className="p-3.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                <div className="p-3.5 bg-primary/10 text-primary rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
@@ -156,7 +156,7 @@ export default function ContactPage() {
                     variant="body"
                     size="xs"
                     weight="semibold"
-                    className="text-foreground mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline"
+                    className="text-foreground mt-0.5 group-hover:text-primary group-hover:underline"
                   >
                     contact@dormio.site
                   </Text>
@@ -176,7 +176,7 @@ export default function ContactPage() {
               {/* Channel 3: Headquarters Address */}
               <div className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-zinc-400 transition-all group shadow-xs">
                 <div className="p-3.5 bg-zinc-900 text-white rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
-                  <MapPin className="w-5 h-5 text-[#2AC1BC]" />
+                  <MapPin className="w-5 h-5 text-primary" />
                 </div>
                 <div className="space-y-1">
                   <Text as="h3" variant="heading" size="sm" weight="extrabold">
@@ -195,7 +195,7 @@ export default function ContactPage() {
                     <Text as="span" size="2xs" weight="bold" color="brand">
                       {t('guestContactMaps')}
                     </Text>
-                    <ExternalLink className="w-3 h-3 text-[#2AC1BC]" />
+                    <ExternalLink className="w-3 h-3 text-primary" />
                   </a>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function ContactPage() {
           <div className="lg:col-span-7 bg-card rounded-3xl p-6 sm:p-8 border border-line shadow-xl space-y-6">
             {submitted ? (
               <div className="text-center py-12 space-y-4">
-                <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <Text as="h3" variant="heading" size="xl" weight="black">
@@ -290,7 +290,7 @@ export default function ContactPage() {
                   fullWidth
                   leftIcon={<Send className="w-4 h-4" />}
                   rightIcon={<span>&rarr;</span>}
-                  className="py-4 sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 hover:scale-[1.01]"
+                  className="py-4 sm:text-sm rounded-2xl shadow-lg shadow-primary/25 hover:scale-[1.01]"
                 >
                   {t('guestContactSubmitBtn')}
                 </Button>
@@ -326,7 +326,7 @@ export default function ContactPage() {
                 variant="primary"
                 size="lg"
                 rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-[#2AC1BC]/30 hover:scale-105"
+                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/30 hover:scale-105"
               >
                 {t('guestContactUseFreeBtn')}
               </Button>

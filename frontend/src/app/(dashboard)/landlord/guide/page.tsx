@@ -198,8 +198,8 @@ export default function GuidePage() {
 
       {/* Top Resource Cards - Cards 2, 3, 4 are hidden per user requirement (preserved in code) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-card p-6 border border-line rounded-2xl shadow-2xs hover:border-[#2AC1BC]/60 transition-all cursor-pointer group flex items-start gap-4 col-span-1 md:col-span-2 lg:col-span-4">
-          <div className="w-12 h-12 rounded-xl bg-[#2AC1BC]/10 flex items-center justify-center text-[#2AC1BC] shrink-0 group-hover:scale-105 transition-transform">
+        <div className="bg-card p-6 border border-line rounded-2xl shadow-2xs hover:border-primary/60 transition-all cursor-pointer group flex items-start gap-4 col-span-1 md:col-span-2 lg:col-span-4">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:scale-105 transition-transform">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
@@ -207,7 +207,7 @@ export default function GuidePage() {
               as="h3"
               variant="heading"
               size="base"
-              className="group-hover:text-[#2AC1BC] transition-colors"
+              className="group-hover:text-primary transition-colors"
             >
               {t('landlordOperationsDocGuide')}
             </Text>
@@ -294,7 +294,7 @@ export default function GuidePage() {
                       as="h4"
                       variant="heading"
                       size="base"
-                      className="group-hover:text-[#2AC1BC] transition-colors"
+                      className="group-hover:text-primary transition-colors"
                     >
                       {t(guide.titleKey)}
                     </Text>
@@ -304,7 +304,7 @@ export default function GuidePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-xs font-bold text-[#2AC1BC] group-hover:translate-x-1 transition-transform self-end sm:self-center shrink-0">
+                <div className="flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform self-end sm:self-center shrink-0">
                   <span>{t('landlordGuideReadNow')}</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
@@ -363,7 +363,7 @@ export default function GuidePage() {
             {/* Modal Scrollable Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
               {/* Summary Box */}
-              <div className="p-4 rounded-xl bg-[#2AC1BC]/5 border border-[#2AC1BC]/20">
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <Text variant="body" className="text-foreground font-medium leading-relaxed">
                   {t(selectedGuide.summaryKey)}
                 </Text>
@@ -380,7 +380,7 @@ export default function GuidePage() {
                       key={idx}
                       className="p-4 rounded-xl bg-surface border border-line hover:border-line transition-colors flex items-start gap-3.5"
                     >
-                      <div className="w-7 h-7 rounded-full bg-[#2AC1BC] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs mt-0.5">
+                      <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs mt-0.5">
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">

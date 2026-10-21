@@ -65,13 +65,13 @@ export default function BlogDetailPage() {
       {/* Breadcrumb Bar */}
       <div className="bg-card border-b border-line py-3 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl flex items-center gap-2 text-muted overflow-x-auto whitespace-nowrap">
-          <Link href="/" className="hover:text-[#2AC1BC]">
+          <Link href="/" className="hover:text-primary">
             <Text as="span" size="xs" weight="semibold" color="inherit">
               {tNav('home')}
             </Text>
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-muted shrink-0" />
-          <Link href="/blog" className="hover:text-[#2AC1BC]">
+          <Link href="/blog" className="hover:text-primary">
             <Text as="span" size="xs" weight="semibold" color="inherit">
               {tNav('blog')}
             </Text>
@@ -87,7 +87,7 @@ export default function BlogDetailPage() {
         {/* Back Link */}
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1 text-muted hover:text-[#2AC1BC] mb-6 transition-colors"
+          className="inline-flex items-center gap-1 text-muted hover:text-primary mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <Text as="span" size="xs" weight="bold" color="inherit">
@@ -103,7 +103,7 @@ export default function BlogDetailPage() {
             size="xs"
             weight="bold"
             color="brand"
-            className="px-3.5 py-1 rounded-full bg-[#2ac1bc]/10 w-fit"
+            className="px-3.5 py-1 rounded-full bg-primary/10 w-fit"
           >
             {post.category}
           </Text>
@@ -253,18 +253,18 @@ export default function BlogDetailPage() {
                 </ol>
               ),
               li: ({ children }) => (
-                <li className="leading-relaxed marker:text-[#2AC1BC]">
+                <li className="leading-relaxed marker:text-primary">
                   {children}
                 </li>
               ),
               hr: () => <hr className="my-8 border-line" />,
               blockquote: ({ children }) => (
-                <blockquote className="my-4 border-l-4 border-[#2AC1BC] bg-card-hover/40 rounded-r-xl py-3 px-4 italic text-muted text-xs sm:text-sm">
+                <blockquote className="my-4 border-l-4 border-primary bg-card-hover/40 rounded-r-xl py-3 px-4 italic text-muted text-xs sm:text-sm">
                   {children}
                 </blockquote>
               ),
               code: ({ children, className }) => (
-                <code className={cn('px-1.5 py-0.5 rounded-md bg-card-hover text-[#2AC1BC] font-mono text-xs', className)}>
+                <code className={cn('px-1.5 py-0.5 rounded-md bg-card-hover text-primary font-mono text-xs', className)}>
                   {children}
                 </code>
               ),
@@ -273,7 +273,7 @@ export default function BlogDetailPage() {
                   href={href}
                   target={href?.startsWith('http') ? '_blank' : undefined}
                   rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="text-[#2AC1BC] hover:underline font-semibold"
+                  className="text-primary hover:underline font-semibold"
                 >
                   {children}
                 </a>
@@ -294,7 +294,7 @@ export default function BlogDetailPage() {
               <Link
                 key={idx}
                 href={`/blog/${item.slug}`}
-                className="group flex items-center gap-4 p-4 rounded-2xl bg-card border border-line hover:border-[#2ac1bc]/40 hover:shadow-md transition-all"
+                className="group flex items-center gap-4 p-4 rounded-2xl bg-card border border-line hover:border-primary/40 hover:shadow-md transition-all"
               >
                 <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-card-hover">
                   <img
@@ -322,7 +322,7 @@ export default function BlogDetailPage() {
                     size="xs"
                     weight="bold"
                     clamp={2}
-                    className="group-hover:text-[#2ac1bc] leading-snug"
+                    className="group-hover:text-primary leading-snug"
                   >
                     {item.title}
                   </Text>

@@ -60,8 +60,8 @@ export interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
 /* -------------------------------------------------------------------------- */
 
 const AVATAR_PALETTES = [
-  { bg: 'bg-[#2AC1BC]', text: 'text-white' }, // Brand Teal
-  { bg: 'bg-[#FF6B35]', text: 'text-white' }, // Brand Orange
+  { bg: 'bg-primary', text: 'text-white' }, // Brand Teal
+  { bg: 'bg-accent', text: 'text-white' }, // Brand Orange
   { bg: 'bg-emerald-500', text: 'text-white' }, // Success Emerald
   { bg: 'bg-indigo-500', text: 'text-white' }, // Indigo
   { bg: 'bg-purple-500', text: 'text-white' }, // Purple
@@ -261,9 +261,9 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
     // Ring highlight styling
     const ringClass =
       ring === true || ring === 'brand'
-        ? 'ring-2 ring-[#2AC1BC] ring-offset-2 ring-offset-card'
+        ? 'ring-2 ring-primary ring-offset-2 ring-offset-card'
         : ring === 'accent'
-          ? 'ring-2 ring-[#FF6B35] ring-offset-2 ring-offset-card'
+          ? 'ring-2 ring-accent ring-offset-2 ring-offset-card'
           : ring === 'line'
             ? 'ring-1 ring-line'
             : ''

@@ -312,14 +312,14 @@ export function Step3BulkRoomsAndPreview({
                         className={cn(
                           'h-8 text-xs font-semibold',
                           isSelected &&
-                            'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#13615e] hover:bg-[#2AC1BC]/20',
+                            'bg-primary/10 border-primary text-[#13615e] hover:bg-primary/20',
                         )}
                         leftIcon={
                           <span
                             className={cn(
                               'w-3.5 h-3.5 rounded-full flex items-center justify-center border text-[9px]',
                               isSelected
-                                ? 'bg-[#2AC1BC] text-white border-transparent'
+                                ? 'bg-primary text-white border-transparent'
                                 : 'border-line bg-card',
                             )}
                           >
@@ -350,7 +350,7 @@ export function Step3BulkRoomsAndPreview({
                 size="xs"
                 weight="extrabold"
                 color="brand"
-                className="bg-[#2AC1BC]/10 px-2.5 py-0.5 rounded-full"
+                className="bg-primary/10 px-2.5 py-0.5 rounded-full"
               >
                 {totalRoomsToCreate} {t('landlordSetupRoomsTotal')}
               </Text>
@@ -420,8 +420,8 @@ export function Step3BulkRoomsAndPreview({
                         className={cn(
                           'h-7 px-2.5 text-xs font-bold transition-all shadow-2xs hover:scale-105 active:scale-95',
                           room.isCustomized
-                            ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#13615e] ring-1 ring-[#2AC1BC]/40'
-                            : 'bg-card border-line text-foreground hover:border-[#2AC1BC] hover:text-[#2AC1BC]',
+                            ? 'bg-primary/10 border-primary text-[#13615e] ring-1 ring-primary/40'
+                            : 'bg-card border-line text-foreground hover:border-primary hover:text-primary',
                         )}
                         rightIcon={
                           room.isCustomized ? (
@@ -440,7 +440,7 @@ export function Step3BulkRoomsAndPreview({
             </div>
 
             <div className="pt-2 text-[11px] text-muted flex items-center gap-1.5 border-t border-line">
-              <Info className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+              <Info className="w-3.5 h-3.5 text-primary shrink-0" />
               <Text as="span" size="2xs" color="secondary">
                 {t('landlordSetupPreviewClickToEditHint')}
               </Text>
