@@ -858,50 +858,50 @@ export default function RoomsPage() {
       {/* Main Card with Toolbar & View Switcher */}
       <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
         {/* Toolbar Header */}
-        <div className="p-4 border-b border-line flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-2">
-              <SelectInput
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                containerClassName="w-auto min-w-[140px]"
-                options={[
-                  { value: '', label: t('landlordRoomsAllStatuses') },
-                  { value: 'Trống', label: t('landlordRoomsStatusVacant') },
-                  { value: 'Đang thuê', label: t('landlordRoomsStatusOccupied') },
-                  { value: 'Bảo trì', label: t('landlordRoomsStatusMaintenance') },
-                  { value: 'Đặt cọc', label: t('landlordRoomsStatusReserved') },
-                ]}
-              />
-
-              <SelectInput
-                value={contractFilter}
-                onChange={e => setContractFilter(e.target.value)}
-                containerClassName="w-auto min-w-[150px]"
-                options={[
-                  { value: '', label: t('landlordRoomsAllContracts') },
-                  { value: 'active', label: t('landlordRoomsContractActive') },
-                  { value: 'expired', label: t('landlordRoomsContractExpired') },
-                  { value: 'none', label: t('landlordRoomsContractNone') },
-                ]}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Search Input */}
+        <div className="p-4 border-b border-line flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Left: Fixed-width Search */}
+          <div className="w-full sm:w-64 lg:w-72 shrink-0">
             <SearchInput
               placeholder={t('landlordRoomsSearchInputPlaceholder')}
               value={searchQuery}
               onChange={val => setSearchQuery(val)}
-              containerClassName="w-full sm:w-72"
+              containerClassName="w-full space-y-0"
             />
-            {/* View Switcher: Grid vs Table */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={handleViewModeChange}
+          </div>
+
+          {/* Right: Filters & View Switcher */}
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
+            <SelectInput
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              containerClassName="w-auto min-w-[140px] space-y-0"
+              options={[
+                { value: '', label: t('landlordRoomsAllStatuses') },
+                { value: 'Trống', label: t('landlordRoomsStatusVacant') },
+                { value: 'Đang thuê', label: t('landlordRoomsStatusOccupied') },
+                { value: 'Bảo trì', label: t('landlordRoomsStatusMaintenance') },
+                { value: 'Đặt cọc', label: t('landlordRoomsStatusReserved') },
+              ]}
             />
+
+            <SelectInput
+              value={contractFilter}
+              onChange={e => setContractFilter(e.target.value)}
+              containerClassName="w-auto min-w-[150px] space-y-0"
+              options={[
+                { value: '', label: t('landlordRoomsAllContracts') },
+                { value: 'active', label: t('landlordRoomsContractActive') },
+                { value: 'expired', label: t('landlordRoomsContractExpired') },
+                { value: 'none', label: t('landlordRoomsContractNone') },
+              ]}
+            />
+
+            <div className="shrink-0 ml-auto lg:ml-0">
+              <ViewModeToggle
+                value={viewMode}
+                onChange={handleViewModeChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -978,7 +978,7 @@ export default function RoomsPage() {
                         <div
                           key={`${room.building}-${room.id}`}
                           onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${statusMeta.gridContainer}`}
+                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${statusMeta.gridContainer}`}
                         >
                           <Button
                             type="button"
@@ -1057,14 +1057,15 @@ export default function RoomsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200/70">
+                <tbody className="divide-y divide-line">
                   {filteredRooms.map(room => {
                     const statusMeta = getRoomStatusMeta(room.status)
 
                     return (
                       <tr
                         key={`${room.building}-${room.id}`}
-                        className="hover:bg-card-hover transition-colors"
+                        onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
+                        className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
                       >
                         <td className="p-3 font-black text-foreground text-sm">
                           <Text as="span" weight="black" size="sm" className="text-foreground">

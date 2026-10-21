@@ -37,6 +37,7 @@ import {
   Text,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -585,11 +586,20 @@ function DepositsContent() {
       />
 
       {/* Main Filter & Control Bar */}
-      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3.5">
-        {/* Top Segmented Pill Switcher */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pb-3 border-b border-line">
-          {/* 2 Deposit Types Segment Switcher */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-card-hover p-1 rounded-2xl sm:rounded-full border border-line w-full md:w-auto">
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordDepositsSearchPlaceholder')}
+            value={searchTerm}
+            onChange={val => {
+              setSearchTerm(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-card-hover p-1 rounded-2xl sm:rounded-full border border-line w-full sm:w-auto">
             <Button
               rounded="full"
               variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
@@ -654,32 +664,15 @@ function DepositsContent() {
               </span>
             </Button>
           </div>
-
-          {/* Search Box & View Switcher */}
-          <div className="flex items-center gap-2 w-full md:w-auto flex-1 max-w-full md:max-w-md">
-            {/* Search Input */}
-            <div className="flex-1 min-w-0">
-              <SearchInput
-                placeholder={t('landlordDepositsSearchPlaceholder')}
-                value={searchTerm}
-                onChange={val => {
-                  setSearchTerm(val)
-                  setCurrentPage(1)
-                }}
-              />
-            </div>
-
-            {/* View Switcher (Grid vs Table) */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-            />
-          </div>
-        </div>
-
-        {/* Status Filter Tabs */}
-        <div className="py-0.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 shrink-0">
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+        subRow={
+          <div className="flex flex-wrap items-center gap-2">
             <Text as="span" size="xs" weight="black" color="secondary" className="uppercase mr-1 hidden sm:inline">
               {t('landlordDepositsStatusFilterLabel')}
             </Text>
@@ -721,8 +714,8 @@ function DepositsContent() {
               ]}
             />
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ─── DATA PRESENTATION (GRID VS TABLE) ──────────────────────────────── */}
 
@@ -771,7 +764,7 @@ function DepositsContent() {
             return (
               <div
                 key={dep.id}
-                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-3">
                   {/* Top Badge & Room */}
@@ -948,7 +941,7 @@ function DepositsContent() {
                   const isHolding = dep.status === 'paid'
 
                   return (
-                    <tr key={dep.id} className="hover:bg-zinc-50/70 transition-colors">
+                    <tr key={dep.id} className="hover:bg-card-hover transition-colors duration-150 group">
                       <td className="py-3.5 px-4 font-mono font-bold text-muted">
                         {dep.id.slice(0, 8)}...
                       </td>

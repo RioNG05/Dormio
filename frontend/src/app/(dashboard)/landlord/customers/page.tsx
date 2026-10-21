@@ -22,7 +22,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, SelectInput, NumberInput, SearchInput, ChipGroup, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, SelectInput, NumberInput, SearchInput, ChipGroup, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
@@ -351,15 +351,20 @@ export default function CustomersPage() {
       )}
 
       {/* SINGLE ROW TOOLBAR (Filter Pills + Search + Sort + View Switcher all in 1 Row) */}
-      <div className="bg-card border border-line rounded-2xl p-3 shadow-2xs">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          {/* Left Controls: Status Pills + Search + Sort */}
-          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
-            {/* Filter Pills */}
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordCustomersSearchPlaceholder')}
+            value={searchQuery}
+            onChange={setSearchQuery}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <>
             <ChipGroup
               value={statusFilter}
               onChange={setStatusFilter}
-              className="flex-1 min-w-0"
               options={[
                 {
                   value: '',
@@ -387,18 +392,6 @@ export default function CustomersPage() {
               ]}
             />
 
-            {/* Separator Line */}
-            <div className="hidden xl:block h-6 w-px bg-line mx-1 shrink-0" />
-
-            {/* Search Input using Base Component */}
-            <SearchInput
-              placeholder={t('landlordCustomersSearchPlaceholder')}
-              value={searchQuery}
-              onChange={setSearchQuery}
-              containerClassName="w-full min-w-80 sm:w-52 shrink-0 space-y-0"
-            />
-
-            {/* Sort Select using Base Component */}
             <SelectInput
               value={sortFilter}
               onChange={e => setSortFilter(e.target.value)}
@@ -409,18 +402,15 @@ export default function CustomersPage() {
                 { value: 'room_asc', label: t('landlordCustomersSortRoom') },
               ]}
             />
-          </div>
-
-          {/* Right Controls: View Mode Switcher */}
+          </>
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
-            onPageSizeChange={setItemsPerPage}
-            onPageChange={setCurrentPage}
-            className="self-end lg:self-auto"
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Customer View: Grid or List */}
       {viewMode === 'grid' ? (
@@ -455,7 +445,7 @@ export default function CustomersPage() {
             paginatedCustomers.map(customer => (
               <div
                 key={customer.id}
-                className="bg-card rounded-2xl border border-line p-4 shadow-xs hover:bg-card-hover transition-all space-y-3 relative group"
+                className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 space-y-3 relative group cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -613,7 +603,7 @@ export default function CustomersPage() {
                   paginatedCustomers.map(customer => (
                     <tr
                       key={customer.id}
-                      className="hover:bg-card-hover transition-colors group cursor-pointer"
+                      className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
                       onClick={() =>
                         router.push(`/landlord/customers/${customer.userId || customer.id}`)
                       }

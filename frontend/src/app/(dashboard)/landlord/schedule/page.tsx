@@ -737,61 +737,71 @@ export default function WorkforceSchedulePage() {
               <span>{weekRangeLabel}</span>
             </div>
           </div>
-
-          {/* View Mode Switcher (Rule #9) */}
-          <ViewModeToggle
-            value={viewMode}
-            onChange={setViewMode}
-            options={[
-              { value: 'calendar', label: t('landlordScheduleViewCalendar'), title: t('landlordScheduleViewCalendar'), icon: <Calendar className="w-3.5 h-3.5" /> },
-              { value: 'list', label: t('landlordScheduleViewList'), title: t('landlordScheduleViewList'), icon: <List className="w-3.5 h-3.5" /> }
-            ]}
-            showLabels
-            className="self-end md:self-auto"
-          />
         </div>
 
         {/* Filter row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-line">
-          <SearchInput
-            placeholder={t('landlordScheduleFilterSearchPh')}
-            value={searchQuery}
-            onChange={setSearchQuery}
-          />
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-line">
+          {/* Left: Fixed-width Search */}
+          <div className="w-full sm:w-64 lg:w-72 shrink-0">
+            <SearchInput
+              placeholder={t('landlordScheduleFilterSearchPh')}
+              value={searchQuery}
+              onChange={setSearchQuery}
+              containerClassName="w-full space-y-0"
+            />
+          </div>
 
-          <SelectInput
-            value={filterEmployeeId}
-            onChange={e => setFilterEmployeeId(e.target.value)}
-            options={[
-              { value: '', label: `${t('landlordScheduleFilterStaffPh')} (${staffList.length})` },
-              ...staffList.map(s => ({
-                value: s.employeeId,
-                label: `${s.fullName} (${s.positionName})`,
-              })),
-            ]}
-          />
+          {/* Right: Selects & View Mode Switcher */}
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
+            <SelectInput
+              value={filterEmployeeId}
+              onChange={e => setFilterEmployeeId(e.target.value)}
+              containerClassName="w-auto min-w-[150px] space-y-0"
+              options={[
+                { value: '', label: `${t('landlordScheduleFilterStaffPh')} (${staffList.length})` },
+                ...staffList.map(s => ({
+                  value: s.employeeId,
+                  label: `${s.fullName} (${s.positionName})`,
+                })),
+              ]}
+            />
 
-          <SelectInput
-            value={filterShiftId}
-            onChange={e => setFilterShiftId(e.target.value)}
-            options={[
-              { value: '', label: `${t('landlordScheduleFilterShiftPh')} (${shifts.length})` },
-              ...shifts.map(s => ({
-                value: s.id,
-                label: `${s.name} (${s.startTime} - ${s.endTime})`,
-              })),
-            ]}
-          />
+            <SelectInput
+              value={filterShiftId}
+              onChange={e => setFilterShiftId(e.target.value)}
+              containerClassName="w-auto min-w-[140px] space-y-0"
+              options={[
+                { value: '', label: `${t('landlordScheduleFilterShiftPh')} (${shifts.length})` },
+                ...shifts.map(s => ({
+                  value: s.id,
+                  label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                })),
+              ]}
+            />
 
-          <SelectInput
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            options={[
-              { value: 'all', label: t('landlordScheduleFilterStatusPh') },
-              { value: 'scheduled', label: t('landlordScheduleStatusAssigned') },
-              { value: 'canceled', label: t('landlordScheduleStatusCanceled') },
-            ]}
-          />
+            <SelectInput
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value)}
+              containerClassName="w-auto min-w-[130px] space-y-0"
+              options={[
+                { value: 'all', label: t('landlordScheduleFilterStatusPh') },
+                { value: 'scheduled', label: t('landlordScheduleStatusAssigned') },
+                { value: 'canceled', label: t('landlordScheduleStatusCanceled') },
+              ]}
+            />
+
+            <div className="shrink-0 ml-auto lg:ml-0">
+              <ViewModeToggle
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'calendar', label: t('landlordScheduleViewCalendar'), title: t('landlordScheduleViewCalendar'), icon: <Calendar className="w-3.5 h-3.5" /> },
+                  { value: 'list', label: t('landlordScheduleViewList'), title: t('landlordScheduleViewList'), icon: <List className="w-3.5 h-3.5" /> }
+                ]}
+                showLabels
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -980,7 +990,7 @@ export default function WorkforceSchedulePage() {
                 </thead>
                 <tbody className="divide-y divide-line font-medium text-foreground/90">
                   {schedules.map(item => (
-                    <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                    <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150 group">
                       <td className="py-3 px-4 font-bold text-foreground">
                         {formatDisplayDate(item.workDate)}
                       </td>

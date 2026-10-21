@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
@@ -293,22 +293,22 @@ export default function ListingsPage() {
       )}
 
       {/* Filter and View Mode Toolbar */}
-      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        <form onSubmit={handleSearchSubmit} className="w-full md:max-w-xs">
-          <SearchInput
-            value={searchQuery}
-            onChange={val => {
-              setSearchQuery(val)
-              setPage(1)
-            }}
-            placeholder={t('landlordListingsSearchPlaceholder')}
-            containerClassName="w-full space-y-0"
-            className="w-full py-2 text-xs border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-          />
-        </form>
-
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-          {/* Status Filter */}
+      <FilterToolbar
+        search={
+          <form onSubmit={handleSearchSubmit}>
+            <SearchInput
+              value={searchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setPage(1)
+              }}
+              placeholder={t('landlordListingsSearchPlaceholder')}
+              containerClassName="w-full space-y-0"
+              className="w-full py-2 text-xs border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+            />
+          </form>
+        }
+        filters={
           <SelectInput
             value={statusFilter}
             onChange={e => {
@@ -324,17 +324,15 @@ export default function ListingsPage() {
               { value: 'hidden', label: t('landlordListingsStatusHidden') },
             ]}
           />
-
-          {/* View Toggle (Grid / Table) */}
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
-            onPageSizeChange={setPageSize}
-            onPageChange={setPage}
             showLabels
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Loading state */}
       {isLoading ? (
@@ -373,7 +371,7 @@ export default function ListingsPage() {
             return (
               <div
                 key={item.id}
-                className="bg-card rounded-3xl border border-line overflow-hidden shadow-sm hover:shadow-md hover:border-line transition-all flex flex-col group"
+                className="bg-card rounded-2xl border border-line overflow-hidden shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 flex flex-col group cursor-pointer"
               >
                 {/* Thumbnail Image */}
                 <div className="relative aspect-video w-full bg-card-hover overflow-hidden">
@@ -505,7 +503,7 @@ export default function ListingsPage() {
               </thead>
               <tbody className="divide-y divide-line text-xs">
                 {listings.map(item => (
-                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150 group">
                     <td className="px-6 py-4 max-w-xs">
                       <div className="font-bold text-foreground line-clamp-1">{item.title}</div>
                       <div className="text-[11px] text-muted mt-0.5 line-clamp-1">

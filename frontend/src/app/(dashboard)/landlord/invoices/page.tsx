@@ -37,6 +37,7 @@ import {
   ChipGroup,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -475,78 +476,67 @@ function InvoicesContent() {
       />
 
       {/* Main Filter & Tabs Control Bar */}
-      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="flex-1">
-            <SearchInput
-              placeholder={t('landlordInvoicesSearchPlaceholder')}
-              value={searchTerm}
-              onChange={val => {
-                setSearchTerm(val)
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordInvoicesSearchPlaceholder')}
+            value={searchTerm}
+            onChange={val => {
+              setSearchTerm(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={selectedMonth}
+              onChange={e => {
+                setSelectedMonth(e.target.value)
                 setCurrentPage(1)
               }}
+              leftIcon={<Calendar className="w-3.5 h-3.5 text-primary" />}
+              containerClassName="w-auto min-w-[130px] space-y-0"
+              options={[
+                { value: 'all', label: t('landlordInvoicesAllMonths') },
+                { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
+                { value: '02', label: t('landlordInvoicesMonthPrefix').replace('{month}', '02') },
+                { value: '03', label: t('landlordInvoicesMonthPrefix').replace('{month}', '03') },
+                { value: '04', label: t('landlordInvoicesMonthPrefix').replace('{month}', '04') },
+                { value: '05', label: t('landlordInvoicesMonthPrefix').replace('{month}', '05') },
+                { value: '06', label: t('landlordInvoicesMonthPrefix').replace('{month}', '06') },
+                { value: '07', label: t('landlordInvoicesMonthPrefix').replace('{month}', '07') },
+                { value: '08', label: t('landlordInvoicesMonthPrefix').replace('{month}', '08') },
+                { value: '09', label: t('landlordInvoicesMonthPrefix').replace('{month}', '09') },
+                { value: '10', label: t('landlordInvoicesMonthPrefix').replace('{month}', '10') },
+                { value: '11', label: t('landlordInvoicesMonthPrefix').replace('{month}', '11') },
+                { value: '12', label: t('landlordInvoicesMonthPrefix').replace('{month}', '12') },
+              ]}
             />
-          </div>
-
-          {/* Month, Year & View Switcher Row on Mobile */}
-          <div className="flex items-center gap-2 justify-between shrink-0 flex-wrap sm:flex-nowrap">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {/* Month Filter Dropdown */}
-              <div className="flex-1 sm:flex-none min-w-[130px]">
-                <SelectInput
-                  value={selectedMonth}
-                  onChange={e => {
-                    setSelectedMonth(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                  leftIcon={<Calendar className="w-3.5 h-3.5 text-primary" />}
-                  options={[
-                    { value: 'all', label: t('landlordInvoicesAllMonths') },
-                    { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
-                    { value: '02', label: t('landlordInvoicesMonthPrefix').replace('{month}', '02') },
-                    { value: '03', label: t('landlordInvoicesMonthPrefix').replace('{month}', '03') },
-                    { value: '04', label: t('landlordInvoicesMonthPrefix').replace('{month}', '04') },
-                    { value: '05', label: t('landlordInvoicesMonthPrefix').replace('{month}', '05') },
-                    { value: '06', label: t('landlordInvoicesMonthPrefix').replace('{month}', '06') },
-                    { value: '07', label: t('landlordInvoicesMonthPrefix').replace('{month}', '07') },
-                    { value: '08', label: t('landlordInvoicesMonthPrefix').replace('{month}', '08') },
-                    { value: '09', label: t('landlordInvoicesMonthPrefix').replace('{month}', '09') },
-                    { value: '10', label: t('landlordInvoicesMonthPrefix').replace('{month}', '10') },
-                    { value: '11', label: t('landlordInvoicesMonthPrefix').replace('{month}', '11') },
-                    { value: '12', label: t('landlordInvoicesMonthPrefix').replace('{month}', '12') },
-                  ]}
-                />
-              </div>
-
-              {/* Year Filter Dropdown */}
-              <div className="flex-1 sm:flex-none min-w-[110px]">
-                <SelectInput
-                  value={selectedYear}
-                  onChange={e => {
-                    setSelectedYear(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                  options={[
-                    { value: 'all', label: t('landlordInvoicesAllYears') },
-                    { value: '2026', label: '2026' },
-                    { value: '2025', label: '2025' },
-                    { value: '2024', label: '2024' },
-                  ]}
-                />
-              </div>
-            </div>
-
-            {/* View Switcher */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
+            <SelectInput
+              value={selectedYear}
+              onChange={e => {
+                setSelectedYear(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-auto min-w-[110px] space-y-0"
+              options={[
+                { value: 'all', label: t('landlordInvoicesAllYears') },
+                { value: '2026', label: '2026' },
+                { value: '2025', label: '2025' },
+                { value: '2024', label: '2024' },
+              ]}
             />
-          </div>
-        </div>
-
-        {/* Quick Filter Tabs */}
-        <div className="border-t border-line pt-3">
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+        subRow={
           <ChipGroup<'all' | 'unpaid' | 'paid' | 'overdue'>
             value={activeTab}
             onChange={val => {
@@ -581,8 +571,8 @@ function InvoicesContent() {
               },
             ]}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Main Content Display (Grid or Table View) */}
       {invoices.length === 0 ? (
@@ -625,7 +615,7 @@ function InvoicesContent() {
             return (
               <div
                 key={inv.id}
-                className={`bg-card border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${isPaid
+                className={`bg-card border rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between ${isPaid
                     ? 'border-success-subtle hover:border-emerald-300'
                     : isOverdue
                       ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
@@ -769,7 +759,7 @@ function InvoicesContent() {
               </thead>
               <tbody className="divide-y divide-line font-semibold">
                 {paginatedInvoices.map(inv => (
-                  <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <tr key={inv.id} className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer">
                     <td className="px-4 py-3.5 font-bold font-mono text-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
                       {inv.id}

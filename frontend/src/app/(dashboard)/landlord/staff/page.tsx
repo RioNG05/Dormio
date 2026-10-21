@@ -40,6 +40,7 @@ import {
   Avatar,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
@@ -594,84 +595,79 @@ export default function StaffPage() {
       />
 
       {/* Filter & Toolbar Bar */}
-      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search Bar */}
-          <div className="w-full md:max-w-xs">
-            <SearchInput
-              placeholder={t('landlordStaffSearchPlaceholder')}
-              value={searchQuery}
-              onChange={val => {
-                setSearchQuery(val)
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordStaffSearchPlaceholder')}
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <div className="w-auto min-w-[170px]">
+            <SelectInput
+              value={positionFilter}
+              onChange={e => {
+                setPositionFilter(e.target.value)
                 setCurrentPage(1)
               }}
+              containerClassName="w-auto space-y-0"
+              options={[
+                { value: 'all', label: t('landlordStaffAllPositions', { count: positions.length }) },
+                ...positions.map(pos => ({
+                  value: pos.id,
+                  label: `${pos.name} ${pos.staffCount ? `(${pos.staffCount})` : ''}`,
+                })),
+              ]}
             />
           </div>
-
-          <div className="flex flex-wrap items-center justify-between md:justify-end gap-2.5">
-            {/* Position filter */}
-            <div className="min-w-[170px]">
-              <SelectInput
-                value={positionFilter}
-                onChange={e => {
-                  setPositionFilter(e.target.value)
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+        subRow={
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { label: t('landlordStaffTabAll'), val: 'all', count: summary.totalStaff },
+              { label: t('landlordStaffTabActive'), val: 'active', count: summary.activeStaff },
+              { label: t('landlordStaffTabInactive'), val: 'inactive', count: summary.inactiveStaff },
+            ].map(tab => (
+              <Button
+                key={tab.val}
+                variant={statusFilter === tab.val ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => {
+                  setStatusFilter(tab.val as any)
                   setCurrentPage(1)
                 }}
-                options={[
-                  { value: 'all', label: t('landlordStaffAllPositions', { count: positions.length }) },
-                  ...positions.map(pos => ({
-                    value: pos.id,
-                    label: `${pos.name} ${pos.staffCount ? `(${pos.staffCount})` : ''}`,
-                  })),
-                ]}
-              />
-            </div>
-
-            {/* View Mode Toggle (Rule #9) */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-              onPageSizeChange={setPageSize}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </div>
-
-        {/* Status Category Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-line">
-          {[
-            { label: t('landlordStaffTabAll'), val: 'all', count: summary.totalStaff },
-            { label: t('landlordStaffTabActive'), val: 'active', count: summary.activeStaff },
-            { label: t('landlordStaffTabInactive'), val: 'inactive', count: summary.inactiveStaff },
-          ].map(tab => (
-            <Button
-              key={tab.val}
-              variant={statusFilter === tab.val ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setStatusFilter(tab.val as any)
-                setCurrentPage(1)
-              }}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
-                statusFilter === tab.val
-                  ? 'bg-primary hover:bg-[#25aba6] text-white shadow-xs shadow-primary/20'
-                  : 'bg-card-hover text-muted hover:bg-zinc-200/70',
-              )}
-            >
-              <span>{tab.label}</span>
-              <span
                 className={cn(
-                  'px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ml-1.5',
-                  statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-line text-foreground/90',
+                  'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
+                  statusFilter === tab.val
+                    ? 'bg-primary hover:bg-[#25aba6] text-white shadow-xs shadow-primary/20'
+                    : 'bg-card-hover text-muted hover:bg-zinc-200/70',
                 )}
               >
-                {tab.count}
-              </span>
-            </Button>
-          ))}
-        </div>
-      </div>
+                <span>{tab.label}</span>
+                <span
+                  className={cn(
+                    'px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ml-1.5',
+                    statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-line text-foreground/90',
+                  )}
+                >
+                  {tab.count}
+                </span>
+              </Button>
+            ))}
+          </div>
+        }
+      />
 
       {/* Main Content Area */}
       {isLoading ? (
@@ -712,7 +708,7 @@ export default function StaffPage() {
             return (
               <div
                 key={staff.assignmentId}
-                className="bg-card border border-line rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-4">
                   {/* Card Header: Avatar, Name & Status */}
@@ -849,7 +845,7 @@ export default function StaffPage() {
                 {staffList.map(staff => {
                   const isActive = staff.status === 'active'
                   return (
-                    <tr key={staff.assignmentId} className="hover:bg-zinc-50/80 transition-colors">
+                    <tr key={staff.assignmentId} className="hover:bg-card-hover transition-colors duration-150 group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar

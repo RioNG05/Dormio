@@ -713,8 +713,6 @@ export default function ReportsPage() {
                   <ViewModeToggle
                     value={viewMode}
                     onChange={setViewMode}
-                    onPageSizeChange={setPageSize}
-                    onPageChange={setPage}
                   />
                 </div>
 
@@ -733,7 +731,7 @@ export default function ReportsPage() {
                       return (
                         <div
                           key={p.id}
-                          className="bg-card p-5 rounded-2xl border border-line hover:border-primary/50 hover:shadow-md transition-all space-y-3.5"
+                          className="bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-2xs hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 space-y-3.5"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
@@ -844,7 +842,7 @@ export default function ReportsPage() {
                         {displayedProperties.map(p => {
                           const occNum = parseFloat(p.occupancyRate) || 0
                           return (
-                            <tr key={p.id} className="hover:bg-zinc-50/80 transition-colors">
+                            <tr key={p.id} className="hover:bg-card-hover transition-colors duration-150 group">
                               <td className="p-3 font-bold text-foreground">
                                 <div>{p.name}</div>
                                 <div className="text-[10px] text-muted font-normal">

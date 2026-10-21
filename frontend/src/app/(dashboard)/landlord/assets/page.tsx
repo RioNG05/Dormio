@@ -30,6 +30,7 @@ import {
   SearchInput,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
   Modal,
   Text,
 } from '@/components/ui'
@@ -548,46 +549,8 @@ export default function AssetsPage() {
       </LandlordStatBanner>
 
       {/* Category Tabs & Financial Valuation Bar */}
-      <div className="flex flex-col items-center sm:flex-row justify-between gap-3 bg-card p-3 rounded-2xl border border-line shadow-xs">
-        {/* Category & Status Dropdowns */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <SelectInput
-            value={categoryFilter}
-            onChange={e => {
-              setCategoryFilter(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: '', label: t('landlordAssetsFilterAllCategories') },
-              { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
-              { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
-              { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
-              { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
-              { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
-            ]}
-            containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[150px]"
-            className="py-2 text-xs font-semibold"
-          />
-
-          <SelectInput
-            value={statusFilter}
-            onChange={e => {
-              setStatusFilter(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: '', label: t('landlordAssetsFilterAllStatuses') },
-              { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
-              { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
-              { value: 'Bảo trì', label: t('landlordAssetsStatusMaintenance') },
-              { value: 'Hỏng hóc', label: t('landlordAssetsStatusBroken') },
-            ]}
-            containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[150px]"
-            className="py-2 text-xs font-semibold"
-          />
-        </div>
-
-        <div className='flex gap-2 justify-center items-center'>
+      <FilterToolbar
+        search={
           <SearchInput
             placeholder={t('landlordAssetsSearchPh')}
             value={searchQuery}
@@ -595,18 +558,55 @@ export default function AssetsPage() {
               setSearchQuery(val)
               setCurrentPage(1)
             }}
-            containerClassName="w-full min-w-80 sm:max-w-md space-y-0"
+            containerClassName="w-full space-y-0"
             className="py-2 text-xs font-semibold"
           />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={categoryFilter}
+              onChange={e => {
+                setCategoryFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: '', label: t('landlordAssetsFilterAllCategories') },
+                { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+                { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+                { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+                { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+                { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+              ]}
+              containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[150px]"
+              className="py-2 text-xs font-semibold"
+            />
 
+            <SelectInput
+              value={statusFilter}
+              onChange={e => {
+                setStatusFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: '', label: t('landlordAssetsFilterAllStatuses') },
+                { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
+                { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
+                { value: 'Bảo trì', label: t('landlordAssetsStatusMaintenance') },
+                { value: 'Hỏng hóc', label: t('landlordAssetsStatusBroken') },
+              ]}
+              containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[150px]"
+              className="py-2 text-xs font-semibold"
+            />
+          </>
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
-            onPageSizeChange={setItemsPerPage}
-            onPageChange={setCurrentPage}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Main Content Area */}
       <div className="bg-card border border-line rounded-2xl shadow-xs overflow-hidden">
@@ -635,7 +635,7 @@ export default function AssetsPage() {
                   <div
                     key={asset.id}
                     onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all space-y-3.5 cursor-pointer relative group flex flex-col justify-between"
+                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 space-y-3.5 cursor-pointer relative group flex flex-col justify-between"
                   >
                     {/* Top Asset Photo Banner */}
                     <div className="w-full aspect-[16/10] rounded-xl overflow-hidden relative border border-line bg-surface shrink-0 group/img">
@@ -800,7 +800,7 @@ export default function AssetsPage() {
                       <tr
                         key={asset.id}
                         onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                        className="hover:bg-card-hover transition-colors cursor-pointer group"
+                        className="hover:bg-card-hover transition-colors duration-150 cursor-pointer group"
                       >
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span className="font-black text-primary block font-mono">

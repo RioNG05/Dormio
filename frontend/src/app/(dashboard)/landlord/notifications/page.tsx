@@ -35,6 +35,7 @@ import {
   Modal,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
 } from '@/components/ui'
 
 export default function NotificationsPage() {
@@ -380,14 +381,21 @@ export default function NotificationsPage() {
       />
 
       {/* 2. Action & Filter Bar */}
-      <div className="bg-card border border-line rounded-2xl p-3 sm:p-4 shadow-2xs">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          {/* Filters: Category & Channel */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-2.5 flex-1 min-w-0">
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordNotificationsSearchPlaceholder')}
+            value={searchQuery}
+            onChange={setSearchQuery}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <>
             <SelectInput
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              containerClassName="w-full lg:w-48 space-y-0"
+              containerClassName="w-full sm:w-48 space-y-0"
               options={[
                 { value: '', label: t('landlordNotificationsFilterAllCategories') },
                 { value: 'Điện nước', label: t('landlordNotificationsCatUtilities') },
@@ -399,7 +407,7 @@ export default function NotificationsPage() {
             <SelectInput
               value={channelFilter}
               onChange={e => setChannelFilter(e.target.value)}
-              containerClassName="w-full lg:w-48 space-y-0"
+              containerClassName="w-full sm:w-48 space-y-0"
               options={[
                 { value: '', label: t('landlordNotificationsFilterAllChannels') },
                 { value: 'Thông báo hệ thống', label: t('landlordNotificationsChannelInApp') },
@@ -407,27 +415,15 @@ export default function NotificationsPage() {
                 { value: 'SMS', label: t('landlordNotificationsChannelSms') },
               ]}
             />
-          </div>
-
-          {/* Right Controls: Search & View Mode Switcher */}
-          <div className="flex items-center gap-2.5 w-full lg:w-auto shrink-0">
-            <SearchInput
-              placeholder={t('landlordNotificationsSearchPlaceholder')}
-              value={searchQuery}
-              onChange={setSearchQuery}
-              containerClassName="flex-1 sm:w-64 lg:w-72 space-y-0"
-            />
-
-            {/* View Switcher (Rule #9: Grid is Default) */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-              onPageSizeChange={setItemsPerPage}
-              onPageChange={setPage}
-            />
-          </div>
-        </div>
-      </div>
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
       {/* 3. Announcements List Section */}
       <div className="space-y-4">
@@ -471,7 +467,7 @@ export default function NotificationsPage() {
                 <div
                   key={notif.id}
                   onClick={() => setSelectedNotifDetail(notif)}
-                  className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group flex flex-col justify-between"
+                  className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex flex-col justify-between"
                 >
                   <div>
                     {/* Header: Category Badge + Sent Time */}
@@ -601,7 +597,11 @@ export default function NotificationsPage() {
                     const isRent = notif.category === 'Tiền nhà' || notif.category === 'Rent'
 
                     return (
-                      <tr key={notif.id} className="hover:bg-card-hover transition-colors">
+                      <tr
+                        key={notif.id}
+                        onClick={() => setSelectedNotifDetail(notif)}
+                        className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
+                      >
                         <td className="px-4 py-4 max-w-sm">
                           <div className="flex items-center gap-2 mb-1">
                             <span

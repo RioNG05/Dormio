@@ -37,6 +37,7 @@ import {
   ChipGroup,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -546,51 +547,46 @@ export default function ExpensesPage() {
       />
 
       {/* ─── Main Filter & Control Bar ───────────────────────────────────────── */}
-      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-sm space-y-3.5">
-        {/* Category Switcher Horizontal Scroll */}
-        <div className="flex items-center gap-2 border-b border-line pb-3">
-          <span className="text-muted text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
-            {t('landlordExpensesCategoryColon')}
-          </span>
-          <ChipGroup
-            value={activeCategoryTab}
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordExpensesSearchPlaceholder')}
+            value={searchTerm}
             onChange={val => {
-              setActiveCategoryTab(val)
+              setSearchTerm(val)
               setCurrentPage(1)
             }}
-            scrollable
-            options={categoriesList.map(cat => ({
-              value: cat,
-              label: cat === 'all' ? t('landlordExpensesAllCategories') : getCategoryLabel(cat),
-              count: cat === 'all' ? summary.totalCount : undefined,
-              variant: 'default' as const,
-            }))}
+            containerClassName="w-full space-y-0"
           />
-        </div>
-
-        {/* Search Box & View Switcher Bar */}
-        <div className="flex items-center gap-2">
-          {/* Search Input */}
-          <div className="flex-1 min-w-0">
-            <SearchInput
-              placeholder={t('landlordExpensesSearchPlaceholder')}
-              value={searchTerm}
+        }
+        filters={
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <span className="text-muted text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
+              {t('landlordExpensesCategoryColon')}
+            </span>
+            <ChipGroup
+              value={activeCategoryTab}
               onChange={val => {
-                setSearchTerm(val)
+                setActiveCategoryTab(val)
                 setCurrentPage(1)
               }}
+              scrollable
+              options={categoriesList.map(cat => ({
+                value: cat,
+                label: cat === 'all' ? t('landlordExpensesAllCategories') : getCategoryLabel(cat),
+                count: cat === 'all' ? summary.totalCount : undefined,
+                variant: 'default' as const,
+              }))}
             />
           </div>
-
-          {/* View Switcher (Grid vs Table) per Rule #9 */}
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
           />
-        </div>
-
-        {/* Status Filter Pills Row */}
-        <div className="pt-0.5">
+        }
+        subRow={
           <ChipGroup<'all' | 'paid' | 'pending' | 'canceled'>
             value={activeStatusTab}
             onChange={val => {
@@ -621,8 +617,8 @@ export default function ExpensesPage() {
               },
             ]}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* ─── Main Content Display (Grid or Table View) ───────────────────────── */}
       {isLoading ? (
@@ -652,7 +648,7 @@ export default function ExpensesPage() {
           {expensesList.map(exp => (
             <div
               key={exp.id}
-              className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
+              className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between"
             >
               {/* Header Info */}
               <div className="space-y-3">
@@ -779,7 +775,7 @@ export default function ExpensesPage() {
               </thead>
               <tbody className="divide-y divide-line font-semibold text-foreground/90">
                 {expensesList.map(exp => (
-                  <tr key={exp.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <tr key={exp.id} className="hover:bg-card-hover transition-colors duration-150 group">
                     <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />

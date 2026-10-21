@@ -36,7 +36,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -472,8 +472,8 @@ export default function LandlordDebtsPage() {
       />
 
       {/* ─── Filter & Control Bar ─────────────────────────────────────────────── */}
-      <div className="bg-card p-4 rounded-2xl border border-line shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
-        {/* Search Input */}
+      <FilterToolbar
+        search={
           <SearchInput
             value={searchTerm}
             onChange={val => {
@@ -484,50 +484,49 @@ export default function LandlordDebtsPage() {
             containerClassName="w-full space-y-0"
             className="w-full text-xs font-semibold text-foreground bg-surface border border-line rounded-xl"
           />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={durationFilter}
+              onChange={e => {
+                setDurationFilter(e.target.value as typeof durationFilter)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: t('landlordDebtsAllDurations') },
+                { value: 'overdue', label: t('landlordDebtsFilterOverdue') },
+                { value: '1_month', label: t('landlordDebtsFilter1Month') },
+                { value: '2_months', label: t('landlordDebtsFilter2Months') },
+                { value: 'bad_debt', label: t('landlordDebtsFilterBadDebt') },
+              ]}
+              containerClassName="w-auto space-y-0"
+              className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
+            />
 
-        {/* Filters and View Switcher */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Duration Filter */}
-          <SelectInput
-            value={durationFilter}
-            onChange={e => {
-              setDurationFilter(e.target.value as typeof durationFilter)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'all', label: t('landlordDebtsAllDurations') },
-              { value: 'overdue', label: t('landlordDebtsFilterOverdue') },
-              { value: '1_month', label: t('landlordDebtsFilter1Month') },
-              { value: '2_months', label: t('landlordDebtsFilter2Months') },
-              { value: 'bad_debt', label: t('landlordDebtsFilterBadDebt') },
-            ]}
-            containerClassName="w-auto space-y-0"
-            className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
-          />
-
-          {/* Sort By */}
-          <SelectInput
-            value={sortBy}
-            onChange={e => {
-              setSortBy(e.target.value as typeof sortBy)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'debt_desc', label: t('landlordDebtsSortDebtDesc') },
-              { value: 'aging_desc', label: t('landlordDebtsSortAgingDesc') },
-              { value: 'room_asc', label: t('landlordDebtsSortRoomAsc') },
-            ]}
-            containerClassName="w-auto space-y-0"
-            className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
-          />
-
-          {/* View Mode Toggle per Rule #9 */}
+            <SelectInput
+              value={sortBy}
+              onChange={e => {
+                setSortBy(e.target.value as typeof sortBy)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'debt_desc', label: t('landlordDebtsSortDebtDesc') },
+                { value: 'aging_desc', label: t('landlordDebtsSortAgingDesc') },
+                { value: 'room_asc', label: t('landlordDebtsSortRoomAsc') },
+              ]}
+              containerClassName="w-auto space-y-0"
+              className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
+            />
+          </>
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* ─── Loading / Empty / Content ───────────────────────────────────────── */}
       {isLoading ? (
@@ -592,8 +591,8 @@ export default function LandlordDebtsPage() {
             return (
               <div
                 key={room.roomId}
-                className={`bg-card rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden group ${
-                  isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-line'
+                className={`bg-card rounded-2xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between overflow-hidden group ${
+                  isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-line hover:border-primary/40'
                 }`}
               >
                 {/* Card Header */}
@@ -784,7 +783,7 @@ export default function LandlordDebtsPage() {
                   return (
                     <tr
                       key={room.roomId}
-                      className={`hover:bg-zinc-50/80 transition-colors ${
+                      className={`hover:bg-card-hover transition-colors duration-150 ${
                         isSelected ? 'bg-primary-soft' : ''
                       }`}
                     >

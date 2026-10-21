@@ -42,6 +42,7 @@ import {
   ChipGroup,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
   Modal,
   Text,
   Switch,
@@ -568,44 +569,39 @@ export default function ServicesPage() {
       </div>
 
       {/* FILTER & TOOLBAR BAR */}
-      <div className="bg-card border border-line rounded-2xl p-3 sm:p-4 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Search Bar */}
-          <div className="relative w-full sm:max-w-xs">
-            <ChipGroup
-              value={typeFilter}
-              onChange={val => {
-                setTypeFilter(val)
-                setCurrentPage(1)
-              }}
-              options={[
-                { value: '', label: t('landlordServicesFilterAll') },
-                { value: 'metered', label: t('landlordServicesFilterMetered') },
-                { value: 'room', label: t('landlordServicesFilterFixed') },
-              ]}
-            />
-          </div>
-
-          {/* Right Toolbar: View Mode Toggle */}
-          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-            <SearchInput
-              placeholder={t('landlordServicesSearchPlaceholder')}
-              value={searchQuery}
-              onChange={val => {
-                setSearchQuery(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-full min-w-80 space-y-0"
-            />
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-              onPageSizeChange={setItemsPerPage}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </div>
-      </div>
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordServicesSearchPlaceholder')}
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <ChipGroup
+            value={typeFilter}
+            onChange={val => {
+              setTypeFilter(val)
+              setCurrentPage(1)
+            }}
+            options={[
+              { value: '', label: t('landlordServicesFilterAll') },
+              { value: 'metered', label: t('landlordServicesFilterMetered') },
+              { value: 'room', label: t('landlordServicesFilterFixed') },
+            ]}
+          />
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
       {/* Loading Indicator */}
       {isLoading && (
@@ -630,7 +626,7 @@ export default function ServicesPage() {
               return (
                 <div
                   key={service.id}
-                  className={`bg-card border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${isActive ? 'border-line' : 'border-line opacity-70 bg-surface/50'
+                  className={`bg-card border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer space-y-4 relative overflow-hidden flex flex-col justify-between ${isActive ? 'border-line' : 'border-line opacity-70 bg-surface/50'
                     }`}
                 >
                   <div className="space-y-3.5">
@@ -800,7 +796,7 @@ export default function ServicesPage() {
                     const formattedPrice = formatCurrency(service.numericPrice, locale)
 
                     return (
-                      <tr key={service.id} className="hover:bg-card-hover transition-colors">
+                      <tr key={service.id} className="hover:bg-card-hover transition-colors duration-150 group">
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div

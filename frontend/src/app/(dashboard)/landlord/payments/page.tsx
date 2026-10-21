@@ -38,7 +38,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
@@ -288,9 +288,8 @@ function PaymentsContent() {
       />
 
       {/* Main Filter & Tabs Control Bar */}
-      <div className="bg-card p-3.5 sm:p-4 border border-line rounded-2xl shadow-2xs space-y-3">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          {/* Search Box */}
+      <FilterToolbar
+        search={
           <SearchInput
             value={searchQuery}
             onChange={val => {
@@ -298,12 +297,12 @@ function PaymentsContent() {
               setCurrentPage(1)
             }}
             placeholder="Tìm theo mã giao dịch, số phòng, số biên nhận, tên khách..."
-            containerClassName="flex-1 space-y-0"
+            containerClassName="w-full space-y-0"
             className="py-2 bg-surface border-line text-xs font-semibold"
           />
-
-          {/* Filter Dropdowns Row */}
-          <div className="flex flex-wrap items-center gap-2">
+        }
+        filters={
+          <>
             {/* Room Filter Dropdown */}
             <SelectInput
               value={selectedRoom}
@@ -318,7 +317,7 @@ function PaymentsContent() {
                   label: `Phòng ${r.roomNumber}`,
                 })),
               ]}
-              containerClassName="space-y-0 max-w-[150px]"
+              containerClassName="w-auto min-w-[130px] space-y-0"
               className="py-2 text-xs font-bold bg-surface"
             />
 
@@ -334,7 +333,7 @@ function PaymentsContent() {
                 { value: 'banking', label: 'VietQR / Chuyển khoản' },
                 { value: 'cash', label: 'Tiền mặt' },
               ]}
-              containerClassName="space-y-0 max-w-[170px]"
+              containerClassName="w-auto min-w-[140px] space-y-0"
               className="py-2 text-xs font-bold bg-surface"
             />
 
@@ -352,7 +351,7 @@ function PaymentsContent() {
                   label: `Tháng ${i + 1}`,
                 })),
               ]}
-              containerClassName="space-y-0 max-w-[130px]"
+              containerClassName="w-auto min-w-[120px] space-y-0"
               className="py-2 text-xs font-bold bg-surface"
             />
 
@@ -369,62 +368,62 @@ function PaymentsContent() {
                 { value: '2025', label: '2025' },
                 { value: '2024', label: '2024' },
               ]}
-              containerClassName="space-y-0 max-w-[130px]"
+              containerClassName="w-auto min-w-[110px] space-y-0"
               className="py-2 text-xs font-bold bg-surface"
             />
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+        subRow={
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setActiveTab('all')
+                setCurrentPage(1)
+              }}
+              className="shrink-0"
+            >
+              Tất cả giao dịch ({summary.totalTransactions})
+            </Button>
 
-            {/* View Switcher (Rule 9) */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setActiveTab('banking')
+                setCurrentPage(1)
+              }}
+              className="shrink-0"
+            >
+              <span className="w-2 h-2 rounded-full bg-indigo-400" />
+              VietQR / Ngân hàng ({formatLargeMoney(summary.bankingRevenue)})
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setActiveTab('cash')
+                setCurrentPage(1)
+              }}
+              className="shrink-0"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              Tiền mặt ({formatLargeMoney(summary.cashRevenue)})
+            </Button>
           </div>
-        </div>
-
-        {/* Quick Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-line pt-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setActiveTab('all')
-              setCurrentPage(1)
-            }}
-            className="shrink-0"
-          >
-            Tất cả giao dịch ({summary.totalTransactions})
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setActiveTab('banking')
-              setCurrentPage(1)
-            }}
-            className="shrink-0"
-          >
-            <span className="w-2 h-2 rounded-full bg-indigo-400" />
-            VietQR / Ngân hàng ({formatLargeMoney(summary.bankingRevenue)})
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setActiveTab('cash')
-              setCurrentPage(1)
-            }}
-            className="shrink-0"
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-            Tiền mặt ({formatLargeMoney(summary.cashRevenue)})
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Main Content Display (Grid or Table View) */}
       {isLoading ? (
@@ -480,7 +479,7 @@ function PaymentsContent() {
             return (
               <div
                 key={p.id}
-                className="bg-card border border-line hover:border-primary/50 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
+                className="bg-card border border-line hover:border-primary/50 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
               >
                 {/* Method Accent Stripe */}
                 <div
@@ -651,7 +650,7 @@ function PaymentsContent() {
                   const evidencePhotos = p.meterReadings.filter(mr => mr.imageUrl)
 
                   return (
-                    <tr key={p.id} className="hover:bg-zinc-50/80 transition-colors">
+                    <tr key={p.id} className="hover:bg-card-hover transition-colors duration-150 group">
                       <td className="px-5 py-4">
                         <div className="font-mono font-black text-foreground text-xs">
                           {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}

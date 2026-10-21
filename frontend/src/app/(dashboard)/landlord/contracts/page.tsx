@@ -35,6 +35,7 @@ import {
   Modal,
   Pagination,
   ViewModeToggle,
+  FilterToolbar,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -422,16 +423,25 @@ export default function ContractsPage() {
         />
 
         {/* Single Row Toolbar (Filter Pills + Search Bar + View Mode) */}
-        <div className="bg-card border border-line rounded-2xl p-3 shadow-2xs">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            {/* Status Filter Pills */}
+        <FilterToolbar
+          search={
+            <SearchInput
+              placeholder={t('landlordContractsSearchPlaceholder')}
+              value={searchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-full space-y-0"
+            />
+          }
+          filters={
             <ChipGroup
               value={statusFilter}
               onChange={val => {
                 setStatusFilter(val)
                 setCurrentPage(1)
               }}
-              className="flex-1 min-w-0"
               options={[
                 { label: t('landlordContractsFilterAll'), value: '' },
                 { label: t('landlordContractsFilterActive'), value: 'Đang hiệu lực' },
@@ -440,29 +450,14 @@ export default function ContractsPage() {
                 { label: t('landlordContractsFilterEnded'), value: 'Đã chấm dứt', variant: 'neutral' },
               ]}
             />
-
-            {/* Search & View Mode */}
-            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-              <div className="w-full sm:w-64">
-                <SearchInput
-                  placeholder={t('landlordContractsSearchPlaceholder')}
-                  value={searchQuery}
-                  onChange={val => {
-                    setSearchQuery(val)
-                    setCurrentPage(1)
-                  }}
-                />
-              </div>
-
-              <ViewModeToggle
-                value={viewMode}
-                onChange={setViewMode}
-                onPageSizeChange={setRowsPerPage}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          </div>
-        </div>
+          }
+          viewMode={
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+            />
+          }
+        />
 
         {/* Loading State */}
         {isLoading && (
@@ -508,7 +503,7 @@ export default function ContractsPage() {
                       <div
                         key={c.id || idx}
                         onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                        className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                        className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex flex-col justify-between relative overflow-hidden"
                       >
                         <div>
                           {/* Card Header: Room & Status */}
@@ -720,7 +715,7 @@ export default function ContractsPage() {
                             <tr
                               key={c.id || idx}
                               onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                              className="hover:bg-card-hover transition-colors group cursor-pointer"
+                              className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
                             >
                               <td className="px-5 py-4 whitespace-nowrap">
                                 <Text as="span" size="sm" weight="black" color="brand">

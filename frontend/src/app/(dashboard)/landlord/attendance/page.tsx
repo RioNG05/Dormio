@@ -126,12 +126,10 @@ export default function AttendancePage() {
   const [isDirty, setIsDirty] = useState(false)
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
 
-  // Switch pageSize when toggling viewMode (Grid default = 6, Table = 10)
+  // Switch viewMode
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    setPageSize(mode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
-      }
+  }
 
   // ─── Date Preset Handler ───────────────────────────────────────────────
   const handleDatePresetChange = (preset: 'today' | 'week' | 'month' | 'custom') => {
@@ -587,85 +585,91 @@ export default function AttendancePage() {
               />
             </div>
           </div>
-
-          {/* View Mode Toggle (Rule #9: Grid default) */}
-          <ViewModeToggle
-            value={viewMode}
-            onChange={handleViewModeChange}
-            showLabels
-            className="self-end md:self-auto"
-          />
         </div>
 
-        {/* Filters Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-line">
-          <SearchInput
-            placeholder={t('landlordAttendanceFilterSearchPh')}
-            value={searchQuery}
-            onChange={val => {
-              setSearchQuery(val)
-              setCurrentPage(1)
-            }}
-            className="w-full text-xs font-semibold bg-surface/50"
-            containerClassName="space-y-0"
-          />
+        {/* Filters & View Switcher Row */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-line">
+          {/* Left: Fixed-width Search */}
+          <div className="w-full sm:w-64 lg:w-72 shrink-0">
+            <SearchInput
+              placeholder={t('landlordAttendanceFilterSearchPh')}
+              value={searchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
+              className="w-full text-xs font-semibold bg-surface/50"
+              containerClassName="space-y-0"
+            />
+          </div>
 
-          <SelectInput
-            value={filterEmployeeId}
-            onChange={e => {
-              setFilterEmployeeId(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              {
-                value: '',
-                label: `${t('landlordAttendanceFilterStaffPh')} (${staffList.length})`,
-              },
-              ...staffList.map(s => ({
-                value: s.employeeId,
-                label: `${s.fullName} (${s.positionName || (isEn ? 'Staff' : 'Nhân viên')})`,
-              })),
-            ]}
-            className="text-xs font-semibold bg-surface/50 cursor-pointer"
-            containerClassName="space-y-0"
-          />
+          {/* Right: Selects & View Mode Toggle */}
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
+            <SelectInput
+              value={filterEmployeeId}
+              onChange={e => {
+                setFilterEmployeeId(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                {
+                  value: '',
+                  label: `${t('landlordAttendanceFilterStaffPh')} (${staffList.length})`,
+                },
+                ...staffList.map(s => ({
+                  value: s.employeeId,
+                  label: `${s.fullName} (${s.positionName || (isEn ? 'Staff' : 'Nhân viên')})`,
+                })),
+              ]}
+              className="text-xs font-semibold bg-surface/50 cursor-pointer"
+              containerClassName="w-auto min-w-[150px] space-y-0"
+            />
 
-          <SelectInput
-            value={filterShiftId}
-            onChange={e => {
-              setFilterShiftId(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              {
-                value: '',
-                label: `${t('landlordAttendanceFilterShiftPh')} (${shifts.length})`,
-              },
-              ...shifts.map(s => ({
-                value: s.id,
-                label: `${s.name} (${s.startTime} - ${s.endTime})`,
-              })),
-            ]}
-            className="text-xs font-semibold bg-surface/50 cursor-pointer"
-            containerClassName="space-y-0"
-          />
+            <SelectInput
+              value={filterShiftId}
+              onChange={e => {
+                setFilterShiftId(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                {
+                  value: '',
+                  label: `${t('landlordAttendanceFilterShiftPh')} (${shifts.length})`,
+                },
+                ...shifts.map(s => ({
+                  value: s.id,
+                  label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                })),
+              ]}
+              className="text-xs font-semibold bg-surface/50 cursor-pointer"
+              containerClassName="w-auto min-w-[140px] space-y-0"
+            />
 
-          <SelectInput
-            value={filterStatus}
-            onChange={e => {
-              setFilterStatus(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'all', label: t('landlordAttendanceFilterStatusPh') },
-              { value: 'on_time', label: t('landlordAttendanceStatusOnTime') },
-              { value: 'late', label: t('landlordAttendanceStatusLate') },
-              { value: 'absent', label: isEn ? 'Absent' : 'Vắng mặt' },
-              { value: 'not_yet', label: isEn ? 'Not checked in' : 'Chưa chấm công' },
-            ]}
-            className="text-xs font-semibold bg-surface/50 cursor-pointer"
-            containerClassName="space-y-0"
-          />
+            <SelectInput
+              value={filterStatus}
+              onChange={e => {
+                setFilterStatus(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: t('landlordAttendanceFilterStatusPh') },
+                { value: 'on_time', label: t('landlordAttendanceStatusOnTime') },
+                { value: 'late', label: t('landlordAttendanceStatusLate') },
+                { value: 'absent', label: isEn ? 'Absent' : 'Vắng mặt' },
+                { value: 'not_yet', label: isEn ? 'Not checked in' : 'Chưa chấm công' },
+              ]}
+              className="text-xs font-semibold bg-surface/50 cursor-pointer"
+              containerClassName="w-auto min-w-[130px] space-y-0"
+            />
+
+            <div className="shrink-0 ml-auto lg:ml-0">
+              <ViewModeToggle
+                value={viewMode}
+                onChange={handleViewModeChange}
+                showLabels
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -708,7 +712,7 @@ export default function AttendancePage() {
             {records.map(item => (
               <div
                 key={item.workScheduleId}
-                className="bg-card border border-line rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between"
               >
                 <div>
                   {/* Top card bar: Date & Status */}
@@ -832,7 +836,7 @@ export default function AttendancePage() {
               </thead>
               <tbody className="divide-y divide-line font-medium text-foreground/90">
                 {records.map(item => (
-                  <tr key={item.workScheduleId} className="hover:bg-zinc-50/80 transition-colors">
+                  <tr key={item.workScheduleId} className="hover:bg-card-hover transition-colors duration-150 group">
                     <td className="py-3 px-4 font-bold text-foreground">
                       {formatDisplayDate(item.workDate)}
                     </td>
