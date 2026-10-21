@@ -4,7 +4,6 @@ import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   Home,
@@ -44,7 +43,9 @@ import {
   Text,
   Modal,
   Breadcrumb,
+  Chip,
 } from '@/components/ui'
+import { cn } from '@/lib/utils'
 import {
   getRoomDashboard,
   updateRoom,
@@ -944,29 +945,36 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <Text as="h1" variant="heading" size="2xl" weight="black" color="default" className="tracking-tight sm:text-2xl">
               {t('landlordRoomDetailRoomPrefix')} {room.roomNumber}
             </Text>
-            <span
-              className={`px-2.5 py-0.5 sm:py-1 rounded-full border shrink-0 ${isOccupied
-                ? 'text-primary bg-primary/10 border-primary/30'
-                : isMaintenance
-                  ? 'text-accent bg-accent/10 border-accent/30'
-                  : isReserved
-                    ? 'text-deposit bg-purple-500/10 border-purple-500/30'
-                    : isVacant
-                      ? 'text-info bg-vacant/10 border-vacant/30'
-                      : 'text-muted bg-card-hover border-line'
-                }`}
+            <Chip
+              variant={
+                isOccupied
+                  ? 'default'
+                  : isVacant
+                    ? 'info'
+                    : isMaintenance
+                      ? 'warning'
+                      : isReserved
+                        ? 'purple'
+                        : 'neutral'
+              }
+              size="sm"
+              preventHover
+              className={cn(
+                'rounded-full',
+                isOccupied && 'bg-primary/10 text-primary border-primary/30',
+              )}
             >
-              <Text as="span" variant="badge" size="3xs" weight="extrabold" color="inherit" className="tracking-wider flex items-center">
-                {getStatusLabel(room.status)}
-              </Text>
-            </span>
+              {getStatusLabel(room.status)}
+            </Chip>
             {dashboardData?.room?.roomType?.name && (
-              <Text
-                as="span" size="3xs" weight="bold" color="success"
-                className='bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle flex items-center'
+              <Chip
+                variant="success"
+                size="sm"
+                preventHover
+                className="rounded-full"
               >
                 {dashboardData.room.roomType.name}
-              </Text>
+              </Chip>
             )}
           </div>
         </div>
@@ -975,7 +983,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           {isOccupied && (
             <Button
-              size="md"
               variant="primary"
               onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
               leftIcon={<Gauge />}
@@ -996,7 +1003,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             >
               <Button
                 fullWidth
-                size="md"
                 variant="outline"
                 leftIcon={<Eye />}
               >
@@ -2197,14 +2203,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                   <div className="flex flex-wrap gap-2">
                     {amenitiesList.map((item: string, idx: number) => (
-                      <span
+                      <Chip
                         key={idx}
-                        className="px-2.5 py-1 bg-card-hover border border-line rounded-xl shadow-2xs"
+                        variant="neutral"
+                        size="sm"
+                        preventHover
                       >
-                        <Text as="span" size="xs" weight="bold" color="default" className="flex items-center gap-1">
-                          {getAmenityLabel(item, t)}
-                        </Text>
-                      </span>
+                        {getAmenityLabel(item, t)}
+                      </Chip>
                     ))}
                   </div>
                 </>
