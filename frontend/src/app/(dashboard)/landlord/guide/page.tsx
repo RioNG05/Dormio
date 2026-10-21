@@ -50,7 +50,7 @@ const GUIDES: GuideItem[] = [
     id: 'contracts',
     icon: FileText,
     iconBg: 'bg-emerald-50 dark:bg-emerald-950/40',
-    iconColor: 'text-emerald-600',
+    iconColor: 'text-success',
     borderHover: 'hover:border-emerald-500',
     badgeBg: 'bg-success-soft text-success',
     titleKey: 'landlordGuideContractsTitle',
@@ -88,8 +88,8 @@ const GUIDES: GuideItem[] = [
     id: 'invoices',
     icon: Zap,
     iconBg: 'bg-blue-50 dark:bg-blue-950/40',
-    iconColor: 'text-blue-600',
-    borderHover: 'hover:border-blue-500',
+    iconColor: 'text-info',
+    borderHover: 'hover:border-vacant',
     badgeBg: 'bg-info-soft text-info',
     titleKey: 'landlordGuideInvoicesTitle',
     descKey: 'landlordGuideInvoicesDesc',
@@ -126,7 +126,7 @@ const GUIDES: GuideItem[] = [
     id: 'staff',
     icon: Users,
     iconBg: 'bg-purple-50 dark:bg-purple-950/40',
-    iconColor: 'text-purple-600',
+    iconColor: 'text-deposit',
     borderHover: 'hover:border-purple-500',
     badgeBg: 'bg-deposit-soft text-deposit',
     titleKey: 'landlordGuideStaffTitle',
@@ -229,8 +229,8 @@ export default function GuidePage() {
         </div>
 
         {/* Câu hỏi thường gặp - Hidden per requirement (do not delete) */}
-        <div className="hidden bg-card p-6 border border-line rounded-xl shadow-xs hover:border-blue-500 transition-colors cursor-pointer group">
-          <FileQuestion className="w-8 h-8 text-blue-500 mb-4 group-hover:scale-110 transition-transform" />
+        <div className="hidden bg-card p-6 border border-line rounded-xl shadow-xs hover:border-vacant transition-colors cursor-pointer group">
+          <FileQuestion className="w-8 h-8 text-vacant mb-4 group-hover:scale-110 transition-transform" />
           <Text as="h3" variant="heading" size="sm" className="mb-2">
             {t('landlordOperationsFaq')}
           </Text>
@@ -408,7 +408,7 @@ export default function GuidePage() {
 
               {/* Tip / Notice Callout Box */}
               <div className="p-4 rounded-xl bg-warning-soft border border-warning-subtle flex items-start gap-3">
-                <Lightbulb className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <Lightbulb className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <Text
                     variant="body"

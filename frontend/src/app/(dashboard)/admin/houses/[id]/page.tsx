@@ -217,7 +217,7 @@ export default function AdminBoardingHouseDetailPage() {
           }`}
         >
           {toastMsg.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           ) : (
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
           )}
@@ -362,7 +362,7 @@ export default function AdminBoardingHouseDetailPage() {
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-success-soft border border-success-subtle text-center">
-                  <div className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+                  <div className="text-[11px] font-bold text-success uppercase tracking-wider">
                     {t('adminHouseDetailOccupied')}
                   </div>
                   <div className="text-xl font-black text-success mt-1">
@@ -380,7 +380,7 @@ export default function AdminBoardingHouseDetailPage() {
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-info-soft border border-info-subtle text-center">
-                  <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+                  <div className="text-[11px] font-bold text-info uppercase tracking-wider">
                     {t('adminHouseDetailOccupancy')}
                   </div>
                   <div className="text-xl font-black text-info mt-1">{occupancyRate}%</div>
@@ -418,7 +418,7 @@ export default function AdminBoardingHouseDetailPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-deposit-soft text-purple-600 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-deposit-soft text-deposit flex items-center justify-center shrink-0">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
@@ -655,7 +655,7 @@ export default function AdminBoardingHouseDetailPage() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <AlertTriangle className="w-4 h-4 text-warning" />
               <span>{t('adminHouseDetailGrievancesTitle')}</span>
             </h3>
             <p className="text-xs text-muted mt-0.5">{t('adminHouseDetailGrievancesHint')}</p>
@@ -667,7 +667,7 @@ export default function AdminBoardingHouseDetailPage() {
 
         {house.grievances.length === 0 ? (
           <div className="p-8 rounded-2xl bg-surface border border-line text-center space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+            <CheckCircle2 className="w-8 h-8 text-success mx-auto" />
             <div className="text-xs font-bold text-foreground">
               {t('adminHouseDetailNoGrievancesTitle')}
             </div>
@@ -868,7 +868,7 @@ export default function AdminBoardingHouseDetailPage() {
                   {t('adminHouseDetailLabelCitizenId')}
                 </span>
                 <span className="font-bold font-mono text-foreground flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-success" />
                   <span>{selectedOwner.idCardNumber || '079201004829'}</span>
                 </span>
               </div>
@@ -922,7 +922,7 @@ export default function AdminBoardingHouseDetailPage() {
                 <img
                   src={selectedSender.avatarUrl || '/avatar-placeholder.png'}
                   alt={selectedSender.name}
-                  className="w-14 h-14 rounded-2xl object-cover border-2 border-blue-500 shadow-sm"
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-vacant shadow-sm"
                 />
                 <div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-info-soft text-info inline-block mb-1">
@@ -977,7 +977,7 @@ export default function AdminBoardingHouseDetailPage() {
                   {t('adminHouseDetailLabelCitizenId')}
                 </span>
                 <span className="font-bold font-mono text-foreground flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-success" />
                   <span>{selectedSender.idCardNumber || '079302008192'}</span>
                 </span>
               </div>
@@ -1088,9 +1088,9 @@ export default function AdminBoardingHouseDetailPage() {
             className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 text-emerald-600">
+            <div className="flex items-center gap-3 text-success">
               <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
-                <Unlock className="w-5 h-5 text-emerald-600" />
+                <Unlock className="w-5 h-5 text-success" />
               </div>
               <div>
                 <h3 className="text-base font-black text-foreground">
@@ -1135,7 +1135,7 @@ export default function AdminBoardingHouseDetailPage() {
       {confirmDiscardModal.isOpen && (
         <div className="fixed inset-0 z-60 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>

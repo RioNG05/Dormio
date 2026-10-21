@@ -248,11 +248,11 @@ export default function TenantInvoicesPage() {
                   {formatCurrency(currentUnpaid.amount, locale)}
                 </div>
                 {isUp ? (
-                  <span className="inline-flex items-center text-xs font-bold text-rose-600 bg-danger-soft px-1.5 py-0.5 rounded-md">
+                  <span className="inline-flex items-center text-xs font-bold text-danger bg-danger-soft px-1.5 py-0.5 rounded-md">
                     <TrendingUp className="w-3.5 h-3.5 mr-0.5" />+{percentDiff}%
                   </span>
                 ) : (
-                  <span className="inline-flex items-center text-xs font-bold text-emerald-600 bg-success-soft px-1.5 py-0.5 rounded-md">
+                  <span className="inline-flex items-center text-xs font-bold text-success bg-success-soft px-1.5 py-0.5 rounded-md">
                     <TrendingDown className="w-3.5 h-3.5 mr-0.5" />-{percentDiff}%
                   </span>
                 )}
@@ -561,12 +561,12 @@ export default function TenantInvoicesPage() {
 
                   {inv.status === 'paid' ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-[10px] font-bold uppercase">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      <CheckCircle2 className="w-3 h-3 text-success" />
                       {t('paid')}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle text-[10px] font-bold uppercase">
-                      <Clock className="w-3 h-3 text-amber-600" />
+                      <Clock className="w-3 h-3 text-warning" />
                       {t('unpaid')}
                     </span>
                   )}
@@ -683,12 +683,12 @@ export default function TenantInvoicesPage() {
                       <td className="px-6 py-4">
                         {inv.status === 'paid' ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-[10px] font-bold uppercase">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <CheckCircle2 className="w-3 h-3 text-success" />
                             {t('paid')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle text-[10px] font-bold uppercase">
-                            <Clock className="w-3 h-3 text-amber-600" />
+                            <Clock className="w-3 h-3 text-warning" />
                             {t('unpaid')}
                           </span>
                         )}

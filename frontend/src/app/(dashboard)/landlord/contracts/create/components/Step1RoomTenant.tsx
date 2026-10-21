@@ -142,7 +142,7 @@ export function Step1RoomTenant() {
         {flowType === 'platform' && pendingDeposit && (
           <div className="p-4 bg-deposit-soft border border-deposit-subtle rounded-2xl space-y-2 mt-4 animate-in zoom-in-95">
             <div className="flex items-center gap-2 text-deposit font-black text-xs uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-deposit" />
               <span>{t('landlordContractsCreateFlowPlatformBadge')}</span>
             </div>
             <p className="text-xs text-deposit font-medium leading-relaxed">
@@ -218,7 +218,7 @@ export function Step1RoomTenant() {
 
             {tenantFound === true && (
               <div className="p-3 bg-success-soft border border-success-subtle rounded-xl flex items-start gap-2.5 text-xs text-success mt-2.5 animate-in fade-in">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
                 <div>
                   <span className="font-black text-success block">
                     {t('landlordContractsCreateTenantFound')}: {tenantFullName}
@@ -232,7 +232,7 @@ export function Step1RoomTenant() {
 
             {tenantFound === false && flowType === 'direct' && (
               <div className="p-3 bg-warning-soft border border-warning-subtle rounded-xl flex items-start gap-2.5 text-xs text-warning mt-2.5 animate-in fade-in">
-                <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                 <div>
                   <span className="font-black text-warning block">
                     {t('landlordContractsCreateTenantNotFound')}
@@ -319,7 +319,7 @@ export function Step1RoomTenant() {
               {t('landlordContractsCreateReadOnlyLocked')}
             </span>
           ) : (
-            <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+            <span className="text-[11px] text-success font-bold flex items-center gap-1">
               <Unlock className="w-3 h-3 text-emerald-500" />
               {t('landlordContractsCreateEditable')}
             </span>
@@ -329,7 +329,7 @@ export function Step1RoomTenant() {
         {/* Alert inside CCCD form if missing identification fields */}
         {errorMessage === t('landlordContractsCreateErrIdentification') && (
           <div className="p-3 bg-danger-soft border border-danger-subtle text-danger rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
@@ -466,7 +466,7 @@ export function Step1RoomTenant() {
                 {t('landlordContractsCreateCccdFrontUrlLabel')}
               </span>
               {cardFrontUrl && (
-                <span className="text-[10px] text-emerald-600 font-bold bg-success-soft px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-success font-bold bg-success-soft px-2 py-0.5 rounded-full">
                   {t('landlordContractsCreatePhotoUploaded')}
                 </span>
               )}
@@ -613,7 +613,7 @@ export function Step1RoomTenant() {
                 {t('landlordContractsCreateCccdBackUrlLabel')}
               </span>
               {cardBackUrl && (
-                <span className="text-[10px] text-emerald-600 font-bold bg-success-soft px-2 py-0.5 rounded-full">
+                <span className="text-[10px] text-success font-bold bg-success-soft px-2 py-0.5 rounded-full">
                   {t('landlordContractsCreatePhotoUploaded')}
                 </span>
               )}
@@ -748,7 +748,7 @@ export function Step1RoomTenant() {
       {/* Error Alert if any */}
       {errorMessage && (
         <div className="flex items-center gap-3 px-2 bg-danger-soft border border-danger-subtle text-danger rounded-2xl text-xs font-bold animate-in fade-in">
-          <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
+          <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
           <span>{errorMessage}</span>
           <Button
             type="button"

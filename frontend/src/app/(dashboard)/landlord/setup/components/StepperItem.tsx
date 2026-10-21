@@ -47,7 +47,7 @@ export function StepperItem({
         className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
           isCompleted
-            ? 'bg-emerald-600 text-white'
+            ? 'bg-success text-white'
             : isActive
               ? 'bg-primary text-white shadow-sm'
               : 'bg-line text-muted',

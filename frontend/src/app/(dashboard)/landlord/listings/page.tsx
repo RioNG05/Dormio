@@ -177,7 +177,7 @@ export default function ListingsPage() {
         value: t('landlordListingsPaidUnit', { count: totalItems }),
         icon: <Eye className="w-5 h-5 text-blue-400 shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[150px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-base leading-none mt-1',
@@ -193,8 +193,8 @@ export default function ListingsPage() {
         <div
           className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-2 duration-300 ${
             toast.type === 'success'
-              ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-              : 'bg-rose-600 text-white shadow-rose-600/20'
+              ? 'bg-success text-white shadow-success/20'
+              : 'bg-danger text-white shadow-danger/20'
           }`}
         >
           {toast.type === 'success' ? (

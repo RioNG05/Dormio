@@ -253,7 +253,7 @@ export default function TenantAdminComplaintsPage() {
       case 'high':
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle text-[10px] font-black uppercase flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3 text-rose-600" />
+            <AlertTriangle className="w-3 h-3 text-danger" />
             <span>{t('tenantPriorityUrgent')}</span>
           </span>
         )
@@ -286,7 +286,7 @@ export default function TenantAdminComplaintsPage() {
       case 'investigating':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-info-soft text-info border border-info-subtle text-[10px] font-bold">
-            <Clock className="w-3 h-3 text-blue-600 animate-spin" />
+            <Clock className="w-3 h-3 text-info animate-spin" />
             <span>{t('tenantStatusProcessing')}</span>
           </span>
         )
@@ -371,7 +371,7 @@ export default function TenantAdminComplaintsPage() {
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                   statusFilter === 'pending'
-                    ? 'bg-amber-600 text-white'
+                    ? 'bg-warning text-white'
                     : 'bg-warning-soft text-warning'
                 }`}
               >
@@ -473,7 +473,7 @@ export default function TenantAdminComplaintsPage() {
                   {item.resolutionNote && (
                     <div className="p-3 rounded-xl bg-success-soft border border-success-subtle text-[11px] text-success space-y-1">
                       <div className="font-black flex items-center gap-1 text-success">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                         <span>{t('tenantResolutionResponseFromAdmin')}</span>
                       </div>
                       <p className="line-clamp-2 font-medium leading-relaxed">
@@ -629,7 +629,7 @@ export default function TenantAdminComplaintsPage() {
               {/* Title */}
               <div>
                 <label className="font-bold text-foreground/90 block mb-1.5">
-                  {t('tenantFieldTitleLabel')} <span className="text-rose-500">*</span>
+                  {t('tenantFieldTitleLabel')} <span className="text-danger">*</span>
                 </label>
                 <TextInput
                   type="text"
@@ -644,7 +644,7 @@ export default function TenantAdminComplaintsPage() {
               {/* Description */}
               <div>
                 <label className="font-bold text-foreground/90 block mb-1.5">
-                  {t('tenantFieldDescLabel')} <span className="text-rose-500">*</span>
+                  {t('tenantFieldDescLabel')} <span className="text-danger">*</span>
                 </label>
                 <TextareaInput
                   rows={4}
@@ -807,7 +807,7 @@ export default function TenantAdminComplaintsPage() {
                 <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 font-black text-success text-xs">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <ShieldCheck className="w-4 h-4 text-success" />
                       <span>
                         {t('tenantOfficialResponseFromAdmin', {
                           name: selectedGrievance.resolvedByName || t('tenantDefaultAdminName'),
@@ -815,7 +815,7 @@ export default function TenantAdminComplaintsPage() {
                       </span>
                     </div>
                     {selectedGrievance.resolvedAt && (
-                      <span className="text-[10px] text-emerald-600 font-semibold">
+                      <span className="text-[10px] text-success font-semibold">
                         {formatDate(selectedGrievance.resolvedAt)}
                       </span>
                     )}
@@ -826,7 +826,7 @@ export default function TenantAdminComplaintsPage() {
                 </div>
               ) : (
                 <div className="p-4 rounded-2xl bg-warning-soft border border-warning-subtle text-warning font-medium flex items-center gap-2.5">
-                  <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                  <Clock className="w-4 h-4 text-warning shrink-0" />
                   <span>{t('tenantPendingVerificationNotice')}</span>
                 </div>
               )}
@@ -853,7 +853,7 @@ export default function TenantAdminComplaintsPage() {
             onClick={e => e.stopPropagation()}
             className="bg-card rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-line"
           >
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">

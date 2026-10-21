@@ -20,7 +20,7 @@ export function CancelConfirmModal() {
       }}
     >
       <div className="bg-card rounded-3xl shadow-2xl w-full max-w-md overflow-hidden p-6 space-y-4 animate-in zoom-in-95 border border-line">
-        <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
+        <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
           <AlertTriangle className="w-6 h-6" />
         </div>
 

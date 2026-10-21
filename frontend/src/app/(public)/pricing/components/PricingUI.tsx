@@ -368,7 +368,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                     weight="black"
                     color="white"
                     uppercase
-                    className="px-2 py-0.5 bg-rose-500 rounded-full"
+                    className="px-2 py-0.5 bg-danger rounded-full"
                   >
                     {t('guestPricingSave20')}
                   </Text>

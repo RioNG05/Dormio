@@ -708,7 +708,7 @@ function StaffScheduleContent() {
                       </h3>
                       {duty.requiresPhoto ? (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-warning-soft text-warning border border-warning-subtle flex items-center gap-1">
-                          <Camera className="w-3 h-3 text-amber-600" />
+                          <Camera className="w-3 h-3 text-warning" />
                           {t('dutyPhotoRequired')}
                         </span>
                       ) : (
@@ -725,7 +725,7 @@ function StaffScheduleContent() {
                     )}
 
                     {duty.completedAt && (
-                      <span className="text-[11px] text-emerald-600 font-bold block">
+                      <span className="text-[11px] text-success font-bold block">
                         ✓ {t('dutyCompletedAt', { time: duty.completedAt })}
                       </span>
                     )}
@@ -779,7 +779,7 @@ function StaffScheduleContent() {
         ) : (
           /* Empty State: Thông báo không có nhiệm vụ */
           <div className="p-8 rounded-3xl bg-card border border-dashed border-line text-center space-y-2.5">
-            <div className="w-12 h-12 mx-auto rounded-full bg-success-soft text-emerald-600 flex items-center justify-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-success-soft text-success flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <h4 className="text-sm font-black text-foreground">{t('noTasksAssigned')}</h4>
@@ -969,7 +969,7 @@ function StaffScheduleContent() {
                   </div>
                 ) : (
                   <div className="p-3 rounded-2xl bg-surface border border-line text-muted text-xs flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                     <span>{t('noAdditionalTasks')}</span>
                   </div>
                 )}
@@ -1031,7 +1031,7 @@ function StaffScheduleContent() {
               <div className="flex items-center gap-2 pt-1 text-[11px] text-muted">
                 {activeDutyForProof.requiresPhoto ? (
                   <span className="text-warning font-bold flex items-center gap-1">
-                    <Camera className="w-3 h-3 text-amber-600" />
+                    <Camera className="w-3 h-3 text-warning" />
                     {t('proofMandatory')}
                   </span>
                 ) : (

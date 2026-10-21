@@ -121,7 +121,7 @@ export default function AdminDashboardPage() {
           growth: `${overview.userGrowthRate >= 0 ? '+' : ''}${overview.userGrowthRate || 0}%`,
           isPositive: (overview.userGrowthRate || 0) >= 0,
           icon: Users,
-          color: 'text-blue-600 bg-info-soft border-info-subtle',
+          color: 'text-info bg-info-soft border-info-subtle',
           link: '/admin/users',
         },
         {
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
           growth: `${overview.propertyGrowthRate >= 0 ? '+' : ''}${overview.propertyGrowthRate || 0}%`,
           isPositive: (overview.propertyGrowthRate || 0) >= 0,
           icon: Building2,
-          color: 'text-emerald-600 bg-success-soft border-success-subtle',
+          color: 'text-success bg-success-soft border-success-subtle',
           link: '/admin/boarding-houses',
         },
         {
@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
           growth: t('adminStatNeedsReview'),
           isPositive: false,
           icon: ShieldAlert,
-          color: 'text-amber-600 bg-warning-soft border-warning-subtle',
+          color: 'text-warning bg-warning-soft border-warning-subtle',
           badge: t('adminStatItemsBadge', { count: overview.reportedItemsCount || 0 }),
           link: '/admin/blogs',
         },
@@ -254,7 +254,7 @@ export default function AdminDashboardPage() {
       {error && !isLoading && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-danger-soft border border-danger-subtle text-danger">
           <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+            <AlertCircle className="w-5 h-5 text-danger shrink-0" />
             <Text size="sm" weight="semibold">
               {error}
             </Text>
@@ -503,7 +503,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-line">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-warning-soft text-amber-600 border border-warning-subtle flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center shrink-0">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>

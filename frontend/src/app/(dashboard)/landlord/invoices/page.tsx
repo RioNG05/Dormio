@@ -393,10 +393,10 @@ function InvoicesContent() {
         label: t('landlordInvoicesOverdueShort'),
         value: overdueCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[150px]',
         labelClassName: 'text-rose-400',
         valueClassName: 'text-rose-400 text-base sm:text-lg leading-none mt-1',
       },
@@ -718,7 +718,7 @@ function InvoicesContent() {
                       </span>
                     </div>
                     <span
-                      className={`text-[10px] font-bold ${isOverdue ? 'text-rose-600 font-black' : 'text-muted'}`}
+                      className={`text-[10px] font-bold ${isOverdue ? 'text-danger font-black' : 'text-muted'}`}
                     >
                       {t('landlordInvoicesLabelDeadline').replace('{deadline}', inv.deadline)}
                     </span>
@@ -783,7 +783,7 @@ function InvoicesContent() {
                       {inv.totalAmount.toLocaleString('vi-VN')} ₫
                     </td>
                     <td
-                      className={`px-4 py-3.5 font-bold ${inv.status === 'Quá hạn' ? 'text-rose-600 font-black' : 'text-muted'}`}
+                      className={`px-4 py-3.5 font-bold ${inv.status === 'Quá hạn' ? 'text-danger font-black' : 'text-muted'}`}
                     >
                       {inv.deadline}
                     </td>
@@ -898,7 +898,7 @@ function InvoicesContent() {
                   <p className="font-bold text-foreground">
                     {t('landlordInvoicesDeadlinePrefix')}{' '}
                     <span
-                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-rose-600 font-extrabold' : 'text-foreground'}`}
+                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-danger font-extrabold' : 'text-foreground'}`}
                     >
                       {selectedInvoice.deadline}
                     </span>
@@ -973,7 +973,7 @@ function InvoicesContent() {
 
                       <tr>
                         <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
-                          <Droplets className="w-3.5 h-3.5 text-blue-500" />{' '}
+                          <Droplets className="w-3.5 h-3.5 text-vacant" />{' '}
                           {t('landlordInvoicesItemWater')}
                         </td>
                         <td className="px-4 py-3 text-muted">
@@ -1094,7 +1094,7 @@ function InvoicesContent() {
               ) : (
                 /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
                 <div className="flex items-center gap-2 px-3.5 py-2 bg-success-soft border border-success-subtle text-success text-xs font-black rounded-xl">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-success shrink-0" />
                   <span>
                     {t('landlordInvoicesPaidAtBadge')
                       .replace('{time}', selectedInvoice.paidAt || '')
@@ -1328,7 +1328,7 @@ function InvoicesContent() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-line bg-card">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-amber-500/10 text-amber-600 rounded-2xl">
+                <div className="p-3 bg-amber-500/10 text-warning rounded-2xl">
                   <Sparkles className="w-6 h-6 fill-amber-500" />
                 </div>
                 <div>
@@ -1357,7 +1357,7 @@ function InvoicesContent() {
                   <span className="text-xs font-black text-foreground/90 uppercase tracking-wider">
                     {t('landlordInvoicesOcrPhotoTitle')}
                   </span>
-                  <span className="px-2.5 py-0.5 bg-success-soft text-emerald-600 border border-success-subtle rounded-full text-[10px] font-extrabold">
+                  <span className="px-2.5 py-0.5 bg-success-soft text-success border border-success-subtle rounded-full text-[10px] font-extrabold">
                     {t('landlordInvoicesOcrAccuracy')}
                   </span>
                 </div>

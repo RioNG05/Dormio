@@ -148,7 +148,7 @@ export default function PersonalInfoTab() {
             uppercase
             className={`px-3 py-1 rounded-full whitespace-nowrap ${
               cccdEdited
-                ? 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
+                ? 'bg-amber-500/10 text-warning border border-amber-500/30'
                 : 'bg-primary/10 text-primary border border-primary/30'
             }`}
           >

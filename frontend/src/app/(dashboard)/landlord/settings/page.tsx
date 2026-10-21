@@ -427,7 +427,7 @@ export default function LandlordSettingsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordSettingsTotalRoomsLabel')}
             </span>
-            <div className="p-1.5 rounded-lg bg-info-soft text-blue-600">
+            <div className="p-1.5 rounded-lg bg-info-soft text-info">
               <Bed className="w-4 h-4" />
             </div>
           </div>
@@ -453,7 +453,7 @@ export default function LandlordSettingsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordServicesTitle')}
             </span>
-            <div className="p-1.5 rounded-lg bg-warning-soft text-amber-600">
+            <div className="p-1.5 rounded-lg bg-warning-soft text-warning">
               <Zap className="w-4 h-4" />
             </div>
           </div>
@@ -479,7 +479,7 @@ export default function LandlordSettingsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordSettingsRoomTypesSection')}
             </span>
-            <div className="p-1.5 rounded-lg bg-deposit-soft text-purple-600">
+            <div className="p-1.5 rounded-lg bg-deposit-soft text-deposit">
               <Layers className="w-4 h-4" />
             </div>
           </div>

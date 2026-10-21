@@ -605,10 +605,10 @@ export default function WorkforceSchedulePage() {
         label: t('landlordScheduleStatRecurringShifts'),
         value: summary.recurringCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[150px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -638,13 +638,13 @@ export default function WorkforceSchedulePage() {
           className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
             toastMessage.type === 'success'
               ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
-              : 'bg-danger-soft text-danger border-danger-subtle shadow-rose-500/10'
+              : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
           }`}
         >
           {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           ) : (
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
           )}
           <span>{toastMessage.text}</span>
         </div>
@@ -879,7 +879,7 @@ export default function WorkforceSchedulePage() {
 
                           {schedule.isRecurring ? (
                             <span
-                              className="flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-info-soft px-1.5 py-0.5 rounded-md border border-info-subtle"
+                              className="flex items-center gap-0.5 text-[10px] font-bold text-info bg-info-soft px-1.5 py-0.5 rounded-md border border-info-subtle"
                               title={t('landlordScheduleWeeklyRecurringTitle')}
                             >
                               <Repeat className="w-2.5 h-2.5" />
@@ -1005,7 +1005,7 @@ export default function WorkforceSchedulePage() {
                       </td>
                       <td className="py-3 px-4">
                         {item.isRecurring ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-info-soft px-2 py-0.5 rounded-md border border-info-subtle">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-info bg-info-soft px-2 py-0.5 rounded-md border border-info-subtle">
                             <Repeat className="w-2.5 h-2.5" />
                             <span>{t('landlordScheduleWeeklyRecurringBadge')}</span>
                           </span>
@@ -1116,7 +1116,7 @@ export default function WorkforceSchedulePage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordScheduleModalStaffLabel')}</span>
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <Button size="xs"
                     type="button"
@@ -1139,7 +1139,7 @@ export default function WorkforceSchedulePage() {
 
                 {staffList.length === 0 ? (
                   <div className="p-3 bg-warning-soft border border-warning-subtle rounded-xl text-xs text-warning font-semibold flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                     <span>
                       {t('landlordScheduleNoStaffWarning')}
                     </span>
@@ -1210,7 +1210,7 @@ export default function WorkforceSchedulePage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordScheduleModalRepeatLabel')}</span>
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <Button size="xs"
@@ -1312,7 +1312,7 @@ export default function WorkforceSchedulePage() {
 
               {/* Pre-calculation Alert */}
               <div className="p-3 bg-info-soft border border-info-subtle rounded-xl text-xs text-info flex items-start gap-2">
-                <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
                   {t('landlordScheduleRecurringInfo')}
                 </span>
@@ -1363,7 +1363,7 @@ export default function WorkforceSchedulePage() {
           >
             <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-warning-soft text-amber-600 rounded-2xl border border-warning-subtle">
+                <div className="p-2.5 bg-warning-soft text-warning rounded-2xl border border-warning-subtle">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
@@ -1766,7 +1766,7 @@ export default function WorkforceSchedulePage() {
                       <span className="font-bold text-warning">
                         {t('landlordScheduleEditScopeFutureTitle')}
                       </span>
-                      <p className="text-[11px] text-amber-600/80 leading-relaxed">
+                      <p className="text-[11px] text-warning/80 leading-relaxed">
                         {t('landlordScheduleEditScopeFutureDesc')}
                       </p>
                     </div>
@@ -1812,7 +1812,7 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-amber-600 border border-warning-subtle flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
 

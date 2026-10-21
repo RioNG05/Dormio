@@ -118,15 +118,15 @@ const ROOM_STATUS_CONFIG: Record<string, RoomStatusVisual> = {
   'Đặt cọc': {
     translationKey: 'landlordRoomsStatusReserved',
     gridContainer: 'bg-deposit/10 border-deposit/30 hover:border-deposit',
-    gridText: 'text-purple-600',
-    gridBadge: 'text-purple-600 bg-deposit/15',
+    gridText: 'text-deposit',
+    gridBadge: 'text-deposit bg-deposit/15',
     tableBadge: 'bg-deposit-soft text-deposit',
   },
   'Trống': {
     translationKey: 'landlordRoomsStatusVacant',
-    gridContainer: 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500',
-    gridText: 'text-blue-600',
-    gridBadge: 'text-blue-600 bg-blue-500/15',
+    gridContainer: 'bg-vacant/10 border-vacant/30 hover:border-vacant',
+    gridText: 'text-info',
+    gridBadge: 'text-info bg-vacant/15',
     tableBadge: 'bg-info-soft text-info',
   },
 }
@@ -700,9 +700,9 @@ export default function RoomsPage() {
         key: 'occupancy',
         label: t('landlordRoomsOccupancy'),
         value: `${occupancyRate}%`,
-        icon: <Target className="w-5 h-5 text-rose-500 shrink-0" />,
+        icon: <Target className="w-5 h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors border-rose-500/30 backdrop-blur-md w-full lg:w-[150px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 transition-colors border-danger/30 backdrop-blur-md w-full lg:w-[150px]',
         labelClassName: 'text-rose-400',
         valueColor: 'danger',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',

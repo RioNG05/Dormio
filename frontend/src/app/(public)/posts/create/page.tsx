@@ -188,13 +188,13 @@ export default function PublicCreatePostPage() {
                   })}
                 </span>
                 {quota.purchasedCreditsAvailable > 0 && (
-                  <span className="text-purple-600 font-bold ml-1">
+                  <span className="text-deposit font-bold ml-1">
                     ·{' '}
                     {t('guestPostsCreatePaidAvailable', { count: quota.purchasedCreditsAvailable })}
                   </span>
                 )}
                 {!quota.canPublish && (
-                  <span className="text-rose-500 font-bold ml-1">
+                  <span className="text-danger font-bold ml-1">
                     ({t('guestPostsCreateQuotaExhausted')})
                   </span>
                 )}
@@ -312,7 +312,7 @@ export default function PublicCreatePostPage() {
         {/* 3. Photos & Media with Reusable Base MultiImageUpload Component */}
         <div className="bg-card p-6 sm:p-8 rounded-3xl border border-line shadow-xs space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-line">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-deposit">
               <ImageIcon className="w-4 h-4" />
             </div>
             <div>
@@ -339,7 +339,7 @@ export default function PublicCreatePostPage() {
         {/* Error Alert Message directly above Action Buttons */}
         {errorMessage && (
           <div className="p-4 bg-danger-soft border border-danger-subtle rounded-2xl flex items-start gap-3 text-danger animate-in fade-in duration-200">
-            <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-bold">{t('guestPostsCreateErrorTitle')}</h4>
               <p className="text-xs mt-0.5">{errorMessage}</p>
@@ -390,7 +390,7 @@ export default function PublicCreatePostPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-card rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-line space-y-6 animate-in zoom-in-95 duration-200">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-warning shrink-0">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div className="space-y-1">

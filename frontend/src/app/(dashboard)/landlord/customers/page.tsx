@@ -248,9 +248,9 @@ export default function CustomersPage() {
         key: 'total',
         label: t('landlordCustomersStatTotalShort'),
         value: totalCustomers,
-        icon: <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        icon: <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[150px]',
         labelClassName: 'text-rose-400',
         valueColor: 'danger',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -286,10 +286,10 @@ export default function CustomersPage() {
         label: t('landlordCustomersStatLeftShort'),
         value: leftCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+          'px-3 py-2 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[130px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -722,19 +722,19 @@ function AlertModal({
 
   const config = {
     warning: {
-      bgColor: 'bg-amber-500/10 text-amber-600 border-warning-subtle',
+      bgColor: 'bg-amber-500/10 text-warning border-warning-subtle',
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20',
+      btnColor: 'bg-amber-500 hover:bg-warning text-white shadow-amber-500/20',
     },
     error: {
-      bgColor: 'bg-rose-500/10 text-rose-600 border-danger-subtle',
-      icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
-      btnColor: 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20',
+      bgColor: 'bg-danger/10 text-danger border-danger-subtle',
+      icon: <AlertCircle className="w-7 h-7 text-danger" />,
+      btnColor: 'bg-danger hover:bg-danger text-white shadow-danger/20',
     },
     success: {
-      bgColor: 'bg-emerald-500/10 text-emerald-600 border-success-subtle',
+      bgColor: 'bg-emerald-500/10 text-success border-success-subtle',
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20',
+      btnColor: 'bg-emerald-500 hover:bg-success text-white shadow-emerald-500/20',
     },
     info: {
       bgColor: 'bg-accent-soft text-accent border-accent-subtle',

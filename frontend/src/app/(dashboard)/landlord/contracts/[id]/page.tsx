@@ -719,10 +719,10 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="p-3.5 bg-emerald-500/5 rounded-xl border border-emerald-500/20 space-y-1">
-                <span className="text-[10px] font-bold text-emerald-600 uppercase">
+                <span className="text-[10px] font-bold text-success uppercase">
                   {t('landlordContractDetailRentPrice')}
                 </span>
-                <p className="font-black text-emerald-600 text-base">{contract.price}</p>
+                <p className="font-black text-success text-base">{contract.price}</p>
               </div>
 
               <div className="p-3.5 bg-purple-500/5 rounded-xl border border-purple-500/20 space-y-1">
@@ -1366,7 +1366,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         onClose={() => setIsTerminateModalOpen(false)}
         size="md"
         header={
-          <div className="flex items-center gap-3 text-rose-600">
+          <div className="flex items-center gap-3 text-danger">
             <div className="p-3 bg-danger-soft rounded-full">
               <AlertTriangle className="w-6 h-6" />
             </div>

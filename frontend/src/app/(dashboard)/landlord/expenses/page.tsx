@@ -459,10 +459,10 @@ export default function ExpensesPage() {
         label: t('landlordExpensesTotalExpenses'),
         value: formatLargeMoney(summary.totalAmount),
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[160px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[160px]',
         labelClassName: 'text-rose-400',
         valueClassName: 'text-rose-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
       },
@@ -519,7 +519,7 @@ export default function ExpensesPage() {
               variant="secondary"
               size="md"
               onClick={handleExportCSV}
-              leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+              leftIcon={<FileSpreadsheet className="w-4 h-4 text-success" />}
             >
               {t('landlordExpensesExportExcel')}
             </Button>
@@ -678,7 +678,7 @@ export default function ExpensesPage() {
                   <span className="text-[11px] font-extrabold text-danger uppercase">
                     {t('landlordExpensesExpenseAmount')}
                   </span>
-                  <span className="text-base font-black text-rose-600 whitespace-nowrap">
+                  <span className="text-base font-black text-danger whitespace-nowrap">
                     -{formatCurrency(exp.amount)}
                   </span>
                 </div>
@@ -806,7 +806,7 @@ export default function ExpensesPage() {
                       {formatDate(exp.paidAt)}
                     </td>
 
-                    <td className="py-3 px-3.5 sm:px-4 font-black text-rose-600 whitespace-nowrap">
+                    <td className="py-3 px-3.5 sm:px-4 font-black text-danger whitespace-nowrap">
                       -{formatCurrency(exp.amount)}
                     </td>
 
@@ -1249,7 +1249,7 @@ export default function ExpensesPage() {
       {confirmCloseTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 bg-amber-500/10 text-warning rounded-2xl flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
@@ -1290,7 +1290,7 @@ export default function ExpensesPage() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
         >
           <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
-            <div className="w-12 h-12 bg-rose-500/10 text-rose-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
+            <div className="w-12 h-12 bg-danger/10 text-danger rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
@@ -1334,7 +1334,7 @@ export default function ExpensesPage() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
         >
           <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
-            <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
+            <div className="w-12 h-12 bg-amber-500/10 text-warning rounded-2xl flex items-center justify-center mx-auto shadow-xs">
               <Lock className="w-6 h-6" />
             </div>
             <div>

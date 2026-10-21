@@ -383,9 +383,9 @@ export default function LandlordDebtsPage() {
         key: 'totalDebt',
         label: t('landlordDebtsTotalDebt'),
         value: formatCurrency(summary.totalDebtAmount),
-        icon: <DollarSign className="w-5 h-5 text-rose-500 shrink-0" />,
+        icon: <DollarSign className="w-5 h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[160px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[160px]',
         labelClassName: 'text-rose-400',
         valueClassName: 'text-rose-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
       },
@@ -458,7 +458,7 @@ export default function LandlordDebtsPage() {
               size="md"
               onClick={handleExportCSV}
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <FileSpreadsheet className="w-4 h-4 text-success" />
               <span>{t('landlordDebtsExportExcel')}</span>
             </Button>
           </>
@@ -538,7 +538,7 @@ export default function LandlordDebtsPage() {
         </div>
       ) : debtRooms.length === 0 ? (
         <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
-          <div className="w-16 h-16 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-success-soft text-success flex items-center justify-center mb-4 shadow-sm">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h3 className="text-base font-black text-foreground">
@@ -673,7 +673,7 @@ export default function LandlordDebtsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordDebtsTotalDebtLabel')}
                     </span>
-                    <span className="text-lg font-black text-rose-600 tracking-tight">
+                    <span className="text-lg font-black text-danger tracking-tight">
                       {formatCurrency(room.totalDebtAmount)}
                     </span>
                   </div>
@@ -683,7 +683,7 @@ export default function LandlordDebtsPage() {
                       <span className="text-muted font-medium">
                         {t('landlordDebtsOverduePartLabel')}
                       </span>
-                      <span className="font-extrabold text-amber-600">
+                      <span className="font-extrabold text-warning">
                         {formatCurrency(room.overdueAmount)}
                       </span>
                     </div>
@@ -832,13 +832,13 @@ export default function LandlordDebtsPage() {
                       </td>
 
                       <td className="p-4 text-right">
-                        <span className="font-black text-rose-600 text-sm">
+                        <span className="font-black text-danger text-sm">
                           {formatCurrency(room.totalDebtAmount)}
                         </span>
                       </td>
 
                       <td className="p-4 text-right">
-                        <span className="font-extrabold text-amber-600">
+                        <span className="font-extrabold text-warning">
                           {formatCurrency(room.overdueAmount)}
                         </span>
                       </td>
@@ -949,11 +949,11 @@ export default function LandlordDebtsPage() {
                   <span className="text-xs font-extrabold text-danger uppercase tracking-wider block">
                     {t('landlordDebtsModalTotalOutstanding')}
                   </span>
-                  <span className="text-2xl font-black text-rose-600">
+                  <span className="text-2xl font-black text-danger">
                     {formatCurrency(invoicesModalRoom.totalDebtAmount)}
                   </span>
                 </div>
-                <span className="px-3 py-1 bg-card text-rose-600 font-black text-xs rounded-full border border-danger-subtle shadow-sm">
+                <span className="px-3 py-1 bg-card text-danger font-black text-xs rounded-full border border-danger-subtle shadow-sm">
                   {t('landlordDebtsModalInvoicesSummary', {
                     count: invoicesModalRoom.invoicesCount,
                   })}
@@ -996,7 +996,7 @@ export default function LandlordDebtsPage() {
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                      <span className="text-base font-black text-rose-600">
+                      <span className="text-base font-black text-danger">
                         {formatCurrency(inv.totalAmount)}
                       </span>
 
@@ -1070,7 +1070,7 @@ export default function LandlordDebtsPage() {
             <div className="p-6 space-y-4">
               {reminderSuccessMessage && (
                 <div className="p-4 bg-success-soft border border-success-subtle text-success rounded-2xl text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
                   <span>{reminderSuccessMessage}</span>
                 </div>
               )}
@@ -1097,7 +1097,7 @@ export default function LandlordDebtsPage() {
                   <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsTotalDebt')}
                   </span>
-                  <span className="font-black text-rose-600 block text-sm">
+                  <span className="font-black text-danger block text-sm">
                     {formatCurrency(reminderModalRoom.totalDebtAmount)}
                   </span>
                 </div>
@@ -1143,8 +1143,8 @@ export default function LandlordDebtsPage() {
                   >
                     {reminderCopied ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600">{t('landlordDebtsModalCopied')}</span>
+                        <Check className="w-3.5 h-3.5 text-success" />
+                        <span className="text-success">{t('landlordDebtsModalCopied')}</span>
                       </>
                     ) : (
                       <>
@@ -1196,7 +1196,7 @@ export default function LandlordDebtsPage() {
           <div className="bg-card w-full max-w-md rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col">
             <div className="p-6 bg-surface border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-emerald-600" />
+                <CreditCard className="w-5 h-5 text-success" />
                 <h3 className="text-base font-black text-foreground">
                   {t('landlordDebtsModalPaymentTitle', { room: paymentModalInvoice.roomNumber })}
                 </h3>
@@ -1300,7 +1300,7 @@ export default function LandlordDebtsPage() {
       {confirmCloseTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-line space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>

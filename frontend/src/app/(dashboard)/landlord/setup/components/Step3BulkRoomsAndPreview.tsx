@@ -169,7 +169,7 @@ export function Step3BulkRoomsAndPreview({
         {/* Left Column: Generation Settings Form */}
         <div className="lg:col-span-7 rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex items-center gap-3 border-b border-line pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-deposit-soft text-purple-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-deposit-soft text-deposit flex items-center justify-center font-bold">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
@@ -360,7 +360,7 @@ export function Step3BulkRoomsAndPreview({
             {isQuotaExceeded ? (
               <div className="p-3.5 rounded-2xl bg-warning-soft border border-warning-subtle text-xs text-warning space-y-1.5 animate-in fade-in">
                 <div className="flex items-center gap-2 font-bold text-warning">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                   <Text as="span" size="xs" weight="bold" color="inherit">
                     {t('landlordSetupQuotaExceededTitle')
                       .replace('{total}', String(totalRoomsToCreate))
@@ -377,7 +377,7 @@ export function Step3BulkRoomsAndPreview({
             ) : (
               <div className="p-3 rounded-xl bg-success-soft border border-success-subtle flex items-center justify-between text-xs text-success font-semibold">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   <Text as="span" size="xs" weight="semibold" color="inherit">
                     {t('landlordSetupQuotaLimitLabel')}
                   </Text>

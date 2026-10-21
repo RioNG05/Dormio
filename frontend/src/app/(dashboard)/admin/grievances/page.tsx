@@ -412,9 +412,9 @@ export default function AdminGrievancesPage() {
           }`}
         >
           {toastMsg.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           ) : (
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-danger shrink-0" />
           )}
           <span>{toastMsg.text}</span>
           <Button
@@ -466,7 +466,7 @@ export default function AdminGrievancesPage() {
 
           {/* In-Progress Cases */}
           <div className="px-3 py-1.5 rounded-xl bg-info-soft border border-info-subtle text-info min-w-[75px]">
-            <span className="text-[10px] font-black uppercase tracking-wider block text-blue-600">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-info">
               {t('adminGrievancesInProgressTotal')}
             </span>
             {loading ? (
@@ -480,7 +480,7 @@ export default function AdminGrievancesPage() {
 
           {/* Pending Cases */}
           <div className="px-3 py-1.5 rounded-xl bg-warning-soft border border-warning-subtle text-warning min-w-[75px]">
-            <span className="text-[10px] font-black uppercase tracking-wider block text-amber-600">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-warning">
               {t('adminGrievancesPendingTotal')}
             </span>
             {loading ? (
@@ -508,7 +508,7 @@ export default function AdminGrievancesPage() {
 
           {/* Resolved Cases */}
           <div className="px-3 py-1.5 rounded-xl bg-success-soft border border-success-subtle text-success min-w-[75px]">
-            <span className="text-[10px] font-black uppercase tracking-wider block text-emerald-600">
+            <span className="text-[10px] font-black uppercase tracking-wider block text-success">
               {t('adminGrievancesResolvedTotal')}
             </span>
             {loading ? (
@@ -526,7 +526,7 @@ export default function AdminGrievancesPage() {
       {error && (
         <div className="flex items-center justify-between p-4 bg-danger-soft border border-danger-subtle rounded-2xl text-danger text-xs font-semibold">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             <span>{error}</span>
           </div>
           <Button variant="danger" size="sm" onClick={() => fetchLiveGrievances()}>
@@ -1126,7 +1126,7 @@ export default function AdminGrievancesPage() {
                   <div
                     className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
                       actionType === 'resolve'
-                        ? 'bg-success-soft text-emerald-600'
+                        ? 'bg-success-soft text-success'
                         : 'bg-card-hover text-foreground/90'
                     }`}
                   >
@@ -1230,7 +1230,7 @@ export default function AdminGrievancesPage() {
                 leftIcon={<Check  />}
                 className={
                   actionType === 'resolve'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    ? 'bg-success hover:bg-emerald-700'
                     : 'bg-zinc-900 text-white hover:bg-zinc-800'
                 }
               >

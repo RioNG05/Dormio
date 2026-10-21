@@ -382,7 +382,7 @@ export default function SendApplicationPage() {
       case 'investigating':
         return (
           <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-info-soft text-info border-info-subtle">
-            <Clock className="w-3 h-3 text-blue-500 animate-spin shrink-0" />
+            <Clock className="w-3 h-3 text-vacant animate-spin shrink-0" />
             <span>{t('statusInProgress')}</span>
           </span>
         )
@@ -410,7 +410,7 @@ export default function SendApplicationPage() {
       case 'high':
         return (
           <span className="h-6 inline-flex items-center gap-1.5 px-2.5 rounded-full border text-[11px] font-bold leading-none normal-case whitespace-nowrap shrink-0 bg-danger-soft text-danger border-danger-subtle">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-danger shrink-0" />
             <span>{t('priorityHigh')}</span>
           </span>
         )
@@ -950,12 +950,12 @@ export default function SendApplicationPage() {
                 onClick={() => setAppType('complaint')}
                 className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
                   appType === 'complaint'
-                    ? 'border-rose-500 bg-danger-soft shadow-xs ring-1 ring-rose-500'
+                    ? 'border-danger bg-danger-soft shadow-xs ring-1 ring-danger'
                     : 'border-line hover:border-line bg-card'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="w-4 h-4 text-rose-500" />
+                  <AlertTriangle className="w-4 h-4 text-danger" />
                   <Text as="span" size="xs" weight="black" color="default">
                     {t('typeComplaint')}
                   </Text>
@@ -971,12 +971,12 @@ export default function SendApplicationPage() {
                 onClick={() => setAppType('inquiry')}
                 className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
                   appType === 'inquiry'
-                    ? 'border-blue-500 bg-info-soft shadow-xs ring-1 ring-blue-500'
+                    ? 'border-vacant bg-info-soft shadow-xs ring-1 ring-vacant'
                     : 'border-line hover:border-line bg-card'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <HelpCircle className="w-4 h-4 text-blue-500" />
+                  <HelpCircle className="w-4 h-4 text-vacant" />
                   <Text as="span" size="xs" weight="black" color="default">
                     {t('typeInquiry')}
                   </Text>
@@ -1101,7 +1101,7 @@ export default function SendApplicationPage() {
         showCloseButton={false}
       >
         <Modal.Body className="text-center space-y-4 p-6">
-          <div className="w-12 h-12 rounded-full bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-warning-soft text-warning flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
@@ -1232,7 +1232,7 @@ export default function SendApplicationPage() {
                   weight="black"
                   className="text-warning flex items-center gap-1.5"
                 >
-                  <ShieldCheck className="w-4 h-4 text-amber-600" />
+                  <ShieldCheck className="w-4 h-4 text-warning" />
                   <Text as="span" color="inherit">
                     {t('adminResolutionTitle')}
                   </Text>

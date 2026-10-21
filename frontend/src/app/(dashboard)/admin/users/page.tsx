@@ -378,7 +378,7 @@ export default function AdminUsersManagementPage() {
         )
       case 'tenant':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-info-soft text-blue-600 border border-info-subtle">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-info-soft text-info border border-info-subtle">
             <Home className="w-3 h-3" />
             {t('adminUsersRoleTenant')}
           </span>
@@ -447,14 +447,14 @@ export default function AdminUsersManagementPage() {
       case 'pro':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-warning-soft text-warning border border-amber-300">
-            <Crown className="w-3 h-3 text-amber-600" />
+            <Crown className="w-3 h-3 text-warning" />
             {t('adminUsersTierBadgePro')}
           </span>
         )
       case 'plus':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-deposit-soft text-deposit border border-deposit-subtle">
-            <Sparkles className="w-3 h-3 text-purple-600" />
+            <Sparkles className="w-3 h-3 text-deposit" />
             {t('adminUsersTierBadgePlus')}
           </span>
         )
@@ -492,9 +492,9 @@ export default function AdminUsersManagementPage() {
             }`}
           >
             {toastMsg.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
             ) : (
-              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-danger shrink-0" />
             )}
             <Text as="span" size="sm" weight="bold">
               {toastMsg.textKey ? t(toastMsg.textKey) : toastMsg.text}
@@ -593,14 +593,14 @@ export default function AdminUsersManagementPage() {
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiTenants')}
             </Text>
-            <div className="p-2 rounded-xl bg-info-soft text-blue-600">
+            <div className="p-2 rounded-xl bg-info-soft text-info">
               <Home className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
             <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
-            <Text as="p" variant="heading" size="2xl" weight="black" className="text-blue-600">
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-info">
               {summary.tenantsCount.toLocaleString()}
             </Text>
           )}
@@ -618,14 +618,14 @@ export default function AdminUsersManagementPage() {
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiStaff')}
             </Text>
-            <div className="p-2 rounded-xl bg-warning-soft text-amber-600">
+            <div className="p-2 rounded-xl bg-warning-soft text-warning">
               <UserCheck className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
             <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
-            <Text as="p" variant="heading" size="2xl" weight="black" className="text-amber-600">
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-warning">
               {summary.employeesCount.toLocaleString()}
             </Text>
           )}
@@ -643,14 +643,14 @@ export default function AdminUsersManagementPage() {
             <Text as="span" size="xs" weight="bold" color="secondary">
               {t('adminUsersKpiBanned')}
             </Text>
-            <div className="p-2 rounded-xl bg-danger-soft text-rose-600">
+            <div className="p-2 rounded-xl bg-danger-soft text-danger">
               <UserX className="w-4 h-4" />
             </div>
           </div>
           {loading ? (
             <div className="h-8 w-16 bg-card-hover rounded-lg animate-pulse my-1" />
           ) : (
-            <Text as="p" variant="heading" size="2xl" weight="black" className="text-rose-600">
+            <Text as="p" variant="heading" size="2xl" weight="black" className="text-danger">
               {summary.bannedUsers.toLocaleString()}
             </Text>
           )}
@@ -1037,7 +1037,7 @@ export default function AdminUsersManagementPage() {
                             </>
                           ) : (
                             <span
-                              className="p-1.5 rounded-xl text-amber-600 cursor-not-allowed inline-flex items-center justify-center"
+                              className="p-1.5 rounded-xl text-warning cursor-not-allowed inline-flex items-center justify-center"
                               title={t('adminUsersRootAdminProtected')}
                             >
                               <Lock className="w-4 h-4" />
@@ -1211,7 +1211,7 @@ export default function AdminUsersManagementPage() {
                               className="inline-flex items-center gap-1 text-[11px] font-semibold text-warning bg-warning-soft px-2 py-0.5 rounded-lg border border-warning-subtle"
                               title={t('adminUsersRootAdminProtected')}
                             >
-                              <Lock className="w-3 h-3 text-amber-600" />
+                              <Lock className="w-3 h-3 text-warning" />
                               {t('adminUsersRootAdminProtected')}
                             </span>
                           )}
@@ -1227,7 +1227,7 @@ export default function AdminUsersManagementPage() {
                         {t('adminUsersTabProfile')}
                       </Text>
                       {selectedUser.isIdentityVerified ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 bg-success-soft px-2.5 py-1 rounded-full border border-success-subtle">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-success bg-success-soft px-2.5 py-1 rounded-full border border-success-subtle">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {t('adminUsersVerified')}
                         </span>
@@ -1461,7 +1461,7 @@ export default function AdminUsersManagementPage() {
                   {!canModifyUser(selectedUser) && (
                     <div className="p-4 rounded-2xl bg-warning-soft border border-warning-subtle text-warning space-y-1">
                       <div className="flex items-center gap-2 font-bold text-sm text-warning">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                         <span>{t('adminUsersRootAdminProtectedTitle')}</span>
                       </div>
                       <Text as="p" size="xs" className="text-amber-800/90 leading-relaxed">
@@ -1547,7 +1547,7 @@ export default function AdminUsersManagementPage() {
                     {/* Choice 3: Change Subscription Tier */}
                     <div className="p-4 rounded-2xl border border-deposit-subtle bg-deposit-soft space-y-2">
                       <div className="flex items-center gap-2 text-deposit font-extrabold text-sm">
-                        <Crown className="w-4 h-4 text-purple-600" />
+                        <Crown className="w-4 h-4 text-deposit" />
                         <Text as="span" size="sm" weight="extrabold" color="inherit">
                           {t('adminUsersBtnChangeTier')}
                         </Text>
@@ -1711,14 +1711,14 @@ export default function AdminUsersManagementPage() {
                           name: t('adminUsersTierBadgePlus'),
                           icon: Sparkles,
                           color: 'border-deposit-subtle text-deposit hover:bg-purple-50',
-                          activeColor: 'border-purple-600 bg-purple-600 text-white shadow-sm',
+                          activeColor: 'border-deposit bg-deposit text-white shadow-sm',
                         },
                         {
                           id: 'pro' as const,
                           name: t('adminUsersTierBadgePro'),
                           icon: Crown,
                           color: 'border-warning-subtle text-warning hover:bg-amber-50',
-                          activeColor: 'border-amber-600 bg-amber-600 text-white shadow-sm',
+                          activeColor: 'border-warning bg-warning text-white shadow-sm',
                         },
                       ].map(tierOpt => {
                         const isSelected = newTier === tierOpt.id
@@ -1812,7 +1812,7 @@ export default function AdminUsersManagementPage() {
       {showDiscardConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-card w-full max-w-sm rounded-3xl shadow-2xl border border-line p-6 space-y-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto border border-warning-subtle">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto border border-warning-subtle">
               <AlertTriangle className="w-6 h-6" />
             </div>
 

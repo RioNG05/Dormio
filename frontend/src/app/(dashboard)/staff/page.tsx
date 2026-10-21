@@ -723,7 +723,7 @@ export default function StaffOverviewPage() {
               toast.type === 'success'
                 ? 'bg-primary'
                 : toast.type === 'warning'
-                  ? 'bg-amber-600'
+                  ? 'bg-warning'
                   : 'bg-zinc-800'
             }`}
           >
@@ -1329,7 +1329,7 @@ export default function StaffOverviewPage() {
                     </div>
                     <Link
                       href="/staff/schedule"
-                      className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-warning text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer"
                     >
                       <Calendar className="w-3.5 h-3.5" />
                       <span>
@@ -1369,7 +1369,7 @@ export default function StaffOverviewPage() {
                                 {/* Requirement Tag */}
                                 {duty.requiresPhoto ? (
                                   <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle inline-flex items-center gap-1 shrink-0">
-                                    <Camera className="w-3 h-3 text-amber-600" />
+                                    <Camera className="w-3 h-3 text-warning" />
                                     {t('requiresPhoto')}
                                   </span>
                                 ) : (
@@ -1388,7 +1388,7 @@ export default function StaffOverviewPage() {
                               )}
 
                               {duty.completedAt && (
-                                <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                                <div className="text-[10px] text-success font-bold flex items-center gap-1">
                                   <Check className="w-3 h-3" />{' '}
                                   {t('completedAtPrefix', { time: duty.completedAt })}
                                 </div>
@@ -1550,7 +1550,7 @@ export default function StaffOverviewPage() {
                   <div className="text-xl font-black text-foreground">
                     {t('shiftsUnit', { count: monthlySummary.totalShifts })}
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-bold">
+                  <span className="text-[10px] text-success font-bold">
                     {t('totalHoursUnit', { hours: monthlySummary.totalHours })}
                   </span>
                 </div>
@@ -1573,7 +1573,7 @@ export default function StaffOverviewPage() {
                   <span className="text-[10px] font-bold text-muted uppercase">
                     {t('lateLabel')}
                   </span>
-                  <div className="text-xl font-black text-amber-600">
+                  <div className="text-xl font-black text-warning">
                     {t('shiftsUnit', { count: monthlySummary.lateCount })}
                   </div>
                   <span className="text-[10px] text-muted font-medium">
@@ -1585,7 +1585,7 @@ export default function StaffOverviewPage() {
                   <span className="text-[10px] font-bold text-muted uppercase">
                     {t('earlyLabel')}
                   </span>
-                  <div className="text-xl font-black text-amber-600">
+                  <div className="text-xl font-black text-warning">
                     {t('shiftsUnit', { count: monthlySummary.earlyCount })}
                   </div>
                   <span className="text-[10px] text-muted font-medium">
@@ -1780,7 +1780,7 @@ export default function StaffOverviewPage() {
             onClick={e => e.stopPropagation()}
             className="bg-card rounded-3xl border border-line shadow-2xl max-w-sm w-full p-6 space-y-5 text-center cursor-default"
           >
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-warning-subtle text-amber-600 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-warning-subtle text-warning flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="space-y-1.5">
@@ -2370,7 +2370,7 @@ function CheckInOutCameraModal({
         <div className="p-5 border-b border-line flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
-              className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-primary' : 'bg-emerald-600'}`}
+              className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-primary' : 'bg-success'}`}
             >
               {mode === 'checkin' ? <Camera className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
             </div>
@@ -2399,7 +2399,7 @@ function CheckInOutCameraModal({
         <div className="p-5 sm:p-6 space-y-4 overflow-y-auto max-h-[75vh]">
           <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-success-soft border border-success-subtle text-success text-xs">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-success shrink-0" />
               <span className="font-black text-[11px] uppercase tracking-wide">
                 {t('cameraNotice')}
               </span>
@@ -2425,7 +2425,7 @@ function CheckInOutCameraModal({
                 {/* Stable GPS Status Badge */}
                 {geoState.status === 'locating' && (
                   <span className="text-[10px] font-bold text-warning bg-warning-soft border border-warning-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0">
-                    <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
+                    <RefreshCw className="w-3 h-3 animate-spin text-warning" />
                     {t('locatingGps')}
                   </span>
                 )}
@@ -2623,7 +2623,7 @@ function CheckInOutCameraModal({
           <div className="space-y-3 pt-1 border-t border-line">
             <div className="p-4 sm:p-5 rounded-2xl bg-warning-soft border border-warning-subtle space-y-3">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
                   <h4 className="text-xs font-black text-warning uppercase">
                     {mode === 'checkin'
@@ -2684,7 +2684,7 @@ function CheckInOutCameraModal({
                         ? t('placeholderExplanation')
                         : t('placeholderCheckOutNote')
                   }
-                  className="w-full p-2.5 rounded-xl bg-card border border-amber-300 text-xs text-foreground font-medium focus:outline-none focus:border-amber-600 focus:ring-1 focus:ring-amber-500/20"
+                  className="w-full p-2.5 rounded-xl bg-card border border-amber-300 text-xs text-foreground font-medium focus:outline-none focus:border-warning focus:ring-1 focus:ring-amber-500/20"
                   containerClassName="space-y-0"
                 />
                 {isRequireExplanation && !explanation.trim() ? (
@@ -2933,7 +2933,7 @@ function DutyProofModal({
           {/* Warning notice if required photo is missing */}
           {warningNotice && (
             <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle text-warning text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-150">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
               <span>{warningNotice}</span>
             </div>
           )}

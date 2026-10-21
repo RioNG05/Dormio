@@ -946,9 +946,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         showCloseButton={false}
       >
         <Modal.Body className="space-y-4">
-          <div className="flex items-center gap-3 text-amber-600">
+          <div className="flex items-center gap-3 text-warning">
             <div className="p-3 bg-warning-soft rounded-full shrink-0">
-              <AlertTriangle className="w-6 h-6 text-amber-600" />
+              <AlertTriangle className="w-6 h-6 text-warning" />
             </div>
             <div>
               <Text as="h3" weight="black" color="default" size="base">
@@ -1015,9 +1015,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         showCloseButton={false}
       >
         <Modal.Body className="space-y-4">
-          <div className="flex items-center gap-3 text-rose-600">
+          <div className="flex items-center gap-3 text-danger">
             <div className="p-3 bg-danger-soft rounded-full shrink-0">
-              <AlertTriangle className="w-6 h-6 text-rose-600" />
+              <AlertTriangle className="w-6 h-6 text-danger" />
             </div>
             <Text as="h3" weight="black" color="default" size="base">
               {confirmModal.title}

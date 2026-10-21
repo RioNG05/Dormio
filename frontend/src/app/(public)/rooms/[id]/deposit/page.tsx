@@ -544,7 +544,7 @@ function DepositPageInner() {
                 {post.room.boardingHouseName}
               </p>
             )}
-            <p className="text-sm font-black text-rose-500 mt-1">
+            <p className="text-sm font-black text-danger mt-1">
               {formatCurrency(depositAmount, currentLocale)}
               <span className="text-xs text-muted font-normal">
                 {' '}
@@ -630,7 +630,7 @@ function DepositPageInner() {
               ) : identityCheckResult.hasId && identityCheckResult.idData ? (
                 /* User already has valid citizen identification */
                 <div className="space-y-4 text-center py-2 animate-in fade-in duration-300">
-                  <div className="w-16 h-16 rounded-full bg-success-soft text-emerald-600 border-2 border-success-subtle flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-success-soft text-success border-2 border-success-subtle flex items-center justify-center mx-auto">
                     <ShieldCheck className="w-9 h-9" />
                   </div>
 
@@ -678,7 +678,7 @@ function DepositPageInner() {
                       <span className="text-muted font-bold">
                         {tGuest('guestDepositEscrowStandard')}
                       </span>
-                      <span className="font-black text-emerald-600 flex items-center gap-1">
+                      <span className="font-black text-success flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" />{' '}
                         {tGuest('guestDepositEscrowPassed')}
                       </span>
@@ -715,7 +715,7 @@ function DepositPageInner() {
               ) : (
                 /* User does NOT have identification -> must complete Step 1 */
                 <div className="space-y-4 text-center py-2 animate-in fade-in duration-300">
-                  <div className="w-16 h-16 rounded-full bg-warning-soft text-amber-600 border-2 border-warning-subtle flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-warning-soft text-warning border-2 border-warning-subtle flex items-center justify-center mx-auto">
                     <AlertTriangle className="w-8 h-8" />
                   </div>
 
@@ -733,7 +733,7 @@ function DepositPageInner() {
 
                   <div className="bg-warning-soft rounded-2xl border border-warning-subtle p-4 text-xs text-left space-y-1.5 text-warning">
                     <div className="font-extrabold flex items-center gap-1.5 text-warning">
-                      <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                      <Info className="w-4 h-4 text-warning shrink-0" />
                       <span>{tGuest('guestDepositIdentityBenefitsTitle')}</span>
                     </div>
                     <ul className="list-disc list-inside space-y-1 text-[11px] text-warning">
@@ -771,7 +771,7 @@ function DepositPageInner() {
               </div>
 
               {identityError && (
-                <div className="p-3 bg-danger-soft border border-danger-subtle text-rose-600 text-xs font-semibold rounded-xl flex items-start gap-2">
+                <div className="p-3 bg-danger-soft border border-danger-subtle text-danger text-xs font-semibold rounded-xl flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{identityError}</span>
                 </div>
@@ -953,7 +953,7 @@ function DepositPageInner() {
                     Number(post.depositAmount ?? 0),
                     currentLocale,
                   )}`}
-                  className="font-mono font-black text-rose-600 text-sm"
+                  className="font-mono font-black text-danger text-sm"
                 />
 
                 <TextInput
@@ -994,7 +994,7 @@ function DepositPageInner() {
               </div>
 
               {depositErrorMsg && (
-                <div className="p-3 bg-danger-soft border border-danger-subtle text-rose-600 text-xs font-semibold rounded-xl flex items-start gap-2">
+                <div className="p-3 bg-danger-soft border border-danger-subtle text-danger text-xs font-semibold rounded-xl flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{depositErrorMsg}</span>
                 </div>
@@ -1033,7 +1033,7 @@ function DepositPageInner() {
               <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
                 <div className="flex items-center gap-2">
                   <Clock
-                    className={`w-4 h-4 ${countdown < 120 ? 'text-rose-500 animate-pulse' : 'text-primary'}`}
+                    className={`w-4 h-4 ${countdown < 120 ? 'text-danger animate-pulse' : 'text-primary'}`}
                   />
                   <span className="text-xs font-bold text-muted">
                     {tGuest('guestDepositQrCountdown')}
@@ -1138,7 +1138,7 @@ function DepositPageInner() {
                     <div className="flex items-center gap-2 ml-2">
                       <span
                         className={`font-mono font-black text-foreground ${
-                          copyKey === 'amount' ? 'text-rose-600 text-base' : ''
+                          copyKey === 'amount' ? 'text-danger text-base' : ''
                         }`}
                       >
                         {value}
@@ -1157,7 +1157,7 @@ function DepositPageInner() {
                           title={tGuest('guestRoomDetailCopy')}
                         >
                           {copiedField === copyKey ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <Check className="w-3.5 h-3.5 text-success" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
@@ -1185,12 +1185,12 @@ function DepositPageInner() {
               </div>
 
               <div className="p-3 bg-warning-soft border border-warning-subtle rounded-2xl text-[11px] text-warning font-semibold text-left flex items-start gap-2">
-                <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                 <span>{tGuest('guestDepositTransferNotice')}</span>
               </div>
 
               {depositErrorMsg && (
-                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-rose-600 font-semibold flex items-start gap-2 text-left">
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-start gap-2 text-left">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{depositErrorMsg}</span>
                 </div>
@@ -1234,7 +1234,7 @@ function DepositPageInner() {
                   <span className="text-muted font-bold">
                     {tGuest('guestDepositAmountDeposited')}
                   </span>
-                  <span className="font-black text-rose-600 text-sm">
+                  <span className="font-black text-danger text-sm">
                     {formatCurrency(depositInstruction?.amount ?? depositAmount, currentLocale)}
                   </span>
                 </div>
@@ -1270,7 +1270,7 @@ function DepositPageInner() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
           <div className="bg-card rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-line text-center cursor-default">
-            <div className="w-12 h-12 rounded-full bg-warning-soft border border-warning-subtle text-amber-600 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-full bg-warning-soft border border-warning-subtle text-warning flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div className="space-y-1">

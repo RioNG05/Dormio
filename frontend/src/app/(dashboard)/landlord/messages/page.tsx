@@ -52,12 +52,12 @@ import { dispatchMessagesUpdated } from '@/hooks'
 const AVATAR_COLORS = [
   'bg-teal-600',
   'bg-primary',
-  'bg-blue-600',
+  'bg-info',
   'bg-indigo-600',
-  'bg-emerald-600',
-  'bg-purple-600',
-  'bg-amber-600',
-  'bg-rose-600',
+  'bg-success',
+  'bg-deposit',
+  'bg-warning',
+  'bg-danger',
 ]
 
 function getAvatarBg(str: string): string {
@@ -1519,7 +1519,7 @@ function MessagesContent() {
       {showCloseModalConfirm && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-card rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-line space-y-4">
-            <div className="flex items-center gap-3 text-amber-600">
+            <div className="flex items-center gap-3 text-warning">
               <div className="p-2 bg-warning-soft rounded-xl">
                 <AlertCircle className="w-5 h-5" />
               </div>

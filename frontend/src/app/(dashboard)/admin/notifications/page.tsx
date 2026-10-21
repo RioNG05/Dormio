@@ -504,7 +504,7 @@ export default function AdminNotificationsPage() {
           {/* Live KPI summary with skeleton placeholders during loading */}
           <div className="hidden md:flex items-center gap-2">
             <div className="px-3 py-1.5 rounded-xl bg-success-soft border border-success-subtle text-success min-w-[70px]">
-              <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider block text-success">
                 {t('adminNotifySent')}
               </span>
               {loading ? (
@@ -516,7 +516,7 @@ export default function AdminNotificationsPage() {
               )}
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-info-soft border border-info-subtle text-info min-w-[70px]">
-              <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider block text-info">
                 {t('adminNotifyPending')}
               </span>
               {loading ? (
@@ -530,7 +530,7 @@ export default function AdminNotificationsPage() {
               )}
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-danger-soft border border-danger-subtle text-danger min-w-[70px]">
-              <span className="text-[10px] font-bold uppercase tracking-wider block text-rose-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider block text-danger">
                 {t('adminNotifyFailed')}
               </span>
               {loading ? (
@@ -765,7 +765,7 @@ export default function AdminNotificationsPage() {
                         {item.sentCount.toLocaleString()} / {item.totalRecipients.toLocaleString()}{' '}
                         {t('adminNotifyRecipientsUnit')}
                       </span>
-                      <span className="text-emerald-600">{percent}%</span>
+                      <span className="text-success">{percent}%</span>
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-card-hover overflow-hidden">
                       <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
@@ -920,7 +920,7 @@ export default function AdminNotificationsPage() {
             <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
               {formError && (
                 <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
                   <span>{formError}</span>
                 </div>
               )}
@@ -940,7 +940,7 @@ export default function AdminNotificationsPage() {
                 <div className="flex items-center justify-between">
                   <label className="font-bold text-foreground/90 block">
                     {t('adminNotifyDeliveryChannels')}
-                    <span className="text-rose-500 ml-1 font-bold">*</span>
+                    <span className="text-danger ml-1 font-bold">*</span>
                   </label>
                   <span className="text-[11px] font-bold text-muted">
                     {composeChannels.length} {t('adminNotifyAllChannels')}
@@ -1002,7 +1002,7 @@ export default function AdminNotificationsPage() {
                   })}
                 </div>
                 {fieldErrors.channels && (
-                  <p className="text-[11px] text-rose-600 font-semibold flex items-center gap-1 mt-1">
+                  <p className="text-[11px] text-danger font-semibold flex items-center gap-1 mt-1">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{fieldErrors.channels}</span>
                   </p>
@@ -1013,7 +1013,7 @@ export default function AdminNotificationsPage() {
               <div className="space-y-1.5">
                 <label className="font-bold text-foreground/90 block">
                   {t('adminNotifyTargetGroup')}
-                  <span className="text-rose-500 ml-1 font-bold">*</span>
+                  <span className="text-danger ml-1 font-bold">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
@@ -1140,14 +1140,14 @@ export default function AdminNotificationsPage() {
                       containerClassName="space-y-0"
                       className={`px-3 py-1.5 bg-card border rounded-xl text-xs font-bold text-foreground ${
                         fieldErrors.scheduleTime
-                          ? 'border-rose-500 focus:border-rose-600'
+                          ? 'border-danger focus:border-danger'
                           : 'border-line focus:border-orange-500'
                       }`}
                     />
                   )}
                 </div>
                 {fieldErrors.scheduleTime && (
-                  <p className="text-[11px] text-rose-600 font-semibold flex items-center gap-1 mt-1">
+                  <p className="text-[11px] text-danger font-semibold flex items-center gap-1 mt-1">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     <span>{fieldErrors.scheduleTime}</span>
                   </p>
@@ -1233,7 +1233,7 @@ export default function AdminNotificationsPage() {
                   <span className="text-[10px] font-bold text-muted uppercase block">
                     {t('adminNotifyDetailSentCount')}
                   </span>
-                  <span className="font-black text-emerald-600 text-sm mt-0.5 block">
+                  <span className="font-black text-success text-sm mt-0.5 block">
                     {inspectCampaign.sentCount.toLocaleString()}
                   </span>
                 </div>

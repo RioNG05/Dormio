@@ -1064,8 +1064,8 @@ function RoomsContent() {
                               }}
                               className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${
                                 isSaved
-                                  ? 'bg-rose-500 text-white'
-                                  : 'bg-zinc-900/70 text-white hover:bg-rose-500'
+                                  ? 'bg-danger text-white'
+                                  : 'bg-zinc-900/70 text-white hover:bg-danger'
                               }`}
                               title={isSaved ? t('guestRoomsSaved') : t('guestRoomsSave')}
                             >
@@ -1160,7 +1160,7 @@ function RoomsContent() {
                           {/* Price + actions */}
                           <div className="pt-3 border-t border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="whitespace-nowrap">
-                              <span className="text-2xl font-black text-rose-500">
+                              <span className="text-2xl font-black text-danger">
                                 {formatVND(listing.depositAmount)}
                               </span>
                               <span className="text-xs text-muted font-normal">
@@ -1280,7 +1280,7 @@ function RoomsContent() {
                   <MapPin className="w-3.5 h-3.5 text-primary" />{' '}
                   {buildAddressString(quickViewRoom)}
                 </div>
-                <div className="text-2xl font-black text-rose-500">
+                <div className="text-2xl font-black text-danger">
                   {formatVND(quickViewRoom.depositAmount)}
                   <span className="text-xs text-muted font-normal"> {t('guestRoomsMonth')}</span>
                   <span className="text-[11px] font-bold text-muted block">

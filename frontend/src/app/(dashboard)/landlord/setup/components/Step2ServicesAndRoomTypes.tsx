@@ -42,7 +42,7 @@ export function Step2ServicesAndRoomTypes({
       <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
         <div className="flex items-center justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center font-bold">
               <Wrench className="w-5 h-5" />
             </div>
             <div>

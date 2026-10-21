@@ -318,7 +318,7 @@ export default function ReportsPage() {
                 onClick={() => setReportMode('single')}
                 className="text-xs font-bold"
               >
-                <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                <Building2 className="w-3.5 h-3.5 text-vacant" />
                 <span>{t('landlordReportsTabSingle')}</span>
               </Button>
             </div>
@@ -439,12 +439,12 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiNetProfit')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-success-soft text-emerald-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-success-soft text-success flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-emerald-600 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-success tracking-tight">
                       {formatCurrency(portfolioSummary.netProfit)}
                     </span>
                     <div className="flex items-center justify-between text-[11px] font-bold text-muted mt-1">
@@ -494,12 +494,12 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiTotalDebt')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-danger-soft text-rose-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-danger-soft text-danger flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-rose-500 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-danger tracking-tight">
                       {formatCurrency(portfolioSummary.unpaidDebt)}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
@@ -518,12 +518,12 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiCollectionRate')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-deposit-soft text-purple-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-deposit-soft text-deposit flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-purple-600 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-deposit tracking-tight">
                       {portfolioSummary.collectionRate}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
@@ -621,13 +621,13 @@ export default function ReportsPage() {
                     <div>
                       <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>{t('landlordReportsOccupancyChartTitle')}</span>
-                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-vacant animate-pulse" />
                       </h3>
                       <p className="text-xs text-muted mt-0.5">
                         {t('landlordReportsOccupancyChartDesc')}
                       </p>
                     </div>
-                    <span className="p-2 rounded-xl bg-info-soft text-blue-600">
+                    <span className="p-2 rounded-xl bg-info-soft text-info">
                       <Home className="w-4 h-4" />
                     </span>
                   </div>
@@ -764,13 +764,13 @@ export default function ReportsPage() {
                               <span className="text-foreground">{p.totalRooms}</span>
                             </div>
                             <div className="p-1.5 bg-success-soft rounded-lg text-success">
-                              <span className="text-emerald-600 block text-[10px]">
+                              <span className="text-success block text-[10px]">
                                 {t('landlordReportsCardOccupied')}
                               </span>
                               <span>{p.occupiedRooms}</span>
                             </div>
                             <div className="p-1.5 bg-info-soft rounded-lg text-info">
-                              <span className="text-blue-600 block text-[10px]">
+                              <span className="text-info block text-[10px]">
                                 {t('landlordReportsCardVacant')}
                               </span>
                               <span>{p.vacantRooms}</span>
@@ -799,11 +799,11 @@ export default function ReportsPage() {
                               <span className="text-muted font-bold">
                                 {t('landlordReportsCardNetProfit')}
                               </span>
-                              <span className="font-extrabold text-emerald-600">
+                              <span className="font-extrabold text-success">
                                 {formatCurrency(p.netProfit)}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-rose-600 text-[11px]">
+                            <div className="flex items-center justify-between text-danger text-[11px]">
                               <span>{t('landlordReportsCardUnpaidDebt')}</span>
                               <span className="font-bold">{formatCurrency(p.unpaidDebt)}</span>
                             </div>
@@ -877,10 +877,10 @@ export default function ReportsPage() {
                               <td className="p-3 text-right text-muted">
                                 {formatCurrency(p.currentMonthExpenses)}
                               </td>
-                              <td className="p-3 text-right font-extrabold text-emerald-600">
+                              <td className="p-3 text-right font-extrabold text-success">
                                 {formatCurrency(p.netProfit)}
                               </td>
-                              <td className="p-3 text-right font-bold text-rose-600">
+                              <td className="p-3 text-right font-bold text-danger">
                                 {formatCurrency(p.unpaidDebt)}
                               </td>
                               <td className="p-3 text-center">
@@ -989,7 +989,7 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiOccupancy')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-info-soft text-blue-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-info-soft text-info flex items-center justify-center">
                       <Home className="w-5 h-5" />
                     </div>
                   </div>
@@ -1036,12 +1036,12 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiDebt')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-danger-soft text-rose-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-danger-soft text-danger flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-rose-500 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-danger tracking-tight">
                       {formatVND(Number(singleFinancial.unpaidDebt) || 0)}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
@@ -1059,12 +1059,12 @@ export default function ReportsPage() {
                     <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiCollection')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-deposit-soft text-purple-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-deposit-soft text-deposit flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-purple-600 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-deposit tracking-tight">
                       {singleCollection.collectionRate}
                     </span>
                     <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
@@ -1263,7 +1263,7 @@ export default function ReportsPage() {
                 {/* Pillar 1: Pricing */}
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                    <DollarSign className="w-4 h-4 text-success" />
                     <span>{t('landlordReportsAiPillarPricing')}</span>
                   </div>
                   <ul className="text-xs text-muted space-y-1.5 list-disc pl-4">
@@ -1276,7 +1276,7 @@ export default function ReportsPage() {
                 {/* Pillar 2: Marketing */}
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                    <Rocket className="w-4 h-4 text-blue-600" />
+                    <Rocket className="w-4 h-4 text-info" />
                     <span>{t('landlordReportsAiPillarMarketing')}</span>
                   </div>
                   <ul className="text-xs text-muted space-y-1.5 list-disc pl-4">
@@ -1289,7 +1289,7 @@ export default function ReportsPage() {
                 {/* Pillar 3: Operations */}
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-2">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                    <Zap className="w-4 h-4 text-amber-600" />
+                    <Zap className="w-4 h-4 text-warning" />
                     <span>{t('landlordReportsAiPillarOperations')}</span>
                   </div>
                   <ul className="text-xs text-muted space-y-1.5 list-disc pl-4">

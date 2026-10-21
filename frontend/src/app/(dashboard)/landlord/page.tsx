@@ -175,19 +175,19 @@ export default function LandlordDashboardPage() {
           {/* 5 COLOR-CODED ROOM METRIC CARDS */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {/* 1. TỔNG SỐ PHÒNG */}
-            <div className="px-3.5 py-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-danger/10 border border-danger/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <Text as="span" variant="overline" size="3xs" weight="black" className="text-rose-600 tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-danger tracking-wider block">
                   {t('landlordOverviewStatTotalRooms')}
                 </Text>
-                <Text as="div" size="lg" weight="black" className="text-rose-600 leading-tight mt-0.5">
+                <Text as="div" size="lg" weight="black" className="text-danger leading-tight mt-0.5">
                   {rooms.totalRooms} {t('landlordOverviewRoomUnitCapital')}
                 </Text>
-                <Text as="span" size="3xs" weight="bold" className="text-rose-500/80 block">
+                <Text as="span" size="3xs" weight="bold" className="text-danger/80 block">
                   {t('landlordOverviewStatOccupancy', { rate: rooms.occupancyRate })}
                 </Text>
               </div>
-              <Building className="w-5 h-5 text-rose-500 shrink-0 opacity-80" />
+              <Building className="w-5 h-5 text-danger shrink-0 opacity-80" />
             </div>
 
             {/* 2. OCCUPIED ROOMS */}
@@ -209,19 +209,19 @@ export default function LandlordDashboardPage() {
             </div>
 
             {/* 3. PHÒNG TRỐNG */}
-            <div className="px-3.5 py-3 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-vacant/10 border border-vacant/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <Text as="span" variant="overline" size="3xs" weight="black" className="text-blue-600 tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-info tracking-wider block">
                   {t('landlordOverviewStatVacant')}
                 </Text>
-                <Text as="div" size="lg" weight="black" className="text-blue-600 leading-tight mt-0.5">
+                <Text as="div" size="lg" weight="black" className="text-info leading-tight mt-0.5">
                   {rooms.vacantRooms} {t('landlordOverviewRoomUnitCapital')}
                 </Text>
-                <Text as="span" size="3xs" weight="bold" className="text-blue-500/80 block">
+                <Text as="span" size="3xs" weight="bold" className="text-vacant/80 block">
                   {t('landlordOverviewStatReady')}
                 </Text>
               </div>
-              <Home className="w-5 h-5 text-blue-500 shrink-0 opacity-80" />
+              <Home className="w-5 h-5 text-vacant shrink-0 opacity-80" />
             </div>
 
             {/* 4. BẢO TRÌ */}
@@ -245,10 +245,10 @@ export default function LandlordDashboardPage() {
             {/* 5. RESERVED DEPOSITS */}
             <div className="px-3.5 py-3 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs col-span-2 sm:col-span-1">
               <div>
-                <Text as="span" variant="overline" size="3xs" weight="black" className="text-purple-600 tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-deposit tracking-wider block">
                   {t('landlordOverviewStatDeposit')}
                 </Text>
-                <Text as="div" size="lg" weight="black" className="text-purple-600 leading-tight mt-0.5">
+                <Text as="div" size="lg" weight="black" className="text-deposit leading-tight mt-0.5">
                   {rooms.depositRooms} {t('landlordOverviewRoomUnitCapital')}
                 </Text>
                 <Text as="span" size="3xs" weight="bold" className="text-purple-500/80 block">
@@ -453,7 +453,7 @@ export default function LandlordDashboardPage() {
                     </Text>
                   </div>
 
-                  <div className="p-3.5 bg-rose-500/5 rounded-2xl border border-rose-500/15 space-y-1">
+                  <div className="p-3.5 bg-danger/5 rounded-2xl border border-danger/15 space-y-1">
                     <Text as="span" variant="overline" size="3xs" weight="extrabold" color="subtle" className="block">
                       {t('landlordOverviewUnpaidDebt')}
                     </Text>
@@ -488,12 +488,12 @@ export default function LandlordDashboardPage() {
             >
               <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-purple-600 shrink-0" />
-                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-purple-600 transition-colors">
+                  <Shield className="w-4 h-4 text-deposit shrink-0" />
+                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-deposit transition-colors">
                     {t('landlordOverviewDepositNotifTitle')}
                   </Text>
                 </div>
-                <Text as="span" variant="badge" size="3xs" weight="black" className="px-2 py-0.5 bg-purple-500/10 text-purple-600 rounded-full">
+                <Text as="span" variant="badge" size="3xs" weight="black" className="px-2 py-0.5 bg-purple-500/10 text-deposit rounded-full">
                   {t('landlordOverviewNewCount', { count: depositNotifications.length })}
                 </Text>
               </div>
@@ -523,18 +523,18 @@ export default function LandlordDashboardPage() {
                             {item.room} — {item.tenant}
                           </Text>
                         </div>
-                        <Text as="span" size="3xs" weight="bold" className="text-purple-600 block">
+                        <Text as="span" size="3xs" weight="bold" className="text-deposit block">
                           {item.type}: {formatCurrency(item.amount, currentLocale)}
                         </Text>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-deposit group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   ))}
                 </div>
               )}
 
               <div className="flex items-center justify-between pt-1 border-t border-line">
-                <Text as="span" size="xs" weight="bold" className="text-purple-600">
+                <Text as="span" size="xs" weight="bold" className="text-deposit">
                   {t('landlordOverviewViewAllDepositsSimple')}
                 </Text>
               </div>
@@ -623,7 +623,7 @@ export default function LandlordDashboardPage() {
               <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-amber-600 transition-colors">
+                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-warning transition-colors">
                     {t('landlordOverviewContractExtensionTitle')}
                   </Text>
                 </div>
@@ -664,7 +664,7 @@ export default function LandlordDashboardPage() {
                           })}
                         </Text>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-warning group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -709,7 +709,7 @@ export default function LandlordDashboardPage() {
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordOverviewCreatePdfContractBtn')}
               </Text>
-              <span className="p-1 bg-amber-500/10 text-amber-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
+              <span className="p-1 bg-amber-500/10 text-warning group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <FileText className="w-3.5 h-3.5" />
               </span>
             </Button>
@@ -724,7 +724,7 @@ export default function LandlordDashboardPage() {
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordOverviewCreateVietqrInvoiceBtn')}
               </Text>
-              <span className="p-1 bg-emerald-500/10 text-emerald-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
+              <span className="p-1 bg-emerald-500/10 text-success group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <QrCode className="w-3.5 h-3.5" />
               </span>
             </Button>

@@ -316,7 +316,7 @@ export default function NotificationsPage() {
         value: summary.totalTargetTenants,
         icon: <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[155px]',
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[155px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -325,9 +325,9 @@ export default function NotificationsPage() {
         key: 'urgent',
         label: t('landlordNotificationsStatUrgent'),
         value: summary.emergencyCount,
-        icon: <ShieldAlert className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        icon: <ShieldAlert className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[155px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[155px]',
         labelClassName: 'text-rose-400',
         valueColor: 'danger',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -350,9 +350,9 @@ export default function NotificationsPage() {
               }`}
           >
             {toast.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             )}
             <span>{toast.text}</span>
             <Button
@@ -503,12 +503,12 @@ export default function NotificationsPage() {
                     <div className="flex items-center justify-between gap-2 pb-3 border-b border-line">
                       <span
                         className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
-                          ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+                          ? 'bg-danger/15 text-danger border border-danger/30'
                           : isUtilities
-                            ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                            ? 'bg-amber-500/15 text-warning border border-amber-500/30'
                             : isRent
                               ? 'bg-emerald-500/15 text-success border border-emerald-500/30'
-                              : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
+                              : 'bg-vacant/15 text-info border border-vacant/30'
                           }`}
                       >
                         {getCategoryLabel(notif.category)}
@@ -636,12 +636,12 @@ export default function NotificationsPage() {
                           <div className="flex items-center gap-2 mb-1">
                             <span
                               className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
-                                ? 'bg-rose-500/15 text-rose-600 border border-rose-500/30'
+                                ? 'bg-danger/15 text-danger border border-danger/30'
                                 : isUtilities
-                                  ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30'
+                                  ? 'bg-amber-500/15 text-warning border border-amber-500/30'
                                   : isRent
                                     ? 'bg-emerald-500/15 text-success border border-emerald-500/30'
-                                    : 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
+                                    : 'bg-vacant/15 text-info border border-vacant/30'
                                 }`}
                             >
                               {getCategoryLabel(notif.category)}
@@ -949,12 +949,12 @@ export default function NotificationsPage() {
 
             <div className="p-3 bg-info-soft rounded-xl border border-info-subtle flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600" />
+                <Users className="w-4 h-4 text-info" />
                 <Text as="span" size="xs" weight="bold" className="text-foreground/90">
                   {t('landlordNotificationsDetailTargetReach')}
                 </Text>
               </div>
-              <Text as="span" size="sm" weight="black" className="text-blue-600">
+              <Text as="span" size="sm" weight="black" className="text-info">
                 {t('landlordNotificationsDetailResidentsUnit', {
                   count: selectedNotifDetail.totalTarget,
                 })}
@@ -999,7 +999,7 @@ export default function NotificationsPage() {
         }
       >
         <div className="space-y-5 text-center">
-          <div className="w-14 h-14 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
+          <div className="w-14 h-14 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-center mx-auto text-danger shadow-2xs">
             <Trash2 className="w-7 h-7" />
           </div>
 

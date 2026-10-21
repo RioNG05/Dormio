@@ -527,10 +527,10 @@ export default function StaffPage() {
         label: t('landlordStaffStatPositions'),
         value: summary.positionsCount,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[135px]',
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[135px]',
         labelClassName: 'text-blue-400',
         valueClassName: 'text-blue-400 text-base sm:text-lg leading-none mt-1',
       },
@@ -779,7 +779,7 @@ export default function StaffPage() {
                       </div>
                     )}
                     {staff.mustChangePassword && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-warning-soft px-2 py-1 rounded-lg border border-warning-subtle font-semibold">
+                      <div className="flex items-center gap-1.5 text-[11px] text-warning bg-warning-soft px-2 py-1 rounded-lg border border-warning-subtle font-semibold">
                         <AlertCircle className="w-3 h-3 shrink-0" />
                         <span>{t('landlordStaffMustChangePassword')}</span>
                       </div>
@@ -818,7 +818,7 @@ export default function StaffPage() {
                     className={cn(
                       'text-xs font-bold',
                       isActive
-                        ? 'text-rose-600 bg-danger-soft hover:bg-rose-100/80 border border-danger-subtle'
+                        ? 'text-danger bg-danger-soft hover:bg-rose-100/80 border border-danger-subtle'
                         : 'text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30',
                     )}
                     leftIcon={<Power  />}
@@ -922,7 +922,7 @@ export default function StaffPage() {
                             className={cn(
                               'p-1.5 h-auto rounded-lg border',
                               isActive
-                                ? 'text-rose-600 bg-danger-soft border-danger-subtle hover:bg-rose-100'
+                                ? 'text-danger bg-danger-soft border-danger-subtle hover:bg-rose-100'
                                 : 'text-primary bg-primary/10 border-primary/30 hover:bg-primary/20',
                             )}
                             title={
@@ -998,7 +998,7 @@ export default function StaffPage() {
               <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
                 {errorMessage && (
                   <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl flex items-start gap-2.5 text-xs text-danger font-semibold">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
                     <span>{errorMessage}</span>
                   </div>
                 )}
@@ -1007,7 +1007,7 @@ export default function StaffPage() {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordStaffOnboardPhoneLabel')}</span>
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
@@ -1048,7 +1048,7 @@ export default function StaffPage() {
                 {hasSearched && foundUser && (
                   <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle space-y-2.5">
                     <div className="flex items-center gap-2 text-success text-xs font-extrabold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                       <span>{t('landlordStaffOnboardAccountFound')}</span>
                     </div>
 
@@ -1071,7 +1071,7 @@ export default function StaffPage() {
 
                     {foundUser.isAlreadyStaffAtThisHouse && (
                       <div className="p-2 bg-warning-soft border border-amber-300 rounded-xl text-[11px] text-warning font-bold flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
                         <span>{t('landlordStaffOnboardAlreadyAssigned')}</span>
                       </div>
                     )}
@@ -1111,7 +1111,7 @@ export default function StaffPage() {
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                       <span>{t('landlordStaffOnboardPositionLabel')}</span>
-                      <span className="text-rose-500">*</span>
+                      <span className="text-danger">*</span>
                     </label>
                     <Button
                       variant="ghost"
@@ -1255,7 +1255,7 @@ export default function StaffPage() {
             <form onSubmit={handleSaveAssignRole} className="p-6 space-y-4">
               {assignError && (
                 <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
                   <span>{assignError}</span>
                 </div>
               )}
@@ -1282,7 +1282,7 @@ export default function StaffPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-foreground/90">
                     {t('landlordStaffAssignSelectRoleLabel')}{' '}
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <Button size="xs"
                     type="button"
@@ -1420,7 +1420,7 @@ export default function StaffPage() {
             <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
               {posErrorMessage && (
                 <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
                   <span>{posErrorMessage}</span>
                 </div>
               )}
@@ -1601,7 +1601,7 @@ export default function StaffPage() {
           }}
         >
           <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-line p-6 space-y-5 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-success-soft text-emerald-600 border border-success-subtle flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-success-soft text-success border border-success-subtle flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -1741,7 +1741,7 @@ export default function StaffPage() {
                   <span className="text-muted font-semibold">
                     {t('landlordStaffDetailLeftLabel')}
                   </span>
-                  <span className="font-medium text-rose-600">
+                  <span className="font-medium text-danger">
                     {formatDate(selectedStaff.leftAt)}
                   </span>
                 </div>
@@ -1797,7 +1797,7 @@ export default function StaffPage() {
           }}
         >
           <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-amber-600 border border-warning-subtle flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
 

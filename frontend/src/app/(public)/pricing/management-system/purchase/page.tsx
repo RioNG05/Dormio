@@ -340,7 +340,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
             color="secondary"
             className="flex items-center gap-2 bg-card-hover border border-line px-3.5 py-1.5 rounded-full"
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <ShieldCheck className="w-4 h-4 text-success" />
             <Text as="span" color="inherit">
               {t('guestPricingCheckoutGatewayBadge')}
             </Text>
@@ -444,7 +444,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                             variant="badge"
                             weight="black"
                             color="white"
-                            className="absolute -top-2.5 right-2 px-1.5 py-0.5 rounded-md bg-rose-500 shadow-xs"
+                            className="absolute -top-2.5 right-2 px-1.5 py-0.5 rounded-md bg-danger shadow-xs"
                           >
                             {t('guestPricingCheckoutSaveBadge', { percent: savings.percent })}
                           </Text>
@@ -550,7 +550,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
               {/* SUCCESS STATE */}
               {isSuccess ? (
                 <div className="py-8 text-center space-y-6 animate-in zoom-in-95 duration-400">
-                  <div className="w-20 h-20 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+                  <div className="w-20 h-20 rounded-full bg-success-soft text-success flex items-center justify-center mx-auto shadow-inner">
                     <CheckCircle2 className="w-12 h-12" />
                   </div>
                   <div>
@@ -620,7 +620,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       weight="bold"
                       className="flex items-center gap-2 text-warning"
                     >
-                      <Clock className="w-4 h-4 text-amber-600" />
+                      <Clock className="w-4 h-4 text-warning" />
                       <Text as="span" color="inherit">
                         {t('guestPricingCheckoutQrExpiryCountdown')}
                       </Text>
@@ -633,10 +633,10 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       color="white"
                       className={`tracking-wider px-3 py-1 rounded-xl ${
                         isExpired
-                          ? 'bg-rose-600'
+                          ? 'bg-danger'
                           : countdown < 120
-                            ? 'bg-rose-500 animate-pulse'
-                            : 'bg-amber-600'
+                            ? 'bg-danger animate-pulse'
+                            : 'bg-warning'
                       }`}
                     >
                       {isExpired ? '00:00' : formatTimer(countdown)}
@@ -666,7 +666,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
 
                     {isExpired && (
                       <div className="absolute inset-0 bg-card/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
-                        <AlertTriangle className="w-10 h-10 text-rose-500 mb-2" />
+                        <AlertTriangle className="w-10 h-10 text-danger mb-2" />
                         <Text as="div" variant="heading" size="sm" weight="black">
                           {t('guestPricingCheckoutQrExpired')}
                         </Text>
@@ -713,7 +713,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           title="Copy"
                         >
                           {isCopiedAcc ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <Check className="w-3.5 h-3.5 text-success" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
@@ -755,7 +755,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           title="Copy"
                         >
                           {isCopiedSyntax ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <Check className="w-3.5 h-3.5 text-success" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}

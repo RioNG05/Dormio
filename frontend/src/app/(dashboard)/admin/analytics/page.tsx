@@ -227,7 +227,7 @@ export default function AdminAnalyticsPage() {
       {error && (
         <div className="flex items-center justify-between p-4 bg-danger-soft border border-danger-subtle rounded-2xl text-danger text-sm">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-danger shrink-0" />
             <span>{error}</span>
           </div>
           <Button variant="danger" size="sm" onClick={() => fetchAnalytics()}>
@@ -377,7 +377,7 @@ export default function AdminAnalyticsPage() {
                     <span className="text-xs font-bold text-muted uppercase tracking-wider">
                       {t('adminAnalyticsSubscriptionTitle')}
                     </span>
-                    <div className="p-2.5 bg-info-soft text-blue-600 rounded-xl">
+                    <div className="p-2.5 bg-info-soft text-info rounded-xl">
                       <Building2 className="w-5 h-5" />
                     </div>
                   </div>
@@ -385,7 +385,7 @@ export default function AdminAnalyticsPage() {
                     <span className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
                       {formatCurrency(revenueData?.summary.subscriptionRevenue.total)}
                     </span>
-                    <span className="text-xs font-bold text-blue-600 bg-info-soft px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-info bg-info-soft px-2 py-0.5 rounded-full">
                       {revenueData?.summary.subscriptionRevenue.percentage || 0}%
                     </span>
                   </div>
@@ -405,7 +405,7 @@ export default function AdminAnalyticsPage() {
                     <span className="text-xs font-bold text-muted uppercase tracking-wider">
                       {t('adminAnalyticsPostPurchaseTitle')}
                     </span>
-                    <div className="p-2.5 bg-success-soft text-emerald-600 rounded-xl">
+                    <div className="p-2.5 bg-success-soft text-success rounded-xl">
                       <FileText className="w-5 h-5" />
                     </div>
                   </div>
@@ -413,7 +413,7 @@ export default function AdminAnalyticsPage() {
                     <span className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
                       {formatCurrency(revenueData?.summary.postPurchaseRevenue.total)}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-success-soft px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                       {revenueData?.summary.postPurchaseRevenue.percentage || 0}%
                     </span>
                   </div>
@@ -655,7 +655,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTenants')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-blue-600">
+                  <div className="mt-2 text-2xl font-black text-info">
                     {formatNumber(userData?.summary.byRole.tenant)}
                   </div>
                   <p className="text-xs text-muted mt-2">
@@ -685,7 +685,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsStaffAndAgents')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-emerald-600">
+                  <div className="mt-2 text-2xl font-black text-success">
                     {formatNumber(
                       (userData?.summary.byRole.employee || 0) +
                         (userData?.summary.byRole.leasing_agent || 0),
@@ -791,7 +791,7 @@ export default function AdminAnalyticsPage() {
                     <span className="text-2xl font-black text-foreground">
                       {formatNumber(propertyData?.summary.totalHouses)}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-success-soft px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                       +{formatNumber(propertyData?.summary.newHousesCurrentPeriod)}
                     </span>
                   </div>
@@ -804,7 +804,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTotalRooms')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-blue-600">
+                  <div className="mt-2 text-2xl font-black text-info">
                     {formatNumber(propertyData?.summary.totalRooms)}
                   </div>
                   <p className="text-xs text-muted mt-2">
@@ -817,7 +817,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsOccupancyRate')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-emerald-600">
+                  <div className="mt-2 text-2xl font-black text-success">
                     {propertyData?.summary.occupancyRate || 0}%
                   </div>
                   <p className="text-xs text-muted mt-2">
@@ -831,7 +831,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsMaintenanceRooms')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-amber-600">
+                  <div className="mt-2 text-2xl font-black text-warning">
                     {propertyData?.summary.roomsByStatus.maintainace || 0}
                   </div>
                   <p className="text-xs text-muted mt-2">
@@ -931,7 +931,7 @@ export default function AdminAnalyticsPage() {
                     <span className="text-2xl font-black text-foreground">
                       {formatNumber(listingData?.summary.totalPosts)}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-success-soft px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                       +{formatNumber(listingData?.summary.newPostsCurrentPeriod)}
                     </span>
                   </div>
@@ -945,7 +945,7 @@ export default function AdminAnalyticsPage() {
                     {t('adminAnalyticsTotalViews')}
                   </span>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-blue-600">
+                    <span className="text-2xl font-black text-info">
                       {formatNumber(listingData?.summary.totalViews)}
                     </span>
                     <Eye className="w-4 h-4 text-blue-400" />
@@ -964,7 +964,7 @@ export default function AdminAnalyticsPage() {
                     {t('adminAnalyticsBookmarks')}
                   </span>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-rose-600">
+                    <span className="text-2xl font-black text-danger">
                       {formatNumber(listingData?.summary.totalSaved)}
                     </span>
                     <Bookmark className="w-4 h-4 text-rose-400" />
@@ -978,7 +978,7 @@ export default function AdminAnalyticsPage() {
                   <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsSourceQuota')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-emerald-600">
+                  <div className="mt-2 text-2xl font-black text-success">
                     {formatNumber(listingData?.summary.bySourceType.purchased)}
                   </div>
                   <p className="text-xs text-muted mt-2">

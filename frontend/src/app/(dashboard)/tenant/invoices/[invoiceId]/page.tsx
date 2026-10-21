@@ -682,7 +682,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                       </span>
                     ) : state.isExtractedByAi ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft border border-success-subtle text-success text-[10px] font-bold">
-                        <Sparkles className="w-3 h-3 text-emerald-600" />
+                        <Sparkles className="w-3 h-3 text-success" />
                         <span>{t('aiExtractedBadge')}</span>
                       </span>
                     ) : null}
@@ -771,12 +771,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     {/* Error message displayed right below the two action buttons if AI check failed */}
                     {uploadErrors[sId] && (
                       <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger flex items-start gap-2.5 animate-in fade-in duration-200 shadow-xs">
-                        <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
                         <div className="space-y-0.5">
                           <p className="text-xs font-bold text-danger leading-tight">
                             Ảnh không hợp lệ
                           </p>
-                          <p className="text-[11px] font-medium text-rose-600 leading-relaxed">
+                          <p className="text-[11px] font-medium text-danger leading-relaxed">
                             {uploadErrors[sId]}
                           </p>
                         </div>
@@ -924,7 +924,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     {formatCurrency(calc.cost, locale)}
                   </span>
                 ) : (
-                  <span className="text-[11px] font-medium text-amber-600 italic">
+                  <span className="text-[11px] font-medium text-warning italic">
                     {t('pendingPhotoUpload')}
                   </span>
                 )}
@@ -940,7 +940,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </span>
               {utilityCalculations.hasAnyMeteredService &&
                 !utilityCalculations.allPhotosUploaded && (
-                  <span className="text-[10px] text-amber-600 font-bold block">
+                  <span className="text-[10px] text-warning font-bold block">
                     {t('awaitingPhotosNote')}
                   </span>
                 )}
@@ -1004,7 +1004,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
 
             {/* 15-Minute Countdown Badge */}
             <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-card-hover border border-line self-start sm:self-auto">
-              <Clock className="w-4 h-4 text-amber-600 animate-spin" />
+              <Clock className="w-4 h-4 text-warning animate-spin" />
               <span className="text-xs text-muted font-semibold">{t('qrExpiresIn')}</span>
               <span
                 className={`font-black text-xs font-mono px-2 py-0.5 rounded-md ${
@@ -1040,7 +1040,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             </div>
 
             <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle flex items-start gap-2.5 text-xs text-warning font-bold">
-              <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <Lock className="w-4 h-4 text-warning shrink-0 mt-0.5" />
               <span>{t('lockedInfoWarning')}</span>
             </div>
           </div>
@@ -1052,8 +1052,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               <div className="relative w-56 h-56 bg-white p-3 rounded-2xl shadow-xs border border-line flex items-center justify-center">
                 {isExpired ? (
                   <div className="flex flex-col items-center justify-center text-center p-4 space-y-2">
-                    <Clock className="w-10 h-10 text-rose-500" />
-                    <p className="text-xs font-bold text-rose-600">{t('qrExpired')}</p>
+                    <Clock className="w-10 h-10 text-danger" />
+                    <p className="text-xs font-bold text-danger">{t('qrExpired')}</p>
                   </div>
                 ) : (
                   <img
@@ -1112,7 +1112,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   title="Sao chép số tài khoản"
                 >
                   {copiedKey === 'acc' ? (
-                    <Check className="w-4 h-4 text-emerald-600" />
+                    <Check className="w-4 h-4 text-success" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -1151,7 +1151,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   title="Sao chép số tiền"
                 >
                   {copiedKey === 'amount' ? (
-                    <Check className="w-4 h-4 text-emerald-600" />
+                    <Check className="w-4 h-4 text-success" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -1182,7 +1182,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   title="Sao chép cú pháp"
                 >
                   {copiedKey === 'syntax' ? (
-                    <Check className="w-4 h-4 text-emerald-600" />
+                    <Check className="w-4 h-4 text-success" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
@@ -1243,7 +1243,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             onClick={e => e.stopPropagation()}
             className="bg-card rounded-3xl shadow-2xl max-w-md w-full p-6 overflow-hidden border border-line space-y-4"
           >
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>

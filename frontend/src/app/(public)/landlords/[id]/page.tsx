@@ -222,7 +222,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
         {/* Error State */}
         {!isLoading && error && (
           <div className="bg-card rounded-3xl p-12 border border-line text-center space-y-4 max-w-lg mx-auto shadow-xs">
-            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+            <AlertCircle className="w-12 h-12 text-danger mx-auto" />
             <h3 className="font-extrabold text-lg text-foreground">{error}</h3>
             <button
               onClick={() => window.location.reload()}
@@ -366,7 +366,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                     <div className="space-y-3">
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1.5">
                         <div className="flex items-center gap-1.5 text-warning font-extrabold text-[11px]">
-                          <Lock className="w-3.5 h-3.5 text-amber-600" />
+                          <Lock className="w-3.5 h-3.5 text-warning" />
                           <span>{t('guestPosterProfileContactProtectedTitle')}</span>
                         </div>
                         <p className="text-[11px] text-amber-800/80 font-medium leading-relaxed">
@@ -486,7 +486,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                           {/* Price and button */}
                           <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                             <div>
-                              <span className="text-lg font-black text-rose-500">
+                              <span className="text-lg font-black text-danger">
                                 {formatVND(listing.depositAmount)}
                               </span>
                               <span className="text-[11px] text-muted font-normal">
@@ -517,7 +517,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
               toastMessage.type === 'success'
                 ? 'bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25'
                 : toastMessage.type === 'error'
-                  ? 'bg-rose-500 text-white border-rose-400 shadow-rose-950/25'
+                  ? 'bg-danger text-white border-rose-400 shadow-rose-950/25'
                   : 'bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25'
             }`}
           >

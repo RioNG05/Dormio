@@ -380,7 +380,7 @@ function CreateListingForm() {
                     })}
                   </span>
                 ) : (
-                  <span className="text-rose-500">{t('landlordListingsCreateOutOfQuota')}</span>
+                  <span className="text-danger">{t('landlordListingsCreateOutOfQuota')}</span>
                 )}
               </div>
             </div>
@@ -391,7 +391,7 @@ function CreateListingForm() {
       {/* Success Toast */}
       {successToast && (
         <div className="p-4 bg-success-soft border border-success-subtle text-success rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
-          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+          <ShieldCheck className="w-5 h-5 text-success shrink-0" />
           <span className="text-sm font-bold">{successToast}</span>
         </div>
       )}
@@ -399,7 +399,7 @@ function CreateListingForm() {
       {/* Error Message */}
       {errorMessage && (
         <div className="p-4 bg-danger-soft border border-danger-subtle text-danger rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-200">
-          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+          <AlertCircle className="w-5 h-5 text-danger shrink-0" />
           <span className="text-sm font-bold">{errorMessage}</span>
         </div>
       )}
@@ -500,7 +500,7 @@ function CreateListingForm() {
                   />
 
                   {rooms.length === 0 && !isLoadingRooms && selectedBuildingId && (
-                    <span className="text-xs text-amber-600 block">
+                    <span className="text-xs text-warning block">
                       {t('landlordListingsCreateBuildingNoRooms')}{' '}
                       <Link href="/landlord/rooms" className="underline font-bold">
                         {t('landlordListingsCreateAddRoomNow')}
@@ -823,7 +823,7 @@ function CreateListingForm() {
 
                 {aiErrorMessage && (
                   <div className="p-3 bg-danger-soft border border-danger-subtle text-danger rounded-xl text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                    <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
                     <span>{aiErrorMessage}</span>
                   </div>
                 )}
@@ -951,7 +951,7 @@ function CreateListingForm() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-card rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-6 border border-line">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center shrink-0">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>

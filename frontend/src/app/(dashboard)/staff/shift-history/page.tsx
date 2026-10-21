@@ -314,7 +314,7 @@ function StaffShiftHistoryContent() {
                 {t('metricOnTime')}
               </span>
               <div className="text-2xl font-black text-primary">{summary.onTime}</div>
-              <span className="text-[10px] font-bold text-emerald-600 block">
+              <span className="text-[10px] font-bold text-success block">
                 {t('metricOnTimeSub')}
               </span>
             </div>
@@ -323,8 +323,8 @@ function StaffShiftHistoryContent() {
               <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricLate')}
               </span>
-              <div className="text-2xl font-black text-amber-600">{summary.late}</div>
-              <span className="text-[10px] font-medium text-amber-600 block">
+              <div className="text-2xl font-black text-warning">{summary.late}</div>
+              <span className="text-[10px] font-medium text-warning block">
                 {t('metricLateSub')}
               </span>
             </div>
@@ -343,7 +343,7 @@ function StaffShiftHistoryContent() {
               <span className="text-[10px] font-bold text-muted uppercase block">
                 {t('metricHours')}
               </span>
-              <div className="text-2xl font-black text-purple-600">{summary.hours}h</div>
+              <div className="text-2xl font-black text-deposit">{summary.hours}h</div>
               <span className="text-[10px] font-bold text-muted block">
                 {t('metricHoursSub')}
               </span>
@@ -634,7 +634,7 @@ function StaffShiftHistoryContent() {
                           {getLocalizedExplanation(item.checkOutExplanation, locale)}&quot;
                         </div>
                       ) : item.editedByLandlord ? (
-                        <span className="text-blue-600 font-semibold flex items-center gap-1">
+                        <span className="text-info font-semibold flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
                         </span>
                       ) : (
@@ -774,7 +774,7 @@ function StaffShiftHistoryContent() {
             {previewImageModal.note && (
               <div className="p-4 bg-warning-soft border-t border-warning-subtle text-xs text-warning space-y-1">
                 <span className="font-bold flex items-center gap-1 text-warning">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                   {t('explanationNoteTitle')}
                 </span>
                 <p className="italic text-foreground font-medium">
@@ -974,7 +974,7 @@ function StaffShiftHistoryContent() {
             className="bg-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-line"
           >
             <div className="p-6">
-              <div className="flex items-center gap-2.5 mb-2 text-amber-600">
+              <div className="flex items-center gap-2.5 mb-2 text-warning">
                 <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                 <h3 className="text-base font-bold text-foreground">{t('confirmCloseTitle')}</h3>
               </div>

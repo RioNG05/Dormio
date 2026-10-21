@@ -300,7 +300,7 @@ function BuyTurnsPageInner() {
             </p>
           </div>
           <div className="flex items-center gap-2 bg-card-hover border border-line px-3.5 py-1.5 rounded-full text-xs font-medium text-muted">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <ShieldCheck className="w-4 h-4 text-success" />
             <span>{t('guestPricingCheckoutGatewayBadge')}</span>
           </div>
         </div>
@@ -437,7 +437,7 @@ function BuyTurnsPageInner() {
             {/* SUCCESS STATE */}
             {isSuccess ? (
               <div className="py-8 text-center space-y-6 animate-in zoom-in-95 duration-400">
-                <div className="w-20 h-20 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+                <div className="w-20 h-20 rounded-full bg-success-soft text-success flex items-center justify-center mx-auto shadow-inner">
                   <CheckCircle2 className="w-12 h-12" />
                 </div>
                 <div>
@@ -485,16 +485,16 @@ function BuyTurnsPageInner() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-warning-soft border border-warning-subtle text-warning">
                   <div className="flex items-center gap-2 text-xs font-bold">
-                    <Clock className="w-4 h-4 text-amber-600" />
+                    <Clock className="w-4 h-4 text-warning" />
                     <span>{t('guestPricingCheckoutQrExpiryCountdown')}</span>
                   </div>
                   <div
                     className={`text-sm font-black font-mono tracking-wider px-3 py-1 rounded-xl ${
                       isExpired
-                        ? 'bg-rose-600 text-white'
+                        ? 'bg-danger text-white'
                         : countdown < 120
-                          ? 'bg-rose-500 text-white animate-pulse'
-                          : 'bg-amber-600 text-white'
+                          ? 'bg-danger text-white animate-pulse'
+                          : 'bg-warning text-white'
                     }`}
                   >
                     {isExpired ? '00:00' : formatTimer(countdown)}
@@ -517,7 +517,7 @@ function BuyTurnsPageInner() {
                   />
                   {isExpired && (
                     <div className="absolute inset-0 bg-card/90 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center p-4 text-center">
-                      <AlertTriangle className="w-10 h-10 text-rose-500 mb-2" />
+                      <AlertTriangle className="w-10 h-10 text-danger mb-2" />
                       <div className="text-sm font-black text-foreground">
                         {t('guestPricingCheckoutQrExpired')}
                       </div>
@@ -556,7 +556,7 @@ function BuyTurnsPageInner() {
                         title="Copy"
                       >
                         {isCopiedAcc ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <Check className="w-3.5 h-3.5 text-success" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}
@@ -571,7 +571,7 @@ function BuyTurnsPageInner() {
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                     <span className="text-muted">{t('guestPricingCheckoutAmount')}</span>
-                    <strong className="text-emerald-600 font-black text-sm">
+                    <strong className="text-success font-black text-sm">
                       {formatVnd(checkoutData.amount)}
                     </strong>
                   </div>
@@ -591,7 +591,7 @@ function BuyTurnsPageInner() {
                         title="Copy"
                       >
                         {isCopiedSyntax ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <Check className="w-3.5 h-3.5 text-success" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}

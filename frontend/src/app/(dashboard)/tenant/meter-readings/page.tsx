@@ -319,7 +319,7 @@ export default function TenantMeterReadingsPage() {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
         <div className="bg-card border border-line rounded-2xl p-8 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-amber-600 flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
             <AlertCircle className="w-7 h-7" />
           </div>
           <div className="space-y-1.5">
@@ -565,7 +565,7 @@ export default function TenantMeterReadingsPage() {
                       }`}
                     >
                       {isAnomaly ? (
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                        <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                       ) : (
                         <CheckCircle2 className="w-3.5 h-3.5" />
                       )}
@@ -592,7 +592,7 @@ export default function TenantMeterReadingsPage() {
               {/* Anomaly warning banner if new reading is less than previous */}
               {isAnomaly && (
                 <div className="mt-3 p-3 bg-warning-soft border border-warning-subtle rounded-xl flex items-center gap-2.5 text-warning text-xs">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                   <Text as="span" size="xs" weight="medium" color="inherit">
                     {t('anomalyWarning', { old: prevVal })}
                   </Text>
@@ -902,7 +902,7 @@ export default function TenantMeterReadingsPage() {
       >
         <Modal.Body className="space-y-5">
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-full bg-success-soft text-emerald-600 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full bg-success-soft text-success flex items-center justify-center mx-auto">
               <Receipt className="w-7 h-7" />
             </div>
             <Text as="h3" weight="bold" size="xl" color="default">

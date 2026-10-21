@@ -119,8 +119,8 @@ export default function SavedPostsPage() {
         <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
           <div className="relative z-10 max-w-4xl mx-auto space-y-4">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />{' '}
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-danger/20 text-rose-400 text-xs font-black rounded-full border border-danger/30 shadow-lg">
+              <Heart className="w-4 h-4 fill-danger text-danger" />{' '}
               {t('guestSavedPostsMemberBadge')}
             </span>
 
@@ -170,8 +170,8 @@ export default function SavedPostsPage() {
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t('guestSavedPostsBadge')}
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-danger/20 text-rose-400 text-xs font-black rounded-full border border-danger/30 shadow-lg">
+            <Heart className="w-4 h-4 fill-danger text-danger" /> {t('guestSavedPostsBadge')}
           </span>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
@@ -215,7 +215,7 @@ export default function SavedPostsPage() {
           </div>
         ) : savedRooms.length === 0 ? (
           <div className="text-center py-20 bg-surface rounded-3xl border border-line space-y-4 max-w-xl mx-auto">
-            <div className="w-16 h-16 rounded-full bg-danger-soft text-rose-500 flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-full bg-danger-soft text-danger flex items-center justify-center mx-auto">
               <Heart className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-black text-foreground">{t('guestSavedPostsEmptyTitle')}</h3>
@@ -305,7 +305,7 @@ export default function SavedPostsPage() {
                       />
                       <button
                         onClick={() => removeSaved(room.id)}
-                        className="absolute top-3 right-3 p-2 bg-zinc-900/80 hover:bg-rose-600 text-white rounded-full transition-colors cursor-pointer"
+                        className="absolute top-3 right-3 p-2 bg-zinc-900/80 hover:bg-danger text-white rounded-full transition-colors cursor-pointer"
                         title={t('guestSavedPostsRemoveTitle')}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -337,7 +337,7 @@ export default function SavedPostsPage() {
 
                       <div className="pt-3 border-t border-line space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xl font-black text-rose-500">
+                          <span className="text-xl font-black text-danger">
                             {formatCurrency(room.depositAmount, currentLocale)}
                           </span>
                           {room.room?.area && (
@@ -440,7 +440,7 @@ export default function SavedPostsPage() {
                   <tr>
                     <td className="p-3 font-bold text-muted">{t('guestSavedPostsRowPrice')}</td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 font-black text-rose-500 text-sm">
+                      <td key={room.id} className="p-3 font-black text-danger text-sm">
                         {formatCurrency(room.depositAmount, currentLocale)}
                       </td>
                     ))}
@@ -454,7 +454,7 @@ export default function SavedPostsPage() {
                         {room.depositAmount > 0 ? (
                           formatCurrency(room.depositAmount, currentLocale)
                         ) : (
-                          <span className="text-emerald-600 font-black">
+                          <span className="text-success font-black">
                             {t('guestSavedPostsFreeDeposit')}
                           </span>
                         )}

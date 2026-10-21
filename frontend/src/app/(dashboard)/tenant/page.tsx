@@ -330,7 +330,7 @@ export default function TenantOverviewPage() {
               <MessageCircle className="w-4 h-4" />
               <span>{t('chatWithLandlord')}</span>
               {unreadMessagesCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
                   {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                 </span>
               )}
@@ -478,7 +478,7 @@ export default function TenantOverviewPage() {
                           title={t('stkLabel')}
                         >
                           {copiedBank ? (
-                            <Check className="w-3 h-3 text-emerald-600" />
+                            <Check className="w-3 h-3 text-success" />
                           ) : (
                             <Copy className="w-3 h-3" />
                           )}
@@ -493,7 +493,7 @@ export default function TenantOverviewPage() {
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl bg-card-hover text-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <ShieldCheck className="w-4 h-4 text-success" />
                     </div>
                     <div>
                       <div className="text-xs font-semibold text-muted">{t('deposit')}</div>
@@ -755,12 +755,12 @@ export default function TenantOverviewPage() {
             <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs sm:text-sm text-foreground/90 custom-scrollbar leading-relaxed">
               <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-6 h-6 text-success shrink-0" />
                   <div>
                     <div className="font-black text-success text-xs sm:text-sm">
                       {t('digitallySignedBadge')}
                     </div>
-                    <div className="text-[11px] text-emerald-600 font-medium">
+                    <div className="text-[11px] text-success font-medium">
                       {t('signedAt')}: {roomInfo.contractStart} 08:30 GMT+7 &bull; SHA-256:
                       9f8a...4b12
                     </div>

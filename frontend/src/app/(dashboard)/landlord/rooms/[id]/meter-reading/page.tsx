@@ -711,7 +711,7 @@ export default function LandlordRoomMeterReadingPage({
                           <Text size="xs" weight="bold" color="secondary">
                             {service.unit}
                           </Text>
-                          <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle">
+                          <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-success bg-success-soft px-2 py-0.5 rounded-full border border-success-subtle">
                             <Check className="w-3 h-3" />
                             Đã ghi nhận
                           </span>

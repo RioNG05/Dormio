@@ -156,7 +156,7 @@ export default function BlogDetailPage() {
                 onClick={handleCopyLink}
                 leftIcon={
                   copied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 text-success" />
                   ) : (
                     <Copy className="w-3.5 h-3.5" />
                   )

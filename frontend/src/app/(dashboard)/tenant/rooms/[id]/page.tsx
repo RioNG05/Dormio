@@ -179,7 +179,7 @@ export default function TenantRoomDetailPage() {
           <span>{t('tenantBackToDashboard')}</span>
         </Link>
         <span className="px-3 py-1 bg-success-soft text-success text-[11px] font-bold rounded-full border border-success-subtle flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <ShieldCheck className="w-3.5 h-3.5 text-success" />
           {t('tenantActiveTenancyBadge')}
         </span>
       </div>
@@ -262,7 +262,7 @@ export default function TenantRoomDetailPage() {
                 <span className="text-[10px] font-bold text-muted uppercase block">
                   {t('tenantDeposit')}
                 </span>
-                <span className="text-sm font-black text-emerald-600 block">
+                <span className="text-sm font-black text-success block">
                   {formatCurrency(contract.depositAmount)}
                 </span>
               </div>

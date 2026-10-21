@@ -302,7 +302,7 @@ export default function AdminBoardingHouseModerationPage() {
         >
           <div className="flex items-center gap-2.5">
             {feedbackMsg.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-success" />
             ) : (
               <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
             )}
@@ -812,9 +812,9 @@ export default function AdminBoardingHouseModerationPage() {
       {unlockTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-emerald-600">
+            <div className="flex items-center gap-3 text-success">
               <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
-                <Unlock className="w-5 h-5 text-emerald-600" />
+                <Unlock className="w-5 h-5 text-success" />
               </div>
               <div>
                 <h3 className="text-base font-black text-foreground">

@@ -166,18 +166,18 @@ export default function ShiftsPage() {
       return {
         label: t('landlordShiftsMorningShift'),
         icon: Sunrise,
-        color: 'text-amber-600 bg-warning-soft border-warning-subtle',
+        color: 'text-warning bg-warning-soft border-warning-subtle',
       }
     if (hour >= 12 && hour < 18)
       return {
         label: t('landlordShiftsAfternoonShift'),
         icon: Sun,
-        color: 'text-blue-600 bg-info-soft border-info-subtle',
+        color: 'text-info bg-info-soft border-info-subtle',
       }
     return {
       label: t('landlordShiftsNightShift'),
       icon: Moon,
-      color: 'text-purple-600 bg-deposit-soft border-deposit-subtle',
+      color: 'text-deposit bg-deposit-soft border-deposit-subtle',
     }
   }
 
@@ -237,7 +237,7 @@ export default function ShiftsPage() {
         value: afternoonCount,
         icon: <Sun className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[135px]',
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[135px]',
         labelClassName: 'text-blue-400',
         valueClassName: 'text-blue-400 text-base sm:text-lg leading-none mt-1',
       },
@@ -266,9 +266,9 @@ export default function ShiftsPage() {
           }`}
         >
           {toast.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           ) : (
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
           )}
           <span>{toast.text}</span>
         </div>

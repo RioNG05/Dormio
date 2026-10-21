@@ -306,9 +306,9 @@ export default function ContractsPage() {
         key: 'total',
         label: t('landlordContractsStatTotal'),
         value: contracts.length,
-        icon: <FileSignature className="w-5 h-5 text-rose-500 shrink-0" />,
+        icon: <FileSignature className="w-5 h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[150px]',
         labelClassName: 'text-rose-400',
         valueColor: 'danger',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -346,10 +346,10 @@ export default function ContractsPage() {
         label: t('landlordContractsStatEnded'),
         value: contracts.filter(c => c.status === 'Chấm dứt' || c.status === 'Đã chấm dứt').length,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+          'px-3 py-2 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[130px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -477,7 +477,7 @@ export default function ContractsPage() {
         {/* Error State */}
         {!isLoading && loadError && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 bg-card border border-danger-subtle rounded-2xl">
-            <AlertTriangle className="w-8 h-8 text-rose-500" />
+            <AlertTriangle className="w-8 h-8 text-danger" />
             <Text size="sm" weight="semibold" color="danger">
               {loadError}
             </Text>

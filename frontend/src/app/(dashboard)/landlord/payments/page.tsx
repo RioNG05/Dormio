@@ -525,7 +525,7 @@ function PaymentsContent() {
                       <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
                         Kỳ Hóa Đơn {p.period}
                       </span>
-                      <span className="text-xl font-black text-emerald-600 tracking-tight block mt-0.5">
+                      <span className="text-xl font-black text-success tracking-tight block mt-0.5">
                         +{formatMoney(p.amount)}
                       </span>
                     </div>
@@ -579,7 +579,7 @@ function PaymentsContent() {
                   {evidencePhotos.length > 0 && (
                     <div className="pt-2 border-t border-line flex items-center justify-between">
                       <span className="text-[11px] font-bold text-warning bg-warning-soft px-2 py-1 rounded-lg border border-warning-subtle flex items-center gap-1">
-                        <Camera className="w-3 h-3 text-amber-600" /> {evidencePhotos.length} ảnh
+                        <Camera className="w-3 h-3 text-warning" /> {evidencePhotos.length} ảnh
                         đồng hồ
                       </span>
                       <div className="flex items-center gap-1.5">
@@ -684,7 +684,7 @@ function PaymentsContent() {
                         {formatDateTime(p.paidAt)}
                       </td>
 
-                      <td className="px-4 py-4 font-black text-emerald-600 text-sm whitespace-nowrap">
+                      <td className="px-4 py-4 font-black text-success text-sm whitespace-nowrap">
                         +{formatMoney(p.amount)}
                       </td>
 
@@ -905,7 +905,7 @@ function PaymentsContent() {
                       <td colSpan={3} className="px-4 py-3 font-black text-foreground text-right">
                         TỔNG CỘNG ĐÃ THANH TOÁN:
                       </td>
-                      <td className="px-4 py-3 font-black text-emerald-600 text-base text-right whitespace-nowrap">
+                      <td className="px-4 py-3 font-black text-success text-base text-right whitespace-nowrap">
                         {formatMoney(selectedPayment.amount)}
                       </td>
                     </tr>
@@ -919,7 +919,7 @@ function PaymentsContent() {
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-black uppercase text-warning tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-600" /> Bằng Chứng Chỉ Số Đồng Hồ
+                    <Sparkles className="w-4 h-4 text-warning" /> Bằng Chứng Chỉ Số Đồng Hồ
                   </h4>
                   <span className="text-[11px] text-muted font-medium">
                     Ảnh chụp đối soát chỉ số điện / nước

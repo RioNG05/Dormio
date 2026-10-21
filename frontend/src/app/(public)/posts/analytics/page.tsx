@@ -236,7 +236,7 @@ export default function PublicPostAnalyticsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardReach')}
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+            <div className="w-9 h-9 rounded-2xl bg-vacant/10 flex items-center justify-center text-info">
               <Eye className="w-4 h-4" />
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function PublicPostAnalyticsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardBookmarks')}
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+            <div className="w-9 h-9 rounded-2xl bg-danger/10 flex items-center justify-center text-danger">
               <Bookmark className="w-4 h-4" />
             </div>
           </div>
@@ -272,7 +272,7 @@ export default function PublicPostAnalyticsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardActive')}
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-success">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function PublicPostAnalyticsPage() {
             <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('guestPostsAnalyticsCardAvg')}
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+            <div className="w-9 h-9 rounded-2xl bg-amber-500/10 flex items-center justify-center text-warning">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
@@ -493,7 +493,7 @@ export default function PublicPostAnalyticsPage() {
                     <td className="py-4 px-4 text-center font-black text-foreground">
                       {post.viewsCount.toLocaleString()}
                     </td>
-                    <td className="py-4 px-4 text-center font-black text-rose-500">
+                    <td className="py-4 px-4 text-center font-black text-danger">
                       {post.savedCount.toLocaleString()}
                     </td>
                     <td className="py-4 px-4 text-right">

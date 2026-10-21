@@ -54,12 +54,12 @@ import { dispatchMessagesUpdated } from '@/hooks'
 const AVATAR_COLORS = [
   'bg-primary',
   'bg-teal-600',
-  'bg-blue-600',
+  'bg-info',
   'bg-indigo-600',
-  'bg-emerald-600',
-  'bg-purple-600',
-  'bg-amber-600',
-  'bg-rose-600',
+  'bg-success',
+  'bg-deposit',
+  'bg-warning',
+  'bg-danger',
 ]
 
 function getAvatarBg(str: string): string {
@@ -589,7 +589,7 @@ export default function TenantMessagesPage() {
                   <div className="relative shrink-0">
                     <div
                       className={`w-10 h-10 rounded-2xl ${
-                        isLandlordRole ? 'bg-emerald-600' : 'bg-teal-600'
+                        isLandlordRole ? 'bg-success' : 'bg-teal-600'
                       } text-white font-black text-sm flex items-center justify-center shadow-xs`}
                     >
                       {isLandlordRole ? (
@@ -668,7 +668,7 @@ export default function TenantMessagesPage() {
                 <div className="relative shrink-0">
                   <div
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${
-                      activeChat.participant?.role === 'landlord' ? 'bg-emerald-600' : 'bg-teal-600'
+                      activeChat.participant?.role === 'landlord' ? 'bg-success' : 'bg-teal-600'
                     } text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-2xs`}
                   >
                     {activeChat.participant?.role === 'landlord' ? (
@@ -770,7 +770,7 @@ export default function TenantMessagesPage() {
                         <div
                           className={`w-8 h-8 rounded-xl ${
                             activeChat.participant?.role === 'landlord'
-                              ? 'bg-emerald-600'
+                              ? 'bg-success'
                               : 'bg-teal-600'
                           } text-white flex items-center justify-center font-bold text-xs shrink-0`}
                         >

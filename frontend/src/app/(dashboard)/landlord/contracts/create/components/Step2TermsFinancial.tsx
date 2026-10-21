@@ -129,7 +129,7 @@ export function Step2TermsFinancial() {
       {/* Error Alert if any */}
       {errorMessage && (
         <div className="flex items-center gap-3 p-4 bg-danger-soft border border-danger-subtle text-danger rounded-2xl text-xs font-bold animate-in fade-in">
-          <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
+          <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
           <span>{errorMessage}</span>
           <Button
             type="button"

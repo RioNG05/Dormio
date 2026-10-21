@@ -356,7 +356,7 @@ export default function RoomDetailPage() {
             <button
               onClick={handleToggleSave}
               className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
-                isSaved ? 'bg-rose-500 text-white' : 'bg-card-hover text-foreground/90 hover:bg-line'
+                isSaved ? 'bg-danger text-white' : 'bg-card-hover text-foreground/90 hover:bg-line'
               }`}
             >
               <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-white' : ''}`} />
@@ -580,7 +580,7 @@ export default function RoomDetailPage() {
                       <span className="text-muted">
                         {tGuest('guestRoomDetailElectricityLabel')}
                       </span>
-                      <span className="text-amber-600 font-black">{electricityKwh} kWh</span>
+                      <span className="text-warning font-black">{electricityKwh} kWh</span>
                     </div>
                     <input
                       type="range"
@@ -624,7 +624,7 @@ export default function RoomDetailPage() {
                   <span className="text-xs text-muted font-semibold block">
                     {tGuest('guestRoomDetailTotalCalcTitle')}
                   </span>
-                  <span className="text-3xl font-black text-rose-500">
+                  <span className="text-3xl font-black text-danger">
                     {formatCurrency(totalEstimatedMonthly, currentLocale)}
                   </span>
                 </div>
@@ -657,7 +657,7 @@ export default function RoomDetailPage() {
                 <span className="text-xs text-muted font-bold uppercase tracking-wider block">
                   {tGuest('guestRoomDetailListedPriceLabel')}
                 </span>
-                <div className="text-3xl font-black text-rose-500">
+                <div className="text-3xl font-black text-danger">
                   {formatCurrency(depositAmount, currentLocale)}{' '}
                   <span className="text-xs text-muted font-normal">
                     {tGuest('guestRoomDetailMonth')}
@@ -674,7 +674,7 @@ export default function RoomDetailPage() {
               <div className="space-y-3 pt-2">
                 {post.room?.status === 'deposited' ? (
                   <div className="w-full py-3.5 px-4 bg-warning-soft border border-warning-subtle text-warning font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 text-center">
-                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <Lock className="w-4 h-4 text-warning shrink-0" />
                     <span>{tGuest('guestRoomDetailRoomDeposited')}</span>
                   </div>
                 ) : post.room?.status === 'occupied' ? (

@@ -90,7 +90,7 @@ export default function CompareRoomsPage() {
                   {t('guestCompareRowPrice')}
                 </td>
                 {roomsToCompare.map(r => (
-                  <td key={r.id} className="px-6 py-4 text-rose-600 font-black text-base">
+                  <td key={r.id} className="px-6 py-4 text-danger font-black text-base">
                     {formatCurrency(r.price, currentLocale)}
                   </td>
                 ))}
