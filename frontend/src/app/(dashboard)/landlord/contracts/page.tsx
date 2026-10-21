@@ -615,7 +615,6 @@ export default function ContractsPage() {
                         <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                           <Button
                             variant="secondary"
-                            size="sm"
                             onClick={e => {
                               e.stopPropagation()
                               router.push(`/landlord/contracts/${c.id}`)
@@ -794,19 +793,8 @@ export default function ContractsPage() {
                               <td className="px-5 py-4 text-right whitespace-nowrap">
                                 <div className="flex items-center justify-end gap-1 text-muted">
                                   <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={e => {
-                                      e.stopPropagation()
-                                      router.push(`/landlord/contracts/${c.id}`)
-                                    }}
-                                    title={t('landlordContractsBtnDetail')}
-                                  >
-                                    <Eye className='w-4 h-4' />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
+                                    variant="secondary"
+                                    size="icon-sm"
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedContract(c)
@@ -814,11 +802,11 @@ export default function ContractsPage() {
                                     }}
                                     title={t('landlordContractsBtnExtend')}
                                   >
-                                    <CalendarDays className='w-4 h-4' />
+                                    <CalendarDays />
                                   </Button>
                                   <Button
                                     variant="ghost-danger"
-                                    size="icon"
+                                    size="icon-sm"
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedContract(c)
@@ -826,7 +814,7 @@ export default function ContractsPage() {
                                     }}
                                     title={t('landlordContractsBtnTerminate')}
                                   >
-                                    <Ban className='w-4 h-4' />
+                                    <Ban />
                                   </Button>
                                 </div>
                               </td>

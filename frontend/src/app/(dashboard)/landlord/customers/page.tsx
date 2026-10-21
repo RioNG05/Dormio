@@ -5,8 +5,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
-  LayoutGrid,
-  List,
   Users,
   AlertCircle,
   CheckCircle2,
@@ -22,7 +20,7 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, SelectInput, NumberInput, SearchInput, ChipGroup, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import { Button, SelectInput, SearchInput, ChipGroup, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
@@ -645,21 +643,25 @@ export default function CustomersPage() {
                           onClick={e => e.stopPropagation()}
                         >
                           <a href={`tel:${customer.phone}`} onClick={e => e.stopPropagation()}>
-                            <Button variant='success' size='sm' leftIcon={<PhoneCall />}>
-                              {t('landlordCustomersCallBtn')}
+                            <Button variant='success' size='icon-sm' title={t('landlordCustomersCallBtn')}>
+                              <PhoneCall />
                             </Button>
                           </a>
-                          <Button type="button" variant="primary" size="sm" leftIcon={<MessageCircle />} className="whitespace-nowrap"
+                          <Button
+                            variant="primary"
+                            size="icon-sm"
+                            title={t('landlordCustomersMessageBtn')}
+                            className="whitespace-nowrap"
                             onClick={e => {
                               e.stopPropagation()
                               handleOpenChat(customer)
                             }}
                           >
-                            {t('landlordCustomersMessageBtn')}
+                            <MessageCircle />
                           </Button>
                           <Link href={`/landlord/customers/${customer.userId || customer.id}`}>
-                            <Button size='sm' variant='secondary' leftIcon={<Eye />} >
-                              {t('landlordCustomersViewBtn')}
+                            <Button size='icon-sm' variant='secondary' title={t('landlordCustomersViewBtn')} >
+                              <Eye />
                             </Button>
                           </Link>
                         </div>

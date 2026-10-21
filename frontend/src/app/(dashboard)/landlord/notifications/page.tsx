@@ -36,6 +36,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Chip,
 } from '@/components/ui'
 
 export default function NotificationsPage() {
@@ -472,18 +473,17 @@ export default function NotificationsPage() {
                   <div>
                     {/* Header: Category Badge + Sent Time */}
                     <div className="flex items-center justify-between gap-2 pb-3 border-b border-line">
-                      <span
-                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
-                          ? 'bg-danger/15 text-danger border border-danger/30'
-                          : isUtilities
-                            ? 'bg-amber-500/15 text-warning border border-amber-500/30'
-                            : isRent
-                              ? 'bg-emerald-500/15 text-success border border-emerald-500/30'
-                              : 'bg-vacant/15 text-info border border-vacant/30'
-                          }`}
+                      <Chip preventHover variant={`${isEmergency
+                        ? 'danger'
+                        : isUtilities
+                          ? 'warning'
+                          : isRent
+                            ? 'success'
+                            : 'info'
+                        }`}
                       >
                         {getCategoryLabel(notif.category)}
-                      </span>
+                      </Chip>
                       <span className="text-[11px] font-semibold text-muted">
                         {notif.sentAt}
                       </span>
@@ -501,14 +501,12 @@ export default function NotificationsPage() {
 
                     {/* Metadata Pills */}
                     <div className="flex flex-wrap items-center gap-2 py-2 border-t border-line text-xs font-bold text-foreground/90">
-                      <span className="inline-flex items-center gap-1.5 bg-card-hover px-2.5 py-1 rounded-full text-[11px]">
-                        <Building2 className="w-3.5 h-3.5 text-muted shrink-0" />
-                        <span className="truncate max-w-[120px]">{notif.targetScope}</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-2.5 py-1 rounded-full text-[11px]">
-                        <Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span>{getChannelLabel(notif.channel)}</span>
-                      </span>
+                      <Chip size='sm' leftIcon={<Smartphone />} variant='success'>
+                        {getChannelLabel(notif.channel)}
+                      </Chip>
+                      <Chip size='sm' leftIcon={<Building2 />}>
+                        {notif.targetScope}
+                      </Chip>
                     </div>
 
                     {/* Read Progress Bar */}
@@ -532,25 +530,14 @@ export default function NotificationsPage() {
                   {/* Footer Details Button */}
                   <div className="pt-3 mt-3 border-t border-line flex items-center justify-end">
                     <Button
-                      variant="secondary"
-                      onClick={e => {
-                        e.stopPropagation()
-                        setSelectedNotifDetail(notif)
-                      }}
-                      leftIcon={<Eye />}
-                    >
-                      {t('landlordNotificationsViewDetails')}
-                    </Button>
-                    <Button
-                      variant="ghost-danger"
-                      size="icon-sm"
+                      variant="danger"
                       onClick={e => {
                         e.stopPropagation()
                         setDeletingNotifId(notif.id)
                       }}
-                      title={t('landlordNotificationsDeleteAction')}
+                      leftIcon={<Trash2 />}
                     >
-                      <Trash2 />
+                      {t('landlordNotificationsDeleteAction')}
                     </Button>
                   </div>
                 </div>
@@ -561,11 +548,14 @@ export default function NotificationsPage() {
           /* Parallel View 2: Table/List View */
           <div className="bg-card border border-line rounded-2xl shadow-2xs overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-xs text-left border-collapse min-w-[900px]">
+              <table className="w-full text-xs text-left border-collapse min-w-[1000px]">
                 <thead className="text-[11px] font-black text-muted uppercase bg-card-hover/90 border-b border-line">
                   <tr>
-                    <th className="px-4 py-3.5 whitespace-nowrap w-80">
-                      {t('landlordNotificationsColCategoryTitle')}
+                    <th className="px-4 py-3.5 whitespace-nowrap">
+                      {t('landlordNotificationsColCategory')}
+                    </th>
+                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[220px]">
+                      {t('landlordNotificationsColTitle')}
                     </th>
                     <th className="px-4 py-3.5 whitespace-nowrap">
                       {t('landlordNotificationsColTargetAudience')}
@@ -602,39 +592,42 @@ export default function NotificationsPage() {
                         onClick={() => setSelectedNotifDetail(notif)}
                         className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
                       >
-                        <td className="px-4 py-4 max-w-sm">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span
-                              className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase shrink-0 ${isEmergency
-                                ? 'bg-danger/15 text-danger border border-danger/30'
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <Chip
+                            preventHover
+                            variant={
+                              isEmergency
+                                ? 'danger'
                                 : isUtilities
-                                  ? 'bg-amber-500/15 text-warning border border-amber-500/30'
+                                  ? 'warning'
                                   : isRent
-                                    ? 'bg-emerald-500/15 text-success border border-emerald-500/30'
-                                    : 'bg-vacant/15 text-info border border-vacant/30'
-                                }`}
-                            >
-                              {getCategoryLabel(notif.category)}
-                            </span>
-                            <span className="font-bold text-foreground text-sm truncate">
-                              {notif.title}
-                            </span>
-                          </div>
-                          <p className="text-muted text-xs line-clamp-1">{notif.content}</p>
+                                    ? 'success'
+                                    : 'info'
+                            }
+                          >
+                            {getCategoryLabel(notif.category)}
+                          </Chip>
+                        </td>
+
+                        <td className="px-4 py-4 max-w-sm">
+                          <span className="font-bold text-foreground text-sm truncate block group-hover:text-primary transition-colors">
+                            {notif.title}
+                          </span>
+                          {notif.content && (
+                            <p className="text-muted text-xs line-clamp-1 mt-0.5">{notif.content}</p>
+                          )}
                         </td>
 
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 bg-card-hover text-foreground/90 px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap">
-                            <Building2 className="w-3.5 h-3.5 text-muted shrink-0" />
-                            <span>{notif.targetScope}</span>
-                          </span>
+                          <Chip size='sm' leftIcon={<Building2 />}>
+                            {notif.targetScope}
+                          </Chip>
                         </td>
 
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground/90 whitespace-nowrap">
-                            <Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />
-                            <span>{getChannelLabel(notif.channel)}</span>
-                          </span>
+                          <Chip size='sm' leftIcon={<Smartphone />} variant='success'>
+                            {getChannelLabel(notif.channel)}
+                          </Chip>
                         </td>
 
                         <td className="px-4 py-4 whitespace-nowrap min-w-[160px]">
@@ -662,18 +655,8 @@ export default function NotificationsPage() {
                         <td className="px-4 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
                             <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedNotifDetail(notif)}
-                            >
-                              <Eye />
-                              <span>{t('landlordNotificationsBtnDetails')}</span>
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
+                              variant="ghost-danger"
+                              size="icon-sm"
                               onClick={() => setDeletingNotifId(notif.id)}
                               title={t('landlordNotificationsBtnDelete')}
                             >
@@ -861,11 +844,9 @@ export default function NotificationsPage() {
         header={
           selectedNotifDetail ? (
             <div className="flex items-center gap-2.5">
-              <span className="px-2.5 py-0.5 bg-primary/20 text-primary border border-primary/30 rounded-full">
-                <Text as="span" variant="badge" size="3xs" weight="black" color="brand">
-                  {getCategoryLabel(selectedNotifDetail.category)}
-                </Text>
-              </span>
+              <Chip size='sm' preventHover variant='default'>
+                {getCategoryLabel(selectedNotifDetail.category)}
+              </Chip>
               <Text as="h3" size="sm" weight="bold" color="white">
                 {t('landlordNotificationsDetailTitle')}
               </Text>
@@ -877,22 +858,18 @@ export default function NotificationsPage() {
           selectedNotifDetail ? (
             <div className="flex items-center justify-between w-full">
               <Button
-                type="button"
-                variant="ghost"
-                size="sm"
+                variant="danger"
                 onClick={() => {
                   setDeletingNotifId(selectedNotifDetail.id)
                   setSelectedNotifDetail(null)
                 }}
                 leftIcon={<Trash2 className="w-4 h-4" />}
               >
-                <span>{t('landlordNotificationsDetailDelete')}</span>
+                {t('landlordNotificationsDetailDelete')}
               </Button>
 
               <Button
-                type="button"
                 variant="primary"
-                size="sm"
                 onClick={() => setSelectedNotifDetail(null)}
               >
                 {t('landlordNotificationsDetailClose')}

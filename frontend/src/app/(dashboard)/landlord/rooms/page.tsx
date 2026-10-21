@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Sparkles,
   Loader2,
+  ListFilterPlus,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -788,18 +789,16 @@ export default function RoomsPage() {
           {/* Bulk Generate Trigger Button */}
           <Button
             type="button"
-            variant="secondary"
+            variant="accent"
             size='md'
             onClick={() => {
               resetBulkForm()
               setIsBulkModalOpen(true)
             }}
-            leftIcon={<Sparkles className='w-4 h-4' />}
+            leftIcon={<ListFilterPlus />}
             title={t('landlordRoomsBulkGenerateTooltip')}
           >
-            <Text as="span" size="sm" weight="semibold">
               {t('landlordRoomsBulkGenerateBtn')}
-            </Text>
           </Button>
 
           {/* Single Room Add Button */}
@@ -1109,20 +1108,12 @@ export default function RoomsPage() {
                         </td>
                         <td className="p-3 text-right space-x-1">
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="secondary"
+                            size="icon-sm"
                             onClick={() => handleOpenEditModal(room)}
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                            title={t('landlordRoomsViewDetailTooltip')}
-                          >
-                            <Eye className="w-4 h-4" />
+                            <Edit />
                           </Button>
                         </td>
                       </tr>

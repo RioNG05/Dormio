@@ -730,13 +730,11 @@ export default function ServicesPage() {
                         {t('landlordServicesEdit')}
                       </Button>
                       <Button
-                        type="button"
-                        variant="ghost-danger"
-                        size="icon-sm"
+                        variant="danger"
                         onClick={() => setDeleteTarget(service)}
-                        title={t('landlordServicesDeleteTooltip')}
+                        leftIcon={<Trash2 />}
                       >
-                        <Trash2 />
+                        {t('landlordServicesDeleteTooltip')}
                       </Button>
                     </div>
                   </div>
@@ -874,10 +872,11 @@ export default function ServicesPage() {
                           <div className="flex items-center justify-end gap-1.5">
                             <Button
                               variant="outline"
+                              size='icon-sm'
                               onClick={() => handleOpenEditModal(service)}
-                              leftIcon={<Edit3 />}
+                              title={t('landlordServicesEdit')}
                             >
-                              {t('landlordServicesEdit')}
+                              <Edit3 />
                             </Button>
                             <Button
                               size='icon-sm'

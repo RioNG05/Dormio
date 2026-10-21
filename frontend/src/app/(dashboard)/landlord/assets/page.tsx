@@ -726,9 +726,7 @@ export default function AssetsPage() {
                     <div className="pt-2 border-t border-line flex items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-1">
                         <Button
-                          type="button"
                           variant="secondary"
-                          size="sm"
                           onClick={e => handleOpenEditModal(asset, e)}
                           leftIcon={<Edit3 className="text-primary" />}
                         >
@@ -736,12 +734,11 @@ export default function AssetsPage() {
                         </Button>
                         <Button
                           type="button"
-                          variant="ghost-danger"
-                          size="icon-sm"
+                          variant="danger"
                           onClick={e => handleOpenDeleteModal(asset, e)}
-                          title={t('landlordAssetsBtnDelete')}
+                          leftIcon={<Trash2 />}
                         >
-                          <Trash2 />
+                          {t('landlordAssetsBtnDelete')}
                         </Button>
                       </div>
                       <span className="text-xs font-black text-primary group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
@@ -869,15 +866,6 @@ export default function AssetsPage() {
                             className="flex items-center justify-end gap-1.5"
                             onClick={e => e.stopPropagation()}
                           >
-                            <Link href={`/landlord/assets/${asset.id}`}>
-                              <Button
-                                size='icon-sm'
-                                variant='secondary'
-                                title={t('landlordAssetsBtnViewDetail')}
-                              >
-                                <Eye />
-                              </Button>
-                            </Link>
                             <Button
                               variant="secondary"
                               size="icon-sm"
