@@ -109,17 +109,6 @@ export function ViewModeToggle<T extends string = string>({
   const handleSelect = (nextValue: T) => {
     if (nextValue === value || disabled) return
     onChange(nextValue)
-
-    // Tích hợp Rule #9: tự động điều chỉnh pageSize (Grid = 6, Table/List = 10)
-    if (onPageSizeChange) {
-      const isGrid = nextValue === 'grid'
-      onPageSizeChange(isGrid ? gridPageSize : tablePageSize)
-    }
-
-    // Tự động reset về trang 1
-    if (onPageChange) {
-      onPageChange(1)
-    }
   }
 
   const containerSizes = {
