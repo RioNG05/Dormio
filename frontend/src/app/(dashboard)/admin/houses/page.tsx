@@ -659,7 +659,7 @@ export default function AdminBoardingHouseModerationPage() {
                     ? Math.round((item.occupiedRooms / item.totalRooms) * 100)
                     : 0)
                 return (
-                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150">
                     <td className="p-3.5 max-w-xs">
                       <Link
                         href={`/admin/houses/${item.id}`}

@@ -23,7 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { grievanceService, GrievanceQueueCounts } from '@/services/grievance.service'
-import { Button, Checkbox, TextareaInput, TextInput, NumberInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, Checkbox, TextareaInput, TextInput, NumberInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 
 interface GrievanceItem {
   id: string
@@ -195,8 +195,6 @@ export default function AdminGrievancesPage() {
   // View mode & pagination
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    setPageSize(mode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
   }
 
   const totalItems = currentDataset.length
@@ -536,88 +534,86 @@ export default function AdminGrievancesPage() {
       )}
 
       {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
-      <div className="bg-card p-4 rounded-2xl border border-line shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1">
-          {/* Search */}
-          <div className="relative flex-1 min-w-[220px] max-w-md">
-            <TextInput
-              type="text"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder={t('adminGrievancesSearchPlaceholder')}
-              containerClassName="space-y-0"
-              className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
-              leftIcon={<Search className="w-4 h-4 text-muted" />}
-              rightIcon={
-                searchQuery ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchQuery('')}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                ) : undefined
-              }
-            />
-          </div>
+      <FilterToolbar
+        search={
+          <TextInput
+            type="text"
+            value={searchQuery}
+            onChange={e => {
+              setSearchQuery(e.target.value)
+              setCurrentPage(1)
+            }}
+            placeholder={t('adminGrievancesSearchPlaceholder')}
+            containerClassName="w-full space-y-0"
+            className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+            leftIcon={<Search className="w-4 h-4 text-muted" />}
+            rightIcon={
+              searchQuery ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              ) : undefined
+            }
+          />
+        }
+        filters={
+          <>
+            {/* Priority filter */}
+            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
+              {(
+                [
+                  { id: 'all', label: t('adminGrievancesAllPriorities') },
+                  { id: 'urgent', label: t('adminGrievancesPriorityUrgent') },
+                  { id: 'high', label: t('adminGrievancesPriorityHigh') },
+                  { id: 'medium', label: t('adminGrievancesPriorityMedium') },
+                  { id: 'low', label: t('adminGrievancesPriorityLow') },
+                ] as const
+              ).map(chip => (
+                <Button
+                  key={chip.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setPriorityFilter(chip.id)
+                    setCurrentPage(1)
+                  }}
+                >
+                  {chip.label}
+                </Button>
+              ))}
+            </div>
 
-          {/* Priority filter */}
-          <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
-            {(
-              [
-                { id: 'all', label: t('adminGrievancesAllPriorities') },
-                { id: 'urgent', label: t('adminGrievancesPriorityUrgent') },
-                { id: 'high', label: t('adminGrievancesPriorityHigh') },
-                { id: 'medium', label: t('adminGrievancesPriorityMedium') },
-                { id: 'low', label: t('adminGrievancesPriorityLow') },
-              ] as const
-            ).map(chip => (
-              <Button
-                key={chip.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setPriorityFilter(chip.id)
-                  setCurrentPage(1)
-                }}
-              >
-                {chip.label}
-              </Button>
-            ))}
-          </div>
-
-          {/* Status filter */}
-          <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
-            {(
-              [
-                { id: 'all', label: t('adminGrievancesAllStatus') },
-                { id: 'pending', label: t('adminGrievancesStatusPending') },
-                { id: 'in_progress', label: t('adminGrievancesStatusInProgress') },
-                { id: 'resolved', label: t('adminGrievancesStatusResolved') },
-                { id: 'rejected', label: t('adminGrievancesStatusRejected') },
-              ] as const
-            ).map(chip => (
-              <Button
-                key={chip.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setStatusFilter(chip.id)
-                  setCurrentPage(1)
-                }}
-              >
-                {chip.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* View mode toggle (Rule #9) & Refresh */}
-        <div className="flex items-center gap-2.5 self-end lg:self-auto">
+            {/* Status filter */}
+            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
+              {(
+                [
+                  { id: 'all', label: t('adminGrievancesAllStatus') },
+                  { id: 'pending', label: t('adminGrievancesStatusPending') },
+                  { id: 'in_progress', label: t('adminGrievancesStatusInProgress') },
+                  { id: 'resolved', label: t('adminGrievancesStatusResolved') },
+                  { id: 'rejected', label: t('adminGrievancesStatusRejected') },
+                ] as const
+              ).map(chip => (
+                <Button
+                  key={chip.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter(chip.id)
+                    setCurrentPage(1)
+                  }}
+                >
+                  {chip.label}
+                </Button>
+              ))}
+            </div>
+          </>
+        }
+        actions={
           <Button
             variant="outline"
             size="sm"
@@ -628,13 +624,14 @@ export default function AdminGrievancesPage() {
           >
             <span className="hidden sm:inline">{t('adminGrievancesRefresh')}</span>
           </Button>
-
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={handleViewModeChange}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Items count indicator */}
       {!loading && paginatedItems.length > 0 && (
@@ -708,10 +705,10 @@ export default function AdminGrievancesPage() {
             return (
               <div
                 key={item.id}
-                className={`bg-card rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md p-5 space-y-4 ${
+                className={`bg-card rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md hover:-translate-y-0.5 p-5 space-y-4 ${
                   isUrgent && item.status === 'pending'
                     ? 'border-orange-300 bg-orange-50/15 ring-1 ring-orange-200'
-                    : 'border-line'
+                    : 'border-line hover:border-primary/40'
                 }`}
               >
                 {/* Card Top */}
@@ -864,7 +861,7 @@ export default function AdminGrievancesPage() {
                 return (
                   <tr
                     key={item.id}
-                    className="hover:bg-zinc-50/80 transition-colors"
+                    className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
                   >
                     <td className="p-3.5 space-y-1">
                       <span className="font-mono text-xs font-black text-foreground/90 bg-card-hover px-2 py-0.5 rounded-md inline-block">

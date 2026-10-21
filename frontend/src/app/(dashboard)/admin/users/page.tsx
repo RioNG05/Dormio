@@ -51,6 +51,7 @@ import { NumberInput } from '@/components/ui/NumberInput'
 import { Pagination } from '@/components/ui/Pagination'
 import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
 import { Avatar } from '@/components/ui/Avatar'
+import { FilterToolbar, SearchInput } from '@/components/ui'
 
 export default function AdminUsersManagementPage() {
   const { locale } = useLanguage()
@@ -92,12 +93,9 @@ export default function AdminUsersManagementPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Adjust pageSize when view mode changes without triggering network refetch
+  // Adjust view mode without triggering network refetch
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    const newSize = mode === 'grid' ? 6 : 10
-    setPageSize(newSize)
-    setCurrentPage(1)
   }
 
   // Fetch users from API (Notice: does NOT depend on `t`, `pageSize`, or `currentPage` so layout/language changes do not trigger refetch)
@@ -664,81 +662,64 @@ export default function AdminUsersManagementPage() {
         </div>
       </Form.Grid>
 
-      {/* Filter and View Mode Toolbar using TextInput, SelectInput, Button */}
-      <div className="bg-card p-4 rounded-3xl border border-line shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-        {/* Reusing TextInput base component for search */}
-        <TextInput
-          value={searchQuery}
-          onChange={e => {
-            setSearchQuery(e.target.value)
-            setCurrentPage(1)
-          }}
-          placeholder={t('adminUsersSearchPlaceholder')}
-          leftIcon={<Search className="w-4 h-4 text-muted" />}
-          rightIcon={
-            searchQuery ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery('')
-                  setCurrentPage(1)
-                }}
-              >
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            ) : null
-          }
-          containerClassName="w-full md:w-80"
-          className="rounded-2xl py-2 bg-surface/50 text-xs font-semibold"
-        />
-
-        {/* Reusing SelectInput and Button base components */}
-        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end flex-wrap">
-          {/* Role Filter using SelectInput */}
-          <SelectInput
-            value={roleFilter}
-            onChange={e => {
-              setRoleFilter(e.target.value)
+      {/* Filter and View Mode Toolbar using FilterToolbar */}
+      <FilterToolbar
+        search={
+          <SearchInput
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
               setCurrentPage(1)
             }}
-            options={[
-              { value: 'all', label: t('adminUsersRoleAll') },
-              { value: 'landlord', label: t('adminUsersRoleLandlord') },
-              { value: 'tenant', label: t('adminUsersRoleTenant') },
-              { value: 'employee', label: t('adminUsersRoleStaff') },
-              { value: 'leasing_agent', label: t('adminUsersRoleAgent') },
-              { value: 'admin', label: t('adminUsersRoleAdmin') },
-            ]}
-            containerClassName="w-full sm:w-40"
-            className="rounded-2xl py-2 text-xs font-bold"
+            placeholder={t('adminUsersSearchPlaceholder')}
           />
+        }
+        filters={
+          <>
+            {/* Role Filter using SelectInput */}
+            <SelectInput
+              value={roleFilter}
+              onChange={e => {
+                setRoleFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: t('adminUsersRoleAll') },
+                { value: 'landlord', label: t('adminUsersRoleLandlord') },
+                { value: 'tenant', label: t('adminUsersRoleTenant') },
+                { value: 'employee', label: t('adminUsersRoleStaff') },
+                { value: 'leasing_agent', label: t('adminUsersRoleAgent') },
+                { value: 'admin', label: t('adminUsersRoleAdmin') },
+              ]}
+              containerClassName="w-full sm:w-40"
+              className="rounded-2xl py-2 text-xs font-bold"
+            />
 
-          {/* Status Filter using SelectInput */}
-          <SelectInput
-            value={statusFilter}
-            onChange={e => {
-              setStatusFilter(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'all', label: t('adminUsersStatusAll') },
-              { value: 'active', label: t('adminUsersStatusActive') },
-              { value: 'inactive', label: t('adminUsersStatusInactive') },
-              { value: 'banned', label: t('adminUsersStatusBanned') },
-            ]}
-            containerClassName="w-full sm:w-40"
-            className="rounded-2xl py-2 text-xs font-bold"
-          />
-
-          {/* View Mode Toggle using Button base components */}
+            {/* Status Filter using SelectInput */}
+            <SelectInput
+              value={statusFilter}
+              onChange={e => {
+                setStatusFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: t('adminUsersStatusAll') },
+                { value: 'active', label: t('adminUsersStatusActive') },
+                { value: 'inactive', label: t('adminUsersStatusInactive') },
+                { value: 'banned', label: t('adminUsersStatusBanned') },
+              ]}
+              containerClassName="w-full sm:w-40"
+              className="rounded-2xl py-2 text-xs font-bold"
+            />
+          </>
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={handleViewModeChange}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Content Section: Loading / Error / Empty / Grid / Table */}
       {loading ? (
@@ -777,7 +758,7 @@ export default function AdminUsersManagementPage() {
             return (
               <div
                 key={user.id}
-                className="bg-card rounded-3xl border border-line hover:border-primary/40 shadow-xs hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 group"
+                className="bg-card rounded-2xl border border-line shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer p-5 flex flex-col justify-between space-y-4 group"
               >
                 {/* Header: Avatar, Name, Role & Status */}
                 <div className="space-y-3">
@@ -932,7 +913,7 @@ export default function AdminUsersManagementPage() {
         </div>
       ) : (
         /* TABLE VIEW (Rule 9: Parallel support) */
-        <div className="bg-card rounded-3xl border border-line shadow-xs overflow-hidden">
+        <div className="bg-card rounded-2xl border border-line shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-surface/80 border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
@@ -948,7 +929,7 @@ export default function AdminUsersManagementPage() {
               <tbody className="divide-y divide-line text-foreground/90">
                 {paginatedUsers.map(user => {
                   return (
-                    <tr key={user.id} className="hover:bg-zinc-50/60 transition-colors group">
+                    <tr key={user.id} className="hover:bg-card-hover transition-colors duration-150 group">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <Avatar

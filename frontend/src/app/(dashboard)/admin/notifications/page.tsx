@@ -36,6 +36,7 @@ import { SelectInput } from '@/components/ui/SelectInput'
 import { NumberInput } from '@/components/ui/NumberInput'
 import { Pagination } from '@/components/ui/Pagination'
 import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
+import { FilterToolbar } from '@/components/ui/FilterToolbar'
 
 interface NotificationCampaign {
   id: string
@@ -191,8 +192,6 @@ export default function AdminNotificationsPage() {
   // View mode toggle
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    setPageSize(mode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
   }
 
   const totalItems = currentDataset.length
@@ -558,79 +557,78 @@ export default function AdminNotificationsPage() {
       </div>
 
       {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
-      <div className="bg-card p-4 rounded-2xl border border-line shadow-2xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1">
-          <div className="relative flex-1 min-w-[220px] max-w-md">
-            <TextInput
-              type="text"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder={t('adminNotifySearchPlaceholder')}
-              containerClassName="space-y-0"
-              className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
-              leftIcon={<Search className="w-4 h-4 text-muted" />}
-              rightIcon={
-                searchQuery ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchQuery('')}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                ) : undefined
-              }
-            />
-          </div>
-
-          {/* Status chips */}
-          <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
-            {(
-              [
-                { id: 'all', label: t('adminNotifyAllStatus') },
-                { id: 'sent', label: t('adminNotifyStatusSent') },
-                { id: 'pending', label: t('adminNotifyStatusPending') },
-                { id: 'failed', label: t('adminNotifyStatusFailed') },
-                { id: 'canceled', label: t('adminNotifyStatusCanceled') },
-              ] as const
-            ).map(chip => (
-              <Button
-                key={chip.id}
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setStatusFilter(chip.id)
-                  setCurrentPage(1)
-                }}
-              >
-                {chip.label}
-              </Button>
-            ))}
-          </div>
-
-          {/* Channel filter dropdown */}
-          <SelectInput
-            value={channelFilter}
+      <FilterToolbar
+        search={
+          <TextInput
+            type="text"
+            value={searchQuery}
             onChange={e => {
-              setChannelFilter(e.target.value)
+              setSearchQuery(e.target.value)
               setCurrentPage(1)
             }}
-            containerClassName="space-y-0"
-            className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground/90 cursor-pointer focus:border-orange-500"
-          >
-            <option value="all">{t('adminNotifyAllChannels')}</option>
-            <option value="in_app">{t('adminNotifyChannelInApp')}</option>
-            <option value="email">{t('adminNotifyChannelEmail')}</option>
-            <option value="sms">{t('adminNotifyChannelSms')}</option>
-            <option value="zalo">{t('adminNotifyChannelZalo')}</option>
-          </SelectInput>
-        </div>
+            placeholder={t('adminNotifySearchPlaceholder')}
+            containerClassName="w-full space-y-0"
+            className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+            leftIcon={<Search className="w-4 h-4 text-muted" />}
+            rightIcon={
+              searchQuery ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              ) : undefined
+            }
+          />
+        }
+        filters={
+          <>
+            {/* Status chips */}
+            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
+              {(
+                [
+                  { id: 'all', label: t('adminNotifyAllStatus') },
+                  { id: 'sent', label: t('adminNotifyStatusSent') },
+                  { id: 'pending', label: t('adminNotifyStatusPending') },
+                  { id: 'failed', label: t('adminNotifyStatusFailed') },
+                  { id: 'canceled', label: t('adminNotifyStatusCanceled') },
+                ] as const
+              ).map(chip => (
+                <Button
+                  key={chip.id}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter(chip.id)
+                    setCurrentPage(1)
+                  }}
+                >
+                  {chip.label}
+                </Button>
+              ))}
+            </div>
 
-        {/* View Mode (Rule #9) & Refresh */}
-        <div className="flex items-center gap-2.5 self-end lg:self-auto">
+            {/* Channel filter dropdown */}
+            <SelectInput
+              value={channelFilter}
+              onChange={e => {
+                setChannelFilter(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="space-y-0 w-auto min-w-[140px]"
+              className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground/90 cursor-pointer focus:border-orange-500"
+            >
+              <option value="all">{t('adminNotifyAllChannels')}</option>
+              <option value="in_app">{t('adminNotifyChannelInApp')}</option>
+              <option value="email">{t('adminNotifyChannelEmail')}</option>
+              <option value="sms">{t('adminNotifyChannelSms')}</option>
+              <option value="zalo">{t('adminNotifyChannelZalo')}</option>
+            </SelectInput>
+          </>
+        }
+        actions={
           <Button
             variant="outline"
             size="sm"
@@ -641,13 +639,14 @@ export default function AdminNotificationsPage() {
           >
             <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
           </Button>
-
+        }
+        viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={handleViewModeChange}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Select All on Current Page Bar */}
       {!loading && paginatedItems.length > 0 && (
@@ -718,8 +717,8 @@ export default function AdminNotificationsPage() {
             return (
               <div
                 key={item.id}
-                className={`bg-card rounded-2xl border transition-all flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md p-5 space-y-4 ${
-                  isSelected ? 'border-orange-500 ring-2 ring-orange-500/20' : 'border-line'
+                className={`bg-card rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer p-5 space-y-4 ${
+                  isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-line'
                 }`}
               >
                 <div className="space-y-3">
@@ -821,8 +820,8 @@ export default function AdminNotificationsPage() {
                 return (
                   <tr
                     key={item.id}
-                    className={`hover:bg-zinc-50/80 transition-colors ${
-                      isSelected ? 'bg-orange-50/30' : ''
+                    className={`hover:bg-card-hover transition-colors duration-150 ${
+                      isSelected ? 'bg-primary/5' : ''
                     }`}
                   >
                     <td className="p-3.5">
