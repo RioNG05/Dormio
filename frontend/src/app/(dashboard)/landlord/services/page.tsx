@@ -45,6 +45,7 @@ import {
   Modal,
   Text,
   Switch,
+  Chip,
 } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { formatCurrency, resolveErrorMessage, localizeDbEnum } from '@/utils'
@@ -52,7 +53,6 @@ import { formatCurrency, resolveErrorMessage, localizeDbEnum } from '@/utils'
 export default function ServicesPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const tCommon = useTranslations('common')
   const tErrors = useTranslations('errors')
   const { locale } = useLanguage()
 
@@ -121,7 +121,7 @@ export default function ServicesPage() {
     confirmText?: string
     cancelText?: string
     onConfirm: () => void
-  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} })
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => { } })
 
   const showAlert = (
     message: string,
@@ -531,45 +531,16 @@ export default function ServicesPage() {
         title={t('landlordServicesTitle')}
         subtitle={t('landlordServicesSubtitle')}
         actions={
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={() => showAlert(t('landlordServicesAlertImportDeveloping'), 'info')}
-              className="sm:px-3.5"
-            >
-              <UploadCloud className="w-4 h-4 text-success" /> {tCommon('import')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={() => showAlert(t('landlordServicesAlertExportSuccess'), 'success')}
-              className="sm:px-3.5"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-info" /> {tCommon('export')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={fetchServices}
-              title={t('landlordServicesRefresh')}
-            >
-              <RefreshCw className={`w-4 h-4 text-muted ${isLoading ? 'animate-spin' : ''}`} />{' '}
-              {t('landlordServicesRefresh')}
-            </Button>
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={handleOpenAddModal}
-              className="sm:w-auto"
-            >
-              <Plus className="w-4 h-4" /> {t('landlordServicesAddNew')}
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleOpenAddModal}
+            className="sm:w-auto"
+            leftIcon={<Plus />}
+          >
+            {t('landlordServicesAddNew')}
+          </Button>
+
         }
       />
 
@@ -601,6 +572,22 @@ export default function ServicesPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search Bar */}
           <div className="relative w-full sm:max-w-xs">
+            <ChipGroup
+              value={typeFilter}
+              onChange={val => {
+                setTypeFilter(val)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: '', label: t('landlordServicesFilterAll') },
+                { value: 'metered', label: t('landlordServicesFilterMetered') },
+                { value: 'room', label: t('landlordServicesFilterFixed') },
+              ]}
+            />
+          </div>
+
+          {/* Right Toolbar: View Mode Toggle */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
             <SearchInput
               placeholder={t('landlordServicesSearchPlaceholder')}
               value={searchQuery}
@@ -608,13 +595,8 @@ export default function ServicesPage() {
                 setSearchQuery(val)
                 setCurrentPage(1)
               }}
-              containerClassName="w-full space-y-0"
-              className="w-full text-xs font-semibold bg-surface border border-line rounded-xl focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+              containerClassName="w-full min-w-80 space-y-0"
             />
-          </div>
-
-          {/* Right Toolbar: View Mode Toggle */}
-          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
             <ViewModeToggle
               value={viewMode}
               onChange={setViewMode}
@@ -622,22 +604,6 @@ export default function ServicesPage() {
               onPageChange={setCurrentPage}
             />
           </div>
-        </div>
-
-        {/* Category Pills */}
-        <div className="pt-1 border-t border-line">
-          <ChipGroup
-            value={typeFilter}
-            onChange={val => {
-              setTypeFilter(val)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: '', label: t('landlordServicesFilterAll') },
-              { value: 'metered', label: t('landlordServicesFilterMetered') },
-              { value: 'room', label: t('landlordServicesFilterFixed') },
-            ]}
-          />
         </div>
       </div>
 
@@ -664,9 +630,8 @@ export default function ServicesPage() {
               return (
                 <div
                   key={service.id}
-                  className={`bg-card border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${
-                    isActive ? 'border-line' : 'border-line opacity-70 bg-surface/50'
-                  }`}
+                  className={`bg-card border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all space-y-4 relative overflow-hidden flex flex-col justify-between ${isActive ? 'border-line' : 'border-line opacity-70 bg-surface/50'
+                    }`}
                 >
                   <div className="space-y-3.5">
                     {/* Top Header Row */}
@@ -678,28 +643,11 @@ export default function ServicesPage() {
                           {renderIcon(visual.iconName, 'w-5 sm:w-6 h-5 sm:h-6')}
                         </div>
                         <div>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <Text
-                              as="span"
-                              size="3xs"
-                              weight="black"
-                              color="brand"
-                              className="bg-primary/10 px-2 py-0.5 rounded-md border border-primary/30"
-                            >
-                              {service.id.substring(0, 8).toUpperCase()}
-                            </Text>
-                            <span
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
-                                service.autoApplied
-                                  ? 'bg-danger-soft text-danger border-danger-subtle'
-                                  : 'bg-info-soft text-info border-info-subtle'
-                              }`}
-                            >
-                              {service.autoApplied
-                                ? t('landlordServicesMandatory')
-                                : t('landlordServicesOptional')}
-                            </span>
-                          </div>
+                          <Chip size='xs' preventHover variant={`${service.autoApplied ? 'danger' : 'info'}`}>
+                            {service.autoApplied
+                              ? t('landlordServicesMandatory')
+                              : t('landlordServicesOptional')}
+                          </Chip>
                           <Text as="h3" weight="black" color="default" size="lg" className="mt-1">
                             {service.name}
                           </Text>
@@ -769,33 +717,30 @@ export default function ServicesPage() {
                   {/* Footer Action Controls */}
                   <div className="pt-3 border-t border-line flex items-center justify-between gap-1.5 text-xs">
                     <Button
-                      type="button"
                       variant="outline"
-                      size="sm"
                       onClick={() => handleOpenRoomsModal(service)}
                       title={t('landlordServicesAppliedRooms')}
+                      leftIcon={<Home className="text-primary" />}
                     >
-                      <Home className="w-3.5 h-3.5 text-primary" />{' '}
                       {t('landlordServicesRoomsCount', { count: service.appliedRoomsCount })}
                     </Button>
 
                     <div className="flex items-center gap-1">
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
                         onClick={() => handleOpenEditModal(service)}
+                        leftIcon={<Edit3 />}
                       >
-                        <Edit3 className="w-3.5 h-3.5" /> {t('landlordServicesEdit')}
+                        {t('landlordServicesEdit')}
                       </Button>
                       <Button
                         type="button"
-                        variant="ghost"
-                        size="sm"
+                        variant="ghost-danger"
+                        size="icon-sm"
                         onClick={() => setDeleteTarget(service)}
                         title={t('landlordServicesDeleteTooltip')}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 />
                       </Button>
                     </div>
                   </div>
@@ -855,7 +800,7 @@ export default function ServicesPage() {
                     const formattedPrice = formatCurrency(service.numericPrice, locale)
 
                     return (
-                      <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
+                      <tr key={service.id} className="hover:bg-card-hover transition-colors">
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div
@@ -863,14 +808,9 @@ export default function ServicesPage() {
                             >
                               {renderIcon(visual.iconName, 'w-4.5 h-4.5')}
                             </div>
-                            <div>
-                              <Text as="span" weight="black" color="default" size="sm" className="block whitespace-nowrap">
-                                {service.name}
-                              </Text>
-                              <Text as="span" size="3xs" weight="bold" color="brand" mono className="block">
-                                {service.id.substring(0, 8).toUpperCase()}
-                              </Text>
-                            </div>
+                            <Text as="span" weight="black" color="default" size="sm" className="block whitespace-nowrap">
+                              {service.name}
+                            </Text>
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
@@ -890,11 +830,10 @@ export default function ServicesPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold border inline-block whitespace-nowrap ${
-                              service.autoApplied
-                                ? 'bg-danger-soft text-danger border-danger-subtle'
-                                : 'bg-info-soft text-info border-info-subtle'
-                            }`}
+                            className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold border inline-block whitespace-nowrap ${service.autoApplied
+                              ? 'bg-danger-soft text-danger border-danger-subtle'
+                              : 'bg-info-soft text-info border-info-subtle'
+                              }`}
                           >
                             {service.autoApplied
                               ? t('landlordServicesMandatory')
@@ -903,13 +842,10 @@ export default function ServicesPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <Button
-                            type="button"
                             variant="ghost"
-                            size="sm"
                             onClick={() => handleOpenRoomsModal(service)}
-                            className="hover:underline"
+                            leftIcon={<Home />}
                           >
-                            <Home className="w-3.5 h-3.5" />{' '}
                             {t('landlordServicesRoomsCount', { count: service.appliedRoomsCount })}
                           </Button>
                         </td>
@@ -941,22 +877,19 @@ export default function ServicesPage() {
                         <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
                             <Button
-                              type="button"
                               variant="outline"
-                              size="sm"
                               onClick={() => handleOpenEditModal(service)}
+                              leftIcon={<Edit3 />}
                             >
-                              <Edit3 className="w-3 h-3 text-primary" />{' '}
                               {t('landlordServicesEdit')}
                             </Button>
                             <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
+                              size='icon-sm'
+                              variant="ghost-danger"
                               onClick={() => setDeleteTarget(service)}
                               title={t('landlordServicesDeleteTooltip')}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 />
                             </Button>
                           </div>
                         </td>
@@ -985,7 +918,7 @@ export default function ServicesPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        size="lg"
+        size="2xl"
       >
         <Modal.Header
           icon={
