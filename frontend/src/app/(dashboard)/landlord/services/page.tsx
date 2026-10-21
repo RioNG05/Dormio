@@ -10,7 +10,6 @@ import {
   Trash2,
   ShieldCheck,
   CarFront,
-  Search,
   Edit3,
   Info,
   UploadCloud,
@@ -21,13 +20,8 @@ import {
   Flame,
   Tv,
   Waves,
-  Box,
-  LayoutGrid,
-  List,
   Home,
   X,
-  Clock,
-  MapPin,
   RefreshCw,
   Loader2,
 } from 'lucide-react'
@@ -39,14 +33,27 @@ import {
   ServicesSummary,
   ServiceAssignedRoom,
 } from '@/services/service.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, ChipGroup, Pagination, ViewModeToggle } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  SearchInput,
+  ChipGroup,
+  Pagination,
+  ViewModeToggle,
+  Modal,
+  Text,
+} from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { formatCurrency, resolveErrorMessage, localizeDbEnum } from '@/utils'
 
 export default function ServicesPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
+  const tCommon = useTranslations('common')
+  const tErrors = useTranslations('errors')
   const { locale } = useLanguage()
-  const isEn = locale === 'en'
 
   // Data States
   const [services, setServices] = useState<ServiceItem[]>([])
@@ -139,7 +146,7 @@ export default function ServicesPage() {
     if (lowerName.includes('nước') || lowerName.includes('nuoc') || lowerName.includes('water')) {
       return {
         iconName: 'Droplets',
-        color: 'text-blue-500',
+        color: 'text-vacant',
         bg: 'bg-info-soft border-info-subtle',
         typeLabel: t('landlordServicesTypeMetered'),
       }
@@ -196,7 +203,7 @@ export default function ServicesPage() {
     ) {
       return {
         iconName: 'ShieldCheck',
-        color: 'text-rose-500',
+        color: 'text-danger',
         bg: 'bg-danger-soft border-danger-subtle',
         typeLabel: t('landlordServicesTypeFixedRoom'),
       }
@@ -290,11 +297,11 @@ export default function ServicesPage() {
         setTotalItems(response.meta.total)
       }
     } catch (err: any) {
-      showAlert(err?.message || 'Không thể tải danh sách dịch vụ', 'error', 'Lỗi tải dữ liệu')
+      showAlert(resolveErrorMessage(err, tErrors, t('landlordServicesErrorLoadFailed')), 'error')
     } finally {
       setIsLoading(false)
     }
-  }, [activeBuilding?.id, searchQuery, typeFilter, currentPage, itemsPerPage])
+  }, [activeBuilding?.id, searchQuery, typeFilter, currentPage, itemsPerPage, t, tErrors])
 
   useEffect(() => {
     fetchServices()
@@ -311,7 +318,7 @@ export default function ServicesPage() {
         setServiceRooms(res.data.rooms || [])
       }
     } catch (err: any) {
-      showAlert(err?.message || 'Không thể tải danh sách phòng áp dụng', 'error')
+      showAlert(resolveErrorMessage(err, tErrors, t('landlordServicesErrorLoadRoomsFailed')), 'error')
     } finally {
       setIsLoadingRooms(false)
     }
@@ -406,14 +413,14 @@ export default function ServicesPage() {
           autoApplied: formAutoApplied,
           status: formStatus,
         })
-        showAlert(t('landlordServicesAlertUpdateSuccess'), 'success')
+        showAlert(t('landlordServicesAlertCreateSuccess'), 'success')
       }
 
       setIsModalOpen(false)
       setIsDirty(false)
       fetchServices()
     } catch (err: any) {
-      showAlert(err?.message || 'Thao tác thất bại', 'error')
+      showAlert(resolveErrorMessage(err, tErrors, t('landlordServicesErrorActionFailed')), 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -443,7 +450,7 @@ export default function ServicesPage() {
         inactiveCount: nextStatus === 'inactive' ? prev.inactiveCount + 1 : prev.inactiveCount - 1,
       }))
     } catch (err: any) {
-      showAlert(err?.message || 'Không thể cập nhật trạng thái', 'error')
+      showAlert(resolveErrorMessage(err, tErrors, t('landlordServicesErrorUpdateStatusFailed')), 'error')
       fetchServices()
     }
   }
@@ -458,7 +465,7 @@ export default function ServicesPage() {
       setDeleteTarget(null)
       fetchServices()
     } catch (err: any) {
-      showAlert(err?.message || 'Không thể xóa dịch vụ này', 'error')
+      showAlert(resolveErrorMessage(err, tErrors, t('landlordServicesErrorDeleteFailed')), 'error')
     } finally {
       setIsDeleting(false)
     }
@@ -470,9 +477,9 @@ export default function ServicesPage() {
         key: 'total',
         label: t('landlordServicesTotalServices'),
         value: summary.totalServices,
-        icon: <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        icon: <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[150px]',
         labelClassName: 'text-rose-400',
         valueColor: 'danger',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -505,7 +512,7 @@ export default function ServicesPage() {
         value: summary.otherCount,
         icon: <CarFront className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />,
         containerClassName:
-          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+          'px-3 py-2 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[130px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -531,7 +538,7 @@ export default function ServicesPage() {
               onClick={() => showAlert(t('landlordServicesAlertImportDeveloping'), 'info')}
               className="sm:px-3.5"
             >
-              <UploadCloud className="w-4 h-4 text-emerald-600" /> Import
+              <UploadCloud className="w-4 h-4 text-success" /> {tCommon('import')}
             </Button>
             <Button
               type="button"
@@ -540,7 +547,7 @@ export default function ServicesPage() {
               onClick={() => showAlert(t('landlordServicesAlertExportSuccess'), 'success')}
               className="sm:px-3.5"
             >
-              <FileSpreadsheet className="w-4 h-4 text-blue-600" /> Export
+              <FileSpreadsheet className="w-4 h-4 text-info" /> {tCommon('export')}
             </Button>
             <Button
               type="button"
@@ -577,12 +584,14 @@ export default function ServicesPage() {
           <Info className="w-4 h-4" />
         </div>
         <div className="space-y-0.5 text-xs">
-          <h3 className="font-extrabold text-foreground">{t('landlordServicesPricingRule')}</h3>
-          <p className="text-muted leading-relaxed font-medium">
+          <Text as="h3" weight="extrabold" color="default" size="xs">
+            {t('landlordServicesPricingRule')}
+          </Text>
+          <Text size="xs" color="secondary" weight="medium" className="leading-relaxed">
             {t('landlordServicesPricingRuleGuidance', {
-              building: activeBuilding?.name || (isEn ? 'the property' : 'tòa nhà'),
+              building: activeBuilding?.name || t('landlordServicesBuildingFallback'),
             })}
-          </p>
+          </Text>
         </div>
       </div>
 
@@ -635,7 +644,9 @@ export default function ServicesPage() {
       {isLoading && (
         <div className="py-12 flex flex-col items-center justify-center space-y-2">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <p className="text-xs text-muted font-medium">{t('landlordServicesLoading')}</p>
+          <Text size="xs" color="secondary" weight="medium">
+            {t('landlordServicesLoading')}
+          </Text>
         </div>
       )}
 
@@ -647,7 +658,7 @@ export default function ServicesPage() {
             services.map(service => {
               const visual = getServiceVisuals(service.name, service.isMetered, service.unit)
               const isActive = service.status === 'active'
-              const formattedPrice = `${service.numericPrice.toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫`
+              const formattedPrice = formatCurrency(service.numericPrice, locale)
 
               return (
                 <div
@@ -667,9 +678,15 @@ export default function ServicesPage() {
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/30">
+                            <Text
+                              as="span"
+                              size="3xs"
+                              weight="black"
+                              color="brand"
+                              className="bg-primary/10 px-2 py-0.5 rounded-md border border-primary/30"
+                            >
                               {service.id.substring(0, 8).toUpperCase()}
-                            </span>
+                            </Text>
                             <span
                               className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${
                                 service.autoApplied
@@ -682,9 +699,9 @@ export default function ServicesPage() {
                                 : t('landlordServicesOptional')}
                             </span>
                           </div>
-                          <h3 className="font-black text-foreground text-base sm:text-lg mt-1">
+                          <Text as="h3" weight="black" color="default" size="lg" className="mt-1">
                             {service.name}
-                          </h3>
+                          </Text>
                         </div>
                       </div>
                     </div>
@@ -692,16 +709,19 @@ export default function ServicesPage() {
                     {/* STATUS TOGGLE WITH SWITCH */}
                     <div className="flex items-center justify-between p-3 bg-surface rounded-2xl border border-line">
                       <div className="space-y-0.5">
-                        <span className="text-xs font-extrabold text-foreground/90 block">
+                        <Text as="span" size="xs" weight="extrabold" className="block text-foreground/90">
                           {t('landlordServicesAppliedStatus')}:
-                        </span>
-                        <span
-                          className={`text-[11px] font-bold block ${isActive ? 'text-emerald-600' : 'text-muted'}`}
+                        </Text>
+                        <Text
+                          as="span"
+                          size="2xs"
+                          weight="bold"
+                          className={`block ${isActive ? 'text-success' : 'text-muted'}`}
                         >
                           {isActive
                             ? t('landlordServicesStatusOn')
                             : t('landlordServicesStatusOff')}
-                        </span>
+                        </Text>
                       </div>
 
                       <Button rounded="full"
@@ -716,7 +736,7 @@ export default function ServicesPage() {
                             : t('landlordServicesClickToEnable')
                         }
                       >
-                        <span className="sr-only">Toggle status</span>
+                        <span className="sr-only">{t('landlordServicesToggleStatusSr')}</span>
                         <span
                           className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
                             isActive ? 'translate-x-5' : 'translate-x-0'
@@ -728,26 +748,28 @@ export default function ServicesPage() {
                     {/* Service Specification Table */}
                     <div className="p-3.5 bg-surface/80 rounded-2xl space-y-2 text-xs border border-line">
                       <div className="flex justify-between items-center text-muted">
-                        <span className="text-muted font-medium">
+                        <Text as="span" size="xs" color="secondary" weight="medium">
                           {t('landlordServicesBillingTypeLabel')}
-                        </span>
-                        <span className="font-bold text-foreground bg-card px-2 py-0.5 rounded-md border border-line">
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" color="default" className="bg-card px-2 py-0.5 rounded-md border border-line">
                           {visual.typeLabel}
-                        </span>
+                        </Text>
                       </div>
                       <div className="flex justify-between items-center text-muted">
-                        <span className="text-muted font-medium">
+                        <Text as="span" size="xs" color="secondary" weight="medium">
                           {t('landlordServicesUnitLabel')}
-                        </span>
-                        <span className="font-bold text-foreground">{service.unit}</span>
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {service.unit}
+                        </Text>
                       </div>
                       <div className="flex justify-between items-center text-muted pt-1 border-t border-line">
-                        <span className="text-muted font-medium">
+                        <Text as="span" size="xs" color="secondary" weight="medium">
                           {t('landlordServicesDefaultPriceLabel')}
-                        </span>
-                        <span className="font-black text-emerald-600 text-base sm:text-lg">
+                        </Text>
+                        <Text as="span" weight="black" color="success" size="lg">
                           {formattedPrice}
-                        </span>
+                        </Text>
                       </div>
                     </div>
                   </div>
@@ -791,10 +813,12 @@ export default function ServicesPage() {
           ) : (
             <div className="col-span-full py-16 flex flex-col items-center justify-center bg-card rounded-3xl border border-line border-dashed p-6 text-center space-y-2">
               <Wrench className="w-12 h-12 text-zinc-300 mb-1" />
-              <p className="font-black text-foreground text-base">
+              <Text weight="black" color="default" size="base">
                 {t('landlordServicesEmptyTitle')}
-              </p>
-              <p className="text-xs text-muted">{t('landlordServicesEmptyDesc')}</p>
+              </Text>
+              <Text size="xs" color="secondary">
+                {t('landlordServicesEmptyDesc')}
+              </Text>
             </div>
           )}
         </div>
@@ -827,14 +851,16 @@ export default function ServicesPage() {
                 {services.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-8 text-center text-muted">
-                      {t('landlordServicesEmptyTitle')}
+                      <Text size="xs" color="secondary">
+                        {t('landlordServicesEmptyTitle')}
+                      </Text>
                     </td>
                   </tr>
                 ) : (
                   services.map(service => {
                     const visual = getServiceVisuals(service.name, service.isMetered, service.unit)
                     const isActive = service.status === 'active'
-                    const formattedPrice = `${service.numericPrice.toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫`
+                    const formattedPrice = formatCurrency(service.numericPrice, locale)
 
                     return (
                       <tr key={service.id} className="hover:bg-zinc-50/80 transition-colors">
@@ -846,25 +872,29 @@ export default function ServicesPage() {
                               {renderIcon(visual.iconName, 'w-4.5 h-4.5')}
                             </div>
                             <div>
-                              <span className="font-black text-foreground block text-xs sm:text-sm whitespace-nowrap">
+                              <Text as="span" weight="black" color="default" size="sm" className="block whitespace-nowrap">
                                 {service.name}
-                              </span>
-                              <span className="text-[10px] font-mono text-primary font-bold block">
+                              </Text>
+                              <Text as="span" size="3xs" weight="bold" color="brand" mono className="block">
                                 {service.id.substring(0, 8).toUpperCase()}
-                              </span>
+                              </Text>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className="font-bold text-foreground bg-card-hover px-2.5 py-1 rounded-md border border-line inline-block">
+                          <Text as="span" size="xs" weight="bold" color="default" className="bg-card-hover px-2.5 py-1 rounded-md border border-line inline-block">
                             {visual.typeLabel}
-                          </span>
+                          </Text>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground/90 whitespace-nowrap">
-                          {service.unit}
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Text as="span" size="xs" weight="bold" className="text-foreground/90">
+                            {service.unit}
+                          </Text>
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 text-sm whitespace-nowrap">
-                          {formattedPrice}
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Text as="span" size="sm" weight="black" color="success">
+                            {formattedPrice}
+                          </Text>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span
@@ -901,8 +931,8 @@ export default function ServicesPage() {
                               className="shrink-0"
                               title={
                                 isActive
-                                  ? t('landlordServicesClickToDisable')
-                                  : t('landlordServicesClickToEnable')
+                              ? t('landlordServicesClickToDisable')
+                              : t('landlordServicesClickToEnable')
                               }
                             >
                               <span
@@ -911,13 +941,16 @@ export default function ServicesPage() {
                                 }`}
                               />
                             </Button>
-                            <span
-                              className={`text-xs font-bold ${isActive ? 'text-emerald-600 font-black' : 'text-muted'}`}
+                            <Text
+                              as="span"
+                              size="xs"
+                              weight="bold"
+                              className={isActive ? 'text-success font-black' : 'text-muted'}
                             >
                               {isActive
                                 ? t('landlordServicesAlertStatusActive')
                                 : t('landlordServicesAlertStatusInactive')}
-                            </span>
+                            </Text>
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
@@ -964,207 +997,179 @@ export default function ServicesPage() {
       />
 
       {/* ADD / EDIT SERVICE MODAL */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseModal()
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
-            <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-accent-soft text-accent rounded-xl">
-                  <Wrench className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base sm:text-lg text-foreground">
-                    {selectedService
-                      ? t('landlordServicesModalEditTitle', { name: selectedService.name })
-                      : t('landlordServicesModalAddTitle')}
-                  </h3>
-                  <p className="text-xs text-muted font-medium">
-                    {t('landlordServicesModalSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseModal}
-              >
-                <Plus className="w-5 h-5 rotate-45" />
-              </Button>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        size="lg"
+      >
+        <Modal.Header
+          icon={
+            <div className="p-2 bg-accent-soft text-accent rounded-xl">
+              <Wrench className="w-5 h-5 text-primary" />
             </div>
+          }
+          title={
+            selectedService
+              ? t('landlordServicesModalEditTitle', { name: selectedService.name })
+              : t('landlordServicesModalAddTitle')
+          }
+          description={t('landlordServicesModalSubtitle')}
+        />
 
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
-              <TextInput
-                label={t('landlordServicesFormNameLabel')}
-                required
-                type="text"
-                placeholder={t('landlordServicesFormNamePlaceholder')}
-                value={formName}
-                onChange={e => {
-                  setFormName(e.target.value)
-                  setIsDirty(true)
-                }}
-                containerClassName="w-full space-y-1"
-                labelClassName="block font-extrabold text-foreground/90"
-                className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-              />
+        <Modal.Body className="p-4 sm:p-6 space-y-4 text-xs">
+          <TextInput
+            label={t('landlordServicesFormNameLabel')}
+            required
+            type="text"
+            placeholder={t('landlordServicesFormNamePlaceholder')}
+            value={formName}
+            onChange={e => {
+              setFormName(e.target.value)
+              setIsDirty(true)
+            }}
+            containerClassName="w-full space-y-1"
+            labelClassName="block font-extrabold text-foreground/90"
+            className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+          />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <SelectInput
-                  label={t('landlordServicesFormMeasurementLabel')}
-                  value={formIsMetered ? 'metered' : 'fixed'}
-                  onChange={e => {
-                    setFormIsMetered(e.target.value === 'metered')
-                    setIsDirty(true)
-                  }}
-                  options={[
-                    { value: 'metered', label: t('landlordServicesFormOptionMetered') },
-                    { value: 'fixed', label: t('landlordServicesFormOptionFixed') },
-                  ]}
-                  containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <SelectInput
+              label={t('landlordServicesFormMeasurementLabel')}
+              value={formIsMetered ? 'metered' : 'fixed'}
+              onChange={e => {
+                setFormIsMetered(e.target.value === 'metered')
+                setIsDirty(true)
+              }}
+              options={[
+                { value: 'metered', label: t('landlordServicesFormOptionMetered') },
+                { value: 'fixed', label: t('landlordServicesFormOptionFixed') },
+              ]}
+              containerClassName="w-full space-y-1"
+              labelClassName="block font-extrabold text-foreground/90"
+              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
+            />
 
-                <SelectInput
-                  label={t('landlordServicesFormRuleLabel')}
-                  value={formAutoApplied ? 'mandatory' : 'optional'}
-                  onChange={e => {
-                    setFormAutoApplied(e.target.value === 'mandatory')
-                    setIsDirty(true)
-                  }}
-                  options={[
-                    { value: 'mandatory', label: t('landlordServicesFormOptionMandatory') },
-                    { value: 'optional', label: t('landlordServicesFormOptionOptional') },
-                  ]}
-                  containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <TextInput
-                  label={t('landlordServicesFormUnitLabel')}
-                  required
-                  type="text"
-                  placeholder={t('landlordServicesFormUnitPlaceholder')}
-                  value={formUnit}
-                  onChange={e => {
-                    setFormUnit(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-                />
-
-                <NumberInput
-                  label={t('landlordServicesFormPriceLabel')}
-                  required
-                  min={0}
-                  step={100}
-                  placeholder={t('landlordServicesFormPricePlaceholder')}
-                  value={formPrice}
-                  onChange={e => {
-                    setFormPrice(e.target.value === '' ? '' : Number(e.target.value))
-                    setIsDirty(true)
-                  }}
-                  containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <SelectInput
-                  label={t('landlordServicesFormStatusLabel')}
-                  value={formStatus}
-                  onChange={e => {
-                    setFormStatus(e.target.value as 'active' | 'inactive')
-                    setIsDirty(true)
-                  }}
-                  options={[
-                    { value: 'active', label: t('landlordServicesFormOptionActive') },
-                    { value: 'inactive', label: t('landlordServicesFormOptionInactive') },
-                  ]}
-                  containerClassName="w-full space-y-1"
-                  labelClassName="block font-extrabold text-foreground/90"
-                  className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
-                />
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCloseModal}
-              >
-                {t('landlordServicesModalCancel')}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSaveService}
-                disabled={isSubmitting}
-              >
-                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {t('landlordServicesModalSave')}
-              </Button>
-            </div>
+            <SelectInput
+              label={t('landlordServicesFormRuleLabel')}
+              value={formAutoApplied ? 'mandatory' : 'optional'}
+              onChange={e => {
+                setFormAutoApplied(e.target.value === 'mandatory')
+                setIsDirty(true)
+              }}
+              options={[
+                { value: 'mandatory', label: t('landlordServicesFormOptionMandatory') },
+                { value: 'optional', label: t('landlordServicesFormOptionOptional') },
+              ]}
+              containerClassName="w-full space-y-1"
+              labelClassName="block font-extrabold text-foreground/90"
+              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
+            />
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <TextInput
+              label={t('landlordServicesFormUnitLabel')}
+              required
+              type="text"
+              placeholder={t('landlordServicesFormUnitPlaceholder')}
+              value={formUnit}
+              onChange={e => {
+                setFormUnit(e.target.value)
+                setIsDirty(true)
+              }}
+              containerClassName="w-full space-y-1"
+              labelClassName="block font-extrabold text-foreground/90"
+              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+            />
+
+            <NumberInput
+              label={t('landlordServicesFormPriceLabel')}
+              required
+              min={0}
+              step={100}
+              placeholder={t('landlordServicesFormPricePlaceholder')}
+              value={formPrice}
+              onChange={e => {
+                setFormPrice(e.target.value === '' ? '' : Number(e.target.value))
+                setIsDirty(true)
+              }}
+              containerClassName="w-full space-y-1"
+              labelClassName="block font-extrabold text-foreground/90"
+              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <SelectInput
+              label={t('landlordServicesFormStatusLabel')}
+              value={formStatus}
+              onChange={e => {
+                setFormStatus(e.target.value as 'active' | 'inactive')
+                setIsDirty(true)
+              }}
+              options={[
+                { value: 'active', label: t('landlordServicesFormOptionActive') },
+                { value: 'inactive', label: t('landlordServicesFormOptionInactive') },
+              ]}
+              containerClassName="w-full space-y-1"
+              labelClassName="block font-extrabold text-foreground/90"
+              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
+            />
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCloseModal}
+          >
+            {t('landlordServicesModalCancel')}
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={handleSaveService}
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {t('landlordServicesModalSave')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* APPLIED ROOMS OVERVIEW MODAL */}
-      {roomsModalService && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setRoomsModalService(null)
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-line pb-3">
-              <div className="flex items-center gap-2.5">
+      <Modal
+        isOpen={Boolean(roomsModalService)}
+        onClose={() => setRoomsModalService(null)}
+        size="md"
+      >
+        {roomsModalService && (
+          <>
+            <Modal.Header
+              icon={
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center border bg-primary-soft border-primary-subtle text-primary">
                   <Wrench className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-black text-base text-foreground">{roomsModalService.name}</h3>
-                  <span className="text-xs text-muted font-medium">
-                    {t('landlordServicesRoomsAppliedSubtitle', { count: serviceRooms.length })}
-                  </span>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setRoomsModalService(null)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+              }
+              title={roomsModalService.name}
+              description={t('landlordServicesRoomsAppliedSubtitle', {
+                count: serviceRooms.length,
+              })}
+            />
 
-            <div className="space-y-2 text-xs">
+            <Modal.Body className="p-4 sm:p-6 space-y-4 text-xs">
               <div className="p-3 bg-surface rounded-xl space-y-1 border border-line">
-                <span className="text-muted font-bold block">
+                <Text as="span" size="xs" weight="bold" color="secondary" className="block">
                   {t('landlordServicesPrice')}:{' '}
-                  <strong className="text-emerald-600 text-sm">
-                    {roomsModalService.numericPrice.toLocaleString(isEn ? 'en-US' : 'vi-VN')} ₫
-                  </strong>{' '}
+                  <Text as="strong" size="sm" weight="black" color="success">
+                    {formatCurrency(roomsModalService.numericPrice, locale)}
+                  </Text>{' '}
                   / {roomsModalService.unit}
-                </span>
-                <span className="text-muted block font-medium">
+                </Text>
+                <Text as="span" size="xs" color="secondary" weight="medium" className="block">
                   {t('landlordServicesType')}:{' '}
                   {roomsModalService.isMetered
                     ? t('landlordServicesMetered')
@@ -1174,12 +1179,12 @@ export default function ServicesPage() {
                     ? t('landlordServicesMandatory')
                     : t('landlordServicesOptional')}
                   )
-                </span>
+                </Text>
               </div>
 
-              <span className="font-extrabold text-foreground/90 block pt-2">
+              <Text as="span" size="xs" weight="extrabold" className="block pt-2 text-foreground/90">
                 {t('landlordServicesRoomsListTitle')}
-              </span>
+              </Text>
 
               {isLoadingRooms ? (
                 <div className="py-8 flex justify-center items-center">
@@ -1187,7 +1192,9 @@ export default function ServicesPage() {
                 </div>
               ) : serviceRooms.length === 0 ? (
                 <div className="py-6 text-center text-muted text-xs">
-                  {t('landlordServicesRoomsEmpty')}
+                  <Text size="xs" color="secondary">
+                    {t('landlordServicesRoomsEmpty')}
+                  </Text>
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
@@ -1195,74 +1202,79 @@ export default function ServicesPage() {
                     <div
                       key={room.id}
                       className="p-2 bg-surface border border-line rounded-xl text-center font-bold text-foreground text-xs"
-                      title={`Tầng ${room.floor} - Trạng thái: ${room.status}`}
+                      title={t('landlordServicesRoomTooltip', {
+                        floor: room.floor,
+                        status: localizeDbEnum('roomStatus', room.status, locale),
+                      })}
                     >
-                      P.{room.roomNumber}
+                      {t('landlordServicesRoomBadge', { room: room.roomNumber })}
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </Modal.Body>
 
-            <Button fullWidth
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => setRoomsModalService(null)}
-            >
-              {t('landlordServicesRoomsClose')}
-            </Button>
-          </div>
-        </div>
-      )}
+            <Modal.Footer>
+              <Button
+                fullWidth
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => setRoomsModalService(null)}
+              >
+                {t('landlordServicesRoomsClose')}
+              </Button>
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* DELETE CONFIRMATION MODAL */}
-      {deleteTarget && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setDeleteTarget(null)
-          }}
-        >
-          <div className="bg-card rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-line">
-            <div className="w-14 h-14 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-center mx-auto text-rose-500 shadow-2xs">
-              <Trash2 className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-foreground tracking-tight">
-                {t('landlordServicesDeleteTitle')}
-              </h3>
-              <p className="text-xs sm:text-sm text-muted font-medium leading-relaxed max-w-xs mx-auto">
-                {t('landlordServicesDeleteMessage', { name: deleteTarget.name })}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteTarget(null)}
-                className="flex-1"
-              >
-                {t('landlordServicesDeleteCancel')}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={handleDeleteService}
-                disabled={isDeleting}
-                className="flex-1"
-              >
-                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {t('landlordServicesDeleteConfirm')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        size="md"
+        zIndex={60}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 sm:p-7 text-center space-y-5">
+          <div className="w-14 h-14 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-center mx-auto text-danger shadow-2xs">
+            <Trash2 className="w-7 h-7" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <Text as="h3" weight="black" size="xl" color="default" className="tracking-tight">
+              {t('landlordServicesDeleteTitle')}
+            </Text>
+            <Text size="sm" color="secondary" weight="medium" className="leading-relaxed max-w-xs mx-auto">
+              {deleteTarget && t('landlordServicesDeleteMessage', { name: deleteTarget.name })}
+            </Text>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer className="flex items-center justify-center gap-3 pt-2 bg-transparent border-t-0 p-6 pt-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setDeleteTarget(null)}
+            className="flex-1"
+          >
+            {t('landlordServicesDeleteCancel')}
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteService}
+            disabled={isDeleting}
+            className="flex-1"
+          >
+            {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            {t('landlordServicesDeleteConfirm')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* CONFIRM MODAL (RULE #10) */}
       <ConfirmModal
@@ -1306,49 +1318,51 @@ function ConfirmModal({
   onCancel: () => void
 }) {
   const t = useTranslations('landlord')
-  if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onCancel()
-      }}
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      size="sm"
+      zIndex={60}
+      showCloseButton={false}
     >
-      <div className="bg-card rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-line">
+      <Modal.Body className="p-6 sm:p-7 text-center space-y-5">
         <div className="w-14 h-14 bg-warning-soft border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
           <AlertTriangle className="w-7 h-7" />
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-xl font-black text-foreground tracking-tight">{title}</h3>
-          <p className="text-xs sm:text-sm text-muted font-medium leading-relaxed max-w-xs mx-auto">
+          <Text as="h3" weight="black" size="xl" color="default" className="tracking-tight">
+            {title}
+          </Text>
+          <Text size="sm" color="secondary" weight="medium" className="leading-relaxed max-w-xs mx-auto">
             {message}
-          </p>
+          </Text>
         </div>
+      </Modal.Body>
 
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onCancel}
-            className="flex-1"
-          >
-            {cancelText || t('landlordServicesConfirmCloseKeep')}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={onConfirm}
-            className="flex-1"
-          >
-            {confirmText || t('landlordServicesConfirmCloseDiscard')}
-          </Button>
-        </div>
-      </div>
-    </div>
+      <Modal.Footer className="flex items-center justify-center gap-3 pt-2 bg-transparent border-t-0 p-6 pt-0">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          className="flex-1"
+        >
+          {cancelText || t('landlordServicesConfirmCloseKeep')}
+        </Button>
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={onConfirm}
+          className="flex-1"
+        >
+          {confirmText || t('landlordServicesConfirmCloseDiscard')}
+        </Button>
+      </Modal.Footer>
+    </Modal>
   )
 }
 
@@ -1368,23 +1382,22 @@ function AlertModal({
   onClose: () => void
 }) {
   const t = useTranslations('landlord')
-  if (!isOpen) return null
 
   const config = {
     warning: {
-      bgColor: 'bg-amber-500/10 text-amber-600 border-warning-subtle',
+      bgColor: 'bg-amber-500/10 text-warning border-warning-subtle',
       icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20',
+      btnColor: 'bg-amber-500 hover:bg-warning text-white shadow-amber-500/20',
     },
     error: {
-      bgColor: 'bg-rose-500/10 text-rose-600 border-danger-subtle',
-      icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
-      btnColor: 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20',
+      bgColor: 'bg-danger/10 text-danger border-danger-subtle',
+      icon: <AlertCircle className="w-7 h-7 text-danger" />,
+      btnColor: 'bg-danger hover:bg-danger text-white shadow-danger/20',
     },
     success: {
-      bgColor: 'bg-emerald-500/10 text-emerald-600 border-success-subtle',
+      bgColor: 'bg-emerald-500/10 text-success border-success-subtle',
       icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20',
+      btnColor: 'bg-emerald-500 hover:bg-success text-white shadow-emerald-500/20',
     },
     info: {
       bgColor: 'bg-accent-soft text-accent border-accent-subtle',
@@ -1394,13 +1407,14 @@ function AlertModal({
   }[type]
 
   return (
-    <div
-      className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onClose()
-      }}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="xs"
+      zIndex={75}
+      showCloseButton={false}
     >
-      <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
+      <Modal.Body className="p-6 space-y-4 text-center">
         <div
           className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
         >
@@ -1408,17 +1422,20 @@ function AlertModal({
         </div>
 
         <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-foreground">{title}</h3>
-          <p className="text-xs text-muted font-medium leading-relaxed">{message}</p>
+          <Text as="h3" weight="black" size="lg" color="default">
+            {title}
+          </Text>
+          <Text size="xs" color="secondary" weight="medium" className="leading-relaxed">
+            {message}
+          </Text>
         </div>
+      </Modal.Body>
 
-        <Button fullWidth variant="dark"
-          onClick={onClose}
-          size="sm"
-        >
+      <Modal.Footer className="bg-transparent border-t-0 p-6 pt-0">
+        <Button fullWidth variant="dark" onClick={onClose} size="sm">
           {btnText || t('landlordServicesAlertUnderstand')}
         </Button>
-      </div>
-    </div>
+      </Modal.Footer>
+    </Modal>
   )
 }
