@@ -3233,7 +3233,7 @@ export const enLandlord = {
     landlordScheduleConfirmRecurringDelete: "This shift belongs to a recurring series.\n\nClick \"OK\" to cancel the shift on {date} only.\nClick \"Cancel\" to adjust future series in Edit Modal.",
     landlordScheduleStaffManagementTag: "Staff Management",
     landlordScheduleCurrentProperty: "current property",
-    landlordScheduleBtnShiftTemplates: "Shift Templates",
+    landlordScheduleBtnShiftTemplates: "Shift config",
     landlordScheduleStatWithinTimeframe: "Within timeframe",
     landlordScheduleStatReadyForDuty: "Ready for duty",
     landlordScheduleStatRecurringShifts: "Recurring Shifts",

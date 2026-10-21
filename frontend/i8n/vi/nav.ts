@@ -80,7 +80,7 @@ export const viNav = {
     sendApplication: "Gửi đơn",
     services: "Dịch vụ",
     settings: "Cài đặt",
-    shifts: "Ca mẫu",
+    shifts: "Ca làm",
     switchProperty: "Chuyển cơ sở",
     switchPropertyTooltip: "Chuyển đổi nhà trọ đang quản lý",
     staff: "Nhân viên",

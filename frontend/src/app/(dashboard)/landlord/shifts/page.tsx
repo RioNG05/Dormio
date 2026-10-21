@@ -6,7 +6,6 @@ import {
   Plus,
   Edit3,
   Trash2,
-  Search,
   Loader2,
   X,
   Check,
@@ -141,8 +140,8 @@ export default function ShiftsPage() {
     } catch (err: any) {
       setFormError(
         err?.response?.data?.message ||
-          err?.message ||
-          t('landlordShiftsDeleteError'),
+        err?.message ||
+        t('landlordShiftsDeleteError'),
       )
     } finally {
       setIsSubmitting(false)
@@ -259,11 +258,10 @@ export default function ShiftsPage() {
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
-            toast.type === 'success'
+          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${toast.type === 'success'
               ? 'bg-success-soft text-success border-success-subtle'
               : 'bg-danger-soft text-danger border-danger-subtle'
-          }`}
+            }`}
         >
           {toast.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
@@ -283,8 +281,9 @@ export default function ShiftsPage() {
             size="md"
             onClick={openCreateModal}
             className="shrink-0"
+            leftIcon={<Plus />}
           >
-            <Plus className="w-4 h-4" /> {t('landlordShiftsAddNewBtn')}
+            {t('landlordShiftsAddNewBtn')}
           </Button>
         }
       />

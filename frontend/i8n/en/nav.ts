@@ -80,7 +80,7 @@ export const enNav = {
     sendApplication: "Submit Application",
     services: "Services",
     settings: "Settings",
-    shifts: "Shift Templates",
+    shifts: "Shift",
     switchProperty: "Switch Property",
     switchPropertyTooltip: "Switch managed property",
     staff: "Employees",

@@ -4,17 +4,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Users,
   Plus,
-  Search,
   UserCheck,
-  Building2,
   Phone,
   Mail,
   Calendar,
   CheckCircle2,
   AlertCircle,
-  LayoutGrid,
-  List,
-  ChevronDown,
   Loader2,
   X,
   Briefcase,
@@ -33,9 +28,7 @@ import { useToast } from '@/context/ToastContext'
 import {
   Button,
   TextInput,
-  NumberInput,
   SelectInput,
-  TextareaInput,
   SearchInput,
   Avatar,
   Pagination,
@@ -568,7 +561,7 @@ export default function StaffPage() {
                 setPosErrorMessage('')
                 setIsPositionsModalOpen(true)
               }}
-              leftIcon={<Briefcase className="w-4 h-4 text-primary" />}
+              leftIcon={<Briefcase className="text-primary" />}
             >
               {t('landlordStaffManagePositions', { count: positions.length })}
             </Button>
@@ -580,7 +573,7 @@ export default function StaffPage() {
                 resetOnboardForm()
                 setIsOnboardModalOpen(true)
               }}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus />}
             >
               {t('landlordStaffAddNew')}
             </Button>
@@ -735,11 +728,10 @@ export default function StaffPage() {
                     </div>
 
                     <span
-                      className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border shrink-0 ${
-                        isActive
-                          ? 'bg-primary/10 text-primary border-primary/30'
-                          : 'bg-card-hover text-muted border-line'
-                      }`}
+                      className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border shrink-0 ${isActive
+                        ? 'bg-primary/10 text-primary border-primary/30'
+                        : 'bg-card-hover text-muted border-line'
+                        }`}
                     >
                       {isActive
                         ? t('landlordStaffStatusActiveBadge')
@@ -801,7 +793,7 @@ export default function StaffPage() {
                       size="sm"
                       onClick={() => handleOpenAssignRoleModal(staff)}
                       title={t('landlordStaffBtnAssignRoleTooltip')}
-                      leftIcon={<Edit3  />}
+                      leftIcon={<Edit3 />}
                     >
                       {t('landlordStaffBtnAssignRole')}
                     </Button>
@@ -817,7 +809,7 @@ export default function StaffPage() {
                         ? 'text-danger bg-danger-soft hover:bg-rose-100/80 border border-danger-subtle'
                         : 'text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30',
                     )}
-                    leftIcon={<Power  />}
+                    leftIcon={<Power />}
                   >
                     {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
                   </Button>
@@ -880,11 +872,10 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border ${
-                            isActive
-                              ? 'bg-primary/10 text-primary border-primary/30'
-                              : 'bg-card-hover text-muted border-line'
-                          }`}
+                          className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border ${isActive
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'bg-card-hover text-muted border-line'
+                            }`}
                         >
                           {isActive
                             ? t('landlordStaffTableStatusActive')
@@ -1699,11 +1690,10 @@ export default function StaffPage() {
                   {t('landlordStaffDetailStatusLabel')}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${
-                    selectedStaff.status === 'active'
-                      ? 'bg-success-soft text-success'
-                      : 'bg-line text-muted'
-                  }`}
+                  className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${selectedStaff.status === 'active'
+                    ? 'bg-success-soft text-success'
+                    : 'bg-line text-muted'
+                    }`}
                 >
                   {selectedStaff.status === 'active'
                     ? t('landlordStaffTableStatusActive')

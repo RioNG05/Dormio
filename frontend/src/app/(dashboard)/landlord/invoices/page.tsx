@@ -12,13 +12,9 @@ import {
   Eye,
   Calendar,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
   QrCode,
   X,
   Check,
-  LayoutGrid,
-  List,
   Zap,
   Droplets,
   ShieldCheck,
@@ -39,7 +35,6 @@ import {
   ViewModeToggle,
   FilterToolbar,
 } from '@/components/ui'
-import { cn } from '@/lib/utils'
 import {
   landlordInvoiceService,
   LandlordInvoiceItem,
@@ -233,18 +228,6 @@ function InvoicesContent() {
   const overdueCount = serverSummary.overdueCount
   const totalPaidAmount = serverSummary.totalPaidAmount
   const totalUnpaidAmount = serverSummary.totalUnpaidAmount
-
-  // Pagination Logic with 5-page window jumping (Rule #9)
-  const totalPages = Math.ceil(totalRecords / pageSize) || 1
-  const windowSize = 5
-  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-  const visiblePages = Array.from(
-    { length: windowEnd - windowStart + 1 },
-    (_, i) => windowStart + i,
-  )
-  const startIndex = (currentPage - 1) * pageSize
-  const endIndex = Math.min(startIndex + pageSize, totalRecords)
 
   const paginatedInvoices = invoices
   const totalItems = totalRecords
@@ -440,16 +423,7 @@ function InvoicesContent() {
         actions={
           <>
             <Button
-              variant="outline"
-              size="md"
-              onClick={handleOpenOcrModal}
-              leftIcon={<Sparkles className="fill-amber-500 shrink-0" />}
-            >
-              {t('landlordInvoicesBtnOcrScan')}
-            </Button>
-
-            <Button
-              variant="outline"
+              variant="success"
               size="md"
               leftIcon={<FileSpreadsheet className="shrink-0" />}
             >
@@ -616,10 +590,10 @@ function InvoicesContent() {
               <div
                 key={inv.id}
                 className={`bg-card border rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between ${isPaid
-                    ? 'border-success-subtle hover:border-emerald-300'
-                    : isOverdue
-                      ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
-                      : 'border-line hover:border-primary/40'
+                  ? 'border-success-subtle hover:border-emerald-300'
+                  : isOverdue
+                    ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
+                    : 'border-line hover:border-primary/40'
                   }`}
               >
                 {/* Header info */}
@@ -630,10 +604,10 @@ function InvoicesContent() {
                     </span>
                     <span
                       className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${isPaid
-                          ? 'bg-success-soft text-success border-success-subtle'
-                          : isOverdue
-                            ? 'bg-danger-soft text-danger border-danger-subtle'
-                            : 'bg-warning-soft text-warning border-warning-subtle'
+                        ? 'bg-success-soft text-success border-success-subtle'
+                        : isOverdue
+                          ? 'bg-danger-soft text-danger border-danger-subtle'
+                          : 'bg-warning-soft text-warning border-warning-subtle'
                         }`}
                     >
                       {inv.status}
@@ -780,10 +754,10 @@ function InvoicesContent() {
                     <td className="px-4 py-3.5">
                       <span
                         className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${inv.status === 'Đã thu'
-                            ? 'bg-success-soft text-success border-success-subtle'
-                            : inv.status === 'Quá hạn'
-                              ? 'bg-danger-soft text-danger border-danger-subtle'
-                              : 'bg-warning-soft text-warning border-warning-subtle'
+                          ? 'bg-success-soft text-success border-success-subtle'
+                          : inv.status === 'Quá hạn'
+                            ? 'bg-danger-soft text-danger border-danger-subtle'
+                            : 'bg-warning-soft text-warning border-warning-subtle'
                           }`}
                       >
                         {getInvoiceStatusLabel(inv.status)}
@@ -843,10 +817,10 @@ function InvoicesContent() {
                     )}
                     <span
                       className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${selectedInvoice.status === 'Đã thu'
-                          ? 'bg-success-soft text-success border-success-subtle'
-                          : selectedInvoice.status === 'Quá hạn'
-                            ? 'bg-danger-soft text-danger border-danger-subtle'
-                            : 'bg-warning-soft text-warning border-warning-subtle'
+                        ? 'bg-success-soft text-success border-success-subtle'
+                        : selectedInvoice.status === 'Quá hạn'
+                          ? 'bg-danger-soft text-danger border-danger-subtle'
+                          : 'bg-warning-soft text-warning border-warning-subtle'
                         }`}
                     >
                       {getInvoiceStatusLabel(selectedInvoice.status)}

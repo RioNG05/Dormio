@@ -3233,7 +3233,7 @@ export const viLandlord = {
     landlordScheduleConfirmRecurringDelete: "Ca trực này thuộc chuỗi phân ca lặp lại.\n\nBấm \"OK\" để chỉ hủy ca ngày {date}.\nBấm \"Cancel\" nếu bạn muốn xem tùy chọn hủy chuỗi tương lai trong modal Chỉnh sửa.",
     landlordScheduleStaffManagementTag: "Quản lý nhân sự",
     landlordScheduleCurrentProperty: "Tòa nhà hiện tại",
-    landlordScheduleBtnShiftTemplates: "Quản lý ca mẫu",
+    landlordScheduleBtnShiftTemplates: "Cấu hình ca làm",
     landlordScheduleStatWithinTimeframe: "Trong khoảng thời gian",
     landlordScheduleStatReadyForDuty: "Sẵn sàng thực hiện",
     landlordScheduleStatRecurringShifts: "Ca lặp lại",

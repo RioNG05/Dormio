@@ -3,26 +3,18 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   AlertTriangle,
-  Search,
   RefreshCw,
   FileSpreadsheet,
   DollarSign,
-  Building2,
   Calendar,
-  Clock,
   Send,
   Eye,
   CheckCircle2,
   Copy,
   Check,
   X,
-  LayoutGrid,
-  List,
-  ChevronLeft,
-  ChevronRight,
   User,
   Phone,
-  ShieldAlert,
   Loader2,
   Receipt,
   CreditCard,
@@ -36,7 +28,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -294,27 +286,27 @@ export default function LandlordDebtsPage() {
 
     const headers = isEn
       ? [
-          'Room',
-          'Floor',
-          'Tenant',
-          'Phone',
-          'Total Debt (VND)',
-          'Overdue Debt (VND)',
-          'Max Aging Days',
-          'Status',
-          'Invoice Count',
-        ]
+        'Room',
+        'Floor',
+        'Tenant',
+        'Phone',
+        'Total Debt (VND)',
+        'Overdue Debt (VND)',
+        'Max Aging Days',
+        'Status',
+        'Invoice Count',
+      ]
       : [
-          'Phòng',
-          'Tầng',
-          'Khách thuê',
-          'Số điện thoại',
-          'Số tiền nợ (VND)',
-          'Nợ quá hạn (VND)',
-          'Số ngày nợ cao nhất',
-          'Tình trạng',
-          'Số lượng hóa đơn',
-        ]
+        'Phòng',
+        'Tầng',
+        'Khách thuê',
+        'Số điện thoại',
+        'Số tiền nợ (VND)',
+        'Nợ quá hạn (VND)',
+        'Số ngày nợ cao nhất',
+        'Tình trạng',
+        'Số lượng hóa đơn',
+      ]
 
     const rows = debtRooms.map(r => [
       r.roomNumber,
@@ -439,29 +431,14 @@ export default function LandlordDebtsPage() {
         title={t('landlordDebtsTitle')}
         subtitle={t('landlordDebtsSubtitle')}
         actions={
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={handleTriggerFlip}
-              disabled={isRefreshing}
-              title={t('landlordDebtsSyncTooltip')}
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-600' : ''}`} />
-              <span>{isRefreshing ? t('landlordDebtsSyncing') : t('landlordDebtsSyncBtn')}</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={handleExportCSV}
-            >
-              <FileSpreadsheet className="w-4 h-4 text-success" />
-              <span>{t('landlordDebtsExportExcel')}</span>
-            </Button>
-          </>
+          <Button
+            variant="success"
+            size="md"
+            onClick={handleExportCSV}
+            leftIcon={<FileSpreadsheet />}
+          >
+            {t('landlordDebtsExportExcel')}
+          </Button>
         }
       />
 
@@ -591,35 +568,26 @@ export default function LandlordDebtsPage() {
             return (
               <div
                 key={room.roomId}
-                className={`bg-card rounded-2xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between overflow-hidden group ${
-                  isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-line hover:border-primary/40'
-                }`}
+                className={`bg-card rounded-2xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between overflow-hidden group ${isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-line hover:border-primary/40'
+                  }`}
               >
                 {/* Card Header */}
                 <div className="p-5 border-b border-line">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => handleToggleSelectRoom(room.roomId)}
-                        size="sm"
-                        containerClassName="w-auto"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-black text-foreground group-hover:text-teal-600 transition-colors">
-                            {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
-                          </span>
-                          {room.floor !== null && (
-                            <span className="text-[10px] font-bold text-muted px-2 py-0.5 bg-card-hover rounded-md">
-                              {t('landlordDebtsFloorPrefix', { floor: room.floor })}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-muted font-medium block">
-                          {room.buildingName}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black text-foreground group-hover:text-teal-600 transition-colors">
+                          {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
                         </span>
+                        {room.floor !== null && (
+                          <span className="text-[10px] font-bold text-muted px-2 py-0.5 bg-card-hover rounded-md">
+                            {t('landlordDebtsFloorPrefix', { floor: room.floor })}
+                          </span>
+                        )}
                       </div>
+                      <span className="text-[11px] text-muted font-medium block">
+                        {room.buildingName}
+                      </span>
                     </div>
 
                     <span
@@ -703,30 +671,16 @@ export default function LandlordDebtsPage() {
                 {/* Card Actions */}
                 <div className="p-4 bg-card border-t border-line flex items-center gap-2">
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInvoicesModalRoom(room)}
-                    className="flex-1"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-muted" />
-                    <span>{t('landlordDebtsBtnViewInvoices')}</span>
-                  </Button>
-
-                  <Button
-                    type="button"
                     variant="primary"
-                    size="sm"
                     onClick={() => {
                       setReminderModalRoom(room)
                       setReminderNote('')
                       setIsReminderDirty(false)
                       setReminderCopied(false)
                     }}
-                    className="flex-1 from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
+                    leftIcon={<Send />}
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{t('landlordDebtsBtnSendReminder')}</span>
+                    {t('landlordDebtsBtnSendReminder')}
                   </Button>
                 </div>
               </div>
@@ -740,14 +694,6 @@ export default function LandlordDebtsPage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-surface/80 text-muted uppercase tracking-wider font-extrabold border-b border-line text-[11px]">
                 <tr>
-                  <th className="p-4 w-10 text-center">
-                    <Checkbox
-                      checked={isAllCurrentPageSelected}
-                      onChange={handleToggleSelectAll}
-                      size="sm"
-                      containerClassName="w-auto flex justify-center"
-                    />
-                  </th>
                   <th className="p-4">{t('landlordDebtsThRoomTenant')}</th>
                   <th className="p-4">{t('landlordDebtsThPhone')}</th>
                   <th className="p-4 text-right">{t('landlordDebtsThTotalDebt')}</th>
@@ -783,38 +729,21 @@ export default function LandlordDebtsPage() {
                   return (
                     <tr
                       key={room.roomId}
-                      className={`hover:bg-card-hover transition-colors duration-150 ${
-                        isSelected ? 'bg-primary-soft' : ''
-                      }`}
+                      className={`hover:bg-card-hover transition-colors duration-150 ${isSelected ? 'bg-primary-soft' : ''
+                        }`}
                     >
-                      <td className="p-4 text-center">
-                        <Checkbox
-                          checked={isSelected}
-                          onChange={() => handleToggleSelectRoom(room.roomId)}
-                          size="sm"
-                          containerClassName="w-auto flex justify-center"
-                        />
-                      </td>
-
                       <td className="p-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center font-black text-xs">
-                            {room.roomNumber}
-                          </div>
-                          <div>
-                            <span className="font-bold text-foreground block">
-                              {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
-                              {room.floor !== null && (
-                                <span className="text-[10px] text-muted font-normal ml-1.5">
-                                  ({t('landlordDebtsFloorPrefix', { floor: room.floor })})
-                                </span>
-                              )}
+                        <span className="font-bold text-foreground block">
+                          {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
+                          {room.floor !== null && (
+                            <span className="text-[10px] text-muted font-normal ml-1.5">
+                              ({t('landlordDebtsFloorPrefix', { floor: room.floor })})
                             </span>
-                            <span className="text-[11px] text-muted font-medium">
-                              {room.tenant?.name || t('landlordDebtsNoTenant')}
-                            </span>
-                          </div>
-                        </div>
+                          )}
+                        </span>
+                        <span className="text-[11px] text-muted font-medium">
+                          {room.tenant?.name || t('landlordDebtsNoTenant')}
+                        </span>
                       </td>
 
                       <td className="p-4">
@@ -861,18 +790,8 @@ export default function LandlordDebtsPage() {
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setInvoicesModalRoom(room)}
-                            title={t('landlordDebtsBtnViewInvoices')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
+                            variant="primary"
+                            size="icon-sm"
                             onClick={() => {
                               setReminderModalRoom(room)
                               setReminderNote('')
@@ -881,7 +800,7 @@ export default function LandlordDebtsPage() {
                             }}
                             title={t('landlordDebtsBtnSendReminder')}
                           >
-                            <Send className="w-4 h-4" />
+                            <Send />
                           </Button>
                         </div>
                       </td>
@@ -971,11 +890,10 @@ export default function LandlordDebtsPage() {
                           {t('landlordDebtsModalPeriod', { period: inv.period })}
                         </span>
                         <span
-                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                            inv.status === 'overdue'
-                              ? 'bg-danger-soft text-danger border-danger-subtle'
-                              : 'bg-warning-soft text-warning border-warning-subtle'
-                          }`}
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${inv.status === 'overdue'
+                            ? 'bg-danger-soft text-danger border-danger-subtle'
+                            : 'bg-warning-soft text-warning border-warning-subtle'
+                            }`}
                         >
                           {inv.status === 'overdue'
                             ? t('landlordDebtsModalStatusOverdue')

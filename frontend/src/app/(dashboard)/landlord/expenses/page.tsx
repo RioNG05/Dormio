@@ -4,20 +4,14 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Plus,
-  Search,
   Receipt,
   Wallet,
-  LayoutGrid,
-  List,
   Check,
   X,
   AlertTriangle,
   Trash2,
   Edit3,
   Clock,
-  MapPin,
-  ChevronLeft,
-  ChevronRight,
   Lock,
   Loader2,
   RefreshCw,
@@ -506,21 +500,10 @@ export default function ExpensesPage() {
         actions={
           <>
             <Button
-              variant="secondary"
-              size="md"
-              onClick={fetchExpenses}
-              disabled={isLoading}
-              isLoading={isLoading}
-              leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-primary')} />}
-            >
-              {t('landlordExpensesReload')}
-            </Button>
-
-            <Button
-              variant="secondary"
+              variant="success"
               size="md"
               onClick={handleExportCSV}
-              leftIcon={<FileSpreadsheet className="w-4 h-4 text-success" />}
+              leftIcon={<FileSpreadsheet />}
             >
               {t('landlordExpensesExportExcel')}
             </Button>
@@ -637,7 +620,7 @@ export default function ExpensesPage() {
               resetForm()
               setShowCreateModal(true)
             }}
-            leftIcon={<Plus  />}
+            leftIcon={<Plus />}
           >
             {t('landlordExpensesAddNew')}
           </Button>
@@ -1048,8 +1031,8 @@ export default function ExpensesPage() {
                     {showCreateModal
                       ? t('landlordExpensesCreateTitle')
                       : t('landlordExpensesEditTitleWithCode', {
-                          code: editingExpense?.code || '',
-                        })}
+                        code: editingExpense?.code || '',
+                      })}
                   </h3>
                   <p className="text-xs text-muted font-semibold">
                     {t('landlordExpensesFormSubtitle')}
@@ -1230,7 +1213,7 @@ export default function ExpensesPage() {
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
                 onClick={showCreateModal ? handleCreateExpense : handleUpdateExpense}
-                leftIcon={!isSubmitting ? <Check  /> : undefined}
+                leftIcon={!isSubmitting ? <Check /> : undefined}
               >
                 {showCreateModal
                   ? t('landlordExpensesSaveExpense')

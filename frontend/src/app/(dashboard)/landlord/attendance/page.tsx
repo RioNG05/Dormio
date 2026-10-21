@@ -8,25 +8,11 @@ import {
   AlertTriangle,
   XCircle,
   HelpCircle,
-  Filter,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  LayoutGrid,
-  List,
   Edit3,
   X,
-  User,
-  Shield,
   Loader2,
   Download,
-  RotateCcw,
-  Sparkles,
-  Percent,
-  CalendarDays,
-  FileSpreadsheet,
   Info,
-  Check,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
@@ -38,7 +24,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -155,7 +141,7 @@ export default function AttendancePage() {
       setEndDate(formatDateString(last))
     }
     setCurrentPage(1)
-      }
+  }
 
   const showToast = (type: 'success' | 'error', text: string) => {
     setToastMessage({ type, text })
@@ -306,7 +292,7 @@ export default function AttendancePage() {
       showToast(
         'error',
         err?.response?.data?.message ||
-          (isEn ? 'Error updating attendance' : 'Lỗi khi cập nhật chấm công'),
+        (isEn ? 'Error updating attendance' : 'Lỗi khi cập nhật chấm công'),
       )
     } finally {
       setIsSubmittingOverride(false)
@@ -365,20 +351,17 @@ export default function AttendancePage() {
           : 'Ngày,Nhân viên,SĐT,Vị trí,Ca làm việc,Khung giờ,Check-in,Check-out,Trạng thái,Người điều chỉnh',
         ...records.map(
           r =>
-            `"${formatDisplayDate(r.workDate)}","${r.employeeName}","${
-              r.employeePhone
-            }","${r.positionName || (isEn ? 'Staff' : 'Nhân viên')}","${r.shiftName}","${
-              r.shiftStartTime
+            `"${formatDisplayDate(r.workDate)}","${r.employeeName}","${r.employeePhone
+            }","${r.positionName || (isEn ? 'Staff' : 'Nhân viên')}","${r.shiftName}","${r.shiftStartTime
             }-${r.shiftEndTime}","${formatDisplayTime(
               r.checkIn,
-            )}","${formatDisplayTime(r.checkOut)}","${
-              r.attendanceStatus === 'on_time'
-                ? 'Đúng giờ'
-                : r.attendanceStatus === 'late'
-                  ? 'Đi trễ'
-                  : r.attendanceStatus === 'absent'
-                    ? 'Vắng mặt'
-                    : 'Chưa chấm công'
+            )}","${formatDisplayTime(r.checkOut)}","${r.attendanceStatus === 'on_time'
+              ? 'Đúng giờ'
+              : r.attendanceStatus === 'late'
+                ? 'Đi trễ'
+                : r.attendanceStatus === 'absent'
+                  ? 'Vắng mặt'
+                  : 'Chưa chấm công'
             }","${r.editedByName || ''}"`,
         ),
       ].join('\n')
@@ -476,11 +459,10 @@ export default function AttendancePage() {
       {/* Toast Feedback */}
       {toastMessage && (
         <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
-            toastMessage.type === 'success'
-              ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
-              : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
-          }`}
+          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${toastMessage.type === 'success'
+            ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
+            : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
+            }`}
         >
           {toastMessage.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
@@ -494,16 +476,15 @@ export default function AttendancePage() {
       {/* ─── Top Header ─────────────────────────────────────────────────── */}
       <LandlordPageHeader
         title={t('landlordAttendanceTitle')}
-        subtitle={`${t('landlordAttendanceSubtitleFull')}: ${activeBuilding?.name || (isEn ? 'property' : 'Tòa nhà')}`}
+        subtitle={`${t('landlordAttendanceSubtitleFull')}`}
         actions={
           <Button
-            type="button"
-            variant="outline"
+            variant="success"
             size="md"
             onClick={handleExportData}
-            leftIcon={<Download className="w-4 h-4" />}
+            leftIcon={<Download />}
           >
-            <span>{t('landlordAttendanceBtnExport')} (CSV)</span>
+            {t('landlordAttendanceBtnExport')} (CSV)
           </Button>
         }
       />
@@ -525,8 +506,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'today' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => handleDatePresetChange('today')}
-                
- >
+
+              >
                 {isEn ? 'Today' : 'Hôm nay'}
               </Button>
               <Button
@@ -534,8 +515,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'week' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => handleDatePresetChange('week')}
-                
- >
+
+              >
                 {isEn ? 'This Week' : 'Tuần này'}
               </Button>
               <Button
@@ -543,8 +524,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'month' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => handleDatePresetChange('month')}
-                
- >
+
+              >
                 {isEn ? 'This Month' : 'Tháng này'}
               </Button>
               <Button
@@ -552,8 +533,8 @@ export default function AttendancePage() {
                 variant={datePreset === 'custom' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setDatePreset('custom')}
-                
- >
+
+              >
                 {isEn ? 'Custom' : 'Tùy chọn'}
               </Button>
             </div>
@@ -698,8 +679,8 @@ export default function AttendancePage() {
             variant="ghost"
             size="sm"
             onClick={() => handleDatePresetChange('month')}
-            
- >
+
+          >
             {isEn ? 'View Entire Month' : 'Xem toàn bộ tháng này'}
           </Button>
         </div>
@@ -793,9 +774,9 @@ export default function AttendancePage() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpenOverride(item)}
-                  leftIcon={<Edit3  />}
+                  leftIcon={<Edit3 />}
                   className="mt-2"
- >
+                >
                   <span>{t('landlordAttendanceBtnEdit')}</span>
                 </Button>
               </div>
@@ -867,9 +848,9 @@ export default function AttendancePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenOverride(item)}
-                        
+
                         title={t('landlordAttendanceBtnEdit')}
- >
+                      >
                         <Edit3 className="w-4 h-4" />
                       </Button>
                     </td>
@@ -892,8 +873,8 @@ export default function AttendancePage() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
- MODAL: MANUAL ATTENDANCE OVERRIDE
- ═══════════════════════════════════════════════════════════════════ */}
+          MODAL: MANUAL ATTENDANCE OVERRIDE
+          ═══════════════════════════════════════════════════════════════════ */}
       {isOverrideModalOpen && selectedRecord && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
@@ -928,8 +909,8 @@ export default function AttendancePage() {
                 variant="ghost"
                 size="sm"
                 onClick={handleAttemptCloseOverride}
-                
- >
+
+              >
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -973,13 +954,12 @@ export default function AttendancePage() {
                       setOverrideStatus('on_time')
                       setIsDirty(true)
                     }}
- >
+                  >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'on_time'
-                          ? 'border-success bg-success'
-                          : 'border-line bg-card'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'on_time'
+                        ? 'border-success bg-success'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'on_time' && (
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
@@ -996,13 +976,12 @@ export default function AttendancePage() {
                       setOverrideStatus('late')
                       setIsDirty(true)
                     }}
- >
+                  >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'late'
-                          ? 'border-warning bg-warning'
-                          : 'border-line bg-card'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'late'
+                        ? 'border-warning bg-warning'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'late' && (
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
@@ -1019,13 +998,12 @@ export default function AttendancePage() {
                       setOverrideStatus('absent')
                       setIsDirty(true)
                     }}
- >
+                  >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'absent'
-                          ? 'border-danger bg-danger'
-                          : 'border-line bg-card'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'absent'
+                        ? 'border-danger bg-danger'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'absent' && (
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
@@ -1042,13 +1020,12 @@ export default function AttendancePage() {
                       setOverrideStatus('not_yet')
                       setIsDirty(true)
                     }}
- >
+                  >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'not_yet'
-                          ? 'border-zinc-600 bg-zinc-600'
-                          : 'border-line bg-card'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'not_yet'
+                        ? 'border-zinc-600 bg-zinc-600'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'not_yet' && (
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
@@ -1131,8 +1108,8 @@ export default function AttendancePage() {
                   variant="outline"
                   size="sm"
                   onClick={handleAttemptCloseOverride}
-                  
- >
+
+                >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
                 <Button
@@ -1140,8 +1117,8 @@ export default function AttendancePage() {
                   variant="primary"
                   size="sm"
                   disabled={isSubmittingOverride}
-                  
- >
+
+                >
                   {isSubmittingOverride ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1190,7 +1167,7 @@ export default function AttendancePage() {
                 size="sm"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1"
- >
+              >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
               <Button
@@ -1202,7 +1179,7 @@ export default function AttendancePage() {
                   performCloseOverride()
                 }}
                 className="flex-1"
- >
+              >
                 {t('landlordShiftsConfirmCloseDiscard')}
               </Button>
             </div>

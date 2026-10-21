@@ -6,15 +6,9 @@ import {
   Calendar as CalendarIcon,
   Clock,
   Plus,
-  Filter,
   ChevronLeft,
   ChevronRight,
-  RotateCcw,
   Repeat,
-  Sparkles,
-  User,
-  Shield,
-  Briefcase,
   AlertTriangle,
   CheckCircle2,
   X,
@@ -22,16 +16,11 @@ import {
   Trash2,
   Calendar,
   CalendarDays,
-  LayoutGrid,
   List,
   Layers,
   Settings,
-  Search,
   Loader2,
   Info,
-  Check,
-  Building2,
-  UserCheck,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
@@ -45,7 +34,6 @@ import {
 import {
   Button,
   TextInput,
-  NumberInput,
   SelectInput,
   TextareaInput,
   Checkbox,
@@ -635,11 +623,10 @@ export default function WorkforceSchedulePage() {
       {/* Toast notification */}
       {toastMessage && (
         <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
-            toastMessage.type === 'success'
-              ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
-              : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
-          }`}
+          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${toastMessage.type === 'success'
+            ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
+            : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
+            }`}
         >
           {toastMessage.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
@@ -653,21 +640,9 @@ export default function WorkforceSchedulePage() {
       {/* ─── Top Header & Primary Actions ───────────────────────────────── */}
       <LandlordPageHeader
         title={t('landlordScheduleTitle')}
-        subtitle={`${t('landlordScheduleSubtitleFull')} (${activeBuilding?.name || t('landlordScheduleCurrentProperty')})`}
+        subtitle={t('landlordScheduleSubtitleFull')}
         actions={
           <>
-            <Button
-              size="md"
-              variant="outline"
-              onClick={() => {
-                setIsDirty(false)
-                setIsShiftsModalOpen(true)
-              }}
-            >
-              <Settings className="w-4 h-4 text-muted" />
-              <span>{t('landlordScheduleBtnShiftTemplates')}</span>
-            </Button>
-
             <Button
               size="md"
               variant="secondary"
@@ -675,9 +650,21 @@ export default function WorkforceSchedulePage() {
                 setIsDirty(false)
                 setIsAdhocModalOpen(true)
               }}
+              leftIcon={<Plus />}
             >
-              <Plus className="w-4 h-4" />
-              <span>{t('landlordScheduleBtnAssign')}</span>
+              {t('landlordScheduleBtnAssign')}
+            </Button>
+
+            <Button
+              size="md"
+              variant="accent"
+              onClick={() => {
+                setIsDirty(false)
+                setIsShiftsModalOpen(true)
+              }}
+              leftIcon={<Settings />}
+            >
+              {t('landlordScheduleBtnShiftTemplates')}
             </Button>
 
             <Button
@@ -687,9 +674,9 @@ export default function WorkforceSchedulePage() {
                 setIsDirty(false)
                 setIsRecurringModalOpen(true)
               }}
+              leftIcon={<Repeat />}
             >
-              <Repeat className="w-4 h-4" />
-              <span>{t('landlordScheduleBtnRecurring')}</span>
+              {t('landlordScheduleBtnRecurring')}
             </Button>
           </>
         }
@@ -824,19 +811,17 @@ export default function WorkforceSchedulePage() {
             return (
               <div
                 key={day.dateString}
-                className={`flex flex-col bg-card border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${
-                  day.isToday
-                    ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.01]'
-                    : 'border-line'
-                }`}
+                className={`flex flex-col bg-card border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${day.isToday
+                  ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.01]'
+                  : 'border-line'
+                  }`}
               >
                 {/* Column Day Header */}
                 <div
-                  className={`p-3 text-center border-b transition-colors ${
-                    day.isToday
-                      ? 'bg-primary/10 border-primary/30 text-[#1fa8a3]'
-                      : 'bg-surface/80 border-line text-foreground/90'
-                  }`}
+                  className={`p-3 text-center border-b transition-colors ${day.isToday
+                    ? 'bg-primary/10 border-primary/30 text-[#1fa8a3]'
+                    : 'bg-surface/80 border-line text-foreground/90'
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span className="text-xs font-extrabold">
@@ -871,11 +856,10 @@ export default function WorkforceSchedulePage() {
                     daySchedules.map(schedule => (
                       <div
                         key={schedule.id}
-                        className={`p-3 rounded-xl border text-left transition-all relative group ${
-                          schedule.status === 'canceled'
-                            ? 'bg-surface/60 border-line opacity-60 line-through'
-                            : 'bg-card border-line hover:border-primary/60 hover:shadow-md'
-                        }`}
+                        className={`p-3 rounded-xl border text-left transition-all relative group ${schedule.status === 'canceled'
+                          ? 'bg-surface/60 border-line opacity-60 line-through'
+                          : 'bg-card border-line hover:border-primary/60 hover:shadow-md'
+                          }`}
                       >
                         {/* Status & Recurring Badge */}
                         <div className="flex items-center justify-between gap-1 mb-1.5">
@@ -1161,11 +1145,10 @@ export default function WorkforceSchedulePage() {
                       return (
                         <div
                           key={s.employeeId}
-                          className={`p-2 rounded-lg border text-xs transition-all ${
-                            isChecked
-                              ? 'bg-card border-primary text-foreground shadow-sm'
-                              : 'bg-transparent border-transparent hover:bg-card-hover text-muted'
-                          }`}
+                          className={`p-2 rounded-lg border text-xs transition-all ${isChecked
+                            ? 'bg-card border-primary text-foreground shadow-sm'
+                            : 'bg-transparent border-transparent hover:bg-card-hover text-muted'
+                            }`}
                         >
                           <Checkbox
                             checked={isChecked}
@@ -1174,7 +1157,7 @@ export default function WorkforceSchedulePage() {
                                 setRecurringEmployeeIds(prev => [...prev, s.employeeId])
                               } else {
                                 setRecurringEmployeeIds(prev =>
-                                   prev.filter(id => id !== s.employeeId),
+                                  prev.filter(id => id !== s.employeeId),
                                 )
                               }
                               setIsDirty(true)
@@ -1723,18 +1706,16 @@ export default function WorkforceSchedulePage() {
                       setEditScope('single')
                       setIsDirty(true)
                     }}
-                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                      editScope === 'single'
-                        ? 'bg-card border-primary shadow-xs'
-                        : 'bg-surface border-line hover:bg-card-hover'
-                    }`}
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${editScope === 'single'
+                      ? 'bg-card border-primary shadow-xs'
+                      : 'bg-surface border-line hover:bg-card-hover'
+                      }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                        editScope === 'single'
-                          ? 'border-primary bg-primary'
-                          : 'border-line bg-card'
-                      }`}
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${editScope === 'single'
+                        ? 'border-primary bg-primary'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {editScope === 'single' && (
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
@@ -1755,18 +1736,16 @@ export default function WorkforceSchedulePage() {
                       setEditScope('future')
                       setIsDirty(true)
                     }}
-                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                      editScope === 'future'
-                        ? 'bg-card border-amber-500 shadow-xs'
-                        : 'bg-surface border-line hover:bg-card-hover'
-                    }`}
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${editScope === 'future'
+                      ? 'bg-card border-amber-500 shadow-xs'
+                      : 'bg-surface border-line hover:bg-card-hover'
+                      }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                        editScope === 'future'
-                          ? 'border-amber-500 bg-amber-500'
-                          : 'border-line bg-card'
-                      }`}
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${editScope === 'future'
+                        ? 'border-amber-500 bg-amber-500'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {editScope === 'future' && (
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
