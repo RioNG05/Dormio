@@ -519,7 +519,7 @@ function StaffShiftHistoryContent() {
                 </>
               ) : attendances.length > 0 ? (
                 attendances.map(item => (
-                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                  <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150">
                     <td className="py-4 px-3 font-bold text-foreground whitespace-nowrap">
                       {item.workDate}
                     </td>

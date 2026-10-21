@@ -26,7 +26,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from 'lucide-react'
-import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
@@ -329,12 +329,20 @@ export default function TenantAdminComplaintsPage() {
         </Button>
       </div>
 
-      {/* Main Container */}
-      <div className="rounded-3xl border border-line bg-card shadow-xs overflow-hidden">
-        {/* Controls Bar */}
-        <div className="p-4 sm:p-5 border-b border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-surface/50">
-          {/* Status Capsule Filter Tabs with Badge Counts */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto p-1 bg-card-hover/80 rounded-2xl">
+      {/* Standardized Filter Toolbar */}
+      <FilterToolbar
+        search={
+          <SearchInput
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
+              setCurrentPage(1)
+            }}
+            placeholder={t('tenantSearchGrievancePlaceholder')}
+          />
+        }
+        filters={
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1 bg-card-hover/80 rounded-2xl">
             <Button
               variant="ghost"
               size="sm"
@@ -407,153 +415,136 @@ export default function TenantAdminComplaintsPage() {
               </span>
             </Button>
           </div>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* View Mode Toggle: Grid vs Table (Rule #9) */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-              onPageSizeChange={setPageSize}
-              onPageChange={setCurrentPage}
-            />
-
-            <TextInput
-              type="text"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder={t('tenantSearchGrievancePlaceholder')}
-              leftIcon={<Search className="w-4 h-4 text-muted" />}
-              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-primary transition-colors"
-              containerClassName="w-full sm:w-64 space-y-0"
-            />
-          </div>
-        </div>
-
-        {/* Content: Grid or Table */}
-        {viewMode === 'grid' ? (
-          /* Grid View (Rule #9 Default) */
-          <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {paginatedComplaints.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-muted text-xs">
-                {t('tenantNoGrievancesFound')}
-              </div>
-            ) : (
-              paginatedComplaints.map(item => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedGrievance(item)}
-                  className="rounded-2xl border border-line bg-card p-5 shadow-xs hover:shadow-md hover:border-primary/50 transition-all duration-200 flex flex-col justify-between cursor-pointer space-y-4 group"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-mono text-muted font-bold bg-card-hover px-2 py-0.5 rounded-md">
-                          {item.id}
-                        </span>
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-accent-soft text-accent border border-accent-subtle">
-                          {t('tenantBqtDormioBadge')}
-                        </span>
-                      </div>
-                      {getPriorityBadge(item.priority)}
+      {/* Content: Grid or Table */}
+      {viewMode === 'grid' ? (
+        /* Grid View (Rule #9 Default) */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {paginatedComplaints.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-muted text-xs">
+              {t('tenantNoGrievancesFound')}
+            </div>
+          ) : (
+            paginatedComplaints.map(item => (
+              <div
+                key={item.id}
+                onClick={() => setSelectedGrievance(item)}
+                className="rounded-2xl border border-line bg-card p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-mono text-muted font-bold bg-card-hover px-2 py-0.5 rounded-md">
+                        {item.id}
+                      </span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-accent-soft text-accent border border-accent-subtle">
+                        {t('tenantBqtDormioBadge')}
+                      </span>
                     </div>
+                    {getPriorityBadge(item.priority)}
+                  </div>
 
-                    <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
-                      {item.title}
-                    </h3>
+                  <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                    {item.title}
+                  </h3>
 
-                    <p className="text-xs text-muted line-clamp-2 leading-relaxed">
-                      {item.description}
+                  <p className="text-xs text-muted line-clamp-2 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+
+                {/* Resolution card snippet */}
+                {item.resolutionNote && (
+                  <div className="p-3 rounded-xl bg-success-soft border border-success-subtle text-[11px] text-success space-y-1">
+                    <div className="font-black flex items-center gap-1 text-success">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                      <span>{t('tenantResolutionResponseFromAdmin')}</span>
+                    </div>
+                    <p className="line-clamp-2 font-medium leading-relaxed">
+                      {item.resolutionNote}
                     </p>
                   </div>
+                )}
 
-                  {/* Resolution card snippet */}
-                  {item.resolutionNote && (
-                    <div className="p-3 rounded-xl bg-success-soft border border-success-subtle text-[11px] text-success space-y-1">
-                      <div className="font-black flex items-center gap-1 text-success">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                        <span>{t('tenantResolutionResponseFromAdmin')}</span>
-                      </div>
-                      <p className="line-clamp-2 font-medium leading-relaxed">
-                        {item.resolutionNote}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="border-t border-line pt-3 flex items-center justify-between text-[11px]">
-                    <span className="text-muted font-medium">{formatDate(item.createdAt)}</span>
-                    {getStatusBadge(item.status)}
-                  </div>
+                <div className="border-t border-line pt-3 flex items-center justify-between text-[11px]">
+                  <span className="text-muted font-medium">{formatDate(item.createdAt)}</span>
+                  {getStatusBadge(item.status)}
                 </div>
-              ))
-            )}
-          </div>
-        ) : (
-          /* Table View */
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-surface border-b border-line text-muted uppercase font-black text-[10px] tracking-wider">
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        /* Table View */
+        <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-surface border-b border-line text-muted uppercase font-black text-[10px] tracking-wider">
+              <tr>
+                <th className="px-6 py-4">{t('tenantColGrievanceId')}</th>
+                <th className="px-6 py-4">{t('tenantColGrievanceTitle')}</th>
+                <th className="px-6 py-4">{t('tenantColGrievancePriority')}</th>
+                <th className="px-6 py-4">{t('tenantColGrievanceDate')}</th>
+                <th className="px-6 py-4">{t('tenantColGrievanceStatus')}</th>
+                <th className="px-6 py-4 text-right">{t('tenantColGrievanceAction')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {paginatedComplaints.length === 0 ? (
                 <tr>
-                  <th className="px-6 py-4">{t('tenantColGrievanceId')}</th>
-                  <th className="px-6 py-4">{t('tenantColGrievanceTitle')}</th>
-                  <th className="px-6 py-4">{t('tenantColGrievancePriority')}</th>
-                  <th className="px-6 py-4">{t('tenantColGrievanceDate')}</th>
-                  <th className="px-6 py-4">{t('tenantColGrievanceStatus')}</th>
-                  <th className="px-6 py-4 text-right">{t('tenantColGrievanceAction')}</th>
+                  <td colSpan={6} className="px-6 py-12 text-center text-muted">
+                    {t('tenantNoGrievances')}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {paginatedComplaints.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-muted">
-                      {t('tenantNoGrievances')}
+              ) : (
+                paginatedComplaints.map(item => (
+                  <tr
+                    key={item.id}
+                    onClick={() => setSelectedGrievance(item)}
+                    className="hover:bg-card-hover transition-colors duration-150 cursor-pointer"
+                  >
+                    <td className="px-6 py-4 font-mono font-bold text-muted">{item.id}</td>
+                    <td className="px-6 py-4 font-bold text-foreground max-w-xs truncate">
+                      {item.title}
+                    </td>
+                    <td className="px-6 py-4">{getPriorityBadge(item.priority)}</td>
+                    <td className="px-6 py-4 text-muted font-medium">
+                      {formatDate(item.createdAt)}
+                    </td>
+                    <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
+                    <td className="px-6 py-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
                     </td>
                   </tr>
-                ) : (
-                  paginatedComplaints.map(item => (
-                    <tr
-                      key={item.id}
-                      onClick={() => setSelectedGrievance(item)}
-                      className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4 font-mono font-bold text-muted">{item.id}</td>
-                      <td className="px-6 py-4 font-bold text-foreground max-w-xs truncate">
-                        {item.title}
-                      </td>
-                      <td className="px-6 py-4">{getPriorityBadge(item.priority)}</td>
-                      <td className="px-6 py-4 text-muted font-medium">
-                        {formatDate(item.createdAt)}
-                      </td>
-                      <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
-                      <td className="px-6 py-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          type="button"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        {/* Standard Pagination Bar (Rule #9) */}
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredComplaints.length}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
-          pageSizeMax={100}
-        />
-      </div>
+      {/* Standard Pagination Bar (Rule #9) */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredComplaints.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+      />
 
       {/* Modal 1: Create New Grievance Modal */}
       {isModalOpen && (

@@ -34,7 +34,7 @@ import {
   Eye,
   Sparkles,
 } from 'lucide-react'
-import { Button, TextInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput } from '@/components/ui'
 import {
   LineChart,
   Line,
@@ -460,11 +460,19 @@ export default function TenantInvoicesPage() {
         </div>
       </div>
 
-      {/* Main Billing Table & Grid Card Section */}
-      <div className="rounded-3xl border border-line bg-card shadow-xs overflow-hidden">
-        {/* Controls Bar */}
-        <div className="p-4 sm:p-6 border-b border-line flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface/50">
-          {/* Status filter tabs */}
+      {/* Standardized Filter Toolbar */}
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('filterByYearMonth')}
+            value={filterText}
+            onChange={val => {
+              setFilterText(val)
+              setCurrentPage(1)
+            }}
+          />
+        }
+        filters={
           <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
             <Button
               variant="ghost"
@@ -500,30 +508,17 @@ export default function TenantInvoicesPage() {
               {t('paid')}
             </Button>
           </div>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* View Mode Toggle: Grid vs Table (Rule #9) */}
-            <ViewModeToggle
-              value={viewMode}
-              onChange={setViewMode}
-              onPageSizeChange={setPageSize}
-              onPageChange={setCurrentPage}
-            />
-
-            <TextInput
-              type="text"
-              value={filterText}
-              onChange={e => {
-                setFilterText(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder={t('filterByYearMonth')}
-              leftIcon={<Search className="w-4 h-4 text-muted" />}
-              className="py-2 rounded-xl bg-card border border-line text-xs font-medium focus:outline-none focus:border-primary transition-colors"
-              containerClassName="w-full sm:w-64 space-y-0"
-            />
-          </div>
-        </div>
+      {/* Main Billing Table & Grid Card Section */}
+      <div className="rounded-2xl border border-line bg-card shadow-2xs overflow-hidden">
 
         {/* Content: Grid or Table */}
         {filteredInvoices.length === 0 ? (
@@ -540,7 +535,7 @@ export default function TenantInvoicesPage() {
             {paginatedInvoices.map(inv => (
               <div
                 key={inv.id}
-                className="rounded-2xl border border-line bg-card p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group space-y-4"
+                className="rounded-2xl border border-line bg-card p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between group space-y-4"
               >
                 {/* Card Header */}
                 <div className="flex items-start justify-between gap-3">
@@ -673,7 +668,7 @@ export default function TenantInvoicesPage() {
               <tbody className="divide-y divide-line">
                 {paginatedInvoices.map(inv => (
                   <React.Fragment key={inv.id}>
-                    <tr className="hover:bg-zinc-50/80 transition-colors">
+                    <tr className="hover:bg-card-hover transition-colors duration-150">
                       <td className="px-6 py-4 font-black text-foreground">{inv.period}</td>
                       <td className="px-6 py-4 font-mono text-muted">{inv.id}</td>
                       <td className="px-6 py-4 font-black text-foreground">
