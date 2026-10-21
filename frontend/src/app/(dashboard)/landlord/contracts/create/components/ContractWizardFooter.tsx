@@ -17,7 +17,7 @@ export function ContractWizardFooter() {
         <Button
           type="button"
           variant="outline"
-          size="md"
+          size="sm"
           onClick={handleAttemptClose}
           disabled={isPending}
         >
@@ -27,7 +27,7 @@ export function ContractWizardFooter() {
         <Button
           type="button"
           variant="outline"
-          size="md"
+          size="sm"
           onClick={() => goToStep((step - 1) as 1 | 2)}
           disabled={isPending}
           leftIcon={<ChevronLeft />}
@@ -40,7 +40,7 @@ export function ContractWizardFooter() {
         <Button
           type="button"
           variant="primary"
-          size="md"
+          size="sm"
           onClick={() => goToStep(2)}
           disabled={isPending}
           rightIcon={<ChevronRight />}
@@ -53,7 +53,7 @@ export function ContractWizardFooter() {
         <Button
           type="button"
           variant="primary"
-          size="md"
+          size="sm"
           onClick={() => goToStep(3)}
           disabled={isPending}
           rightIcon={<ChevronRight />}
@@ -66,7 +66,7 @@ export function ContractWizardFooter() {
         <Button
           type="button"
           variant="primary"
-          size="md"
+          size="sm"
           disabled={isPending}
           isLoading={isPending}
           onClick={handleSubmitContract}
