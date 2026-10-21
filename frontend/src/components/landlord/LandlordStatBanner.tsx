@@ -19,12 +19,14 @@ export interface LandlordStatBannerProps {
   chips: LandlordStatChipItem[]
   watermarkIcon?: React.ReactNode
   className?: string
+  children?: React.ReactNode
 }
 
 export function LandlordStatBanner({
   chips,
   watermarkIcon = <Building2 className="w-64 h-64" />,
   className,
+  children,
 }: LandlordStatBannerProps) {
   return (
     <div
@@ -38,6 +40,11 @@ export function LandlordStatBanner({
       </div>
 
       <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
+        {children && (
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
+            {children}
+          </div>
+        )}
         {/* Stat Chips */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end items-center gap-2.5 sm:gap-3 w-full lg:w-auto mt-4 lg:mt-0">
           {chips.map(chip => (

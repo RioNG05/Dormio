@@ -315,7 +315,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                   size="2xs"
                   weight="extrabold"
                   color="white"
-                  className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 shadow-2xs animate-in zoom-in-75 duration-150"
+                  className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger shadow-2xs animate-in zoom-in-75 duration-150"
                 >
                   {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                 </Text>
@@ -389,7 +389,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                     size="3xs"
                     weight="bold"
                     color="white"
-                    className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-rose-500 shadow-2xs"
+                    className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-danger shadow-2xs"
                   >
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                   </Text>
@@ -445,7 +445,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
                           size="2xs"
                           weight="extrabold"
                           color="white"
-                          className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 shadow-2xs animate-in zoom-in-75 duration-150"
+                          className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger shadow-2xs animate-in zoom-in-75 duration-150"
                         >
                           {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                         </Text>

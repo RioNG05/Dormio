@@ -592,7 +592,7 @@ export function MultiImageUpload({
 
             {cameraError ? (
               <div className="p-4 text-center space-y-2 text-rose-400">
-                <AlertCircle className="w-8 h-8 mx-auto text-rose-500" />
+                <AlertCircle className="w-8 h-8 mx-auto text-danger" />
                 <Text size="xs" weight="medium" color="danger">{cameraError}</Text>
                 <Button
                   type="button"

@@ -327,8 +327,8 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
           <label
             onClick={() => !disabled && setIsOpen(prev => !prev)}
             className={cn(
-              'block text-xs font-bold text-zinc-700 dark:text-slate-200 select-none cursor-pointer',
-              disabled && 'text-zinc-400 dark:text-slate-500 cursor-not-allowed',
+              'block text-xs font-bold text-foreground select-none cursor-pointer',
+              disabled && 'text-muted cursor-not-allowed',
               labelClassName,
             )}
           >
@@ -352,17 +352,17 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
             className={cn(
               'w-full flex items-center justify-between rounded-xl border pl-3.5 pr-3 py-2.5 text-xs font-semibold transition-all duration-200 outline-none text-left cursor-pointer select-none',
               disabled
-                ? 'bg-zinc-100 dark:bg-surface text-zinc-400 dark:text-slate-500 border-zinc-200 dark:border-line cursor-not-allowed shadow-none'
+                ? 'bg-surface text-muted border-line cursor-not-allowed shadow-none'
                 : error
-                  ? 'bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/15'
+                  ? 'bg-input border-danger text-danger ring-2 ring-danger/15'
                   : isOpen
-                    ? 'bg-input border-primary ring-3 ring-primary/20 text-zinc-900 dark:text-foreground shadow-sm'
-                    : 'bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 hover:bg-zinc-50/50 dark:hover:bg-card-hover/50 shadow-2xs',
+                    ? 'bg-input border-primary ring-3 ring-primary/20 text-foreground shadow-sm'
+                    : 'bg-input border-line text-foreground hover:border-primary/50 hover:bg-card-hover/50 shadow-2xs',
               className,
             )}
           >
             <div className="flex items-center gap-2 min-w-0 pr-2">
-              {leftIcon && <span className="shrink-0 text-zinc-400 dark:text-slate-400">{leftIcon}</span>}
+              {leftIcon && <span className="shrink-0 text-muted">{leftIcon}</span>}
               <Text
                 as="span"
                 size="xs"
@@ -376,7 +376,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
 
             <ChevronDown
               className={cn(
-                'w-4 h-4 text-zinc-400 dark:text-slate-400 shrink-0 transition-transform duration-200 ease-in-out',
+                'w-4 h-4 text-muted shrink-0 transition-transform duration-200 ease-in-out',
                 isOpen && 'rotate-180 text-primary',
               )}
             />
@@ -386,7 +386,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
           {isOpen && (
             <div
               className={cn(
-                'absolute z-50 rounded-2xl border border-zinc-200/90 dark:border-line bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-xl shadow-zinc-950/10 dark:shadow-black/50 p-1.5 flex flex-col',
+                'absolute z-50 rounded-2xl border border-line bg-card/95 backdrop-blur-md shadow-xl shadow-black/10 dark:shadow-black/50 p-1.5 flex flex-col',
                 'w-full min-w-full',
                 alignPosition === 'right' ? 'right-0' : 'left-0',
                 dropPosition === 'top'
@@ -396,9 +396,9 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
             >
               {/* Search Bar for large lists (> 10 items) */}
               {parsedOptions.length > 10 && (
-                <div className="p-1 pb-1.5 border-b border-zinc-100 dark:border-line">
+                <div className="p-1 pb-1.5 border-b border-line">
                   <div className="relative flex items-center">
-                    <Search className="w-3.5 h-3.5 text-zinc-400 dark:text-slate-400 absolute left-2.5 pointer-events-none" />
+                    <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 pointer-events-none" />
                     <input
                       ref={searchInputRef}
                       type="text"
@@ -406,7 +406,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                       onChange={e => setSearchQuery(e.target.value)}
                       placeholder="Tìm kiếm..."
                       onClick={e => e.stopPropagation()}
-                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-zinc-100/80 dark:bg-surface hover:bg-card-hover focus:bg-white dark:focus:bg-input border border-transparent focus:border-primary rounded-xl outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-slate-500 text-foreground font-medium"
+                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-surface hover:bg-card-hover focus:bg-input border border-transparent focus:border-primary rounded-xl outline-none transition-all placeholder:text-muted text-foreground font-medium"
                     />
                     {searchQuery && (
                       <button
@@ -416,7 +416,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                           setSearchQuery('')
                           searchInputRef.current?.focus()
                         }}
-                        className="absolute right-2 p-0.5 text-muted hover:text-foreground dark:hover:text-slate-200 rounded-md cursor-pointer"
+                        className="absolute right-2 p-0.5 text-muted hover:text-foreground rounded-md cursor-pointer"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -450,7 +450,7 @@ export const SelectInput = React.forwardRef<HTMLSelectElement, SelectInputProps>
                             ? 'opacity-40 cursor-not-allowed pointer-events-none'
                             : isSelected
                               ? 'bg-primary/15 text-primary font-extrabold shadow-2xs'
-                              : 'text-zinc-700 dark:text-slate-200 hover:bg-card-hover hover:text-zinc-900 dark:hover:text-white font-semibold',
+                              : 'text-foreground/80 hover:bg-card-hover hover:text-foreground font-semibold',
                         )}
                       >
                         <div className="flex items-center gap-2 truncate pr-2">

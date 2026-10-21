@@ -263,7 +263,7 @@ export function PublicHeader() {
               : user.role === 'employee'
                 ? '/staff'
                 : '/tenant',
-          icon: <Building className="w-4 h-4 text-blue-500" />,
+          icon: <Building className="w-4 h-4 text-vacant" />,
         },
         ...(FEATURE_FLAGS.ENABLE_BHRP
           ? [
@@ -271,7 +271,7 @@ export function PublicHeader() {
                 key: 'saved-rooms',
                 label: tNav('mySavedRooms'),
                 href: '/saved-posts',
-                icon: <Heart className="w-4 h-4 text-rose-500 fill-rose-500/10" />,
+                icon: <Heart className="w-4 h-4 text-danger fill-danger/10" />,
               },
               {
                 key: 'post-listing',
@@ -292,7 +292,7 @@ export function PublicHeader() {
           key: 'logout',
           label: tNav('logout'),
           onClick: logout,
-          icon: <LogOut className="w-4 h-4 text-rose-500" />,
+          icon: <LogOut className="w-4 h-4 text-danger" />,
           isDanger: true,
           dividerAbove: true,
         },

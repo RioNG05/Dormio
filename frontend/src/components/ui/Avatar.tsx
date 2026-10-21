@@ -62,14 +62,12 @@ export interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
 const AVATAR_PALETTES = [
   { bg: 'bg-primary', text: 'text-white' }, // Brand Teal
   { bg: 'bg-accent', text: 'text-white' }, // Brand Orange
-  { bg: 'bg-emerald-500', text: 'text-white' }, // Success Emerald
-  { bg: 'bg-indigo-500', text: 'text-white' }, // Indigo
-  { bg: 'bg-purple-500', text: 'text-white' }, // Purple
-  { bg: 'bg-amber-500', text: 'text-white' }, // Warning Amber
-  { bg: 'bg-sky-500', text: 'text-white' }, // Vacant Sky
-  { bg: 'bg-rose-500', text: 'text-white' }, // Danger Rose
-  { bg: 'bg-teal-600', text: 'text-white' }, // Dark Teal
-  { bg: 'bg-blue-600', text: 'text-white' }, // Blue
+  { bg: 'bg-success', text: 'text-white' }, // Success Emerald
+  { bg: 'bg-deposit', text: 'text-white' }, // Deposit Purple
+  { bg: 'bg-warning', text: 'text-white' }, // Warning Amber
+  { bg: 'bg-vacant', text: 'text-white' }, // Vacant Sky
+  { bg: 'bg-danger', text: 'text-white' }, // Danger Rose
+  { bg: 'bg-info', text: 'text-white' }, // Info Blue
 ]
 
 const sizeStyles: Record<
@@ -150,7 +148,7 @@ const sizeStyles: Record<
 const statusColors: Record<AvatarStatus, string> = {
   online: 'bg-emerald-500',
   offline: 'bg-zinc-400',
-  busy: 'bg-rose-500',
+  busy: 'bg-danger',
   away: 'bg-amber-500',
 }
 

@@ -58,8 +58,8 @@ export function DashboardUserFooter() {
       href: '/tenant',
       icon: Home,
       allowed: capabilities.isTenant,
-      color: 'text-blue-500',
-      bg: 'hover:bg-blue-500/10',
+      color: 'text-vacant',
+      bg: 'hover:bg-vacant/10',
     },
     {
       label: tNav('userMenuStaffDashboard'),

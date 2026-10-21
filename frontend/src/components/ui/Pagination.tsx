@@ -115,7 +115,7 @@ export function Pagination({
         )}
 
         {showPageSizeInput && onPageSizeChange && showItemRange && (
-          <span className="hidden sm:inline text-zinc-300 dark:text-zinc-700">|</span>
+          <span className="hidden sm:inline text-line">|</span>
         )}
 
         {showItemRange && (

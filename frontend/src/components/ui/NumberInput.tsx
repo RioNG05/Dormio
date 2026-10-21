@@ -42,8 +42,8 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           <label
             htmlFor={inputId}
             className={cn(
-              'block text-xs font-bold text-zinc-700 dark:text-slate-200 select-none',
-              disabled && 'text-zinc-400 dark:text-slate-500 cursor-not-allowed',
+              'block text-xs font-bold text-foreground select-none',
+              disabled && 'text-muted cursor-not-allowed',
               labelClassName,
             )}
           >
@@ -78,10 +78,10 @@ export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
               prefixText ? 'pl-8' : '',
               suffixText ? 'pr-14' : '',
               disabled
-                ? 'bg-zinc-100 dark:bg-surface text-zinc-500 dark:text-slate-500 border-zinc-200 dark:border-line cursor-not-allowed select-none shadow-none'
+                ? 'bg-surface text-muted border-line cursor-not-allowed select-none shadow-none'
                 : error
-                  ? 'bg-input border-rose-400 dark:border-rose-500/80 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                  : 'bg-input border-zinc-200 dark:border-line text-zinc-800 dark:text-foreground hover:border-zinc-300 dark:hover:border-primary/50 focus:border-primary dark:focus:border-primary focus:ring-2 focus:ring-primary/20',
+                  ? 'bg-input border-danger text-danger focus:border-danger focus:ring-2 focus:ring-danger/20'
+                  : 'bg-input border-line text-foreground hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20',
               className,
             )}
             {...props}

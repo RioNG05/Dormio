@@ -97,7 +97,7 @@ export default function TierUpgradeModal() {
 
         {/* Backend Error Message */}
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-amber-900 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-200">
-          <ShieldAlert className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <ShieldAlert className="h-5 w-5 shrink-0 text-warning dark:text-amber-400 mt-0.5" />
           <Text size="xs" weight="medium" color="inherit" className="leading-relaxed">
             {tierInfo.message}
           </Text>
@@ -145,7 +145,7 @@ export default function TierUpgradeModal() {
             rightIcon={<ArrowRight className="h-4 w-4" />}
             className={
               isPro
-                ? '!bg-gradient-to-r !from-amber-500 !to-orange-500 hover:!from-amber-600 hover:!to-orange-600 shadow-amber-500/25 shadow-lg'
+                ? '!bg-gradient-to-r !from-amber-500 !to-orange-500 hover:!from-warning hover:!to-orange-600 shadow-amber-500/25 shadow-lg'
                 : '!bg-gradient-to-r !from-indigo-600 !to-violet-600 hover:!from-indigo-700 hover:!to-violet-700 shadow-indigo-500/25 shadow-lg'
             }
           >

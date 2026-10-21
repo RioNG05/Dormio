@@ -237,7 +237,7 @@ export function CoverPhotoUpload({
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-1.5 text-xs font-medium text-rose-600 pt-1">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-danger pt-1">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <Text as="span" size="xs" weight="medium" color="danger">
             {errorMessage}

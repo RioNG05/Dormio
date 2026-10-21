@@ -69,25 +69,25 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         // Variants
         'bg-primary text-white hover:bg-primary-hover active:opacity-90 shadow-2xs shadow-primary/20':
           variant === 'primary',
-        'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 active:bg-zinc-300 dark:bg-surface dark:text-foreground dark:border dark:border-line dark:hover:bg-card-hover':
+        'bg-surface text-foreground border border-line hover:bg-card-hover active:opacity-80':
           variant === 'secondary',
-        'border border-zinc-200 bg-transparent text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 dark:border-line dark:text-foreground dark:hover:bg-card-hover':
+        'border border-line bg-transparent text-foreground hover:bg-card-hover active:bg-surface':
           variant === 'outline',
-        'bg-transparent hover:bg-zinc-100 active:bg-zinc-200 text-zinc-700 dark:text-slate-200 dark:hover:bg-card-hover':
+        'bg-transparent hover:bg-card-hover active:bg-surface text-foreground':
           variant === 'ghost',
-        'bg-transparent hover:bg-rose-50 active:bg-rose-100 text-rose-600 dark:hover:bg-rose-950/20 dark:text-rose-400':
+        'bg-transparent hover:bg-danger-soft active:opacity-80 text-danger':
           variant === 'ghost-danger',
-        'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-2xs shadow-rose-600/20':
+        'bg-danger text-white hover:bg-danger-hover active:opacity-90 shadow-2xs shadow-danger/20':
           variant === 'danger',
-        'bg-accent text-white hover:bg-[#e85a26] dark:hover:bg-[#ff8252] active:opacity-90 shadow-2xs shadow-accent/20':
+        'bg-accent text-white hover:bg-accent-hover active:opacity-90 shadow-2xs shadow-accent/20':
           variant === 'accent' || variant === 'orange',
-        'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-2xs shadow-emerald-600/20':
+        'bg-success text-white hover:opacity-90 active:opacity-80 shadow-2xs shadow-success/20':
           variant === 'success',
-        'bg-amber-500 text-white hover:bg-amber-600 active:bg-amber-700 shadow-2xs shadow-amber-500/20':
+        'bg-warning text-white hover:opacity-90 active:opacity-80 shadow-2xs shadow-warning/20':
           variant === 'warning',
-        'bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-950 dark:bg-primary dark:text-white dark:hover:bg-primary-hover':
+        'bg-foreground text-background hover:opacity-90 active:opacity-80 dark:bg-primary dark:text-white dark:hover:bg-primary-hover':
           variant === 'dark',
-        'bg-white text-zinc-900 border border-zinc-200/80 hover:bg-zinc-50 shadow-xs active:bg-zinc-100 dark:bg-card dark:text-foreground dark:border-line dark:hover:bg-card-hover':
+        'bg-card text-foreground border border-line hover:bg-card-hover shadow-xs active:bg-surface':
           variant === 'white',
 
         // Sizes (default rounded applied per size if rounded !== 'full')

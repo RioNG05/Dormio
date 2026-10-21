@@ -46,34 +46,34 @@ const activeVariantStyles: Record<ChipVariant, string> = {
   default:
     'bg-primary text-white border-primary shadow-2xs shadow-primary/20 hover:bg-primary-hover hover:border-primary-hover',
   neutral:
-    'bg-zinc-900 text-white border-zinc-900 shadow-2xs hover:bg-zinc-800 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100 dark:hover:bg-white dark:hover:text-slate-950',
+    'bg-foreground text-background border-foreground shadow-2xs hover:opacity-90',
   success:
-    'bg-emerald-600 text-white border-emerald-600 shadow-2xs hover:bg-emerald-700 dark:bg-emerald-600 dark:border-emerald-500 dark:hover:bg-emerald-500',
+    'bg-success text-white border-success shadow-2xs hover:opacity-90',
   warning:
-    'bg-amber-500 text-white border-amber-500 shadow-2xs hover:bg-amber-600 dark:bg-amber-500 dark:border-amber-400 dark:hover:bg-amber-400',
+    'bg-warning text-white border-warning shadow-2xs hover:opacity-90',
   danger:
-    'bg-rose-600 text-white border-rose-600 shadow-2xs hover:bg-rose-700 dark:bg-rose-600 dark:border-rose-500 dark:hover:bg-rose-500',
+    'bg-danger text-white border-danger shadow-2xs hover:opacity-90',
   info:
-    'bg-blue-600 text-white border-blue-600 shadow-2xs hover:bg-blue-700 dark:bg-blue-600 dark:border-blue-500 dark:hover:bg-blue-500',
+    'bg-info text-white border-info shadow-2xs hover:opacity-90',
   purple:
-    'bg-purple-600 text-white border-purple-600 shadow-2xs hover:bg-purple-700 dark:bg-purple-600 dark:border-purple-500 dark:hover:bg-purple-500',
+    'bg-deposit text-white border-deposit shadow-2xs hover:opacity-90',
 }
 
 const inactiveVariantStyles: Record<ChipVariant, string> = {
   default:
     'bg-surface text-muted border-line hover:bg-card-hover hover:text-foreground',
   neutral:
-    'bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-200/80 hover:text-zinc-900 dark:bg-surface dark:text-muted dark:border-line dark:hover:bg-card-hover dark:hover:text-foreground',
+    'bg-surface text-muted border-line hover:bg-card-hover hover:text-foreground',
   success:
-    'bg-success-soft text-emerald-700 border-success-subtle hover:bg-emerald-100/70 hover:text-emerald-800 dark:text-success dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300',
+    'bg-success-soft text-success border-success-subtle hover:opacity-85',
   warning:
-    'bg-warning-soft text-amber-700 border-warning-subtle hover:bg-amber-100/70 hover:text-amber-800 dark:text-warning dark:hover:bg-amber-950/60 dark:hover:text-amber-300',
+    'bg-warning-soft text-warning border-warning-subtle hover:opacity-85',
   danger:
-    'bg-danger-soft text-rose-700 border-danger-subtle hover:bg-rose-100/70 hover:text-rose-800 dark:text-danger dark:hover:bg-rose-950/60 dark:hover:text-rose-300',
+    'bg-danger-soft text-danger border-danger-subtle hover:opacity-85',
   info:
-    'bg-info-soft text-blue-700 border-info-subtle hover:bg-blue-100/70 hover:text-blue-800 dark:text-info dark:hover:bg-blue-950/60 dark:hover:text-blue-300',
+    'bg-info-soft text-info border-info-subtle hover:opacity-85',
   purple:
-    'bg-deposit-soft text-purple-700 border-deposit-subtle hover:bg-purple-100/70 hover:text-purple-800 dark:text-deposit dark:hover:bg-purple-950/60 dark:hover:text-purple-300',
+    'bg-deposit-soft text-deposit border-deposit-subtle hover:opacity-85',
 }
 
 const sizeStyles: Record<ChipSize, string> = {
@@ -89,13 +89,13 @@ const badgeSizeStyles: Record<ChipSize, string> = {
 }
 
 const inactiveBadgeColorStyles: Record<ChipVariant, string> = {
-  default: 'bg-zinc-200/80 text-zinc-700 dark:bg-card-hover dark:text-slate-200',
-  neutral: 'bg-zinc-200 text-zinc-700 dark:bg-card-hover dark:text-slate-200',
-  success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200',
-  warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200',
-  danger: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200',
-  info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200',
-  purple: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200',
+  default: 'bg-card-hover text-muted',
+  neutral: 'bg-card-hover text-muted',
+  success: 'bg-success-soft text-success',
+  warning: 'bg-warning-soft text-warning',
+  danger: 'bg-danger-soft text-danger',
+  info: 'bg-info-soft text-info',
+  purple: 'bg-deposit-soft text-deposit',
 }
 
 /* -------------------------------------------------------------------------- */

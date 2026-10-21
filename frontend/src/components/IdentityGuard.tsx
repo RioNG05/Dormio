@@ -72,7 +72,7 @@ function IdentityBlockerScreen({
                 missingId ? 'bg-danger-soft' : 'bg-success-soft'
               }`}
             >
-              <User className={`w-4 h-4 ${missingId ? 'text-red-500' : 'text-emerald-600'}`} />
+              <User className={`w-4 h-4 ${missingId ? 'text-red-500' : 'text-success'}`} />
             </div>
             <div className="flex-1 min-w-0">
               <p className={`text-xs font-bold ${missingId ? 'text-danger' : 'text-success'}`}>
@@ -93,7 +93,7 @@ function IdentityBlockerScreen({
               }`}
             >
               <CreditCard
-                className={`w-4 h-4 ${missingBank ? 'text-red-500' : 'text-emerald-600'}`}
+                className={`w-4 h-4 ${missingBank ? 'text-red-500' : 'text-success'}`}
               />
             </div>
             <div className="flex-1 min-w-0">

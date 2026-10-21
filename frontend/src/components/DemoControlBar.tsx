@@ -181,7 +181,7 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('landlord_empty', '/landlord')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'landlord_empty'
-                    ? 'border-rose-500 bg-rose-500 text-white shadow-md'
+                    ? 'border-danger bg-danger text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
@@ -198,7 +198,7 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('landlord_active', '/landlord')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'landlord_active'
-                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-md'
+                    ? 'border-success bg-success text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
@@ -215,7 +215,7 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('admin', '/admin')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'admin'
-                    ? 'border-purple-600 bg-purple-600 text-white shadow-md'
+                    ? 'border-deposit bg-deposit text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >

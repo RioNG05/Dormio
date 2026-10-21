@@ -117,7 +117,7 @@ export function ModalHeader({
     return (
       <div
         className={cn(
-          'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-line shrink-0 bg-card',
+          'flex items-center justify-between p-4 sm:p-5 border-b border-line shrink-0 bg-card',
           className,
         )}
       >
@@ -142,7 +142,7 @@ export function ModalHeader({
   return (
     <div
       className={cn(
-        'flex items-center justify-between p-4 sm:p-5 border-b border-zinc-100 dark:border-line shrink-0 bg-card',
+        'flex items-center justify-between p-4 sm:p-5 border-b border-line shrink-0 bg-card',
         className,
       )}
     >
@@ -201,7 +201,7 @@ export function ModalFooter({ className, children }: ModalFooterProps) {
   return (
     <div
       className={cn(
-        'p-3.5 sm:p-4 border-t border-zinc-100 dark:border-line flex flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3 bg-zinc-50/50 dark:bg-surface shrink-0',
+        'p-3.5 sm:p-4 border-t border-line flex flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3 bg-surface shrink-0',
         className,
       )}
     >
@@ -297,7 +297,7 @@ function ModalRoot({
       aria-modal="true"
       onClick={e => e.stopPropagation()}
       className={cn(
-        'bg-card rounded-2xl w-full shadow-2xl overflow-hidden border border-zinc-200/80 dark:border-line transition-all duration-200 ease-out max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col',
+        'bg-card rounded-2xl w-full shadow-2xl overflow-hidden border border-line transition-all duration-200 ease-out max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] flex flex-col',
         sizeClasses[size],
         isVisible
           ? 'opacity-100 scale-100 translate-y-0'
@@ -308,7 +308,7 @@ function ModalRoot({
       {header ? (
         <div
           className={cn(
-            'p-4 sm:p-5 border-b border-zinc-100 dark:border-line flex items-center justify-between bg-card shrink-0 z-10',
+            'p-4 sm:p-5 border-b border-line flex items-center justify-between bg-card shrink-0 z-10',
             headerClassName,
           )}
         >

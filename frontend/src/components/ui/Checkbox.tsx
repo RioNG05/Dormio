@@ -141,9 +141,9 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             variant === 'card' &&
               cn(
                 'p-3.5 rounded-2xl border transition-all duration-200 w-full',
-                'border-zinc-200 dark:border-line bg-card hover:border-primary/60 hover:bg-zinc-50/50 dark:hover:bg-card-hover',
-                isChecked && 'border-primary bg-primary/5 dark:bg-primary/15 shadow-xs',
-                hasError && 'border-rose-300 dark:border-rose-500/60 bg-rose-50/20',
+                'border-line bg-card hover:border-primary/60 hover:bg-card-hover',
+                isChecked && 'border-primary bg-primary-soft shadow-xs',
+                hasError && 'border-danger/60 bg-danger-soft',
               ),
             labelClassName,
           )}
@@ -175,7 +175,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 'flex items-center justify-center transition-all duration-200 border',
                 sizeConfig.box,
                 // Unchecked baseline
-                'border-zinc-300 dark:border-line bg-input group-hover:border-primary',
+                'border-line bg-input group-hover:border-primary',
                 // Focus styling
                 'peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 peer-focus-visible:ring-offset-1',
                 // Checked or Indeterminate styling
@@ -184,10 +184,10 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 isChecked && 'bg-primary border-primary text-white',
                 // Error styling
                 hasError &&
-                'border-rose-400 bg-rose-50/20 peer-checked:bg-rose-500 peer-checked:border-rose-500',
+                'border-danger bg-danger-soft peer-checked:bg-danger peer-checked:border-danger',
                 // Disabled styling
                 disabled &&
-                'bg-zinc-100 dark:bg-surface border-zinc-200 dark:border-line text-zinc-400 group-hover:border-zinc-200 cursor-not-allowed peer-checked:bg-zinc-400 peer-checked:border-zinc-400',
+                'bg-surface border-line text-muted cursor-not-allowed peer-checked:bg-muted peer-checked:border-muted',
                 boxClassName,
                 className,
               )}

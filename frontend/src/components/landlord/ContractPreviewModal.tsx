@@ -257,10 +257,10 @@ export default function ContractPreviewModal({
 
       {error && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-card p-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-danger-soft flex items-center justify-center text-rose-600">
+          <div className="w-12 h-12 rounded-full bg-danger-soft flex items-center justify-center text-danger">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <Text size="base" weight="bold" className="text-rose-600">{error}</Text>
+          <Text size="base" weight="bold" className="text-danger">{error}</Text>
           <Text size="xs" color="secondary" className="max-w-md mx-auto">
             {t('landlordContractsExportErrorTitle')}
           </Text>
