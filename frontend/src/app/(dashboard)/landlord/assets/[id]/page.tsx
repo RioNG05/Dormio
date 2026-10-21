@@ -689,7 +689,6 @@ export default function AssetDetailPage() {
           {/* Notice / Finish Maintenance Action Button */}
           <Button
             variant={isMaintenance ? 'success' : 'warning'}
-            size="md"
             onClick={handleInitiateMaintenanceWorkflow}
             leftIcon={
               isUpdatingStatus ? (
@@ -709,7 +708,6 @@ export default function AssetDetailPage() {
           {/* Edit Asset Button */}
           <Button
             variant="secondary"
-            size="md"
             onClick={handleOpenEditModal}
             leftIcon={<Edit3 className="text-primary" />}
           >
@@ -719,7 +717,6 @@ export default function AssetDetailPage() {
           {/* Delete Asset Button */}
           <Button
             variant="danger"
-            size="md"
             onClick={() => setShowDeleteModal(true)}
             leftIcon={<Trash2 />}
           >

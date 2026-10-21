@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, use, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   Edit2,
   Trash2,
   User,
@@ -22,6 +20,7 @@ import {
   AlertTriangle,
   Users,
   MessageSquare,
+  MoveRight,
 } from 'lucide-react'
 import { getContractById, Contract, ContractMember } from '../data'
 import { Customer } from '../../customers/data'
@@ -302,36 +301,36 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           setContract(prev =>
             prev
               ? {
-                  ...prev,
-                  price: `${Number(d.rentPrice).toLocaleString('vi-VN')} ₫`,
-                  priceNumber: Number(d.rentPrice),
-                  deposit: `${Number(d.deposit?.amount ?? parsedDeposit).toLocaleString('vi-VN')} ₫`,
-                  depositNumber: Number(d.deposit?.amount ?? parsedDeposit),
-                  paymentDate: String(d.monthlyPaymentDate),
-                  endDate: new Date(d.endDate).toLocaleDateString('vi-VN'),
-                  history: [
-                    { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
-                    ...(prev.history || []),
-                  ],
-                }
+                ...prev,
+                price: `${Number(d.rentPrice).toLocaleString('vi-VN')} ₫`,
+                priceNumber: Number(d.rentPrice),
+                deposit: `${Number(d.deposit?.amount ?? parsedDeposit).toLocaleString('vi-VN')} ₫`,
+                depositNumber: Number(d.deposit?.amount ?? parsedDeposit),
+                paymentDate: String(d.monthlyPaymentDate),
+                endDate: new Date(d.endDate).toLocaleDateString('vi-VN'),
+                history: [
+                  { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+                  ...(prev.history || []),
+                ],
+              }
               : null,
           )
         } else {
           setContract(prev =>
             prev
               ? {
-                  ...prev,
-                  price: formattedPrice,
-                  priceNumber: parsedPrice,
-                  deposit: formattedDeposit,
-                  depositNumber: parsedDeposit,
-                  paymentDate: editPaymentDate,
-                  endDate: editEndDate || prev.endDate,
-                  history: [
-                    { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
-                    ...(prev.history || []),
-                  ],
-                }
+                ...prev,
+                price: formattedPrice,
+                priceNumber: parsedPrice,
+                deposit: formattedDeposit,
+                depositNumber: parsedDeposit,
+                paymentDate: editPaymentDate,
+                endDate: editEndDate || prev.endDate,
+                history: [
+                  { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+                  ...(prev.history || []),
+                ],
+              }
               : null,
           )
         }
@@ -354,18 +353,18 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
       setContract(prev =>
         prev
           ? {
-              ...prev,
-              price: formattedPrice,
-              priceNumber: parsedPrice,
-              deposit: formattedDeposit,
-              depositNumber: parsedDeposit,
-              paymentDate: editPaymentDate,
-              endDate: editEndDate || prev.endDate,
-              history: [
-                { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
-                ...(prev.history || []),
-              ],
-            }
+            ...prev,
+            price: formattedPrice,
+            priceNumber: parsedPrice,
+            deposit: formattedDeposit,
+            depositNumber: parsedDeposit,
+            paymentDate: editPaymentDate,
+            endDate: editEndDate || prev.endDate,
+            history: [
+              { date: todayStr, user: 'Admin (Chủ trọ)', content: `Cập nhật HĐ: ${editReason}` },
+              ...(prev.history || []),
+            ],
+          }
           : null,
       )
 
@@ -561,15 +560,14 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <span>{t('landlordContractDetailContractId', { id: contract.id })}</span>
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
                 onClick={() => {
                   navigator.clipboard.writeText(contract.id)
                   showToast(t('landlordContractsToastCodeCopied'), 'success')
                 }}
                 title={t('landlordContractsCopyCodeTitle')}
               >
-                <Copy className="w-3.5 h-3.5" />
+                <Copy />
               </Button>
             </p>
           </div>
@@ -578,28 +576,25 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* Action Toolbar using Base Button Components */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <Button
-            type="button"
             variant="primary"
             onClick={handlePrintContract}
-            leftIcon={<Printer className="w-3.5 h-3.5" />}
+            leftIcon={<Printer />}
           >
             {t('landlordContractDetailBtnPrint')}
           </Button>
 
           <Button
-            type="button"
             variant="secondary"
             onClick={openExtendModal}
-            leftIcon={<CalendarDays className="w-3.5 h-3.5" />}
+            leftIcon={<CalendarDays />}
           >
             {t('landlordContractDetailBtnExtend')}
           </Button>
 
           <Button
-            type="button"
-            variant="secondary"
+            variant="danger"
             onClick={() => setIsTerminateModalOpen(true)}
-            leftIcon={<Ban className="w-3.5 h-3.5" />}
+            leftIcon={<Ban />}
           >
             {t('landlordContractDetailBtnTerminate')}
           </Button>
@@ -618,7 +613,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 {t('landlordContractDetailTenantSection')}
               </h3>
               <Link href={`/landlord/customers/${contract.tenantId || ''}`}>
-                <Button size='sm' variant='secondary'>
+                <Button variant='secondary' rightIcon={<MoveRight />}>
                   {t('landlordContractDetailTenantSection')}
                 </Button>
               </Link>
@@ -652,7 +647,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   </Button>
                 </Link>
                 <a href={`tel:${contract.tenantPhone}`}>
-                  <Button size='sm' variant='success' leftIcon={<Phone />}>
+                  <Button variant='success' leftIcon={<Phone />}>
                     {t('landlordContractDetailCallBtn')}
                   </Button>
                 </a>
@@ -661,7 +656,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <Button size='sm' className='bg-[#0068FF]'>
+                  <Button className='bg-[#0068FF]'>
                     Zalo
                   </Button>
                 </a>
@@ -677,9 +672,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 {t('landlordContractDetailFinancialSection')}
               </h3>
               <Button
-                type="button"
                 variant="secondary"
-                size="sm"
                 onClick={openEditModal}
                 leftIcon={<Edit2 />}
               >
@@ -787,9 +780,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 })}
               </h3>
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
+
                 onClick={openAddMemberModal}
                 leftIcon={<Plus />}
               >
@@ -820,7 +812,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                       </p>
                     </div>
                     <Button
-                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() =>
@@ -832,7 +823,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                       }
                       title={t('landlordContractsCreateConfirmCloseDiscard')}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 />
                     </Button>
                   </div>
                 ))}
@@ -945,17 +936,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         footer={
           <div className="flex justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
-              size="md"
               onClick={() => requestCloseModal(() => setIsExtendModalOpen(false))}
             >
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              type="button"
               variant="primary"
-              size="md"
               onClick={handleSaveExtension}
             >
               {t('landlordContractDetailModalExtendSubmit')}
@@ -1004,18 +991,16 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         footer={
           <div className="flex justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
+
               disabled={isUpdatingContract}
               onClick={() => requestCloseModal(() => setIsEditModalOpen(false))}
             >
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              type="button"
               variant="primary"
-              size="sm"
+
               isLoading={isUpdatingContract}
               disabled={isUpdatingContract}
               onClick={handleSaveContractEdit}
@@ -1103,17 +1088,15 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         footer={
           <div className="flex justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
+
               onClick={() => requestCloseModal(() => setIsAddMemberModalOpen(false))}
             >
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              type="button"
               variant="primary"
-              size="sm"
+
               onClick={handleAddMember}
             >
               {addMemberTab === 'select'
@@ -1126,8 +1109,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* Mode Switcher Tabs */}
         <div className="grid grid-cols-2 p-2 bg-card-hover/70 border-b border-line text-xs font-bold gap-1">
           <Button
-            type="button"
-            size="sm"
+
             variant={addMemberTab === 'select' ? 'primary' : 'ghost'}
             onClick={() => setAddMemberTab('select')}
           >
@@ -1135,8 +1117,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </Button>
 
           <Button
-            type="button"
-            size="sm"
+
             variant={addMemberTab === 'create' ? 'primary' : 'ghost'}
             onClick={() => setAddMemberTab('create')}
           >
@@ -1379,17 +1360,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         footer={
           <div className="flex justify-end gap-3 w-full">
             <Button
-              type="button"
-              variant="outline"
-              size="md"
+              variant="secondary"
               onClick={() => setIsTerminateModalOpen(false)}
             >
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              type="button"
               variant="danger"
-              size="md"
               onClick={handleTerminate}
             >
               {t('landlordContractDetailTerminateConfirmBtn')}
@@ -1414,15 +1391,13 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         footer={
           <div className="flex items-center gap-3 w-full">
             <Button
-              type="button"
-              variant="outline"
+              variant="secondary"
               className="flex-1"
               onClick={() => setShowConfirmClose(false)}
             >
               {t('landlordContractDetailConfirmCloseKeep')}
             </Button>
             <Button
-              type="button"
               variant="danger"
               className="flex-1"
               onClick={handleConfirmDiscard}
