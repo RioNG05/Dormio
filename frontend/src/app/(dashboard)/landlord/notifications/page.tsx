@@ -10,11 +10,6 @@ import {
   Building2,
   Eye,
   Sparkles,
-  Search,
-  LayoutGrid,
-  List,
-  RefreshCw,
-  MapPin,
   ShieldAlert,
   Smartphone,
   Trash2,
@@ -35,10 +30,8 @@ import {
   TextInput,
   SelectInput,
   TextareaInput,
-  NumberInput,
   SearchInput,
   Text,
-  ChipGroup,
   Modal,
   Pagination,
   ViewModeToggle,
@@ -47,7 +40,6 @@ import {
 export default function NotificationsPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
-  const tCommon = useTranslations('common')
 
   const tRef = useRef(t)
   useEffect(() => {
@@ -55,7 +47,7 @@ export default function NotificationsPage() {
   }, [t])
 
   const [isMounted, setIsMounted] = useState(false)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   // Filter and Search States
   const [searchQuery, setSearchQuery] = useState('')
@@ -70,7 +62,6 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<LandlordAnnouncementItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [totalItems, setTotalItems] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
   const [summary, setSummary] = useState<LandlordAnnouncementsSummary>({
     totalAnnouncements: 0,
     totalTargetTenants: 0,
@@ -182,7 +173,6 @@ export default function NotificationsPage() {
 
       setNotifications(res.data || [])
       setTotalItems(res.meta?.total || 0)
-      setTotalPages(res.meta?.totalPages || 1)
       if (res.summary) {
         setSummary(res.summary)
       }
@@ -356,13 +346,12 @@ export default function NotificationsPage() {
             )}
             <span>{toast.text}</span>
             <Button
-              type="button"
               variant="ghost"
-              size="sm"
+              size="icon-sm"
               onClick={() => setToast(null)}
               className="ml-2"
             >
-              <X className="w-3.5 h-3.5" />
+              <X />
             </Button>
           </div>
         </div>
@@ -373,27 +362,14 @@ export default function NotificationsPage() {
         title={t('landlordNotificationsHeroTitle')}
         subtitle={t('landlordNotificationsHeroSubtitle')}
         actions={
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              size="md"
-              onClick={() => fetchAnnouncements()}
-              disabled={isLoading}
-              title={t('landlordNotificationsRefreshList')}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary' : ''}`} />
-              <span>{t('landlordNotificationsRefreshList')}</span>
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => setIsNotifModalOpen(true)}
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t('landlordNotificationsBtnBroadcast')}</span>
-            </Button>
-          </>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsNotifModalOpen(true)}
+            leftIcon={<Plus />}
+          >
+            {t('landlordNotificationsBtnBroadcast')}
+          </Button>
         }
       />
 
@@ -404,22 +380,14 @@ export default function NotificationsPage() {
       />
 
       {/* 2. Action & Filter Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        <div className="relative flex-1">
-          <SearchInput
-            placeholder={t('landlordNotificationsSearchPlaceholder')}
-            value={searchQuery}
-            onChange={setSearchQuery}
-          />
-        </div>
-
-        {/* Filter Controls & Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Category Filter */}
-          <div className="w-36 sm:w-40">
+      <div className="bg-card border border-line rounded-2xl p-3 sm:p-4 shadow-2xs">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Filters: Category & Channel */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-2.5 flex-1 min-w-0">
             <SelectInput
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
+              containerClassName="w-full lg:w-48 space-y-0"
               options={[
                 { value: '', label: t('landlordNotificationsFilterAllCategories') },
                 { value: 'Điện nước', label: t('landlordNotificationsCatUtilities') },
@@ -428,13 +396,10 @@ export default function NotificationsPage() {
                 { value: 'Khẩn cấp', label: t('landlordNotificationsCatEmergency') },
               ]}
             />
-          </div>
-
-          {/* Channel Filter */}
-          <div className="w-36 sm:w-40">
             <SelectInput
               value={channelFilter}
               onChange={e => setChannelFilter(e.target.value)}
+              containerClassName="w-full lg:w-48 space-y-0"
               options={[
                 { value: '', label: t('landlordNotificationsFilterAllChannels') },
                 { value: 'Thông báo hệ thống', label: t('landlordNotificationsChannelInApp') },
@@ -444,15 +409,24 @@ export default function NotificationsPage() {
             />
           </div>
 
-          {/* View Switcher (Rule #9: Grid is Default) */}
-          <ViewModeToggle
-            value={viewMode}
-            onChange={setViewMode}
-            onPageSizeChange={setItemsPerPage}
-            onPageChange={setPage}
-          />
+          {/* Right Controls: Search & View Mode Switcher */}
+          <div className="flex items-center gap-2.5 w-full lg:w-auto shrink-0">
+            <SearchInput
+              placeholder={t('landlordNotificationsSearchPlaceholder')}
+              value={searchQuery}
+              onChange={setSearchQuery}
+              containerClassName="flex-1 sm:w-64 lg:w-72 space-y-0"
+            />
 
+            {/* View Switcher (Rule #9: Grid is Default) */}
+            <ViewModeToggle
+              value={viewMode}
+              onChange={setViewMode}
+              onPageSizeChange={setItemsPerPage}
+              onPageChange={setPage}
+            />
           </div>
+        </div>
       </div>
 
       {/* 3. Announcements List Section */}
@@ -475,11 +449,12 @@ export default function NotificationsPage() {
             </p>
             <Button
               size='sm'
+              variant='primary'
               onClick={() => setIsNotifModalOpen(true)}
               className="mt-4"
+              leftIcon={<Plus />}
             >
-              <Plus className="w-4 h-4" />
-              <span>{t('landlordNotificationsCreateFirstNotif')}</span>
+              {t('landlordNotificationsCreateFirstNotif')}
             </Button>
           </div>
         ) : viewMode === 'grid' ? (
@@ -513,23 +488,9 @@ export default function NotificationsPage() {
                       >
                         {getCategoryLabel(notif.category)}
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-semibold text-muted">
-                          {notif.sentAt}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={e => {
-                            e.stopPropagation()
-                            setDeletingNotifId(notif.id)
-                          }}
-                          title={t('landlordNotificationsDeleteAction')}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
+                      <span className="text-[11px] font-semibold text-muted">
+                        {notif.sentAt}
+                      </span>
                     </div>
 
                     {/* Title & Preview */}
@@ -574,17 +535,26 @@ export default function NotificationsPage() {
 
                   {/* Footer Details Button */}
                   <div className="pt-3 mt-3 border-t border-line flex items-center justify-end">
-                    <Button fullWidth
-                      type="button"
-                      variant="outline"
-                      size="sm"
+                    <Button
+                      variant="secondary"
                       onClick={e => {
                         e.stopPropagation()
                         setSelectedNotifDetail(notif)
                       }}
+                      leftIcon={<Eye />}
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>{t('landlordNotificationsViewDetails')}</span>
+                      {t('landlordNotificationsViewDetails')}
+                    </Button>
+                    <Button
+                      variant="ghost-danger"
+                      size="icon-sm"
+                      onClick={e => {
+                        e.stopPropagation()
+                        setDeletingNotifId(notif.id)
+                      }}
+                      title={t('landlordNotificationsDeleteAction')}
+                    >
+                      <Trash2 />
                     </Button>
                   </div>
                 </div>
@@ -631,7 +601,7 @@ export default function NotificationsPage() {
                     const isRent = notif.category === 'Tiền nhà' || notif.category === 'Rent'
 
                     return (
-                      <tr key={notif.id} className="hover:bg-zinc-50/80 transition-colors">
+                      <tr key={notif.id} className="hover:bg-card-hover transition-colors">
                         <td className="px-4 py-4 max-w-sm">
                           <div className="flex items-center gap-2 mb-1">
                             <span
@@ -697,7 +667,7 @@ export default function NotificationsPage() {
                               size="sm"
                               onClick={() => setSelectedNotifDetail(notif)}
                             >
-                              <Eye className="w-3.5 h-3.5" />
+                              <Eye />
                               <span>{t('landlordNotificationsBtnDetails')}</span>
                             </Button>
                             <Button
@@ -707,7 +677,7 @@ export default function NotificationsPage() {
                               onClick={() => setDeletingNotifId(notif.id)}
                               title={t('landlordNotificationsBtnDelete')}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 />
                             </Button>
                           </div>
                         </td>
@@ -784,7 +754,7 @@ export default function NotificationsPage() {
       >
         {/* Quick Templates */}
         <div className="space-y-1.5">
-          <label className="flex items-center gap-1">
+          <label className="flex items-center gap-1 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             <Text as="span" size="xs" weight="bold" className="text-foreground/90 uppercase tracking-wider">
               {t('landlordNotificationsTemplatesLabel')}
@@ -792,21 +762,32 @@ export default function NotificationsPage() {
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {notificationTemplates.map(tmpl => (
-              <Button fullWidth size="icon"
+              <Button
                 key={tmpl.title}
-                type="button"
-                variant="ghost"
+                fullWidth
+                size="lg"
+                variant="outline"
                 onClick={() => {
                   setNotifTitle(tmpl.title)
                   setNotifContent(tmpl.content)
                   setNotifCategory(tmpl.category)
                 }}
-                className="group flex-col items-start justify-start whitespace-normal"
+                className="h-auto py-2.5 px-3 group flex-col items-start justify-start whitespace-normal gap-1"
+                title={tmpl.title}
               >
-                <Text size="xs" weight="bold" className="text-foreground group-hover:text-primary truncate w-full text-left">
+                <Text
+                  size="xs"
+                  weight="bold"
+                  className="text-foreground group-hover:text-primary w-full text-left break-words leading-snug"
+                >
                   {tmpl.title}
                 </Text>
-                <Text size="3xs" weight="medium" color="subtle" className="text-muted mt-0.5 text-left">
+                <Text
+                  size="3xs"
+                  weight="medium"
+                  color="subtle"
+                  className="text-muted text-left"
+                >
                   {getCategoryLabel(tmpl.category)}
                 </Text>
               </Button>

@@ -1944,7 +1944,7 @@ export const enLandlord = {
     landlordNotificationsCatUtilities: "Utilities",
     landlordNotificationsChannelAll: "All Channels",
     landlordNotificationsChannelInApp: "In-App Notice",
-    landlordNotificationsChannelInAppFull: "In-App Notice (Dormio)",
+    landlordNotificationsChannelInAppFull: "In-App Notice",
     landlordNotificationsChannelSms: "SMS",
     landlordNotificationsChannelSmsDirect: "Direct SMS Message",
     landlordNotificationsChannelZalo: "Zalo OA",

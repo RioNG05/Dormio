@@ -1944,7 +1944,7 @@ export const viLandlord = {
     landlordNotificationsCatUtilities: "Điện nước",
     landlordNotificationsChannelAll: "Tất cả kênh",
     landlordNotificationsChannelInApp: "Thông báo hệ thống",
-    landlordNotificationsChannelInAppFull: "Thông báo hệ thống (Dormio)",
+    landlordNotificationsChannelInAppFull: "Thông báo hệ thống",
     landlordNotificationsChannelSms: "SMS",
     landlordNotificationsChannelSmsDirect: "Tin nhắn SMS trực tiếp",
     landlordNotificationsChannelZalo: "Zalo OA",
