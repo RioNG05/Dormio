@@ -157,6 +157,15 @@ export enum AttendanceStatus {
   absent = 'absent',
 }
 
+export enum AssetCondition {
+  new = 'new',
+  good = 'good',
+  damaged = 'damaged',
+  under_repair = 'under_repair',
+  lost = 'lost',
+  disposed = 'disposed',
+}
+
 export class Decimal {
   private val: number
   constructor(value: number | string) {

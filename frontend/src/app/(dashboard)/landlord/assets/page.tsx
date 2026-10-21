@@ -1,55 +1,46 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Package,
-  Search,
   Plus,
-  Download,
-  MoreHorizontal,
-  CheckCircle2,
-  AlertTriangle,
-  Wrench,
-  Box,
-  Filter,
-  Building2,
-  ArrowUpDown,
-  ChevronDown,
-  UploadCloud,
-  FileSpreadsheet,
-  MapPin,
   Eye,
   Edit3,
   Trash2,
-  Tag,
-  ShieldCheck,
-  Sparkles,
-  LayoutGrid,
-  List,
   DollarSign,
-  Home,
-  AlertCircle,
-  Info,
-  Calendar,
   ArrowRight,
   BarChart3,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { assetService, AssetItem, AssetCondition, AssetsSummary } from '@/services/asset.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput, ChipGroup, Pagination, ViewModeToggle } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  TextareaInput,
+  SearchInput,
+  Pagination,
+  ViewModeToggle,
+  Modal,
+  Text,
+} from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth()
   const router = useRouter()
   const t = useTranslations('landlord')
-  const tRef = React.useRef(t)
+  const { toast } = useToast()
+  const tRef = useRef(t)
 
   useEffect(() => {
     tRef.current = t
@@ -78,12 +69,13 @@ export default function AssetsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(6)
   const [totalRecords, setTotalRecords] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isDirty, setIsDirty] = useState(false)
   const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null)
+  const [showConfirmCloseModal, setShowConfirmCloseModal] = useState(false)
+  const [assetToDelete, setAssetToDelete] = useState<AssetItem | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Form Field States
   const [formName, setFormName] = useState('')
@@ -94,37 +86,23 @@ export default function AssetsPage() {
   const [formCondition, setFormCondition] = useState<AssetCondition>('good')
   const [formValue, setFormValue] = useState('3.000.000 ₫')
   const [formPurchaseDate, setFormPurchaseDate] = useState(new Date().toISOString().split('T')[0])
-  const [formDepreciationYears, setFormDepreciationYears] = useState(5)
   const [formNote, setFormNote] = useState('')
+
+  // Initial Form Snapshot for dirty tracking (Rule #10)
+  const [initialFormState, setInitialFormState] = useState({
+    name: '',
+    category: 'Điện lạnh',
+    roomId: '',
+    location: '101',
+    quantity: 1,
+    condition: 'good' as AssetCondition,
+    value: '3.000.000 ₫',
+    purchaseDate: new Date().toISOString().split('T')[0],
+    note: '',
+  })
 
   // Building Code Prefix for Asset ID
   const buildingPrefix = activeBuilding?.id ? activeBuilding.id.slice(0, 8).toUpperCase() : 'DORMIO'
-
-  // Alert & Confirm Modals
-  const [alertModal, setAlertModal] = useState<{
-    isOpen: boolean
-    title: string
-    message: string
-    type: 'warning' | 'error' | 'success' | 'info'
-  }>({
-    isOpen: false,
-    title: t('landlordAssetsAlertTitle'),
-    message: '',
-    type: 'info',
-  })
-
-  const showAlert = (
-    message: string,
-    type: 'warning' | 'error' | 'success' | 'info' = 'warning',
-    title?: string,
-  ) => {
-    setAlertModal({
-      isOpen: true,
-      title: title || tRef.current('landlordAssetsAlertTitle'),
-      message,
-      type,
-    })
-  }
 
   // Map condition to UI label
   const getStatusLabel = (cond: AssetCondition | string) => {
@@ -200,72 +178,149 @@ export default function AssetsPage() {
         }
         if (res.pagination) {
           setTotalRecords(res.pagination.total)
-          setTotalPages(res.pagination.totalPages)
         }
       }
     } catch (error: any) {
       console.error('Error loading assets:', error)
-      showAlert(error?.message || tRef.current('landlordAssetsLoadFailed'), 'error')
+      toast.error(error?.message || tRef.current('landlordAssetsLoadFailed'))
     } finally {
       setIsLoading(false)
     }
-  }, [activeBuilding?.id, searchQuery, categoryFilter, statusFilter, currentPage, itemsPerPage])
+  }, [activeBuilding?.id, searchQuery, categoryFilter, statusFilter, currentPage, itemsPerPage, toast])
 
   useEffect(() => {
     fetchAssets()
   }, [fetchAssets])
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setIsDirty(false)
-  }
+  // Rule #10: Track dirty state to prevent accidental loss of changes
+  const isFormDirty = useMemo(() => {
+    if (!isModalOpen) return false
+    return (
+      formName !== initialFormState.name ||
+      formCategory !== initialFormState.category ||
+      formRoomId !== initialFormState.roomId ||
+      formLocation !== initialFormState.location ||
+      formQuantity !== initialFormState.quantity ||
+      formCondition !== initialFormState.condition ||
+      formValue !== initialFormState.value ||
+      formPurchaseDate !== initialFormState.purchaseDate ||
+      formNote !== initialFormState.note
+    )
+  }, [
+    isModalOpen,
+    initialFormState,
+    formName,
+    formCategory,
+    formRoomId,
+    formLocation,
+    formQuantity,
+    formCondition,
+    formValue,
+    formPurchaseDate,
+    formNote,
+  ])
 
-  const handleOpenAddModal = () => {
+  const resetAndCloseModal = () => {
+    setIsModalOpen(false)
+    setShowConfirmCloseModal(false)
     setSelectedAsset(null)
     setFormName('')
     setFormCategory('Điện lạnh')
-    setFormRoomId(availableRooms.length > 0 ? availableRooms[0].id : '')
-    setFormLocation(
-      availableRooms.length > 0
-        ? t('landlordAssetsRoomPrefix', { room: availableRooms[0].roomNumber })
-        : t('landlordAssetsLocationStorage'),
-    )
+    setFormRoomId('')
+    setFormLocation('')
     setFormQuantity(1)
     setFormCondition('good')
     setFormValue('3.000.000 ₫')
     setFormPurchaseDate(new Date().toISOString().split('T')[0])
-    setFormDepreciationYears(5)
     setFormNote('')
-    setIsDirty(false)
+  }
+
+  const handleRequestCloseModal = () => {
+    if (isFormDirty) {
+      setShowConfirmCloseModal(true)
+    } else {
+      resetAndCloseModal()
+    }
+  }
+
+  const handleOpenAddModal = () => {
+    const initRoomId = availableRooms.length > 0 ? availableRooms[0].id : ''
+    const initLocation =
+      availableRooms.length > 0
+        ? t('landlordAssetsRoomPrefix', { room: availableRooms[0].roomNumber })
+        : t('landlordAssetsLocationStorage')
+    const initDate = new Date().toISOString().split('T')[0]
+
+    setSelectedAsset(null)
+    setFormName('')
+    setFormCategory('Điện lạnh')
+    setFormRoomId(initRoomId)
+    setFormLocation(initLocation)
+    setFormQuantity(1)
+    setFormCondition('good')
+    setFormValue('3.000.000 ₫')
+    setFormPurchaseDate(initDate)
+    setFormNote('')
+
+    setInitialFormState({
+      name: '',
+      category: 'Điện lạnh',
+      roomId: initRoomId,
+      location: initLocation,
+      quantity: 1,
+      condition: 'good',
+      value: '3.000.000 ₫',
+      purchaseDate: initDate,
+      note: '',
+    })
+
     setIsModalOpen(true)
   }
 
   const handleOpenEditModal = (asset: AssetItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
+    const initVal = asset.purchasePrice
+      ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
+      : '0 ₫'
+    const initDate = asset.purchaseDate
+      ? asset.purchaseDate.split('T')[0]
+      : new Date().toISOString().split('T')[0]
+    const initLocation = asset.location || asset.roomName || ''
+    const initCategory = asset.category || 'Điện lạnh'
+    const initRoomId = asset.roomId || ''
+    const initQuantity = asset.quantity || 1
+    const initCondition = asset.condition || 'good'
+    const initNote = asset.note || ''
+
     setSelectedAsset(asset)
     setFormName(asset.name)
-    setFormCategory(asset.category || 'Điện lạnh')
-    setFormRoomId(asset.roomId || '')
-    setFormLocation(asset.location || asset.roomName)
-    setFormQuantity(asset.quantity || 1)
-    setFormCondition(asset.condition || 'good')
-    setFormValue(
-      asset.purchasePrice ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫` : '0 ₫',
-    )
-    setFormPurchaseDate(
-      asset.purchaseDate
-        ? asset.purchaseDate.split('T')[0]
-        : new Date().toISOString().split('T')[0],
-    )
-    setFormDepreciationYears(5)
-    setFormNote(asset.note || '')
-    setIsDirty(false)
+    setFormCategory(initCategory)
+    setFormRoomId(initRoomId)
+    setFormLocation(initLocation)
+    setFormQuantity(initQuantity)
+    setFormCondition(initCondition)
+    setFormValue(initVal)
+    setFormPurchaseDate(initDate)
+    setFormNote(initNote)
+
+    setInitialFormState({
+      name: asset.name,
+      category: initCategory,
+      roomId: initRoomId,
+      location: initLocation,
+      quantity: initQuantity,
+      condition: initCondition,
+      value: initVal,
+      purchaseDate: initDate,
+      note: initNote,
+    })
+
     setIsModalOpen(true)
   }
 
   const handleSaveAsset = async () => {
     if (!formName.trim()) {
-      showAlert(t('landlordAssetsNameRequired'), 'warning', t('landlordAssetsInfoMissing'))
+      toast.warning(t('landlordAssetsNameRequired'))
       return
     }
 
@@ -288,37 +343,40 @@ export default function AssetsPage() {
 
       if (selectedAsset) {
         await assetService.updateAsset(activeBuilding.id, selectedAsset.id, payload)
-        showAlert(
-          t('landlordAssetsToastEditSuccess'),
-          'success',
-          t('landlordAssetsToastEditSuccess'),
-        )
+        toast.success(t('landlordAssetsToastEditSuccess'))
       } else {
         await assetService.createAsset(activeBuilding.id, payload)
-        showAlert(t('landlordAssetsToastAddSuccess'), 'success', t('landlordAssetsToastAddSuccess'))
+        toast.success(t('landlordAssetsToastAddSuccess'))
       }
 
-      setIsModalOpen(false)
-      setIsDirty(false)
+      resetAndCloseModal()
       fetchAssets()
     } catch (err: any) {
       console.error('Save asset error:', err)
-      showAlert(err?.message || tRef.current('landlordAssetsSaveFailed'), 'error')
+      toast.error(err?.message || tRef.current('landlordAssetsSaveFailed'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleDeleteAsset = async (asset: AssetItem, e?: React.MouseEvent) => {
+  const handleOpenDeleteModal = (asset: AssetItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    if (!activeBuilding?.id) return
+    setAssetToDelete(asset)
+  }
 
+  const handleConfirmDeleteAsset = async () => {
+    if (!assetToDelete || !activeBuilding?.id) return
+    setIsDeleting(true)
     try {
-      await assetService.deleteAsset(activeBuilding.id, asset.id)
-      showAlert(t('landlordAssetsToastDeleteSuccess'), 'success')
+      await assetService.deleteAsset(activeBuilding.id, assetToDelete.id)
+      toast.success(t('landlordAssetsToastDeleteSuccess'))
+      setAssetToDelete(null)
       fetchAssets()
     } catch (err: any) {
-      showAlert(err?.message || tRef.current('landlordAssetsDeleteFailed'), 'error')
+      console.error('Delete asset error:', err)
+      toast.error(err?.message || tRef.current('landlordAssetsDeleteFailed'))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -339,9 +397,9 @@ export default function AssetsPage() {
         key: 'total',
         label: t('landlordAssetsTotalAssetsShort'),
         value: t('landlordAssetsItemsCount', { count: summary.totalItems }),
-        icon: <Package className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-rose-500 shrink-0" />,
+        icon: <Package className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-danger shrink-0" />,
         containerClassName:
-          'px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 lg:w-[150px]',
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[150px]',
         labelClassName: 'text-rose-400',
         valueColor: 'danger',
         valueClassName: 'text-base sm:text-lg leading-none mt-1',
@@ -377,10 +435,10 @@ export default function AssetsPage() {
         label: t('landlordAssetsTotalQuantity'),
         value: summary.totalQuantity,
         icon: (
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
         ),
         containerClassName:
-          'px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30 lg:w-[130px]',
+          'px-3 py-2 bg-vacant/10 hover:bg-vacant-hover border-vacant/30 lg:w-[130px]',
         labelClassName: 'text-blue-400',
         valueColor: 'white',
         valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
@@ -411,68 +469,43 @@ export default function AssetsPage() {
       <LandlordStatBanner
         watermarkIcon={<Package className="w-64 h-64" />}
         chips={statChips}
-      />
+      >
+        <div className="px-3 py-1.5 bg-success-soft border border-success-subtle rounded-xl text-xs font-black text-success flex items-center gap-1.5">
+          <DollarSign className="w-3.5 h-3.5 text-success" />
+          <span>
+            {t('landlordAssetsOriginalValueLabel')}{' '}
+            {totalPurchaseValueSum.toLocaleString('vi-VN')} ₫
+          </span>
+        </div>
+
+        <div className="px-3 py-1.5 bg-info-soft border border-info-subtle rounded-xl text-xs font-black text-info flex items-center gap-1.5">
+          <BarChart3 className="w-3.5 h-3.5 text-info" />
+          <span>
+            {t('landlordAssetsCurrentValueLabel')} {totalCurrentValueSum.toLocaleString('vi-VN')}{' '}
+            ₫
+          </span>
+        </div>
+      </LandlordStatBanner>
 
       {/* Category Tabs & Financial Valuation Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-line shadow-xs">
-        {/* Category Pills */}
-        <ChipGroup
-          scrollable
-          value={categoryFilter}
-          onChange={cat => {
-            setCategoryFilter(cat)
-            setCurrentPage(1)
-          }}
-          className="pb-1 sm:pb-0"
-          options={[
-            { value: '', label: t('landlordAssetsFilterAllCategories') },
-            { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
-            { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
-            { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
-            { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
-            { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
-          ]}
-        />
-
-        {/* Financial Valuation Summary */}
-        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">
-          <div className="px-3 py-1.5 bg-success-soft border border-success-subtle rounded-xl text-xs font-black text-success flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-            <span>
-              {t('landlordAssetsOriginalValueLabel')}{' '}
-              {totalPurchaseValueSum.toLocaleString('vi-VN')} ₫
-            </span>
-          </div>
-
-          <div className="px-3 py-1.5 bg-info-soft border border-info-subtle rounded-xl text-xs font-black text-info flex items-center gap-1.5">
-            <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-            <span>
-              {t('landlordAssetsCurrentValueLabel')} {totalCurrentValueSum.toLocaleString('vi-VN')}{' '}
-              ₫
-            </span>
-          </div>
-
-          <ViewModeToggle
-            value={viewMode}
-            onChange={setViewMode}
-            onPageSizeChange={setItemsPerPage}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="bg-card border border-line rounded-2xl shadow-xs overflow-hidden">
-        {/* Filter Toolbar */}
-        <div className="p-3.5 sm:p-4 border-b border-line flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-surface/50">
-          <SearchInput
-            placeholder={t('landlordAssetsSearchPh')}
-            value={searchQuery}
-            onChange={val => {
-              setSearchQuery(val)
+        {/* Category & Status Dropdowns */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <SelectInput
+            value={categoryFilter}
+            onChange={e => {
+              setCategoryFilter(e.target.value)
               setCurrentPage(1)
             }}
-            containerClassName="w-full sm:max-w-md space-y-0"
+            options={[
+              { value: '', label: t('landlordAssetsFilterAllCategories') },
+              { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+              { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+              { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+              { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+              { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+            ]}
+            containerClassName="w-full sm:w-auto shrink-0 space-y-0 min-w-[160px]"
             className="py-2 text-xs font-semibold"
           />
 
@@ -494,6 +527,29 @@ export default function AssetsPage() {
           />
         </div>
 
+        <div className='flex gap-2 justify-center items-center'>
+          <SearchInput
+            placeholder={t('landlordAssetsSearchPh')}
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full min-w-80 sm:max-w-md space-y-0"
+            className="py-2 text-xs font-semibold"
+          />
+
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+            onPageSizeChange={setItemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="bg-card border border-line rounded-2xl shadow-xs overflow-hidden">
         {/* Loading Indicator */}
         {isLoading ? (
           <div className="py-20 text-center text-muted font-medium">
@@ -532,15 +588,14 @@ export default function AssetsPage() {
                           </span>
                         </div>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${
-                            asset.condition === 'good'
-                              ? 'bg-primary/10 text-primary border-primary/30'
-                              : asset.condition === 'new'
-                                ? 'bg-info-soft text-blue-600 border-info-subtle'
-                                : asset.condition === 'under_repair'
-                                  ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
-                                  : 'bg-danger-soft text-rose-600 border-danger-subtle'
-                          }`}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shrink-0 ${asset.condition === 'good'
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : asset.condition === 'new'
+                              ? 'bg-info-soft text-info border-info-subtle'
+                              : asset.condition === 'under_repair'
+                                ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
+                                : 'bg-danger-soft text-danger border-danger-subtle'
+                            }`}
                         >
                           {getStatusLabel(asset.condition)}
                         </span>
@@ -580,7 +635,7 @@ export default function AssetsPage() {
                           <span className="text-muted font-medium">
                             {t('landlordAssetsCurrentValueLabel')}
                           </span>
-                          <span className="font-black text-emerald-600">
+                          <span className="font-black text-accent">
                             {dep.currentValue.toLocaleString('vi-VN')} ₫{' '}
                             <span className="text-[10px] text-muted font-normal">
                               ({dep.remainingPercent}%)
@@ -595,17 +650,17 @@ export default function AssetsPage() {
                         <Button
                           type="button"
                           variant="secondary"
-                          size="xs"
+                          size="sm"
                           onClick={e => handleOpenEditModal(asset, e)}
-                          leftIcon={<Edit3 className="w-3.5 h-3.5 text-primary" />}
+                          leftIcon={<Edit3 className="text-primary" />}
                         >
                           {t('landlordAssetsBtnEditSku')}
                         </Button>
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={e => handleDeleteAsset(asset, e)}
+                          variant="ghost-danger"
+                          size="icon-sm"
+                          onClick={e => handleOpenDeleteModal(asset, e)}
                           title={t('landlordAssetsBtnDelete')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -687,7 +742,7 @@ export default function AssetsPage() {
                             ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
                             : '0 ₫'}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-4 font-black text-success whitespace-nowrap">
                           {dep.currentValue.toLocaleString('vi-VN')} ₫
                           <span className="text-[10px] text-muted font-medium block">
                             {t('landlordAssetsRemaining')} {dep.remainingPercent}%
@@ -695,15 +750,14 @@ export default function AssetsPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${
-                              asset.condition === 'good'
-                                ? 'bg-primary/10 text-primary border-primary/30'
-                                : asset.condition === 'new'
-                                  ? 'bg-info-soft text-blue-600 border-info-subtle'
-                                  : asset.condition === 'under_repair'
-                                    ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
-                                    : 'bg-danger-soft text-rose-600 border-danger-subtle'
-                            }`}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${asset.condition === 'good'
+                              ? 'bg-primary/10 text-primary border-primary/30'
+                              : asset.condition === 'new'
+                                ? 'bg-info-soft text-info border-info-subtle'
+                                : asset.condition === 'under_repair'
+                                  ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
+                                  : 'bg-danger-soft text-danger border-danger-subtle'
+                              }`}
                           >
                             {getStatusLabel(asset.condition)}
                           </span>
@@ -724,9 +778,9 @@ export default function AssetsPage() {
                             </Button>
                             <Button
                               type="button"
-                              variant="ghost"
+                              variant="ghost-danger"
                               size="icon-xs"
-                              onClick={e => handleDeleteAsset(asset, e)}
+                              onClick={e => handleOpenDeleteModal(asset, e)}
                               title={t('landlordAssetsBtnDelete')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -759,200 +813,294 @@ export default function AssetsPage() {
         unitLabel={t('landlordAssetsAssetsUnit')}
       />
 
-      {/* ADD / EDIT ASSET MODAL */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseModal()
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]">
-            <div className="px-5 sm:px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-accent-soft text-accent rounded-xl">
-                  <Package className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base sm:text-lg text-foreground">
-                    {selectedAsset
-                      ? `${t('landlordAssetsModalEditTitle')} [${selectedAsset.code}]`
-                      : t('landlordAssetsModalAddTitle')}
-                  </h3>
-                  <p className="text-xs text-muted font-medium">{t('landlordAssetsModalSub')}</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleCloseModal}
-              >
-                <Plus className="w-5 h-5 rotate-45" />
-              </Button>
+      {/* ─── MODALS ──────────────────────────────────────────────────────────── */}
+
+      {/* 1. ADD / EDIT ASSET MODAL */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleRequestCloseModal}
+        size="2xl"
+        asForm
+        onSubmit={e => {
+          e.preventDefault()
+          handleSaveAsset()
+        }}
+      >
+        <Modal.Header
+          title={
+            selectedAsset
+              ? `${t('landlordAssetsModalEditTitle')} [${selectedAsset.code}]`
+              : t('landlordAssetsModalAddTitle')
+          }
+          description={t('landlordAssetsModalSub')}
+          icon={
+            <div className="p-2 bg-accent-soft text-accent rounded-xl">
+              <Package className="w-5 h-5 text-primary" />
             </div>
+          }
+          onClose={handleRequestCloseModal}
+        />
 
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                {/* Name */}
-                <TextInput
-                  label={t('landlordAssetsFieldName')}
-                  required
-                  placeholder={t('landlordAssetsFieldNamePh')}
-                  value={formName}
-                  onChange={e => {
-                    setFormName(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  containerClassName="sm:col-span-2"
-                />
+        <Modal.Body className="p-4 sm:p-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            {/* Name */}
+            <TextInput
+              label={t('landlordAssetsFieldName')}
+              required
+              placeholder={t('landlordAssetsFieldNamePh')}
+              value={formName}
+              onChange={e => {
+                setFormName(e.target.value)
+              }}
+              containerClassName="sm:col-span-2"
+            />
 
-                {/* Category */}
-                <SelectInput
-                  label={t('landlordAssetsFieldCategory')}
-                  value={formCategory}
-                  onChange={e => {
-                    setFormCategory(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  options={[
-                    { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
-                    { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
-                    { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
-                    { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
-                    { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
-                  ]}
-                />
+            {/* Category */}
+            <SelectInput
+              label={t('landlordAssetsFieldCategory')}
+              value={formCategory}
+              onChange={e => {
+                setFormCategory(e.target.value)
+              }}
+              options={[
+                { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+                { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+                { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+                { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+                { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+              ]}
+            />
 
-                {/* Room Selection */}
-                <SelectInput
-                  label={t('landlordAssetsFieldRoom')}
-                  value={formRoomId}
-                  onChange={e => {
-                    const selectedVal = e.target.value
-                    setFormRoomId(selectedVal)
-                    setIsDirty(true)
-                    if (!selectedVal) {
-                      setFormLocation(t('landlordAssetsLocationSharedOrStorage'))
-                    } else {
-                      const targetRoom = availableRooms.find(r => r.id === selectedVal)
-                      if (targetRoom) {
-                        setFormLocation(
-                          t('landlordAssetsRoomPrefix', { room: targetRoom.roomNumber }),
-                        )
-                      }
-                    }
-                  }}
-                  options={[
-                    { value: '', label: t('landlordAssetsRoomSharedOption') },
-                    ...availableRooms.map(room => ({
-                      value: room.id,
-                      label: t('landlordAssetsRoomPrefix', { room: room.roomNumber }),
-                    })),
-                  ]}
-                />
+            {/* Room Selection */}
+            <SelectInput
+              label={t('landlordAssetsFieldRoom')}
+              value={formRoomId}
+              onChange={e => {
+                const selectedVal = e.target.value
+                setFormRoomId(selectedVal)
+                if (!selectedVal) {
+                  setFormLocation(t('landlordAssetsLocationSharedOrStorage'))
+                } else {
+                  const targetRoom = availableRooms.find(r => r.id === selectedVal)
+                  if (targetRoom) {
+                    setFormLocation(
+                      t('landlordAssetsRoomPrefix', { room: targetRoom.roomNumber }),
+                    )
+                  }
+                }
+              }}
+              options={[
+                { value: '', label: t('landlordAssetsRoomSharedOption') },
+                ...availableRooms.map(room => ({
+                  value: room.id,
+                  label: t('landlordAssetsRoomPrefix', { room: room.roomNumber }),
+                })),
+              ]}
+            />
 
-                {/* Location Detail */}
-                <TextInput
-                  label={t('landlordAssetsFieldLocationDetail')}
-                  placeholder={t('landlordAssetsFieldLocationDetailPh')}
-                  value={formLocation}
-                  onChange={e => {
-                    setFormLocation(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
+            {/* Location Detail */}
+            <TextInput
+              label={t('landlordAssetsFieldLocationDetail')}
+              placeholder={t('landlordAssetsFieldLocationDetailPh')}
+              value={formLocation}
+              onChange={e => {
+                setFormLocation(e.target.value)
+              }}
+            />
 
-                {/* Quantity */}
-                <NumberInput
-                  label={t('landlordAssetsFieldQuantity')}
-                  min={1}
-                  value={formQuantity}
-                  onChange={e => {
-                    setFormQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                    setIsDirty(true)
-                  }}
-                />
+            {/* Quantity */}
+            <NumberInput
+              label={t('landlordAssetsFieldQuantity')}
+              min={1}
+              value={formQuantity}
+              onChange={e => {
+                setFormQuantity(Math.max(1, parseInt(e.target.value) || 1))
+              }}
+            />
 
-                {/* Purchase Value */}
-                <TextInput
-                  label={t('landlordAssetsFieldPurchaseValue')}
-                  placeholder="VD: 8.500.000 ₫"
-                  value={formValue}
-                  onChange={e => {
-                    setFormValue(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
+            {/* Purchase Value */}
+            <TextInput
+              label={t('landlordAssetsFieldPurchaseValue')}
+              placeholder="VD: 8.500.000 ₫"
+              value={formValue}
+              onChange={e => {
+                setFormValue(e.target.value)
+              }}
+            />
 
-                {/* Purchase Date */}
-                <TextInput
-                  type="date"
-                  label={t('landlordAssetsFieldPurchaseDate')}
-                  value={formPurchaseDate}
-                  onChange={e => {
-                    setFormPurchaseDate(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
+            {/* Purchase Date */}
+            <TextInput
+              type="date"
+              label={t('landlordAssetsFieldPurchaseDate')}
+              value={formPurchaseDate}
+              onChange={e => {
+                setFormPurchaseDate(e.target.value)
+              }}
+            />
 
-                {/* Condition / Status */}
-                <SelectInput
-                  label={t('landlordAssetsFieldStatus')}
-                  value={formCondition}
-                  onChange={e => {
-                    setFormCondition(e.target.value as AssetCondition)
-                    setIsDirty(true)
-                  }}
-                  options={[
-                    { value: 'good', label: t('landlordAssetsStatusInUse') },
-                    { value: 'new', label: t('landlordAssetsStatusReady') },
-                    { value: 'under_repair', label: t('landlordAssetsStatusMaintenance') },
-                    { value: 'damaged', label: t('landlordAssetsStatusBroken') },
-                    { value: 'lost', label: t('landlordAssetsStatusLost') },
-                    { value: 'disposed', label: t('landlordAssetsStatusDisposed') },
-                  ]}
-                />
+            {/* Condition / Status */}
+            <SelectInput
+              label={t('landlordAssetsFieldStatus')}
+              value={formCondition}
+              onChange={e => {
+                setFormCondition(e.target.value as AssetCondition)
+              }}
+              options={[
+                { value: 'good', label: t('landlordAssetsStatusInUse') },
+                { value: 'new', label: t('landlordAssetsStatusReady') },
+                { value: 'under_repair', label: t('landlordAssetsStatusMaintenance') },
+                { value: 'damaged', label: t('landlordAssetsStatusBroken') },
+                { value: 'lost', label: t('landlordAssetsStatusLost') },
+                { value: 'disposed', label: t('landlordAssetsStatusDisposed') },
+              ]}
+            />
 
-                {/* Note */}
-                <TextareaInput
-                  label={t('landlordAssetsFieldNoteWarranty')}
-                  rows={2}
-                  placeholder={t('landlordAssetsFieldNoteWarrantyPh')}
-                  value={formNote}
-                  onChange={e => {
-                    setFormNote(e.target.value)
-                    setIsDirty(true)
-                  }}
-                  containerClassName="sm:col-span-2"
-                  className="resize-none"
-                />
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCloseModal}
-              >
-                {t('landlordAssetsBtnCancel')}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSaveAsset}
-                disabled={isSubmitting}
-                isLoading={isSubmitting}
-              >
-                {t('landlordAssetsModalBtnSave')}
-              </Button>
-            </div>
+            {/* Note */}
+            <TextareaInput
+              label={t('landlordAssetsFieldNoteWarranty')}
+              rows={2}
+              placeholder={t('landlordAssetsFieldNoteWarrantyPh')}
+              value={formNote}
+              onChange={e => {
+                setFormNote(e.target.value)
+              }}
+              containerClassName="sm:col-span-2"
+              className="resize-none"
+            />
           </div>
-        </div>
-      )}
+        </Modal.Body>
+
+        <Modal.Footer className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRequestCloseModal}
+          >
+            {t('landlordAssetsBtnCancel')}
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+          >
+            {t('landlordAssetsModalBtnSave')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 2. RULE #10 UNSAVED CHANGES CONFIRMATION MODAL */}
+      <Modal
+        isOpen={showConfirmCloseModal}
+        onClose={() => setShowConfirmCloseModal(false)}
+        size="sm"
+        zIndex={70}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-warning-soft text-warning rounded-2xl flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsConfirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsConfirmCloseDesc')}
+            </Text>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmCloseModal(false)}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseKeep')}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={resetAndCloseModal}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* 3. DELETE ASSET CONFIRMATION MODAL */}
+      <Modal
+        isOpen={Boolean(assetToDelete)}
+        onClose={() => setAssetToDelete(null)}
+        size="sm"
+        zIndex={60}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-danger-soft text-danger rounded-2xl flex items-center justify-center mx-auto">
+            <Trash2 className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsDeleteConfirmTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsDeleteConfirmDesc', {
+                name: assetToDelete?.name || '',
+                code: assetToDelete?.code || '',
+              })}
+            </Text>
+          </div>
+
+          {assetToDelete && (
+            <div className="p-3 bg-surface border border-line rounded-xl text-left space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-bold text-primary">{assetToDelete.code}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-card border border-line text-muted font-medium">
+                  {getCategoryLabel(assetToDelete.category)}
+                </span>
+              </div>
+              <p className="font-bold text-sm text-foreground truncate">{assetToDelete.name}</p>
+              <div className="flex items-center justify-between text-muted text-[11px] pt-1 border-t border-line/60">
+                <span>{assetToDelete.roomName || assetToDelete.location}</span>
+                {assetToDelete.purchasePrice && (
+                  <span className="font-bold text-foreground">
+                    {Number(assetToDelete.purchasePrice).toLocaleString('vi-VN')} ₫
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAssetToDelete(null)}
+              className="flex-1"
+              disabled={isDeleting}
+            >
+              {t('landlordAssetsBtnCancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleConfirmDeleteAsset}
+              className="flex-1"
+              isLoading={isDeleting}
+            >
+              {t('landlordAssetsDeleteConfirmBtn')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }

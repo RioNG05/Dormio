@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core'
 import { SubscriptionPackage, AssetCondition } from '@prisma'
 import { AssetsController } from './assets.controller'
 import { AssetsService } from './assets.service'
+import { PrismaService } from '../../common/prisma/prisma.service'
 import { REQUIRE_TIER_KEY } from '../../common/decorators/require-tier.decorator'
 
 describe('AssetsController Tier Guard & Endpoints', () => {
@@ -29,6 +30,10 @@ describe('AssetsController Tier Guard & Endpoints', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AssetsController],
       providers: [
+        {
+          provide: PrismaService,
+          useValue: {},
+        },
         {
           provide: AssetsService,
           useValue: service,

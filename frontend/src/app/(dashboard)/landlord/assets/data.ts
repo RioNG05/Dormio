@@ -1,3 +1,5 @@
+import { AssetCondition } from '@/services/asset.service'
+
 export interface MaintenanceLog {
   id: string
   date: string
@@ -17,6 +19,7 @@ export interface Asset {
   room: string
   roomId?: string | null
   status: 'Đang sử dụng' | 'Sẵn sàng' | 'Bảo trì' | 'Hỏng hóc' | 'Đã mất' | 'Đã thanh lý' | string
+  condition?: AssetCondition
   dateAdded: string
   value: string // Formatted value
   numericValue: number // Raw numeric cost

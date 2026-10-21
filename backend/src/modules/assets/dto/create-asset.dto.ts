@@ -60,7 +60,7 @@ export class CreateAssetDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  quantity?: number = 1
+  quantity?: number
 
   @ApiPropertyOptional({
     description: 'Current physical condition of the asset',
@@ -69,7 +69,7 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsEnum(AssetCondition)
-  condition?: AssetCondition = AssetCondition.good
+  condition?: AssetCondition
 
   @ApiPropertyOptional({
     description: 'Purchase price in VND',
