@@ -36,6 +36,8 @@ import {
   FilterToolbar,
   TableRow,
   Card,
+  Text,
+  Chip,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
@@ -603,14 +605,36 @@ export default function StaffPage() {
           />
         }
         filters={
-          <div className="w-auto min-w-[170px]">
+          <>
+            <SelectInput
+              value={statusFilter}
+              onChange={e => {
+                setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')
+                setCurrentPage(1)
+              }}
+              containerClassName="w-full sm:w-auto min-w-[150px] space-y-0"
+              options={[
+                {
+                  value: 'all',
+                  label: `${t('landlordStaffTabAll')} (${summary.totalStaff})`,
+                },
+                {
+                  value: 'active',
+                  label: `${t('landlordStaffTabActive')} (${summary.activeStaff})`,
+                },
+                {
+                  value: 'inactive',
+                  label: `${t('landlordStaffTabInactive')} (${summary.inactiveStaff})`,
+                },
+              ]}
+            />
             <SelectInput
               value={positionFilter}
               onChange={e => {
                 setPositionFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              containerClassName="w-auto space-y-0"
+              containerClassName="w-full sm:w-auto min-w-[170px] space-y-0"
               options={[
                 { value: 'all', label: t('landlordStaffAllPositions', { count: positions.length }) },
                 ...positions.map(pos => ({
@@ -619,48 +643,13 @@ export default function StaffPage() {
                 })),
               ]}
             />
-          </div>
+          </>
         }
         viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
           />
-        }
-        subRow={
-          <div className="flex flex-wrap items-center gap-1.5">
-            {[
-              { label: t('landlordStaffTabAll'), val: 'all', count: summary.totalStaff },
-              { label: t('landlordStaffTabActive'), val: 'active', count: summary.activeStaff },
-              { label: t('landlordStaffTabInactive'), val: 'inactive', count: summary.inactiveStaff },
-            ].map(tab => (
-              <Button
-                key={tab.val}
-                variant={statusFilter === tab.val ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => {
-                  setStatusFilter(tab.val as any)
-                  setCurrentPage(1)
-                }}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
-                  statusFilter === tab.val
-                    ? 'bg-primary hover:bg-[#25aba6] text-white shadow-xs shadow-primary/20'
-                    : 'bg-card-hover text-muted hover:bg-zinc-200/70',
-                )}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={cn(
-                    'px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ml-1.5',
-                    statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-line text-foreground/90',
-                  )}
-                >
-                  {tab.count}
-                </span>
-              </Button>
-            ))}
-          </div>
         }
       />
 
@@ -721,28 +710,34 @@ export default function StaffPage() {
                         zoomOnHover
                       />
                       <div>
-                        <h3 className="font-extrabold text-foreground text-base group-hover:text-primary transition-colors line-clamp-1">
+                        <Text
+                          as="h3"
+                          size="base"
+                          weight="extrabold"
+                          color="default"
+                          clamp={1}
+                          className="group-hover:text-primary transition-colors"
+                        >
                           {staff.fullName}
-                        </h3>
+                        </Text>
                         <div className="inline-flex items-center gap-1 mt-0.5">
                           <Briefcase className="w-3 h-3 text-primary" />
-                          <span className="text-xs font-bold text-primary">
+                          <Text as="span" size="xs" weight="bold" color="brand">
                             {staff.positionName}
-                          </span>
+                          </Text>
                         </div>
                       </div>
                     </div>
 
-                    <span
-                      className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border shrink-0 ${isActive
-                        ? 'bg-primary/10 text-primary border-primary/30'
-                        : 'bg-card-hover text-muted border-line'
-                        }`}
+                    <Chip
+                      size="sm"
+                      preventHover
+                      variant={isActive ? 'primary' : 'neutral'}
                     >
                       {isActive
                         ? t('landlordStaffStatusActiveBadge')
                         : t('landlordStaffStatusInactiveBadge')}
-                    </span>
+                    </Chip>
                   </div>
                 </Card.Header>
 
@@ -751,22 +746,26 @@ export default function StaffPage() {
                   <div className="space-y-2 pt-1 text-xs text-muted border-t border-line">
                     <div className="flex items-center gap-2">
                       <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
-                      <span className="font-bold text-foreground">{staff.phoneNumber}</span>
+                      <Text as="span" size="xs" weight="bold" color="default">
+                        {staff.phoneNumber}
+                      </Text>
                     </div>
                     {staff.email && (
                       <div className="flex items-center gap-2">
                         <Mail className="w-3.5 h-3.5 text-muted shrink-0" />
-                        <span className="text-muted truncate">{staff.email}</span>
+                        <Text as="span" size="xs" color="secondary" clamp={1}>
+                          {staff.email}
+                        </Text>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-muted shrink-0" />
-                      <span>
+                      <Text as="span" size="xs" color="secondary">
                         {t('landlordStaffJoinedLabel')}{' '}
-                        <strong className="text-foreground/90">
+                        <Text as="strong" size="xs" weight="bold" color="default">
                           {formatDate(staff.joinedAt)}
-                        </strong>
-                      </span>
+                        </Text>
+                      </Text>
                     </div>
                     {staff.positionDescription && (
                       <div className="flex items-start gap-2 text-[11px] text-muted bg-surface p-2 rounded-xl">
@@ -786,17 +785,6 @@ export default function StaffPage() {
                 {/* Card Footer Actions: Assign Role & Toggle Status */}
                 <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={event => {
-                        event.stopPropagation()
-                        setSelectedStaff(staff)
-                        setIsDetailModalOpen(true)
-                      }}
-                    >
-                      {t('landlordStaffBtnDetail')}
-                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -852,7 +840,14 @@ export default function StaffPage() {
                 {staffList.map(staff => {
                   const isActive = staff.status === 'active'
                   return (
-                    <TableRow key={staff.assignmentId} className="group">
+                    <TableRow
+                      key={staff.assignmentId}
+                      className="group"
+                      onClick={() => {
+                        setSelectedStaff(staff)
+                        setIsDetailModalOpen(true)
+                      }}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar
@@ -862,40 +857,47 @@ export default function StaffPage() {
                             shape="rounded"
                           />
                           <div>
-                            <div className="font-extrabold text-foreground text-sm">
+                            <Text as="div" size="sm" weight="extrabold" color="default">
                               {staff.fullName}
-                            </div>
-                            <div className="text-[11px] text-muted">
+                            </Text>
+                            <Text as="div" size="2xs" color="secondary">
                               {staff.email || t('landlordStaffNoEmail')}
-                            </div>
+                            </Text>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <span className="font-bold text-foreground">{staff.positionName}</span>
+                          <Text as="span" size="xs" weight="bold" color="default">
+                            {staff.positionName}
+                          </Text>
                           {staff.positionDescription && (
-                            <p className="text-[11px] text-muted line-clamp-1 italic">
+                            <Text as="p" size="2xs" color="secondary" clamp={1} className="italic">
                               {staff.positionDescription}
-                            </p>
+                            </Text>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-foreground">{staff.phoneNumber}</td>
-                      <td className="px-6 py-4 text-muted">
-                        {formatDate(staff.joinedAt)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {staff.phoneNumber}
+                        </Text>
                       </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border ${isActive
-                            ? 'bg-primary/10 text-primary border-primary/30'
-                            : 'bg-card-hover text-muted border-line'
-                            }`}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" color="secondary">
+                          {formatDate(staff.joinedAt)}
+                        </Text>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          preventHover
+                          variant={isActive ? 'primary' : 'neutral'}
                         >
                           {isActive
                             ? t('landlordStaffTableStatusActive')
                             : t('landlordStaffTableStatusInactive')}
-                        </span>
+                        </Chip>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -906,16 +908,6 @@ export default function StaffPage() {
                             title={t('landlordStaffBtnAssignRoleTooltip')}
                           >
                             {t('landlordStaffBtnAssignRole')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => {
-                              setSelectedStaff(staff)
-                              setIsDetailModalOpen(true)
-                            }}
-                          >
-                            {t('landlordStaffBtnDetail')}
                           </Button>
                           <Button
                             size="sm"
