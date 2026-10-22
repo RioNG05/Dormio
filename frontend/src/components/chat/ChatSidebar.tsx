@@ -188,12 +188,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           />
           <Button
             size="icon-sm"
-            variant="primary"
             onClick={onOpenNewChat}
             title="Bắt đầu cuộc trò chuyện mới"
             className="shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <Plus />
           </Button>
         </div>
 
@@ -222,9 +221,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
             <p>Chưa có cuộc trò chuyện nào</p>
             {hasContacts && (
               <Button
-                variant="primary"
                 onClick={onOpenNewChat}
-                leftIcon={<Plus className="w-4 h-4" />}
+                leftIcon={<Plus />}
                 className="mt-2"
               >
                 Bắt đầu nhắn tin

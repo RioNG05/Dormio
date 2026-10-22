@@ -139,10 +139,9 @@ export default function TierUpgradeModal() {
             </Text>
           </Button>
           <Button
-            variant="primary"
             size="md"
             onClick={handleUpgrade}
-            rightIcon={<ArrowRight className="h-4 w-4" />}
+            rightIcon={<ArrowRight />}
             className={
               isPro
                 ? '!bg-gradient-to-r !from-amber-500 !to-orange-500 hover:!from-warning hover:!to-orange-600 shadow-amber-500/25 shadow-lg'

@@ -178,12 +178,10 @@ export function CoverPhotoUpload({
 
             <div className="flex items-center gap-1.5 shrink-0">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+                leftIcon={<RefreshCw />}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
                   Đổi ảnh
@@ -191,12 +189,10 @@ export function CoverPhotoUpload({
               </Button>
 
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={handleRemove}
                 disabled={isUploading}
-                leftIcon={<X className="h-3.5 w-3.5" />}
+                leftIcon={<X />}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
                   Xóa

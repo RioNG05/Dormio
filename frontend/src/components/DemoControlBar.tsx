@@ -29,13 +29,12 @@ export default function DemoControlBar() {
     return (
       <Button
         variant="ghost"
-        size="sm"
         rounded="full"
         onClick={() => setIsDismissed(false)}
+        leftIcon={<Sparkles className="fill-primary" />}
         className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-primary border border-zinc-700 shadow-lg text-[10px] font-bold hover:bg-zinc-800"
         title="Mở lại bảng thử nghiệm"
       >
-        <Sparkles className="w-3.5 h-3.5 fill-primary" />
         <Text as="span" size="3xs" weight="bold" color="inherit">
           Thử nghiệm
         </Text>

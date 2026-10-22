@@ -150,22 +150,18 @@ export default function LegalView({ initialTab = 'terms' }: LegalViewProps) {
       {/* Tab Switcher using Button components */}
       <div className="flex p-1 bg-card-hover/90 rounded-2xl border border-line gap-1">
         <Button
-          type="button"
-          variant={activeTab === 'terms' ? 'primary' : 'ghost'}
-          size="sm"
+          variant={activeTab === 'terms' ? undefined : 'ghost'}
           onClick={() => setActiveTab('terms')}
           className="flex-1"
-          leftIcon={<Scale  />}
+          leftIcon={<Scale />}
         >
           {t('authLegalTabTerms')}
         </Button>
         <Button
-          type="button"
-          variant={activeTab === 'privacy' ? 'primary' : 'ghost'}
-          size="sm"
+          variant={activeTab === 'privacy' ? undefined : 'ghost'}
           onClick={() => setActiveTab('privacy')}
           className="flex-1"
-          leftIcon={<ShieldCheck  />}
+          leftIcon={<ShieldCheck />}
         >
           {t('authLegalTabPrivacy')}
         </Button>

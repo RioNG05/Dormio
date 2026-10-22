@@ -104,7 +104,6 @@ export default function AIChatBot() {
       {/* Floating Launcher Button */}
       {!isOpen && (
         <Button
-          variant="primary"
           rounded="full"
           size="icon"
           onClick={() => setIsOpen(true)}
@@ -112,7 +111,7 @@ export default function AIChatBot() {
           title={t('aiChatBotTitle')}
           aria-label={t('aiChatBotTitle')}
         >
-          <Bot className="w-7 h-7 group-hover:animate-pulse" />
+          <Bot className="group-hover:animate-pulse" />
           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-accent border-2 border-white rounded-full" />
         </Button>
       )}
@@ -235,14 +234,13 @@ export default function AIChatBot() {
                 rightIcon={
                   <Button
                     type="submit"
-                    variant="primary"
                     size="icon"
                     disabled={!input.trim() || isLoading}
                     isLoading={isLoading}
                     className="!h-7 !w-7 rounded-lg shrink-0"
                     aria-label="Send"
                   >
-                    <Send className="w-3.5 h-3.5 ml-0.5" />
+                    <Send className="ml-0.5" />
                   </Button>
                 }
               />

@@ -140,23 +140,19 @@ export function Pagination({
       <div className="flex items-center gap-1 sm:gap-1.5 w-full sm:w-auto justify-center sm:justify-end overflow-x-auto pb-1 sm:pb-0">
         {/* Nút lùi 1 trang */}
         <Button
-          type="button"
           variant="outline"
-          size="sm"
           disabled={safeCurrentPage <= 1}
           onClick={() => onPageChange(Math.max(1, safeCurrentPage - 1))}
+          leftIcon={<ChevronLeft />}
           className="px-2 sm:px-2.5 gap-1 shrink-0"
         >
-          <ChevronLeft className="w-3.5 h-3.5" />
           <span className="hidden md:inline">{t('prev')}</span>
         </Button>
 
         {/* Nút nhảy lùi 5 trang (Rule #9 window jump) */}
         {showWindowJumping && windowStart > 1 && (
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => onPageChange(Math.max(1, windowStart - windowSize))}
             title={t('jumpPrev5')}
             className="w-8 h-8 px-0 font-bold shrink-0"
@@ -171,9 +167,7 @@ export function Pagination({
           return (
             <Button
               key={page}
-              type="button"
-              variant={isActive ? 'primary' : 'outline'}
-              size="sm"
+              variant={isActive ? undefined : 'outline'}
               onClick={() => onPageChange(page)}
               className={cn(
                 'min-w-8 h-8 px-2 font-bold shrink-0',
@@ -188,9 +182,7 @@ export function Pagination({
         {/* Nút nhảy tiến 5 trang (Rule #9 window jump) */}
         {showWindowJumping && windowStart + windowSize <= totalPages && (
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => onPageChange(Math.min(totalPages, windowStart + windowSize))}
             title={t('jumpNext5')}
             className="w-8 h-8 px-0 font-bold shrink-0"
@@ -201,15 +193,13 @@ export function Pagination({
 
         {/* Nút tiến 1 trang */}
         <Button
-          type="button"
           variant="outline"
-          size="sm"
           disabled={safeCurrentPage >= totalPages}
           onClick={() => onPageChange(Math.min(totalPages, safeCurrentPage + 1))}
+          rightIcon={<ChevronRight />}
           className="px-2 sm:px-2.5 gap-1 shrink-0"
         >
           <span className="hidden md:inline">{t('next')}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
         </Button>
       </div>
     </div>

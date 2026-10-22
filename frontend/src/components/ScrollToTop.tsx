@@ -31,14 +31,13 @@ export function ScrollToTop() {
 
   return (
     <Button
-      variant="primary"
       size="icon"
       rounded="full"
       onClick={scrollToTop}
       className="fixed bottom-8 right-8 z-50 !h-12 !w-12 shadow-lg shadow-primary/30 hover:-translate-y-1"
       aria-label="Cuộn lên đầu trang"
     >
-      <ArrowUp className="h-6 w-6" />
+      <ArrowUp />
     </Button>
   )
 }

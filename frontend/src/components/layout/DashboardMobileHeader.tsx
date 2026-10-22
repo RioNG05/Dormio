@@ -28,13 +28,12 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
     <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 dark:border-line bg-card sticky top-0 z-30 gap-2">
       <div className="flex items-center gap-2 shrink-0">
         <Button
-          type="button"
           variant="ghost"
           size="icon"
           onClick={onOpenMobileMenu}
           className="-ml-1"
         >
-          <Menu className="w-5 h-5" />
+          <Menu />
         </Button>
         <Logo />
         <NotificationBell align="left" />

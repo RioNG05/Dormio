@@ -397,7 +397,6 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
           <div key={idx} className="mb-1">
             <Button
               fullWidth
-              type="button"
               variant="ghost"
               onClick={() => toggleGroup(block.key!)}
               className="justify-between"

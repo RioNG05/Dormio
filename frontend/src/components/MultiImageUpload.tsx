@@ -371,12 +371,10 @@ export function MultiImageUpload({
       {/* Action Buttons: Device Upload & Camera Capture */}
       <div className="flex flex-wrap items-center gap-3">
         <Button
-          type="button"
           variant="secondary"
-          size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={() => deviceInputRef.current?.click()}
-          leftIcon={<UploadCloud className="w-4 h-4 text-primary shrink-0" />}
+          leftIcon={<UploadCloud className="text-primary shrink-0" />}
         >
           <Text as="span" size="xs" weight="medium" color="inherit">
             {t('guestPostsCreateUploadDevice') || 'Tải ảnh từ máy'}
@@ -384,12 +382,10 @@ export function MultiImageUpload({
         </Button>
 
         <Button
-          type="button"
           variant="secondary"
-          size="sm"
           disabled={disabled || isAtMaxImages}
           onClick={openCamera}
-          leftIcon={<Camera className="w-4 h-4 text-accent shrink-0" />}
+          leftIcon={<Camera className="text-accent shrink-0" />}
         >
           <Text as="span" size="xs" weight="medium" color="inherit">
             {t('guestPostsCreateCaptureCamera') || 'Chụp ảnh camera'}
@@ -470,38 +466,35 @@ export function MultiImageUpload({
               <div className="absolute inset-0 bg-zinc-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                 {/* Inspect Button */}
                 <Button
-                  type="button"
                   variant="secondary"
                   size="icon"
                   onClick={() => setInspectedImageUrl(url)}
                   title="Xem ảnh phóng to"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye />
                 </Button>
 
                 {/* Make Cover Button (if not already cover) */}
                 {idx > 0 && !disabled && (
                   <Button
-                    type="button"
                     variant="secondary"
                     size="icon"
                     onClick={() => handleSetCoverPhoto(idx)}
                     title={t('guestPostsCreateSetCoverTooltip') || 'Đặt làm ảnh bìa'}
                   >
-                    <Star className="w-4 h-4" />
+                    <Star />
                   </Button>
                 )}
 
                 {/* Delete Button */}
                 {!disabled && (
                   <Button
-                    type="button"
                     variant="danger"
                     size="icon"
                     onClick={() => handleRemoveImage(idx)}
                     title="Xóa ảnh"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 />
                   </Button>
                 )}
               </div>
@@ -535,9 +528,7 @@ export function MultiImageUpload({
                     <AlertCircle className="w-5 h-5 text-rose-400" />
                     <Text as="span" size="3xs" weight="bold" color="danger">{item.error}</Text>
                     <Button
-                      type="button"
                       variant="danger"
-                      size="sm"
                       onClick={() => handleRemoveUploadingItem(item.id)}
                       className="mt-1"
                     >
@@ -595,9 +586,7 @@ export function MultiImageUpload({
                 <AlertCircle className="w-8 h-8 mx-auto text-danger" />
                 <Text size="xs" weight="medium" color="danger">{cameraError}</Text>
                 <Button
-                  type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     closeCamera()
                     cameraInputRef.current?.click()
@@ -623,11 +612,9 @@ export function MultiImageUpload({
           {/* Modal Actions */}
           <div className="flex items-center justify-between pt-2">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={handleToggleFacingMode}
-              leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+              leftIcon={<RotateCcw />}
               title="Đổi camera trước/sau"
             >
               <Text as="span" size="xs" weight="medium" color="inherit">
@@ -637,9 +624,7 @@ export function MultiImageUpload({
 
             <div className="flex items-center gap-2">
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={closeCamera}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
@@ -647,12 +632,9 @@ export function MultiImageUpload({
                 </Text>
               </Button>
               <Button
-                type="button"
-                variant="primary"
-                size="sm"
                 disabled={cameraLoading || !!cameraError}
                 onClick={handleSnapPhoto}
-                leftIcon={<Camera className="w-4 h-4" />}
+                leftIcon={<Camera />}
               >
                 <Text as="span" size="xs" weight="medium" color="white">
                   {t('guestPostsCreateCameraModalSnap') || 'Chụp ảnh'}

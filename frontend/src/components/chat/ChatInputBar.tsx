@@ -60,13 +60,12 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               )}
               <span className="max-w-[120px] truncate">{att.name}</span>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => onRemovePendingAttachment(idx)}
                 className="p-0.5 h-auto text-muted hover:text-foreground"
               >
-                <X className="w-3.5 h-3.5" />
+                <X />
               </Button>
             </div>
           ))}
@@ -102,24 +101,22 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 
         <div className="flex items-center gap-1 text-muted shrink-0">
           <Button
-            type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => fileInputRef.current?.click()}
             title={attachTooltip}
             className="p-2"
           >
-            <Paperclip className="w-4 h-4" />
+            <Paperclip />
           </Button>
           <Button
-            type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => imageInputRef.current?.click()}
             title={imageTooltip}
             className="p-2"
           >
-            <ImageIcon className="w-4 h-4" />
+            <ImageIcon />
           </Button>
         </div>
 
@@ -135,16 +132,12 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 
         <Button
           type="submit"
-          variant="primary"
-          size={sendBtnText ? 'md' : 'sm'}
+          size={sendBtnText ? 'md' : undefined}
           disabled={!canSend}
+          isLoading={isSending}
+          leftIcon={!isSending ? <Send /> : undefined}
           className="shrink-0"
         >
-          {isSending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4" />
-          )}
           {sendBtnText && <span className="ml-1 hidden sm:inline">{sendBtnText}</span>}
         </Button>
       </form>

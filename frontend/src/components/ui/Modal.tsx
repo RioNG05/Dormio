@@ -124,7 +124,6 @@ export function ModalHeader({
         <div className="flex-1 min-w-0">{children}</div>
         {canShowClose && handleClose && (
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             rounded="full"
@@ -132,7 +131,7 @@ export function ModalHeader({
             aria-label="Đóng"
             className="shrink-0 ml-2 sm:ml-3"
           >
-            <X className="w-5 h-5" />
+            <X />
           </Button>
         )}
       </div>
@@ -169,7 +168,6 @@ export function ModalHeader({
       </div>
       {canShowClose && handleClose && (
         <Button
-          type="button"
           variant="ghost"
           size="icon"
           rounded="full"
@@ -177,7 +175,7 @@ export function ModalHeader({
           aria-label="Đóng"
           className="shrink-0 ml-2 sm:ml-3"
         >
-          <X className="w-5 h-5" />
+          <X />
         </Button>
       )}
     </div>
@@ -315,7 +313,6 @@ function ModalRoot({
           <div className="flex-1 min-w-0">{header}</div>
           {showCloseButton && (
             <Button
-              type="button"
               variant="ghost"
               size="icon"
               rounded="full"
@@ -323,7 +320,7 @@ function ModalRoot({
               aria-label="Đóng"
               className="shrink-0 ml-2 sm:ml-3"
             >
-              <X className="w-5 h-5" />
+              <X />
             </Button>
           )}
         </div>

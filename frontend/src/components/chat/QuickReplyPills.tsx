@@ -28,9 +28,7 @@ export const QuickReplyPills: React.FC<QuickReplyPillsProps> = ({
       {replies.map((reply, idx) => (
         <Button
           key={idx}
-          type="button"
           variant="ghost"
-          size="sm"
           onClick={() => onSelect(reply)}
           disabled={disabled}
           className="shrink-0 text-xs font-semibold py-1 px-2.5 rounded-lg border border-line bg-card hover:bg-card-hover"

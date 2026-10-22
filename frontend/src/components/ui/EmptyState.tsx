@@ -32,17 +32,19 @@ function renderAction(
   if (React.isValidElement(act)) return act
   if (typeof act === 'object' && act !== null && 'label' in act) {
     const config = act as EmptyActionConfig
+    const variant = config.variant || defaultVariant
+    const variantProp = variant !== 'primary' ? variant : undefined
     if (config.href) {
       return (
         <Link href={config.href}>
-          <Button size="sm" variant={config.variant || defaultVariant} onClick={config.onClick}>
+          <Button variant={variantProp} onClick={config.onClick}>
             {config.label}
           </Button>
         </Link>
       )
     }
     return (
-      <Button size="sm" variant={config.variant || defaultVariant} onClick={config.onClick}>
+      <Button variant={variantProp} onClick={config.onClick}>
         {config.label}
       </Button>
     )

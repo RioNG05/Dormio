@@ -130,8 +130,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 variant="ghost"
                 onClick={() => onNavigateRoom(p.roomName)}
                 className="justify-between group"
-                leftIcon={<DoorOpen className="w-4 h-4" />}
-                rightIcon={<MoveRight className="w-4 h-4" />}
+                leftIcon={<DoorOpen />}
+                rightIcon={<MoveRight />}
               >
                 <Text size="xs" align="left" className="w-full">
                   Xem phòng {p.roomName}
@@ -146,8 +146,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 variant="ghost"
                 onClick={() => onNavigateContract(p.roomName)}
                 className="justify-between group"
-                leftIcon={<FileText className="w-4 h-4" />}
-                rightIcon={<MoveRight className="w-4 h-4" />}
+                leftIcon={<FileText />}
+                rightIcon={<MoveRight />}
               >
                 <Text size="xs" align="left" className="w-full">
                   Xem hợp đồng thuê
@@ -162,8 +162,8 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 variant="orange"
                 onClick={onNavigateInvoice}
                 className="justify-between group"
-                leftIcon={<Receipt className="w-4 h-4" />}
-                rightIcon={<MoveRight className="w-4 h-4" />}
+                leftIcon={<Receipt />}
+                rightIcon={<MoveRight />}
               >
                 <Text size="xs" align="left" className="w-full text-white font-bold">
                   Xem hóa đơn tiền phòng

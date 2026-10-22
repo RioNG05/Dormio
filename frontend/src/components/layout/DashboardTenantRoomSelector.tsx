@@ -33,7 +33,6 @@ export function DashboardTenantRoomSelector() {
 
       <Button
         fullWidth
-        type="button"
         variant="ghost"
         size="md"
         onClick={() => setDropdownOpen(prev => !prev)}
@@ -77,7 +76,6 @@ export function DashboardTenantRoomSelector() {
                   <Button
                     fullWidth
                     key={t.contractId}
-                    type="button"
                     variant="ghost"
                     size="xl"
                     className="px-2"

@@ -388,11 +388,9 @@ export function MapAddressPicker({
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => setIsExpanded(prev => !prev)}
-            leftIcon={isExpanded ? <Minimize2 className="h-3.5 w-3.5 text-muted" /> : <Maximize2 className="h-3.5 w-3.5 text-muted" />}
+            leftIcon={isExpanded ? <Minimize2 className="text-muted" /> : <Maximize2 className="text-muted" />}
           >
             <Text as="span" size="xs" weight="medium" color="inherit">
               {isExpanded ? 'Thu nhỏ' : 'Phóng to bản đồ'}
@@ -400,11 +398,9 @@ export function MapAddressPicker({
           </Button>
 
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={openGoogleMapsDirectly}
-            rightIcon={<ExternalLink className="h-3.5 w-3.5" />}
+            rightIcon={<ExternalLink />}
           >
             <Text as="span" size="xs" weight="medium" color="inherit">
               Mở trên Google Maps
@@ -431,12 +427,10 @@ export function MapAddressPicker({
         </div>
 
         <Button
-          type="button"
-          variant="primary"
           onClick={handleSearchOSM}
           disabled={isSearching || !searchQuery.trim()}
           isLoading={isSearching}
-          leftIcon={!isSearching ? <Navigation className="h-4 w-4" /> : undefined}
+          leftIcon={!isSearching ? <Navigation /> : undefined}
           className="shrink-0"
         >
           <Text as="span" size="xs" weight="semibold" color="inherit">
@@ -510,10 +504,8 @@ export function MapAddressPicker({
             </div>
 
             <Button
-              type="button"
-              variant="primary"
               onClick={handleApply}
-              leftIcon={<Check className="h-4 w-4" />}
+              leftIcon={<Check />}
               className="shrink-0"
             >
               <Text as="span" size="xs" weight="semibold" color="inherit">

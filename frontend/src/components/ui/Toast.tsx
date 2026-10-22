@@ -195,14 +195,13 @@ export function ToastCard({ toast, onDismiss }: ToastCardProps) {
 
       {/* Dismiss Button */}
       <Button
-        type="button"
         variant="ghost"
         size="icon"
         onClick={() => onDismiss(id)}
         aria-label="Dismiss toast"
         className={`!h-6 !w-6 -mr-1 -mt-1 rounded-lg shrink-0 ${config.closeColor} hover:bg-black/5 dark:hover:bg-white/10`}
       >
-        <X className="w-4 h-4" />
+        <X />
       </Button>
     </div>
   )

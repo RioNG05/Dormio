@@ -544,13 +544,12 @@ export const FormAlert: React.FC<FormAlertProps> = ({
 
       {onClose && (
         <Button
-          type="button"
           variant="ghost"
           size="icon"
           onClick={onClose}
           className="shrink-0 -mt-1 -mr-1"
         >
-          <X className="w-3.5 h-3.5" />
+          <X />
         </Button>
       )}
     </div>

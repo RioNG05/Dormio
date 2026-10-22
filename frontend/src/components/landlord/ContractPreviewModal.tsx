@@ -244,18 +244,15 @@ export default function ContractPreviewModal({
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={handlePrint}
               disabled={isLoading || !!error}
-              leftIcon={<Printer className=" text-primary" />}
+              leftIcon={<Printer className="text-primary" />}
               title={t('landlordContractsExportPrintTooltip')}
             >
               {t('landlordContractsExportPrintBtn')}
             </Button>
 
             <Button
-              variant="primary"
-              size="sm"
               onClick={handleExportDocument}
               disabled={isLoading || isExporting || !!error}
               isLoading={isExporting}
@@ -280,7 +277,6 @@ export default function ContractPreviewModal({
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="sm"
               onClick={() => handleDownloadHtml()}
               disabled={isLoading || !htmlContent}
               className="underline"
@@ -321,7 +317,6 @@ export default function ContractPreviewModal({
           <div className="flex items-center justify-center gap-2 mt-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={fetchContractHtml}
               leftIcon={<RefreshCw />}
             >
@@ -330,8 +325,6 @@ export default function ContractPreviewModal({
               </Text>
             </Button>
             <Button
-              variant="primary"
-              size="sm"
               onClick={onClose}
             >
               <Text as="span" size="sm" weight="semibold" color="inherit">

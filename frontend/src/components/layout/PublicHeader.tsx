@@ -333,7 +333,6 @@ export function PublicHeader() {
           {/* Desktop Right Action Buttons & User Menu */}
           <div className="hidden lg:flex items-center gap-3">
             <Button
-              variant="primary"
               rounded="full"
               onClick={handleManageBoardingHouse}
               leftIcon={<Building2 />}
@@ -402,7 +401,7 @@ export function PublicHeader() {
             ) : (
               <div className="flex items-center gap-3">
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" rounded="full">
+                  <Button variant="ghost" rounded="full">
                     {tNav('login')}
                   </Button>
                 </Link>
@@ -478,7 +477,6 @@ export function PublicHeader() {
                   </div>
 
                   <Button
-                    variant="primary"
                     size="md"
                     rounded="full"
                     onClick={() => {
@@ -486,7 +484,7 @@ export function PublicHeader() {
                       handleManageBoardingHouse()
                     }}
                     className="w-full shadow-md justify-center"
-                    leftIcon={<Building2 className="w-4 h-4" />}
+                    leftIcon={<Building2 />}
                   >
                     {tNav('manageYourHouse')}
                   </Button>
@@ -506,7 +504,6 @@ export function PublicHeader() {
               ) : (
                 <div className="space-y-2">
                   <Button
-                    variant="primary"
                     size="md"
                     rounded="full"
                     onClick={() => {
@@ -514,7 +511,7 @@ export function PublicHeader() {
                       handleManageBoardingHouse()
                     }}
                     className="w-full shadow-md justify-center"
-                    leftIcon={<Building2 className="w-4 h-4" />}
+                    leftIcon={<Building2 />}
                   >
                     {tNav('manageYourHouse')}
                   </Button>
@@ -601,7 +598,6 @@ export function PublicHeader() {
 
               <Button
                 type="submit"
-                variant="primary"
                 size="md"
                 rounded="full"
                 className="w-full bg-accent hover:bg-[#ff5518] shadow-lg shadow-accent/25 border-none justify-center"

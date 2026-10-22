@@ -186,12 +186,11 @@ export function DashboardUserFooter() {
             <div className="px-2 py-1.5">
               <Button
                 fullWidth
-                type="button"
                 variant="ghost"
                 onClick={handleLogout}
+                leftIcon={<LogOut />}
                 className="justify-start"
               >
-                <LogOut className="w-4 h-4 shrink-0" />
                 <Text as="span" size="sm" weight="semibold" color="danger">
                   {tNav('logout')}
                 </Text>
@@ -204,7 +203,6 @@ export function DashboardUserFooter() {
         <Button
           fullWidth
           size="lg"
-          type="button"
           variant="ghost"
           onClick={() => setUserMenuOpen(prev => !prev)}
           className="group mb-2 px-0 justify-start"

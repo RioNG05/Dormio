@@ -30,7 +30,6 @@ export function DashboardBuildingSelector() {
 
       <Button
         fullWidth
-        type="button"
         variant="ghost"
         size="md"
         onClick={() => setBuildingDropdownOpen(prev => !prev)}
@@ -72,7 +71,6 @@ export function DashboardBuildingSelector() {
                   <Button
                     fullWidth
                     key={b.id}
-                    type="button"
                     variant="ghost"
                     size="xl"
                     className='px-2'

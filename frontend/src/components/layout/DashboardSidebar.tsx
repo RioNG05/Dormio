@@ -57,12 +57,11 @@ export function DashboardSidebar({
               <div className="flex items-center gap-1">
                 <NotificationBell align="left" />
                 <Button
-                  type="button"
                   variant="ghost"
                   size="icon"
                   onClick={onCloseMobileMenu}
                 >
-                  <X className="w-5 h-5" />
+                  <X />
                 </Button>
               </div>
             </div>

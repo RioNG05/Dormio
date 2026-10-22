@@ -239,7 +239,6 @@ export function ImageUpload({
             <Button
               variant="secondary"
               size="icon"
-              type="button"
               onClick={e => {
                 e.stopPropagation()
                 onInspect(value)
@@ -247,7 +246,7 @@ export function ImageUpload({
               className="absolute top-2.5 right-2.5 z-10"
               title="Xem ảnh"
             >
-              <Eye className="w-4 h-4" />
+              <Eye />
             </Button>
           )}
 
@@ -275,22 +274,18 @@ export function ImageUpload({
           {!isBusy && !disabled && !hideActionButtons && (
             <div className="absolute inset-0 bg-zinc-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
               <Button
-                type="button"
-                size="sm"
                 variant="secondary"
                 onClick={() => fileInputRef.current?.click()}
-                leftIcon={<Camera className="w-3.5 h-3.5" />}
+                leftIcon={<Camera />}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
                   {tGuest('guestDepositChangeImage') || 'Đổi ảnh'}
                 </Text>
               </Button>
               <Button
-                type="button"
-                size="sm"
                 variant="danger"
                 onClick={handleRemove}
-                leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                leftIcon={<Trash2 />}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
                   {tGuest('guestDepositRemoveImage') || 'Xóa ảnh'}
