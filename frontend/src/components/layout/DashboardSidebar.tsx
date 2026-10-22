@@ -7,6 +7,7 @@ import Logo from '@/components/Logo'
 import NotificationBell from '@/components/NotificationBell'
 import { Button } from '@/components/ui'
 import { DashboardBuildingSelector } from './DashboardBuildingSelector'
+import { DashboardTenantRoomSelector } from './DashboardTenantRoomSelector'
 import { DashboardNav } from './DashboardNav'
 import { DashboardUserFooter } from './DashboardUserFooter'
 
@@ -36,6 +37,7 @@ export function DashboardSidebar({
           </div>
 
           {isLandlord && <DashboardBuildingSelector />}
+          {isTenant && <DashboardTenantRoomSelector />}
 
           <DashboardNav persistScroll />
           <DashboardUserFooter />
@@ -66,6 +68,7 @@ export function DashboardSidebar({
             </div>
 
             {isLandlord && <DashboardBuildingSelector />}
+          {isTenant && <DashboardTenantRoomSelector />}
 
             <DashboardNav />
             <DashboardUserFooter />

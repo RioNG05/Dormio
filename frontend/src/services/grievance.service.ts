@@ -33,6 +33,8 @@ export interface CreateGrievancePayload {
   description: string
   priority?: GrievancePriority
   imageUrls?: string[]
+  contractId?: string
+  roomId?: string
 }
 
 // ─── ADMIN INTERFACES ──────────────────────────────────────────────

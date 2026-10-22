@@ -2,7 +2,10 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { getMyBoardingHouses } from '@/services/boarding-house.service'
+import { getMyTenancies, TenantTenancyItem } from '@/services/contract.service'
 import { api } from '@/services/api'
+
+export type { TenantTenancyItem }
 
 export interface UserProfile {
   id?: string
@@ -78,6 +81,14 @@ interface AuthContextType {
   activeBuilding: BuildingItem
   selectBuilding: (id: string) => void
   refreshBuildings: () => Promise<void>
+
+  // Multi-Room Tenancy Management for Tenant Dashboard
+  tenancies: TenantTenancyItem[]
+  isTenanciesLoading: boolean
+  activeTenancyId: string
+  activeTenancy: TenantTenancyItem | null
+  selectTenancy: (contractId: string) => void
+  refreshTenancies: () => Promise<void>
 }
 
 const EMPTY_BUILDING: BuildingItem = {
@@ -142,6 +153,13 @@ const AuthContext = createContext<AuthContextType>({
   activeBuilding: EMPTY_BUILDING,
   selectBuilding: () => {},
   refreshBuildings: async () => {},
+
+  tenancies: [],
+  isTenanciesLoading: true,
+  activeTenancyId: '',
+  activeTenancy: null,
+  selectTenancy: () => {},
+  refreshTenancies: async () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -158,6 +176,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // No active building until API loads real data
   const [activeBuildingId, setActiveBuildingId] = useState<string>('')
+
+  // Tenancies loaded from API for tenant multi-room scoping
+  const [tenancies, setTenancies] = useState<TenantTenancyItem[]>([])
+  const [isTenanciesLoading, setIsTenanciesLoading] = useState<boolean>(true)
+  const [activeTenancyId, setActiveTenancyId] = useState<string>('')
 
   // Live multi-role capabilities — initialized from localStorage cache if available
   const [capabilities, setCapabilities] = useState<UserCapabilities>(() => {
@@ -256,6 +279,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  /**
+   * Fetch real active tenancies for tenant across boarding houses and sync activeTenancyId
+   */
+  const loadTenanciesFromApi = useCallback(async () => {
+    setIsTenanciesLoading(true)
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      if (!token) {
+        setTenancies([])
+        setActiveTenancyId('')
+        return
+      }
+
+      let fetchedTenancies: TenantTenancyItem[] = []
+      try {
+        fetchedTenancies = await getMyTenancies({ silent: true })
+      } catch {
+        fetchedTenancies = []
+      }
+
+      if (fetchedTenancies && fetchedTenancies.length > 0) {
+        setTenancies(fetchedTenancies)
+        setActiveTenancyId(prev => {
+          const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          const saved =
+            typeof window !== 'undefined' ? localStorage.getItem('dormio_active_tenancy_id') : null
+          const validSaved =
+            saved && UUID_RE.test(saved) && fetchedTenancies.some(t => t.contractId === saved)
+          const validPrev =
+            prev && UUID_RE.test(prev) && fetchedTenancies.some(t => t.contractId === prev)
+          const primary = fetchedTenancies.find(t => t.isPrimary)
+          const nextId = validPrev
+            ? prev
+            : validSaved
+              ? saved!
+              : primary
+                ? primary.contractId
+                : fetchedTenancies[0].contractId
+          if (typeof window !== 'undefined')
+            localStorage.setItem('dormio_active_tenancy_id', nextId)
+          return nextId
+        })
+      } else {
+        setTenancies([])
+        setActiveTenancyId('')
+      }
+    } catch (e) {
+      console.error('Failed to load tenancies from API:', e)
+    } finally {
+      setIsTenanciesLoading(false)
+    }
+  }, [])
+
   // Read initial session from localStorage
   useEffect(() => {
     const savedState =
@@ -270,6 +346,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       typeof window !== 'undefined' ? localStorage.getItem('dormio_house_address') : null
     const savedBuildingId =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_active_building_id') : null
+    const savedTenancyId =
+      typeof window !== 'undefined' ? localStorage.getItem('dormio_active_tenancy_id') : null
     const savedName =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_name') : null
     const savedEmail =
@@ -300,6 +378,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (savedBuildingId) {
         setActiveBuildingId(savedBuildingId)
+      }
+      if (savedTenancyId) {
+        setActiveTenancyId(savedTenancyId)
       }
 
       let parsedCaps: UserCapabilities | null = null
@@ -334,6 +415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       syncAuthCookies(resolvedRole, savedToken, parsedCaps)
       loadBuildingsFromApi()
       loadCapabilitiesFromApi()
+      loadTenanciesFromApi()
     } else {
       // User is logged out / unauthenticated guest
       setIsLoggedIn(false)
@@ -341,15 +423,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBuildings([])
       setActiveBuildingId('')
       setIsBuildingsLoading(false)
+      setTenancies([])
+      setActiveTenancyId('')
+      setIsTenanciesLoading(false)
       setCapabilities(DEFAULT_CAPABILITIES)
       setIsHydrating(false)
       syncAuthCookies(null, null, null)
     }
-  }, [loadBuildingsFromApi, loadCapabilitiesFromApi])
+  }, [loadBuildingsFromApi, loadCapabilitiesFromApi, loadTenanciesFromApi])
 
   const selectBuilding = (id: string) => {
     setActiveBuildingId(id)
     localStorage.setItem('dormio_active_building_id', id)
+  }
+
+  const selectTenancy = (id: string) => {
+    setActiveTenancyId(id)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dormio_active_tenancy_id', id)
+    }
   }
 
   const login = (userData?: Partial<UserProfile>) => {
@@ -427,6 +519,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loadBuildingsFromApi()
     }
 
+    // Immediately load real tenancies if tenant
+    if (resolvedRole === 'tenant') {
+      loadTenanciesFromApi()
+    }
+
     // Load live capabilities for all roles — a landlord may also be a tenant, etc.
     loadCapabilitiesFromApi()
   }
@@ -472,6 +569,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBuildings([])
     setActiveBuildingId('')
     setIsBuildingsLoading(false)
+    setTenancies([])
+    setActiveTenancyId('')
+    setIsTenanciesLoading(false)
     setCapabilities(DEFAULT_CAPABILITIES)
     syncAuthCookies(null, null, null)
     localStorage.removeItem('dormio_logged_in')
@@ -479,6 +579,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('dormio_house_name')
     localStorage.removeItem('dormio_house_address')
     localStorage.removeItem('dormio_active_building_id')
+    localStorage.removeItem('dormio_active_tenancy_id')
     localStorage.removeItem('auth_token')
     localStorage.removeItem('dormio_user_id')
     localStorage.removeItem('dormio_user_name')
@@ -611,6 +712,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const activeBuilding =
     buildings.find(b => b.id === activeBuildingId) || buildings[0] || EMPTY_BUILDING
 
+  // Find active tenancy for tenant dashboard
+  const activeTenancy =
+    tenancies.find(t => t.contractId === activeTenancyId) ||
+    tenancies.find(t => t.isPrimary) ||
+    tenancies[0] ||
+    null
+
   return (
     <AuthContext.Provider
       value={{
@@ -633,6 +741,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         activeBuilding,
         selectBuilding,
         refreshBuildings: loadBuildingsFromApi,
+        tenancies,
+        isTenanciesLoading,
+        activeTenancyId,
+        activeTenancy,
+        selectTenancy,
+        refreshTenancies: loadTenanciesFromApi,
       }}
     >
       {children}

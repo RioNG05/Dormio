@@ -341,10 +341,14 @@ export async function downloadContractDocument(
 /**
  * Fetches rendered contract HTML template for active tenant's tenancy
  */
-export async function getTenantContractPrintHtml(autoPrint: boolean = false): Promise<string> {
+export async function getTenantContractPrintHtml(
+  autoPrint: boolean = false,
+  contractId?: string,
+): Promise<string> {
   return api.getText('/v1/tenant/tenancy/print', {
     params: {
       autoPrint: autoPrint ? 'true' : 'false',
+      ...(contractId ? { contractId } : {}),
     },
   })
 }
@@ -352,11 +356,17 @@ export async function getTenantContractPrintHtml(autoPrint: boolean = false): Pr
 /**
  * Exports active tenant's contract document
  */
-export async function exportTenantContract(): Promise<{
+export async function exportTenantContract(contractId?: string): Promise<{
   success: boolean
   data: ExportContractResponse
 }> {
-  return api.post<{ success: boolean; data: ExportContractResponse }>('/v1/tenant/tenancy/export')
+  return api.post<{ success: boolean; data: ExportContractResponse }>(
+    '/v1/tenant/tenancy/export',
+    undefined,
+    {
+      params: contractId ? { contractId } : undefined,
+    },
+  )
 }
 
 /**
@@ -365,8 +375,11 @@ export async function exportTenantContract(): Promise<{
 export async function downloadTenantContractDocument(
   documentId: string,
   filename?: string,
+  contractId?: string,
 ): Promise<void> {
-  const blob = await api.getBlob(`/v1/tenant/tenancy/documents/${documentId}/download`)
+  const blob = await api.getBlob(`/v1/tenant/tenancy/documents/${documentId}/download`, {
+    params: contractId ? { contractId } : undefined,
+  })
   const downloadUrl = window.URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = downloadUrl
@@ -375,4 +388,34 @@ export async function downloadTenantContractDocument(
   a.click()
   document.body.removeChild(a)
   window.URL.revokeObjectURL(downloadUrl)
+}
+
+export interface TenantTenancyItem {
+  contractId: string
+  roomId: string
+  roomNumber: string
+  floor: number
+  roomTypeName?: string
+  boardingHouseId: string
+  boardingHouseName: string
+  boardingHouseAddress: string
+  rentPrice: number
+  isPrimary: boolean
+  startDate: string
+  endDate: string
+  coverPhotoUrl?: string
+}
+
+/**
+ * Fetches all active room tenancies for the current tenant user across boarding houses
+ */
+export async function getMyTenancies(options?: {
+  silent?: boolean
+}): Promise<TenantTenancyItem[]> {
+  const res = await api.get<{ success: boolean; data: TenantTenancyItem[] }>(
+    '/v1/tenant/tenancies',
+    options,
+  )
+  const data = (res as any)?.data ?? res
+  return Array.isArray(data) ? data : []
 }
