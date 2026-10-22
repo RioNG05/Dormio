@@ -9,7 +9,6 @@ import {
   Target,
   FileSignature,
   Receipt,
-  Eye,
   Edit,
   AlertTriangle,
   Sparkles,

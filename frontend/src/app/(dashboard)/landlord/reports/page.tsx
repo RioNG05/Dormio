@@ -13,7 +13,6 @@ import {
   ArrowUpRight,
   ShieldCheck,
   MessageSquare,
-  Eye,
   Sparkles,
   Flame,
   Rocket,

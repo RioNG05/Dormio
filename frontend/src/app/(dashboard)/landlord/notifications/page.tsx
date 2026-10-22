@@ -8,7 +8,6 @@ import {
   Send,
   Users,
   Building2,
-  Eye,
   Sparkles,
   ShieldAlert,
   Smartphone,
@@ -486,21 +485,34 @@ export default function NotificationsPage() {
                       >
                         {getCategoryLabel(notif.category)}
                       </Chip>
-                      <span className="text-[11px] font-semibold text-muted">
+                      <Text as="span" size="2xs" color="secondary" weight="semibold">
                         {notif.sentAt}
-                      </span>
+                      </Text>
                     </div>
                   </Card.Header>
 
-                    <Card.Body className="px-4 sm:px-5 py-0">
+                  <Card.Body className="px-4 sm:px-5 py-0">
                     {/* Title & Preview */}
                     <div className="py-3 space-y-1.5">
-                      <h3 className="font-extrabold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      <Text
+                        as="h3"
+                        size="sm"
+                        weight="extrabold"
+                        color="default"
+                        clamp={1}
+                        className="group-hover:text-primary transition-colors"
+                      >
                         {notif.title}
-                      </h3>
-                      <p className="text-muted text-xs line-clamp-2 leading-relaxed whitespace-pre-line">
+                      </Text>
+                      <Text
+                        as="p"
+                        size="xs"
+                        color="secondary"
+                        clamp={2}
+                        className="leading-relaxed whitespace-pre-line"
+                      >
                         {notif.content}
-                      </p>
+                      </Text>
                     </div>
 
                     {/* Metadata Pills */}
@@ -515,12 +527,14 @@ export default function NotificationsPage() {
 
                     {/* Read Progress Bar */}
                     <div className="pt-2 border-t border-line">
-                      <div className="flex items-center justify-between text-[11px] font-bold mb-1">
-                        <span className="text-muted">
+                      <div className="flex items-center justify-between mb-1">
+                        <Text as="span" size="2xs" weight="bold" color="secondary">
                           {t('landlordNotificationsReadPrefix')}: {notif.readCount}/
                           {notif.totalTarget} {t('landlordNotificationsTenantsUnit')}
-                        </span>
-                        <span className="text-primary">{readPct}%</span>
+                        </Text>
+                        <Text as="span" size="2xs" weight="bold" color="brand">
+                          {readPct}%
+                        </Text>
                       </div>
                       <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
                         <div
@@ -614,11 +628,20 @@ export default function NotificationsPage() {
                         </td>
 
                         <td className="px-4 py-4 max-w-sm">
-                          <span className="font-bold text-foreground text-sm truncate block group-hover:text-primary transition-colors">
+                          <Text
+                            as="span"
+                            size="sm"
+                            weight="bold"
+                            color="default"
+                            clamp={1}
+                            className="block group-hover:text-primary transition-colors"
+                          >
                             {notif.title}
-                          </span>
+                          </Text>
                           {notif.content && (
-                            <p className="text-muted text-xs line-clamp-1 mt-0.5">{notif.content}</p>
+                            <Text as="p" size="xs" color="secondary" clamp={1} className="mt-0.5">
+                              {notif.content}
+                            </Text>
                           )}
                         </td>
 
@@ -636,12 +659,14 @@ export default function NotificationsPage() {
 
                         <td className="px-4 py-4 whitespace-nowrap min-w-[160px]">
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center justify-between text-[11px] font-bold">
-                              <span className="text-foreground/90">
+                            <div className="flex items-center justify-between">
+                              <Text as="span" size="2xs" weight="bold" color="default">
                                 {notif.readCount}/{notif.totalTarget}{' '}
                                 {t('landlordNotificationsTenantsUnit')}
-                              </span>
-                              <span className="text-primary">{readPct}%</span>
+                              </Text>
+                              <Text as="span" size="2xs" weight="bold" color="brand">
+                                {readPct}%
+                              </Text>
                             </div>
                             <div className="w-full h-1.5 bg-card-hover rounded-full overflow-hidden">
                               <div
@@ -652,8 +677,10 @@ export default function NotificationsPage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-4 text-muted font-semibold whitespace-nowrap">
-                          {notif.sentAt}
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <Text as="span" size="xs" color="secondary" weight="semibold">
+                            {notif.sentAt}
+                          </Text>
                         </td>
 
                         <td className="px-4 py-4 text-right whitespace-nowrap">

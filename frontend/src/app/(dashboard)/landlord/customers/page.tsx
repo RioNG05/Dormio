@@ -12,7 +12,6 @@ import {
   PhoneCall,
   Phone,
   MessageCircle,
-  Eye,
   AlertTriangle,
   Loader2,
 } from 'lucide-react'
@@ -31,6 +30,7 @@ import {
   Card,
   TableRow,
   Chip,
+  Text,
 } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
@@ -464,64 +464,73 @@ export default function CustomersPage() {
                         {customer.name.charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <Link
-                          href={`/landlord/customers/${customer.userId || customer.id}`}
-                          className="font-bold text-foreground text-sm hover:text-primary cursor-pointer transition-colors truncate block"
+                        <Text
+                          as="h3"
+                          size="sm"
+                          weight="bold"
+                          color="default"
+                          clamp={1}
+                          className="group-hover:text-primary transition-colors"
                         >
                           {customer.name}
-                        </Link>
-                        <p className="text-xs text-muted font-semibold truncate flex items-center gap-1.5 mt-0.5">
+                        </Text>
+                        <div className="flex items-center gap-1.5 mt-0.5">
                           <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
-                          <span>{customer.phone || '—'}</span>
-                        </p>
+                          <Text as="span" size="xs" color="secondary" weight="semibold" clamp={1}>
+                            {customer.phone || '—'}
+                          </Text>
+                        </div>
                       </div>
                     </div>
-                    <span
-                      className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
-                        ? 'bg-primary/10 text-primary border border-primary/30'
-                        : customer.status === 'Sắp hết hợp đồng'
-                          ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
-                          : 'bg-info-soft text-info border border-info-subtle'
-                        }`}
+                    <Chip
+                      size="sm"
+                      preventHover
+                      variant={
+                        customer.status === 'Đang ở'
+                          ? 'primary'
+                          : customer.status === 'Sắp hết hợp đồng'
+                            ? 'accent'
+                            : 'info'
+                      }
                     >
                       {getCustomerStatusLabel(customer.status)}
-                    </span>
+                    </Chip>
                   </div>
                 </Card.Header>
 
                 <Card.Body className="px-4 sm:px-5 py-0">
-                  <div className="p-2.5 bg-surface rounded-xl space-y-1.5 text-xs text-muted">
+                  <div className="p-2.5 bg-surface rounded-xl space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-muted font-medium whitespace-nowrap">
+                      <Text as="span" size="xs" color="secondary" weight="medium" className="whitespace-nowrap">
                         {t('landlordCustomersBuildingAndRoomLabel')}
-                      </span>
-                      <span className="font-bold text-foreground whitespace-nowrap">
+                      </Text>
+                      <Text as="span" size="xs" weight="bold" color="default" className="whitespace-nowrap">
                         {activeBuilding?.name || t('landlordCustomersBuildingFallback')} —{' '}
                         {t('landlordCustomersRoomWord')}{' '}
                         {customer.status === 'Đã rời' ? '—' : customer.room}
-                      </span>
+                      </Text>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-muted font-medium whitespace-nowrap">
+                      <Text as="span" size="xs" color="secondary" weight="medium" className="whitespace-nowrap">
                         {t('landlordCustomersStayDate')}
-                      </span>
-                      <span className="font-semibold text-foreground whitespace-nowrap">
+                      </Text>
+                      <Text as="span" size="xs" weight="semibold" color="default" className="whitespace-nowrap">
                         {customer.joinDate}
-                      </span>
+                      </Text>
                     </div>
                     {customer.status === 'Sắp hết hợp đồng' && (
-                      <div className="flex justify-between items-center pt-1 border-t border-accent-subtle text-accent font-bold">
-                        <span className="whitespace-nowrap">
+                      <div className="flex justify-between items-center pt-1 border-t border-accent-subtle">
+                        <Text as="span" size="xs" weight="bold" color="orange" className="whitespace-nowrap">
                           ⏳ {t('landlordCustomersContractExpiry')}
-                        </span>
-                        <span className="text-orange-600 animate-pulse whitespace-nowrap">
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" color="orange" className="animate-pulse whitespace-nowrap">
                           {customer.daysRemaining !== undefined
                             ? t('landlordCustomersContractDaysRemaining').replace(
                               '{days}',
                               String(customer.daysRemaining),
                             )
                             : t('landlordCustomersDaysRemainingShort')}
-                        </span>
+                        </Text>
                       </div>
                     )}
                   </div>
@@ -611,30 +620,43 @@ export default function CustomersPage() {
                           <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs uppercase shrink-0">
                             {customer.name.charAt(0)}
                           </div>
-                          <span className="font-bold text-foreground group-hover:text-primary transition-colors">
+                          <Text
+                            as="span"
+                            size="sm"
+                            weight="bold"
+                            color="default"
+                            className="group-hover:text-primary transition-colors"
+                          >
                             {customer.name}
-                          </span>
+                          </Text>
                         </div>
                       </td>
-                      <td className="px-6 py-3.5 font-bold text-foreground whitespace-nowrap">
-                        {customer.phone}
+                      <td className="px-6 py-3.5 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {customer.phone || '—'}
+                        </Text>
                       </td>
-                      <td className="px-6 py-3.5 font-medium text-foreground/90 capitalize whitespace-nowrap">
-                        {activeBuilding?.name || t('landlordCustomersBuildingFallback')}
+                      <td className="px-6 py-3.5 whitespace-nowrap capitalize">
+                        <Text as="span" size="xs" weight="medium" color="default">
+                          {activeBuilding?.name || t('landlordCustomersBuildingFallback')}
+                        </Text>
                       </td>
-                      <td className="px-6 py-3.5 font-medium text-foreground/90 whitespace-nowrap">
-                        {customer.status === 'Đã rời' ? '—' : customer.room}
+                      <td className="px-6 py-3.5 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="medium" color="default">
+                          {customer.status === 'Đã rời' ? '—' : customer.room}
+                        </Text>
                       </td>
                       <td className="px-6 py-3.5 whitespace-nowrap">
                         <Chip
-                          size='sm'
+                          size="sm"
                           preventHover
-                          variant={`${customer.status === 'Đang ở'
-                            ? 'primary'
-                            : customer.status === 'Sắp hết hợp đồng'
-                              ? 'accent'
-                              : 'info'
-                            }`}
+                          variant={
+                            customer.status === 'Đang ở'
+                              ? 'primary'
+                              : customer.status === 'Sắp hết hợp đồng'
+                                ? 'accent'
+                                : 'info'
+                          }
                         >
                           {getCustomerStatusLabel(customer.status)}
                         </Chip>

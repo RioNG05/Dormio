@@ -11,7 +11,6 @@ import {
   Users,
   Gauge,
   CreditCard,
-  Eye,
   Loader2,
   AlertTriangle,
   User,
@@ -568,13 +567,13 @@ export default function ContractsPage() {
                               {t('landlordContractsDurationLabel')}
                             </Text>
                             <div className="flex items-center gap-1.5">
-                              <Text as="span" size="xs" weight="bold" className="text-foreground">
+                              <Text as="span" size="xs" weight="bold" color="default">
                                 {c.startDate} - {c.endDate}
                               </Text>
                               {c.isOverdue && (
-                                <Text as="span" size="3xs" weight="black" className="px-1.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle">
+                                <Chip size="xs" variant="danger" preventHover>
                                   {t('landlordContractsDueExpired')}
-                                </Text>
+                                </Chip>
                               )}
                             </div>
                           </div>
@@ -584,19 +583,13 @@ export default function ContractsPage() {
                               <CreditCard className="w-3.5 h-3.5 text-muted" />
                               {t('landlordContractsPaymentLabel')}
                             </Text>
-                            <Text
-                              as="span"
-                              size="2xs"
-                              weight="extrabold"
-                              className={cn(
-                                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
-                                c.paymentStatus === 'Đã thu đủ'
-                                  ? 'bg-success-soft text-success border-success-subtle'
-                                  : 'bg-danger-soft text-danger border-danger-subtle',
-                              )}
+                            <Chip
+                              size="sm"
+                              preventHover
+                              variant={c.paymentStatus === 'Đã thu đủ' ? 'success' : 'danger'}
                             >
                               {getPaymentStatusLabel(c.paymentStatus)}
-                            </Text>
+                            </Chip>
                           </div>
                         </Card.Body>
 
@@ -712,13 +705,13 @@ export default function ContractsPage() {
                               </td>
                               <td className="px-5 py-4 whitespace-nowrap">
                                 <div className="flex flex-col">
-                                  <Text as="span" size="xs" weight="bold" className="text-foreground">
+                                  <Text as="span" size="xs" weight="bold" color="default">
                                     {c.startDate} - {c.endDate}
                                   </Text>
                                   {c.isOverdue && (
-                                    <Text as="span" size="3xs" weight="black" color="danger">
+                                    <Chip size="xs" variant="danger" preventHover className="w-fit mt-0.5">
                                       {t('landlordContractsDueExpired')}
-                                    </Text>
+                                    </Chip>
                                   )}
                                 </div>
                               </td>
@@ -728,46 +721,28 @@ export default function ContractsPage() {
                                 </Text>
                               </td>
                               <td className="px-5 py-4 whitespace-nowrap">
-                                <Text
-                                  as="span"
-                                  size="2xs"
-                                  weight="extrabold"
-                                  className={cn(
-                                    'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
-                                    c.paymentStatus === 'Đã thu đủ'
-                                      ? 'bg-success-soft text-success border-success-subtle'
-                                      : 'bg-danger-soft text-danger border-danger-subtle',
-                                  )}
+                                <Chip
+                                  size="sm"
+                                  preventHover
+                                  variant={c.paymentStatus === 'Đã thu đủ' ? 'success' : 'danger'}
                                 >
                                   {getPaymentStatusLabel(c.paymentStatus)}
-                                </Text>
+                                </Chip>
                               </td>
                               <td className="px-5 py-4 whitespace-nowrap">
-                                <Text
-                                  as="span"
-                                  size="2xs"
-                                  weight="extrabold"
-                                  className={cn(
-                                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border',
+                                <Chip
+                                  size="sm"
+                                  preventHover
+                                  variant={
                                     c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                      ? 'bg-success-soft text-success border-success-subtle'
+                                      ? 'success'
                                       : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                        ? 'bg-warning-soft text-warning border-warning-subtle'
-                                        : 'bg-card-hover text-muted border-line',
-                                  )}
+                                        ? 'warning'
+                                        : 'default'
+                                  }
                                 >
-                                  <span
-                                    className={cn(
-                                      'w-1.5 h-1.5 rounded-full',
-                                      c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                        ? 'bg-emerald-500'
-                                        : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                          ? 'bg-amber-500'
-                                          : 'bg-zinc-400',
-                                    )}
-                                  />
                                   {getContractStatusLabel(c.status)}
-                                </Text>
+                                </Chip>
                               </td>
                               <td className="px-5 py-4 text-right whitespace-nowrap">
                                 <div className="flex items-center justify-end gap-1 text-muted">

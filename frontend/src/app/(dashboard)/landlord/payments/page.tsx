@@ -8,7 +8,6 @@ import {
   Search,
   Filter,
   ArrowDownLeft,
-  Eye,
   Calendar,
   Building2,
   MapPin,
@@ -38,7 +37,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, Text, Chip } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
@@ -477,9 +476,10 @@ function PaymentsContent() {
             const evidencePhotos = p.meterReadings.filter(mr => mr.imageUrl)
 
             return (
-              <div
+              <Card
                 key={p.id}
-                className="bg-card border border-line hover:border-primary/50 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+                className="p-5 flex flex-col justify-between group relative overflow-hidden space-y-4"
+                onClick={() => setSelectedPayment(p)}
               >
                 {/* Method Accent Stripe */}
                 <div
@@ -496,80 +496,85 @@ function PaymentsContent() {
                         {p.roomNumber}
                       </span>
                       {p.roomTypeName && (
-                        <span className="text-[11px] font-bold text-muted truncate">
+                        <Text as="span" size="2xs" weight="bold" color="secondary" clamp={1}>
                           {p.roomTypeName}
-                        </span>
+                        </Text>
                       )}
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span
-                        className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                          isBanking
-                            ? 'bg-info-soft text-info border border-info-subtle'
-                            : 'bg-warning-soft text-warning border border-warning-subtle'
-                        }`}
+                      <Chip
+                        size="xs"
+                        preventHover
+                        variant={isBanking ? 'info' : 'warning'}
                       >
                         {isBanking ? 'VietQR' : 'Tiền mặt'}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-success-soft text-success border border-success-subtle flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Thành công
-                      </span>
+                      </Chip>
+                      <Chip
+                        size="xs"
+                        preventHover
+                        variant="success"
+                        leftIcon={<CheckCircle2 className="w-3 h-3" />}
+                      >
+                        Thành công
+                      </Chip>
                     </div>
                   </div>
 
                   {/* Payment Amount & Period Callout */}
                   <div className="p-3.5 bg-surface rounded-xl border border-line flex items-baseline justify-between">
                     <div>
-                      <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
+                      <Text as="span" size="3xs" weight="extrabold" color="secondary" uppercase className="tracking-wider block">
                         Kỳ Hóa Đơn {p.period}
-                      </span>
-                      <span className="text-xl font-black text-success tracking-tight block mt-0.5">
+                      </Text>
+                      <Text as="span" size="xl" weight="black" color="success" className="tracking-tight block mt-0.5">
                         +{formatMoney(p.amount)}
-                      </span>
+                      </Text>
                     </div>
-                    <span className="text-[11px] font-bold text-muted">
+                    <Text as="span" size="2xs" weight="bold" color="secondary">
                       {p.items.length} khoản thu
-                    </span>
+                    </Text>
                   </div>
 
                   {/* Payer Info & Receipt Numbers */}
                   <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-muted">
-                      <span className="font-medium text-muted flex items-center gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="medium" className="flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-muted" /> Người nộp:
-                      </span>
-                      <span className="font-bold text-foreground truncate max-w-[150px]">
+                      </Text>
+                      <Text as="span" size="xs" weight="bold" color="default" clamp={1} className="max-w-[150px]">
                         {p.payerName}
-                      </span>
+                      </Text>
                     </div>
 
                     {p.payerPhone && (
-                      <div className="flex items-center justify-between text-muted">
-                        <span className="font-medium text-muted flex items-center gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <Text as="span" size="xs" color="secondary" weight="medium" className="flex items-center gap-1.5">
                           <Phone className="w-3.5 h-3.5 text-muted" /> SĐT:
-                        </span>
-                        <span className="font-bold text-foreground/90">{p.payerPhone}</span>
+                        </Text>
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {p.payerPhone}
+                        </Text>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-muted">
-                      <span className="font-medium text-muted flex items-center gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="medium" className="flex items-center gap-1.5">
                         <Receipt className="w-3.5 h-3.5 text-muted" /> Số biên nhận:
-                      </span>
-                      <span className="font-mono font-bold text-foreground text-[11px]">
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default" mono>
                         {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}
-                      </span>
+                      </Text>
                     </div>
 
                     {p.transactionRef && (
-                      <div className="flex items-center justify-between text-muted">
-                        <span className="font-medium text-muted text-[11px]">
+                      <div className="flex items-center justify-between">
+                        <Text as="span" size="2xs" color="secondary" weight="medium">
                           Mã GD ngân hàng:
-                        </span>
-                        <span className="font-mono text-muted text-[10px] truncate max-w-[140px]">
+                        </Text>
+                        <Text as="span" size="3xs" color="subtle" mono clamp={1} className="max-w-[140px]">
                           {p.transactionRef}
-                        </span>
+                        </Text>
                       </div>
                     )}
                   </div>
@@ -588,7 +593,10 @@ function PaymentsContent() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setPreviewImageUrl(photo.imageUrl)}
+                            onClick={event => {
+                              event.stopPropagation()
+                              setPreviewImageUrl(photo.imageUrl)
+                            }}
                             className="overflow-hidden relative group/thumb"
                             title={`Xem ảnh ${photo.serviceName}: ${photo.readingValue}`}
                           >
@@ -607,22 +615,13 @@ function PaymentsContent() {
                   )}
                 </div>
 
-                {/* Card Footer: Timestamp & Action */}
-                <div className="pt-4 mt-4 border-t border-line flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-muted flex items-center gap-1">
+                {/* Card Footer: Timestamp */}
+                <div className="pt-4 border-t border-line flex items-center justify-between">
+                  <Text as="span" size="2xs" color="secondary" weight="medium" className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-muted" /> {formatDateTime(p.paidAt)}
-                  </span>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedPayment(p)}
-                  >
-                    <Eye className="w-3.5 h-3.5" /> Xem Biên Nhận
-                  </Button>
+                  </Text>
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
@@ -655,52 +654,60 @@ function PaymentsContent() {
                       className="group"
                       onClick={() => setSelectedPayment(p)}
                     >
-                      <td className="px-5 py-4">
-                        <div className="font-mono font-black text-foreground text-xs">
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <Text as="div" size="xs" weight="black" color="default" mono>
                           {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}
-                        </div>
+                        </Text>
                         {p.transactionRef && (
-                          <div className="text-[10px] font-mono text-muted mt-0.5 truncate max-w-[140px]">
+                          <Text as="div" size="3xs" color="subtle" mono clamp={1} className="mt-0.5 max-w-[140px]">
                             {p.transactionRef}
-                          </div>
+                          </Text>
                         )}
                       </td>
 
-                      <td className="px-4 py-4">
-                        <span className="font-black text-foreground bg-card-hover px-2.5 py-1 rounded-lg">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="black" color="default" className="bg-card-hover px-2.5 py-1 rounded-lg">
                           {p.roomNumber}
-                        </span>
+                        </Text>
                       </td>
 
-                      <td className="px-4 py-4">
-                        <div className="font-bold text-foreground">{p.payerName}</div>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Text as="div" size="xs" weight="bold" color="default">
+                          {p.payerName}
+                        </Text>
                         {p.payerPhone && (
-                          <div className="text-[11px] text-muted font-medium">
+                          <Text as="div" size="2xs" color="secondary" weight="medium">
                             {p.payerPhone}
-                          </div>
+                          </Text>
                         )}
                       </td>
 
-                      <td className="px-4 py-4 font-bold text-foreground/90">{p.period}</td>
-
-                      <td className="px-4 py-4 text-muted font-medium">
-                        {formatDateTime(p.paidAt)}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {p.period}
+                        </Text>
                       </td>
 
-                      <td className="px-4 py-4 font-black text-success text-sm whitespace-nowrap">
-                        +{formatMoney(p.amount)}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" color="secondary" weight="medium">
+                          {formatDateTime(p.paidAt)}
+                        </Text>
                       </td>
 
-                      <td className="px-4 py-4">
-                        <span
-                          className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase ${
-                            isBanking
-                              ? 'bg-info-soft text-info border border-info-subtle'
-                              : 'bg-warning-soft text-warning border border-warning-subtle'
-                          }`}
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Text as="span" size="sm" weight="black" color="success">
+                          +{formatMoney(p.amount)}
+                        </Text>
+                      </td>
+
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          preventHover
+                          variant={isBanking ? 'info' : 'warning'}
                         >
                           {isBanking ? 'VietQR' : 'Tiền mặt'}
-                        </span>
+                        </Chip>
                       </td>
 
                       <td className="px-4 py-4">
@@ -738,17 +745,7 @@ function PaymentsContent() {
                       </td>
 
                       <td className="px-5 py-4 text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={event => {
-                            event.stopPropagation()
-                            setSelectedPayment(p)
-                          }}
-                        >
-                          <Eye className="w-3.5 h-3.5" /> Biên Nhận
-                        </Button>
+                        <span className="text-muted text-[11px]">—</span>
                       </td>
                     </TableRow>
                   )

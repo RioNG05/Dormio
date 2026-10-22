@@ -6,11 +6,9 @@ import { useRouter } from 'next/navigation'
 import {
   Package,
   Plus,
-  Eye,
   Edit3,
   Trash2,
   DollarSign,
-  ArrowRight,
   BarChart3,
   Loader2,
   AlertTriangle,
@@ -35,6 +33,7 @@ import {
   TableRow,
   Modal,
   Text,
+  Chip,
 } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { uploadImageToBackend } from '@/services/upload.service'
@@ -657,97 +656,109 @@ export default function AssetsPage() {
                       )}
                       {/* Floating Category & SKU Chips */}
                       <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-card/90 backdrop-blur-xs text-foreground/90 border border-line shadow-xs">
+                        <Chip size="xs" preventHover variant="neutral">
                           {getCategoryLabel(asset.category)}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/90 text-white shadow-xs font-mono">
+                        </Chip>
+                        <Chip size="xs" preventHover variant="primary" className="font-mono">
                           {asset.code}
-                        </span>
+                        </Chip>
                       </div>
                       {/* Floating Condition Badge */}
                       <div className="absolute top-2 right-2 z-10">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border shadow-xs backdrop-blur-xs ${asset.condition === 'good'
-                            ? 'bg-primary/90 text-white border-primary'
-                            : asset.condition === 'new'
-                              ? 'bg-info/90 text-white border-info'
-                              : asset.condition === 'under_repair'
-                                ? 'bg-accent/90 text-white border-accent animate-pulse'
-                                : 'bg-danger/90 text-white border-danger'
-                            }`}
+                        <Chip
+                          size="xs"
+                          preventHover
+                          variant={
+                            asset.condition === 'good'
+                              ? 'primary'
+                              : asset.condition === 'new'
+                                ? 'info'
+                                : asset.condition === 'under_repair'
+                                  ? 'accent'
+                                  : 'danger'
+                          }
                         >
                           {getStatusLabel(asset.condition)}
-                        </span>
+                        </Chip>
                       </div>
                     </div>
                     </Card.Header>
 
                     <Card.Body className="px-4 sm:px-5 py-0 space-y-3">
                       <div>
-                        <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors leading-snug">
+                        <Text
+                          as="h3"
+                          size="base"
+                          weight="black"
+                          color="default"
+                          className="group-hover:text-primary transition-colors leading-snug"
+                        >
                           {asset.name}
-                        </h3>
+                        </Text>
                         {asset.quantity > 1 && (
-                          <span className="text-[11px] font-bold text-muted block mt-0.5">
+                          <Text as="span" size="2xs" weight="bold" color="secondary" className="block mt-0.5">
                             {t('landlordAssetsQuantityCount', { count: asset.quantity })}
-                          </span>
+                          </Text>
                         )}
                       </div>
 
-                      <div className="p-3 bg-surface rounded-xl space-y-2 text-xs">
-                        <div className="flex justify-between items-center text-muted">
-                          <span className="text-muted font-medium">
+                      <div className="p-3 bg-surface rounded-xl space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Text as="span" size="xs" color="secondary" weight="medium">
                             {t('landlordAssetsLocation')}
-                          </span>
-                          <span className="font-bold text-foreground bg-card px-2 py-0.5 rounded-md border border-line">
+                          </Text>
+                          <Text
+                            as="span"
+                            size="xs"
+                            weight="bold"
+                            color="default"
+                            className="bg-card px-2 py-0.5 rounded-md border border-line"
+                          >
                             {asset.roomName || asset.location}
-                          </span>
+                          </Text>
                         </div>
-                        <div className="flex justify-between items-center text-muted">
-                          <span className="text-muted font-medium">
+                        <div className="flex justify-between items-center">
+                          <Text as="span" size="xs" color="secondary" weight="medium">
                             {t('landlordAssetsOriginalValueLabel')}
-                          </span>
-                          <span className="font-bold text-foreground">
+                          </Text>
+                          <Text as="span" size="xs" weight="bold" color="default">
                             {asset.purchasePrice
                               ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
                               : '0 ₫'}
-                          </span>
+                          </Text>
                         </div>
-                        <div className="flex justify-between items-center text-muted">
-                          <span className="text-muted font-medium">
+                        <div className="flex justify-between items-center">
+                          <Text as="span" size="xs" color="secondary" weight="medium">
                             {t('landlordAssetsCurrentValueLabel')}
-                          </span>
-                          <span className="font-black text-accent">
-                            {dep.currentValue.toLocaleString('vi-VN')} ₫{' '}
-                            <span className="text-[10px] text-muted font-normal">
+                          </Text>
+                          <div className="flex items-center gap-1">
+                            <Text as="span" size="xs" weight="black" color="brand">
+                              {dep.currentValue.toLocaleString('vi-VN')} ₫
+                            </Text>
+                            <Text as="span" size="3xs" color="secondary">
                               ({dep.remainingPercent}%)
-                            </span>
-                          </span>
+                            </Text>
+                          </div>
                         </div>
                       </div>
                     </Card.Body>
 
-                    <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-2 flex items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="secondary"
-                          onClick={e => handleOpenEditModal(asset, e)}
-                          leftIcon={<Edit3 className="text-primary" />}
-                        >
-                          {t('landlordAssetsBtnEditSku')}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="danger"
-                          onClick={e => handleOpenDeleteModal(asset, e)}
-                          leftIcon={<Trash2 />}
-                        >
-                          {t('landlordAssetsBtnDelete')}
-                        </Button>
-                      </div>
-                      <span className="text-xs font-black text-primary group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                        {t('landlordAssetsBtnDetails')} <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
+                    <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-2 flex items-center justify-end gap-1 text-xs">
+                      <Button
+                        variant="secondary"
+                        onClick={e => handleOpenEditModal(asset, e)}
+                        leftIcon={<Edit3 className="text-primary" />}
+                      >
+                        {t('landlordAssetsBtnEditSku')}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="danger"
+                        onClick={e => handleOpenDeleteModal(asset, e)}
+                        leftIcon={<Trash2 />}
+                      >
+                        {t('landlordAssetsBtnDelete')}
+                      </Button>
                     </Card.Footer>
                   </Card>
                 )
@@ -804,9 +815,9 @@ export default function AssetsPage() {
                         className="hover:bg-card-hover transition-colors duration-150 cursor-pointer group"
                       >
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span className="font-black text-primary block font-mono">
+                          <Text as="span" size="xs" weight="black" color="brand" mono>
                             {asset.code}
-                          </span>
+                          </Text>
                         </td>
                         <td className="px-4 sm:px-6 py-3 whitespace-nowrap">
                           {asset.imageUrl ? (
@@ -831,39 +842,58 @@ export default function AssetsPage() {
                             </div>
                           )}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground group-hover:text-primary transition-colors whitespace-nowrap">
-                          {asset.name}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-muted whitespace-nowrap">
-                          {getCategoryLabel(asset.category)}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground whitespace-nowrap">
-                          {asset.roomName || asset.location}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground whitespace-nowrap">
-                          {asset.purchasePrice
-                            ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
-                            : '0 ₫'}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 font-black text-success whitespace-nowrap">
-                          {dep.currentValue.toLocaleString('vi-VN')} ₫
-                          <span className="text-[10px] text-muted font-medium block">
-                            {t('landlordAssetsRemaining')} {dep.remainingPercent}%
-                          </span>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Text
+                            as="span"
+                            size="xs"
+                            weight="bold"
+                            color="default"
+                            className="group-hover:text-primary transition-colors"
+                          >
+                            {asset.name}
+                          </Text>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border inline-block whitespace-nowrap ${asset.condition === 'good'
-                              ? 'bg-primary/10 text-primary border-primary/30'
-                              : asset.condition === 'new'
-                                ? 'bg-info-soft text-info border-info-subtle'
-                                : asset.condition === 'under_repair'
-                                  ? 'bg-accent-soft text-accent border-accent-subtle animate-pulse'
-                                  : 'bg-danger-soft text-danger border-danger-subtle'
-                              }`}
+                          <Text as="span" size="xs" color="secondary">
+                            {getCategoryLabel(asset.category)}
+                          </Text>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Text as="span" size="xs" weight="bold" color="default">
+                            {asset.roomName || asset.location}
+                          </Text>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Text as="span" size="xs" weight="bold" color="default">
+                            {asset.purchasePrice
+                              ? `${Number(asset.purchasePrice).toLocaleString('vi-VN')} ₫`
+                              : '0 ₫'}
+                          </Text>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Text as="span" size="xs" weight="black" color="brand">
+                            {dep.currentValue.toLocaleString('vi-VN')} ₫
+                          </Text>
+                          <Text as="span" size="3xs" color="secondary" weight="medium" className="block">
+                            {t('landlordAssetsRemaining')} {dep.remainingPercent}%
+                          </Text>
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <Chip
+                            size="sm"
+                            preventHover
+                            variant={
+                              asset.condition === 'good'
+                                ? 'primary'
+                                : asset.condition === 'new'
+                                  ? 'info'
+                                  : asset.condition === 'under_repair'
+                                    ? 'accent'
+                                    : 'danger'
+                            }
                           >
                             {getStatusLabel(asset.condition)}
-                          </span>
+                          </Chip>
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
                           <div
