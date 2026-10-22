@@ -19,7 +19,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, SearchInput, Card } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ShiftsPage() {
@@ -336,11 +336,11 @@ export default function ShiftsPage() {
             const CategoryIcon = cat.icon
             const duration = getDurationHours(shift.startTime, shift.endTime)
             return (
-              <div
+              <Card
                 key={shift.id}
-                className="bg-card border border-line rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between"
+                className="group flex flex-col justify-between"
               >
-                <div className="space-y-4">
+                <Card.Header className="mx-6 mt-6 p-0 border-0">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div
@@ -361,7 +361,9 @@ export default function ShiftsPage() {
                       </div>
                     </div>
                   </div>
+                  </Card.Header>
 
+                  <Card.Body className="mx-6 p-0">
                   <div className="bg-surface rounded-2xl p-4 border border-line space-y-2.5">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -384,9 +386,9 @@ export default function ShiftsPage() {
                       <span className="font-extrabold text-foreground">{duration}</span>
                     </div>
                   </div>
-                </div>
+                </Card.Body>
 
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-line">
+                <Card.Footer className="mx-6 mb-6 p-0 pt-4 flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -403,8 +405,8 @@ export default function ShiftsPage() {
                   >
                     <Trash2 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnDelete')}
                   </Button>
-                </div>
-              </div>
+                </Card.Footer>
+              </Card>
             )
           })}
         </div>

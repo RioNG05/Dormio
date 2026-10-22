@@ -24,7 +24,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, TableRow } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -691,11 +691,12 @@ export default function AttendancePage() {
         <div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {records.map(item => (
-              <div
+              <Card
                 key={item.workScheduleId}
-                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                onClick={() => handleOpenOverride(item)}
+                className="flex flex-col justify-between"
               >
-                <div>
+              <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0">
                   {/* Top card bar: Date & Status */}
                   <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-line">
                     <div className="flex items-center gap-1.5 text-xs font-extrabold text-foreground">
@@ -766,9 +767,10 @@ export default function AttendancePage() {
                         : `Đã điều chỉnh bởi: ${item.editedByName}`}
                     </div>
                   )}
-                </div>
+                </Card.Header>
 
                 {/* Bottom Action Button */}
+                <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-2 border-0">
                 <Button fullWidth
                   type="button"
                   variant="outline"
@@ -779,7 +781,8 @@ export default function AttendancePage() {
                 >
                   <span>{t('landlordAttendanceBtnEdit')}</span>
                 </Button>
-              </div>
+                </Card.Footer>
+              </Card>
             ))}
           </div>
 
@@ -817,7 +820,11 @@ export default function AttendancePage() {
               </thead>
               <tbody className="divide-y divide-line font-medium text-foreground/90">
                 {records.map(item => (
-                  <TableRow key={item.workScheduleId} className="group">
+                  <TableRow
+                    key={item.workScheduleId}
+                    className="group"
+                    onClick={() => handleOpenOverride(item)}
+                  >
                     <td className="py-3 px-4 font-bold text-foreground">
                       {formatDisplayDate(item.workDate)}
                     </td>
@@ -847,7 +854,10 @@ export default function AttendancePage() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleOpenOverride(item)}
+                        onClick={event => {
+                          event.stopPropagation()
+                          handleOpenOverride(item)
+                        }}
 
                         title={t('landlordAttendanceBtnEdit')}
                       >

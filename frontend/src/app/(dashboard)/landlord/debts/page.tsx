@@ -26,7 +26,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, Card, TableRow } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -564,13 +564,13 @@ export default function LandlordDebtsPage() {
                   : t('landlordDebtsBadgeDue')
 
             return (
-              <div
+              <Card
                 key={room.roomId}
-                className={`bg-card rounded-2xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between overflow-hidden group ${isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-line hover:border-primary/40'
+                className={`flex flex-col justify-between overflow-hidden group ${isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : ''
                   }`}
               >
                 {/* Card Header */}
-                <div className="p-5 border-b border-line">
+                <Card.Header className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -630,10 +630,10 @@ export default function LandlordDebtsPage() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card.Header>
 
                 {/* Card Financial Breakdown */}
-                <div className="p-5 bg-surface/60 space-y-3">
+                <Card.Body className="p-5 bg-surface/60 space-y-3">
                   <div className="flex items-baseline justify-between">
                     <span className="text-xs font-bold text-muted">
                       {t('landlordDebtsTotalDebtLabel')}
@@ -664,10 +664,10 @@ export default function LandlordDebtsPage() {
                       {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
                     </span>
                   </div>
-                </div>
+                </Card.Body>
 
                 {/* Card Actions */}
-                <div className="p-4 bg-card border-t border-line flex items-center gap-2">
+                <Card.Footer className="p-4 flex items-center gap-2">
                   <Button
                     variant="primary"
                     onClick={() => {
@@ -680,8 +680,8 @@ export default function LandlordDebtsPage() {
                   >
                     {t('landlordDebtsBtnSendReminder')}
                   </Button>
-                </div>
-              </div>
+                </Card.Footer>
+              </Card>
             )
           })}
         </div>
@@ -729,6 +729,12 @@ export default function LandlordDebtsPage() {
                       key={room.roomId}
                       className={`hover:bg-card-hover transition-colors duration-150 ${isSelected ? 'bg-primary-soft' : ''
                         }`}
+                      onClick={() => {
+                        setReminderModalRoom(room)
+                        setReminderNote('')
+                        setIsReminderDirty(false)
+                        setReminderCopied(false)
+                      }}
                     >
                       <td className="p-4">
                         <span className="font-bold text-foreground block">
@@ -790,7 +796,8 @@ export default function LandlordDebtsPage() {
                           <Button
                             variant="primary"
                             size="icon-sm"
-                            onClick={() => {
+                            onClick={event => {
+                              event.stopPropagation()
                               setReminderModalRoom(room)
                               setReminderNote('')
                               setIsReminderDirty(false)

@@ -650,7 +650,11 @@ function PaymentsContent() {
                   const evidencePhotos = p.meterReadings.filter(mr => mr.imageUrl)
 
                   return (
-                    <TableRow key={p.id} className="group">
+                    <TableRow
+                      key={p.id}
+                      className="group"
+                      onClick={() => setSelectedPayment(p)}
+                    >
                       <td className="px-5 py-4">
                         <div className="font-mono font-black text-foreground text-xs">
                           {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}
@@ -708,7 +712,10 @@ function PaymentsContent() {
                                 type="button"
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setPreviewImageUrl(photo.imageUrl)}
+                                onClick={event => {
+                                  event.stopPropagation()
+                                  setPreviewImageUrl(photo.imageUrl)
+                                }}
                                 className="rounded overflow-hidden"
                                 title={`Xem ${photo.serviceName}: ${photo.readingValue}`}
                               >
@@ -735,7 +742,10 @@ function PaymentsContent() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setSelectedPayment(p)}
+                          onClick={event => {
+                            event.stopPropagation()
+                            setSelectedPayment(p)
+                          }}
                         >
                           <Eye className="w-3.5 h-3.5" /> Biên Nhận
                         </Button>

@@ -43,6 +43,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
   TableRow,
   Modal,
   Text,
@@ -625,12 +626,12 @@ export default function ServicesPage() {
               const formattedPrice = formatCurrency(service.numericPrice, locale)
 
               return (
-                <div
+                <Card
                   key={service.id}
-                  className={`bg-card border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer space-y-4 relative overflow-hidden flex flex-col justify-between ${isActive ? 'border-line' : 'border-line opacity-70 bg-surface/50'
+                  className={`space-y-4 relative overflow-hidden flex flex-col justify-between ${isActive ? '' : 'opacity-70 bg-surface/50'
                     }`}
                 >
-                  <div className="space-y-3.5">
+                  <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0 border-0">
                     {/* Top Header Row */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
@@ -651,7 +652,9 @@ export default function ServicesPage() {
                         </div>
                       </div>
                     </div>
+                    </Card.Header>
 
+                    <Card.Body className="px-4 sm:px-5 py-0 space-y-3.5">
                     {/* STATUS TOGGLE WITH SWITCH */}
                     <div className="flex items-center justify-between p-3 bg-surface rounded-2xl border border-line">
                       <div className="space-y-0.5">
@@ -709,10 +712,10 @@ export default function ServicesPage() {
                         </Text>
                       </div>
                     </div>
-                  </div>
+                  </Card.Body>
 
                   {/* Footer Action Controls */}
-                  <div className="pt-3 border-t border-line flex items-center justify-between gap-1.5 text-xs">
+                  <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-3 flex items-center justify-between gap-1.5 text-xs">
                     <Button
                       variant="outline"
                       onClick={() => handleOpenRoomsModal(service)}
@@ -738,8 +741,8 @@ export default function ServicesPage() {
                         {t('landlordServicesDeleteTooltip')}
                       </Button>
                     </div>
-                  </div>
-                </div>
+                  </Card.Footer>
+                </Card>
               )
             })
           ) : (
@@ -795,7 +798,11 @@ export default function ServicesPage() {
                     const formattedPrice = formatCurrency(service.numericPrice, locale)
 
                     return (
-                      <TableRow key={service.id} className="group">
+                      <TableRow
+                        key={service.id}
+                        className="group"
+                        onClick={() => handleOpenEditModal(service)}
+                      >
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div
@@ -838,7 +845,10 @@ export default function ServicesPage() {
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <Button
                             variant="ghost"
-                            onClick={() => handleOpenRoomsModal(service)}
+                            onClick={event => {
+                              event.stopPropagation()
+                              handleOpenRoomsModal(service)
+                            }}
                             leftIcon={<Home />}
                           >
                             {t('landlordServicesRoomsCount', { count: service.appliedRoomsCount })}
@@ -849,7 +859,10 @@ export default function ServicesPage() {
                             <Switch
                               size="sm"
                               checked={isActive}
-                              onClick={(e: React.MouseEvent) => handleToggleActive(service, e)}
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation()
+                                handleToggleActive(service, e)
+                              }}
                               title={
                                 isActive
                                   ? t('landlordServicesClickToDisable')
@@ -874,7 +887,10 @@ export default function ServicesPage() {
                             <Button
                               variant="outline"
                               size='icon-sm'
-                              onClick={() => handleOpenEditModal(service)}
+                              onClick={event => {
+                                event.stopPropagation()
+                                handleOpenEditModal(service)
+                              }}
                               title={t('landlordServicesEdit')}
                             >
                               <Edit3 />
@@ -882,7 +898,10 @@ export default function ServicesPage() {
                             <Button
                               size='icon-sm'
                               variant="ghost-danger"
-                              onClick={() => setDeleteTarget(service)}
+                              onClick={event => {
+                                event.stopPropagation()
+                                setDeleteTarget(service)
+                              }}
                               title={t('landlordServicesDeleteTooltip')}
                             >
                               <Trash2 />

@@ -30,6 +30,7 @@ import {
   FilterToolbar,
   Card,
   TableRow,
+  Chip,
 } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
@@ -453,105 +454,103 @@ export default function CustomersPage() {
             paginatedCustomers.map(customer => (
               <Card
                 key={customer.id}
-                className="p-4 sm:p-5 space-y-3 relative group"
+                className="space-y-3 relative group"
                 onClick={() => router.push(`/landlord/customers/${customer.userId || customer.id}`)}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm uppercase shrink-0">
-                      {customer.name.charAt(0)}
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 border-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm uppercase shrink-0">
+                        {customer.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <Link
+                          href={`/landlord/customers/${customer.userId || customer.id}`}
+                          className="font-bold text-foreground text-sm hover:text-primary cursor-pointer transition-colors truncate block"
+                        >
+                          {customer.name}
+                        </Link>
+                        <p className="text-xs text-muted font-semibold truncate flex items-center gap-1.5 mt-0.5">
+                          <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
+                          <span>{customer.phone || '—'}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <Link
-                        href={`/landlord/customers/${customer.userId || customer.id}`}
-                        className="font-bold text-foreground text-sm hover:text-primary cursor-pointer transition-colors truncate block"
-                      >
-                        {customer.name}
-                      </Link>
-                      <p className="text-xs text-muted font-semibold truncate flex items-center gap-1.5 mt-0.5">
-                        <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
-                        <span>{customer.phone || '—'}</span>
-                      </p>
-                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
+                        ? 'bg-primary/10 text-primary border border-primary/30'
+                        : customer.status === 'Sắp hết hợp đồng'
+                          ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
+                          : 'bg-info-soft text-info border border-info-subtle'
+                        }`}
+                    >
+                      {getCustomerStatusLabel(customer.status)}
+                    </span>
                   </div>
-                  <span
-                    className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full shrink-0 whitespace-nowrap ${customer.status === 'Đang ở'
-                      ? 'bg-primary/10 text-primary border border-primary/30'
-                      : customer.status === 'Sắp hết hợp đồng'
-                        ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
-                        : 'bg-info-soft text-info border border-info-subtle'
-                      }`}
-                  >
-                    {getCustomerStatusLabel(customer.status)}
-                  </span>
-                </div>
+                </Card.Header>
 
-                <div className="p-2.5 bg-surface rounded-xl space-y-1.5 text-xs text-muted">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted font-medium whitespace-nowrap">
-                      {t('landlordCustomersBuildingAndRoomLabel')}
-                    </span>
-                    <span className="font-bold text-foreground whitespace-nowrap">
-                      {activeBuilding?.name || t('landlordCustomersBuildingFallback')} —{' '}
-                      {t('landlordCustomersRoomWord')}{' '}
-                      {customer.status === 'Đã rời' ? '—' : customer.room}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted font-medium whitespace-nowrap">
-                      {t('landlordCustomersStayDate')}
-                    </span>
-                    <span className="font-semibold text-foreground whitespace-nowrap">
-                      {customer.joinDate}
-                    </span>
-                  </div>
-                  {customer.status === 'Sắp hết hợp đồng' && (
-                    <div className="flex justify-between items-center pt-1 border-t border-accent-subtle text-accent font-bold">
-                      <span className="whitespace-nowrap">
-                        ⏳ {t('landlordCustomersContractExpiry')}
+                <Card.Body className="px-4 sm:px-5 py-0">
+                  <div className="p-2.5 bg-surface rounded-xl space-y-1.5 text-xs text-muted">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted font-medium whitespace-nowrap">
+                        {t('landlordCustomersBuildingAndRoomLabel')}
                       </span>
-                      <span className="text-orange-600 animate-pulse whitespace-nowrap">
-                        {customer.daysRemaining !== undefined
-                          ? t('landlordCustomersContractDaysRemaining').replace(
-                            '{days}',
-                            String(customer.daysRemaining),
-                          )
-                          : t('landlordCustomersDaysRemainingShort')}
+                      <span className="font-bold text-foreground whitespace-nowrap">
+                        {activeBuilding?.name || t('landlordCustomersBuildingFallback')} —{' '}
+                        {t('landlordCustomersRoomWord')}{' '}
+                        {customer.status === 'Đã rời' ? '—' : customer.room}
                       </span>
                     </div>
-                  )}
-                </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted font-medium whitespace-nowrap">
+                        {t('landlordCustomersStayDate')}
+                      </span>
+                      <span className="font-semibold text-foreground whitespace-nowrap">
+                        {customer.joinDate}
+                      </span>
+                    </div>
+                    {customer.status === 'Sắp hết hợp đồng' && (
+                      <div className="flex justify-between items-center pt-1 border-t border-accent-subtle text-accent font-bold">
+                        <span className="whitespace-nowrap">
+                          ⏳ {t('landlordCustomersContractExpiry')}
+                        </span>
+                        <span className="text-orange-600 animate-pulse whitespace-nowrap">
+                          {customer.daysRemaining !== undefined
+                            ? t('landlordCustomersContractDaysRemaining').replace(
+                              '{days}',
+                              String(customer.daysRemaining),
+                            )
+                            : t('landlordCustomersDaysRemainingShort')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </Card.Body>
 
                 {/* Quick Inline Action Buttons */}
-                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                <Card.Footer className="px-4 sm:px-5 pt-1 pb-4 border-0 flex justify-end gap-1.5">
                   <a
                     href={`tel:${customer.phone}`}
                     onClick={e => e.stopPropagation()}
                   >
                     <Button
                       variant='success'
-                      size='sm'
                       leftIcon={<PhoneCall />}
-                      fullWidth
                     >
                       {t('landlordCustomersCallBtn')}
                     </Button>
                   </a>
                   <Button
-                    type="button"
                     variant="primary"
-                    size="sm"
                     leftIcon={<MessageCircle />}
-                    fullWidth
                     onClick={e => {
                       e.stopPropagation()
                       handleOpenChat(customer)
                     }}
-                    className="whitespace-nowrap"
                   >
                     {t('landlordCustomersMessageBtn')}
                   </Button>
-                </div>
+                </Card.Footer>
               </Card>
             ))
           )}
@@ -627,16 +626,18 @@ export default function CustomersPage() {
                         {customer.status === 'Đã rời' ? '—' : customer.room}
                       </td>
                       <td className="px-6 py-3.5 whitespace-nowrap">
-                        <span
-                          className={`px-2.5 py-1 text-[11px] font-bold rounded-full border whitespace-nowrap ${customer.status === 'Đang ở'
-                            ? 'bg-primary/10 text-primary border-primary/30'
+                        <Chip
+                          size='sm'
+                          preventHover
+                          variant={`${customer.status === 'Đang ở'
+                            ? 'primary'
                             : customer.status === 'Sắp hết hợp đồng'
-                              ? 'bg-accent-soft text-accent border border-accent-subtle animate-pulse'
-                              : 'bg-info-soft text-info border border-info-subtle'
+                              ? 'accent'
+                              : 'info'
                             }`}
                         >
                           {getCustomerStatusLabel(customer.status)}
-                        </span>
+                        </Chip>
                       </td>
                       <td className="px-6 py-3.5 text-right whitespace-nowrap">
                         <div

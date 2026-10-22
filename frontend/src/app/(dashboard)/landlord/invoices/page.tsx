@@ -591,17 +591,20 @@ function InvoicesContent() {
             return (
               <Card
                 key={inv.id}
-                className={`p-4 sm:p-5 space-y-4 flex flex-col justify-between ${isPaid
+                className={`space-y-4 flex flex-col justify-between ${isPaid
                   ? 'border-success-subtle hover:border-emerald-300'
                   : isOverdue
                     ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
                     : 'border-line hover:border-primary/40'
                   }`}
-                onClick={() => setSelectedInvoice(inv)}
+                onClick={event => {
+                  event.stopPropagation()
+                  setSelectedInvoice(inv)
+                }}
               >
                 {/* Header info */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-line">
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5">
+                  <div className="flex items-center justify-between">
                     <span className="font-extrabold text-sm text-foreground flex items-center gap-1.5">
                       <FileText className="w-4 h-4 text-primary" /> {inv.roomName}
                     </span>
@@ -616,7 +619,9 @@ function InvoicesContent() {
                       {inv.status}
                     </span>
                   </div>
+                </Card.Header>
 
+                <Card.Body className="px-4 sm:px-5 py-0 space-y-2">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted font-semibold">
@@ -671,10 +676,10 @@ function InvoicesContent() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Card.Body>
 
                 {/* Total & Action Footer */}
-                <div className="pt-3 border-t border-line space-y-3">
+                <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-bold text-muted block uppercase tracking-wider">
@@ -714,8 +719,8 @@ function InvoicesContent() {
                         {t('landlordInvoicesBtnCollect')}
                       </Button>
                     )}
-                </div>
-                </div>
+                  </div>
+                </Card.Footer>
               </Card>
             )
           })}
@@ -739,7 +744,11 @@ function InvoicesContent() {
               </thead>
               <tbody className="divide-y divide-line font-semibold">
                 {paginatedInvoices.map(inv => (
-                  <TableRow key={inv.id} className="group">
+                  <TableRow
+                    key={inv.id}
+                    className="group"
+                    onClick={() => setSelectedInvoice(inv)}
+                  >
                     <td className="px-4 py-3.5 font-bold font-mono text-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
                       {inv.id}

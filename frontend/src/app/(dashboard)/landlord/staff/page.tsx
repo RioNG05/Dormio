@@ -555,7 +555,7 @@ export default function StaffPage() {
             <Button
               variant="secondary"
               size="md"
-              onClick={() => {
+              onClick={event => {
                 setEditingPosition(null)
                 setIsAddingPositionInline(false)
                 setPosFormName('')
@@ -703,9 +703,13 @@ export default function StaffPage() {
             return (
               <Card
                 key={staff.assignmentId}
-                className="p-4 sm:p-5 flex flex-col justify-between space-y-4 group"
+                className="flex flex-col justify-between space-y-4 group"
+                onClick={() => {
+                  setSelectedStaff(staff)
+                  setIsDetailModalOpen(true)
+                }}
               >
-                <div className="space-y-4">
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 border-0">
                   {/* Card Header: Avatar, Name & Status */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -740,7 +744,9 @@ export default function StaffPage() {
                         : t('landlordStaffStatusInactiveBadge')}
                     </span>
                   </div>
+                </Card.Header>
 
+                <Card.Body className="px-4 sm:px-5 py-0 space-y-4">
                   {/* Details List */}
                   <div className="space-y-2 pt-1 text-xs text-muted border-t border-line">
                     <div className="flex items-center gap-2">
@@ -775,15 +781,16 @@ export default function StaffPage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Card.Body>
 
                 {/* Card Footer Actions: Assign Role & Toggle Status */}
-                <div className="pt-3 border-t border-line flex items-center justify-between gap-1.5">
+                <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
+                      onClick={event => {
+                        event.stopPropagation()
                         setSelectedStaff(staff)
                         setIsDetailModalOpen(true)
                       }}
@@ -793,7 +800,10 @@ export default function StaffPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleOpenAssignRoleModal(staff)}
+                      onClick={event => {
+                        event.stopPropagation()
+                        handleOpenAssignRoleModal(staff)
+                      }}
                       title={t('landlordStaffBtnAssignRoleTooltip')}
                       leftIcon={<Edit3 />}
                     >
@@ -804,7 +814,10 @@ export default function StaffPage() {
                   <Button
                     size="sm"
                     variant={isActive ? 'danger' : 'secondary'}
-                    onClick={() => handleToggleStatus(staff)}
+                    onClick={event => {
+                      event.stopPropagation()
+                      handleToggleStatus(staff)
+                    }}
                     className={cn(
                       'text-xs font-bold',
                       isActive
@@ -815,7 +828,7 @@ export default function StaffPage() {
                   >
                     {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
                   </Button>
-                </div>
+                </Card.Footer>
               </Card>
             )
           })}

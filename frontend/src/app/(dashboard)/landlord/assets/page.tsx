@@ -31,6 +31,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
   TableRow,
   Modal,
   Text,
@@ -633,12 +634,13 @@ export default function AssetsPage() {
                   depreciationYears: 5,
                 })
                 return (
-                  <div
+                  <Card
                     key={asset.id}
                     onClick={() => router.push(`/landlord/assets/${asset.id}`)}
-                    className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 space-y-3.5 cursor-pointer relative group flex flex-col justify-between"
+                    className="space-y-3.5 relative group flex flex-col justify-between"
                   >
                     {/* Top Asset Photo Banner */}
+                    <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0 border-0">
                     <div className="w-full aspect-[16/10] rounded-xl overflow-hidden relative border border-line bg-surface shrink-0 group/img">
                       {asset.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -678,8 +680,9 @@ export default function AssetsPage() {
                         </span>
                       </div>
                     </div>
+                    </Card.Header>
 
-                    <div className="space-y-3">
+                    <Card.Body className="px-4 sm:px-5 py-0 space-y-3">
                       <div>
                         <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors leading-snug">
                           {asset.name}
@@ -722,9 +725,9 @@ export default function AssetsPage() {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </Card.Body>
 
-                    <div className="pt-2 border-t border-line flex items-center justify-between gap-2 text-xs">
+                    <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-2 flex items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-1">
                         <Button
                           variant="secondary"
@@ -745,8 +748,8 @@ export default function AssetsPage() {
                       <span className="text-xs font-black text-primary group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
                         {t('landlordAssetsBtnDetails')} <ArrowRight className="w-3.5 h-3.5" />
                       </span>
-                    </div>
-                  </div>
+                    </Card.Footer>
+                  </Card>
                 )
               })
             )}

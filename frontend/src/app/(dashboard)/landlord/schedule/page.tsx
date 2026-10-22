@@ -975,7 +975,11 @@ export default function WorkforceSchedulePage() {
                 </thead>
                 <tbody className="divide-y divide-line font-medium text-foreground/90">
                   {schedules.map(item => (
-                    <TableRow key={item.id} className="group">
+                    <TableRow
+                      key={item.id}
+                      className="group"
+                      onClick={() => handleOpenEditModal(item)}
+                    >
                       <td className="py-3 px-4 font-bold text-foreground">
                         {formatDisplayDate(item.workDate)}
                       </td>

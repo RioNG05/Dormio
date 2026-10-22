@@ -32,6 +32,7 @@ import {
   Text,
   Modal,
   ViewModeToggle,
+  Card,
   TableRow,
   type TextColor,
 } from '@/components/ui'
@@ -955,11 +956,11 @@ export default function RoomsPage() {
             /* GRID VIEW (Grouped by floor - all rooms displayed) */
             <div className="space-y-4">
               {floors.map(floor => (
-                <div
+                <Card
                   key={floor}
-                  className="flex flex-col md:flex-row gap-4 bg-card p-3.5 rounded-2xl border border-line shadow-2xs hover:border-line transition-all"
+                  className="flex flex-col md:flex-row gap-4 p-3.5"
                 >
-                  <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white">
+                  <Card.Header className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white border-0 p-0">
                     <div className="flex items-center gap-1.5">
                       <Text variant="overline" size="3xs" weight="bold" color="subtle">
                         {t('landlordRoomsColFloor')}
@@ -968,17 +969,17 @@ export default function RoomsPage() {
                         {floor}
                       </Text>
                     </div>
-                  </div>
+                  </Card.Header>
 
-                  <div className="flex-1 flex flex-wrap gap-3 items-center">
+                  <Card.Body className="flex-1 flex flex-wrap gap-3 items-center p-0">
                     {(groupedRooms[floor] || []).map((room: any) => {
                       const statusMeta = getRoomStatusMeta(room.status)
 
                       return (
-                        <div
+                        <Card
                           key={`${room.building}-${room.id}`}
                           onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${statusMeta.gridContainer}`}
+                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all duration-200 ${statusMeta.gridContainer}`}
                         >
                           <Button
                             type="button"
@@ -1007,11 +1008,11 @@ export default function RoomsPage() {
                           <Text.Badge className={`mt-1 px-2 py-0.5 rounded-md text-center ${statusMeta.gridBadge}`}>
                             {statusMeta.label}
                           </Text.Badge>
-                        </div>
+                        </Card>
                       )
                     })}
-                  </div>
-                </div>
+                  </Card.Body>
+                </Card>
               ))}
             </div>
           ) : (

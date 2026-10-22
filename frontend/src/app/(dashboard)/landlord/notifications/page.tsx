@@ -36,6 +36,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
   TableRow,
   Chip,
 } from '@/components/ui'
@@ -466,12 +467,12 @@ export default function NotificationsPage() {
               const isRent = notif.category === 'Tiền nhà' || notif.category === 'Rent'
 
               return (
-                <div
+                <Card
                   key={notif.id}
                   onClick={() => setSelectedNotifDetail(notif)}
-                  className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex flex-col justify-between"
+                  className="group flex flex-col justify-between"
                 >
-                  <div>
+                  <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0">
                     {/* Header: Category Badge + Sent Time */}
                     <div className="flex items-center justify-between gap-2 pb-3 border-b border-line">
                       <Chip preventHover variant={`${isEmergency
@@ -489,7 +490,9 @@ export default function NotificationsPage() {
                         {notif.sentAt}
                       </span>
                     </div>
+                  </Card.Header>
 
+                    <Card.Body className="px-4 sm:px-5 py-0">
                     {/* Title & Preview */}
                     <div className="py-3 space-y-1.5">
                       <h3 className="font-extrabold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
@@ -526,10 +529,10 @@ export default function NotificationsPage() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </Card.Body>
 
                   {/* Footer Details Button */}
-                  <div className="pt-3 mt-3 border-t border-line flex items-center justify-end">
+                  <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-3 flex items-center justify-end">
                     <Button
                       variant="danger"
                       onClick={e => {
@@ -540,8 +543,8 @@ export default function NotificationsPage() {
                     >
                       {t('landlordNotificationsDeleteAction')}
                     </Button>
-                  </div>
-                </div>
+                  </Card.Footer>
+                </Card>
               )
             })}
           </div>

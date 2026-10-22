@@ -633,19 +633,24 @@ export default function ExpensesPage() {
           {expensesList.map(exp => (
             <Card
               key={exp.id}
-              className="p-4 sm:p-5 space-y-4 flex flex-col justify-between"
-              onClick={() => setSelectedExpense(exp)}
+              className="space-y-4 flex flex-col justify-between"
+              onClick={event => {
+                event.stopPropagation()
+                setSelectedExpense(exp)
+              }}
             >
               {/* Header Info */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2.5 border-b border-line">
+              <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Receipt className="w-4 h-4 text-primary shrink-0" />
                     <span className="font-black text-xs text-foreground">{exp.code}</span>
                   </div>
                   {renderStatusBadge(exp.status)}
                 </div>
+              </Card.Header>
 
+              <Card.Body className="px-4 sm:px-5 py-0 space-y-3">
                 <div>
                   <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-card-hover text-foreground/90 border border-line inline-block mb-1.5">
                     {getCategoryLabel(exp.category)}
@@ -676,10 +681,10 @@ export default function ExpensesPage() {
                     <span className="font-semibold text-foreground/90">{formatDate(exp.paidAt)}</span>
                   </div>
                 </div>
-              </div>
+              </Card.Body>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
+              <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-between gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
@@ -695,7 +700,10 @@ export default function ExpensesPage() {
                 {exp.status === 'pending' && (
                   <Button variant="dark"
                     size="sm"
-                    onClick={() => handleMarkAsPaid(exp.id)}
+                    onClick={event => {
+                      event.stopPropagation()
+                      handleMarkAsPaid(exp.id)
+                    }}
                     className="whitespace-nowrap"
                     title={t('landlordExpensesMarkPaid')}
                   >
@@ -708,7 +716,10 @@ export default function ExpensesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openEditModal(exp)}
+                      onClick={event => {
+                        event.stopPropagation()
+                        openEditModal(exp)
+                      }}
                       title={t('landlordExpensesLockedTooltip')}
                     >
                       <Lock className="w-4 h-4 text-amber-500" />
@@ -717,7 +728,10 @@ export default function ExpensesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openEditModal(exp)}
+                      onClick={event => {
+                        event.stopPropagation()
+                        openEditModal(exp)
+                      }}
                       title={t('landlordExpensesEditTooltip')}
                     >
                       <Edit3 className="w-4 h-4" />
@@ -726,13 +740,16 @@ export default function ExpensesPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteExpense(exp)}
+                    onClick={event => {
+                      event.stopPropagation()
+                      handleDeleteExpense(exp)
+                    }}
                     title={t('landlordExpensesDeleteTooltip')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
+                </Card.Footer>
             </Card>
           ))}
         </div>
@@ -764,7 +781,11 @@ export default function ExpensesPage() {
               </thead>
               <tbody className="divide-y divide-line font-semibold text-foreground/90">
                 {expensesList.map(exp => (
-                  <TableRow key={exp.id} className="group">
+                  <TableRow
+                    key={exp.id}
+                    className="group"
+                    onClick={() => setSelectedExpense(exp)}
+                  >
                     <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />

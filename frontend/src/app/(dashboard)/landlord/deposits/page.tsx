@@ -38,6 +38,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
   TableRow,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -763,11 +764,12 @@ function DepositsContent() {
             const isHolding = dep.status === 'paid'
 
             return (
-              <div
+              <Card
                 key={dep.id}
-                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group"
+                onClick={() => setSelectedDeposit(dep)}
+                className="flex flex-col justify-between space-y-4 group"
               >
-                <div className="space-y-3">
+                <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0 border-0 space-y-3">
                   {/* Top Badge & Room */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -838,10 +840,10 @@ function DepositsContent() {
                       </Text>
                     </div>
                   </div>
-                </div>
+                </Card.Header>
 
                 {/* Amount & Action Footer */}
-                <div className="pt-3 border-t border-line space-y-3">
+                <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <Text as="span" size="xs" weight="bold" color="secondary" className="block uppercase tracking-wider">
@@ -913,8 +915,8 @@ function DepositsContent() {
                       </Button>
                     )}
                   </div>
-                </div>
-              </div>
+                </Card.Footer>
+                </Card>
             )
           })}
         </div>
@@ -942,7 +944,11 @@ function DepositsContent() {
                   const isHolding = dep.status === 'paid'
 
                   return (
-                    <TableRow key={dep.id} className="group">
+                    <TableRow
+                      key={dep.id}
+                      className="group"
+                      onClick={() => setSelectedDeposit(dep)}
+                    >
                       <td className="py-3.5 px-4 font-mono font-bold text-muted">
                         {dep.id.slice(0, 8)}...
                       </td>
@@ -991,7 +997,10 @@ function DepositsContent() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setSelectedDeposit(dep)}
+                            onClick={event => {
+                              event.stopPropagation()
+                              setSelectedDeposit(dep)
+                            }}
                             title={t('landlordDepositsBtnDetail')}
                           >
                             <Eye className="w-4 h-4" />
@@ -1001,7 +1010,8 @@ function DepositsContent() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => {
+                              onClick={event => {
+                                event.stopPropagation()
                                 setShowUpgradeModal(dep)
                                 setUpgradeForm({
                                   targetContractAmount: '',
@@ -1020,7 +1030,8 @@ function DepositsContent() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => {
+                              onClick={event => {
+                                event.stopPropagation()
                                 setShowRefundModal(dep)
                                 setRefundForm({
                                   deductedAmount: '0',

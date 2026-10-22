@@ -38,6 +38,7 @@ import {
   FilterToolbar,
   Card,
   TableRow,
+  Chip,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -505,126 +506,102 @@ export default function ContractsPage() {
                       <Card
                         key={c.id || idx}
                         onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                        className="p-4 sm:p-5 group flex flex-col justify-between relative overflow-hidden"
+                        className="group flex flex-col justify-between relative overflow-hidden"
                       >
-                        <div>
+                        <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
                           {/* Card Header: Room & Status */}
-                          <div className="flex items-start justify-between gap-3 pb-3 border-b border-line">
+                          <div className="flex items-start justify-between gap-3">
                             <Text as="h3" weight="black" size="base" color="default" className="group-hover:text-primary transition-colors">
                               {t('landlordRoomDetailRoomPrefix')} {c.room}
                             </Text>
 
+                            <Chip
+                              size="sm"
+                              preventHover
+                              variant={`${(c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực')
+                                ? 'success'
+                                : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
+                                  ? 'warning'
+                                  : 'default'}`}
+                            >
+                              {getContractStatusLabel(c.status)}
+                            </Chip>
+                          </div>
+                        </Card.Header>
+
+                        {/* Card Body */}
+                        <Card.Body className="px-4 sm:px-5 py-3 space-y-2.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-muted" />
+                              {t('landlordContractsRepresentative')}
+                            </Text>
+                            <div className="flex flex-col items-end">
+                              <Text as="span" size="xs" weight="extrabold" color="default">
+                                {c.tenant}
+                              </Text>
+                              {c.members && c.members.length > 0 && (
+                                <Text as="span" size="3xs" weight="bold" color="secondary" className="flex items-center gap-1">
+                                  <Users className="w-3 h-3 text-muted" />
+                                  {t('landlordContractsRoommatesCount').replace(
+                                    '{count}',
+                                    String(c.members.length),
+                                  )}
+                                </Text>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs">
+                            <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                              <CreditCard className="w-3.5 h-3.5 text-muted" />
+                              {t('landlordContractsRentPriceLabel')}:
+                            </Text>
+                            <Text as="span" size="sm" weight="black" color="brand">
+                              {c.price} {t('landlordContractsPerMonth')}
+                            </Text>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs">
+                            <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                              <CalendarDays className="w-3.5 h-3.5 text-muted" />
+                              {t('landlordContractsDurationLabel')}
+                            </Text>
+                            <div className="flex items-center gap-1.5">
+                              <Text as="span" size="xs" weight="bold" className="text-foreground">
+                                {c.startDate} - {c.endDate}
+                              </Text>
+                              {c.isOverdue && (
+                                <Text as="span" size="3xs" weight="black" className="px-1.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle">
+                                  {t('landlordContractsDueExpired')}
+                                </Text>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs pt-1 border-t border-line">
+                            <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
+                              <CreditCard className="w-3.5 h-3.5 text-muted" />
+                              {t('landlordContractsPaymentLabel')}
+                            </Text>
                             <Text
                               as="span"
                               size="2xs"
                               weight="extrabold"
                               className={cn(
-                                'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border shrink-0',
-                                c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
+                                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
+                                c.paymentStatus === 'Đã thu đủ'
                                   ? 'bg-success-soft text-success border-success-subtle'
-                                  : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                    ? 'bg-warning-soft text-warning border-warning-subtle'
-                                    : 'bg-card-hover text-muted border-line',
+                                  : 'bg-danger-soft text-danger border-danger-subtle',
                               )}
                             >
-                              <span
-                                className={cn(
-                                  'w-1.5 h-1.5 rounded-full',
-                                  c.status === 'Đang hiệu lực' || c.status === 'Còn hiệu lực'
-                                    ? 'bg-emerald-500'
-                                    : c.status === 'Sắp hết hạn' || c.status === 'Quá hạn'
-                                      ? 'bg-amber-500'
-                                      : 'bg-zinc-400',
-                                )}
-                              />
-                              {getContractStatusLabel(c.status)}
+                              {getPaymentStatusLabel(c.paymentStatus)}
                             </Text>
                           </div>
-
-                          {/* Card Body */}
-                          <div className="py-3 space-y-2.5">
-                            <div className="flex items-center justify-between text-xs">
-                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5 text-muted" />
-                                {t('landlordContractsRepresentative')}
-                              </Text>
-                              <div className="flex flex-col items-end">
-                                <Text as="span" size="xs" weight="extrabold" color="default">
-                                  {c.tenant}
-                                </Text>
-                                {c.members && c.members.length > 0 && (
-                                  <Text as="span" size="3xs" weight="bold" color="secondary" className="flex items-center gap-1">
-                                    <Users className="w-3 h-3 text-muted" />
-                                    {t('landlordContractsRoommatesCount').replace(
-                                      '{count}',
-                                      String(c.members.length),
-                                    )}
-                                  </Text>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between text-xs">
-                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <CreditCard className="w-3.5 h-3.5 text-muted" />
-                                {t('landlordContractsRentPriceLabel')}:
-                              </Text>
-                              <Text as="span" size="sm" weight="black" color="brand">
-                                {c.price} {t('landlordContractsPerMonth')}
-                              </Text>
-                            </div>
-
-                            <div className="flex items-center justify-between text-xs">
-                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <CalendarDays className="w-3.5 h-3.5 text-muted" />
-                                {t('landlordContractsDurationLabel')}
-                              </Text>
-                              <div className="flex items-center gap-1.5">
-                                <Text as="span" size="xs" weight="bold" className="text-foreground">
-                                  {c.startDate} - {c.endDate}
-                                </Text>
-                                {c.isOverdue && (
-                                  <Text as="span" size="3xs" weight="black" className="px-1.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle">
-                                    {t('landlordContractsDueExpired')}
-                                  </Text>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between text-xs pt-1 border-t border-line">
-                              <Text as="span" size="xs" weight="semibold" color="secondary" className="flex items-center gap-1.5">
-                                <CreditCard className="w-3.5 h-3.5 text-muted" />
-                                {t('landlordContractsPaymentLabel')}
-                              </Text>
-                              <Text
-                                as="span"
-                                size="2xs"
-                                weight="extrabold"
-                                className={cn(
-                                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border',
-                                  c.paymentStatus === 'Đã thu đủ'
-                                    ? 'bg-success-soft text-success border-success-subtle'
-                                    : 'bg-danger-soft text-danger border-danger-subtle',
-                                )}
-                              >
-                                {getPaymentStatusLabel(c.paymentStatus)}
-                              </Text>
-                            </div>
-                          </div>
-                        </div>
+                        </Card.Body>
 
                         {/* Card Footer Actions */}
-                        <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
-                          <Button
-                            variant="secondary"
-                            onClick={e => {
-                              e.stopPropagation()
-                              router.push(`/landlord/contracts/${c.id}`)
-                            }}
-                            leftIcon={<Eye />}
-                          >
-                            {t('landlordContractsBtnDetail')}
-                          </Button>
+                        <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-end gap-2">
                           <div className="flex items-center gap-1.5">
                             <Button
                               variant="secondary"
@@ -651,7 +628,7 @@ export default function ContractsPage() {
                               {t('landlordContractsBtnTerminate')}
                             </Button>
                           </div>
-                        </div>
+                        </Card.Footer>
                       </Card>
                     )
                   })
