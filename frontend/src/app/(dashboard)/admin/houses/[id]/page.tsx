@@ -262,29 +262,25 @@ export default function AdminBoardingHouseDetailPage() {
         <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="secondary"
-            size="sm"
             onClick={fetchHouseData}
+            leftIcon={<RefreshCw />}
           >
-            <RefreshCw className="w-3.5 h-3.5" />
             <span>{t('adminHouseDetailBtnRefresh')}</span>
           </Button>
 
           {house.status === 'locked' ? (
             <Button
-              variant="primary"
-              size="sm"
               onClick={() => setShowUnlockModal(true)}
+              leftIcon={<Unlock />}
             >
-              <Unlock className="w-3.5 h-3.5" />
               <span>{t('adminHouseDetailBtnUnlock')}</span>
             </Button>
           ) : (
             <Button
               variant="danger"
-              size="sm"
               onClick={() => setShowLockModal(true)}
+              leftIcon={<Lock />}
             >
-              <Lock className="w-3.5 h-3.5" />
               <span>{t('adminHouseDetailBtnLock')}</span>
             </Button>
           )}
@@ -443,12 +439,10 @@ export default function AdminBoardingHouseDetailPage() {
 
             {/* Clickable Owner Avatar for Modal */}
             <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-surface/80 border border-line">
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 type="button"
                 onClick={() => setSelectedOwner(house.owner)}
-                className="relative group shrink-0"
+                className="relative group shrink-0 rounded-2xl focus:outline-none"
                 title={t('adminHouseDetailOwnerProfileTooltip')}
               >
                 <img
@@ -459,18 +453,16 @@ export default function AdminBoardingHouseDetailPage() {
                 <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-bold">
                   {t('adminHouseDetailViewButton')}
                 </div>
-              </Button>
+              </button>
 
               <div className="space-y-0.5 min-w-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   type="button"
                   onClick={() => setSelectedOwner(house.owner)}
-                  className="truncate block"
+                  className="text-left font-bold text-foreground hover:text-orange-600 transition-colors truncate block focus:outline-none"
                 >
                   {house.owner.name}
-                </Button>
+                </button>
                 <div className="text-xs text-muted font-mono truncate">
                   {house.owner.phoneNumber}
                 </div>
@@ -512,11 +504,9 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
 
             <Button fullWidth
-              variant="primary"
-              size="sm"
               onClick={() => setSelectedOwner(house.owner)}
+              leftIcon={<User />}
             >
-              <User className="w-3.5 h-3.5" />
               <span>{t('adminHouseDetailBtnViewFullProfile')}</span>
             </Button>
           </div>
@@ -678,12 +668,10 @@ export default function AdminBoardingHouseDetailPage() {
                     {/* Sender with Clickable Avatar */}
                     <td className="p-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           type="button"
                           onClick={() => setSelectedSender(g.sender)}
-                          className="relative group shrink-0"
+                          className="relative group shrink-0 rounded-xl focus:outline-none"
                           title={t('adminHouseDetailTenantProfileTooltip')}
                         >
                           <img
@@ -694,17 +682,15 @@ export default function AdminBoardingHouseDetailPage() {
                           <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[9px] font-bold">
                             {t('adminHouseDetailViewButton')}
                           </div>
-                        </Button>
+                        </button>
                         <div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             type="button"
                             onClick={() => setSelectedSender(g.sender)}
-                            className="block"
+                            className="text-left font-bold text-foreground hover:text-orange-600 transition-colors block focus:outline-none"
                           >
                             {g.sender.name}
-                          </Button>
+                          </button>
                           <div className="text-[11px] text-muted font-mono flex items-center gap-1.5">
                             <span className="bg-card-hover px-1.5 py-0.2 rounded text-foreground/90 font-bold">
                               {g.sender.roomNumber || 'P.302'}
@@ -821,10 +807,10 @@ export default function AdminBoardingHouseDetailPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setSelectedOwner(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -884,7 +870,6 @@ export default function AdminBoardingHouseDetailPage() {
             <div className="pt-2">
               <Button fullWidth
                 variant="secondary"
-                size="sm"
                 onClick={() => setSelectedOwner(null)}
               >
                 {t('adminHouseDetailBtnClose')}
@@ -921,10 +906,10 @@ export default function AdminBoardingHouseDetailPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setSelectedSender(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -982,7 +967,6 @@ export default function AdminBoardingHouseDetailPage() {
             <div className="pt-2">
               <Button fullWidth
                 variant="secondary"
-                size="sm"
                 onClick={() => setSelectedSender(null)}
               >
                 {t('adminHouseDetailBtnClose')}
@@ -1042,22 +1026,18 @@ export default function AdminBoardingHouseDetailPage() {
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
-                type="button"
                 variant="secondary"
-                size="sm"
                 onClick={handleCloseLockModal}
               >
                 {t('adminHouseDetailBtnCancel')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 disabled={isSubmittingLock}
                 isLoading={isSubmittingLock}
                 onClick={handleConfirmLock}
+                leftIcon={<Lock />}
               >
-                {!isSubmittingLock && <Lock className="w-3.5 h-3.5" />}
                 <span>{t('adminHouseDetailBtnConfirmLock')}</span>
               </Button>
             </div>
@@ -1095,22 +1075,17 @@ export default function AdminBoardingHouseDetailPage() {
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
-                type="button"
                 variant="secondary"
-                size="sm"
                 onClick={() => setShowUnlockModal(false)}
               >
                 {t('adminHouseDetailBtnCancel')}
               </Button>
               <Button
-                type="button"
-                variant="primary"
-                size="sm"
                 disabled={isSubmittingUnlock}
                 isLoading={isSubmittingUnlock}
                 onClick={handleConfirmUnlock}
+                leftIcon={<Unlock />}
               >
-                {!isSubmittingUnlock && <Unlock className="w-3.5 h-3.5" />}
                 <span>{t('adminHouseDetailBtnConfirmUnlock')}</span>
               </Button>
             </div>
@@ -1135,17 +1110,13 @@ export default function AdminBoardingHouseDetailPage() {
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
-                type="button"
                 variant="secondary"
-                size="sm"
                 onClick={() => setConfirmDiscardModal({ isOpen: false, onDiscard: () => {} })}
               >
                 {t('adminHouseDetailBtnKeepEditing')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={confirmDiscardModal.onDiscard}
               >
                 {t('adminHouseDetailBtnDiscardAndClose')}

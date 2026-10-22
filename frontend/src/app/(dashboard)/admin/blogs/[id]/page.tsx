@@ -436,19 +436,16 @@ export default function AdminPostDetailPage() {
           {/* Lock / Unlock Post */}
           {post.status === 'locked' ? (
             <Button
-              variant="primary"
-              size="sm"
               onClick={() => setIsUnlockModalOpen(true)}
               disabled={actionLoading}
               title={t('adminModActionUnlock')}
+              leftIcon={<Unlock />}
             >
-              <Unlock className="w-3.5 h-3.5" />
               <span>{t('adminModActionUnlock')}</span>
             </Button>
           ) : (
             <Button
               variant="danger"
-              size="sm"
               onClick={() => {
                 setLockReason('')
                 setLockReasonError('')
@@ -456,8 +453,8 @@ export default function AdminPostDetailPage() {
               }}
               disabled={actionLoading}
               title={t('adminModActionLock')}
+              leftIcon={<Lock />}
             >
-              <Lock className="w-3.5 h-3.5" />
               <span>{t('adminModActionLock')}</span>
             </Button>
           )}
@@ -467,23 +464,21 @@ export default function AdminPostDetailPage() {
             (post.status === 'posted' ? (
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handleRevertToDraft}
                 disabled={actionLoading}
                 title={t('adminBlogsDetailRevertTitle')}
+                leftIcon={<RotateCcw className="text-warning" />}
               >
-                <RotateCcw className="w-3.5 h-3.5 text-warning" />
                 <span>{t('adminBlogsDetailRevertBtn')}</span>
               </Button>
             ) : (
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handlePublishPost}
                 disabled={actionLoading}
                 title={t('adminBlogsDetailPublishTitle')}
+                leftIcon={<CheckCircle2 className="text-success" />}
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                 <span>{t('adminBlogsDetailPublishBtn')}</span>
               </Button>
             ))}
@@ -491,36 +486,34 @@ export default function AdminPostDetailPage() {
           {/* Edit Content */}
           <Button
             variant="secondary"
-            size="sm"
             onClick={handleOpenEdit}
+            leftIcon={<Edit3 />}
           >
-            <Edit3 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailEditBtn')}</span>
           </Button>
 
           {/* Delete Post */}
           <Button
-            variant="ghost"
-            size="sm"
+            variant="ghost-danger"
             onClick={() => {
               setDeleteReason('')
               setDeleteError('')
               setIsDeleteModalOpen(true)
             }}
+            leftIcon={<Trash2 />}
           >
-            <Trash2 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailDeleteBtn')}</span>
           </Button>
 
           {/* Refresh */}
           <Button
             variant="secondary"
-            size="sm"
+            size="icon"
             onClick={() => fetchPostDetail(true)}
-            disabled={loading}
+            isLoading={loading}
             title={t('adminModRefresh')}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw />
           </Button>
         </div>
       </div>
@@ -544,10 +537,10 @@ export default function AdminPostDetailPage() {
           </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon-xs"
             onClick={() => setFeedbackMsg(null)}
           >
-            <X className="w-3.5 h-3.5" />
+            <X />
           </Button>
         </div>
       )}
@@ -573,11 +566,10 @@ export default function AdminPostDetailPage() {
           </div>
           <Button
             variant="danger"
-            size="sm"
             onClick={() => setIsUnlockModalOpen(true)}
             className="shrink-0"
+            leftIcon={<Unlock />}
           >
-            <Unlock className="w-3.5 h-3.5" />
             <span>{t('adminModActionUnlock')}</span>
           </Button>
         </div>
@@ -659,15 +651,15 @@ export default function AdminPostDetailPage() {
                 <span className="text-foreground/90 font-semibold">{post.id}</span>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-xs"
                   onClick={handleCopyId}
                   className="rounded"
                   title={t('adminBlogsDetailCopyUuid')}
                 >
                   {copied ? (
-                    <Check className="w-3 h-3 text-success" />
+                    <Check className="text-success" />
                   ) : (
-                    <Copy className="w-3 h-3 text-muted" />
+                    <Copy className="text-muted" />
                   )}
                 </Button>
               </div>
@@ -744,15 +736,14 @@ export default function AdminPostDetailPage() {
             {allImages.length > 1 && (
               <div className="flex items-center gap-2.5 overflow-x-auto pb-1 pt-1">
                 {allImages.map((img, idx) => (
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     key={img.id || idx}
+                    type="button"
                     onClick={() => setActiveImageIndex(idx)}
-                    className="shrink-0"
+                    className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-line hover:border-orange-500 focus:outline-none transition-colors"
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
-                  </Button>
+                  </button>
                 ))}
               </div>
             )}
@@ -889,10 +880,10 @@ export default function AdminPostDetailPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestCloseEdit}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -960,15 +951,12 @@ export default function AdminPostDetailPage() {
             <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handleRequestCloseEdit}
                 disabled={isSaving}
               >
                 {t('adminBlogsCancel')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={handleSaveEdit}
                 disabled={isSaving}
                 isLoading={isSaving}
@@ -1017,9 +1005,7 @@ export default function AdminPostDetailPage() {
                 ].map(preset => (
                   <Button
                     key={preset}
-                    type="button"
                     variant="secondary"
-                    size="sm"
                     onClick={() => {
                       setLockReason(preset)
                       setLockReasonError('')
@@ -1046,7 +1032,6 @@ export default function AdminPostDetailPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handleRequestCloseLock}
                 disabled={isLocking}
               >
@@ -1054,7 +1039,6 @@ export default function AdminPostDetailPage() {
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmLock}
                 disabled={isLocking}
                 isLoading={isLocking}
@@ -1087,15 +1071,12 @@ export default function AdminPostDetailPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setIsUnlockModalOpen(false)}
                 disabled={isUnlocking}
               >
                 {t('adminBlogsCancel')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
                 isLoading={isUnlocking}
@@ -1157,7 +1138,6 @@ export default function AdminPostDetailPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handleRequestCloseDelete}
                 disabled={isDeleting}
               >
@@ -1165,7 +1145,6 @@ export default function AdminPostDetailPage() {
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting || !deleteReason.trim()}
                 isLoading={isDeleting}
@@ -1195,14 +1174,11 @@ export default function AdminPostDetailPage() {
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
               >
                 {t('adminBlogsContinueEditing')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={confirmCloseModal.onDiscard}
               >
                 {t('adminBlogsDiscardAndClose')}

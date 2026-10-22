@@ -215,34 +215,29 @@ export default function AdminDashboardPage() {
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => fetchDashboardData(true)}
-              disabled={isRefreshing}
-              leftIcon={<RefreshCw  />}
+              isLoading={isRefreshing}
+              leftIcon={<RefreshCw />}
             >
               {t('adminRefresh')}
             </Button>
             <Button
               variant="outline"
-              size="sm"
               onClick={() => router.push('/admin/notifications')}
-              leftIcon={<Megaphone  />}
+              leftIcon={<Megaphone />}
             >
               {t('adminActionSendBroadcast')}
             </Button>
             <Button
               variant="outline"
-              size="sm"
               onClick={() => router.push('/admin/blogs')}
-              leftIcon={<Newspaper  />}
+              leftIcon={<Newspaper />}
             >
               {t('adminActionNewBlog')}
             </Button>
             <Button
-              variant="primary"
-              size="sm"
               onClick={() => router.push('/admin/analytics')}
-              leftIcon={<TrendingUp  />}
+              leftIcon={<TrendingUp />}
             >
               {t('adminActionFullAnalytics')}
             </Button>
@@ -261,7 +256,6 @@ export default function AdminDashboardPage() {
           </div>
           <Button
             variant="danger"
-            size="sm"
             onClick={() => fetchDashboardData()}
             className="shrink-0"
           >
@@ -483,7 +477,6 @@ export default function AdminDashboardPage() {
 
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() =>
                         router.push(`/admin/grievances?search=${encodeURIComponent(item.id)}`)
                       }
@@ -599,8 +592,6 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <Button
-                      variant="primary"
-                      size="sm"
                       onClick={() =>
                         router.push(`/admin/blogs?search=${encodeURIComponent(item.id)}`)
                       }

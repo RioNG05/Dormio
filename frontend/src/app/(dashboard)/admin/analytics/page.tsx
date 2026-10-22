@@ -202,10 +202,9 @@ export default function AdminAnalyticsPage() {
           {/* Refresh button */}
           <Button
             variant="outline"
-            size="sm"
             onClick={() => fetchAnalytics(true)}
             isLoading={refreshing}
-            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
+            leftIcon={<RefreshCw />}
             title={t('adminAnalyticsRefreshTooltip')}
           >
             <span className="hidden sm:inline">{t('adminAnalyticsRefresh')}</span>
@@ -213,10 +212,8 @@ export default function AdminAnalyticsPage() {
 
           {/* Export button */}
           <Button
-            variant="primary"
-            size="sm"
             onClick={handleExportReport}
-            leftIcon={<Download className="w-3.5 h-3.5" />}
+            leftIcon={<Download />}
           >
             <span>{t('adminAnalyticsExport')}</span>
           </Button>
@@ -230,7 +227,7 @@ export default function AdminAnalyticsPage() {
             <AlertTriangle className="w-5 h-5 text-danger shrink-0" />
             <span>{error}</span>
           </div>
-          <Button variant="danger" size="sm" onClick={() => fetchAnalytics()}>
+          <Button variant="danger" onClick={() => fetchAnalytics()}>
             {t('adminRetry')}
           </Button>
         </div>
@@ -239,38 +236,34 @@ export default function AdminAnalyticsPage() {
       {/* Main Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto">
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'revenue' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('revenue')}
+          leftIcon={<Wallet />}
         >
-          <Wallet className="w-4 h-4" />
           <span>{t('adminAnalyticsTabRevenue')}</span>
         </Button>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'users' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('users')}
+          leftIcon={<Users />}
         >
-          <Users className="w-4 h-4" />
           <span>{t('adminAnalyticsTabUsers')}</span>
         </Button>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'properties' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('properties')}
+          leftIcon={<Building2 />}
         >
-          <Building2 className="w-4 h-4" />
           <span>{t('adminAnalyticsTabProperties')}</span>
         </Button>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'listings' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('listings')}
+          leftIcon={<Layers />}
         >
-          <Layers className="w-4 h-4" />
           <span>{t('adminAnalyticsTabListings')}</span>
         </Button>
       </div>
@@ -301,8 +294,7 @@ export default function AdminAnalyticsPage() {
               ).map(p => (
                 <Button
                   key={p.id}
-                  variant="ghost"
-                  size="sm"
+                  variant={revenuePeriod === p.id ? 'secondary' : 'ghost'}
                   onClick={() => setRevenuePeriod(p.id)}
                 >
                   {p.label}

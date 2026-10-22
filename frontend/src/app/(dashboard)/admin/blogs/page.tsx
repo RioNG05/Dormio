@@ -11,6 +11,7 @@ import {
   Plus,
   Search,
   Eye,
+  EyeOff,
   Edit3,
   Trash2,
   Lock,
@@ -28,7 +29,7 @@ import {
   CheckCircle2,
   Newspaper,
 } from 'lucide-react'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Pagination } from '@/components/ui'
+import { Button, TableActionButton, TextInput, NumberInput, SelectInput, TextareaInput, Pagination } from '@/components/ui'
 
 const HOUSE_PLACEHOLDER = '/house-placeholder.jpg'
 
@@ -483,18 +484,16 @@ export default function AdminPostModerationPage() {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRefresh}
-            disabled={refreshing || loading}
-            leftIcon={<RefreshCw  />}
+            isLoading={refreshing}
+            disabled={loading}
+            leftIcon={<RefreshCw />}
             title={t('adminModRefresh')}
           />
 
           <Button
-            variant="primary"
-            size="sm"
             onClick={handleOpenCreate}
-            leftIcon={<Plus  />}
+            leftIcon={<Plus />}
           >
             <span>{t('adminModNewPost')}</span>
           </Button>
@@ -516,10 +515,10 @@ export default function AdminPostModerationPage() {
           </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon-xs"
             onClick={() => setFeedbackMsg(null)}
           >
-            <X className="w-3.5 h-3.5" />
+            <X />
           </Button>
         </div>
       )}
@@ -533,7 +532,6 @@ export default function AdminPostModerationPage() {
           </div>
           <Button
             variant="danger"
-            size="sm"
             onClick={() => fetchPosts()}
           >
             {t('adminBlogsRetry')}
@@ -593,13 +591,13 @@ export default function AdminPostModerationPage() {
                         filterArticle ? (
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon-xs"
                             onClick={() => {
                               setFilterArticle('')
                               setCurrentPage(1)
                             }}
                           >
-                            <X className="w-3 h-3" />
+                            <X />
                           </Button>
                         ) : undefined
                       }
@@ -674,10 +672,9 @@ export default function AdminPostModerationPage() {
                   {isAnyFilterActive && (
                     <Button
                       variant="ghost"
-                      size="sm"
                       onClick={handleResetFilters}
                       title={t('adminBlogsFilterResetTooltip')}
-                      leftIcon={<RotateCcw  />}
+                      leftIcon={<RotateCcw />}
                     >
                       <span>{t('adminBlogsFilterReset')}</span>
                     </Button>
@@ -707,18 +704,15 @@ export default function AdminPostModerationPage() {
                       {isAnyFilterActive ? (
                         <Button
                           variant="secondary"
-                          size="sm"
                           onClick={handleResetFilters}
-                          leftIcon={<RotateCcw  />}
+                          leftIcon={<RotateCcw />}
                         >
                           <span>{t('adminBlogsFilterReset')}</span>
                         </Button>
                       ) : (
                         <Button
-                          variant="primary"
-                          size="sm"
                           onClick={handleOpenCreate}
-                          leftIcon={<Plus  />}
+                          leftIcon={<Plus />}
                         >
                           <span>{t('adminBlogsCreateFirst')}</span>
                         </Button>
@@ -832,52 +826,39 @@ export default function AdminPostModerationPage() {
                         <div className="flex flex-wrap justify-end items-end gap-1">
                           {/* Lock / Unlock */}
                           {item.status === 'locked' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <TableActionButton
+                              icon={<Unlock />}
                               onClick={() => handleOpenUnlock(item)}
                               title={t('adminModActionUnlock')}
-                            >
-                              <Unlock className="w-4 h-4" />
-                            </Button>
+                            />
                           ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <TableActionButton
+                              icon={<Lock />}
                               onClick={() => handleOpenLock(item)}
                               title={t('adminModActionLock')}
-                            >
-                              <Lock className="w-4 h-4" />
-                            </Button>
+                            />
                           )}
 
                           {/* Toggle Publish */}
                           {item.status !== 'locked' && (
-                            <Button
-                              variant="secondary"
-                              size="sm"
+                            <TableActionButton
+                              icon={item.status === 'posted' ? <EyeOff /> : <Eye />}
                               onClick={() => handleTogglePublish(item)}
                               title={
                                 item.status === 'posted'
                                   ? t('adminBlogsUnpublish')
                                   : t('adminBlogsPublish')
                               }
-                            >
-                              {item.status === 'posted'
-                                ? t('adminBlogsHideTitle')
-                                : t('adminBlogsShowTitle')}
-                            </Button>
+                            />
                           )}
 
                           {/* Delete */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <TableActionButton
+                            icon={<Trash2 />}
                             onClick={() => handleOpenDelete(item)}
                             title={t('adminModActionDelete')}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                            danger
+                          />
                         </div>
                       </td>
                     </tr>
@@ -929,9 +910,7 @@ export default function AdminPostModerationPage() {
                   { label: t('adminModLockPresetViolation') },
                 ].map((preset, idx) => (
                   <Button
-                    type="button"
                     variant="secondary"
-                    size="sm"
                     key={idx}
                     onClick={() => setLockReason(preset.label)}
                   >
@@ -965,7 +944,6 @@ export default function AdminPostModerationPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setLockTarget(null)}
                 disabled={isLocking}
               >
@@ -973,7 +951,6 @@ export default function AdminPostModerationPage() {
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmLock}
                 disabled={isLocking || !lockReason.trim()}
                 isLoading={isLocking}
@@ -1008,15 +985,12 @@ export default function AdminPostModerationPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setUnlockTarget(null)}
                 disabled={isUnlocking}
               >
                 {t('adminBlogsCancel')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
                 isLoading={isUnlocking}
@@ -1052,10 +1026,10 @@ export default function AdminPostModerationPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestCloseCreate}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1120,9 +1094,7 @@ export default function AdminPostModerationPage() {
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-line">
                 <Button
-                  type="button"
                   variant="secondary"
-                  size="sm"
                   onClick={handleRequestCloseCreate}
                   disabled={isSavingCreate}
                 >
@@ -1130,8 +1102,6 @@ export default function AdminPostModerationPage() {
                 </Button>
                 <Button
                   type="submit"
-                  variant="primary"
-                  size="sm"
                   disabled={isSavingCreate}
                   isLoading={isSavingCreate}
                 >
@@ -1188,7 +1158,6 @@ export default function AdminPostModerationPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setDeleteTarget(null)}
                 disabled={isDeleting}
               >
@@ -1196,7 +1165,6 @@ export default function AdminPostModerationPage() {
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting || !deleteReason.trim()}
                 isLoading={isDeleting}
@@ -1226,14 +1194,11 @@ export default function AdminPostModerationPage() {
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
               >
                 {t('adminBlogsContinueEditing')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={confirmCloseModal.onDiscard}
               >
                 {t('adminBlogsDiscardAndClose')}

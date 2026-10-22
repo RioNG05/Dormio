@@ -41,6 +41,7 @@ import {
   Lock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { TableActionButton } from '@/components/ui'
 import { Text } from '@/components/ui/Text'
 import { Form } from '@/components/ui/Form'
 import { TextInput } from '@/components/ui/TextInput'
@@ -522,12 +523,10 @@ export default function AdminUsersManagementPage() {
         </div>
 
         <Button
-          type="button"
           variant="outline"
-          size="sm"
           onClick={() => fetchUsers(true)}
           disabled={refreshing}
-          leftIcon={<RefreshCw  />}
+          leftIcon={<RefreshCw />}
           className="shrink-0"
         >
           {t('adminUsersRefresh')}
@@ -736,7 +735,7 @@ export default function AdminUsersManagementPage() {
           className="rounded-3xl p-6"
         >
           <div className="pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => fetchUsers()}>
+            <Button variant="outline" onClick={() => fetchUsers()}>
               {t('adminUsersRefresh')}
             </Button>
           </div>
@@ -866,11 +865,8 @@ export default function AdminUsersManagementPage() {
                 {/* Card Actions using Button */}
                 <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                   <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
                     onClick={() => handleOpenDetail(user, 'profile')}
-                    leftIcon={<Eye  />}
+                    leftIcon={<Eye />}
                     className="flex-1"
                   >
                     {t('adminUsersBtnDetail')}
@@ -878,25 +874,19 @@ export default function AdminUsersManagementPage() {
 
                   {canModifyUser(user) ? (
                     <>
-                      <Button
-                        type="button"
+                      <TableActionButton
+                        icon={<Crown />}
                         variant="outline"
-                        size="sm"
                         onClick={() => handleOpenAction(user, 'tier')}
                         title={t('adminUsersBtnChangeTier')}
-                      >
-                        <Crown className="w-4 h-4" />
-                      </Button>
+                      />
 
-                      <Button
-                        type="button"
+                      <TableActionButton
+                        icon={<UserCog />}
                         variant="outline"
-                        size="sm"
                         onClick={() => handleOpenDetail(user, 'actions')}
                         title={t('adminUsersTabActions')}
-                      >
-                        <UserCog className="w-4 h-4" />
-                      </Button>
+                      />
                     </>
                   ) : (
                     <div
@@ -986,35 +976,23 @@ export default function AdminUsersManagementPage() {
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
+                          <TableActionButton
+                            icon={<Eye />}
+                            title={t('adminUsersBtnDetail')}
                             onClick={() => handleOpenDetail(user, 'profile')}
-                            leftIcon={<Eye  />}
-                          >
-                            {t('adminUsersBtnDetail')}
-                          </Button>
+                          />
                           {canModifyUser(user) ? (
                             <>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleOpenAction(user, 'tier')}
+                              <TableActionButton
+                                icon={<Crown />}
                                 title={t('adminUsersBtnChangeTier')}
-                              >
-                                <Crown className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleOpenDetail(user, 'actions')}
+                                onClick={() => handleOpenAction(user, 'tier')}
+                              />
+                              <TableActionButton
+                                icon={<UserCog />}
                                 title={t('adminUsersTabActions')}
-                              >
-                                <UserCog className="w-4 h-4" />
-                              </Button>
+                                onClick={() => handleOpenDetail(user, 'actions')}
+                              />
                             </>
                           ) : (
                             <span
@@ -1077,12 +1055,11 @@ export default function AdminUsersManagementPage() {
               </div>
 
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={requestCloseDetailModal}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1090,29 +1067,23 @@ export default function AdminUsersManagementPage() {
             {selectedUser && (
               <div className="flex border-b border-line bg-card-hover/50 px-5 gap-2 pt-2">
                 <Button
-                  type="button"
                   variant={modalTab === 'profile' ? 'primary' : 'ghost'}
-                  size="sm"
                   onClick={() => setModalTab('profile')}
-                  leftIcon={<Users  />}
+                  leftIcon={<Users />}
                 >
                   {t('adminUsersTabProfile')}
                 </Button>
                 <Button
-                  type="button"
                   variant={modalTab === 'activity' ? 'primary' : 'ghost'}
-                  size="sm"
                   onClick={() => setModalTab('activity')}
-                  leftIcon={<Activity  />}
+                  leftIcon={<Activity />}
                 >
                   {t('adminUsersTabActivity')}
                 </Button>
                 <Button
-                  type="button"
                   variant={modalTab === 'actions' ? 'primary' : 'ghost'}
-                  size="sm"
                   onClick={() => setModalTab('actions')}
-                  leftIcon={<UserCog  />}
+                  leftIcon={<UserCog />}
                 >
                   {t('adminUsersTabActions')}
                 </Button>
@@ -1178,13 +1149,11 @@ export default function AdminUsersManagementPage() {
                           {getTierBadge(selectedUser.subscriptionPackage)}
                           {canModifyUser(selectedUser) ? (
                             <Button
-                              type="button"
                               variant="ghost"
-                              size="sm"
                               onClick={() => handleOpenAction(selectedUser, 'tier')}
                               title={t('adminUsersBtnChangeTier')}
+                              leftIcon={<Sparkles />}
                             >
-                              <Sparkles className="w-3 h-3" />
                               {t('adminUsersQuickChangeTier')}
                             </Button>
                           ) : (
@@ -1465,9 +1434,6 @@ export default function AdminUsersManagementPage() {
                           {t('adminUsersUnbanDesc')}
                         </Text>
                         <Button fullWidth
-                          type="button"
-                          variant="primary"
-                          size="sm"
                           onClick={() => handleOpenAction(selectedUser, 'unban')}
                           disabled={!canModifyUser(selectedUser)}
                           title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
@@ -1488,9 +1454,7 @@ export default function AdminUsersManagementPage() {
                           {t('adminUsersBanDesc')}
                         </Text>
                         <Button fullWidth
-                          type="button"
                           variant="danger"
-                          size="sm"
                           onClick={() => handleOpenAction(selectedUser, 'ban')}
                           disabled={!canModifyUser(selectedUser)}
                           title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
@@ -1513,9 +1477,7 @@ export default function AdminUsersManagementPage() {
                         {t('adminUsersRoleDesc')}
                       </Text>
                       <Button fullWidth
-                        type="button"
                         variant="outline"
-                        size="sm"
                         onClick={() => handleOpenAction(selectedUser, 'role')}
                         disabled={!canModifyUser(selectedUser)}
                         title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
@@ -1537,9 +1499,7 @@ export default function AdminUsersManagementPage() {
                         {t('adminUsersTierDesc')}
                       </Text>
                       <Button fullWidth
-                        type="button"
                         variant="outline"
-                        size="sm"
                         onClick={() => handleOpenAction(selectedUser, 'tier')}
                         disabled={!canModifyUser(selectedUser)}
                         title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
@@ -1561,9 +1521,7 @@ export default function AdminUsersManagementPage() {
                         {t('adminUsersResetPwdDesc')}
                       </Text>
                       <Button fullWidth
-                        type="button"
                         variant="outline"
-                        size="sm"
                         onClick={() => handleOpenAction(selectedUser, 'reset-password')}
                         disabled={!canModifyUser(selectedUser)}
                         title={!canModifyUser(selectedUser) ? t('adminUsersRootAdminProtected') : undefined}
@@ -1580,7 +1538,7 @@ export default function AdminUsersManagementPage() {
             {/* Modal Footer using Form.Actions */}
             <div className="p-4 border-t border-line bg-surface/50">
               <Form.Actions align="end">
-                <Button type="button" variant="outline" size="sm" onClick={requestCloseDetailModal} >
+                <Button variant="outline" onClick={requestCloseDetailModal} >
                   {t('adminUsersClose')}
                 </Button>
               </Form.Actions>
@@ -1612,12 +1570,11 @@ export default function AdminUsersManagementPage() {
                   </Text>
                 </div>
                 <Button
-                  type="button"
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   onClick={requestCloseActionModal}
                 >
-                  <X className="w-5 h-5" />
+                  <X />
                 </Button>
               </div>
 
@@ -1734,9 +1691,7 @@ export default function AdminUsersManagementPage() {
                         {[1, 3, 6, 12].map(m => (
                           <Button
                             key={m}
-                            type="button"
                             variant={durationMonths === m ? 'primary' : 'outline'}
-                            size="sm"
                             onClick={() => setDurationMonths(m)}
                             className="flex-1"
                           >
@@ -1772,13 +1727,12 @@ export default function AdminUsersManagementPage() {
 
               {/* Reusing Form.Actions base component */}
               <Form.Actions align="end" className="pt-2">
-                <Button type="button" variant="outline" size="sm" onClick={requestCloseActionModal} disabled={actionSubmitting}>
+                <Button variant="outline" onClick={requestCloseActionModal} disabled={actionSubmitting}>
                   {t('adminUsersCancelBtn')}
                 </Button>
                 <Button
                   type="submit"
                   variant={actionType === 'ban' ? 'danger' : 'primary'}
-                  size="sm"
                   disabled={actionSubmitting}
                 >
                   {actionSubmitting ? t('adminUsersProcessing') : t('adminUsersConfirmActionBtn')}
@@ -1808,18 +1762,14 @@ export default function AdminUsersManagementPage() {
 
             <Form.Actions stackedOnMobile={false} className="gap-2 pt-2">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setShowDiscardConfirm(false)}
                 className="flex-1"
               >
                 {t('adminUsersKeepEditing')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmDiscard}
                 className="flex-1"
               >

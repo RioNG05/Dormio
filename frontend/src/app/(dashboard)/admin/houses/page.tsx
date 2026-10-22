@@ -27,7 +27,7 @@ import {
   Check,
   ChevronDown,
 } from 'lucide-react'
-import { Button, TextInput, NumberInput, TextareaInput, Pagination } from '@/components/ui'
+import { Button, TableActionButton, TextInput, NumberInput, TextareaInput, Pagination } from '@/components/ui'
 
 export type HouseModerationItem = AdminHouseModerationItem
 
@@ -280,10 +280,9 @@ export default function AdminBoardingHouseModerationPage() {
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRefresh}
-            disabled={refreshing}
-            leftIcon={<RefreshCw  />}
+            isLoading={refreshing}
+            leftIcon={<RefreshCw />}
             title={t('adminHouseModRefresh')}
           >
             <span className="hidden sm:inline">{t('adminHouseModRefresh')}</span>
@@ -310,10 +309,10 @@ export default function AdminBoardingHouseModerationPage() {
           </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon-xs"
             onClick={() => setFeedbackMsg(null)}
           >
-            <X className="w-3.5 h-3.5" />
+            <X />
           </Button>
         </div>
       )}
@@ -327,7 +326,6 @@ export default function AdminBoardingHouseModerationPage() {
           </div>
           <Button
             variant="danger"
-            size="sm"
             onClick={() => fetchHouses()}
             className="shrink-0"
           >
@@ -374,14 +372,14 @@ export default function AdminBoardingHouseModerationPage() {
                       propertyQuery ? (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-xs"
                           onClick={() => {
                             setPropertyQuery('')
                             setCurrentPage(1)
                           }}
                           title={t('adminHouseModFilterClearTooltip')}
                         >
-                          <X className="w-3 h-3" />
+                          <X />
                         </Button>
                       ) : undefined
                     }
@@ -407,14 +405,14 @@ export default function AdminBoardingHouseModerationPage() {
                       landlordQuery ? (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-xs"
                           onClick={() => {
                             setLandlordQuery('')
                             setCurrentPage(1)
                           }}
                           title={t('adminHouseModFilterClearTooltip')}
                         >
-                          <X className="w-3 h-3" />
+                          <X />
                         </Button>
                       ) : undefined
                     }
@@ -451,7 +449,7 @@ export default function AdminBoardingHouseModerationPage() {
                   {(minRooms || maxRooms) && (
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon-xs"
                       onClick={() => {
                         setMinRooms('')
                         setMaxRooms('')
@@ -459,7 +457,7 @@ export default function AdminBoardingHouseModerationPage() {
                       }}
                       title={t('adminHouseModFilterClearRoomsTooltip')}
                     >
-                      <X className="w-3 h-3" />
+                      <X />
                     </Button>
                   )}
                 </div>
@@ -496,7 +494,7 @@ export default function AdminBoardingHouseModerationPage() {
                   {(minOccupancy || maxOccupancy) && (
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon-xs"
                       onClick={() => {
                         setMinOccupancy('')
                         setMaxOccupancy('')
@@ -504,7 +502,7 @@ export default function AdminBoardingHouseModerationPage() {
                       }}
                       title={t('adminHouseModFilterClearOccupancyTooltip')}
                     >
-                      <X className="w-3 h-3" />
+                      <X />
                     </Button>
                   )}
                 </div>
@@ -514,9 +512,7 @@ export default function AdminBoardingHouseModerationPage() {
               <th className="p-2 relative">
                 <div className="relative">
                   <Button fullWidth
-                    type="button"
                     variant="ghost"
-                    size="sm"
                     onClick={() => setTableStatusDropdownOpen(!tableStatusDropdownOpen)}
                   >
                     <span className="truncate">
@@ -539,7 +535,6 @@ export default function AdminBoardingHouseModerationPage() {
                           {statusFilters.length > 0 && (
                             <Button
                               variant="ghost"
-                              size="sm"
                               onClick={() => {
                                 setStatusFilters([])
                                 setCurrentPage(1)
@@ -581,11 +576,11 @@ export default function AdminBoardingHouseModerationPage() {
                 {hasActiveFilters && (
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon-xs"
                     onClick={resetAllFilters}
                     title={t('adminHouseModFilterClearAll')}
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw />
                   </Button>
                 )}
               </th>
@@ -639,11 +634,9 @@ export default function AdminBoardingHouseModerationPage() {
                     </p>
                     {hasActiveFilters && (
                       <Button
-                        variant="primary"
-                        size="sm"
                         onClick={resetAllFilters}
                         className="mt-2"
-                        leftIcon={<RotateCcw  />}
+                        leftIcon={<RotateCcw />}
                       >
                         <span>{t('adminHouseModFilterClearAll')}</span>
                       </Button>
@@ -711,23 +704,17 @@ export default function AdminBoardingHouseModerationPage() {
                     </td>
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                       {item.status === 'locked' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <TableActionButton
+                          icon={<Unlock />}
                           onClick={() => handleOpenUnlock(item)}
                           title={t('adminHouseModUnlockHouse')}
-                        >
-                          <Unlock className="w-4 h-4" />
-                        </Button>
+                        />
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <TableActionButton
+                          icon={<Lock />}
                           onClick={() => handleOpenLock(item)}
                           title={t('adminHouseModLockHouse')}
-                        >
-                          <Lock className="w-4 h-4" />
-                        </Button>
+                        />
                       )}
                     </td>
                   </tr>
@@ -788,7 +775,6 @@ export default function AdminBoardingHouseModerationPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setLockTarget(null)}
                 disabled={isLocking}
               >
@@ -796,7 +782,6 @@ export default function AdminBoardingHouseModerationPage() {
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmLock}
                 disabled={isLocking || !lockReason.trim()}
                 isLoading={isLocking}
@@ -833,15 +818,12 @@ export default function AdminBoardingHouseModerationPage() {
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setUnlockTarget(null)}
                 disabled={isUnlocking}
               >
                 {t('adminBlogsCancel')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={handleConfirmUnlock}
                 disabled={isUnlocking}
                 isLoading={isUnlocking}

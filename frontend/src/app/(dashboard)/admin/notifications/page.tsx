@@ -29,6 +29,7 @@ import {
   MassNotificationStatusCounts,
 } from '@/services/admin-notification.service'
 import { Button } from '@/components/ui/Button'
+import { TableActionButton } from '@/components/ui/TableActionButton'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { TextInput } from '@/components/ui/TextInput'
 import { TextareaInput } from '@/components/ui/TextareaInput'
@@ -545,10 +546,8 @@ export default function AdminNotificationsPage() {
           </div>
 
           <Button
-            variant="primary"
-            size="sm"
             onClick={() => setIsComposeOpen(true)}
-            leftIcon={<Plus  />}
+            leftIcon={<Plus />}
             className="self-start sm:self-auto"
           >
             {t('adminNotifyComposeCampaign')}
@@ -574,10 +573,10 @@ export default function AdminNotificationsPage() {
               searchQuery ? (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-xs"
                   onClick={() => setSearchQuery('')}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X />
                 </Button>
               ) : undefined
             }
@@ -598,8 +597,7 @@ export default function AdminNotificationsPage() {
               ).map(chip => (
                 <Button
                   key={chip.id}
-                  variant="ghost"
-                  size="sm"
+                  variant={statusFilter === chip.id ? 'secondary' : 'ghost'}
                   onClick={() => {
                     setStatusFilter(chip.id)
                     setCurrentPage(1)
@@ -631,10 +629,9 @@ export default function AdminNotificationsPage() {
         actions={
           <Button
             variant="outline"
-            size="sm"
             onClick={() => fetchLiveCampaigns(true)}
             isLoading={refreshing}
-            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
+            leftIcon={<RefreshCw />}
             title={t('adminNotifyRefreshTooltip')}
           >
             <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
@@ -776,9 +773,8 @@ export default function AdminNotificationsPage() {
                     <span>{item.createdAt}</span>
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => setInspectCampaign(item)}
-                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                      leftIcon={<Eye />}
                     >
                       {t('adminNotifyDetailsBtn')}
                     </Button>
@@ -867,14 +863,11 @@ export default function AdminNotificationsPage() {
                     <td className="p-3.5">{renderStatusBadge(item.status)}</td>
 
                     <td className="p-3.5 text-right whitespace-nowrap">
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                      <TableActionButton
+                        icon={<Eye />}
                         onClick={() => setInspectCampaign(item)}
                         title={t('adminNotifyDetailsBtn')}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </Button>
+                      />
                     </td>
                   </tr>
                 )
@@ -909,10 +902,10 @@ export default function AdminNotificationsPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestCloseComposer}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -973,17 +966,21 @@ export default function AdminNotificationsPage() {
                     const isSelected = composeChannels.includes(ch.id)
                     const Icon = ch.icon
                     return (
-                      <Button size="icon-sm"
+                      <button
                         key={ch.id}
                         type="button"
-                        variant="ghost"
                         onClick={() => {
                           toggleComposeChannel(ch.id)
                           if (fieldErrors.channels)
                             setFieldErrors(prev => ({ ...prev, channels: undefined }))
                         }}
+                        className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 ${
+                          isSelected
+                            ? 'border-orange-500 bg-orange-50/20 text-orange-600 ring-1 ring-orange-400'
+                            : 'border-line bg-surface hover:bg-card-hover text-foreground/80'
+                        }`}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between w-full">
                           <Icon className="w-4 h-4" />
                           <div
                             className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
@@ -995,8 +992,8 @@ export default function AdminNotificationsPage() {
                             {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-card" />}
                           </div>
                         </div>
-                        <span className="text-[11px] leading-tight">{ch.label}</span>
-                      </Button>
+                        <span className="text-[11px] leading-tight font-bold">{ch.label}</span>
+                      </button>
                     )
                   })}
                 </div>
@@ -1023,10 +1020,9 @@ export default function AdminNotificationsPage() {
                     { id: 'all_admins' as const, label: t('adminNotifyTargetAllAdmins') },
                     { id: 'specific_user' as const, label: t('adminNotifyTargetSpecificUser') },
                   ].map(tgt => (
-                    <Button size="xs"
+                    <Button
                       key={tgt.id}
-                      type="button"
-                      variant="ghost"
+                      variant={composeTarget === tgt.id ? 'secondary' : 'ghost'}
                       onClick={() => {
                         setComposeTarget(tgt.id)
                         if (tgt.id !== 'specific_user' && fieldErrors.targetId) {
@@ -1157,18 +1153,15 @@ export default function AdminNotificationsPage() {
             <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
                 variant="outline"
-                size="sm"
                 onClick={handleRequestCloseComposer}
                 disabled={isSubmitting}
               >
                 {t('adminNotifyBtnCancel')}
               </Button>
               <Button
-                variant="primary"
-                size="sm"
                 onClick={handleSendCampaign}
                 isLoading={isSubmitting}
-                leftIcon={<Send className="w-3.5 h-3.5" />}
+                leftIcon={<Send />}
               >
                 {t('adminNotifyBtnSubmit')}
               </Button>
@@ -1192,10 +1185,10 @@ export default function AdminNotificationsPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setInspectCampaign(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1257,17 +1250,14 @@ export default function AdminNotificationsPage() {
             <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2">
               {(inspectCampaign.status === 'failed' || inspectCampaign.status === 'pending') && (
                 <Button
-                  variant="primary"
-                  size="sm"
                   onClick={() => handleRetryCampaign(inspectCampaign.id)}
-                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                  leftIcon={<RotateCcw />}
                 >
                   {t('adminRetry')}
                 </Button>
               )}
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => setInspectCampaign(null)}
               >
                 {t('adminNotifyDetailClose')}
@@ -1295,14 +1285,12 @@ export default function AdminNotificationsPage() {
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
               >
                 {t('adminNotifyContinueEditing')}
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={confirmCloseModal.onDiscard}
               >
                 {t('adminNotifyDiscardAndClose')}

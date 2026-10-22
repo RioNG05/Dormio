@@ -23,7 +23,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { grievanceService, GrievanceQueueCounts } from '@/services/grievance.service'
-import { Button, Checkbox, TextareaInput, TextInput, NumberInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import { Button, TableActionButton, Checkbox, TextareaInput, TextInput, NumberInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
 
 interface GrievanceItem {
   id: string
@@ -417,11 +417,11 @@ export default function AdminGrievancesPage() {
           <span>{toastMsg.text}</span>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon-xs"
             onClick={() => setToastMsg(null)}
             className="ml-2"
           >
-            <X className="w-3.5 h-3.5" />
+            <X />
           </Button>
         </div>
       )}
@@ -527,7 +527,7 @@ export default function AdminGrievancesPage() {
             <AlertCircle className="w-4 h-4 text-danger shrink-0" />
             <span>{error}</span>
           </div>
-          <Button variant="danger" size="sm" onClick={() => fetchLiveGrievances()}>
+          <Button variant="danger" onClick={() => fetchLiveGrievances()}>
             {t('adminGrievancesRetry')}
           </Button>
         </div>
@@ -551,10 +551,10 @@ export default function AdminGrievancesPage() {
               searchQuery ? (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-xs"
                   onClick={() => setSearchQuery('')}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X />
                 </Button>
               ) : undefined
             }
@@ -575,8 +575,7 @@ export default function AdminGrievancesPage() {
               ).map(chip => (
                 <Button
                   key={chip.id}
-                  variant="ghost"
-                  size="sm"
+                  variant={priorityFilter === chip.id ? 'secondary' : 'ghost'}
                   onClick={() => {
                     setPriorityFilter(chip.id)
                     setCurrentPage(1)
@@ -600,8 +599,7 @@ export default function AdminGrievancesPage() {
               ).map(chip => (
                 <Button
                   key={chip.id}
-                  variant="ghost"
-                  size="sm"
+                  variant={statusFilter === chip.id ? 'secondary' : 'ghost'}
                   onClick={() => {
                     setStatusFilter(chip.id)
                     setCurrentPage(1)
@@ -616,10 +614,9 @@ export default function AdminGrievancesPage() {
         actions={
           <Button
             variant="outline"
-            size="sm"
             onClick={() => fetchLiveGrievances(true)}
             isLoading={refreshing}
-            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
+            leftIcon={<RefreshCw />}
             title={t('adminGrievancesRefreshTooltip')}
           >
             <span className="hidden sm:inline">{t('adminGrievancesRefresh')}</span>
@@ -685,13 +682,12 @@ export default function AdminGrievancesPage() {
           </p>
           <Button
             variant="secondary"
-            size="sm"
             onClick={() => {
               setSearchQuery('')
               setPriorityFilter('all')
               setStatusFilter('all')
             }}
-            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+            leftIcon={<RotateCcw />}
           >
             {t('adminGrievancesResetFilters')}
           </Button>
@@ -744,15 +740,14 @@ export default function AdminGrievancesPage() {
                       </span>
                       <div className="flex items-center gap-1.5">
                         {item.evidenceImages.map((img, idx) => (
-                          <Button
+                          <button
                             key={idx}
-                            variant="ghost"
-                            size="sm"
+                            type="button"
                             onClick={() => setPreviewImage(img)}
-                            className="overflow-hidden"
+                            className="w-10 h-10 rounded-lg overflow-hidden border border-line hover:border-orange-500 transition-colors shrink-0"
                           >
                             <img src={img} alt="" className="w-full h-full object-cover" />
-                          </Button>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -802,10 +797,9 @@ export default function AdminGrievancesPage() {
                 <div className="pt-3 border-t border-line flex items-center gap-2">
                   <Button
                     variant="secondary"
-                    size="sm"
                     className="flex-1"
                     onClick={() => setInspectItem(item)}
-                    leftIcon={<Eye  />}
+                    leftIcon={<Eye />}
                   >
                     <span>{t('adminGrievancesDetailsBtn')}</span>
                   </Button>
@@ -814,17 +808,15 @@ export default function AdminGrievancesPage() {
                     <>
                       <Button
                         variant="secondary"
-                        size="sm"
+                        size="icon"
                         onClick={() => handleOpenResolveModal(item, 'reject')}
                         title={t('adminGrievancesRejectTooltip')}
                       >
-                        <Ban className="w-3.5 h-3.5" />
+                        <Ban />
                       </Button>
                       <Button
-                        variant="primary"
-                        size="sm"
                         onClick={() => handleOpenResolveModal(item, 'resolve')}
-                        leftIcon={<Check  />}
+                        leftIcon={<Check />}
                       >
                         <span>{t('adminGrievancesResolveBtn')}</span>
                       </Button>
@@ -832,7 +824,6 @@ export default function AdminGrievancesPage() {
                   ) : (
                     <Button
                       variant="secondary"
-                      size="sm"
                       onClick={() => handleOpenResolveModal(item, 'resolve')}
                     >
                       {t('adminGrievancesEditNoteBtn')}
@@ -899,31 +890,32 @@ export default function AdminGrievancesPage() {
                     <td className="p-3.5">{renderStatusBadge(item.status)}</td>
 
                     <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-                      <Button
-                        variant="secondary"
-                        size="sm"
+                      <TableActionButton
+                        icon={<Eye />}
                         onClick={() => setInspectItem(item)}
                         title={t('adminGrievancesDetailsBtn')}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </Button>
+                      />
 
                       {item.status === 'pending' || item.status === 'in_progress' ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleOpenResolveModal(item, 'resolve')}
-                        >
-                          {t('adminGrievancesResolveBtn')}
-                        </Button>
+                        <>
+                          <TableActionButton
+                            icon={<Check />}
+                            onClick={() => handleOpenResolveModal(item, 'resolve')}
+                            title={t('adminGrievancesResolveBtn')}
+                          />
+                          <TableActionButton
+                            icon={<Ban />}
+                            onClick={() => handleOpenResolveModal(item, 'reject')}
+                            title={t('adminGrievancesRejectTooltip')}
+                            danger
+                          />
+                        </>
                       ) : (
-                        <Button
-                          variant="secondary"
-                          size="sm"
+                        <TableActionButton
+                          icon={<RotateCcw />}
                           onClick={() => handleOpenResolveModal(item, 'resolve')}
-                        >
-                          {t('adminGrievancesNoteBtn')}
-                        </Button>
+                          title={t('adminGrievancesNoteBtn')}
+                        />
                       )}
                     </td>
                   </tr>
@@ -966,10 +958,10 @@ export default function AdminGrievancesPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setInspectItem(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1073,16 +1065,15 @@ export default function AdminGrievancesPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-2.5">
-              <Button variant="secondary" size="sm" onClick={() => setInspectItem(null)}>
+              <Button variant="secondary" onClick={() => setInspectItem(null)}>
                 {t('adminGrievancesModalClose')}
               </Button>
 
               {inspectItem.status === 'pending' && (
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => handleMarkInProgress(inspectItem)}
-                  leftIcon={<Eye  />}
+                  leftIcon={<Eye />}
                 >
                   <span>{t('adminGrievancesModalInvestigating')}</span>
                 </Button>
@@ -1090,14 +1081,12 @@ export default function AdminGrievancesPage() {
 
               {inspectItem.status !== 'resolved' && inspectItem.status !== 'rejected' && (
                 <Button
-                  variant="primary"
-                  size="sm"
                   onClick={() => {
                     const target = inspectItem
                     setInspectItem(null)
                     handleOpenResolveModal(target, 'resolve')
                   }}
-                  leftIcon={<Check  />}
+                  leftIcon={<Check />}
                 >
                   <span>{t('adminGrievancesModalTakeAction')}</span>
                 </Button>
@@ -1146,28 +1135,24 @@ export default function AdminGrievancesPage() {
                 </div>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   onClick={handleRequestCloseResolveModal}
                 >
-                  <X className="w-5 h-5" />
+                  <X />
                 </Button>
               </div>
 
               {/* Action Type switcher */}
               <div className="flex items-center gap-2 p-1 bg-card-hover rounded-xl text-xs font-bold">
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
+                  variant={actionType === 'resolve' ? 'secondary' : 'ghost'}
                   onClick={() => setActionType('resolve')}
                   className="flex-1"
                 >
                   {t('adminGrievancesTabApprove')}
                 </Button>
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
+                  variant={actionType === 'reject' ? 'secondary' : 'ghost'}
                   onClick={() => setActionType('reject')}
                   className="flex-1"
                 >
@@ -1213,18 +1198,16 @@ export default function AdminGrievancesPage() {
             <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={handleRequestCloseResolveModal}
                 disabled={isSubmittingResolution}
               >
                 {t('adminGrievancesCancel')}
               </Button>
               <Button
-                variant={actionType === 'resolve' ? 'primary' : 'secondary'}
-                size="sm"
+                variant={actionType === 'resolve' ? undefined : 'secondary'}
                 onClick={handleConfirmResolution}
                 isLoading={isSubmittingResolution}
-                leftIcon={<Check  />}
+                leftIcon={<Check />}
                 className={
                   actionType === 'resolve'
                     ? 'bg-success hover:bg-emerald-700'
@@ -1254,13 +1237,14 @@ export default function AdminGrievancesPage() {
               alt="Evidence"
               className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain"
             />
-            <Button rounded="full"
+            <Button
               variant="ghost"
-              size="sm"
+              size="icon"
+              rounded="full"
               onClick={() => setPreviewImage(null)}
               className="absolute top-3 right-3"
             >
-              <X className="w-5 h-5" />
+              <X />
             </Button>
           </div>
         </div>
@@ -1290,14 +1274,12 @@ export default function AdminGrievancesPage() {
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
               >
                 {t('adminGrievancesContinueEditing')}
               </Button>
               <Button
                 variant="danger"
-                size="sm"
                 onClick={confirmCloseModal.onDiscard}
               >
                 {t('adminGrievancesDiscardAndClose')}
