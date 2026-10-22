@@ -29,6 +29,7 @@ import {
 } from '@/services/landlord-invoice.service'
 import {
   Button,
+  TableActionButton,
   TextInput,
   SelectInput,
   TextareaInput,
@@ -535,9 +536,7 @@ export default function LandlordDebtsPage() {
           action={
             (searchTerm || durationFilter !== 'all') ? (
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => {
                   setSearchTerm('')
                   setDurationFilter('all')
@@ -699,8 +698,6 @@ export default function LandlordDebtsPage() {
                 {/* Card Actions Footer */}
                 <Card.Footer className="px-5 pt-3 pb-4 flex items-center justify-end gap-2">
                   <Button
-                    variant="primary"
-                    size="sm"
                     onClick={e => {
                       e.stopPropagation()
                       setReminderModalRoom(room)
@@ -828,9 +825,9 @@ export default function LandlordDebtsPage() {
 
                       <td className="p-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
-                          <Button
+                          <TableActionButton
                             variant="primary"
-                            size="icon-sm"
+                            icon={<Send />}
                             onClick={event => {
                               event.stopPropagation()
                               setReminderModalRoom(room)
@@ -839,9 +836,7 @@ export default function LandlordDebtsPage() {
                               setReminderCopied(false)
                             }}
                             title={t('landlordDebtsBtnSendReminder')}
-                          >
-                            <Send />
-                          </Button>
+                          />
                         </div>
                       </td>
                     </TableRow>
@@ -891,12 +886,11 @@ export default function LandlordDebtsPage() {
               </div>
 
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setInvoicesModalRoom(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -958,9 +952,7 @@ export default function LandlordDebtsPage() {
                       </span>
 
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
                         onClick={() => {
                           setPaymentModalInvoice({
                             id: inv.id,
@@ -972,9 +964,9 @@ export default function LandlordDebtsPage() {
                           setPaymentNote('')
                           setIsPaymentDirty(false)
                         }}
+                        leftIcon={<CreditCard />}
                       >
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>{t('landlordDebtsModalCollectNow')}</span>
+                        {t('landlordDebtsModalCollectNow')}
                       </Button>
                     </div>
                   </div>
@@ -985,9 +977,7 @@ export default function LandlordDebtsPage() {
             {/* Modal Footer */}
             <div className="p-4 bg-surface border-t border-line flex items-center justify-end">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setInvoicesModalRoom(null)}
               >
                 {t('landlordDebtsModalClose')}
@@ -1014,12 +1004,11 @@ export default function LandlordDebtsPage() {
               </div>
 
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestCloseReminder}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1093,22 +1082,13 @@ export default function LandlordDebtsPage() {
                     {t('landlordDebtsModalTemplateTitle')}
                   </label>
                   <Button
-                    type="button"
                     variant="ghost"
-                    size="sm"
                     onClick={() => handleCopyReminder(reminderModalRoom)}
+                    leftIcon={reminderCopied ? <Check className="text-success" /> : <Copy />}
                   >
-                    {reminderCopied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-success" />
-                        <span className="text-success">{t('landlordDebtsModalCopied')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>{t('landlordDebtsModalCopyBtn')}</span>
-                      </>
-                    )}
+                    <span className={reminderCopied ? 'text-success' : undefined}>
+                      {reminderCopied ? t('landlordDebtsModalCopied') : t('landlordDebtsModalCopyBtn')}
+                    </span>
                   </Button>
                 </div>
                 <div className="p-3.5 bg-surface border border-line rounded-2xl text-xs text-foreground/90 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto leading-relaxed">
@@ -1120,26 +1100,18 @@ export default function LandlordDebtsPage() {
             {/* Modal Footer */}
             <div className="p-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={handleRequestCloseReminder}
               >
                 {t('landlordDebtsModalCancelBtn')}
               </Button>
 
               <Button
-                type="button"
-                variant="primary"
-                size="sm"
                 disabled={isSendingReminder}
+                isLoading={isSendingReminder}
                 onClick={() => handleSendInAppReminder(reminderModalRoom)}
+                leftIcon={<Send />}
               >
-                {isSendingReminder ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
                 <span>{t('landlordDebtsModalSendAppBtn')}</span>
               </Button>
             </div>
@@ -1159,12 +1131,11 @@ export default function LandlordDebtsPage() {
                 </h3>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestClosePayment}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1184,9 +1155,7 @@ export default function LandlordDebtsPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
                     onClick={() => {
                       setPaymentMethod('cash')
                       setIsPaymentDirty(true)
@@ -1195,9 +1164,7 @@ export default function LandlordDebtsPage() {
                     {t('landlordDebtsModalMethodCash')}
                   </Button>
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    variant={paymentMethod === 'banking' ? 'primary' : 'outline'}
                     onClick={() => {
                       setPaymentMethod('banking')
                       setIsPaymentDirty(true)
@@ -1226,26 +1193,18 @@ export default function LandlordDebtsPage() {
 
             <div className="p-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={handleRequestClosePayment}
               >
                 {t('landlordDebtsModalCancelBtn')}
               </Button>
 
               <Button
-                type="button"
-                variant="primary"
-                size="sm"
                 disabled={isSubmittingPayment}
+                isLoading={isSubmittingPayment}
                 onClick={handleRecordPayment}
+                leftIcon={<Check />}
               >
-                {isSubmittingPayment ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
                 <span>{t('landlordDebtsModalConfirmPaymentBtn')}</span>
               </Button>
             </div>
@@ -1270,17 +1229,13 @@ export default function LandlordDebtsPage() {
             </div>
             <div className="flex items-center justify-end gap-2.5 pt-2">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setConfirmCloseTarget(null)}
               >
                 {t('landlordDebtsModalKeepEditing')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmDiscard}
               >
                 {t('landlordDebtsModalDiscardAndClose')}

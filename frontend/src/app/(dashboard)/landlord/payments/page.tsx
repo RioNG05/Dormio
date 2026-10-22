@@ -268,12 +268,11 @@ function PaymentsContent() {
               <span>Quản Lý Hóa Đơn</span>
             </Button>
             <Button
-              variant="primary"
               size="md"
               onClick={() => router.push('/landlord/invoices?status=unpaid')}
               className="text-sm font-black"
+              leftIcon={<ArrowUpRight className="shrink-0" />}
             >
-              <ArrowUpRight className="w-4 h-4 shrink-0" />
               <span>Ghi Nhận Thu Tiền Mới</span>
             </Button>
           </>
@@ -381,9 +380,7 @@ function PaymentsContent() {
         subRow={
           <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold">
             <Button
-              type="button"
               variant={activeTab === 'all' ? 'primary' : 'ghost'}
-              size="sm"
               onClick={() => {
                 setActiveTab('all')
                 setCurrentPage(1)
@@ -394,9 +391,7 @@ function PaymentsContent() {
             </Button>
 
             <Button
-              type="button"
               variant={activeTab === 'banking' ? 'primary' : 'ghost'}
-              size="sm"
               onClick={() => {
                 setActiveTab('banking')
                 setCurrentPage(1)
@@ -408,9 +403,7 @@ function PaymentsContent() {
             </Button>
 
             <Button
-              type="button"
               variant={activeTab === 'cash' ? 'primary' : 'ghost'}
-              size="sm"
               onClick={() => {
                 setActiveTab('cash')
                 setCurrentPage(1)
@@ -574,9 +567,7 @@ function PaymentsContent() {
                         {evidencePhotos.slice(0, 2).map((photo, idx) => (
                           <Button
                             key={idx}
-                            type="button"
                             variant="ghost"
-                            size="sm"
                             onClick={event => {
                               event.stopPropagation()
                               setPreviewImageUrl(photo.imageUrl)
@@ -700,9 +691,7 @@ function PaymentsContent() {
                             {evidencePhotos.slice(0, 2).map((photo, idx) => (
                               <Button
                                 key={idx}
-                                type="button"
                                 variant="ghost"
-                                size="sm"
                                 onClick={event => {
                                   event.stopPropagation()
                                   setPreviewImageUrl(photo.imageUrl)
@@ -778,22 +767,20 @@ function PaymentsContent() {
 
               <div className="flex items-center gap-2 print:hidden">
                 <Button
-                  type="button"
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   onClick={handlePrintReceipt}
                   title="In biên nhận"
                 >
-                  <Printer className="w-5 h-5" />
+                  <Printer />
                 </Button>
                 <Button
-                  type="button"
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   onClick={() => setSelectedPayment(null)}
                   title="Đóng modal"
                 >
-                  <X className="w-5 h-5" />
+                  <X />
                 </Button>
               </div>
             </div>
@@ -924,9 +911,7 @@ function PaymentsContent() {
                     >
                       {mr.imageUrl ? (
                         <Button
-                          type="button"
                           variant="ghost"
-                          size="sm"
                           onClick={() => setPreviewImageUrl(mr.imageUrl)}
                           className="overflow-hidden shrink-0 relative group/photo"
                         >
@@ -954,9 +939,7 @@ function PaymentsContent() {
                         </span>
                         {mr.imageUrl && (
                           <Button
-                            type="button"
                             variant="ghost"
-                            size="sm"
                             onClick={() => setPreviewImageUrl(mr.imageUrl)}
                             className="hover:underline"
                           >
@@ -975,17 +958,13 @@ function PaymentsContent() {
               <span className="text-[11px] text-muted">Xác thực số hóa bởi Dormio BHMS</span>
               <div className="flex items-center gap-2">
                 <Button
-                  type="button"
                   variant="outline"
-                  size="sm"
                   onClick={handlePrintReceipt}
+                  leftIcon={<Printer />}
                 >
-                  <Printer className="w-3.5 h-3.5" /> In Biên Nhận
+                  In Biên Nhận
                 </Button>
                 <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={() => setSelectedPayment(null)}
                 >
                   Đóng
@@ -1000,15 +979,15 @@ function PaymentsContent() {
       {previewImageUrl && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="relative max-w-3xl w-full max-h-[90vh] flex flex-col items-center">
-            <Button rounded="full"
-              type="button"
+            <Button
+              rounded="full"
               variant="ghost"
-              size="sm"
+              size="icon-sm"
               onClick={() => setPreviewImageUrl(null)}
               className="absolute -top-12 right-0"
               title="Đóng ảnh"
             >
-              <X className="w-6 h-6" />
+              <X />
             </Button>
             <img
               src={previewImageUrl}

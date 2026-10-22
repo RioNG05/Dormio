@@ -23,6 +23,7 @@ import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -552,7 +553,6 @@ function DepositsContent() {
         subtitle={t('landlordDepositsSubtitle')}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={() => {
               setShowCreateModal(true)
@@ -560,7 +560,7 @@ function DepositsContent() {
               fetchAvailableRooms()
             }}
             className="sm:w-auto"
-            leftIcon={<Plus className="shrink-0 w-4 h-4" />}
+            leftIcon={<Plus className="shrink-0" />}
           >
             {t('landlordDepositsAddNew')}
           </Button>
@@ -592,7 +592,6 @@ function DepositsContent() {
               <Button
                 rounded="full"
                 variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => {
                   setSelectedDepositTypeTab('hold')
                   setActiveStatusTab('all')
@@ -604,7 +603,7 @@ function DepositsContent() {
                     ? 'bg-amber-500 hover:bg-warning text-white shadow-xs'
                     : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
                 )}
-                leftIcon={<Clock className="shrink-0 w-3.5 h-3.5" />}
+                leftIcon={<Clock className="shrink-0" />}
               >
                 <Text as="span" size="xs" weight="black" color="inherit" className="whitespace-nowrap">
                   {t('landlordDepositsTabHoldingButton')}
@@ -624,7 +623,6 @@ function DepositsContent() {
               <Button
                 rounded="full"
                 variant={selectedDepositTypeTab === 'contract' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => {
                   setSelectedDepositTypeTab('contract')
                   setActiveStatusTab('all')
@@ -636,7 +634,7 @@ function DepositsContent() {
                     ? 'bg-primary text-white shadow-xs'
                     : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
                 )}
-                leftIcon={<FileText className="shrink-0 w-3.5 h-3.5" />}
+                leftIcon={<FileText className="shrink-0" />}
               >
                 <Text as="span" size="xs" weight="black" color="inherit" className="whitespace-nowrap">
                   {t('landlordDepositsTabContractButton')}
@@ -710,13 +708,12 @@ function DepositsContent() {
           action={
             <Button
               variant="outline"
-              size="sm"
               onClick={() => {
                 setShowCreateModal(true)
                 setIsFormDirty(false)
                 fetchAvailableRooms()
               }}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus />}
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('landlordDepositsAddNew')}
@@ -831,7 +828,6 @@ function DepositsContent() {
                       {isHoldType && isHolding && (
                         <Button
                           variant="orange"
-                          size="sm"
                           onClick={() => {
                             setShowUpgradeModal(dep)
                             setUpgradeForm({
@@ -852,7 +848,6 @@ function DepositsContent() {
 
                       {isHolding && (
                         <Button
-                          size="sm"
                           onClick={() => {
                             setShowRefundModal(dep)
                             setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
@@ -953,9 +948,9 @@ function DepositsContent() {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {isHoldType && isHolding && (
-                            <Button
+                            <TableActionButton
                               variant="accent"
-                              size="icon-sm"
+                              icon={<FilePenLine />}
                               onClick={event => {
                                 event.stopPropagation()
                                 setShowUpgradeModal(dep)
@@ -967,15 +962,12 @@ function DepositsContent() {
                                 setIsFormDirty(false)
                               }}
                               title={t('landlordDepositsBtnUpgrade')}
-                            >
-                              <FilePenLine />
-                            </Button>
+                            />
                           )}
 
                           {isHolding && (
-                            <Button
-                              variant="primary"
-                              size="icon-sm"
+                            <TableActionButton
+                              icon={<RotateCcw />}
                               onClick={event => {
                                 event.stopPropagation()
                                 setShowRefundModal(dep)
@@ -987,9 +979,7 @@ function DepositsContent() {
                                 setIsFormDirty(false)
                               }}
                               title={t('landlordDepositsBtnRefundDeduct')}
-                            >
-                              <RotateCcw />
-                            </Button>
+                            />
                           )}
                         </div>
                       </td>
@@ -1169,13 +1159,12 @@ function DepositsContent() {
               <div className="flex items-center justify-between w-full gap-2">
                 <Button
                   variant="secondary"
-                  size="sm"
                   onClick={() => {
                     router.push(
                       `/landlord/messages?room=${encodeURIComponent(selectedDeposit.roomId)}&tenant=${encodeURIComponent(selectedDeposit.tenantName)}`,
                     )
                   }}
-                  leftIcon={<Send className="w-3.5 h-3.5 text-primary" />}
+                  leftIcon={<Send className="text-primary" />}
                 >
                   <Text as="span" size="xs" weight="bold" color="inherit">
                     {t('landlordDepositsChatWithTenant')}
@@ -1187,7 +1176,6 @@ function DepositsContent() {
                     selectedDeposit.status === 'paid' && (
                       <Button
                         variant="orange"
-                        size="sm"
                         onClick={() => {
                           setShowUpgradeModal(selectedDeposit)
                           setUpgradeForm({
@@ -1209,7 +1197,6 @@ function DepositsContent() {
                   {selectedDeposit.status === 'paid' && (
                     <Button
                       variant="dark"
-                      size="sm"
                       onClick={() => {
                         setShowRefundModal(selectedDeposit)
                         setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
@@ -1381,7 +1368,6 @@ function DepositsContent() {
         <Modal.Footer>
           <Button
             variant="secondary"
-            size="sm"
             onClick={() => requestCloseModal('create')}
             disabled={isSubmitting}
           >
@@ -1391,7 +1377,6 @@ function DepositsContent() {
           </Button>
           <Button
             variant="dark"
-            size="sm"
             onClick={handleCreateDeposit}
             disabled={isSubmitting}
             isLoading={isSubmitting}
@@ -1453,9 +1438,7 @@ function DepositsContent() {
                 {/* Quick Presets */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
                   <Button
-                    type="button"
                     variant={refundForm.deductedAmount === '0' ? 'primary' : 'secondary'}
-                    size="sm"
                     onClick={() => {
                       setRefundForm({ ...refundForm, deductedAmount: '0' })
                       setIsFormDirty(true)
@@ -1474,9 +1457,7 @@ function DepositsContent() {
                   </Button>
 
                   <Button
-                    type="button"
                     variant={Number(refundForm.deductedAmount) === Math.round(showRefundModal.amount / 2) ? 'danger' : 'secondary'}
-                    size="sm"
                     onClick={() => {
                       const half = Math.round(showRefundModal.amount / 2)
                       setRefundForm({ ...refundForm, deductedAmount: String(half) })
@@ -1496,9 +1477,7 @@ function DepositsContent() {
                   </Button>
 
                   <Button
-                    type="button"
                     variant={Number(refundForm.deductedAmount) === showRefundModal.amount ? 'danger' : 'secondary'}
-                    size="sm"
                     onClick={() => {
                       setRefundForm({
                         ...refundForm,
@@ -1550,7 +1529,6 @@ function DepositsContent() {
             <Modal.Footer>
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => requestCloseModal('refund')}
                 disabled={isSubmitting}
               >
@@ -1560,7 +1538,6 @@ function DepositsContent() {
               </Button>
               <Button
                 variant="dark"
-                size="sm"
                 onClick={handleRefundDeposit}
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
@@ -1644,7 +1621,6 @@ function DepositsContent() {
             <Modal.Footer>
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => requestCloseModal('upgrade')}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
@@ -1653,7 +1629,6 @@ function DepositsContent() {
               </Button>
               <Button
                 variant="orange"
-                size="sm"
                 onClick={handleConfirmUpgradeToContract}
                 leftIcon={<FileText />}
               >
