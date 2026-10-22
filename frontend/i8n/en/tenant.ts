@@ -421,7 +421,30 @@ export const enTenant = {
     tenantRoomNotFoundDesc: "You currently do not have an active room contract or the room ID is invalid.",
     tenantRoomNotFoundTitle: "Room tenancy not found",
     tenantRoomSpecifications: "Room Specifications",
-    tenantViewMonthlyInvoices: "View Monthly Invoices"
+    tenantViewMonthlyInvoices: "View Monthly Invoices",
+
+    // --- Contract page additions (app/(dashboard)/tenant/contract/page.tsx) ---
+    tenantContractPageTitle: "Rental Contract",
+    tenantContractPageSubtitle: "Details of terms, contract duration, and legal documents for your rented room.",
+    tenantContractViewAndPrint: "View & Print Contract",
+    tenantContractExportHtml: "Export Contract Document",
+    tenantContractRoomAndHouse: "Room & Property Information",
+    tenantContractTerms: "Financial Terms",
+    tenantContractDurationTitle: "Contract Duration & Timeline",
+    tenantContractDocumentsTitle: "Exported Documents & Archives",
+    tenantContractDocumentsDesc: "Electronic contract export records stored in the system",
+    tenantContractNoDocuments: "No exported documents stored yet. Click 'View & Print Contract' to generate an export copy.",
+    tenantContractDepositStatus: "Security Deposit",
+    tenantContractPaymentCycle: "Payment Cycle",
+    tenantContractRentPaymentDay: "Monthly Payment Day",
+    tenantContractStartDate: "Start Date",
+    tenantContractEndDate: "End Date",
+    tenantContractNotes: "Notes & Special Agreements",
+    tenantContractServicesTitle: "Contract Registered Services",
+    tenantContractNoServices: "No additional services registered",
+    tenantContractActiveStatus: "Active",
+    tenantContractSignedVerified: "Verified & Executed Contract",
+    tenantContractDownloadDoc: "Download"
 }
 
 export default enTenant

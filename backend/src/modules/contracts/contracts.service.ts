@@ -1471,6 +1471,83 @@ export class ContractsService {
     }
   }
 
+  // ─── UC-T-06 Extension: Tenant Contract Export & Print ──────────────────────
+
+  /**
+   * Resolves the active contract and boarding house context for a tenant.
+   *
+   * @param userId Tenant user UUID
+   */
+  async getTenantActiveContract(
+    userId: string,
+  ): Promise<{ boardingHouseId: string; contractId: string }> {
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: {
+        tenantId: userId,
+        contract: {
+          status: 'active',
+        },
+      },
+      include: {
+        contract: {
+          include: {
+            room: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    if (!tenantContract || !tenantContract.contract) {
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'No active contract found for this tenant.',
+      )
+    }
+
+    return {
+      contractId: tenantContract.contract.id,
+      boardingHouseId: tenantContract.contract.room.boardingHouseId,
+    }
+  }
+
+  /**
+   * Generates printable HTML for the tenant's active contract.
+   *
+   * @param userId Tenant user UUID
+   * @param autoPrint If true, triggers print dialog on load
+   */
+  async printMyContract(userId: string, autoPrint: boolean = false): Promise<string> {
+    const { boardingHouseId, contractId } = await this.getTenantActiveContract(userId)
+    return this.getContractPrintHtml(boardingHouseId, contractId, autoPrint, true)
+  }
+
+  /**
+   * Exports the tenant's active contract document and registers audit trail.
+   *
+   * @param userId Tenant user UUID
+   */
+  async exportMyContract(userId: string): Promise<ExportContractResponseDto> {
+    const { boardingHouseId, contractId } = await this.getTenantActiveContract(userId)
+    return this.exportContract(boardingHouseId, contractId, userId)
+  }
+
+  /**
+   * Retrieves downloadable HTML file for a tenant's contract document.
+   *
+   * @param userId Tenant user UUID
+   * @param documentId Contract document UUID
+   */
+  async getMyContractDocumentDownload(
+    userId: string,
+    documentId: string,
+  ): Promise<{ filename: string; html: string }> {
+    const { boardingHouseId, contractId } = await this.getTenantActiveContract(userId)
+    return this.getContractDocumentDownload(boardingHouseId, contractId, documentId)
+  }
+
   // ─── Helper methods ─────────────────────────────────────────────────────────
 
   private formatAddress(bh: {

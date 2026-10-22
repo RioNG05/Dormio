@@ -337,3 +337,42 @@ export async function downloadContractDocument(
   document.body.removeChild(a)
   window.URL.revokeObjectURL(downloadUrl)
 }
+
+/**
+ * Fetches rendered contract HTML template for active tenant's tenancy
+ */
+export async function getTenantContractPrintHtml(autoPrint: boolean = false): Promise<string> {
+  return api.getText('/v1/tenant/tenancy/print', {
+    params: {
+      autoPrint: autoPrint ? 'true' : 'false',
+    },
+  })
+}
+
+/**
+ * Exports active tenant's contract document
+ */
+export async function exportTenantContract(): Promise<{
+  success: boolean
+  data: ExportContractResponse
+}> {
+  return api.post<{ success: boolean; data: ExportContractResponse }>('/v1/tenant/tenancy/export')
+}
+
+/**
+ * Triggers download of a contract document for tenant
+ */
+export async function downloadTenantContractDocument(
+  documentId: string,
+  filename?: string,
+): Promise<void> {
+  const blob = await api.getBlob(`/v1/tenant/tenancy/documents/${documentId}/download`)
+  const downloadUrl = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = downloadUrl
+  a.download = filename || `hop-dong-thue-tro-${documentId.substring(0, 8)}.html`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  window.URL.revokeObjectURL(downloadUrl)
+}

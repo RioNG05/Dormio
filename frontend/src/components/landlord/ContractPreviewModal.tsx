@@ -3,14 +3,18 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
   Printer,
-  X,
   Loader2,
   FileText,
   AlertTriangle,
   FileDown,
   RefreshCw,
 } from 'lucide-react'
-import { getContractPrintHtml, exportContract } from '@/services/contract.service'
+import {
+  getContractPrintHtml,
+  exportContract,
+  getTenantContractPrintHtml,
+  exportTenantContract,
+} from '@/services/contract.service'
 import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import { Button, Modal, Text } from '@/components/ui'
@@ -18,10 +22,11 @@ import { Button, Modal, Text } from '@/components/ui'
 interface ContractPreviewModalProps {
   isOpen: boolean
   onClose: () => void
-  buildingId: string
-  contractId: string
-  roomNumber: string
+  buildingId?: string
+  contractId?: string
+  roomNumber?: string
   tenantName?: string
+  isTenant?: boolean
   onExportSuccess?: () => void
 }
 
@@ -30,8 +35,9 @@ export default function ContractPreviewModal({
   onClose,
   buildingId,
   contractId,
-  roomNumber,
+  roomNumber = '',
   tenantName,
+  isTenant = false,
   onExportSuccess,
 }: ContractPreviewModalProps) {
   const t = useTranslations('landlord')
@@ -55,6 +61,25 @@ export default function ContractPreviewModal({
   }, [buildingId])
 
   const fetchContractHtml = async () => {
+    if (isTenant) {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const html = await getTenantContractPrintHtml(false)
+        setHtmlContent(html)
+      } catch (err: any) {
+        console.error('Failed to load tenant contract print HTML from backend:', err)
+        const errorMsg =
+          err?.message ||
+          t('landlordContractsExportErrorTitle') ||
+          'Không thể tải văn bản hợp đồng từ máy chủ.'
+        setError(errorMsg)
+      } finally {
+        setIsLoading(false)
+      }
+      return
+    }
+
     if (!contractId) {
       setError(t('landlordContractsExportErrorTitle') || 'Thiếu mã hợp đồng.')
       setIsLoading(false)
@@ -98,7 +123,7 @@ export default function ContractPreviewModal({
     }
 
     fetchContractHtml()
-  }, [isOpen, contractId, currentBuildingId])
+  }, [isOpen, contractId, currentBuildingId, isTenant])
 
   if (!isOpen) return null
 
@@ -124,7 +149,9 @@ export default function ContractPreviewModal({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `hop-dong-phong-${roomNumber.replace(/[^a-zA-Z0-9_-]/g, '_')}-${contractId.substring(0, 8)}.html`
+    const safeRoom = roomNumber ? roomNumber.replace(/[^a-zA-Z0-9_-]/g, '_') : 'phong'
+    const safeContractId = contractId ? contractId.substring(0, 8) : 'hop-dong'
+    a.download = `hop-dong-phong-${safeRoom}-${safeContractId}.html`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -134,7 +161,28 @@ export default function ContractPreviewModal({
 
   // Persist export on backend & download
   const handleExportDocument = async () => {
-    if (!currentBuildingId) {
+    if (isTenant) {
+      try {
+        setIsExporting(true)
+        const res = await exportTenantContract()
+        if (res?.data) {
+          toast.success(t('landlordContractsExportToastExportSuccess'))
+          onExportSuccess?.()
+          if (res.data.html) {
+            setHtmlContent(res.data.html)
+          }
+          handleDownloadHtml(res.data.html || htmlContent)
+        }
+      } catch (err: any) {
+        console.error('Failed to export tenant contract document:', err)
+        toast.error(err.message || t('landlordContractsExportToastExportFailed'))
+      } finally {
+        setIsExporting(false)
+      }
+      return
+    }
+
+    if (!currentBuildingId || !contractId) {
       toast.error('Thiếu thông tin nhà trọ để xuất tài liệu hợp đồng.')
       return
     }
@@ -176,14 +224,20 @@ export default function ContractPreviewModal({
             </div>
             <div>
               <Text as="h2" size="lg" weight="black" className="text-foreground leading-tight">
-                {t('landlordContractsExportTitle', { roomNumber })}
+                {roomNumber
+                  ? t('landlordContractsExportTitle', { roomNumber })
+                  : 'Văn bản hợp đồng thuê'}
               </Text>
-              <Text size="xs" color="subtle" weight="medium">
-                {tenantName ? `${t('landlordContractsExportRep', { tenantName })}` : ''}
-              </Text>
-              <Text size="xs" color="subtle" weight="medium">
-                {contractId ? `${t('landlordContractsExportId', { contractId })}` : ''}
-              </Text>
+              {tenantName && (
+                <Text size="xs" color="subtle" weight="medium">
+                  {t('landlordContractsExportRep', { tenantName })}
+                </Text>
+              )}
+              {contractId && (
+                <Text size="xs" color="subtle" weight="medium">
+                  {t('landlordContractsExportId', { contractId })}
+                </Text>
+              )}
             </div>
           </div>
 

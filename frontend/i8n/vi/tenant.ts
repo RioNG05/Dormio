@@ -421,7 +421,30 @@ export const viTenant = {
     tenantRoomNotFoundDesc: "Tài khoản của bạn hiện chưa được liên kết với hợp đồng phòng thuê nào có hiệu lực trên hệ thống.",
     tenantRoomNotFoundTitle: "Không tìm thấy thông tin phòng thuê",
     tenantRoomSpecifications: "Thông số phòng",
-    tenantViewMonthlyInvoices: "Xem hóa đơn tiền phòng"
+    tenantViewMonthlyInvoices: "Xem hóa đơn tiền phòng",
+
+    // --- Contract page additions (app/(dashboard)/tenant/contract/page.tsx) ---
+    tenantContractPageTitle: "Hợp đồng thuê phòng",
+    tenantContractPageSubtitle: "Chi tiết các điều khoản, thời hạn hợp đồng và văn bản pháp lý của phòng trọ đang ở.",
+    tenantContractViewAndPrint: "Xem & In hợp đồng",
+    tenantContractExportHtml: "Tải văn bản hợp đồng",
+    tenantContractRoomAndHouse: "Thông tin phòng & Cơ sở trọ",
+    tenantContractTerms: "Điều khoản tài chính",
+    tenantContractDurationTitle: "Thời hạn & Tiến độ hợp đồng",
+    tenantContractDocumentsTitle: "Văn bản & Tài liệu lưu trữ",
+    tenantContractDocumentsDesc: "Các bản xuất hợp đồng điện tử đã lưu trên hệ thống",
+    tenantContractNoDocuments: "Chưa có bản xuất lưu trữ nào. Bạn có thể nhấn 'Xem & In hợp đồng' để tạo bản sao lưu mới.",
+    tenantContractDepositStatus: "Tiền cọc đảm bảo",
+    tenantContractPaymentCycle: "Chu kỳ thanh toán",
+    tenantContractRentPaymentDay: "Ngày đóng tiền phòng",
+    tenantContractStartDate: "Ngày bắt đầu",
+    tenantContractEndDate: "Ngày kết thúc",
+    tenantContractNotes: "Ghi chú & Thỏa thuận thêm",
+    tenantContractServicesTitle: "Dịch vụ đã đăng ký theo hợp đồng",
+    tenantContractNoServices: "Không có dịch vụ đăng ký kèm",
+    tenantContractActiveStatus: "Đang hiệu lực",
+    tenantContractSignedVerified: "Hợp đồng đã xác thực & ký kết",
+    tenantContractDownloadDoc: "Tải xuống"
 }
 
 export default viTenant
