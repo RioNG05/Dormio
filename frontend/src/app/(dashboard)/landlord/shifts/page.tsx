@@ -283,7 +283,6 @@ export default function ShiftsPage() {
         subtitle={`${t('landlordShiftsSubtitle')}: ${activeBuilding?.name || t('landlordRoomsBuildingDefault')}`}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={openCreateModal}
             className="shrink-0"
@@ -323,7 +322,7 @@ export default function ShiftsPage() {
           }
           action={
             !searchQuery ? (
-              <Button size="sm" onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
+              <Button onClick={openCreateModal} leftIcon={<Plus />}>
                 {t('landlordShiftsAddNow')}
               </Button>
             ) : undefined
@@ -391,19 +390,19 @@ export default function ShiftsPage() {
                 <Card.Footer className="mx-6 mb-6 p-0 pt-4 flex items-center gap-2">
                   <Button
                     variant="ghost"
-                    size="sm"
                     onClick={() => openEditModal(shift)}
                     className="flex-1"
+                    leftIcon={<Edit3 />}
                   >
-                    <Edit3 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnEdit')}
+                    {t('landlordShiftsBtnEdit')}
                   </Button>
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="ghost-danger"
                     onClick={() => handleDelete(shift)}
                     className="flex-1"
+                    leftIcon={<Trash2 />}
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnDelete')}
+                    {t('landlordShiftsBtnDelete')}
                   </Button>
                 </Card.Footer>
               </Card>
@@ -436,10 +435,10 @@ export default function ShiftsPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleAttemptClose}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -498,16 +497,16 @@ export default function ShiftsPage() {
 
               <div className="flex gap-2.5 pt-2">
                 <Button size="xs"
-                  type="button"
                   variant="outline"
                   onClick={handleAttemptClose}
                   className="flex-1"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button size="icon"
+                <Button
                   type="submit"
                   disabled={isSubmitting}
+                  isLoading={isSubmitting}
                   className="flex-1"
                 >
                   {isSubmitting ? (
@@ -573,18 +572,14 @@ export default function ShiftsPage() {
             </div>
             <div className="flex items-center gap-3 pt-3 border-t border-line">
               <Button
-                size="sm"
                 variant="secondary"
-                type="button"
                 onClick={() => setDeleteConfirmShift(null)}
                 className="flex-1"
               >
                 {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
               </Button>
               <Button
-                size="sm"
                 variant="danger"
-                type="button"
                 onClick={handleConfirmDeleteShift}
                 className="flex-1"
               >

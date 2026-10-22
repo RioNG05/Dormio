@@ -27,6 +27,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   SelectInput,
   SearchInput,
@@ -586,7 +587,6 @@ export default function StaffPage() {
             </Button>
 
             <Button
-              variant="primary"
               size="md"
               onClick={() => {
                 resetOnboardForm()
@@ -685,12 +685,11 @@ export default function StaffPage() {
           }
           action={
             <Button
-              size="sm"
               onClick={() => {
                 resetOnboardForm()
                 setIsOnboardModalOpen(true)
               }}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus />}
             >
               {t('landlordStaffAddNow')}
             </Button>
@@ -799,7 +798,6 @@ export default function StaffPage() {
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
                       onClick={event => {
                         event.stopPropagation()
                         handleOpenAssignRoleModal(staff)
@@ -812,7 +810,6 @@ export default function StaffPage() {
                   </div>
 
                   <Button
-                    size="sm"
                     variant={isActive ? 'danger' : 'secondary'}
                     onClick={event => {
                       event.stopPropagation()
@@ -913,32 +910,21 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="secondary"
+                          <TableActionButton
+                            icon={<Edit3 />}
                             onClick={() => handleOpenAssignRoleModal(staff)}
                             title={t('landlordStaffBtnAssignRoleTooltip')}
-                          >
-                            {t('landlordStaffBtnAssignRole')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
+                          />
+                          <TableActionButton
+                            icon={<Power />}
+                            variant={isActive ? 'ghost-danger' : 'ghost'}
                             onClick={() => handleToggleStatus(staff)}
-                            className={cn(
-                              'p-1.5 h-auto rounded-lg border',
-                              isActive
-                                ? 'text-danger bg-danger-soft border-danger-subtle hover:bg-rose-100'
-                                : 'text-primary bg-primary/10 border-primary/30 hover:bg-primary/20',
-                            )}
                             title={
                               isActive
                                 ? t('landlordStaffTooltipDeactivate')
                                 : t('landlordStaffTooltipActivate')
                             }
-                          >
-                            <Power className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                         </div>
                       </td>
                     </TableRow>
@@ -992,11 +978,10 @@ export default function StaffPage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('onboard')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1037,8 +1022,8 @@ export default function StaffPage() {
                         leftIcon={<Phone className="w-4 h-4 text-muted" />}
                       />
                     </div>
-                    <Button variant="dark"
-                      type="button"
+                    <Button
+                      variant="dark"
                       onClick={() => handleSearchPhone(lookupPhone)}
                       disabled={isSearchingUser || !lookupPhone.trim()}
                       isLoading={isSearchingUser}
@@ -1121,8 +1106,6 @@ export default function StaffPage() {
                     </label>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      type="button"
                       onClick={() => setIsCreatingNewPosition(!isCreatingNewPosition)}
                       className="hover:underline"
                     >
@@ -1201,7 +1184,6 @@ export default function StaffPage() {
               <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-3 bg-surface/60">
                 <Button
                   variant="secondary"
-                  type="button"
                   onClick={() => handleAttemptCloseModal('onboard')}
                 >
                   {t('landlordStaffOnboardBtnCancel')}
@@ -1249,12 +1231,11 @@ export default function StaffPage() {
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('assignRole')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1290,8 +1271,8 @@ export default function StaffPage() {
                     {t('landlordStaffAssignSelectRoleLabel')}{' '}
                     <span className="text-danger">*</span>
                   </label>
-                  <Button size="xs"
-                    type="button"
+                  <Button
+                    size="xs"
                     variant="ghost"
                     onClick={() => setIsAssignCreatingNew(!isAssignCreatingNew)}
                     className="hover:underline"
@@ -1358,25 +1339,20 @@ export default function StaffPage() {
 
               {/* Modal Actions */}
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line">
-                <Button size="xs"
-                  type="button"
+                <Button
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('assignRole')}
                 >
                   {t('landlordStaffAssignBtnCancel')}
                 </Button>
-                <Button size="xs"
+                <Button
+                  size="xs"
                   type="submit"
                   disabled={isAssignSubmitting}
+                  isLoading={isAssignSubmitting}
                 >
-                  {isAssignSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{t('landlordStaffAssignBtnUpdating')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordStaffAssignBtnConfirm')}</span>
-                  )}
+                  <span>{t('landlordStaffAssignBtnConfirm')}</span>
                 </Button>
               </div>
             </form>
@@ -1414,12 +1390,11 @@ export default function StaffPage() {
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('positions')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1443,8 +1418,8 @@ export default function StaffPage() {
                         ? t('landlordStaffPositionsEditTitle')
                         : t('landlordStaffPositionsAddTitle')}
                     </h4>
-                    <Button size="xs"
-                      type="button"
+                    <Button
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setEditingPosition(null)
@@ -1479,9 +1454,7 @@ export default function StaffPage() {
 
                   <div className="flex justify-end gap-2 pt-1">
                     <Button
-                      type="button"
                       variant="outline"
-                      size="sm"
                       onClick={() => {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
@@ -1492,11 +1465,9 @@ export default function StaffPage() {
                     <Button
                       type="submit"
                       disabled={isPosSubmitting}
-                      size="sm"
+                      isLoading={isPosSubmitting}
                     >
-                      {isPosSubmitting
-                        ? t('landlordStaffPositionsBtnSaving')
-                        : t('landlordStaffPositionsBtnSave')}
+                      {t('landlordStaffPositionsBtnSave')}
                     </Button>
                   </div>
                 </form>
@@ -1509,8 +1480,8 @@ export default function StaffPage() {
                     {t('landlordStaffPositionsListTitle', { count: positions.length })}
                   </span>
                   {!isAddingPositionInline && !editingPosition && (
-                    <Button size="icon"
-                      type="button"
+                    <Button
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setIsAddingPositionInline(true)
@@ -1518,9 +1489,10 @@ export default function StaffPage() {
                         setPosFormName('')
                         setPosFormDesc('')
                       }}
+                      leftIcon={<Plus />}
                       className="hover:underline"
                     >
-                      <Plus className="w-3.5 h-3.5" /> {t('landlordStaffPositionsBtnAddNew')}
+                      {t('landlordStaffPositionsBtnAddNew')}
                     </Button>
                   )}
                 </div>
@@ -1545,11 +1517,9 @@ export default function StaffPage() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
+                      <div className="flex items-center gap-1 self-end sm:self-center">
+                        <TableActionButton
+                          icon={<Edit3 />}
                           onClick={() => {
                             setEditingPosition(pos)
                             setIsAddingPositionInline(false)
@@ -1557,13 +1527,10 @@ export default function StaffPage() {
                             setPosFormDesc(pos.description || '')
                           }}
                           title={t('landlordStaffPositionsEditTooltip')}
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
+                        />
+                        <TableActionButton
+                          icon={<Trash2 />}
+                          variant="ghost-danger"
                           onClick={() => handleDeletePosition(pos)}
                           disabled={(pos.staffCount || 0) > 0}
                           title={
@@ -1571,9 +1538,7 @@ export default function StaffPage() {
                               ? t('landlordStaffPositionsCannotDeleteTooltip')
                               : t('landlordStaffPositionsDeleteTooltip')
                           }
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        />
                       </div>
                     </div>
                   ))}
@@ -1582,8 +1547,8 @@ export default function StaffPage() {
             </div>
 
             <div className="px-6 py-4 border-t border-line flex items-center justify-end bg-surface/60">
-              <Button size="xs"
-                type="button"
+              <Button
+                size="xs"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('positions')}
               >
@@ -1696,10 +1661,10 @@ export default function StaffPage() {
 
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setIsDetailModalOpen(false)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1816,16 +1781,16 @@ export default function StaffPage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <Button size="xs"
-                type="button"
+              <Button
+                size="xs"
                 variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1"
               >
                 {t('landlordStaffConfirmCloseKeep')}
               </Button>
-              <Button size="xs"
-                type="button"
+              <Button
+                size="xs"
                 variant="danger"
                 onClick={handleConfirmClose}
                 className="flex-1"
@@ -1858,18 +1823,13 @@ export default function StaffPage() {
             </div>
             <div className="flex items-center gap-3 pt-3 border-t border-line">
               <Button
-                size="sm"
                 variant="secondary"
-                type="button"
                 onClick={() => setActionConfirm(null)}
                 className="flex-1"
               >
                 {t('landlordStaffConfirmCloseKeep') || 'Hủy bỏ'}
               </Button>
               <Button
-                size="sm"
-                variant="primary"
-                type="button"
                 onClick={() => {
                   const onConf = actionConfirm.onConfirm
                   setActionConfirm(null)

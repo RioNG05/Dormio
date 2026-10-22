@@ -33,6 +33,7 @@ import {
 } from '@/services/schedule.service'
 import {
   Button,
+  TableActionButton,
   TextInput,
   SelectInput,
   TextareaInput,
@@ -669,7 +670,6 @@ export default function WorkforceSchedulePage() {
 
             <Button
               size="md"
-              variant="primary"
               onClick={() => {
                 setIsDirty(false)
                 setIsRecurringModalOpen(true)
@@ -695,16 +695,15 @@ export default function WorkforceSchedulePage() {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon-sm"
               onClick={handlePrevWeek}
               title={t('landlordScheduleBtnPrevWeek')}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft />
             </Button>
 
             <Button
               variant="outline"
-              size="sm"
               onClick={handleCurrentWeek}
             >
               {t('landlordScheduleBtnToday')}
@@ -712,11 +711,11 @@ export default function WorkforceSchedulePage() {
 
             <Button
               variant="outline"
-              size="sm"
+              size="icon-sm"
               onClick={handleNextWeek}
               title={t('landlordScheduleBtnNextWeek')}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight />
             </Button>
 
             <div className="flex items-center gap-2 pl-2 text-sm font-bold text-foreground">
@@ -916,23 +915,18 @@ export default function WorkforceSchedulePage() {
 
                         {/* Action Buttons (visible on hover or focus) */}
                         <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-line">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <TableActionButton
+                            icon={<Edit3 />}
                             onClick={() => handleOpenEditModal(schedule)}
                             title={t('landlordScheduleEditShiftTitle')}
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                           {schedule.status !== 'canceled' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <TableActionButton
+                              icon={<Trash2 />}
+                              variant="ghost-danger"
                               onClick={() => handleDeleteSchedule(schedule)}
                               title={t('landlordScheduleCancelShiftTitle')}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            />
                           )}
                         </div>
                       </div>
@@ -1038,23 +1032,18 @@ export default function WorkforceSchedulePage() {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="inline-flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <TableActionButton
+                            icon={<Edit3 />}
                             onClick={() => handleOpenEditModal(item)}
                             title={t('landlordShiftsBtnEdit')}
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                           {item.status !== 'canceled' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <TableActionButton
+                              icon={<Trash2 />}
+                              variant="ghost-danger"
                               onClick={() => handleDeleteSchedule(item)}
                               title={t('landlordScheduleCancelShiftAction')}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            />
                           )}
                         </div>
                       </td>
@@ -1109,10 +1098,10 @@ export default function WorkforceSchedulePage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('recurring')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1128,8 +1117,8 @@ export default function WorkforceSchedulePage() {
                     <span>{t('landlordScheduleModalStaffLabel')}</span>
                     <span className="text-danger">*</span>
                   </label>
-                  <Button size="xs"
-                    type="button"
+                  <Button
+                    size="xs"
                     variant="ghost"
                     onClick={() => {
                       if (recurringEmployeeIds.length === staffList.length) {
@@ -1222,8 +1211,8 @@ export default function WorkforceSchedulePage() {
                     <span className="text-danger">*</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <Button size="xs"
-                      type="button"
+                    <Button
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '3', '4', '5', '6'])
@@ -1233,8 +1222,8 @@ export default function WorkforceSchedulePage() {
                       T2 - T6
                     </Button>
                     <span className="text-zinc-300">·</span>
-                    <Button size="xs"
-                      type="button"
+                    <Button
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '4', '6'])
@@ -1244,8 +1233,8 @@ export default function WorkforceSchedulePage() {
                       T2, 4, 6
                     </Button>
                     <span className="text-zinc-300">·</span>
-                    <Button size="xs"
-                      type="button"
+                    <Button
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['3', '5', '7'])
@@ -1263,9 +1252,7 @@ export default function WorkforceSchedulePage() {
                     return (
                       <Button
                         key={d.key}
-                        type="button"
                         variant={isSelected ? 'primary' : 'outline'}
-                        size="sm"
                         onClick={() => {
                           if (isSelected) {
                             setRecurringDays(prev => prev.filter(k => k !== d.key))
@@ -1329,25 +1316,20 @@ export default function WorkforceSchedulePage() {
 
               {/* Modal Footer */}
               <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
-                <Button size="xs"
-                  type="button"
+                <Button
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('recurring')}
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button size="xs"
+                <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmittingRecurring}
+                  isLoading={isSubmittingRecurring}
                 >
-                  {isSubmittingRecurring ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{t('landlordScheduleMaterializing')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordScheduleModalSubmitRecurring')}</span>
-                  )}
+                  <span>{t('landlordScheduleModalSubmitRecurring')}</span>
                 </Button>
               </div>
             </form>
@@ -1386,10 +1368,10 @@ export default function WorkforceSchedulePage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('adhoc')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1464,25 +1446,20 @@ export default function WorkforceSchedulePage() {
               </div>
 
               <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
-                <Button size="xs"
-                  type="button"
+                <Button
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('adhoc')}
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button size="xs"
+                <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmittingAdhoc}
+                  isLoading={isSubmittingAdhoc}
                 >
-                  {isSubmittingAdhoc ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{t('landlordScheduleSaving')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordScheduleModalSubmitAssign')}</span>
-                  )}
+                  <span>{t('landlordScheduleModalSubmitAssign')}</span>
                 </Button>
               </div>
             </form>
@@ -1521,10 +1498,10 @@ export default function WorkforceSchedulePage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('shifts')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1605,14 +1582,12 @@ export default function WorkforceSchedulePage() {
                         </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <TableActionButton
+                        icon={<Trash2 />}
+                        variant="ghost-danger"
                         onClick={() => handleDeleteShift(s.id, s.name)}
                         title={t('landlordShiftsBtnDelete')}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      />
                     </div>
                   ))}
                 </div>
@@ -1620,8 +1595,8 @@ export default function WorkforceSchedulePage() {
             </div>
 
             <div className="p-4 border-t border-line flex items-center justify-end bg-surface/60">
-              <Button size="xs"
-                type="button"
+              <Button
+                size="xs"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('shifts')}
               >
@@ -1664,10 +1639,10 @@ export default function WorkforceSchedulePage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('edit')}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1780,25 +1755,20 @@ export default function WorkforceSchedulePage() {
               )}
 
               <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
-                <Button size="xs"
-                  type="button"
+                <Button
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('edit')}
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
-                <Button size="xs"
+                <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmittingEdit}
+                  isLoading={isSubmittingEdit}
                 >
-                  {isSubmittingEdit ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{t('landlordScheduleSaving')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordShiftsSaveShiftBtn')}</span>
-                  )}
+                  <span>{t('landlordShiftsSaveShiftBtn')}</span>
                 </Button>
               </div>
             </form>
@@ -1831,16 +1801,16 @@ export default function WorkforceSchedulePage() {
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
-              <Button size="xs"
-                type="button"
+              <Button
+                size="xs"
                 variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
-              <Button size="xs"
-                type="button"
+              <Button
+                size="xs"
                 variant="danger"
                 onClick={() => {
                   setIsConfirmCloseOpen(false)
@@ -1876,18 +1846,14 @@ export default function WorkforceSchedulePage() {
             </div>
             <div className="flex items-center gap-3 pt-3 border-t border-line">
               <Button
-                size="sm"
                 variant="secondary"
-                type="button"
                 onClick={() => setActionConfirm(null)}
                 className="flex-1"
               >
                 {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
               </Button>
               <Button
-                size="sm"
                 variant="danger"
-                type="button"
                 onClick={() => {
                   const onConf = actionConfirm.onConfirm
                   setActionConfirm(null)

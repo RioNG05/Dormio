@@ -24,7 +24,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow, EmptyState } from '@/components/ui'
+import { Button, TableActionButton, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -502,38 +502,26 @@ export default function AttendancePage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
               <Button
-                type="button"
                 variant={datePreset === 'today' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => handleDatePresetChange('today')}
-
               >
                 {isEn ? 'Today' : 'Hôm nay'}
               </Button>
               <Button
-                type="button"
                 variant={datePreset === 'week' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => handleDatePresetChange('week')}
-
               >
                 {isEn ? 'This Week' : 'Tuần này'}
               </Button>
               <Button
-                type="button"
                 variant={datePreset === 'month' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => handleDatePresetChange('month')}
-
               >
                 {isEn ? 'This Month' : 'Tháng này'}
               </Button>
               <Button
-                type="button"
                 variant={datePreset === 'custom' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => setDatePreset('custom')}
-
               >
                 {isEn ? 'Custom' : 'Tùy chọn'}
               </Button>
@@ -670,9 +658,7 @@ export default function AttendancePage() {
           description={t('landlordAttendanceEmptyDesc')}
           action={
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={() => handleDatePresetChange('month')}
             >
               {t('landlordAttendanceViewMonth') || 'View Month'}
@@ -767,9 +753,7 @@ export default function AttendancePage() {
                 {/* Bottom Action Button */}
                 <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-2 border-0">
                 <Button fullWidth
-                  type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => handleOpenOverride(item)}
                   leftIcon={<Edit3 />}
                   className="mt-2"
@@ -845,19 +829,14 @@ export default function AttendancePage() {
                       {item.editedByName || '—'}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
+                      <TableActionButton
+                        icon={<Edit3 />}
                         onClick={event => {
                           event.stopPropagation()
                           handleOpenOverride(item)
                         }}
-
                         title={t('landlordAttendanceBtnEdit')}
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </Button>
+                      />
                     </td>
                   </TableRow>
                 ))}
@@ -910,13 +889,11 @@ export default function AttendancePage() {
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleAttemptCloseOverride}
-
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -952,9 +929,7 @@ export default function AttendancePage() {
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    type="button"
                     variant={overrideStatus === 'on_time' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('on_time')
                       setIsDirty(true)
@@ -974,9 +949,7 @@ export default function AttendancePage() {
                   </Button>
 
                   <Button
-                    type="button"
                     variant={overrideStatus === 'late' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('late')
                       setIsDirty(true)
@@ -996,9 +969,7 @@ export default function AttendancePage() {
                   </Button>
 
                   <Button
-                    type="button"
                     variant={overrideStatus === 'absent' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('absent')
                       setIsDirty(true)
@@ -1018,9 +989,7 @@ export default function AttendancePage() {
                   </Button>
 
                   <Button
-                    type="button"
                     variant={overrideStatus === 'not_yet' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('not_yet')
                       setIsDirty(true)
@@ -1109,29 +1078,17 @@ export default function AttendancePage() {
               {/* Actions */}
               <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button
-                  type="button"
                   variant="outline"
-                  size="sm"
                   onClick={handleAttemptCloseOverride}
-
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
                 <Button
                   type="submit"
-                  variant="primary"
-                  size="sm"
                   disabled={isSubmittingOverride}
-
+                  isLoading={isSubmittingOverride}
                 >
-                  {isSubmittingOverride ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{isEn ? 'Saving...' : 'Đang lưu...'}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordAttendanceModalBtnSubmit')}</span>
-                  )}
+                  <span>{t('landlordAttendanceModalBtnSubmit')}</span>
                 </Button>
               </div>
             </form>
@@ -1167,18 +1124,14 @@ export default function AttendancePage() {
 
             <div className="flex items-center gap-2.5 pt-2">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setIsConfirmCloseOpen(false)}
                 className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={() => {
                   setIsConfirmCloseOpen(false)
                   performCloseOverride()
