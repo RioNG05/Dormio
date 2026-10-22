@@ -55,10 +55,8 @@ export function Step2ServicesAndRoomTypes({
             </div>
           </div>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
-            leftIcon={<Plus className="w-3.5 h-3.5" />}
+            leftIcon={<Plus />}
             onClick={onAddService}
           >
             {t('landlordSetupAddService')}
@@ -128,13 +126,12 @@ export function Step2ServicesAndRoomTypes({
 
                   <div className="sm:col-span-1 flex justify-end pb-1">
                     <Button
-                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => onRemoveService(service.id)}
                       title={t('landlordSetupDeleteService')}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 />
                     </Button>
                   </div>
                 </div>
@@ -171,10 +168,8 @@ export function Step2ServicesAndRoomTypes({
             </div>
           </div>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
-            leftIcon={<Plus className="w-3.5 h-3.5" />}
+            leftIcon={<Plus />}
             onClick={onAddRoomType}
           >
             {t('landlordSetupAddRoomType')}
@@ -213,13 +208,12 @@ export function Step2ServicesAndRoomTypes({
                 <div className="sm:col-span-1 flex justify-end pb-1">
                   {roomTypes.length > 1 && (
                     <Button
-                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => onRemoveRoomType(rt.id)}
                       title={t('landlordSetupDeleteRoomType')}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 />
                     </Button>
                   )}
                 </div>
@@ -231,19 +225,16 @@ export function Step2ServicesAndRoomTypes({
 
       <Form.Actions align="between" className="pt-2">
         <Button
-          type="button"
           variant="outline"
           onClick={onBack}
-          leftIcon={<ChevronLeft className="w-4 h-4" />}
+          leftIcon={<ChevronLeft />}
         >
           {t('landlordSetupBackToStep1')}
         </Button>
         <Button
-          type="button"
-          variant="primary"
           disabled={!isValid}
           onClick={onNext}
-          rightIcon={<ChevronRight className="w-4 h-4" />}
+          rightIcon={<ChevronRight />}
         >
           {t('landlordSetupNextToStep3')}
         </Button>

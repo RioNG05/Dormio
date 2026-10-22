@@ -14,10 +14,9 @@ export function ContractWizardProgress() {
     <div className="flex items-center justify-center gap-2 sm:gap-3 bg-card p-3 rounded-2xl border border-line shadow-2xs">
       <Button
         variant={step === 1 ? 'primary' : 'ghost'}
-        type="button"
         onClick={() => goToStep(1)}
         size="md"
-        leftIcon={step > 1 ? <Check className="w-4 h-4 text-emerald-500" /> : <Home className="w-4 h-4" />}
+        leftIcon={step > 1 ? <Check className="text-emerald-500" /> : <Home />}
         className={step > 1 ? 'text-foreground' : undefined}
       >
         {t('landlordContractsCreateStep1Btn')}
@@ -27,10 +26,9 @@ export function ContractWizardProgress() {
 
       <Button
         variant={step === 2 ? 'primary' : 'ghost'}
-        type="button"
         onClick={() => goToStep(2)}
         size="md"
-        leftIcon={step > 2 ? <Check className="w-4 h-4 text-emerald-500" /> : <DollarSign className="w-4 h-4" />}
+        leftIcon={step > 2 ? <Check className="text-emerald-500" /> : <DollarSign />}
         className={step > 2 ? 'text-foreground' : undefined}
       >
         {t('landlordContractsCreateStep2Btn')}
@@ -40,10 +38,9 @@ export function ContractWizardProgress() {
 
       <Button
         variant={step === 3 ? 'primary' : 'ghost'}
-        type="button"
         onClick={() => goToStep(3)}
         size="md"
-        leftIcon={<FileSignature className="w-4 h-4" />}
+        leftIcon={<FileSignature />}
       >
         {t('landlordContractsCreateStep3Header')}
       </Button>

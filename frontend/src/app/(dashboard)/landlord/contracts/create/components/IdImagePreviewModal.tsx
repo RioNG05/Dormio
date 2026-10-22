@@ -25,12 +25,11 @@ export function IdImagePreviewModal() {
             <span className="text-sm font-bold">{previewModalImg.title}</span>
           </div>
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={() => setPreviewModalImg(null)}
           >
-            <X className="w-5 h-5" />
+            <X />
           </Button>
         </div>
         <div className="mt-3 flex items-center justify-center bg-zinc-950 rounded-2xl overflow-hidden min-h-[260px] max-h-[70vh]">

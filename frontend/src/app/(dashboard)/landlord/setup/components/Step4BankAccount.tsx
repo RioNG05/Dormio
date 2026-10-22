@@ -61,8 +61,6 @@ export function Step4BankAccount({
                   {POPULAR_BANKS.map(bName => (
                     <Button
                       key={bName}
-                      type="button"
-                      size="sm"
                       variant={bankInfo.bankName === bName ? 'primary' : 'outline'}
                       onClick={() => onChangeBankInfo(prev => ({ ...prev, bankName: bName }))}
                     >
@@ -168,21 +166,18 @@ export function Step4BankAccount({
       {/* Step 4 Navigation / Final Submit */}
       <Form.Actions align="between" className="pt-2">
         <Button
-          type="button"
           variant="outline"
           disabled={isSubmitting}
           onClick={onBack}
-          leftIcon={<ChevronLeft className="w-4 h-4" />}
+          leftIcon={<ChevronLeft />}
         >
           {t('landlordSetupBackToStep3')}
         </Button>
         <Button
-          type="button"
-          variant="primary"
           disabled={isSubmitting || !isValid}
           isLoading={isSubmitting}
           onClick={onSubmit}
-          leftIcon={<Check className="w-4 h-4" />}
+          leftIcon={<Check />}
         >
           {t('landlordSetupSubmit')}
         </Button>

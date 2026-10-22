@@ -80,12 +80,11 @@ export function RoomEditModal({
             </div>
           </div>
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={onClose}
           >
-            <X className="w-4 h-4" />
+            <X />
           </Button>
         </div>
 
@@ -196,9 +195,7 @@ export function RoomEditModal({
           <div>
             {isCustomized && (
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={onResetToDefault}
               >
                 {t('landlordSetupRoomModalResetToDefault')}
@@ -207,14 +204,12 @@ export function RoomEditModal({
           </div>
           <div className="flex items-center gap-2.5">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={onClose}
             >
               {t('landlordSetupRoomModalCancel')}
             </Button>
-            <Button type="button" variant="primary" size="sm" onClick={onSave} >
+            <Button onClick={onSave} >
               {t('landlordSetupRoomModalSave')}
             </Button>
           </div>

@@ -15,9 +15,7 @@ export function ContractWizardFooter() {
     <div className="flex justify-between items-center pt-4 border-t border-line">
       {step === 1 ? (
         <Button
-          type="button"
           variant="outline"
-          size="sm"
           onClick={handleAttemptClose}
           disabled={isPending}
         >
@@ -25,9 +23,7 @@ export function ContractWizardFooter() {
         </Button>
       ) : (
         <Button
-          type="button"
           variant="outline"
-          size="sm"
           onClick={() => goToStep((step - 1) as 1 | 2)}
           disabled={isPending}
           leftIcon={<ChevronLeft />}
@@ -38,9 +34,6 @@ export function ContractWizardFooter() {
 
       {step === 1 && (
         <Button
-          type="button"
-          variant="primary"
-          size="sm"
           onClick={() => goToStep(2)}
           disabled={isPending}
           rightIcon={<ChevronRight />}
@@ -51,9 +44,6 @@ export function ContractWizardFooter() {
 
       {step === 2 && (
         <Button
-          type="button"
-          variant="primary"
-          size="sm"
           onClick={() => goToStep(3)}
           disabled={isPending}
           rightIcon={<ChevronRight />}
@@ -64,9 +54,6 @@ export function ContractWizardFooter() {
 
       {step === 3 && (
         <Button
-          type="button"
-          variant="primary"
-          size="sm"
           disabled={isPending}
           isLoading={isPending}
           onClick={handleSubmitContract}

@@ -195,11 +195,9 @@ export function Step1RoomTenant() {
               />
               {flowType === 'direct' && (
                 <Button
-                  type="button"
                   disabled={isSearchingPhone || tenantPhone.length !== 10}
                   isLoading={isSearchingPhone}
                   onClick={() => handleSearchPhone(tenantPhone)}
-                  size="sm"
                   leftIcon={<Search />}
                   className="absolute right-1.5 bottom-1.5"
                 >
@@ -492,9 +490,7 @@ export function Step1RoomTenant() {
                 </div>
                 <div className="flex items-center justify-between gap-1.5 pt-0.5">
                   <Button
-                    type="button"
                     variant="outline"
-                    size="sm"
                     onClick={() =>
                       setPreviewModalImg({
                         url: cardFrontUrl,
@@ -509,9 +505,7 @@ export function Step1RoomTenant() {
                   {canEditTenantInfo ? (
                     <div className="flex items-center gap-1.5">
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
                         disabled={uploadingFront}
                         onClick={() => document.getElementById('cccd-front-file')?.click()}
                         leftIcon={<RefreshCw />}
@@ -519,14 +513,13 @@ export function Step1RoomTenant() {
                         {t('landlordContractsCreateCccdChangePhoto')}
                       </Button>
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
+                        size="icon-sm"
                         disabled={uploadingFront}
                         onClick={() => setCardFrontUrl('')}
                         title={t('landlordContractsCreateCccdRemovePhoto')}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 />
                       </Button>
                     </div>
                   ) : (
@@ -639,9 +632,7 @@ export function Step1RoomTenant() {
                 </div>
                 <div className="flex items-center justify-between gap-1.5 pt-0.5">
                   <Button
-                    type="button"
                     variant="outline"
-                    size="sm"
                     onClick={() =>
                       setPreviewModalImg({
                         url: cardBackUrl,
@@ -656,9 +647,7 @@ export function Step1RoomTenant() {
                   {canEditTenantInfo ? (
                     <div className="flex items-center gap-1.5">
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
                         disabled={uploadingBack}
                         onClick={() => document.getElementById('cccd-back-file')?.click()}
                         leftIcon={<RefreshCw />}
@@ -666,14 +655,13 @@ export function Step1RoomTenant() {
                         {t('landlordContractsCreateCccdChangePhoto')}
                       </Button>
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
+                        size="icon-sm"
                         disabled={uploadingBack}
                         onClick={() => setCardBackUrl('')}
                         title={t('landlordContractsCreateCccdRemovePhoto')}
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 />
                       </Button>
                     </div>
                   ) : (
@@ -751,13 +739,12 @@ export function Step1RoomTenant() {
           <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
           <span>{errorMessage}</span>
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={() => setErrorMessage(null)}
             className="ml-auto"
           >
-            <X className="w-4 h-4" />
+            <X />
           </Button>
         </div>
       )}

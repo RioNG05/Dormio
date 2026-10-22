@@ -228,8 +228,6 @@ export function Step3BulkRoomsAndPreview({
                 {nameFormatPresets.map(preset => (
                   <Button
                     key={preset.value}
-                    type="button"
-                    size="sm"
                     variant={roomsConfig.nameFormat === preset.value ? 'primary' : 'outline'}
                     onClick={() =>
                       onChangeRoomsConfig(prev => ({
@@ -305,8 +303,6 @@ export function Step3BulkRoomsAndPreview({
                     return (
                       <Button rounded="full"
                         key={service.id}
-                        type="button"
-                        size="sm"
                         variant={isSelected ? 'secondary' : 'outline'}
                         onClick={() => toggleServiceIndex(idx)}
                         className={cn(
@@ -412,8 +408,6 @@ export function Step3BulkRoomsAndPreview({
                     {group.rooms.map(room => (
                       <Button rounded="full"
                         key={room.index}
-                        type="button"
-                        size="sm"
                         variant={room.isCustomized ? 'secondary' : 'outline'}
                         onClick={() => handleOpenRoomModal(group.floor, room.index)}
                         title={t('landlordSetupPreviewClickToEditHint')}
@@ -452,20 +446,17 @@ export function Step3BulkRoomsAndPreview({
       {/* Step 3 Navigation / Submit */}
       <Form.Actions align="between" className="pt-2">
         <Button
-          type="button"
           variant="outline"
           disabled={isSubmitting}
           onClick={onBack}
-          leftIcon={<ChevronLeft className="w-4 h-4" />}
+          leftIcon={<ChevronLeft />}
         >
           {t('landlordSetupBackToStep2')}
         </Button>
         <Button
-          type="button"
-          variant="primary"
           disabled={isSubmitting || isQuotaExceeded || totalRoomsToCreate < 1}
           onClick={onNext}
-          rightIcon={<ChevronRight className="w-4 h-4" />}
+          rightIcon={<ChevronRight />}
         >
           {t('landlordSetupNextToStep4')}
         </Button>

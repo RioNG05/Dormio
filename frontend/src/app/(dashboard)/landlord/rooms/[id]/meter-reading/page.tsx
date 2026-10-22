@@ -623,11 +623,8 @@ export default function LandlordRoomMeterReadingPage({
 
                         <div className="absolute bottom-3 right-3 flex items-center gap-2">
                           <Button
-                            type="button"
-                            size="sm"
-                            variant="primary"
                             onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                            leftIcon={<RotateCcw />}
                           >
                             {t('landlordMeterRecordRetake')}
                           </Button>
@@ -662,9 +659,7 @@ export default function LandlordRoomMeterReadingPage({
                         </Text>
                         {!state.isEditing && state.readingValue !== null && (
                           <Button
-                            type="button"
                             variant="ghost"
-                            size="sm"
                             onClick={() =>
                               setReadingsState(prev => ({
                                 ...prev,
@@ -694,8 +689,6 @@ export default function LandlordRoomMeterReadingPage({
                             />
                           </div>
                           <Button
-                            type="button"
-                            variant="primary"
                             size="md"
                             onClick={() => handleSaveDraft(service.serviceId)}
                           >
@@ -798,7 +791,6 @@ export default function LandlordRoomMeterReadingPage({
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <Button
-            type="button"
             variant="outline"
             size="md"
             onClick={() => router.push(`/landlord/rooms/${roomId}`)}
@@ -808,13 +800,11 @@ export default function LandlordRoomMeterReadingPage({
           </Button>
 
           <Button
-            type="button"
-            variant="primary"
             size="md"
             disabled={!isReadyToConfirm || isSubmitting}
             isLoading={isSubmitting}
             onClick={() => setShowConfirmModal(true)}
-            leftIcon={<CheckCircle2 className="w-4 h-4" />}
+            leftIcon={<CheckCircle2 />}
             className="flex-1 sm:flex-initial"
           >
             {t('landlordMeterRecordBtnConfirm')}
@@ -846,7 +836,6 @@ export default function LandlordRoomMeterReadingPage({
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
               size="md"
               onClick={() => setShowConfirmModal(false)}
@@ -855,8 +844,6 @@ export default function LandlordRoomMeterReadingPage({
               {t('landlordMeterRecordModalContinueEditing')}
             </Button>
             <Button
-              type="button"
-              variant="primary"
               size="md"
               disabled={isSubmitting}
               isLoading={isSubmitting}

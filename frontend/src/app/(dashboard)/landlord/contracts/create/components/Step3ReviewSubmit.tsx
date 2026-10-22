@@ -134,13 +134,12 @@ export function Step3ReviewSubmit() {
           <AlertCircle className="w-5 h-5 shrink-0 text-danger" />
           <span>{errorMessage}</span>
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={() => setErrorMessage(null)}
             className="ml-auto"
           >
-            <X className="w-4 h-4" />
+            <X />
           </Button>
         </div>
       )}

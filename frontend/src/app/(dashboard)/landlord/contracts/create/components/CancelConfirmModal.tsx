@@ -35,8 +35,6 @@ export function CancelConfirmModal() {
 
         <div className="flex items-center gap-3 pt-2">
           <Button
-            size="sm"
-            type="button"
             variant="secondary"
             onClick={() => setShowConfirmClose(false)}
             className="flex-1"
@@ -44,8 +42,6 @@ export function CancelConfirmModal() {
             {t('landlordContractsCreateConfirmCloseKeep')}
           </Button>
           <Button
-            size="sm"
-            type="button"
             variant="danger"
             onClick={handleConfirmClose}
             className="flex-1"
