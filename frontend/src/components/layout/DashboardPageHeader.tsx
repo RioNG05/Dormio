@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 export interface DashboardPageHeaderProps {
   title: React.ReactNode
   subtitle?: React.ReactNode
+  description?: React.ReactNode
   badge?: React.ReactNode
   actions?: React.ReactNode
   className?: string
@@ -13,10 +14,12 @@ export interface DashboardPageHeaderProps {
 export function DashboardPageHeader({
   title,
   subtitle,
+  description,
   badge,
   actions,
   className,
 }: DashboardPageHeaderProps) {
+  const displaySubtitle = subtitle ?? description
   return (
     <div
       className={cn(
@@ -33,13 +36,13 @@ export function DashboardPageHeader({
         ) : (
           title
         )}
-        {subtitle &&
-          (typeof subtitle === 'string' ? (
+        {displaySubtitle &&
+          (typeof displaySubtitle === 'string' ? (
             <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5 leading-relaxed">
-              {subtitle}
+              {displaySubtitle}
             </Text>
           ) : (
-            subtitle
+            displaySubtitle
           ))}
       </div>
       {actions && (
