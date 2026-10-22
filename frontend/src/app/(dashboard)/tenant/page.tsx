@@ -384,9 +384,8 @@ export default function TenantOverviewPage() {
           </div>
 
           <Link href={`/tenant/invoices/${latestInvoice.id}`} className="w-full sm:w-auto">
-            <Button size="xs" variant="orange" className="sm:w-auto">
-              <span>{t('payNow')}</span>
-              <ArrowRight className="w-4 h-4" />
+            <Button size="xs" variant="orange" rightIcon={<ArrowRight />} className="sm:w-auto">
+              {t('payNow')}
             </Button>
           </Link>
         </div>
@@ -491,17 +490,11 @@ export default function TenantOverviewPage() {
                         </a>
                         <Button
                           variant="secondary"
-                          size="sm"
-                          type="button"
                           onClick={handleCopyBank}
                           title={t('stkLabel')}
+                          leftIcon={copiedBank ? <Check className="text-success" /> : <Copy />}
                         >
-                          {copiedBank ? (
-                            <Check className="w-3 h-3 text-success" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
-                          <span>{copiedBank ? t('copied') : t('stkLabel')}</span>
+                          {copiedBank ? t('copied') : t('stkLabel')}
                         </Button>
                       </div>
                     </div>
@@ -566,7 +559,7 @@ export default function TenantOverviewPage() {
               action={
                 FEATURE_FLAGS.ENABLE_BHRP ? (
                   <Link href="/rooms">
-                    <Button size="sm">
+                    <Button>
                       {t('exploreHousesBtn')}
                     </Button>
                   </Link>
@@ -713,7 +706,7 @@ export default function TenantOverviewPage() {
             </div>
 
             <div className="pt-4 flex justify-end border-t border-line">
-              <Button size="sm" onClick={() => setSelectedNotice(null)}>
+              <Button onClick={() => setSelectedNotice(null)}>
                 {t('btnClose')}
               </Button>
             </div>

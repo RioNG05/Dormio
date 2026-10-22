@@ -549,12 +549,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           <p className="text-xs text-muted max-w-md mx-auto">{t('loadInvoiceError')}</p>
         </div>
         <div>
-          <Button size="xs"
-            variant="primary"
+          <Button
+            size="xs"
+            leftIcon={<ArrowLeft />}
             onClick={() => router.push('/tenant/invoices')}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            <span>{t('backToInvoices')}</span>
+            {t('backToInvoices')}
           </Button>
         </div>
       </div>
@@ -739,20 +739,15 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="secondary"
-                        size="sm"
-                        type="button"
                         onClick={() => deviceUploadRefs.current[sId]?.click()}
+                        leftIcon={<UploadCloud />}
                       >
-                        <UploadCloud className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('btnUploadFromDevice')}</span>
                       </Button>
                       <Button
-                        variant="primary"
-                        size="sm"
-                        type="button"
                         onClick={() => cameraUploadRefs.current[sId]?.click()}
+                        leftIcon={<Camera />}
                       >
-                        <Camera className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{t('btnCaptureNow')}</span>
                       </Button>
                     </div>
@@ -942,7 +937,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
 
         {/* CTA: Complete and Generate PayOS QR */}
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
-          <Button size="xs"
+          <Button
+            size="xs"
             variant="ghost"
             onClick={handleBackClick}
             className="sm:w-auto"
@@ -950,23 +946,15 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             {t('btnClose')}
           </Button>
 
-          <Button size="icon"
-            variant="primary"
+          <Button
+            size="md"
             onClick={handleCompleteAndPay}
             disabled={isCreatingCheckout}
+            isLoading={isCreatingCheckout}
+            leftIcon={<CreditCard />}
             className="sm:w-auto sm:text-sm"
           >
-            {isCreatingCheckout ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>{t('btnCreatingQr')}</span>
-              </>
-            ) : (
-              <>
-                <CreditCard className="w-4 h-4" />
-                <span>{t('btnCompleteAndPay')}</span>
-              </>
-            )}
+            {t('btnCompleteAndPay')}
           </Button>
         </div>
       </div>
@@ -1054,12 +1042,12 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
               </div>
 
               {isExpired ? (
-                <Button fullWidth size="icon"
-                  variant="primary"
+                <Button
+                  fullWidth
+                  leftIcon={<RefreshCw />}
                   onClick={handleCompleteAndPay}
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>{t('btnRegenerateQr')}</span>
+                  {t('btnRegenerateQr')}
                 </Button>
               ) : (
                 <div className="flex items-center gap-2 text-xs text-muted font-bold animate-pulse">
@@ -1095,15 +1083,14 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 </div>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  type="button"
+                  size="icon-xs"
                   onClick={() => handleCopy(payOsData.accountNumber, 'acc')}
                   title="Sao chép số tài khoản"
                 >
                   {copiedKey === 'acc' ? (
-                    <Check className="w-4 h-4 text-success" />
+                    <Check className="text-success" />
                   ) : (
-                    <Copy className="w-4 h-4" />
+                    <Copy />
                   )}
                 </Button>
               </div>
@@ -1134,15 +1121,14 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 </div>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  type="button"
+                  size="icon-xs"
                   onClick={() => handleCopy(payOsData.amount.toString(), 'amount')}
                   title="Sao chép số tiền"
                 >
                   {copiedKey === 'amount' ? (
-                    <Check className="w-4 h-4 text-success" />
+                    <Check className="text-success" />
                   ) : (
-                    <Copy className="w-4 h-4" />
+                    <Copy />
                   )}
                 </Button>
               </div>
@@ -1165,15 +1151,14 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                 </div>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  type="button"
+                  size="icon-xs"
                   onClick={() => handleCopy(payOsData.description, 'syntax')}
                   title="Sao chép cú pháp"
                 >
                   {copiedKey === 'syntax' ? (
-                    <Check className="w-4 h-4 text-success" />
+                    <Check className="text-success" />
                   ) : (
-                    <Copy className="w-4 h-4" />
+                    <Copy />
                   )}
                 </Button>
               </div>
@@ -1194,12 +1179,13 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           >
             <div className="flex items-center justify-between border-b border-line pb-3">
               <h3 className="text-sm font-black text-foreground">{t('meterReadingPhotoTitle')}</h3>
-              <Button rounded="full"
+              <Button
                 variant="ghost"
-                size="icon"
+                size="icon-sm"
+                title="Đóng"
                 onClick={() => setInspectImage(null)}
               >
-                <X className="w-4 h-4" />
+                <X />
               </Button>
             </div>
             <div className="h-80 w-full rounded-2xl overflow-hidden bg-card-hover">
@@ -1212,7 +1198,6 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
             <div className="flex justify-end">
               <Button
                 variant="secondary"
-                size="sm"
                 onClick={() => setInspectImage(null)}
               >
                 {t('btnClose')}

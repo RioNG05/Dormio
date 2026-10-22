@@ -338,9 +338,8 @@ export default function TenantMeterReadingsPage() {
           action={
             <Button
               variant="outline"
-              size="sm"
               onClick={() => loadData()}
-              leftIcon={<RefreshCw className="w-4 h-4" />}
+              leftIcon={<RefreshCw />}
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
                 {t('btnRetry')}
@@ -349,7 +348,7 @@ export default function TenantMeterReadingsPage() {
           }
           secondaryAction={
             <Link href="/tenant">
-              <Button variant="primary" size="sm">
+              <Button>
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {t('btnBackToDashboard')}
                 </Text>
@@ -371,7 +370,7 @@ export default function TenantMeterReadingsPage() {
           description={t('noMeteredServicesDesc')}
           action={
             <Link href="/tenant">
-              <Button variant="primary" size="sm">
+              <Button>
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {t('btnBackToDashboard')}
                 </Text>
@@ -637,11 +636,10 @@ export default function TenantMeterReadingsPage() {
                       {!state.isScanning && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          leftIcon={<Camera />}
                           onClick={() => fileInputRefs.current[service.serviceId]?.click()}
                           className="absolute bottom-2 right-2 backdrop-blur-md opacity-90 hover:opacity-100 bg-black/40 text-white hover:bg-black/60"
                         >
-                          <Camera className="w-3.5 h-3.5 mr-1" />
                           <Text as="span" size="xs" weight="medium" color="inherit">
                             {t('retakePhoto')}
                           </Text>
@@ -652,7 +650,6 @@ export default function TenantMeterReadingsPage() {
                     <Button
                       fullWidth
                       variant="ghost"
-                      size="sm"
                       onClick={() => fileInputRefs.current[service.serviceId]?.click()}
                       className="aspect-video md:aspect-[4/3] flex-col group border-2 border-dashed border-line hover:border-teal-400 bg-surface/50"
                     >
@@ -683,7 +680,6 @@ export default function TenantMeterReadingsPage() {
                       {state.readingValue !== null && !state.isEditing && (
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() =>
                             setReadingsState(prev => ({
                               ...prev,
@@ -797,12 +793,12 @@ export default function TenantMeterReadingsPage() {
             size="lg"
             onClick={() => setShowConfirmModal(true)}
             disabled={!isReadyToConfirm}
+            rightIcon={<ArrowRight />}
             className="sm:w-auto"
           >
             <Text as="span" size="sm" weight="bold" color="inherit">
               {t('confirmAndViewInvoiceBtn')}
             </Text>
-            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       )}
@@ -871,22 +867,15 @@ export default function TenantMeterReadingsPage() {
             </Text>
           </Button>
 
-          <Button onClick={handleConfirmSubmit} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('generatingInvoice')}
-                </Text>
-              </div>
-            ) : (
-              <>
-                <Check className="w-4 h-4 mr-1.5" />
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('btnConfirmAndGenerate')}
-                </Text>
-              </>
-            )}
+          <Button
+            onClick={handleConfirmSubmit}
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            leftIcon={<Check />}
+          >
+            <Text as="span" size="xs" weight="bold" color="inherit">
+              {t('btnConfirmAndGenerate')}
+            </Text>
           </Button>
         </Modal.Footer>
       </Modal>
@@ -959,7 +948,7 @@ export default function TenantMeterReadingsPage() {
                   href="/tenant/invoices"
                   className="w-full sm:w-1/2"
                 >
-                  <Button variant="outline" fullWidth size="sm">
+                  <Button variant="outline" fullWidth>
                     <Text as="span" size="xs" weight="bold" color="inherit">
                       {t('viewInvoicesListBtn')}
                     </Text>
@@ -970,7 +959,7 @@ export default function TenantMeterReadingsPage() {
                   href="/tenant/invoices"
                   className="w-full sm:w-1/2"
                 >
-                  <Button variant="primary" fullWidth size="sm">
+                  <Button fullWidth>
                     <Text as="span" size="xs" weight="bold" color="inherit">
                       {t('payNowVietQrBtn')}
                     </Text>

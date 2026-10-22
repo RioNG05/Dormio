@@ -790,16 +790,13 @@ export default function StaffOverviewPage() {
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={() => {
                     fetchOverview()
                     fetchMonthlySummary()
                   }}
-                  leftIcon={<RefreshCw  />}
+                  leftIcon={<RefreshCw />}
                 >
-                  <span>{t('btnRefreshData')}</span>
+                  {t('btnRefreshData')}
                 </Button>
 
                 <Link
@@ -994,9 +991,7 @@ export default function StaffOverviewPage() {
                           </div>
                         </div>
                         <Button
-                          type="button"
                           variant="ghost"
-                          size="sm"
                           onClick={() =>
                             setPreviewImageModal({
                               isOpen: true,
@@ -1021,10 +1016,10 @@ export default function StaffOverviewPage() {
                               ),
                             })
                           }
-                          leftIcon={<Eye  />}
+                          leftIcon={<Eye />}
                           className="hover:underline"
                         >
-                          <span>{t('viewPhoto')}</span>
+                          {t('viewPhoto')}
                         </Button>
                       </div>
                     )}
@@ -1131,9 +1126,7 @@ export default function StaffOverviewPage() {
                           </div>
                         </div>
                         <Button
-                          type="button"
                           variant="ghost"
-                          size="sm"
                           onClick={() =>
                             setPreviewImageModal({
                               isOpen: true,
@@ -1158,10 +1151,10 @@ export default function StaffOverviewPage() {
                               ),
                             })
                           }
-                          leftIcon={<Eye  />}
+                          leftIcon={<Eye />}
                           className="hover:underline"
                         >
-                          <span>{t('viewPhoto')}</span>
+                          {t('viewPhoto')}
                         </Button>
                       </div>
                     )}
@@ -1185,9 +1178,7 @@ export default function StaffOverviewPage() {
                   {/* Check In Button */}
                   {attendance?.checkIn ? (
                     <Button
-                      type="button"
                       variant="outline"
-                      size="sm"
                       onClick={() =>
                         setPreviewImageModal({
                           isOpen: true,
@@ -1212,32 +1203,25 @@ export default function StaffOverviewPage() {
                           ),
                         })
                       }
-                      leftIcon={<CheckCircle2  />}
+                      leftIcon={<CheckCircle2 />}
                       className="sm:text-sm"
                     >
-                      <span>{t('btnCheckInLocked')}</span>
+                      {t('btnCheckInLocked')}
                     </Button>
                   ) : (
                     <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
                       disabled={!checkInEval.allowed}
                       onClick={handleOpenCheckIn}
-                      leftIcon={<Camera  />}
+                      leftIcon={<Camera />}
                     >
-                      <span>
-                        {checkInEval.isLate ? t('btnCheckInLate') : t('btnCheckInOnTime')}
-                      </span>
+                      {checkInEval.isLate ? t('btnCheckInLate') : t('btnCheckInOnTime')}
                     </Button>
                   )}
 
                   {/* Check Out Button */}
                   {attendance?.checkOut ? (
                     <Button
-                      type="button"
                       variant="outline"
-                      size="sm"
                       onClick={() =>
                         setPreviewImageModal({
                           isOpen: true,
@@ -1262,23 +1246,18 @@ export default function StaffOverviewPage() {
                           ),
                         })
                       }
-                      leftIcon={<CheckCircle2  />}
+                      leftIcon={<CheckCircle2 />}
                       className="sm:text-sm"
                     >
-                      <span>{t('btnCheckOutLocked')}</span>
+                      {t('btnCheckOutLocked')}
                     </Button>
                   ) : (
                     <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
                       disabled={!checkOutEval.allowed}
                       onClick={handleOpenCheckOut}
-                      leftIcon={<LogOut  />}
+                      leftIcon={<LogOut />}
                     >
-                      <span>
-                        {checkOutEval.isEarly ? t('btnCheckOutEarly') : t('btnCheckOutNormal')}
-                      </span>
+                      {checkOutEval.isEarly ? t('btnCheckOutEarly') : t('btnCheckOutNormal')}
                     </Button>
                   )}
                 </div>
@@ -1438,17 +1417,15 @@ export default function StaffOverviewPage() {
                             )}
 
                             <Button
-                              type="button"
                               variant="outline"
-                              size="sm"
                               onClick={() => {
                                 setSelectedDutyForProof(duty)
                                 setActiveModal('duty_proof')
                               }}
-                              leftIcon={<FileText  />}
+                              leftIcon={<FileText />}
                               className="shrink-0"
                             >
-                              <span>{t('btnUpdateDetails')}</span>
+                              {t('btnUpdateDetails')}
                             </Button>
                           </div>
                         </div>
@@ -1682,12 +1659,12 @@ export default function StaffOverviewPage() {
                 </h3>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
+                title="Đóng"
                 onClick={() => setPreviewImageModal(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1756,9 +1733,7 @@ export default function StaffOverviewPage() {
             {/* Footer */}
             <div className="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-end">
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => setPreviewImageModal(null)}
               >
                 {t('btnClose')}
@@ -1789,17 +1764,13 @@ export default function StaffOverviewPage() {
             </div>
             <div className="grid grid-cols-2 gap-2.5 pt-1">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setShowConfirmClose(false)}
               >
                 {t('btnContinueEditing')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmDiscardClose}
               >
                 {t('btnDiscardAndClose')}
@@ -2384,15 +2355,15 @@ function CheckInOutCameraModal({
             </div>
           </div>
           <Button
-            type="button"
             variant="ghost"
-            size="sm"
+            size="icon-sm"
+            title="Đóng"
             onClick={() => {
               stopCamera()
               onClose()
             }}
           >
-            <X className="w-5 h-5" />
+            <X />
           </Button>
         </div>
 
@@ -2446,9 +2417,7 @@ function CheckInOutCameraModal({
                     <MapPin className="w-3 h-3 text-muted" />
                     {t('gpsDisabled')}
                     <Button
-                      type="button"
                       variant="ghost"
-                      size="sm"
                       onClick={locateUser}
                       className="hover:underline ml-1 inline"
                     >
@@ -2504,32 +2473,26 @@ function CheckInOutCameraModal({
                       />
                       <div className="flex flex-col sm:flex-row gap-2 pt-1 justify-center">
                         <Button
-                          type="button"
                           variant="ghost"
-                          size="sm"
                           onClick={() => startCamera(facingMode)}
                         >
                           {t('retryCamera')}
                         </Button>
                         <Button
-                          type="button"
                           variant="ghost"
-                          size="sm"
                           onClick={() => fallbackFileInputRef.current?.click()}
-                          leftIcon={<Upload  />}
+                          leftIcon={<Upload />}
                         >
-                          <span>{t('btnUploadDuty')}</span>
+                          {t('btnUploadDuty')}
                         </Button>
                       </div>
                     </div>
                   )}
                   {cameraStatus === 'ready' && (
                     <Button
-                      type="button"
                       variant="ghost"
-                      size="sm"
                       onClick={handleToggleFacingMode}
-                      leftIcon={<RefreshCw  />}
+                      leftIcon={<RefreshCw />}
                       className="absolute top-3 right-3 z-20 backdrop-blur-md"
                     >
                       {facingMode === 'user' ? t('cameraRear') : t('cameraFront')}
@@ -2587,33 +2550,28 @@ function CheckInOutCameraModal({
             {/* Snap Button */}
             <div className="flex items-center justify-center gap-3 pt-1">
               {!capturedPhoto ? (
-                <Button fullWidth
-                  type="button"
-                  variant="primary"
-                  size="sm"
+                <Button
+                  fullWidth
                   disabled={cameraStatus !== 'ready' || geoState.status === 'locating'}
                   onClick={handleCaptureRealFrame}
                   leftIcon={
                     geoState.status === 'locating' ? (
-                      <RefreshCw  />
+                      <RefreshCw />
                     ) : (
-                      <Camera  />
+                      <Camera />
                     )
                   }
                 >
-                  <span>
-                    {geoState.status === 'locating' ? t('waitingGps') : t('btnCaptureNow')}
-                  </span>
+                  {geoState.status === 'locating' ? t('waitingGps') : t('btnCaptureNow')}
                 </Button>
               ) : (
-                <Button fullWidth
-                  type="button"
+                <Button
+                  fullWidth
                   variant="outline"
-                  size="sm"
                   onClick={handleRetakePhoto}
-                  leftIcon={<RefreshCw  />}
+                  leftIcon={<RefreshCw />}
                 >
-                  <span>{t('btnRetake')}</span>
+                  {t('btnRetake')}
                 </Button>
               )}
             </div>
@@ -2655,9 +2613,7 @@ function CheckInOutCameraModal({
                   {currentPresets.map((chip, idx) => (
                     <Button
                       key={idx}
-                      type="button"
                       variant="ghost"
-                      size="sm"
                       onClick={() => handleSelectChip(chip)}
                     >
                       {chip}
@@ -2704,9 +2660,7 @@ function CheckInOutCameraModal({
         {/* MODAL FOOTER */}
         <div className="p-4 sm:p-5 bg-surface border-t border-line flex items-center justify-end gap-2.5">
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => {
               stopCamera()
               onClose()
@@ -2715,9 +2669,6 @@ function CheckInOutCameraModal({
             {t('btnCancel')}
           </Button>
           <Button
-            type="button"
-            variant="primary"
-            size="sm"
             disabled={!isFormValid}
             onClick={() => {
               if (capturedPhoto && capturedWatermark && capturedTime && isFormValid) {
@@ -2731,9 +2682,9 @@ function CheckInOutCameraModal({
                 })
               }
             }}
+            leftIcon={<Check />}
           >
-            <Check className="w-4 h-4" />
-            <span>{mode === 'checkin' ? t('btnConfirmCheckIn') : t('btnConfirmCheckOut')}</span>
+            {mode === 'checkin' ? t('btnConfirmCheckIn') : t('btnConfirmCheckOut')}
           </Button>
         </div>
       </div>
@@ -2897,21 +2848,16 @@ function DutyProofModal({
               onChange={handleFileUpload}
             />
             <Button
-              type="button"
-              variant="primary"
-              size="sm"
               onClick={() => cameraRef.current?.click()}
-              leftIcon={<Camera  />}
+              leftIcon={<Camera />}
               className="flex-1"
             >
               <span>{t('btnCaptureNewDuty')}</span>
             </Button>
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={() => fileRef.current?.click()}
-              leftIcon={<Upload  />}
+              leftIcon={<Upload />}
             >
               <span>{t('btnUploadDuty')}</span>
             </Button>
@@ -2942,9 +2888,7 @@ function DutyProofModal({
         {/* Footer with 2 separate action buttons: Update Progress & Complete Task */}
         <div className="p-4 sm:p-5 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-2.5">
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={onClose}
           >
             {t('btnCancel')}
@@ -2952,9 +2896,7 @@ function DutyProofModal({
 
           <div className="flex items-center gap-2">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={() => {
                 onSubmit({
                   dutyId: duty.id,
@@ -2964,15 +2906,12 @@ function DutyProofModal({
                   markCompleted: false,
                 })
               }}
-              leftIcon={<FileText  />}
+              leftIcon={<FileText />}
             >
               <span>{t('btnUpdateProgress')}</span>
             </Button>
 
             <Button
-              type="button"
-              variant="primary"
-              size="sm"
               onClick={() => {
                 if (duty.requiresPhoto && !photo) {
                   setWarningNotice(t('photoProofRequiredWarning'))
@@ -2986,7 +2925,7 @@ function DutyProofModal({
                   markCompleted: true,
                 })
               }}
-              leftIcon={<Check  />}
+              leftIcon={<Check />}
             >
               <span>{t('btnCompleteDuty')}</span>
             </Button>

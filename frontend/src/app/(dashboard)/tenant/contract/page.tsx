@@ -203,7 +203,7 @@ export default function TenantContractPage() {
             description={t('tenantNoActiveContractDesc')}
             action={
               <Link href="/tenant">
-                <Button variant="primary" size="md">
+                <Button size="md">
                   Quay lại Tổng quan
                 </Button>
               </Link>
@@ -231,17 +231,14 @@ export default function TenantContractPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={handleCopyContractId}
-              leftIcon={<Copy className="w-4 h-4" />}
+              leftIcon={<Copy />}
             >
               Mã: {contract.id.substring(0, 8)}...
             </Button>
             <Button
-              variant="primary"
-              size="sm"
               onClick={() => setIsPreviewModalOpen(true)}
-              leftIcon={<Printer className="w-4 h-4" />}
+              leftIcon={<Printer />}
             >
               {t('tenantContractViewAndPrint')}
             </Button>
@@ -278,10 +275,8 @@ export default function TenantContractPage() {
 
               <div className="flex items-center gap-2">
                 <Button
-                  variant="primary"
-                  size="sm"
                   onClick={() => setIsPreviewModalOpen(true)}
-                  leftIcon={<Printer className="w-4 h-4" />}
+                  leftIcon={<Printer />}
                 >
                   {t('tenantContractViewAndPrint')}
                 </Button>
@@ -469,10 +464,9 @@ export default function TenantContractPage() {
 
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => handleDownloadDoc(doc.id, doc.createdAt)}
                       isLoading={downloadingDocId === doc.id}
-                      leftIcon={<Download className="w-3.5 h-3.5" />}
+                      leftIcon={<Download />}
                     >
                       {t('tenantContractDownloadDoc')}
                     </Button>
@@ -488,9 +482,8 @@ export default function TenantContractPage() {
                 action={
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => setIsPreviewModalOpen(true)}
-                    leftIcon={<Printer className="w-3.5 h-3.5" />}
+                    leftIcon={<Printer />}
                   >
                     {t('tenantContractViewAndPrint')}
                   </Button>
@@ -544,7 +537,7 @@ export default function TenantContractPage() {
 
             <div className="pt-2">
               <Link href="/tenant/room">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" className="w-full">
                   Xem chi tiết phòng thuê
                 </Button>
               </Link>
@@ -610,7 +603,7 @@ export default function TenantContractPage() {
 
             <div className="pt-2">
               <Link href="/tenant/messages">
-                <Button variant="secondary" size="sm" className="w-full">
+                <Button variant="secondary" className="w-full">
                   Nhắn tin với chủ trọ
                 </Button>
               </Link>

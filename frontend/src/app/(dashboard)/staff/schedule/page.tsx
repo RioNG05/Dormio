@@ -459,13 +459,11 @@ function StaffScheduleContent() {
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="sm"
-              type="button"
               onClick={handleCurrentWeek}
               title={t('titleReturnCurrentWeek')}
+              leftIcon={<span className="w-2.5 h-2.5 rounded-full bg-primary" />}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-primary" />
-              <span>{todayLabel}</span>
+              {todayLabel}
             </Button>
           </div>
         </div>
@@ -476,34 +474,30 @@ function StaffScheduleContent() {
             <div className="flex items-center gap-1">
               <Button
                 variant="secondary"
-                size="sm"
-                type="button"
+                size="icon-sm"
                 onClick={handlePrevWeek}
                 title={t('titlePrevWeek')}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft />
               </Button>
               <Button
                 variant="secondary"
-                size="sm"
-                type="button"
+                size="icon-sm"
                 onClick={handleNextWeek}
                 title={t('titleNextWeek')}
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight />
               </Button>
             </div>
 
             {/* Nút bấm "Xem lịch hôm nay" để trở về lịch làm việc của tuần hiện tại */}
             <Button
               variant="secondary"
-              size="sm"
-              type="button"
               onClick={handleCurrentWeek}
               title={t('titleTodaySchedule')}
+              leftIcon={<Calendar className="text-primary" />}
             >
-              <Calendar className="w-3.5 h-3.5 text-primary" />
-              <span>{t('btnTodaySchedule')}</span>
+              {t('btnTodaySchedule')}
             </Button>
 
             <span className="text-xs sm:text-sm font-black text-foreground ml-1">
@@ -765,12 +759,10 @@ function StaffScheduleContent() {
 
                   <Button
                     variant="secondary"
-                    size="sm"
-                    type="button"
                     onClick={() => handleOpenDutyProofModal(duty)}
+                    leftIcon={<FileText className="text-primary" />}
                   >
-                    <FileText className="w-3.5 h-3.5 text-primary" />
-                    <span>{t('btnUpdateDetails')}</span>
+                    {t('btnUpdateDetails')}
                   </Button>
                 </div>
               </div>
@@ -814,11 +806,11 @@ function StaffScheduleContent() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
+                title="Đóng"
                 onClick={() => setSelectedSchedule(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -978,9 +970,10 @@ function StaffScheduleContent() {
 
             {/* Modal Close Button */}
             <div className="pt-3 border-t border-line">
-              <Button fullWidth size="xs"
+              <Button
+                fullWidth
+                size="xs"
                 variant="secondary"
-                type="button"
                 onClick={() => setSelectedSchedule(null)}
               >
                 {t('btnClose')}
@@ -1012,11 +1005,11 @@ function StaffScheduleContent() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
+                title="Đóng"
                 onClick={() => setActiveDutyForProof(null)}
               >
-                <X className="w-4 h-4" />
+                <X />
               </Button>
             </div>
 
@@ -1071,18 +1064,18 @@ function StaffScheduleContent() {
                   </div>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    type="button"
+                    size="icon-sm"
                     onClick={() => setDutyDraftPhoto(null)}
                     title={t('deletePhoto')}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 />
                   </Button>
                 </div>
               ) : (
-                <Button fullWidth size="xs"
+                <Button
+                  fullWidth
+                  size="xs"
                   variant="ghost"
-                  type="button"
                   onClick={() => dutyFileInputRef.current?.click()}
                   className="flex-col"
                 >
@@ -1111,31 +1104,30 @@ function StaffScheduleContent() {
 
             {/* Actions */}
             <div className="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-2.5">
-              <Button size="xs"
+              <Button
+                size="xs"
                 variant="secondary"
-                type="button"
                 onClick={() => setActiveDutyForProof(null)}
               >
                 {t('btnCancel')}
               </Button>
 
               <div className="flex items-center gap-2">
-                <Button size="xs"
+                <Button
+                  size="xs"
                   variant="secondary"
-                  type="button"
                   onClick={() => handleSaveDutyProof(false)}
+                  leftIcon={<FileText className="text-muted" />}
                 >
-                  <FileText className="w-3.5 h-3.5 text-muted" />
-                  <span>{t('saveProgress')}</span>
+                  {t('saveProgress')}
                 </Button>
 
-                <Button size="xs"
-                  variant="primary"
-                  type="button"
+                <Button
+                  size="xs"
                   onClick={() => handleSaveDutyProof(true)}
+                  leftIcon={<CheckCircle2 />}
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{t('btnCompleteDuty')}</span>
+                  {t('btnCompleteDuty')}
                 </Button>
               </div>
             </div>
@@ -1164,11 +1156,11 @@ function StaffScheduleContent() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
+                title="Đóng"
                 onClick={() => setPreviewPhotoModal(null)}
               >
-                <X className="w-4 h-4" />
+                <X />
               </Button>
             </div>
 
@@ -1192,9 +1184,9 @@ function StaffScheduleContent() {
             )}
 
             <div className="p-4 bg-surface border-t border-line flex justify-end">
-              <Button size="xs"
+              <Button
+                size="xs"
                 variant="secondary"
-                type="button"
                 onClick={() => setPreviewPhotoModal(null)}
               >
                 {t('btnClose')}

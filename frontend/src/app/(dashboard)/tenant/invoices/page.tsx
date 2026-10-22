@@ -34,7 +34,7 @@ import {
   Eye,
   Sparkles,
 } from 'lucide-react'
-import { Button, TextInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState } from '@/components/ui'
+import { Button, TextInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState, TableActionButton } from '@/components/ui'
 import { DashboardPageHeader } from '@/components/layout'
 import {
   LineChart,
@@ -264,12 +264,14 @@ export default function TenantInvoicesPage() {
             </div>
           </div>
 
-          <Button size="xs" variant="orange"
+          <Button
+            size="xs"
+            variant="orange"
+            rightIcon={<ArrowRight />}
             onClick={() => router.push(`/tenant/invoices/${currentUnpaid.id}`)}
             className="sm:w-auto"
           >
-            <span>{t('payNow')}</span>
-            <ArrowRight className="w-4 h-4" />
+            {t('payNow')}
           </Button>
         </div>
       )}
@@ -289,16 +291,12 @@ export default function TenantInvoicesPage() {
             <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl">
               <Button
                 variant={activeChartTab === 'cost' ? 'primary' : 'ghost'}
-                size="sm"
-                type="button"
                 onClick={() => setActiveChartTab('cost')}
               >
                 {t('chartTabCost')}
               </Button>
               <Button
                 variant={activeChartTab === 'consumption' ? 'primary' : 'ghost'}
-                size="sm"
-                type="button"
                 onClick={() => setActiveChartTab('consumption')}
               >
                 {t('chartTabConsumption')}
@@ -310,8 +308,6 @@ export default function TenantInvoicesPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, electricity: !p.electricity }))}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -319,8 +315,6 @@ export default function TenantInvoicesPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, water: !p.water }))}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
@@ -328,8 +322,6 @@ export default function TenantInvoicesPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, services: !p.services }))}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
@@ -337,8 +329,6 @@ export default function TenantInvoicesPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, roomRent: !p.roomRent }))}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -478,8 +468,6 @@ export default function TenantInvoicesPage() {
           <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
             <Button
               variant={statusFilter === 'all' ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
               onClick={() => {
                 setStatusFilter('all')
                 setCurrentPage(1)
@@ -489,8 +477,6 @@ export default function TenantInvoicesPage() {
             </Button>
             <Button
               variant={statusFilter === 'unpaid' ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
               onClick={() => {
                 setStatusFilter('unpaid')
                 setCurrentPage(1)
@@ -500,8 +486,6 @@ export default function TenantInvoicesPage() {
             </Button>
             <Button
               variant={statusFilter === 'paid' ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
               onClick={() => {
                 setStatusFilter('paid')
                 setCurrentPage(1)
@@ -580,19 +564,14 @@ export default function TenantInvoicesPage() {
 
                 {/* Line Items Accordion */}
                 <div className="space-y-1.5 border-t border-line pt-3">
-                  <Button fullWidth
+                  <Button
+                    fullWidth
                     variant="ghost"
-                    size="sm"
-                    type="button"
                     onClick={() => toggleRow(inv.id)}
-                    className="justify-between"
+                    justify="between"
+                    rightIcon={expandedRows[inv.id] ? <ChevronUp /> : <ChevronDown />}
                   >
-                    <span>{t('viewDetails')}</span>
-                    {expandedRows[inv.id] ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                    {t('viewDetails')}
                   </Button>
 
                   {expandedRows[inv.id] && (
@@ -618,13 +597,11 @@ export default function TenantInvoicesPage() {
                                 <Button
                                   key={mIdx}
                                   variant="secondary"
-                                  size="sm"
-                                  type="button"
                                   onClick={() => setPreviewImage(mr.imageUrl)}
+                                  leftIcon={<Eye />}
                                   className="rounded"
                                 >
-                                  <Eye className="w-3 h-3" />
-                                  <span>{mr.serviceName}</span>
+                                  {mr.serviceName}
                                 </Button>
                               ),
                           )}
@@ -637,11 +614,13 @@ export default function TenantInvoicesPage() {
                 {/* Card Action Footer */}
                 <div className="border-t border-line pt-3 flex items-center justify-end">
                   {inv.status !== 'paid' ? (
-                    <Button fullWidth size="icon" variant="orange"
+                    <Button
+                      fullWidth
+                      variant="orange"
+                      leftIcon={<CreditCard />}
                       onClick={() => router.push(`/tenant/invoices/${inv.id}`)}
                     >
-                      <CreditCard className="w-4 h-4" />
-                      <span>{t('payNow')}</span>
+                      {t('payNow')}
                     </Button>
                   ) : (
                     <div className="text-[11px] text-muted font-medium w-full text-center">
@@ -691,27 +670,18 @@ export default function TenantInvoicesPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            type="button"
-                            onClick={() => toggleRow(inv.id)}
+                          <TableActionButton
+                            icon={expandedRows[inv.id] ? <ChevronUp /> : <ChevronDown />}
                             title={t('viewDetails')}
-                          >
-                            {expandedRows[inv.id] ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </Button>
+                            onClick={() => toggleRow(inv.id)}
+                          />
 
                           {inv.status !== 'paid' && (
-                            <Button variant="orange"
+                            <TableActionButton
+                              icon={<CreditCard />}
+                              title={t('payNow')}
                               onClick={() => router.push(`/tenant/invoices/${inv.id}`)}
-                              size="sm"
-                            >
-                              {t('payNow')}
-                            </Button>
+                            />
                           )}
                         </div>
                       </td>
@@ -757,12 +727,11 @@ export default function TenantInvoicesPage() {
                                     {mr.imageUrl && (
                                       <Button
                                         variant="ghost"
-                                        size="sm"
-                                        type="button"
                                         onClick={() => setPreviewImage(mr.imageUrl)}
+                                        leftIcon={<Eye />}
                                         className="hover:underline"
                                       >
-                                        <Eye className="w-3 h-3" /> {t('viewPhoto')}
+                                        {t('viewPhoto')}
                                       </Button>
                                     )}
                                   </div>
@@ -810,7 +779,7 @@ export default function TenantInvoicesPage() {
               />
             </div>
             <div className="flex justify-end pt-2 border-t border-line">
-              <Button size="sm" onClick={() => setPreviewImage(null)}>
+              <Button onClick={() => setPreviewImage(null)}>
                 {t('btnClose')}
               </Button>
             </div>

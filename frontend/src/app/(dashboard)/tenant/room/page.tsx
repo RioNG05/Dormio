@@ -129,7 +129,7 @@ export default function TenantRoomPage() {
             description={t('tenantRoomNotFoundDesc')}
             action={
               <Link href="/tenant">
-                <Button variant="primary" size="md">
+                <Button size="md">
                   {t('tenantBackToDashboard')}
                 </Button>
               </Link>

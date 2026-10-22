@@ -37,7 +37,7 @@ import {
   getLocalizedExplanation,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, NumberInput, SelectInput, Pagination, Modal, EmptyState } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, Pagination, Modal, EmptyState, TableActionButton } from '@/components/ui'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -358,16 +358,12 @@ function StaffShiftHistoryContent() {
           {/* Nút bấm "Sử dụng bộ lọc" */}
           <Button
             variant="secondary"
-            size="sm"
-            type="button"
             onClick={handleOpenFilterModal}
             title={t('titleFilterOpen')}
+            leftIcon={<Filter className="text-primary" />}
+            rightIcon={hasAnyAppliedFilter ? <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> : undefined}
           >
-            <Filter className="w-3.5 h-3.5 text-primary" />
-            <span>{t('btnUseFilters')}</span>
-            {hasAnyAppliedFilter && (
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            )}
+            {t('btnUseFilters')}
           </Button>
 
           {/* Khi ấn apply ở modal thì hiện filter được áp dụng ở bên cạnh */}
@@ -386,8 +382,7 @@ function StaffShiftHistoryContent() {
                   </span>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    type="button"
+                    size="icon-xs"
                     onClick={() => {
                       setAppliedStartDate('')
                       setAppliedEndDate('')
@@ -396,7 +391,7 @@ function StaffShiftHistoryContent() {
                     className="ml-0.5"
                     title={t('titleRemoveDateFilter')}
                   >
-                    <X className="w-3 h-3" />
+                    <X />
                   </Button>
                 </span>
               )}
@@ -408,8 +403,7 @@ function StaffShiftHistoryContent() {
                   <span>{getShiftName(appliedShift)}</span>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    type="button"
+                    size="icon-xs"
                     onClick={() => {
                       setAppliedShift('all')
                       setCurrentPage(1)
@@ -417,7 +411,7 @@ function StaffShiftHistoryContent() {
                     className="ml-0.5"
                     title={t('titleRemoveShiftFilter')}
                   >
-                    <X className="w-3 h-3" />
+                    <X />
                   </Button>
                 </span>
               )}
@@ -433,8 +427,7 @@ function StaffShiftHistoryContent() {
                   </span>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    type="button"
+                    size="icon-xs"
                     onClick={() => {
                       setAppliedStatus('all')
                       setCurrentPage(1)
@@ -442,7 +435,7 @@ function StaffShiftHistoryContent() {
                     className="ml-0.5"
                     title={t('titleRemoveStatusFilter')}
                   >
-                    <X className="w-3 h-3" />
+                    <X />
                   </Button>
                 </span>
               )}
@@ -450,8 +443,6 @@ function StaffShiftHistoryContent() {
               {/* Clear All Chip */}
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
                 onClick={handleClearAllFilters}
                 className="ml-1 hover:underline"
               >
@@ -531,10 +522,8 @@ function StaffShiftHistoryContent() {
                       <div className="flex items-center gap-1.5 font-mono font-bold">
                         <span>{item.checkIn || '--:--'}</span>
                         {item.checkInPhoto && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            type="button"
+                          <TableActionButton
+                            icon={<Camera />}
                             onClick={() =>
                               setPreviewImageModal({
                                 isOpen: true,
@@ -554,9 +543,7 @@ function StaffShiftHistoryContent() {
                               })
                             }
                             title={t('viewWatermarkCheckIn')}
-                          >
-                            <Camera className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                         )}
                       </div>
                     </td>
@@ -564,10 +551,8 @@ function StaffShiftHistoryContent() {
                       <div className="flex items-center gap-1.5 font-mono font-bold">
                         <span>{item.checkOut || '--:--'}</span>
                         {item.checkOutPhoto && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            type="button"
+                          <TableActionButton
+                            icon={<Camera />}
                             onClick={() =>
                               setPreviewImageModal({
                                 isOpen: true,
@@ -587,9 +572,7 @@ function StaffShiftHistoryContent() {
                               })
                             }
                             title={t('viewWatermarkCheckOut')}
-                          >
-                            <Camera className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                         )}
                       </div>
                     </td>
@@ -643,10 +626,8 @@ function StaffShiftHistoryContent() {
                     </td>
                     <td className="py-4 px-3 text-center whitespace-nowrap">
                       {item.checkInPhoto || item.checkOutPhoto ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          type="button"
+                        <TableActionButton
+                          icon={<Eye />}
                           onClick={() =>
                             setPreviewImageModal({
                               isOpen: true,
@@ -669,9 +650,7 @@ function StaffShiftHistoryContent() {
                             })
                           }
                           title={t('viewPhotoProof')}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </Button>
+                        />
                       ) : (
                         <span className="text-zinc-300 font-mono text-xs">-</span>
                       )}
@@ -694,12 +673,10 @@ function StaffShiftHistoryContent() {
             hasAnyAppliedFilter ? (
               <Button
                 variant="secondary"
-                size="sm"
-                type="button"
                 onClick={handleClearAllFilters}
-                leftIcon={<RotateCcw className="w-3.5 h-3.5 text-muted" />}
+                leftIcon={<RotateCcw className="text-muted" />}
               >
-                <span>{t('btnResetFilters')}</span>
+                {t('btnResetFilters')}
               </Button>
             ) : undefined
           }
@@ -765,9 +742,7 @@ function StaffShiftHistoryContent() {
 
             <div className="pt-2 border-t border-line flex justify-end">
               <Button
-                size="sm"
                 variant="secondary"
-                type="button"
                 onClick={() => setPreviewImageModal(null)}
               >
                 {t('btnClose')}
@@ -800,12 +775,11 @@ function StaffShiftHistoryContent() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
-                onClick={handleRequestCloseFilterModal}
+                size="icon-sm"
                 title={t('btnClose')}
+                onClick={handleRequestCloseFilterModal}
               >
-                <X className="w-4 h-4" />
+                <X />
               </Button>
             </div>
 
@@ -821,8 +795,6 @@ function StaffShiftHistoryContent() {
                   {(modalStartDate || modalEndDate) && (
                     <Button
                       variant="ghost"
-                      size="sm"
-                      type="button"
                       onClick={() => {
                         setModalStartDate('')
                         setModalEndDate('')
@@ -915,28 +887,21 @@ function StaffShiftHistoryContent() {
             <div className="p-4 bg-surface/80 border-t border-line flex items-center justify-between gap-3">
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
                 onClick={handleResetModalDrafts}
                 title={t('titleResetDialog')}
+                leftIcon={<RotateCcw />}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t('btnReset')}</span>
+                {t('btnReset')}
               </Button>
 
               <div className="flex items-center gap-2">
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={handleRequestCloseFilterModal}
                 >
                   {t('btnCancel')}
                 </Button>
                 <Button
-                  variant="primary"
-                  size="sm"
-                  type="button"
                   onClick={handleApplyModalFilter}
                 >
                   {t('btnApplyFilters')}
@@ -964,18 +929,14 @@ function StaffShiftHistoryContent() {
             </div>
             <div className="flex items-center gap-3 pt-3 border-t border-line">
               <Button
-                size="sm"
                 variant="secondary"
-                type="button"
                 onClick={() => setShowConfirmCloseModal(false)}
                 className="flex-1"
               >
                 {t('btnContinueEditing')}
               </Button>
               <Button
-                size="sm"
                 variant="danger"
-                type="button"
                 onClick={handleConfirmDiscardAndClose}
                 className="flex-1"
               >

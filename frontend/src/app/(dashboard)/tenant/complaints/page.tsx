@@ -12,7 +12,7 @@ import {
   Plus,
   ShieldCheck,
 } from 'lucide-react'
-import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState } from '@/components/ui'
+import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState, TableActionButton } from '@/components/ui'
 import { DashboardPageHeader } from '@/components/layout'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
@@ -304,10 +304,10 @@ export default function TenantAdminComplaintsPage() {
               resetForm()
               setIsModalOpen(true)
             }}
-            leftIcon={<Plus className="w-4 h-4" />}
+            leftIcon={<Plus />}
             className="sm:text-sm shrink-0"
           >
-            <span>{t('tenantBtnNewComplaint')}</span>
+            {t('tenantBtnNewComplaint')}
           </Button>
         }
       />
@@ -328,8 +328,6 @@ export default function TenantAdminComplaintsPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1 bg-card-hover/80 rounded-2xl">
             <Button
               variant={statusFilter === 'all' ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
               onClick={() => {
                 setStatusFilter('all')
                 setCurrentPage(1)
@@ -343,8 +341,6 @@ export default function TenantAdminComplaintsPage() {
             </Button>
             <Button
               variant={statusFilter === 'pending' ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
               onClick={() => {
                 setStatusFilter('pending')
                 setCurrentPage(1)
@@ -361,8 +357,6 @@ export default function TenantAdminComplaintsPage() {
             </Button>
             <Button
               variant={statusFilter === 'resolved' ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
               onClick={() => {
                 setStatusFilter('resolved')
                 setCurrentPage(1)
@@ -403,14 +397,13 @@ export default function TenantAdminComplaintsPage() {
                 description={t('tenantComplaintsSubtitle')}
                 action={
                   <Button
-                    size="sm"
                     onClick={() => {
                       resetForm()
                       setIsModalOpen(true)
                     }}
-                    leftIcon={<Plus className="w-4 h-4" />}
+                    leftIcon={<Plus />}
                   >
-                    <span>{t('tenantBtnNewComplaint')}</span>
+                    {t('tenantBtnNewComplaint')}
                   </Button>
                 }
               />
@@ -503,13 +496,11 @@ export default function TenantAdminComplaintsPage() {
                     </td>
                     <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
                     <td className="px-6 py-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        type="button"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <TableActionButton
+                        icon={<Eye />}
+                        title={t('tenantViewDetailTooltip') || 'Xem chi tiết'}
+                        onClick={() => setSelectedGrievance(item)}
+                      />
                     </td>
                   </tr>
                 ))
@@ -551,13 +542,13 @@ export default function TenantAdminComplaintsPage() {
                   <p className="text-xs text-muted">{t('tenantCreateGrievanceModalSubtitle')}</p>
                 </div>
               </div>
-              <Button rounded="full"
+              <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
+                title="Đóng"
                 onClick={handleCloseModal}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -589,9 +580,7 @@ export default function TenantAdminComplaintsPage() {
                   ].map(p => (
                     <Button
                       key={p.key}
-                      variant="secondary"
-                      size="sm"
-                      type="button"
+                      variant={priority === p.key ? 'primary' : 'secondary'}
                       onClick={() => setPriority(p.key as GrievancePriority)}
                     >
                       {p.label}
@@ -646,20 +635,20 @@ export default function TenantAdminComplaintsPage() {
                       <img src={img} alt="Evidence" className="w-full h-full object-cover" />
                       <Button
                         variant="ghost"
-                        size="sm"
-                        type="button"
+                        size="icon-xs"
+                        title="Xóa ảnh"
                         onClick={() => removeUploadedImage(idx)}
                         className="absolute top-1 right-1 opacity-0 group-hover:opacity-100"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X />
                       </Button>
                     </div>
                   ))}
 
                   {uploadedImages.length < 5 && (
-                    <Button fullWidth
+                    <Button
+                      fullWidth
                       variant="ghost"
-                      type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="flex-col"
                     >
@@ -680,18 +669,20 @@ export default function TenantAdminComplaintsPage() {
               </div>
 
               <div className="pt-3 border-t border-line flex items-center justify-end gap-2.5">
-                <Button size="xs"
-                  type="button"
+                <Button
+                  size="xs"
                   variant="ghost"
                   onClick={handleCloseModal}
                 >
                   {t('tenantBtnCancel')}
                 </Button>
-                <Button size="xs"
+                <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmitting}
+                  isLoading={isSubmitting}
                 >
-                  {isSubmitting ? t('tenantSubmitting') : t('tenantBtnSubmitOfficial')}
+                  {t('tenantBtnSubmitOfficial')}
                 </Button>
               </div>
             </form>
@@ -716,13 +707,13 @@ export default function TenantAdminComplaintsPage() {
                 </span>
                 {getStatusBadge(selectedGrievance.status)}
               </div>
-              <Button rounded="full"
+              <Button
                 variant="ghost"
-                size="sm"
-                type="button"
+                size="icon-sm"
+                title="Đóng"
                 onClick={() => setSelectedGrievance(null)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -836,7 +827,6 @@ export default function TenantAdminComplaintsPage() {
             </div>
             <div className="flex items-center gap-2 pt-2 border-t border-line">
               <Button
-                size="sm"
                 variant="ghost"
                 onClick={() => setShowExitConfirm(false)}
                 className="flex-1"
@@ -844,7 +834,6 @@ export default function TenantAdminComplaintsPage() {
                 {t('tenantBtnKeepEditing')}
               </Button>
               <Button
-                size="sm"
                 variant="danger"
                 onClick={() => {
                   setShowExitConfirm(false)
