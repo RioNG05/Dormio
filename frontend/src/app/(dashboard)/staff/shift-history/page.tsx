@@ -37,7 +37,7 @@ import {
   getLocalizedExplanation,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, NumberInput, SelectInput, Pagination } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, Pagination, Modal, EmptyState } from '@/components/ui'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -686,26 +686,24 @@ function StaffShiftHistoryContent() {
 
       {/* Empty State */}
       {!isLoading && attendances.length === 0 && (
-        <div className="p-8 rounded-3xl bg-card border border-dashed border-line text-center space-y-2">
-          <div className="w-10 h-10 mx-auto rounded-full bg-card-hover flex items-center justify-center text-muted">
-            <Clock className="w-5 h-5" />
-          </div>
-          <p className="text-xs font-bold text-foreground/90">{t('emptyHistoryTitle')}</p>
-          <p className="text-[11px] text-muted">{t('emptyHistoryDesc')}</p>
-          {hasAnyAppliedFilter && (
-            <div className="pt-1">
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title={t('emptyHistoryTitle')}
+          description={t('emptyHistoryDesc')}
+          action={
+            hasAnyAppliedFilter ? (
               <Button
                 variant="secondary"
                 size="sm"
                 type="button"
                 onClick={handleClearAllFilters}
+                leftIcon={<RotateCcw className="w-3.5 h-3.5 text-muted" />}
               >
-                <RotateCcw className="w-3.5 h-3.5 text-muted" />
                 <span>{t('btnResetFilters')}</span>
               </Button>
-            </div>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
       )}
 
       {/* RULE #9 STANDARDIZED PAGINATION BAR */}
@@ -720,32 +718,14 @@ function StaffShiftHistoryContent() {
 
       {/* WATERMARK PHOTO MODAL */}
       {previewImageModal && previewImageModal.isOpen && (
-        <div
-          onClick={() => setPreviewImageModal(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
+        <Modal
+          isOpen={previewImageModal.isOpen}
+          onClose={() => setPreviewImageModal(null)}
+          title={previewImageModal.title}
+          size="md"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-line"
-          >
-            <div className="p-4 border-b border-line flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-black text-foreground truncate">
-                  {previewImageModal.title}
-                </h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setPreviewImageModal(null)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="relative bg-zinc-950 aspect-video max-h-[380px] flex items-center justify-center">
+          <div className="space-y-4 pt-1">
+            <div className="relative bg-zinc-950 rounded-2xl overflow-hidden aspect-video max-h-[380px] flex items-center justify-center border border-line">
               <img
                 src={previewImageModal.imageUrl}
                 alt="Audit proof"
@@ -754,14 +734,14 @@ function StaffShiftHistoryContent() {
             </div>
 
             {previewImageModal.watermark && (
-              <div className="p-4 bg-zinc-900 text-white space-y-1.5 text-xs font-mono">
+              <div className="p-4 rounded-xl bg-surface border border-line space-y-1.5 text-xs font-mono">
                 <div className="flex items-center justify-between text-primary font-bold">
                   <span>🕒 {previewImageModal.watermark.time}</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     AUDIT VERIFIED
                   </span>
                 </div>
-                <div className="text-zinc-200 font-sans text-xs">
+                <div className="text-foreground font-sans text-xs">
                   📍 {previewImageModal.watermark.place}
                 </div>
                 <div className="text-muted font-sans text-[11px]">
@@ -772,7 +752,7 @@ function StaffShiftHistoryContent() {
             )}
 
             {previewImageModal.note && (
-              <div className="p-4 bg-warning-soft border-t border-warning-subtle text-xs text-warning space-y-1">
+              <div className="p-4 rounded-xl bg-warning-soft border border-warning-subtle text-xs text-warning space-y-1">
                 <span className="font-bold flex items-center gap-1 text-warning">
                   <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                   {t('explanationNoteTitle')}
@@ -783,8 +763,9 @@ function StaffShiftHistoryContent() {
               </div>
             )}
 
-            <div className="p-4 bg-surface border-t border-line flex justify-end">
-              <Button size="xs"
+            <div className="pt-2 border-t border-line flex justify-end">
+              <Button
+                size="sm"
                 variant="secondary"
                 type="button"
                 onClick={() => setPreviewImageModal(null)}
@@ -793,7 +774,7 @@ function StaffShiftHistoryContent() {
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* FILTER MODAL */}
@@ -968,20 +949,22 @@ function StaffShiftHistoryContent() {
 
       {/* RULE #10 CONFIRMATION MODAL */}
       {showConfirmCloseModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-line"
-          >
-            <div className="p-6">
-              <div className="flex items-center gap-2.5 mb-2 text-warning">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                <h3 className="text-base font-bold text-foreground">{t('confirmCloseTitle')}</h3>
-              </div>
+        <Modal
+          isOpen={showConfirmCloseModal}
+          onClose={() => setShowConfirmCloseModal(false)}
+          size="sm"
+        >
+          <div className="space-y-4 pt-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">{t('confirmCloseTitle')}</h3>
               <p className="text-xs text-muted leading-relaxed">{t('filterConfirmCloseDesc')}</p>
             </div>
-            <div className="flex items-center gap-3 px-6 pb-6">
-              <Button size="xs"
+            <div className="flex items-center gap-3 pt-3 border-t border-line">
+              <Button
+                size="sm"
                 variant="secondary"
                 type="button"
                 onClick={() => setShowConfirmCloseModal(false)}
@@ -989,7 +972,8 @@ function StaffShiftHistoryContent() {
               >
                 {t('btnContinueEditing')}
               </Button>
-              <Button size="xs"
+              <Button
+                size="sm"
                 variant="danger"
                 type="button"
                 onClick={handleConfirmDiscardAndClose}
@@ -999,7 +983,7 @@ function StaffShiftHistoryContent() {
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )
@@ -1008,7 +992,12 @@ function StaffShiftHistoryContent() {
 export default function StaffShiftHistoryPage() {
   return (
     <Suspense
-      fallback={<div className="p-8 text-center text-xs text-muted font-bold">Loading...</div>}
+      fallback={
+        <div className="p-8 text-center text-xs text-muted font-bold flex items-center justify-center gap-2">
+          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span>Loading...</span>
+        </div>
+      }
     >
       <StaffShiftHistoryContent />
     </Suspense>
