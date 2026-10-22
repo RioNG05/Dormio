@@ -350,8 +350,8 @@ export default function PublicCreatePostPage() {
         {/* 4. Action Buttons reusing base Button component */}
         <div className="flex items-center justify-between bg-card p-6 rounded-3xl border border-line shadow-xs">
           <Button
-            type="button"
             variant="ghost"
+            size="md"
             onClick={handleCancelClick}
           >
             {t('guestPostsCreateBtnCancel')}
@@ -359,27 +359,22 @@ export default function PublicCreatePostPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              type="button"
               variant="secondary"
+              size="md"
               disabled={isSubmitting}
               onClick={e => handleSubmit(e, 'draft')}
             >
               {t('guestPostsCreateBtnDraft')}
             </Button>
-            <Button size="lg"
+            <Button
               type="submit"
               variant="primary"
+              size="lg"
               disabled={isSubmitting}
+              isLoading={isSubmitting}
+              leftIcon={!isSubmitting ? <Sparkle /> : undefined}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> {t('guestPostsCreateBtnProcessing')}
-                </>
-              ) : (
-                <>
-                  <Sparkle className="w-4 h-4" /> {t('guestPostsCreateBtnPublish')}
-                </>
-              )}
+              {isSubmitting ? t('guestPostsCreateBtnProcessing') : t('guestPostsCreateBtnPublish')}
             </Button>
           </div>
         </div>
@@ -405,14 +400,12 @@ export default function PublicCreatePostPage() {
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button
-                type="button"
                 variant="secondary"
-                size="sm"
                 onClick={() => setShowConfirmModal(false)}
               >
                 {t('guestPostsCreateConfirmContinue')}
               </Button>
-              <Button type="button" variant="danger" size="sm" onClick={handleConfirmLeave}>
+              <Button variant="danger" onClick={handleConfirmLeave}>
                 {t('guestPostsCreateConfirmLeave')}
               </Button>
             </div>

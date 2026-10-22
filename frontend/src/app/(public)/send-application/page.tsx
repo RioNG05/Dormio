@@ -31,6 +31,7 @@ import {
   NumberInput,
   SearchInput,
   SelectInput,
+  TableActionButton,
   Text,
   TextareaInput,
   TextInput,
@@ -490,9 +491,8 @@ export default function SendApplicationPage() {
           <div>
             {isLoggedIn ? (
               <Button
-                variant="primary"
                 size="md"
-                leftIcon={<Plus className="w-4 h-4" />}
+                leftIcon={<Plus />}
                 onClick={() => {
                   resetForm()
                   setIsModalOpen(true)
@@ -504,9 +504,8 @@ export default function SendApplicationPage() {
             ) : (
               <Link href="/login?from=/send-application">
                 <Button
-                  variant="primary"
                   size="md"
-                  leftIcon={<LogIn className="w-4 h-4" />}
+                  leftIcon={<LogIn />}
                   className="w-full sm:w-auto shadow-md shadow-primary/20"
                 >
                   {t('loginBtn')}
@@ -539,7 +538,7 @@ export default function SendApplicationPage() {
             </Text>
             <div className="pt-2">
               <Link href="/login?from=/send-application">
-                <Button size="sm" leftIcon={<LogIn className="w-4 h-4" />}>
+                <Button leftIcon={<LogIn />}>
                   {t('loginBtn')}
                 </Button>
               </Link>
@@ -629,8 +628,7 @@ export default function SendApplicationPage() {
                 </Text>
                 <div className="pt-2">
                   <Button
-                    size="sm"
-                    leftIcon={<Plus className="w-3.5 h-3.5" />}
+                    leftIcon={<Plus />}
                     onClick={() => {
                       resetForm()
                       setIsModalOpen(true)
@@ -800,13 +798,11 @@ export default function SendApplicationPage() {
                               </Text>
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                leftIcon={<Eye className="w-3.5 h-3.5" />}
-                              >
-                                {t('viewDetailBtn')}
-                              </Button>
+                              <TableActionButton
+                                icon={<Eye />}
+                                title={t('viewDetailBtn')}
+                                onClick={() => setSelectedApplication(item)}
+                              />
                             </td>
                           </tr>
                         )
@@ -849,18 +845,17 @@ export default function SendApplicationPage() {
                 {/* 5-page window jumping controls */}
                 <div className="flex items-center gap-1.5">
                   <Button
-                    type="button"
                     variant="outline"
                     size="icon-sm"
+                    title={tCommon('prevPage') || 'Previous'}
                     disabled={currentPage <= 1}
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft />
                   </Button>
 
                   {windowStart > 1 && (
                     <Button
-                      type="button"
                       variant="outline"
                       size="xs"
                       onClick={() => setCurrentPage(Math.max(1, windowStart - 5))}
@@ -872,7 +867,6 @@ export default function SendApplicationPage() {
                   {pageNumbers.map(pageNum => (
                     <Button
                       key={pageNum}
-                      type="button"
                       variant={currentPage === pageNum ? 'primary' : 'outline'}
                       size="xs"
                       onClick={() => setCurrentPage(pageNum)}
@@ -883,7 +877,6 @@ export default function SendApplicationPage() {
 
                   {windowEnd < totalPages && (
                     <Button
-                      type="button"
                       variant="outline"
                       size="xs"
                       onClick={() => setCurrentPage(Math.min(totalPages, windowEnd + 1))}
@@ -893,13 +886,13 @@ export default function SendApplicationPage() {
                   )}
 
                   <Button
-                    type="button"
                     variant="outline"
                     size="icon-sm"
+                    title={tCommon('nextPage') || 'Next'}
                     disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight />
                   </Button>
                 </div>
               </div>
@@ -1047,12 +1040,13 @@ export default function SendApplicationPage() {
                   >
                     <img src={src} alt="Evidence" className="w-full h-full object-cover" />
                     <Button
-                      type="button"
                       variant="ghost"
+                      size="icon"
+                      title={t('removeImage') || 'Remove'}
                       onClick={() => removeUploadedImage(idx)}
                       className="absolute inset-0 w-full h-full rounded-none bg-black/50 hover:bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 />
                     </Button>
                   </div>
                 ))}
@@ -1082,10 +1076,10 @@ export default function SendApplicationPage() {
 
           {/* Action Buttons */}
           <Form.Actions bordered stackedOnMobile={false}>
-            <Button size="sm" type="button" variant="outline" onClick={handleCloseModal}>
+            <Button variant="outline" onClick={handleCloseModal}>
               {t('cancelBtn')}
             </Button>
-            <Button size="sm" type="submit" isLoading={isSubmitting}>
+            <Button type="submit" isLoading={isSubmitting}>
               {isSubmitting ? t('submittingBtn') : t('submitBtn')}
             </Button>
           </Form.Actions>
@@ -1114,17 +1108,13 @@ export default function SendApplicationPage() {
           </div>
           <div className="flex items-center justify-center gap-3 pt-2">
             <Button
-              size="sm"
-              type="button"
               variant="outline"
               onClick={() => setShowExitConfirm(false)}
             >
               {t('continueEditingBtn')}
             </Button>
             <Button
-              size="sm"
               variant="danger"
-              type="button"
               onClick={() => {
                 setShowExitConfirm(false)
                 setIsModalOpen(false)
@@ -1178,7 +1168,7 @@ export default function SendApplicationPage() {
           )
         }
         footer={
-          <Button size="sm" variant="outline" onClick={() => setSelectedApplication(null)}>
+          <Button variant="outline" onClick={() => setSelectedApplication(null)}>
             {t('closeBtn')}
           </Button>
         }

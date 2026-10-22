@@ -400,32 +400,23 @@ function BuyTurnsPageInner() {
             </ul>
 
             <div className="pt-4 border-t border-line">
-              <Button fullWidth size="lg" variant="orange"
-                type="button"
+              <Button
+                fullWidth
+                size="lg"
+                variant="orange"
                 disabled={isGeneratingQr || isSuccess}
+                isLoading={isGeneratingQr}
                 onClick={handleGenerateCheckout}
+                leftIcon={isSuccess ? <CheckCircle2 /> : <QrCode />}
+                rightIcon={!isSuccess ? <ArrowRight /> : undefined}
               >
-                {isGeneratingQr ? (
-                  <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>{t('guestPricingCheckoutPayBtnLoading')}</span>
-                  </>
-                ) : isSuccess ? (
-                  <>
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span>{t('guestPricingCheckoutSuccessTitle')}</span>
-                  </>
-                ) : (
-                  <>
-                    <QrCode className="w-5 h-5" />
-                    <span>
-                      {isVi
-                        ? `Thanh toán ${formatVnd(pack.price)} — ${pack.turns} lượt`
-                        : `Pay ${formatVnd(pack.price)} — ${pack.turns} turns`}
-                    </span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </>
-                )}
+                {isGeneratingQr
+                  ? t('guestPricingCheckoutPayBtnLoading')
+                  : isSuccess
+                    ? t('guestPricingCheckoutSuccessTitle')
+                    : isVi
+                      ? `Thanh toán ${formatVnd(pack.price)} — ${pack.turns} lượt`
+                      : `Pay ${formatVnd(pack.price)} — ${pack.turns} turns`}
               </Button>
             </div>
           </div>
@@ -468,13 +459,12 @@ function BuyTurnsPageInner() {
                 </div>
                 <div className="pt-2 flex gap-3 justify-center flex-wrap">
                   <Link href="/posts/create">
-                    <Button size="icon" variant="orange" >
-                      <span>{isVi ? 'Đăng tin ngay' : 'Post Now'}</span>
-                      <ArrowRight className="w-4 h-4" />
+                    <Button size="md" variant="orange" rightIcon={<ArrowRight />}>
+                      {isVi ? 'Đăng tin ngay' : 'Post Now'}
                     </Button>
                   </Link>
                   <Link href="/pricing">
-                    <Button size="lg" variant="dark" >
+                    <Button size="lg" variant="dark">
                       {isVi ? 'Bảng giá' : 'Pricing'}
                     </Button>
                   </Link>
@@ -524,12 +514,13 @@ function BuyTurnsPageInner() {
                       <p className="text-xs text-muted mt-1 mb-4">
                         {t('guestPricingCheckoutQrExpiredDesc')}
                       </p>
-                      <Button size="xs" variant="dark"
-                        type="button"
+                      <Button
+                        size="xs"
+                        variant="dark"
                         onClick={handleGenerateCheckout}
+                        leftIcon={<RefreshCw />}
                       >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                        <span>{t('guestPricingCheckoutGenerateNewQr')}</span>
+                        {t('guestPricingCheckoutGenerateNewQr')}
                       </Button>
                     </div>
                   )}
@@ -549,16 +540,15 @@ function BuyTurnsPageInner() {
                         {checkoutData.accountNumber}
                       </strong>
                       <Button
-                        type="button"
                         variant="ghost"
-                        size="icon"
+                        size="icon-xs"
                         onClick={() => handleCopy(checkoutData.accountNumber, 'acc')}
                         title="Copy"
                       >
                         {isCopiedAcc ? (
-                          <Check className="w-3.5 h-3.5 text-success" />
+                          <Check className="text-success" />
                         ) : (
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy />
                         )}
                       </Button>
                     </div>
@@ -584,16 +574,15 @@ function BuyTurnsPageInner() {
                         {checkoutData.description}
                       </strong>
                       <Button
-                        type="button"
                         variant="ghost"
-                        size="icon"
+                        size="icon-xs"
                         onClick={() => handleCopy(checkoutData.description, 'syntax')}
                         title="Copy"
                       >
                         {isCopiedSyntax ? (
-                          <Check className="w-3.5 h-3.5 text-success" />
+                          <Check className="text-success" />
                         ) : (
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy />
                         )}
                       </Button>
                     </div>

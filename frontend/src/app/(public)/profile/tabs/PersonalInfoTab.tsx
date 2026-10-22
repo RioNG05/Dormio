@@ -52,11 +52,10 @@ export default function PersonalInfoTab() {
           actions={
             !isEditingInfo ? (
               <Button
-                type="button"
                 variant="primary"
                 size="sm"
                 onClick={() => setIsEditingInfo(true)}
-                leftIcon={<Edit3 className="w-4 h-4 shrink-0" />}
+                leftIcon={<Edit3 />}
                 className="w-full sm:w-auto rounded-2xl hover:scale-105"
               >
                 {t('guestProfileInfoEditBtn')}
@@ -64,11 +63,10 @@ export default function PersonalInfoTab() {
             ) : (
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <Button
-                  type="button"
                   variant="secondary"
                   size="sm"
                   onClick={() => setIsEditingInfo(false)}
-                  leftIcon={<X className="w-4 h-4 shrink-0" />}
+                  leftIcon={<X />}
                 >
                   {t('guestProfileBtnCancelShort')}
                 </Button>
@@ -77,7 +75,7 @@ export default function PersonalInfoTab() {
                   type="submit"
                   variant="primary"
                   size="sm"
-                  leftIcon={<Save className="w-4 h-4 shrink-0" />}
+                  leftIcon={<Save />}
                   className="hover:scale-105"
                 >
                   {t('guestProfileBtnSaveDraft')}
@@ -311,7 +309,6 @@ export default function PersonalInfoTab() {
       {isEditingInfo && (
         <Form.Actions>
           <Button
-            type="button"
             variant="secondary"
             size="lg"
             onClick={() => setIsEditingInfo(false)}
@@ -323,7 +320,7 @@ export default function PersonalInfoTab() {
             type="submit"
             variant="primary"
             size="lg"
-            leftIcon={<Save className="w-4 h-4 shrink-0" />}
+            leftIcon={<Save />}
             rightIcon={<span>&rarr;</span>}
             className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
           >

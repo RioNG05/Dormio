@@ -273,6 +273,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               <Button
                 id="tab-bhms"
                 variant={isBhms ? 'primary' : 'ghost'}
+                size="md"
                 leftIcon={<Building2 />}
                 onClick={() => router.push('/pricing/management-system', { scroll: false })}
                 className="flex-1 rounded-2xl"
@@ -283,6 +284,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
               <Button
                 id="tab-bhrp"
                 variant={!isBhms ? 'accent' : 'ghost'}
+                size="md"
                 leftIcon={<QrCode />}
                 onClick={() => router.push('/pricing/rental-platform', { scroll: false })}
                 className="flex-1 rounded-2xl"
@@ -344,6 +346,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 <Button
                   id="billing-monthly"
                   variant={billingCycle === 'monthly' ? 'dark' : 'ghost'}
+                  size="sm"
                   onClick={() => setBillingCycle('monthly')}
                   fullWidth="responsive"
                 >
@@ -352,6 +355,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 <Button
                   id="billing-yearly"
                   variant={billingCycle === 'yearly' ? 'dark' : 'ghost'}
+                  size="sm"
                   onClick={() => setBillingCycle('yearly')}
                   fullWidth="responsive"
                 >

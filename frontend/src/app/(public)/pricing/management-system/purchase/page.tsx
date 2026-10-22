@@ -286,10 +286,9 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
       <div className="mb-8">
         <Link href="/pricing" className="inline-flex mb-4">
           <Button
-            type="button"
             variant="ghost"
             size="xs"
-            leftIcon={<ArrowLeft className="w-4 h-4" />}
+            leftIcon={<ArrowLeft />}
             className="text-muted hover:text-foreground -ml-2.5"
           >
             {t('guestPricingCheckoutBackToPricing')}
@@ -365,7 +364,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
             {t('guestPricingCheckoutNotFoundDesc')}
           </Text>
           <Link href="/pricing">
-            <Button size="sm" variant="dark">
+            <Button variant="dark">
               {t('guestPricingCheckoutBackToPlansBtn')}
             </Button>
           </Link>
@@ -519,18 +518,17 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                   fullWidth
                   size="lg"
                   variant="success"
-                  type="button"
                   isLoading={isGeneratingQr}
                   disabled={isGeneratingQr || isSuccess}
                   onClick={() => handleGenerateCheckout(selectedCycle)}
                   leftIcon={
                     isSuccess ? (
-                      <CheckCircle2 className="w-5 h-5" />
+                      <CheckCircle2 />
                     ) : (
-                      <QrCode className="w-5 h-5" />
+                      <QrCode />
                     )
                   }
-                  rightIcon={!isSuccess ? <ArrowRight className="w-4 h-4" /> : undefined}
+                  rightIcon={!isSuccess ? <ArrowRight /> : undefined}
                 >
                   {isGeneratingQr
                     ? t('guestPricingCheckoutPayBtnLoading')
@@ -603,7 +601,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                       <Button
                         size="md"
                         variant="dark"
-                        rightIcon={<ArrowRight className="w-4 h-4" />}
+                        rightIcon={<ArrowRight />}
                       >
                         {t('guestPricingCheckoutGoToDashboard')}
                       </Button>
@@ -676,9 +674,8 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                         <Button
                           size="sm"
                           variant="dark"
-                          type="button"
                           isLoading={isGeneratingQr}
-                          leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                          leftIcon={<RefreshCw />}
                           onClick={() => handleGenerateCheckout(selectedCycle)}
                         >
                           {t('guestPricingCheckoutGenerateNewQr')}
@@ -706,16 +703,15 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           {checkoutData.accountNumber}
                         </Text>
                         <Button
-                          type="button"
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => handleCopy(checkoutData.accountNumber, 'acc')}
                           title="Copy"
                         >
                           {isCopiedAcc ? (
-                            <Check className="w-3.5 h-3.5 text-success" />
+                            <Check className="text-success" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy />
                           )}
                         </Button>
                       </div>
@@ -748,16 +744,15 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           {checkoutData.description}
                         </Text>
                         <Button
-                          type="button"
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => handleCopy(checkoutData.description, 'syntax')}
                           title="Copy"
                         >
                           {isCopiedSyntax ? (
-                            <Check className="w-3.5 h-3.5 text-success" />
+                            <Check className="text-success" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy />
                           )}
                         </Button>
                       </div>

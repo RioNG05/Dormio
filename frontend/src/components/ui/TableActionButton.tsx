@@ -27,3 +27,4 @@ export const TableActionButton = React.forwardRef<HTMLButtonElement, TableAction
 )
 
 TableActionButton.displayName = 'TableActionButton'
+

@@ -395,7 +395,6 @@ export default function BlogPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2">
             <Link href="/register" className="w-full sm:w-auto">
               <Button
-                variant="primary"
                 size="lg"
                 rightIcon={<SquareArrowOutUpRight />}
                 className="w-full sm:w-auto"

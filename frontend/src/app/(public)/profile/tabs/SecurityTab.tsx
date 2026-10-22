@@ -107,11 +107,11 @@ export default function SecurityTab() {
           rightIcon={
             <Button
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               tabIndex={-1}
             >
-              {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showCurrentPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
         />
@@ -128,13 +128,12 @@ export default function SecurityTab() {
             onChange={e => setNewPassword(e.target.value)}
             rightIcon={
               <Button
-                type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-xs"
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 tabIndex={-1}
               >
-                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showNewPassword ? <EyeOff /> : <Eye />}
               </Button>
             }
           />
@@ -182,13 +181,12 @@ export default function SecurityTab() {
           onChange={e => setConfirmPassword(e.target.value)}
           rightIcon={
             <Button
-              type="button"
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               tabIndex={-1}
             >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showConfirmPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
         />

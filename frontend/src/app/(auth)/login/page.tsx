@@ -94,7 +94,6 @@ export default function LoginPage() {
       {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
       <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
         <Button
-          type="button"
           variant={method === 'phone' ? 'primary' : 'ghost'}
           size="sm"
           onClick={() => {
@@ -102,13 +101,12 @@ export default function LoginPage() {
             setAccountIdentifier('')
             setError(null)
           }}
-          leftIcon={<Phone  />}
+          leftIcon={<Phone />}
           className="flex-1"
         >
           {t('authLoginMethodPhone')}
         </Button>
         <Button
-          type="button"
           variant={method === 'email' ? 'primary' : 'ghost'}
           size="sm"
           onClick={() => {
@@ -116,7 +114,7 @@ export default function LoginPage() {
             setAccountIdentifier('')
             setError(null)
           }}
-          leftIcon={<Mail  />}
+          leftIcon={<Mail />}
           className="flex-1"
         >
           {t('authLoginMethodEmail')}
@@ -170,13 +168,14 @@ export default function LoginPage() {
           onChange={e => setPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
-            <Button size="icon"
-              type="button"
+            <Button
+              size="icon-xs"
               variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
           className="rounded-2xl py-3 border-line focus:border-primary"

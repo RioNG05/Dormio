@@ -150,15 +150,14 @@ export default function BlogDetailPage() {
                 </Text>
               </Text>
               <Button
-                type="button"
                 variant="outline"
                 size="xs"
                 onClick={handleCopyLink}
                 leftIcon={
                   copied ? (
-                    <Check className="w-3.5 h-3.5 text-success" />
+                    <Check className="text-success" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy />
                   )
                 }
               >

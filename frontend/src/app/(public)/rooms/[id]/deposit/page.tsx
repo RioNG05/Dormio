@@ -488,10 +488,7 @@ function DepositPageInner() {
         <AlertCircle className="w-10 h-10 text-muted" />
         <p className="text-muted font-semibold text-sm">{tGuest('guestRoomsErrorFetch')}</p>
         <Link href={`/rooms/${id}`}>
-          <Button
-            variant="primary"
-            size="sm"
-          >
+          <Button>
             {tGuest('guestRoomDetailBackToList')}
           </Button>
         </Link>
@@ -686,12 +683,13 @@ function DepositPageInner() {
                   </div>
 
                   <div className="pt-2 space-y-2">
-                    <Button fullWidth size="icon"
+                    <Button
+                      fullWidth
+                      size="md"
+                      rightIcon={<ArrowRight />}
                       onClick={() => setDepositStep('confirm_amount')}
-                      className="sm:text-sm"
                     >
-                      <span>{tGuest('guestDepositIdentityPassedBtn')}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      {tGuest('guestDepositIdentityPassedBtn')}
                     </Button>
                     <button
                       onClick={() => {
@@ -744,12 +742,13 @@ function DepositPageInner() {
                   </div>
 
                   <div className="pt-2">
-                    <Button fullWidth size="icon"
+                    <Button
+                      fullWidth
+                      size="md"
+                      rightIcon={<ArrowRight />}
                       onClick={() => setDepositStep('identity_gate')}
-                      className="sm:text-sm"
                     >
-                      <span>{tGuest('guestDepositIdentityMissingBtn')}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      {tGuest('guestDepositIdentityMissingBtn')}
                     </Button>
                   </div>
                 </div>
@@ -873,21 +872,17 @@ function DepositPageInner() {
                 </div>
               </div>
 
-              <Button fullWidth size="icon"
+              <Button
+                fullWidth
+                size="md"
                 type="submit"
+                isLoading={isSavingIdentity}
                 disabled={
                   isSavingIdentity || idNumber.length !== 12 || !idFullName.trim() || !idDob
                 }
                 className="mt-2"
               >
-                {isSavingIdentity ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{tGuest('guestDepositSavingIdentity')}</span>
-                  </>
-                ) : (
-                  <span>{tGuest('guestDepositSaveIdBtn')} →</span>
-                )}
+                {tGuest('guestDepositSaveIdBtn')} &rarr;
               </Button>
             </form>
           )}
@@ -1000,7 +995,12 @@ function DepositPageInner() {
                 </div>
               )}
 
-              <Button fullWidth size="icon" variant="orange"
+              <Button
+                fullWidth
+                size="md"
+                variant="orange"
+                isLoading={isSubmittingDeposit}
+                leftIcon={<QrCode />}
                 onClick={handleInitiateDeposit}
                 disabled={
                   isSubmittingDeposit ||
@@ -1011,17 +1011,7 @@ function DepositPageInner() {
                 }
                 className="from-accent to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] mt-2"
               >
-                {isSubmittingDeposit ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{tGuest('guestDepositCreatingOrder')}</span>
-                  </>
-                ) : (
-                  <>
-                    <QrCode className="w-4 h-4" />
-                    <span>{tGuest('guestRoomDetailConfirmQrBtn')}</span>
-                  </>
-                )}
+                {tGuest('guestRoomDetailConfirmQrBtn')}
               </Button>
             </div>
           )}
@@ -1086,12 +1076,10 @@ function DepositPageInner() {
                     <Button
                       onClick={handleInitiateDeposit}
                       disabled={isSubmittingDeposit}
-                      size="sm"
+                      isLoading={isSubmittingDeposit}
+                      leftIcon={<RefreshCw />}
                     >
-                      <RefreshCw
-                        className={`w-3.5 h-3.5 ${isSubmittingDeposit ? 'animate-spin' : ''}`}
-                      />
-                      <span>{tGuest('guestDepositGenerateNewQr')}</span>
+                      {tGuest('guestDepositGenerateNewQr')}
                     </Button>
                   </div>
                 )}
@@ -1242,11 +1230,13 @@ function DepositPageInner() {
 
               <div className="space-y-2 pt-2">
                 {post.poster && (
-                  <Button fullWidth size="icon"
+                  <Button
+                    fullWidth
+                    size="md"
+                    leftIcon={<MessageSquare />}
                     onClick={handleStartChat}
                   >
-                    <MessageSquare className="w-4 h-4" />
-                    <span>{tGuest('guestDepositChatWithLandlord')}</span>
+                    {tGuest('guestDepositChatWithLandlord')}
                   </Button>
                 )}
                 <Button fullWidth size="xs"

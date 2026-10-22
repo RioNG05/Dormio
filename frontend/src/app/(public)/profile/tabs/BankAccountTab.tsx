@@ -106,11 +106,10 @@ export default function BankAccountTab() {
           actions={
             !isEditingBank ? (
               <Button
-                type="button"
                 variant="primary"
                 size="sm"
                 onClick={() => setIsEditingBank(true)}
-                leftIcon={<Edit3 className="w-4 h-4 shrink-0" />}
+                leftIcon={<Edit3 />}
                 className="w-full sm:w-auto rounded-2xl hover:scale-105"
               >
                 {t('guestProfileBankEditBtn')}
@@ -118,14 +117,13 @@ export default function BankAccountTab() {
             ) : (
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <Button
-                  type="button"
                   variant="secondary"
                   size="sm"
                   onClick={() => {
                     setIsEditingBank(false)
                     setBankSaveError('')
                   }}
-                  leftIcon={<X className="w-4 h-4 shrink-0" />}
+                  leftIcon={<X />}
                 >
                   {t('guestProfileBtnCancelShort')}
                 </Button>
@@ -135,7 +133,7 @@ export default function BankAccountTab() {
                   variant="primary"
                   size="sm"
                   isLoading={isSavingBank}
-                  leftIcon={!isSavingBank ? <Save className="w-4 h-4 shrink-0" /> : undefined}
+                  leftIcon={!isSavingBank ? <Save /> : undefined}
                   className="hover:scale-105"
                 >
                   {t('guestProfileBankBtnSave')}
@@ -227,7 +225,6 @@ export default function BankAccountTab() {
           )}
           <Form.Actions>
             <Button
-              type="button"
               variant="secondary"
               size="lg"
               disabled={isSavingBank}
@@ -245,7 +242,7 @@ export default function BankAccountTab() {
               size="lg"
               disabled={isSavingBank}
               isLoading={isSavingBank}
-              leftIcon={!isSavingBank ? <Save className="w-4 h-4 shrink-0" /> : undefined}
+              leftIcon={!isSavingBank ? <Save /> : undefined}
               rightIcon={!isSavingBank ? <span>&rarr;</span> : undefined}
               className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
             >

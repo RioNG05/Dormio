@@ -40,7 +40,7 @@ export default function RoleDataTab() {
               <Button
                 variant="accent"
                 size="md"
-                leftIcon={<Building2 className="w-4 h-4 shrink-0" />}
+                leftIcon={<Building2 className="shrink-0" />}
                 rightIcon={<span>&rarr;</span>}
                 className="w-full sm:w-auto rounded-2xl hover:scale-105"
               >

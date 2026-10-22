@@ -313,8 +313,8 @@ function GuestMessagesContent() {
       {/* Top Header Trail */}
       <div className="flex items-center gap-3 mb-6">
         <Link href="/">
-          <Button variant="ghost" size="icon-sm">
-            <ChevronLeft className="w-5 h-5" />
+          <Button variant="ghost" size="icon-sm" title="Quay lại">
+            <ChevronLeft />
           </Button>
         </Link>
         <div>
@@ -598,7 +598,7 @@ function GuestMessagesContent() {
                   size="md"
                   disabled={!messageInput.trim() || isSending}
                   isLoading={isSending}
-                  rightIcon={!isSending ? <Send className="w-3.5 h-3.5" /> : undefined}
+                  rightIcon={!isSending ? <Send /> : undefined}
                   className="shrink-0"
                 >
                   {t('guestMessagesSend')}

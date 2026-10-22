@@ -285,6 +285,7 @@ export default function HomePage() {
                   <Button
                     type="submit"
                     variant="accent"
+                    size="md"
                     fullWidth
                     leftIcon={<Search />}
                     className="h-11 rounded-2xl text-xs font-extrabold shadow-md shadow-accent/25 hover:scale-[1.02]"
@@ -344,6 +345,7 @@ export default function HomePage() {
               <Link href="#features">
                 <Button
                   variant="dark"
+                  size="md"
                   rounded="full"
                   className="px-7 py-3 bg-zinc-900/80 hover:bg-accent text-white font-black text-xs sm:text-sm border border-zinc-700/80 hover:border-accent backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300"
                 >
@@ -409,6 +411,7 @@ export default function HomePage() {
             <div className="inline-flex items-center p-1 sm:p-1.5 bg-card border border-line rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
               <Button
                 variant={processTab === 'tenant' ? 'primary' : 'ghost'}
+                size="sm"
                 rounded="full"
                 onClick={() => setProcessTab('tenant')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'tenant'
@@ -420,6 +423,7 @@ export default function HomePage() {
               </Button>
               <Button
                 variant={processTab === 'landlord' ? 'primary' : 'ghost'}
+                size="sm"
                 rounded="full"
                 onClick={() => setProcessTab('landlord')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'landlord'
@@ -516,7 +520,7 @@ export default function HomePage() {
                   {t('guestHomeNoRooms')}
                 </Text>
                 <Link href="/rooms">
-                  <Button variant="primary" size="md" className="px-5 py-2.5 text-xs">
+                  <Button size="md" className="px-5 py-2.5 text-xs">
                     {t('guestHomeExploreAllRooms')}
                   </Button>
                 </Link>
@@ -609,7 +613,7 @@ export default function HomePage() {
                     variant="white"
                     size="lg"
                     rounded="full"
-                    rightIcon={<ArrowRight className="w-3.5 h-3.5 text-primary" />}
+                    rightIcon={<ArrowRight className="text-primary" />}
                     className="px-8 py-3.5 font-extrabold text-xs hover:shadow-md"
                   >
                     {t('guestHomeExploreMoreRooms')}
@@ -699,7 +703,7 @@ export default function HomePage() {
                   variant="white"
                   size="lg"
                   rounded="full"
-                  rightIcon={<ArrowRight className="w-4 h-4 text-primary" />}
+                  rightIcon={<ArrowRight className="text-primary" />}
                   className="px-8 py-3.5 font-extrabold text-xs sm:text-sm hover:shadow-md"
                 >
                   {t('guestHomeBhmsViewDetails')}

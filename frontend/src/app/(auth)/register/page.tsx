@@ -184,13 +184,14 @@ export default function RegisterPage() {
           onChange={e => setPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
-            <Button size="icon"
-              type="button"
+            <Button
+              size="icon-xs"
               variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
           className="rounded-2xl py-3 border-line focus:border-primary"
@@ -207,13 +208,14 @@ export default function RegisterPage() {
           onChange={e => setConfirmPassword(e.target.value)}
           leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
-            <Button size="icon"
-              type="button"
+            <Button
+              size="icon-xs"
               variant="ghost"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+              title={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
             >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showConfirmPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
           className="rounded-2xl py-3 border-line focus:border-primary"

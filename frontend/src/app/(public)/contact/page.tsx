@@ -287,7 +287,6 @@ export default function ContactPage() {
                 {/* Solid Brand Teal Action Button using Button */}
                 <Button
                   type="submit"
-                  variant="primary"
                   size="lg"
                   fullWidth
                   rightIcon={<Send />}
@@ -323,7 +322,6 @@ export default function ContactPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link href="/landlord/setup" className="w-full sm:w-auto">
               <Button
-                variant="primary"
                 size="lg"
                 rightIcon={<SquareArrowOutUpRight />}
                 className="w-full sm:w-auto"

@@ -33,7 +33,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <>
                 <Link href="/register">
                   <Button
-                    type="button"
                     variant="outline"
                     size="sm"
                   >
@@ -42,7 +41,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 </Link>
                 <Link href="/login">
                   <Button
-                    type="button"
                     variant="primary"
                     size="sm"
                   >

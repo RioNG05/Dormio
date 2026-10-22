@@ -199,7 +199,6 @@ function UniversalProfilePage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/login">
             <Button
-              variant="primary"
               size="md"
               rightIcon={<span>&rarr;</span>}
               className="rounded-2xl shadow-lg shadow-primary/20"
@@ -265,10 +264,9 @@ function UniversalProfilePage() {
                 )}
 
                 <Button
-                  type="button"
-                  variant="primary"
                   size="icon-sm"
                   title={t('guestProfileAvatarChangeTooltip')}
+                  isLoading={isUploadingAvatar}
                   disabled={isUploadingAvatar}
                   onClick={e => {
                     e.stopPropagation()
@@ -276,11 +274,7 @@ function UniversalProfilePage() {
                   }}
                   className="absolute bottom-1 right-1 shadow-lg hover:scale-110 z-20"
                 >
-                  {isUploadingAvatar ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Camera className="w-4 h-4" />
-                  )}
+                  <Camera />
                 </Button>
               </div>
 
