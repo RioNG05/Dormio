@@ -2,29 +2,27 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
 import {
-  Building,
   MapPin,
   Phone,
-  Calendar,
   Zap,
   Droplets,
   Wifi,
   Trash2,
-  ArrowLeft,
   ShieldCheck,
-  CheckCircle2,
-  AlertCircle,
-  FileSignature,
   Home,
-  User,
-  Clock,
   Sparkles,
   ExternalLink,
+  MessageCircle,
+  FileSignature,
+  FileText,
+  User,
+  Wrench,
+  Loader2,
 } from 'lucide-react'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Breadcrumb } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
+import { Breadcrumb, Button, Text } from '@/components/ui'
+import { useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 
@@ -68,12 +66,8 @@ interface TenancyApiResponse {
   } | null
 }
 
-export default function TenantRoomDetailPage() {
-  const t = useTranslations('tenantPortal')
-  const { locale } = useLanguage()
-  const params = useParams()
-  const router = useRouter()
-  const roomId = params?.id as string
+export default function TenantRoomPage() {
+  const t = useTranslations('tenant')
 
   const [loading, setLoading] = useState(true)
   const [tenancyData, setTenancyData] = useState<TenancyApiResponse['data'] | null>(null)
@@ -88,7 +82,7 @@ export default function TenantRoomDetailPage() {
           setTenancyData(response.data)
         }
       } catch (err) {
-        // Fallback demo handled below
+        console.error('Failed to load room tenancy info:', err)
       } finally {
         if (isMounted) {
           setLoading(false)
@@ -100,12 +94,12 @@ export default function TenantRoomDetailPage() {
     return () => {
       isMounted = false
     }
-  }, [roomId])
+  }, [])
 
   if (loading) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
         <span className="text-xs text-muted font-medium">{t('tenantLoadingRoomDetails')}</span>
       </div>
     )
@@ -113,24 +107,28 @@ export default function TenantRoomDetailPage() {
 
   if (!tenancyData || !tenancyData.room) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto py-16 text-center animate-in fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-card-hover flex items-center justify-center mx-auto text-muted mb-4">
-          <Home className="w-8 h-8" />
-        </div>
-        <h2 className="text-lg sm:text-xl font-black text-foreground">
-          {t('tenantRoomNotFoundTitle')}
-        </h2>
-        <p className="text-xs sm:text-sm text-muted max-w-md mx-auto">
-          {t('tenantRoomNotFoundDesc')}
-        </p>
-        <div className="pt-4">
-          <Link
-            href="/tenant"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-[#23a8a3] text-white text-xs font-bold transition-all shadow-xs"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>{t('tenantBackToDashboard')}</span>
-          </Link>
+      <div className="space-y-6">
+        <DashboardPageHeader
+          title={t('tenantRoomInfoTitle')}
+          subtitle="Thông tin phòng thuê hiện tại của bạn"
+        />
+        <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-xs space-y-4">
+          <div className="w-16 h-16 rounded-3xl bg-card-hover flex items-center justify-center mx-auto text-muted mb-4">
+            <Home className="w-8 h-8" />
+          </div>
+          <Text as="h3" size="lg" weight="bold" className="text-foreground">
+            {t('tenantRoomNotFoundTitle')}
+          </Text>
+          <Text size="sm" color="subtle" className="leading-relaxed">
+            {t('tenantRoomNotFoundDesc')}
+          </Text>
+          <div className="pt-2">
+            <Link href="/tenant">
+              <Button variant="primary" size="md">
+                {t('tenantBackToDashboard')}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -139,11 +137,11 @@ export default function TenantRoomDetailPage() {
   const room = tenancyData.room
   const house = tenancyData.boardingHouse || {
     id: 'bh-unknown',
-    name: t('tenantFallbackBuildingName'),
-    address: t('tenantFallbackAddress'),
+    name: 'Nhà trọ',
+    address: 'Địa chỉ chưa cập nhật',
     landlord: {
-      name: t('tenantFallbackLandlord'),
-      phoneNumber: t('tenantFallbackNotUpdated'),
+      name: 'Chủ trọ',
+      phoneNumber: '',
     },
   }
   const contract = tenancyData.contract || {
@@ -165,7 +163,9 @@ export default function TenantRoomDetailPage() {
       return <Droplets className="w-5 h-5 text-sky-500" />
     if (lower.includes('mạng') || lower.includes('wifi') || lower.includes('internet'))
       return <Wifi className="w-5 h-5 text-indigo-500" />
-    return <Trash2 className="w-5 h-5 text-emerald-500" />
+    if (lower.includes('rác') || lower.includes('vệ sinh') || lower.includes('trash'))
+      return <Trash2 className="w-5 h-5 text-emerald-500" />
+    return <Wrench className="w-5 h-5 text-primary" />
   }
 
   return (
@@ -175,7 +175,7 @@ export default function TenantRoomDetailPage() {
         <Breadcrumb
           backHref="/tenant"
           backLabel={t('tenantBackToDashboard')}
-          current={`${room.roomNumber} - ${house.name}`}
+          current={`Phòng ${room.roomNumber} - ${house.name}`}
         />
         <span className="px-3 py-1 bg-success-soft text-success text-[11px] font-bold rounded-full border border-success-subtle flex items-center gap-1.5 shrink-0">
           <ShieldCheck className="w-3.5 h-3.5 text-success" />
@@ -190,14 +190,14 @@ export default function TenantRoomDetailPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 bg-primary/20 text-primary text-[11px] font-black rounded-full border border-primary/30 uppercase tracking-wider">
-                {room.roomTypeName || 'Studio'}
+                {room.roomTypeName || 'Phòng trọ'}
               </span>
               <span className="text-xs text-muted font-semibold">
                 {t('tenantFloorLabel', { floor: room.floor })}
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight flex items-center gap-3">
-              <span>{room.roomNumber}</span>
+              <span>Phòng {room.roomNumber}</span>
               <span className="text-lg sm:text-xl font-normal text-muted">| {house.name}</span>
             </h1>
             <p className="text-xs sm:text-sm text-zinc-300 flex items-center gap-1.5">
@@ -225,7 +225,7 @@ export default function TenantRoomDetailPage() {
         {/* Left 2 Cols: Room Specifications & Services */}
         <div className="lg:col-span-2 space-y-6">
           {/* Room Specs Card */}
-          <div className="bg-card rounded-3xl p-6 border border-line shadow-sm space-y-5">
+          <div className="bg-card rounded-3xl p-6 border border-line shadow-xs space-y-5">
             <div className="border-b border-line pb-3 flex items-center justify-between">
               <h3 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-2">
                 <Home className="w-4 h-4 text-primary" />
@@ -269,7 +269,7 @@ export default function TenantRoomDetailPage() {
           </div>
 
           {/* Connected Services */}
-          <div className="bg-card rounded-3xl p-6 border border-line shadow-sm space-y-4">
+          <div className="bg-card rounded-3xl p-6 border border-line shadow-xs space-y-4">
             <div className="border-b border-line pb-3 flex items-center justify-between">
               <h3 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
@@ -287,13 +287,13 @@ export default function TenantRoomDetailPage() {
                   className="p-4 bg-surface hover:bg-card-hover rounded-2xl border border-line flex items-center justify-between transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-card shadow-sm flex items-center justify-center border border-line">
+                    <div className="w-10 h-10 rounded-xl bg-card shadow-xs flex items-center justify-center border border-line">
                       {getServiceIcon(svc.name)}
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground">{svc.name}</p>
                       <span className="text-[10px] text-muted font-medium">
-                        {svc.isMetered ? t('tenantServiceMetered') : t('tenantServiceFixed')}
+                        {svc.isMetered ? 'Tính theo công tơ' : 'Cố định hàng tháng'}
                       </span>
                     </div>
                   </div>
@@ -310,7 +310,7 @@ export default function TenantRoomDetailPage() {
         {/* Right Col: Landlord & Quick Links */}
         <div className="space-y-6">
           {/* Landlord Contact Card */}
-          <div className="bg-card rounded-3xl p-6 border border-line shadow-sm space-y-4">
+          <div className="bg-card rounded-3xl p-6 border border-line shadow-xs space-y-4">
             <h3 className="text-xs font-black text-muted uppercase tracking-wider">
               {t('tenantRoleLandlord')}
             </h3>
@@ -320,35 +320,48 @@ export default function TenantRoomDetailPage() {
               </div>
               <div className="space-y-0.5">
                 <h4 className="text-sm font-black text-foreground">
-                  {house.landlord?.name || t('tenantFallbackLandlord')}
+                  {house.landlord?.name || 'Chủ trọ'}
                 </h4>
                 <p className="text-xs text-muted font-medium">
-                  {house.landlord?.phoneNumber || t('tenantFallbackNotUpdated')}
+                  {house.landlord?.phoneNumber || 'Chưa cập nhật SĐT'}
                 </p>
               </div>
             </div>
 
             <div className="pt-2 flex flex-col gap-2">
-              <a
-                href={`tel:${house.landlord.phoneNumber}`}
-                className="w-full py-2.5 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md shadow-accent/20 flex items-center justify-center gap-2 transition-all"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>{t('tenantCallLandlord')}</span>
-              </a>
+              {house.landlord?.phoneNumber && (
+                <a
+                  href={`tel:${house.landlord.phoneNumber}`}
+                  className="w-full py-2.5 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md shadow-accent/20 flex items-center justify-center gap-2 transition-all"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>{t('tenantCallLandlord')}</span>
+                </a>
+              )}
               <Link
                 href="/tenant/messages"
                 className="w-full py-2.5 bg-card-hover hover:bg-line text-foreground font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 transition-all"
               >
+                <MessageCircle className="w-3.5 h-3.5" />
                 <span>{t('tenantChatInPortal')}</span>
               </Link>
             </div>
           </div>
 
           {/* Quick Navigation Links */}
-          <div className="bg-surface rounded-3xl p-6 border border-line shadow-sm space-y-3">
+          <div className="bg-surface rounded-3xl p-6 border border-line shadow-xs space-y-3">
             <h4 className="text-xs font-bold text-foreground/90">{t('tenantRelatedActions')}</h4>
             <div className="space-y-2">
+              <Link
+                href="/tenant/contract"
+                className="flex items-center justify-between p-3 bg-card rounded-xl border border-line hover:border-primary text-xs font-bold text-foreground/90 hover:text-primary transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  Hợp đồng thuê phòng
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted" />
+              </Link>
               <Link
                 href="/tenant/invoices"
                 className="flex items-center justify-between p-3 bg-card rounded-xl border border-line hover:border-primary text-xs font-bold text-foreground/90 hover:text-primary transition-colors"
@@ -370,3 +383,4 @@ export default function TenantRoomDetailPage() {
     </div>
   )
 }
+

@@ -2,29 +2,15 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
-  MessageSquare,
   AlertTriangle,
   CheckCircle2,
   Clock,
   X,
-  ShieldAlert,
   UploadCloud,
-  Trash2,
   Eye,
-  Search,
-  Filter,
   AlertCircle,
-  HelpCircle,
-  Image as ImageIcon,
-  Building,
-  LayoutGrid,
-  List,
   Plus,
   ShieldCheck,
-  Calendar,
-  Sparkles,
-  ChevronRight,
-  ChevronLeft,
 } from 'lucide-react'
 import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
