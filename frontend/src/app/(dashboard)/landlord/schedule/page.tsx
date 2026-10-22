@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -632,7 +632,7 @@ export default function WorkforceSchedulePage() {
       )}
 
       {/* ─── Top Header & Primary Actions ───────────────────────────────── */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordScheduleTitle')}
         subtitle={t('landlordScheduleSubtitleFull')}
         actions={

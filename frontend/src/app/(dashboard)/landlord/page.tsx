@@ -26,7 +26,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
 import { Button, Text } from '@/components/ui'
-import { LandlordPageHeader } from '@/components/landlord'
+import { DashboardPageHeader } from '@/components/landlord'
 import { cn } from '@/lib/utils'
 import {
   getBoardingHouseOverview,
@@ -150,7 +150,7 @@ export default function LandlordDashboardPage() {
   return (
     <div className="flex flex-col gap-6 pb-16 animate-in fade-in duration-500">
       {/* Top Header Title & Create Building Button */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordOverviewHeaderTitle', { name: activeBuilding.name })}
         subtitle={activeBuilding.address || t('landlordOverviewNoAddress')}
         actions={

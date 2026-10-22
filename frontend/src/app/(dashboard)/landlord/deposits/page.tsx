@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react'
-import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
@@ -546,7 +546,7 @@ function DepositsContent() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Actions Bar */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordDepositsTitle')}
         subtitle={t('landlordDepositsSubtitle')}
         actions={

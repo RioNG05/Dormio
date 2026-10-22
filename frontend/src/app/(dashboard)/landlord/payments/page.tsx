@@ -38,7 +38,7 @@ import {
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, Text, Chip } from '@/components/ui'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
   const { activeBuilding } = useAuth()
@@ -249,7 +249,7 @@ function PaymentsContent() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Actions Bar */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={
           <span className="flex items-center gap-2">
             <CreditCard className="w-8 h-8 text-primary" /> Lịch Sử Thu Tiền & Thanh Toán

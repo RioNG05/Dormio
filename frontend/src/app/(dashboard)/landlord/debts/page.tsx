@@ -40,7 +40,7 @@ import {
   Text,
   Chip,
 } from '@/components/ui'
-import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
@@ -435,7 +435,7 @@ export default function LandlordDebtsPage() {
   return (
     <div className="space-y-6 pb-20">
       {/* ─── Page Header ──────────────────────────────────────────────────────── */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordDebtsTitle')}
         subtitle={t('landlordDebtsSubtitle')}
         actions={

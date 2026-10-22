@@ -6,4 +6,5 @@ export * from './DashboardNav'
 export * from './DashboardUserFooter'
 export * from './DashboardSidebar'
 export * from './DashboardMobileHeader'
+export * from './DashboardPageHeader'
 

@@ -50,7 +50,7 @@ import {
   Switch,
   Chip,
 } from '@/components/ui'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { formatCurrency, resolveErrorMessage, localizeDbEnum } from '@/utils'
 
 export default function ServicesPage() {
@@ -530,7 +530,7 @@ export default function ServicesPage() {
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Top Bar Header */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordServicesTitle')}
         subtitle={t('landlordServicesSubtitle')}
         actions={

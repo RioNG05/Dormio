@@ -33,6 +33,7 @@ import {
   ExternalLink,
   Sparkles,
 } from 'lucide-react'
+import { DashboardPageHeader } from '@/components/layout'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
@@ -41,6 +42,7 @@ import { api } from '@/services/api'
 import { tenantInvoiceService, TenantInvoice } from '@/services/tenant-invoice.service'
 import { FEATURE_FLAGS } from '@/config/features'
 import { useUnreadMessages } from '@/hooks'
+import { Chip } from '@/components/ui'
 
 interface TenancyApiResponse {
   success: boolean
@@ -295,53 +297,56 @@ export default function TenantOverviewPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          {roomInfo ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-xs font-bold mb-2">
+      <DashboardPageHeader
+        badge={
+          roomInfo ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{t('roomStatusActive')}</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card-hover text-muted border border-line text-xs font-bold mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card-hover text-muted border border-line text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-zinc-400" />
               <span>{t('noActiveRoom')}</span>
             </div>
-          )}
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-            {t('title')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed">{t('subtitle')}</p>
-        </div>
+          )
+        }
+        title={t('title')}
+        subtitle={t('subtitle')}
+        actions={
+          <>
+            <Link href="/tenant/messages">
+              <Button
+                size="md"
+                className="relative sm:text-sm"
+                leftIcon={<MessageCircle />}
+              >
+                <span>{t('chatWithLandlord')}</span>
+                {unreadMessagesCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
+                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                  </span>
+                )}
+              </Button>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {roomInfo && (
-            <Button size="xs"
-              onClick={() => setIsContractOpen(true)}
-              className="sm:text-sm"
-            >
-              <FileSignature className="w-4 h-4 text-primary" />
-              <span>{t('viewContract')}</span>
-            </Button>
-          )}
-
-          <Link href="/tenant/messages">
-            <Button size="xs" className="relative sm:text-sm">
-              <MessageCircle className="w-4 h-4" />
-              <span>{t('chatWithLandlord')}</span>
-              {unreadMessagesCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
-                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                </span>
-              )}
-            </Button>
-          </Link>
-        </div>
-      </div>
+            </Link>
+            {roomInfo && (
+              <Button
+                size="md"
+                variant='accent'
+                leftIcon={<FileSignature />}
+                onClick={() => setIsContractOpen(true)} className="sm:text-sm"
+              >
+                {t('viewContract')}
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* Quick Billing Alert Banner (Only when unpaid invoice exists) */}
       {latestInvoice && (
-        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 rounded-3xlborder border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <CreditCard className="w-5 h-5" />
@@ -527,13 +532,14 @@ export default function TenantOverviewPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {roomInfo.amenities.map((item, idx) => (
-                    <span
+                    <Chip
                       key={idx}
-                      className="px-3 py-1.5 rounded-xl bg-surface border border-line text-xs font-semibold text-foreground/90 flex items-center gap-1.5"
+                      size='sm'
+                      variant='neutral'
+                      leftIcon={<CheckCircle2 className="text-primary" />}
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                      <span>{item}</span>
-                    </span>
+                      {item}
+                    </Chip>
                   ))}
                 </div>
               </div>
@@ -566,9 +572,9 @@ export default function TenantOverviewPage() {
                 </h3>
                 <p className="text-xs text-muted mt-0.5">{t('servicesSubtitle')}</p>
               </div>
-              <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+              <Chip size='sm' variant='primary'>
                 {t('activeServices', { count: services.length })}
-              </span>
+              </Chip>
             </div>
 
             {services.length === 0 ? (

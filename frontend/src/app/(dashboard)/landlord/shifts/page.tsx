@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
 import { Button, TextInput, SearchInput, Card } from '@/components/ui'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ShiftsPage() {
   const { activeBuilding } = useAuth()
@@ -272,7 +272,7 @@ export default function ShiftsPage() {
         </div>
       )}
 
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordShiftsTitle')}
         subtitle={`${t('landlordShiftsSubtitle')}: ${activeBuilding?.name || t('landlordRoomsBuildingDefault')}`}
         actions={

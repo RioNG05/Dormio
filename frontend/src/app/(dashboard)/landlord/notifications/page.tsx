@@ -18,7 +18,7 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import {
   announcementService,
   LandlordAnnouncementItem,
@@ -361,7 +361,7 @@ export default function NotificationsPage() {
       )}
 
       {/* 1. Page Header */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordNotificationsHeroTitle')}
         subtitle={t('landlordNotificationsHeroSubtitle')}
         actions={

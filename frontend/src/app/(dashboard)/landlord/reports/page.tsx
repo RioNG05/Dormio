@@ -60,7 +60,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
 import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle, TableRow } from '@/components/ui'
-import { LandlordPageHeader } from '@/components/landlord'
+import { DashboardPageHeader } from '@/components/landlord'
 import {
   getBoardingHouseOverview,
   getMultiPropertyOverview,
@@ -289,7 +289,7 @@ export default function ReportsPage() {
       )}
 
       {/* Header Bar */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordReportsTitle')}
         subtitle={
           reportMode === 'portfolio'

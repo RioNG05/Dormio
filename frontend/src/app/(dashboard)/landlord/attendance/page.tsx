@@ -25,7 +25,7 @@ import {
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
 import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow } from '@/components/ui'
-import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
   const year = date.getFullYear()
@@ -474,7 +474,7 @@ export default function AttendancePage() {
       )}
 
       {/* ─── Top Header ─────────────────────────────────────────────────── */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordAttendanceTitle')}
         subtitle={`${t('landlordAttendanceSubtitleFull')}`}
         actions={

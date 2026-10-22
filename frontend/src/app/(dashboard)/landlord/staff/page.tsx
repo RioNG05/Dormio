@@ -40,7 +40,7 @@ import {
   Chip,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { staffService, StaffItem, JobPosition, StaffSummary } from '@/services/staff.service'
 
 export default function StaffPage() {
@@ -549,7 +549,7 @@ export default function StaffPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-16">
       {/* Top Action Bar */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordStaffTitle')}
         subtitle={t('landlordStaffSubtitle')}
         actions={

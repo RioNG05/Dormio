@@ -37,7 +37,7 @@ import {
 } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { uploadImageToBackend } from '@/services/upload.service'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function AssetsPage() {
   const { activeBuilding } = useAuth()
@@ -512,7 +512,7 @@ export default function AssetsPage() {
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Top Bar / Header */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordAssetsPageTitle')}
         subtitle={t('landlordAssetsPageSubtitle')}
         actions={

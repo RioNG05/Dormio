@@ -30,7 +30,7 @@ import {
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card } from '@/components/ui'
-import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
   if (!FEATURE_FLAGS.ENABLE_BHRP) {
@@ -207,7 +207,7 @@ export default function ListingsPage() {
       )}
 
       {/* Top Header & Action */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordListingsPageTitle')}
         subtitle={t('landlordListingsPageSubtitle')}
         actions={

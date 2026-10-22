@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Plus,
   Receipt,
@@ -478,7 +478,7 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* ─── Top Header & Actions Bar ────────────────────────────────────────── */}
-      <LandlordPageHeader
+      <DashboardPageHeader
         title={t('landlordExpensesTitle')}
         subtitle={t('landlordExpensesSubtitle')}
         actions={

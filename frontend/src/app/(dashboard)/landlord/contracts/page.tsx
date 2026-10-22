@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
@@ -404,7 +404,7 @@ export default function ContractsPage() {
       </Modal>
 
       <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-        <LandlordPageHeader
+        <DashboardPageHeader
           title={t('landlordContractsTitle')}
           subtitle={t('landlordContractsSubtitle')}
           actions={
