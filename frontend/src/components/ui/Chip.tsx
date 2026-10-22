@@ -8,6 +8,9 @@ import { cn } from '@/lib/utils'
 
 export type ChipVariant =
   | 'default'
+  | 'primary'
+  | 'secondary'
+  | 'accent'
   | 'neutral'
   | 'success'
   | 'warning'
@@ -51,6 +54,9 @@ export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 
 const activeVariantStyles: Record<ChipVariant, string> = {
   default: 'bg-primary text-white border-primary shadow-2xs shadow-primary/20',
+  primary: 'bg-primary text-white border-primary shadow-2xs shadow-primary/20',
+  secondary: 'bg-surface text-foreground border-line shadow-2xs',
+  accent: 'bg-accent text-white border-accent shadow-2xs shadow-accent/20',
   neutral: 'bg-foreground text-background border-foreground shadow-2xs',
   success: 'bg-success text-white border-success shadow-2xs',
   warning: 'bg-warning text-white border-warning shadow-2xs',
@@ -61,6 +67,9 @@ const activeVariantStyles: Record<ChipVariant, string> = {
 
 const activeHoverStyles: Record<ChipVariant, string> = {
   default: 'hover:bg-primary-hover hover:border-primary-hover',
+  primary: 'hover:bg-primary-hover hover:border-primary-hover',
+  secondary: 'hover:bg-card-hover',
+  accent: 'hover:bg-accent-hover hover:border-accent-hover',
   neutral: 'hover:opacity-90',
   success: 'hover:opacity-90',
   warning: 'hover:opacity-90',
@@ -71,6 +80,9 @@ const activeHoverStyles: Record<ChipVariant, string> = {
 
 const inactiveVariantStyles: Record<ChipVariant, string> = {
   default: 'bg-surface text-muted border-line',
+  primary: 'bg-primary-soft text-primary border-primary-subtle',
+  secondary: 'bg-surface text-foreground border-line',
+  accent: 'bg-accent-soft text-accent border-accent-subtle',
   neutral: 'bg-surface text-muted border-line',
   success: 'bg-success-soft text-success border-success-subtle',
   warning: 'bg-warning-soft text-warning border-warning-subtle',
@@ -81,6 +93,9 @@ const inactiveVariantStyles: Record<ChipVariant, string> = {
 
 const inactiveHoverStyles: Record<ChipVariant, string> = {
   default: 'hover:bg-card-hover hover:text-foreground',
+  primary: 'hover:opacity-85',
+  secondary: 'hover:bg-card-hover',
+  accent: 'hover:opacity-85',
   neutral: 'hover:bg-card-hover hover:text-foreground',
   success: 'hover:opacity-85',
   warning: 'hover:opacity-85',
@@ -105,6 +120,9 @@ const badgeSizeStyles: Record<ChipSize, string> = {
 
 const inactiveBadgeColorStyles: Record<ChipVariant, string> = {
   default: 'bg-card-hover text-muted',
+  primary: 'bg-primary-soft text-primary',
+  secondary: 'bg-card-hover text-foreground',
+  accent: 'bg-accent-soft text-accent',
   neutral: 'bg-card-hover text-muted',
   success: 'bg-success-soft text-success',
   warning: 'bg-warning-soft text-warning',
@@ -321,4 +339,3 @@ export const ChipWithGroup = Object.assign(Chip, {
 })
 
 export default ChipWithGroup
-
