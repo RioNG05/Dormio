@@ -23,6 +23,7 @@ import {
 import { DashboardPageHeader } from '@/components/layout'
 import { Breadcrumb, Button, Text, EmptyState } from '@/components/ui'
 import { useTranslations } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 
@@ -68,6 +69,7 @@ interface TenancyApiResponse {
 
 export default function TenantRoomPage() {
   const t = useTranslations('tenant')
+  const { activeTenancyId } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [tenancyData, setTenancyData] = useState<TenancyApiResponse['data'] | null>(null)
@@ -77,9 +79,17 @@ export default function TenantRoomPage() {
 
     async function fetchDetails() {
       try {
-        const response = await api.get<TenancyApiResponse>('/v1/tenant/tenancy', { silent: true })
-        if (isMounted && response?.data) {
-          setTenancyData(response.data)
+        setLoading(true)
+        const response = await api.get<TenancyApiResponse>('/v1/tenant/tenancy', {
+          silent: true,
+          params: activeTenancyId ? { contractId: activeTenancyId } : undefined,
+        })
+        if (isMounted) {
+          if (response?.data) {
+            setTenancyData(response.data)
+          } else {
+            setTenancyData(null)
+          }
         }
       } catch (err) {
         console.error('Failed to load room tenancy info:', err)
@@ -94,7 +104,7 @@ export default function TenantRoomPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [activeTenancyId])
 
   if (loading) {
     return (

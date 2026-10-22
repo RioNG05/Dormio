@@ -49,6 +49,7 @@ import {
   Legend,
 } from 'recharts'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatCurrency } from '@/utils'
 import {
   tenantInvoiceService,
@@ -60,6 +61,7 @@ export default function TenantInvoicesPage() {
   const router = useRouter()
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
+  const { activeTenancyId } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [allInvoices, setAllInvoices] = useState<TenantInvoice[]>([])
@@ -95,8 +97,9 @@ export default function TenantInvoicesPage() {
 
     async function loadData() {
       try {
+        setLoading(true)
         const [invoicesData, analyticsData] = await Promise.all([
-          tenantInvoiceService.getTenantInvoices().catch(() => []),
+          tenantInvoiceService.getTenantInvoices(activeTenancyId || undefined).catch(() => []),
           tenantInvoiceService.getUsageAnalytics().catch(() => null),
         ])
 
@@ -117,7 +120,7 @@ export default function TenantInvoicesPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [activeTenancyId])
 
   const activeInvoices = allInvoices
 

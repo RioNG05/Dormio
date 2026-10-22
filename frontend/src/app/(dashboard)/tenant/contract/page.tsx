@@ -33,6 +33,7 @@ import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import { api } from '@/services/api'
 import { downloadTenantContractDocument } from '@/services/contract.service'
 import { useTranslations } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { formatCurrency } from '@/utils'
 
@@ -87,6 +88,7 @@ interface TenancyApiResponse {
 export default function TenantContractPage() {
   const t = useTranslations('tenant')
   const { toast } = useToast()
+  const { activeTenancyId } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [tenancyData, setTenancyData] = useState<TenancyApiResponse['data'] | null>(null)
@@ -96,7 +98,9 @@ export default function TenantContractPage() {
   const fetchTenancyData = async () => {
     try {
       setLoading(true)
-      const res = await api.get<TenancyApiResponse>('/v1/tenant/tenancy')
+      const res = await api.get<TenancyApiResponse>('/v1/tenant/tenancy', {
+        params: activeTenancyId ? { contractId: activeTenancyId } : undefined,
+      })
       if (res?.data) {
         setTenancyData(res.data)
       } else {
@@ -112,7 +116,7 @@ export default function TenantContractPage() {
 
   useEffect(() => {
     fetchTenancyData()
-  }, [])
+  }, [activeTenancyId])
 
   const contract = tenancyData?.contract
   const room = tenancyData?.room
@@ -154,7 +158,7 @@ export default function TenantContractPage() {
       const dateStr = new Date(createdAt).toISOString().slice(0, 10)
       const roomStr = room?.roomNumber || 'phong'
       const filename = `hop-dong-${roomStr}-${dateStr}.html`
-      await downloadTenantContractDocument(docId, filename)
+      await downloadTenantContractDocument(docId, filename, activeTenancyId || contract?.id)
       toast.success('Tải văn bản hợp đồng thành công!')
     } catch (err: any) {
       console.error('Failed to download contract document:', err)

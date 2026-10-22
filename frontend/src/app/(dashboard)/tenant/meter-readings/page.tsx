@@ -27,6 +27,7 @@ import {
 } from '@/services/meter-reading.service'
 import Link from 'next/link'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { formatCurrency } from '@/utils'
 
@@ -34,6 +35,7 @@ export default function TenantMeterReadingsPage() {
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
   const { toast } = useToast()
+  const { activeTenancyId } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<ActiveMeteredServicesResponse | null>(null)
@@ -64,7 +66,9 @@ export default function TenantMeterReadingsPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await meterReadingService.getActiveMeteredServices()
+      const res = await meterReadingService.getActiveMeteredServices(
+        activeTenancyId || undefined,
+      )
       setData(res)
 
       // Initialize local state from real backend response
@@ -97,7 +101,7 @@ export default function TenantMeterReadingsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activeTenancyId])
 
   useEffect(() => {
     loadData()
@@ -182,6 +186,7 @@ export default function TenantMeterReadingsPage() {
       const res = await meterReadingService.uploadMeterReading({
         serviceId,
         imageUrl: base64Url,
+        contractId: activeTenancyId || undefined,
         ...(detectedValue !== null ? { readingValue: detectedValue } : {}),
       })
 
@@ -241,12 +246,14 @@ export default function TenantMeterReadingsPage() {
           serviceId,
           imageUrl: currentState.imageUrl,
           readingValue: parsed,
+          contractId: activeTenancyId || undefined,
         })
       } else {
         await meterReadingService.uploadMeterReading({
           serviceId,
           imageUrl: '',
           readingValue: parsed,
+          contractId: activeTenancyId || undefined,
         })
       }
 
@@ -279,7 +286,9 @@ export default function TenantMeterReadingsPage() {
   const handleConfirmSubmit = async () => {
     setIsSubmitting(true)
     try {
-      const invoiceRes = await meterReadingService.confirmAndGenerateInvoice()
+      const invoiceRes = await meterReadingService.confirmAndGenerateInvoice(
+        activeTenancyId || undefined,
+      )
       setGeneratedInvoice(invoiceRes)
       setShowConfirmModal(false)
       toast.success(t('invoiceGeneratedSuccessTitle'))

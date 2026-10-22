@@ -37,6 +37,7 @@ import { DashboardPageHeader } from '@/components/layout'
 import { Button, Pagination, Chip, Modal, EmptyState, Text } from '@/components/ui'
 
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 import { tenantInvoiceService, TenantInvoice } from '@/services/tenant-invoice.service'
@@ -94,6 +95,7 @@ interface TenancyApiResponse {
 export default function TenantOverviewPage() {
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
+  const { activeTenancyId } = useAuth()
   const { unreadCount: unreadMessagesCount } = useUnreadMessages()
 
   const [loading, setLoading] = useState(true)
@@ -111,20 +113,32 @@ export default function TenantOverviewPage() {
 
     async function fetchDashboardData() {
       try {
+        setLoading(true)
         const [response, invoices] = await Promise.all([
-          api.get<TenancyApiResponse>('/v1/tenant/tenancy', { silent: true }).catch(() => null),
-          tenantInvoiceService.getTenantInvoices().catch(() => []),
+          api
+            .get<TenancyApiResponse>('/v1/tenant/tenancy', {
+              silent: true,
+              params: activeTenancyId ? { contractId: activeTenancyId } : undefined,
+            })
+            .catch(() => null),
+          tenantInvoiceService
+            .getTenantInvoices(activeTenancyId || undefined)
+            .catch(() => []),
         ])
 
         if (!isMounted) return
 
         if (response?.data) {
           setTenancyData(response.data)
+        } else {
+          setTenancyData(null)
         }
 
         if (invoices && invoices.length > 0) {
           const unpaid = invoices.find(inv => inv.status === 'unpaid' || inv.status === 'overdue')
           setLatestInvoice(unpaid || null)
+        } else {
+          setLatestInvoice(null)
         }
       } catch (err) {
         // Silent catch for dev mode
@@ -140,7 +154,7 @@ export default function TenantOverviewPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [activeTenancyId])
 
   // Format phone display
   const formatPhoneDisplay = (phone: string) => {

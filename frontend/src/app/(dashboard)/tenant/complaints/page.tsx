@@ -15,11 +15,13 @@ import {
 import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState } from '@/components/ui'
 import { DashboardPageHeader } from '@/components/layout'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
 export default function TenantAdminComplaintsPage() {
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
+  const { activeTenancyId, activeTenancy } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [complaints, setComplaints] = useState<Grievance[]>([])
@@ -181,6 +183,8 @@ export default function TenantAdminComplaintsPage() {
         description: description.trim(),
         priority,
         imageUrls: uploadedImages,
+        contractId: activeTenancyId || undefined,
+        roomId: activeTenancy?.roomId || undefined,
       })
 
       setComplaints(prev => [newGrievance, ...prev])

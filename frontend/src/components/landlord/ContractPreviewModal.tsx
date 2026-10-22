@@ -65,7 +65,7 @@ export default function ContractPreviewModal({
       setIsLoading(true)
       setError(null)
       try {
-        const html = await getTenantContractPrintHtml(false)
+        const html = await getTenantContractPrintHtml(false, contractId)
         setHtmlContent(html)
       } catch (err: any) {
         console.error('Failed to load tenant contract print HTML from backend:', err)
@@ -164,7 +164,7 @@ export default function ContractPreviewModal({
     if (isTenant) {
       try {
         setIsExporting(true)
-        const res = await exportTenantContract()
+        const res = await exportTenantContract(contractId)
         if (res?.data) {
           toast.success(t('landlordContractsExportToastExportSuccess'))
           onExportSuccess?.()
