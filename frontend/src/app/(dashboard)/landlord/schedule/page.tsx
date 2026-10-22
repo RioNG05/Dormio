@@ -197,6 +197,12 @@ export default function WorkforceSchedulePage() {
     return `${startStr} – ${endStr}`
   }, [weekDays])
 
+  // Client-side pagination for list view to avoid refetching on viewMode or page changes
+  const paginatedSchedules = useMemo(() => {
+    const start = (listPage - 1) * listPageSize
+    return schedules.slice(start, start + listPageSize)
+  }, [schedules, listPage, listPageSize])
+
   // ─── Load Shifts & Staff ───────────────────────────────────────────────
   const loadInitialDependencies = useCallback(async () => {
     if (!buildingId) return
@@ -218,24 +224,11 @@ export default function WorkforceSchedulePage() {
 
   // ─── Fetch Schedules ───────────────────────────────────────────────────
   const fetchSchedules = useCallback(async () => {
-    if (!buildingId) return
+    if (!buildingId || weekDays.length === 0) return
     setIsLoading(true)
     try {
-      // If calendar mode, query week range; if list mode, query active month or params
-      let startDate: string
-      let endDate: string
-
-      if (viewMode === 'calendar') {
-        startDate = formatDateString(weekDays[0].date)
-        endDate = formatDateString(weekDays[6].date)
-      } else {
-        // Query broader month range for list view
-        const cur = new Date(selectedWeekStart)
-        const monthStart = new Date(cur.getFullYear(), cur.getMonth(), 1)
-        const monthEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0)
-        startDate = formatDateString(monthStart)
-        endDate = formatDateString(monthEnd)
-      }
+      const startDate = formatDateString(weekDays[0].date)
+      const endDate = formatDateString(weekDays[6].date)
 
       const res = await scheduleService.getSchedules(buildingId, {
         startDate,
@@ -244,8 +237,8 @@ export default function WorkforceSchedulePage() {
         shiftId: filterShiftId || undefined,
         status: filterStatus !== 'all' ? (filterStatus as 'scheduled' | 'canceled') : undefined,
         search: searchQuery || undefined,
-        page: viewMode === 'list' ? listPage : 1,
-        limit: viewMode === 'list' ? listPageSize : 1000,
+        page: 1,
+        limit: 1000,
       })
 
       if (res?.data) {
@@ -264,15 +257,12 @@ export default function WorkforceSchedulePage() {
     }
   }, [
     buildingId,
-    viewMode,
     weekDays,
-    selectedWeekStart,
     filterEmployeeId,
     filterShiftId,
     filterStatus,
     searchQuery,
-    listPage,
-    listPageSize,
+    t,
   ])
 
   useEffect(() => {
@@ -294,16 +284,19 @@ export default function WorkforceSchedulePage() {
     const prev = new Date(selectedWeekStart)
     prev.setDate(selectedWeekStart.getDate() - 7)
     setSelectedWeekStart(prev)
+    setListPage(1)
   }
 
   const handleNextWeek = () => {
     const next = new Date(selectedWeekStart)
     next.setDate(selectedWeekStart.getDate() + 7)
     setSelectedWeekStart(next)
+    setListPage(1)
   }
 
   const handleCurrentWeek = () => {
     setSelectedWeekStart(getMondayOfCurrentWeek())
+    setListPage(1)
   }
 
   // ─── Rule #10: Modal Reset and Confirmation ───────────────────────────
@@ -734,7 +727,10 @@ export default function WorkforceSchedulePage() {
             <SearchInput
               placeholder={t('landlordScheduleFilterSearchPh')}
               value={searchQuery}
-              onChange={setSearchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setListPage(1)
+              }}
               containerClassName="w-full space-y-0"
             />
           </div>
@@ -743,7 +739,10 @@ export default function WorkforceSchedulePage() {
           <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
             <SelectInput
               value={filterEmployeeId}
-              onChange={e => setFilterEmployeeId(e.target.value)}
+              onChange={e => {
+                setFilterEmployeeId(e.target.value)
+                setListPage(1)
+              }}
               containerClassName="w-auto min-w-[150px] space-y-0"
               options={[
                 { value: '', label: `${t('landlordScheduleFilterStaffPh')} (${staffList.length})` },
@@ -756,7 +755,10 @@ export default function WorkforceSchedulePage() {
 
             <SelectInput
               value={filterShiftId}
-              onChange={e => setFilterShiftId(e.target.value)}
+              onChange={e => {
+                setFilterShiftId(e.target.value)
+                setListPage(1)
+              }}
               containerClassName="w-auto min-w-[140px] space-y-0"
               options={[
                 { value: '', label: `${t('landlordScheduleFilterShiftPh')} (${shifts.length})` },
@@ -769,7 +771,10 @@ export default function WorkforceSchedulePage() {
 
             <SelectInput
               value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}
+              onChange={e => {
+                setFilterStatus(e.target.value)
+                setListPage(1)
+              }}
               containerClassName="w-auto min-w-[130px] space-y-0"
               options={[
                 { value: 'all', label: t('landlordScheduleFilterStatusPh') },
@@ -974,7 +979,7 @@ export default function WorkforceSchedulePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line font-medium text-foreground/90">
-                  {schedules.map(item => (
+                  {paginatedSchedules.map(item => (
                     <TableRow
                       key={item.id}
                       className="group"
@@ -1055,7 +1060,7 @@ export default function WorkforceSchedulePage() {
               {/* Rule #9: Standardized Pagination Bar */}
               <Pagination
                 currentPage={listPage}
-                totalItems={totalListItems}
+                totalItems={schedules.length}
                 pageSize={listPageSize}
                 onPageChange={setListPage}
                 onPageSizeChange={setListPageSize}
