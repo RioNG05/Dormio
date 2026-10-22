@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   HttpStatus,
   HttpCode,
   Logger,
@@ -16,6 +17,7 @@ import {
   ApiOkResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiQuery,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger'
@@ -51,9 +53,19 @@ export class MeterReadingsController {
     type: ActiveMeteredServicesResponseDto,
   })
   @ApiNotFoundResponse({ description: 'No active tenancy found for tenant' })
-  async getActiveServices(@CurrentUser() user: JwtPayload) {
-    this.logger.log(`GET /api/v1/tenant/meter-readings/active-services called by user: ${user?.id}`)
-    const data = await this.meterReadingsService.getActiveServicesForTenant(user.id)
+  @ApiQuery({
+    name: 'contractId',
+    required: false,
+    description: 'Filter active metered services by specific room contract ID (multi-room tenant)',
+  })
+  async getActiveServices(
+    @CurrentUser() user: JwtPayload,
+    @Query('contractId') contractId?: string,
+  ) {
+    this.logger.log(
+      `GET /api/v1/tenant/meter-readings/active-services (contractId=${contractId}) called by user: ${user?.id}`,
+    )
+    const data = await this.meterReadingsService.getActiveServicesForTenant(user.id, contractId)
     return { success: true, data }
   }
 
@@ -121,9 +133,19 @@ export class MeterReadingsController {
   @ApiBadRequestResponse({
     description: 'Incomplete readings or validation error',
   })
-  async confirmAndGenerateInvoice(@CurrentUser() user: JwtPayload) {
-    this.logger.log(`POST /api/v1/tenant/meter-readings/confirm called by user: ${user?.id}`)
-    const data = await this.meterReadingsService.confirmAndGenerateInvoice(user.id)
+  @ApiQuery({
+    name: 'contractId',
+    required: false,
+    description: 'Scope meter confirmation to specific room contract ID (multi-room tenant)',
+  })
+  async confirmAndGenerateInvoice(
+    @CurrentUser() user: JwtPayload,
+    @Query('contractId') contractId?: string,
+  ) {
+    this.logger.log(
+      `POST /api/v1/tenant/meter-readings/confirm (contractId=${contractId}) called by user: ${user?.id}`,
+    )
+    const data = await this.meterReadingsService.confirmAndGenerateInvoice(user.id, contractId)
     return {
       success: true,
       data,

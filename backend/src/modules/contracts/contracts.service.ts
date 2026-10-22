@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ConflictException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common'
 import {
   BusinessNotFoundException,
@@ -16,6 +17,7 @@ import { NotificationsService } from '../notifications/notifications.service'
 import { AuthService } from '../auth/auth.service'
 import { UploadService } from '../upload/upload.service'
 import { TenancyDetailsDto } from './dto/tenancy-details.dto'
+import { TenantTenancyItemDto } from './dto/tenant-tenancy-item.dto'
 import { CreateContractPlatformDto } from './dto/create-contract-platform.dto'
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto'
 import { QueryContractsDto } from './dto/query-contracts.dto'
@@ -35,6 +37,8 @@ import { randomUUID } from 'crypto'
  */
 @Injectable()
 export class ContractsService {
+  private readonly logger = new Logger(ContractsService.name)
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
@@ -971,21 +975,90 @@ export class ContractsService {
   // ─── UC-T-06: View Tenancy Details ──────────────────────────────────────────
 
   /**
-   * Retrieves the full tenancy aggregate for the authenticated tenant:
-   * active Contract + Room + BoardingHouse (basic info only, never financials)
-   * + active RoomServices (fee structure) + BoardingHouse broadcast Announcements.
+   * Returns list of all active room tenancies for the authenticated tenant.
+   * Enables tenants to occupy and switch between multiple rooms simultaneously.
    *
    * @param userId Authenticated tenant's User ID
-   * @returns TenancyDetailsDto or null if no active contract found
+   * @returns Array of TenantTenancyItemDto
    */
-  async getMyTenancyDetails(userId: string): Promise<TenancyDetailsDto | null> {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
+  async getMyTenancies(userId: string): Promise<TenantTenancyItemDto[]> {
+    this.logger.log(`Fetching all active room tenancies for user: ${userId}`)
+
+    const tenantContracts = await this.prisma.tenantContract.findMany({
       where: {
         tenantId: userId,
         contract: {
           status: 'active',
         },
       },
+      include: {
+        contract: {
+          include: {
+            room: {
+              include: {
+                roomType: true,
+                boardingHouse: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+    })
+
+    return tenantContracts
+      .filter(tc => tc.contract && tc.contract.room && tc.contract.room.boardingHouse)
+      .map(tc => {
+        const { contract } = tc
+        const { room } = contract
+        const { boardingHouse } = room
+
+        const formattedAddress = this.formatAddress(boardingHouse)
+
+        return {
+          contractId: contract.id,
+          roomId: room.id,
+          roomNumber: room.roomNumber,
+          floor: room.floor,
+          roomTypeName: room.roomType?.name || undefined,
+          boardingHouseId: boardingHouse.id,
+          boardingHouseName: boardingHouse.name,
+          boardingHouseAddress: formattedAddress,
+          rentPrice: Number(contract.rentPrice),
+          isPrimary: tc.isPrimary,
+          startDate: contract.startDate.toISOString(),
+          endDate: contract.endDate.toISOString(),
+          coverPhotoUrl: boardingHouse.thumbnail || undefined,
+        }
+      })
+  }
+
+  /**
+   * Retrieves the full tenancy aggregate for the authenticated tenant:
+   * active Contract + Room + BoardingHouse (basic info only, never financials)
+   * + active RoomServices (fee structure) + BoardingHouse broadcast Announcements.
+   *
+   * @param userId Authenticated tenant's User ID
+   * @param contractId Optional Contract UUID for multi-room selection
+   * @returns TenancyDetailsDto or null if no active contract found
+   */
+  async getMyTenancyDetails(
+    userId: string,
+    contractId?: string,
+  ): Promise<TenancyDetailsDto | null> {
+    const whereClause: any = {
+      tenantId: userId,
+      contract: {
+        status: 'active',
+      },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -1026,9 +1099,7 @@ export class ContractsService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
@@ -1477,17 +1548,25 @@ export class ContractsService {
    * Resolves the active contract and boarding house context for a tenant.
    *
    * @param userId Tenant user UUID
+   * @param contractId Optional Contract UUID for multi-room scoping
    */
   async getTenantActiveContract(
     userId: string,
+    contractId?: string,
   ): Promise<{ boardingHouseId: string; contractId: string }> {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId: userId,
-        contract: {
-          status: 'active',
-        },
+    const whereClause: any = {
+      tenantId: userId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -1495,9 +1574,7 @@ export class ContractsService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
@@ -1518,20 +1595,31 @@ export class ContractsService {
    *
    * @param userId Tenant user UUID
    * @param autoPrint If true, triggers print dialog on load
+   * @param contractId Optional Contract UUID
    */
-  async printMyContract(userId: string, autoPrint: boolean = false): Promise<string> {
-    const { boardingHouseId, contractId } = await this.getTenantActiveContract(userId)
-    return this.getContractPrintHtml(boardingHouseId, contractId, autoPrint, true)
+  async printMyContract(
+    userId: string,
+    autoPrint: boolean = false,
+    contractId?: string,
+  ): Promise<string> {
+    const { boardingHouseId, contractId: resolvedContractId } =
+      await this.getTenantActiveContract(userId, contractId)
+    return this.getContractPrintHtml(boardingHouseId, resolvedContractId, autoPrint, true)
   }
 
   /**
    * Exports the tenant's active contract document and registers audit trail.
    *
    * @param userId Tenant user UUID
+   * @param contractId Optional Contract UUID
    */
-  async exportMyContract(userId: string): Promise<ExportContractResponseDto> {
-    const { boardingHouseId, contractId } = await this.getTenantActiveContract(userId)
-    return this.exportContract(boardingHouseId, contractId, userId)
+  async exportMyContract(
+    userId: string,
+    contractId?: string,
+  ): Promise<ExportContractResponseDto> {
+    const { boardingHouseId, contractId: resolvedContractId } =
+      await this.getTenantActiveContract(userId, contractId)
+    return this.exportContract(boardingHouseId, resolvedContractId, userId)
   }
 
   /**
@@ -1539,13 +1627,16 @@ export class ContractsService {
    *
    * @param userId Tenant user UUID
    * @param documentId Contract document UUID
+   * @param contractId Optional Contract UUID
    */
   async getMyContractDocumentDownload(
     userId: string,
     documentId: string,
+    contractId?: string,
   ): Promise<{ filename: string; html: string }> {
-    const { boardingHouseId, contractId } = await this.getTenantActiveContract(userId)
-    return this.getContractDocumentDownload(boardingHouseId, contractId, documentId)
+    const { boardingHouseId, contractId: resolvedContractId } =
+      await this.getTenantActiveContract(userId, contractId)
+    return this.getContractDocumentDownload(boardingHouseId, resolvedContractId, documentId)
   }
 
   // ─── Helper methods ─────────────────────────────────────────────────────────

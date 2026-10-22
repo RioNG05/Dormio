@@ -8,6 +8,7 @@ import {
   ArrayMaxSize,
   MinLength,
   MaxLength,
+  IsUUID,
 } from 'class-validator'
 
 export enum GrievancePriorityEnum {
@@ -79,4 +80,20 @@ export class CreateGrievanceDto {
   @ArrayMaxSize(5, { message: 'Maximum 5 evidence images allowed' })
   @IsString({ each: true, message: 'Each image URL must be a valid string' })
   imageUrls?: string[]
+
+  @ApiPropertyOptional({
+    description: 'Optional Room UUID for multi-room scoping',
+    example: 'd9b2d63d-a233-4123-847e-2972986422b4',
+  })
+  @IsOptional()
+  @IsUUID()
+  roomId?: string
+
+  @ApiPropertyOptional({
+    description: 'Optional Contract UUID for multi-room scoping',
+    example: 'd9b2d63d-a233-4123-847e-2972986422b4',
+  })
+  @IsOptional()
+  @IsUUID()
+  contractId?: string
 }

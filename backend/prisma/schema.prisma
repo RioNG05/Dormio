@@ -518,6 +518,9 @@ model TenantContract {
   isPrimary  Boolean  @default(true) @map("is_primary")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@unique([tenantId, contractId])
+  @@index([tenantId])
+  @@index([contractId])
   @@map("tenant_contracts")
 }
 

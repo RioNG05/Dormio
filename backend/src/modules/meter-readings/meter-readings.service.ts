@@ -38,11 +38,15 @@ export class MeterReadingsService {
    * Returns list of room's active metered services and unbilled draft readings.
    *
    * @param userId - Authenticated tenant user ID
+   * @param contractId - Optional contract UUID for multi-room scoping
    */
-  async getActiveServicesForTenant(userId: string): Promise<ActiveMeteredServicesResponseDto> {
-    this.logger.log(`Fetching active metered services for tenant ${userId}`)
+  async getActiveServicesForTenant(
+    userId: string,
+    contractId?: string,
+  ): Promise<ActiveMeteredServicesResponseDto> {
+    this.logger.log(`Fetching active metered services for tenant ${userId} (contractId=${contractId})`)
 
-    const tenantContract = await this.getActiveTenantContract(userId)
+    const tenantContract = await this.getActiveTenantContract(userId, contractId)
     const { contract } = tenantContract
     const { roomId, room } = contract
 
@@ -138,9 +142,11 @@ export class MeterReadingsService {
    * Updates in-place if an unbilled draft reading already exists (never duplicates for the cycle).
    */
   async uploadOrUpdateReading(userId: string, dto: UploadMeterReadingDto) {
-    this.logger.log(`Tenant ${userId} uploading meter reading for service ${dto.serviceId}`)
+    this.logger.log(
+      `Tenant ${userId} uploading meter reading for service ${dto.serviceId} (contractId=${dto.contractId})`,
+    )
 
-    const tenantContract = await this.getActiveTenantContract(userId)
+    const tenantContract = await this.getActiveTenantContract(userId, dto.contractId)
     const { roomId } = tenantContract.contract
 
     // Verify the service is an active metered service for this room
@@ -268,12 +274,15 @@ export class MeterReadingsService {
    * Atomically generates Invoice + InvoiceItems, links consumed MeterReadings,
    * writes AuditLog entry, and returns payment payload.
    */
-  async confirmAndGenerateInvoice(userId: string): Promise<ConfirmReadingsResponseDto> {
+  async confirmAndGenerateInvoice(
+    userId: string,
+    contractId?: string,
+  ): Promise<ConfirmReadingsResponseDto> {
     this.logger.log(
-      `Tenant ${userId} confirming utility meter readings and requesting invoice generation`,
+      `Tenant ${userId} confirming utility meter readings and requesting invoice generation (contractId=${contractId})`,
     )
 
-    const tenantContract = await this.getActiveTenantContract(userId)
+    const tenantContract = await this.getActiveTenantContract(userId, contractId)
     const { contract } = tenantContract
     const { roomId } = contract
 
@@ -1151,14 +1160,20 @@ export class MeterReadingsService {
 
   // ─── Private Helpers ────────────────────────────────────────────────────────
 
-  private async getActiveTenantContract(userId: string) {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId: userId,
-        contract: {
-          status: 'active',
-        },
+  private async getActiveTenantContract(userId: string, contractId?: string) {
+    const whereClause: any = {
+      tenantId: userId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -1170,6 +1185,7 @@ export class MeterReadingsService {
           },
         },
       },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {

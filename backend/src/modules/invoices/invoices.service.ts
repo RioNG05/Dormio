@@ -55,16 +55,22 @@ export class InvoicesService {
   ) {}
 
   /**
-   * Helper to resolve active contract for tenant
+   * Helper to resolve active contract for tenant (supports optional contractId for multi-room scoping)
    */
-  async resolveActiveTenantContract(tenantId: string) {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId,
-        contract: {
-          status: 'active',
-        },
+  async resolveActiveTenantContract(tenantId: string, contractId?: string) {
+    const whereClause: any = {
+      tenantId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -76,6 +82,7 @@ export class InvoicesService {
           },
         },
       },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
@@ -88,9 +95,12 @@ export class InvoicesService {
   /**
    * UC-T-05: Query all invoices and item details for the tenant's active room
    */
-  async getTenantInvoices(userId: string): Promise<TenantInvoicesListResponseDto> {
-    this.logger.log(`Fetching invoices for tenant user ${userId}`)
-    const contract = await this.resolveActiveTenantContract(userId)
+  async getTenantInvoices(
+    userId: string,
+    contractId?: string,
+  ): Promise<TenantInvoicesListResponseDto> {
+    this.logger.log(`Fetching invoices for tenant user ${userId} (contractId=${contractId})`)
+    const contract = await this.resolveActiveTenantContract(userId, contractId)
 
     const invoices = await this.prisma.invoice.findMany({
       where: {

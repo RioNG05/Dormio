@@ -29,16 +29,29 @@ export class GrievancesService {
   ) {}
 
   /**
-   * Helper to resolve active tenant contract (optional)
+   * Helper to resolve active tenant contract (supports multi-room scoping via contractId or roomId)
    */
-  async findActiveTenantContract(tenantId: string) {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId,
-        contract: {
-          status: 'active',
-        },
+  async findActiveTenantContract(tenantId: string, contractId?: string, roomId?: string) {
+    const whereClause: any = {
+      tenantId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    if (roomId) {
+      whereClause.contract = {
+        status: 'active',
+        roomId,
+      }
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -50,6 +63,7 @@ export class GrievancesService {
           },
         },
       },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
     })
 
     return tenantContract?.contract || null
@@ -91,7 +105,7 @@ export class GrievancesService {
     dto: CreateGrievanceDto,
   ): Promise<GrievanceDetailResponseDto> {
     this.logger.log(`User ${tenantId} creating grievance (${dto.type}): "${dto.title}"`)
-    const contract = await this.findActiveTenantContract(tenantId)
+    const contract = await this.findActiveTenantContract(tenantId, dto.contractId, dto.roomId)
 
     const boardingHouseId = contract?.room?.boardingHouseId || null
     const roomId = contract?.roomId || null

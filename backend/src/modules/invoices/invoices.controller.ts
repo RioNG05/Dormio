@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Request, Logger, HttpStatus } from '@nestjs/common'
+import { Controller, Get, Param, Query, UseGuards, Request, Logger, HttpStatus } from '@nestjs/common'
 import {
   ApiTags,
   ApiOperation,
@@ -6,6 +6,7 @@ import {
   ApiResponse,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { InvoicesService } from './invoices.service'
@@ -40,10 +41,18 @@ export class InvoicesController {
     status: HttpStatus.NOT_FOUND,
     description: 'User lease contract not found',
   })
-  async getTenantInvoices(@Request() req: any): Promise<TenantInvoicesListResponseDto> {
+  @ApiQuery({
+    name: 'contractId',
+    required: false,
+    description: 'Filter invoices by specific room contract ID (multi-room tenant)',
+  })
+  async getTenantInvoices(
+    @Request() req: any,
+    @Query('contractId') contractId?: string,
+  ): Promise<TenantInvoicesListResponseDto> {
     const userId = req.user?.id || req.user?.sub
-    this.logger.log(`GET /api/v1/tenant/invoices triggered by user ${userId}`)
-    return this.invoicesService.getTenantInvoices(userId)
+    this.logger.log(`GET /api/v1/tenant/invoices (contractId=${contractId}) triggered by user ${userId}`)
+    return this.invoicesService.getTenantInvoices(userId, contractId)
   }
 
   @Get('invoices/:id')
