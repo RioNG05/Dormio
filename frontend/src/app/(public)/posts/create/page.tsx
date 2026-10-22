@@ -368,7 +368,6 @@ export default function PublicCreatePostPage() {
             </Button>
             <Button
               type="submit"
-              variant="primary"
               size="lg"
               disabled={isSubmitting}
               isLoading={isSubmitting}

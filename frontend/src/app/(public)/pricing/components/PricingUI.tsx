@@ -346,7 +346,6 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 <Button
                   id="billing-monthly"
                   variant={billingCycle === 'monthly' ? 'dark' : 'ghost'}
-                  size="sm"
                   onClick={() => setBillingCycle('monthly')}
                   fullWidth="responsive"
                 >
@@ -355,7 +354,6 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                 <Button
                   id="billing-yearly"
                   variant={billingCycle === 'yearly' ? 'dark' : 'ghost'}
-                  size="sm"
                   onClick={() => setBillingCycle('yearly')}
                   fullWidth="responsive"
                 >
@@ -787,7 +785,6 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
           </Text>
           <Link href="/register">
             <Button
-              variant="primary"
               size="lg"
               rightIcon={<MoveRight />}
             >

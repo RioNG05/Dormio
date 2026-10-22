@@ -80,12 +80,10 @@ export default function UnauthorizedPage() {
           {/* Row: Go Back + Back to Home */}
           <div className="grid grid-cols-2 gap-2.5">
             <Button
-              type="button"
-              variant="primary"
               size="md"
               fullWidth
               onClick={handleGoBack}
-              leftIcon={<ArrowLeft className="w-4 h-4" strokeWidth={2.5} />}
+              leftIcon={<ArrowLeft strokeWidth={2.5} />}
               className="font-semibold text-sm"
             >
               {t('unauthorizedBtnBack')}
@@ -93,11 +91,10 @@ export default function UnauthorizedPage() {
 
             <Link href="/" className="w-full">
               <Button
-                type="button"
                 variant="white"
                 size="md"
                 fullWidth
-                leftIcon={<Home className="w-4 h-4" strokeWidth={2} />}
+                leftIcon={<Home strokeWidth={2} />}
                 className="font-semibold text-sm text-foreground/90"
               >
                 {t('unauthorizedBtnHome')}
@@ -108,11 +105,10 @@ export default function UnauthorizedPage() {
           {/* Secondary: Log in (keep session, just navigate) */}
           <Link href="/login" className="w-full">
             <Button
-              type="button"
               variant="white"
               size="md"
               fullWidth
-              leftIcon={<LogIn className="w-4 h-4" />}
+              leftIcon={<LogIn />}
               className="font-semibold text-sm text-foreground/90"
             >
               {t('unauthorizedBtnLogin')}
@@ -121,12 +117,11 @@ export default function UnauthorizedPage() {
 
           {/* Tertiary: Logout and switch account */}
           <Button
-            type="button"
             variant="ghost"
             size="md"
             fullWidth
             onClick={handleSwitchAccount}
-            leftIcon={<LogOut className="w-4 h-4" />}
+            leftIcon={<LogOut />}
             className="bg-danger-soft border border-danger-subtle text-red-500 font-semibold text-sm hover:bg-red-100 hover:text-red-600"
           >
             {t('unauthorizedBtnSwitchAcc')}

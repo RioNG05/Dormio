@@ -300,7 +300,6 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
                 <Link href="/landlord" className="w-full sm:w-auto">
                   <Button
-                    variant="primary"
                     size="lg"
                     rounded="full"
                     rightIcon={<SquareArrowOutUpRight />}
@@ -410,8 +409,7 @@ export default function HomePage() {
           {FEATURE_FLAGS.ENABLE_BHRP && (
             <div className="inline-flex items-center p-1 sm:p-1.5 bg-card border border-line rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
               <Button
-                variant={processTab === 'tenant' ? 'primary' : 'ghost'}
-                size="sm"
+                variant={processTab === 'tenant' ? undefined : 'ghost'}
                 rounded="full"
                 onClick={() => setProcessTab('tenant')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'tenant'
@@ -422,8 +420,7 @@ export default function HomePage() {
                 {t('guestHomeForTenant')}
               </Button>
               <Button
-                variant={processTab === 'landlord' ? 'primary' : 'ghost'}
-                size="sm"
+                variant={processTab === 'landlord' ? undefined : 'ghost'}
                 rounded="full"
                 onClick={() => setProcessTab('landlord')}
                 className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'landlord'
@@ -817,7 +814,6 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
             <Link href="/register">
               <Button
-                variant="primary"
                 size="lg"
                 className="px-8 py-3.5"
                 rightIcon={<SquareArrowOutUpRight />}

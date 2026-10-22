@@ -154,9 +154,8 @@ export default function RoleDataTab() {
             {/* Direct Jump Button to Tenant Dashboard */}
             <Link href="/tenant" className="w-full sm:w-auto">
               <Button
-                variant="primary"
                 size="lg"
-                leftIcon={<Home className="w-4 h-4 shrink-0" />}
+                leftIcon={<Home />}
                 rightIcon={<span>&rarr;</span>}
                 className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
               >
@@ -293,10 +292,8 @@ export default function RoleDataTab() {
                 </a>
 
                 <Button
-                  type="button"
                   variant="dark"
-                  size="sm"
-                  leftIcon={<FileText className="w-3.5 h-3.5 text-primary shrink-0" />}
+                  leftIcon={<FileText className="text-primary" />}
                   onClick={() => toast.info(t('guestProfileAlertDownloadPdf'))}
                   className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700"
                 >

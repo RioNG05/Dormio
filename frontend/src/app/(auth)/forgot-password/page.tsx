@@ -69,8 +69,7 @@ export default function ForgotPasswordPage() {
           {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
           <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
             <Button
-              variant={method === 'phone' ? 'primary' : 'ghost'}
-              size="sm"
+              variant={method === 'phone' ? undefined : 'ghost'}
               onClick={() => setMethod('phone')}
               leftIcon={<Phone />}
               className="flex-1"
@@ -78,8 +77,7 @@ export default function ForgotPasswordPage() {
               {t('authLoginMethodPhone')}
             </Button>
             <Button
-              variant={method === 'email' ? 'primary' : 'ghost'}
-              size="sm"
+              variant={method === 'email' ? undefined : 'ghost'}
               onClick={() => setMethod('email')}
               leftIcon={<Mail />}
               className="flex-1"
@@ -114,9 +112,8 @@ export default function ForgotPasswordPage() {
             <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
               <Button fullWidth
                 type="submit"
-                variant="primary"
                 size="lg"
-                rightIcon={<ArrowRight  />}
+                rightIcon={<ArrowRight />}
                 className="sm:text-sm"
               >
                 {t('authForgotPassSubmitBtn')}

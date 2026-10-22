@@ -106,8 +106,6 @@ export default function BankAccountTab() {
           actions={
             !isEditingBank ? (
               <Button
-                variant="primary"
-                size="sm"
                 onClick={() => setIsEditingBank(true)}
                 leftIcon={<Edit3 />}
                 className="w-full sm:w-auto rounded-2xl hover:scale-105"
@@ -118,7 +116,6 @@ export default function BankAccountTab() {
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <Button
                   variant="secondary"
-                  size="sm"
                   onClick={() => {
                     setIsEditingBank(false)
                     setBankSaveError('')
@@ -130,8 +127,6 @@ export default function BankAccountTab() {
 
                 <Button
                   type="submit"
-                  variant="primary"
-                  size="sm"
                   isLoading={isSavingBank}
                   leftIcon={!isSavingBank ? <Save /> : undefined}
                   className="hover:scale-105"
@@ -238,7 +233,6 @@ export default function BankAccountTab() {
             </Button>
             <Button
               type="submit"
-              variant="primary"
               size="lg"
               disabled={isSavingBank}
               isLoading={isSavingBank}

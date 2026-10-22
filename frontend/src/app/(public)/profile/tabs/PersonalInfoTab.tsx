@@ -52,8 +52,6 @@ export default function PersonalInfoTab() {
           actions={
             !isEditingInfo ? (
               <Button
-                variant="primary"
-                size="sm"
                 onClick={() => setIsEditingInfo(true)}
                 leftIcon={<Edit3 />}
                 className="w-full sm:w-auto rounded-2xl hover:scale-105"
@@ -64,7 +62,6 @@ export default function PersonalInfoTab() {
               <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <Button
                   variant="secondary"
-                  size="sm"
                   onClick={() => setIsEditingInfo(false)}
                   leftIcon={<X />}
                 >
@@ -73,8 +70,6 @@ export default function PersonalInfoTab() {
 
                 <Button
                   type="submit"
-                  variant="primary"
-                  size="sm"
                   leftIcon={<Save />}
                   className="hover:scale-105"
                 >
@@ -318,7 +313,6 @@ export default function PersonalInfoTab() {
           </Button>
           <Button
             type="submit"
-            variant="primary"
             size="lg"
             leftIcon={<Save />}
             rightIcon={<span>&rarr;</span>}

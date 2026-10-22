@@ -289,7 +289,6 @@ function GuestMessagesContent() {
         </Text>
         <Link href="/login?redirect=/messages">
           <Button
-            variant="primary"
             size="lg"
             rightIcon={<span>&rarr;</span>}
             className="rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
@@ -594,7 +593,6 @@ function GuestMessagesContent() {
                 />
                 <Button
                   type="submit"
-                  variant="primary"
                   size="md"
                   disabled={!messageInput.trim() || isSending}
                   isLoading={isSending}

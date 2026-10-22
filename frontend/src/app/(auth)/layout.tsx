@@ -32,18 +32,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {isLegalPage && (
               <>
                 <Link href="/register">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button variant="outline">
                     {t('authLegalBackToRegister')}
                   </Button>
                 </Link>
                 <Link href="/login">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                  >
+                  <Button>
                     {t('authLoginBtn')}
                   </Button>
                 </Link>

@@ -267,11 +267,10 @@ export default function RegisterPage() {
         <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
           <Button fullWidth
             type="submit"
-            variant="primary"
             size="lg"
             disabled={!agreed || isLoading}
             isLoading={isLoading}
-            rightIcon={<ArrowRight  />}
+            rightIcon={<ArrowRight />}
             className="sm:text-sm"
           >
             {t('authRegisterSubmitBtn')}

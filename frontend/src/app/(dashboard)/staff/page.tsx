@@ -2772,12 +2772,11 @@ function DutyProofModal({
             </div>
           </div>
           <Button
-            type="button"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={onClose}
           >
-            <X className="w-5 h-5" />
+            <X />
           </Button>
         </div>
 

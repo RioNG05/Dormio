@@ -672,7 +672,6 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                           {t('guestPricingCheckoutQrExpiredDesc')}
                         </Text>
                         <Button
-                          size="sm"
                           variant="dark"
                           isLoading={isGeneratingQr}
                           leftIcon={<RefreshCw />}

@@ -94,8 +94,7 @@ export default function LoginPage() {
       {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
       <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
         <Button
-          variant={method === 'phone' ? 'primary' : 'ghost'}
-          size="sm"
+          variant={method === 'phone' ? undefined : 'ghost'}
           onClick={() => {
             setMethod('phone')
             setAccountIdentifier('')
@@ -107,8 +106,7 @@ export default function LoginPage() {
           {t('authLoginMethodPhone')}
         </Button>
         <Button
-          variant={method === 'email' ? 'primary' : 'ghost'}
-          size="sm"
+          variant={method === 'email' ? undefined : 'ghost'}
           onClick={() => {
             setMethod('email')
             setAccountIdentifier('')
@@ -203,10 +201,9 @@ export default function LoginPage() {
         <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
           <Button fullWidth
             type="submit"
-            variant="primary"
             size="lg"
             isLoading={isLoading}
-            rightIcon={<ArrowRight  />}
+            rightIcon={<ArrowRight />}
             className="sm:text-sm"
           >
             {t('authLoginSubmitBtn')}
