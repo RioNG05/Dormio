@@ -24,6 +24,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   fullWidth?: boolean | 'responsive'
   rounded?: 'default' | 'full'
   justify?: 'start' | 'center' | 'between' | 'end'
+  /** Prevents a button click from triggering interactive parent elements. */
+  preventPropagation?: boolean
+  /** Prevents the browser default action; non-submit buttons do this by default. */
+  preventDefault?: boolean
 }
 
 const iconSizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
@@ -58,6 +62,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       fullWidth = false,
       rounded = 'default',
       justify = 'center',
+      preventPropagation = true,
+      preventDefault,
+      onClick,
       children,
       disabled,
       type = 'button',
@@ -67,6 +74,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const isIconSize =
       size === 'icon' || size === 'icon-xs' || size === 'icon-sm' || size === 'icon-lg'
+    const shouldPreventDefault = preventDefault ?? type !== 'submit'
 
     const buttonClasses = cn(
       'relative inline-flex items-center font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
@@ -181,6 +189,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         disabled={disabled || isLoading}
         className={buttonClasses}
+        onClick={event => {
+          if (shouldPreventDefault) event.preventDefault()
+          if (preventPropagation) event.stopPropagation()
+          onClick?.(event)
+        }}
         {...props}
       >
         {content}
