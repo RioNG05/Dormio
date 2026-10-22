@@ -21,7 +21,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/layout'
-import { Breadcrumb, Button, Text } from '@/components/ui'
+import { Breadcrumb, Button, Text, EmptyState } from '@/components/ui'
 import { useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
@@ -112,23 +112,19 @@ export default function TenantRoomPage() {
           title={t('tenantRoomInfoTitle')}
           subtitle="Thông tin phòng thuê hiện tại của bạn"
         />
-        <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-xs space-y-4">
-          <div className="w-16 h-16 rounded-3xl bg-card-hover flex items-center justify-center mx-auto text-muted mb-4">
-            <Home className="w-8 h-8" />
-          </div>
-          <Text as="h3" size="lg" weight="bold" className="text-foreground">
-            {t('tenantRoomNotFoundTitle')}
-          </Text>
-          <Text size="sm" color="subtle" className="leading-relaxed">
-            {t('tenantRoomNotFoundDesc')}
-          </Text>
-          <div className="pt-2">
-            <Link href="/tenant">
-              <Button variant="primary" size="md">
-                {t('tenantBackToDashboard')}
-              </Button>
-            </Link>
-          </div>
+        <div className="max-w-xl mx-auto">
+          <EmptyState
+            icon={<Home className="w-8 h-8" />}
+            title={t('tenantRoomNotFoundTitle')}
+            description={t('tenantRoomNotFoundDesc')}
+            action={
+              <Link href="/tenant">
+                <Button variant="primary" size="md">
+                  {t('tenantBackToDashboard')}
+                </Button>
+              </Link>
+            }
+          />
         </div>
       </div>
     )

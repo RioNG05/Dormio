@@ -34,15 +34,14 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/layout'
-import { Button } from '@/components/ui/Button'
-import { Pagination } from '@/components/ui/Pagination'
+import { Button, Pagination, Chip, Modal, EmptyState, Text } from '@/components/ui'
+
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 import { tenantInvoiceService, TenantInvoice } from '@/services/tenant-invoice.service'
 import { FEATURE_FLAGS } from '@/config/features'
 import { useUnreadMessages } from '@/hooks'
-import { Chip } from '@/components/ui'
 
 interface TenancyApiResponse {
   success: boolean
@@ -102,7 +101,6 @@ export default function TenantOverviewPage() {
   const [latestInvoice, setLatestInvoice] = useState<TenantInvoice | null>(null)
 
   // States for modals and UI
-  const [isContractOpen, setIsContractOpen] = useState(false)
   const [selectedNotice, setSelectedNotice] = useState<any>(null)
   const [copiedBank, setCopiedBank] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -331,14 +329,16 @@ export default function TenantOverviewPage() {
 
             </Link>
             {roomInfo && (
-              <Button
-                size="md"
-                variant='accent'
-                leftIcon={<FileSignature />}
-                onClick={() => setIsContractOpen(true)} className="sm:text-sm"
-              >
-                {t('viewContract')}
-              </Button>
+              <Link href="/tenant/contract">
+                <Button
+                  size="md"
+                  variant='accent'
+                  leftIcon={<FileSignature />}
+                  className="sm:text-sm"
+                >
+                  {t('viewContract')}
+                </Button>
+              </Link>
             )}
           </>
         }
@@ -346,7 +346,7 @@ export default function TenantOverviewPage() {
 
       {/* Quick Billing Alert Banner (Only when unpaid invoice exists) */}
       {latestInvoice && (
-        <div className="p-4 sm:p-5 rounded-3xlborder border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 rounded-3xl border border-accent-subtle bg-accent-soft/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <CreditCard className="w-5 h-5" />
@@ -385,7 +385,7 @@ export default function TenantOverviewPage() {
           {/* Hero Room Details Card or Empty Tenancy State */}
           {roomInfo ? (
             <div className="rounded-3xl border border-line bg-card shadow-xs overflow-hidden">
-              <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-line bg-gradient-to-r from-zinc-50/80 via-white to-teal-50/20">
+              <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-line bg-gradient-to-r from-card via-surface to-primary/5">
                 <div className="flex items-center gap-4 sm:gap-5">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-line shrink-0 shadow-xs">
                     <img
@@ -545,22 +545,20 @@ export default function TenantOverviewPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-3xl border border-line bg-card p-8 shadow-xs text-center space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-card-hover flex items-center justify-center mx-auto text-muted">
-                <Building className="w-8 h-8" />
-              </div>
-              <h3 className="text-base font-black text-foreground">{t('noActiveContractTitle')}</h3>
-              <p className="text-xs text-muted max-w-md mx-auto">{t('noActiveContractDesc')}</p>
-              {FEATURE_FLAGS.ENABLE_BHRP && (
-                <div className="flex items-center justify-center gap-3 pt-2">
+            <EmptyState
+              icon={<Building className="w-8 h-8" />}
+              title={t('noActiveContractTitle')}
+              description={t('noActiveContractDesc')}
+              action={
+                FEATURE_FLAGS.ENABLE_BHRP ? (
                   <Link href="/rooms">
-                    <Button size="xs" >
+                    <Button size="sm">
                       {t('exploreHousesBtn')}
                     </Button>
                   </Link>
-                </div>
-              )}
-            </div>
+                ) : undefined
+              }
+            />
           )}
 
           {/* Card: Services & Utility Rates */}
@@ -677,219 +675,36 @@ export default function TenantOverviewPage() {
 
       {/* Modal: View Full Notice Detail */}
       {selectedNotice && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setSelectedNotice(null)
-          }}
+        <Modal
+          isOpen={!!selectedNotice}
+          onClose={() => setSelectedNotice(null)}
+          title={selectedNotice.title}
+          size="md"
         >
-          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-line p-6 space-y-4">
-            <div className="flex items-start justify-between gap-3 border-b border-line pb-4">
-              <div>
-                <span
-                  className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border mb-2 ${selectedNotice.color}`}
-                >
-                  {selectedNotice.tag}
-                </span>
-                <h3 className="text-base font-bold text-foreground leading-snug">
-                  {selectedNotice.title}
-                </h3>
-                <div className="text-xs text-muted mt-1 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" /> {selectedNotice.date} &bull;{' '}
-                  {t('sentByManagement')}
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setSelectedNotice(null)}
+          <div className="space-y-4 pt-1">
+            <div className="flex items-center justify-between gap-2 border-b border-line pb-3">
+              <span
+                className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${selectedNotice.color}`}
               >
-                <X className="w-5 h-5" />
-              </Button>
+                {selectedNotice.tag}
+              </span>
+              <div className="text-xs text-muted flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> {selectedNotice.date} &bull;{' '}
+                {t('sentByManagement')}
+              </div>
             </div>
 
-            <div className="text-xs sm:text-sm text-muted leading-relaxed pt-2">
+            <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed">
               {selectedNotice.content}
             </div>
 
-            <div className="pt-4 flex justify-end">
-              <Button size="xs"
-                onClick={() => setSelectedNotice(null)}
-              >
+            <div className="pt-4 flex justify-end border-t border-line">
+              <Button size="sm" onClick={() => setSelectedNotice(null)}>
                 {t('btnClose')}
               </Button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Modal: Electronic Tenancy Agreement */}
-      {isContractOpen && roomInfo && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsContractOpen(false)
-          }}
-        >
-          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-line">
-            <div className="p-6 border-b border-line flex items-center justify-between bg-surface/60">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <FileSignature className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-foreground">
-                    {t('contractModalTitle')}
-                  </h3>
-                  <div className="text-xs font-semibold text-muted">
-                    {t('contractCode')}:{' '}
-                    <span className="text-foreground/90 font-bold">{roomInfo.contractCode}</span>
-                  </div>
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setIsContractOpen(false)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs sm:text-sm text-foreground/90 custom-scrollbar leading-relaxed">
-              <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-success shrink-0" />
-                  <div>
-                    <div className="font-black text-success text-xs sm:text-sm">
-                      {t('digitallySignedBadge')}
-                    </div>
-                    <div className="text-[11px] text-success font-medium">
-                      {t('signedAt')}: {roomInfo.contractStart} 08:30 GMT+7 &bull; SHA-256:
-                      9f8a...4b12
-                    </div>
-                  </div>
-                </div>
-                <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-emerald-200/60 text-success text-[10px] font-black uppercase">
-                  {t('verified')}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-surface border border-line">
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-muted">
-                    {t('partyA')}
-                  </div>
-                  <div className="font-bold text-foreground">{roomInfo.landlord}</div>
-                  <div className="text-xs text-muted">
-                    {t('idCard')}: {roomInfo.landlordIdCard}
-                  </div>
-                  <div className="text-xs text-muted">
-                    {t('phone')}: {roomInfo.phoneDisplay}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-muted">
-                    {t('partyB')}
-                  </div>
-                  <div className="font-bold text-foreground">{roomInfo.tenantName}</div>
-                  <div className="text-xs text-muted">
-                    {t('idCard')}: {roomInfo.tenantIdCard}
-                  </div>
-                  <div className="text-xs text-muted">{t('phone')}: 0987.654.321</div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-foreground border-b border-line pb-2">
-                  {t('termsTitle')}
-                </h4>
-                <div className="space-y-2 text-xs text-muted">
-                  <p className="flex items-start gap-2">
-                    <span className="font-bold text-primary">1.</span>
-                    <span>{t('term1')}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="font-bold text-primary">2.</span>
-                    <span>{t('term2')}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="font-bold text-primary">3.</span>
-                    <span>{t('term3')}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-line overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <tbody className="divide-y divide-line">
-                    <tr className="bg-surface/50">
-                      <td className="px-4 py-2.5 font-bold text-muted">{t('rentPrice')}</td>
-                      <td className="px-4 py-2.5 font-black text-primary">
-                        {formatCurrency(roomInfo.rentPrice, locale)} {t('monthUnit')}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-2.5 font-bold text-muted">{t('deposit')}</td>
-                      <td className="px-4 py-2.5 font-bold text-foreground">
-                        {formatCurrency(roomInfo.deposit, locale)}
-                      </td>
-                    </tr>
-                    <tr className="bg-surface/50">
-                      <td className="px-4 py-2.5 font-bold text-muted">
-                        {t('contractDuration')}
-                      </td>
-                      <td className="px-4 py-2.5 font-bold text-foreground">
-                        {roomInfo.contractStart} &ndash; {roomInfo.contractEnd}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {roomInfo.documentUrl && (
-                <div className="p-3 bg-surface border border-line rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-foreground/90">
-                    <FileText className="w-4 h-4 text-primary" />
-                    <span>{t('contractAttachedFile')}</span>
-                  </div>
-                  <a
-                    href={roomInfo.documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-line hover:bg-card-hover rounded-xl text-xs font-bold text-primary transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>{t('contractDownload')}</span>
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 sm:p-6 border-t border-line flex items-center justify-between gap-3 bg-surface/50">
-              <Button
-                variant="secondary"
-                size="sm"
-                type="button"
-                onClick={() => window.print()}
-              >
-                <Printer className="w-4 h-4" />
-                <span>{t('btnPrintContract')}</span>
-              </Button>
-
-              <Button
-                variant="primary"
-                size="sm"
-                type="button"
-                onClick={() => setIsContractOpen(false)}
-              >
-                {t('btnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

@@ -12,7 +12,8 @@ import {
   Plus,
   ShieldCheck,
 } from 'lucide-react'
-import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput } from '@/components/ui'
+import { Button, TextInput, TextareaInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { grievanceService, Grievance, GrievancePriority } from '@/services/grievance.service'
 
@@ -289,31 +290,23 @@ export default function TenantAdminComplaintsPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto px-1 sm:px-0">
       {/* Top Header with Protected Escrow Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-soft border border-primary-subtle text-primary text-[11px] font-bold mb-2">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{t('tenantEscrowProtectedBadge')}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-            {t('tenantComplaintsTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1 leading-relaxed max-w-3xl">
-            {t('tenantComplaintsSubtitle')}
-          </p>
-        </div>
-
-        <Button size="xs"
-          onClick={() => {
-            resetForm()
-            setIsModalOpen(true)
-          }}
-          className="sm:w-auto from-primary to-[#20a8a3] hover:from-[#20a8a3] hover:to-[#1a938f] sm:text-sm shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('tenantBtnNewComplaint')}</span>
-        </Button>
-      </div>
+      <DashboardPageHeader
+        title={t('tenantComplaintsTitle')}
+        description={t('tenantComplaintsSubtitle')}
+        actions={
+          <Button
+            size="md"
+            onClick={() => {
+              resetForm()
+              setIsModalOpen(true)
+            }}
+            leftIcon={<Plus className="w-4 h-4" />}
+            className="sm:text-sm shrink-0"
+          >
+            <span>{t('tenantBtnNewComplaint')}</span>
+          </Button>
+        }
+      />
 
       {/* Standardized Filter Toolbar */}
       <FilterToolbar
@@ -330,7 +323,7 @@ export default function TenantAdminComplaintsPage() {
         filters={
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1 bg-card-hover/80 rounded-2xl">
             <Button
-              variant="ghost"
+              variant={statusFilter === 'all' ? 'primary' : 'ghost'}
               size="sm"
               type="button"
               onClick={() => {
@@ -340,16 +333,12 @@ export default function TenantAdminComplaintsPage() {
               className="shrink-0"
             >
               <span>{t('tenantTabAllIssues')}</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === 'all' ? 'bg-zinc-900 text-white' : 'bg-line text-foreground/90'
-                }`}
-              >
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-surface text-foreground/90">
                 {complaints.length}
               </span>
             </Button>
             <Button
-              variant="ghost"
+              variant={statusFilter === 'pending' ? 'primary' : 'ghost'}
               size="sm"
               type="button"
               onClick={() => {
@@ -362,18 +351,12 @@ export default function TenantAdminComplaintsPage() {
                 <Clock className="w-3.5 h-3.5" />
                 <span>{t('tenantStatusUnresponded')}</span>
               </div>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === 'pending'
-                    ? 'bg-warning text-white'
-                    : 'bg-warning-soft text-warning'
-                }`}
-              >
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-surface text-foreground/90">
                 {complaints.filter(c => c.status === 'pending').length}
               </span>
             </Button>
             <Button
-              variant="ghost"
+              variant={statusFilter === 'resolved' ? 'primary' : 'ghost'}
               size="sm"
               type="button"
               onClick={() => {
@@ -386,13 +369,7 @@ export default function TenantAdminComplaintsPage() {
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>{t('tenantStatusResponded')}</span>
               </div>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  statusFilter === 'resolved'
-                    ? 'bg-[#20a8a3] text-white'
-                    : 'bg-success-soft text-success'
-                }`}
-              >
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-surface text-foreground/90">
                 {
                   complaints.filter(
                     c => c.status === 'resolved' || (c.status as string) === 'closed',
@@ -415,8 +392,24 @@ export default function TenantAdminComplaintsPage() {
         /* Grid View (Rule #9 Default) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {paginatedComplaints.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-muted text-xs">
-              {t('tenantNoGrievancesFound')}
+            <div className="col-span-full">
+              <EmptyState
+                icon={<AlertCircle className="w-8 h-8" />}
+                title={t('tenantNoGrievancesFound')}
+                description={t('tenantComplaintsSubtitle')}
+                action={
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      resetForm()
+                      setIsModalOpen(true)
+                    }}
+                    leftIcon={<Plus className="w-4 h-4" />}
+                  >
+                    <span>{t('tenantBtnNewComplaint')}</span>
+                  </Button>
+                }
+              />
             </div>
           ) : (
             paginatedComplaints.map(item => (
@@ -822,32 +815,33 @@ export default function TenantAdminComplaintsPage() {
 
       {/* Confirmation Modal on Exit Unsaved (Rule #10) */}
       {showExitConfirm && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-xs animate-in fade-in duration-150"
-          onClick={() => setShowExitConfirm(false)}
+        <Modal
+          isOpen={showExitConfirm}
+          onClose={() => setShowExitConfirm(false)}
+          size="sm"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-line"
-          >
+          <div className="space-y-4 pt-2 text-center">
             <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
-            <div className="text-center space-y-1">
+            <div className="space-y-1">
               <h3 className="text-sm font-black text-foreground">
                 {t('tenantConfirmCloseFormTitle')}
               </h3>
               <p className="text-xs text-muted">{t('tenantConfirmCloseFormDesc')}</p>
             </div>
-            <div className="flex items-center gap-2 pt-2">
-              <Button size="xs"
+            <div className="flex items-center gap-2 pt-2 border-t border-line">
+              <Button
+                size="sm"
                 variant="ghost"
                 onClick={() => setShowExitConfirm(false)}
                 className="flex-1"
               >
                 {t('tenantBtnKeepEditing')}
               </Button>
-              <Button size="xs" variant="danger"
+              <Button
+                size="sm"
+                variant="danger"
                 onClick={() => {
                   setShowExitConfirm(false)
                   setIsModalOpen(false)
@@ -859,37 +853,23 @@ export default function TenantAdminComplaintsPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Image Preview Modal */}
       {previewImage && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setPreviewImage(null)}
+        <Modal
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+          title={t('tenantEvidencePhotoTitle')}
+          size="lg"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl p-4 max-w-xl w-full space-y-3"
-          >
-            <div className="flex items-center justify-between border-b pb-2">
-              <span className="text-xs font-bold text-foreground/90">
-                {t('tenantEvidencePhotoTitle')}
-              </span>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setPreviewImage(null)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="max-h-[70vh] overflow-hidden rounded-2xl bg-card-hover">
+          <div className="space-y-3 pt-1">
+            <div className="max-h-[70vh] overflow-hidden rounded-2xl bg-card-hover border border-line flex items-center justify-center">
               <img src={previewImage} alt="Preview" className="w-full h-full object-contain" />
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

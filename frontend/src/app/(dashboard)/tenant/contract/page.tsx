@@ -28,7 +28,7 @@ import {
   FileCheck,
 } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/layout'
-import { Button, Text, Breadcrumb } from '@/components/ui'
+import { Button, Text, Breadcrumb, EmptyState } from '@/components/ui'
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import { api } from '@/services/api'
 import { downloadTenantContractDocument } from '@/services/contract.service'
@@ -192,23 +192,19 @@ export default function TenantContractPage() {
           title={t('tenantContractPageTitle')}
           subtitle={t('tenantContractPageSubtitle')}
         />
-        <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center max-w-xl mx-auto shadow-xs space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto">
-            <FileText className="w-8 h-8" />
-          </div>
-          <Text as="h3" size="lg" weight="bold" className="text-foreground">
-            {t('tenantNoActiveContractTitle')}
-          </Text>
-          <Text size="sm" color="subtle" className="leading-relaxed">
-            {t('tenantNoActiveContractDesc')}
-          </Text>
-          <div className="pt-2">
-            <Link href="/tenant">
-              <Button variant="primary" size="md">
-                Quay lại Tổng quan
-              </Button>
-            </Link>
-          </div>
+        <div className="max-w-xl mx-auto">
+          <EmptyState
+            icon={<FileText className="w-8 h-8 text-amber-600" />}
+            title={t('tenantNoActiveContractTitle')}
+            description={t('tenantNoActiveContractDesc')}
+            action={
+              <Link href="/tenant">
+                <Button variant="primary" size="md">
+                  Quay lại Tổng quan
+                </Button>
+              </Link>
+            }
+          />
         </div>
       </div>
     )
@@ -480,12 +476,12 @@ export default function TenantContractPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-6 text-center rounded-2xl bg-surface/40 border border-dashed border-line space-y-2">
-                <FileText className="w-8 h-8 mx-auto text-muted/50" />
-                <Text size="xs" color="subtle" className="max-w-md mx-auto leading-relaxed">
-                  {t('tenantContractNoDocuments')}
-                </Text>
-                <div className="pt-2">
+              <EmptyState
+                bordered={false}
+                size="sm"
+                icon={<FileText className="w-6 h-6 text-muted" />}
+                title={t('tenantContractNoDocuments')}
+                action={
                   <Button
                     variant="outline"
                     size="sm"
@@ -494,8 +490,8 @@ export default function TenantContractPage() {
                   >
                     {t('tenantContractViewAndPrint')}
                   </Button>
-                </div>
-              </div>
+                }
+              />
             )}
           </div>
         </div>

@@ -639,8 +639,8 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
                   key={sId}
                   className={`rounded-2xl border p-5 transition-all space-y-4 ${
                     isElec
-                      ? 'border-warning-subtle bg-gradient-to-br from-amber-50/40 via-white to-white'
-                      : 'border-vacant-subtle bg-gradient-to-br from-sky-50/40 via-white to-white'
+                      ? 'border-warning-subtle bg-gradient-to-br from-amber-500/10 via-card to-card'
+                      : 'border-vacant-subtle bg-gradient-to-br from-sky-500/10 via-card to-card'
                   }`}
                 >
                   {/* Card Title & Unit Price */}
@@ -1008,7 +1008,7 @@ export default function TenantInvoiceDetailPage({ params }: PageProps) {
           </div>
 
           {/* ─── Critical Security / Escrow Notice Banner ───────────────────── */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-50 via-sky-50/60 to-white border border-vacant-subtle shadow-xs space-y-3">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-card border border-vacant-subtle shadow-xs space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <ShieldCheck className="w-5 h-5" />

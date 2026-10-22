@@ -34,7 +34,8 @@ import {
   Eye,
   Sparkles,
 } from 'lucide-react'
-import { Button, TextInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput } from '@/components/ui'
+import { Button, TextInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import {
   LineChart,
   Line,
@@ -218,18 +219,14 @@ export default function TenantInvoicesPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-            {t('invoicesTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1">{t('invoicesSubtitle')}</p>
-        </div>
-      </div>
+      <DashboardPageHeader
+        title={t('invoicesTitle')}
+        description={t('invoicesSubtitle')}
+      />
 
       {/* Quick Summary Banner: Current Unpaid Bill */}
       {currentUnpaid && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-accent/15 via-accent/5 to-card border border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <Receipt className="w-6 h-6" />
@@ -288,7 +285,7 @@ export default function TenantInvoicesPage() {
             {/* Toggle Tabs: Cost vs Consumption */}
             <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl">
               <Button
-                variant="ghost"
+                variant={activeChartTab === 'cost' ? 'primary' : 'ghost'}
                 size="sm"
                 type="button"
                 onClick={() => setActiveChartTab('cost')}
@@ -296,7 +293,7 @@ export default function TenantInvoicesPage() {
                 {t('chartTabCost')}
               </Button>
               <Button
-                variant="ghost"
+                variant={activeChartTab === 'consumption' ? 'primary' : 'ghost'}
                 size="sm"
                 type="button"
                 onClick={() => setActiveChartTab('consumption')}
@@ -381,9 +378,10 @@ export default function TenantInvoicesPage() {
                   <Tooltip
                     formatter={(val: any) => formatCurrency(Number(val) || 0, locale)}
                     contentStyle={{
-                      backgroundColor: '#ffffff',
+                      backgroundColor: 'var(--color-card, #ffffff)',
+                      borderColor: 'var(--color-line, #e2e8f0)',
+                      color: 'var(--color-foreground, #0f172a)',
                       borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
                       fontSize: '12px',
                       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                     }}
@@ -444,9 +442,10 @@ export default function TenantInvoicesPage() {
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#ffffff',
+                      backgroundColor: 'var(--color-card, #ffffff)',
+                      borderColor: 'var(--color-line, #e2e8f0)',
+                      color: 'var(--color-foreground, #0f172a)',
                       borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
                       fontSize: '12px',
                     }}
                   />
@@ -475,7 +474,7 @@ export default function TenantInvoicesPage() {
         filters={
           <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
             <Button
-              variant="ghost"
+              variant={statusFilter === 'all' ? 'primary' : 'ghost'}
               size="sm"
               type="button"
               onClick={() => {
@@ -486,7 +485,7 @@ export default function TenantInvoicesPage() {
               {t('allInvoices')}
             </Button>
             <Button
-              variant="ghost"
+              variant={statusFilter === 'unpaid' ? 'primary' : 'ghost'}
               size="sm"
               type="button"
               onClick={() => {
@@ -497,7 +496,7 @@ export default function TenantInvoicesPage() {
               {t('unpaid')}
             </Button>
             <Button
-              variant="ghost"
+              variant={statusFilter === 'paid' ? 'primary' : 'ghost'}
               size="sm"
               type="button"
               onClick={() => {
@@ -522,13 +521,12 @@ export default function TenantInvoicesPage() {
 
         {/* Content: Grid or Table */}
         {filteredInvoices.length === 0 ? (
-          <div className="py-16 px-4 text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-card-hover flex items-center justify-center mx-auto text-muted">
-              <Receipt className="w-7 h-7" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground">{t('noInvoicesTitle')}</h3>
-            <p className="text-xs text-muted max-w-sm mx-auto">{t('noInvoicesDesc')}</p>
-          </div>
+          <EmptyState
+            icon={<Receipt className="w-8 h-8" />}
+            title={t('noInvoicesTitle')}
+            description={t('noInvoicesDesc')}
+            bordered={false}
+          />
         ) : viewMode === 'grid' ? (
           /* Invoices Grid View */
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -794,41 +792,27 @@ export default function TenantInvoicesPage() {
 
       {/* Modal 3: Meter Image Preview */}
       {previewImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setPreviewImage(null)}
+        <Modal
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+          title={t('meterReadingPhotoTitle')}
+          size="lg"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl shadow-2xl max-w-xl w-full p-4 overflow-hidden border border-line space-y-4"
-          >
-            <div className="flex items-center justify-between border-b border-line pb-3">
-              <h3 className="text-sm font-black text-foreground">{t('meterReadingPhotoTitle')}</h3>
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setPreviewImage(null)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="h-80 w-full rounded-2xl overflow-hidden bg-card-hover">
+          <div className="space-y-4 pt-1">
+            <div className="h-80 w-full rounded-2xl overflow-hidden bg-card-hover flex items-center justify-center border border-line">
               <img
                 src={previewImage}
                 alt="Meter reading"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="flex justify-end">
-              <Button size="xs"
-                onClick={() => setPreviewImage(null)}
-              >
+            <div className="flex justify-end pt-2 border-t border-line">
+              <Button size="sm" onClick={() => setPreviewImage(null)}>
                 {t('btnClose')}
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

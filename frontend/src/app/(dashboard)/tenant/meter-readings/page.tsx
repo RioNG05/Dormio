@@ -19,7 +19,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react'
-import { Button, TextInput, Modal, Text } from '@/components/ui'
+import { Button, TextInput, Modal, Text, EmptyState } from '@/components/ui'
 import {
   meterReadingService,
   ActiveMeteredServicesResponse,
@@ -318,21 +318,15 @@ export default function TenantMeterReadingsPage() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="bg-card border border-line rounded-2xl p-8 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
-            <AlertCircle className="w-7 h-7" />
-          </div>
-          <div className="space-y-1.5">
-            <Text as="h2" size="lg" weight="bold" color="default">
-              {error.isNoContract ? t('noActiveTenancyTitle') : t('meterLoadErrorTitle')}
-            </Text>
-            <Text size="sm" color="secondary" className="max-w-md mx-auto">
-              {error.isNoContract
-                ? t('noActiveTenancyDesc')
-                : error.message || t('meterLoadErrorDesc')}
-            </Text>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
+        <EmptyState
+          icon={<AlertCircle className="w-8 h-8 text-warning" />}
+          title={error.isNoContract ? t('noActiveTenancyTitle') : t('meterLoadErrorTitle')}
+          description={
+            error.isNoContract
+              ? t('noActiveTenancyDesc')
+              : error.message || t('meterLoadErrorDesc')
+          }
+          action={
             <Button
               variant="outline"
               size="sm"
@@ -343,6 +337,8 @@ export default function TenantMeterReadingsPage() {
                 {t('btnRetry')}
               </Text>
             </Button>
+          }
+          secondaryAction={
             <Link href="/tenant">
               <Button variant="primary" size="sm">
                 <Text as="span" size="xs" weight="bold" color="inherit">
@@ -350,8 +346,8 @@ export default function TenantMeterReadingsPage() {
                 </Text>
               </Button>
             </Link>
-          </div>
-        </div>
+          }
+        />
       </div>
     )
   }
@@ -360,19 +356,11 @@ export default function TenantMeterReadingsPage() {
   if (!data || servicesList.length === 0) {
     return (
       <div className="max-w-2xl mx-auto py-12 px-4">
-        <div className="bg-card border border-line rounded-2xl p-8 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-primary-soft text-teal-600 flex items-center justify-center mx-auto">
-            <Gauge className="w-7 h-7" />
-          </div>
-          <div className="space-y-1.5">
-            <Text as="h2" size="lg" weight="bold" color="default">
-              {t('noMeteredServicesTitle')}
-            </Text>
-            <Text size="sm" color="secondary" className="max-w-md mx-auto">
-              {t('noMeteredServicesDesc')}
-            </Text>
-          </div>
-          <div className="pt-3">
+        <EmptyState
+          icon={<Gauge className="w-8 h-8 text-primary" />}
+          title={t('noMeteredServicesTitle')}
+          description={t('noMeteredServicesDesc')}
+          action={
             <Link href="/tenant">
               <Button variant="primary" size="sm">
                 <Text as="span" size="xs" weight="bold" color="inherit">
@@ -380,8 +368,8 @@ export default function TenantMeterReadingsPage() {
                 </Text>
               </Button>
             </Link>
-          </div>
-        </div>
+          }
+        />
       </div>
     )
   }
