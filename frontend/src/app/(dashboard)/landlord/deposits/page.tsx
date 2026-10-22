@@ -6,20 +6,16 @@ import { useRouter } from 'next/navigation'
 import {
   Plus,
   PiggyBank,
-  MapPin,
-  Eye,
   Clock,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  LayoutGrid,
-  List,
   Send,
   FileText,
   RotateCcw,
   Sparkles,
   ArrowRight,
   Loader2,
+  DiamondPlus,
+  FilePenLine,
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
@@ -32,7 +28,6 @@ import {
   SelectInput,
   TextareaInput,
   SearchInput,
-  ChipGroup,
   Modal,
   Text,
   Pagination,
@@ -40,6 +35,7 @@ import {
   FilterToolbar,
   Card,
   TableRow,
+  Chip,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -188,11 +184,6 @@ function DepositsContent() {
   // Rule #9 Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(6) // Default 6 for Grid
-
-  useEffect(() => {
-    setPageSize(viewMode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
-  }, [viewMode])
 
   // Recalculate additional required deposit when upgrade modal target amount changes
   useEffect(() => {
@@ -419,11 +410,9 @@ function DepositsContent() {
   const renderStatusBadge = (dep: DepositItem) => {
     if (dep.status === 'paid') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full bg-primary/15 text-[#0d6e6b] border border-primary/30">
-          <Text as="span" size="xs" weight="black" color="inherit">
-            {t('landlordDepositsStatusHolding')}
-          </Text>
-        </span>
+        <Chip preventHover variant="primary" size="sm">
+          {t('landlordDepositsStatusHolding')}
+        </Chip>
       )
     }
 
@@ -431,23 +420,21 @@ function DepositsContent() {
       const hasDeduction = (dep.deductedAmount ?? 0) > 0
       return (
         <div className="flex flex-wrap items-center gap-1 justify-end sm:justify-start">
-          <span className="px-2.5 py-0.5 rounded-full bg-deposit-soft text-deposit border border-deposit-subtle">
-            <Text as="span" size="xs" weight="black" color="inherit">
-              {t('landlordDepositsStatusRefunded')}
-            </Text>
-          </span>
+          <Chip preventHover variant="info" size="sm">
+            {t('landlordDepositsStatusRefunded')}
+          </Chip>
           {hasDeduction && (
-            <span
-              className="px-2.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle"
+            <Chip
+              preventHover
+              variant="danger"
+              size="sm"
               title={t('landlordDepositsPartialDeductionBadge').replace(
                 '{amount}',
                 `${dep.deductedAmount?.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫`,
               )}
             >
-              <Text as="span" size="xs" weight="black" color="inherit">
-                {t('landlordDepositsStatusDeducted')}
-              </Text>
-            </span>
+              {t('landlordDepositsStatusDeducted')}
+            </Chip>
           )}
         </div>
       )
@@ -455,11 +442,9 @@ function DepositsContent() {
 
     // 100% Deduction / Forfeited status
     return (
-      <span className="px-2.5 py-0.5 rounded-full bg-danger-soft text-danger border border-danger-subtle">
-        <Text as="span" size="xs" weight="black" color="inherit">
-          {t('landlordDepositsStatusDeducted')}
-        </Text>
-      </span>
+      <Chip preventHover variant="danger" size="sm">
+        {t('landlordDepositsStatusDeducted')}
+      </Chip>
     )
   }
 
@@ -601,70 +586,102 @@ function DepositsContent() {
           />
         }
         filters={
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-card-hover p-1 rounded-2xl sm:rounded-full border border-line w-full sm:w-auto">
-            <Button
-              rounded="full"
-              variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                setSelectedDepositTypeTab('hold')
-                setActiveStatusTab('all')
-                setCurrentPage(1)
-              }}
-              className={cn(
-                'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
-                selectedDepositTypeTab === 'hold'
-                  ? 'bg-amber-500 hover:bg-warning text-white shadow-xs'
-                  : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
-              )}
-              leftIcon={<Clock className="shrink-0 w-3.5 h-3.5" />}
-            >
-              <Text as="span" size="xs" weight="black" color="inherit" className="whitespace-nowrap">
-                {t('landlordDepositsTabHoldingButton')}
-              </Text>
-              <span
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-card-hover p-1 rounded-2xl sm:rounded-full border border-line w-full sm:w-auto">
+              <Button
+                rounded="full"
+                variant={selectedDepositTypeTab === 'hold' ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => {
+                  setSelectedDepositTypeTab('hold')
+                  setActiveStatusTab('all')
+                  setCurrentPage(1)
+                }}
                 className={cn(
-                  'px-2 py-0.5 rounded-full text-[10px] font-black',
+                  'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
                   selectedDepositTypeTab === 'hold'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-line text-foreground/90',
+                    ? 'bg-amber-500 hover:bg-warning text-white shadow-xs'
+                    : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
                 )}
+                leftIcon={<Clock className="shrink-0 w-3.5 h-3.5" />}
               >
-                {stats.holdTypeCountTotal}
-              </span>
-            </Button>
+                <Text as="span" size="xs" weight="black" color="inherit" className="whitespace-nowrap">
+                  {t('landlordDepositsTabHoldingButton')}
+                </Text>
+                <span
+                  className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-black',
+                    selectedDepositTypeTab === 'hold'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-line text-foreground/90',
+                  )}
+                >
+                  {stats.holdTypeCountTotal}
+                </span>
+              </Button>
 
-            <Button
-              rounded="full"
-              variant={selectedDepositTypeTab === 'contract' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                setSelectedDepositTypeTab('contract')
-                setActiveStatusTab('all')
+              <Button
+                rounded="full"
+                variant={selectedDepositTypeTab === 'contract' ? 'primary' : 'ghost'}
+                size="sm"
+                onClick={() => {
+                  setSelectedDepositTypeTab('contract')
+                  setActiveStatusTab('all')
+                  setCurrentPage(1)
+                }}
+                className={cn(
+                  'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
+                  selectedDepositTypeTab === 'contract'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
+                )}
+                leftIcon={<FileText className="shrink-0 w-3.5 h-3.5" />}
+              >
+                <Text as="span" size="xs" weight="black" color="inherit" className="whitespace-nowrap">
+                  {t('landlordDepositsTabContractButton')}
+                </Text>
+                <span
+                  className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-black',
+                    selectedDepositTypeTab === 'contract'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-line text-foreground/90',
+                  )}
+                >
+                  {stats.contractTypeCountTotal}
+                </span>
+              </Button>
+            </div>
+
+            <SelectInput
+              value={activeStatusTab}
+              onChange={e => {
+                setActiveStatusTab(e.target.value as 'all' | 'holding' | 'refunded' | 'deducted')
                 setCurrentPage(1)
               }}
-              className={cn(
-                'rounded-xl sm:rounded-full text-xs font-black transition-all gap-2',
-                selectedDepositTypeTab === 'contract'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'text-muted hover:text-foreground hover:bg-zinc-200/50',
-              )}
-              leftIcon={<FileText className="shrink-0 w-3.5 h-3.5" />}
-            >
-              <Text as="span" size="xs" weight="black" color="inherit" className="whitespace-nowrap">
-                {t('landlordDepositsTabContractButton')}
-              </Text>
-              <span
-                className={cn(
-                  'px-2 py-0.5 rounded-full text-[10px] font-black',
-                  selectedDepositTypeTab === 'contract'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-line text-foreground/90',
-                )}
-              >
-                {stats.contractTypeCountTotal}
-              </span>
-            </Button>
+              containerClassName="w-full sm:w-auto min-w-[160px] space-y-0"
+              options={[
+                {
+                  value: 'all',
+                  label: t('landlordDepositsStatusAll'),
+                },
+                {
+                  value: 'holding',
+                  label: `${t('landlordDepositsStatusHolding')} (${selectedDepositTypeTab === 'hold'
+                    ? stats.holdTypeHoldingCountTotal
+                    : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal
+                    })`,
+                },
+                {
+                  value: 'refunded',
+                  label: `${t('landlordDepositsStatusRefunded')} (${stats.refundedCountTotal})`,
+                },
+                {
+                  value: 'deducted',
+                  label: `${t('landlordDepositsStatusDeducted')} (${stats.deductedCountTotal})`,
+                },
+              ]}
+            />
           </div>
         }
         viewMode={
@@ -672,50 +689,6 @@ function DepositsContent() {
             value={viewMode}
             onChange={setViewMode}
           />
-        }
-        subRow={
-          <div className="flex flex-wrap items-center gap-2">
-            <Text as="span" size="xs" weight="black" color="secondary" className="uppercase mr-1 hidden sm:inline">
-              {t('landlordDepositsStatusFilterLabel')}
-            </Text>
-
-            <ChipGroup<'all' | 'holding' | 'refunded' | 'deducted'>
-              value={activeStatusTab}
-              onChange={val => {
-                setActiveStatusTab(val)
-                setCurrentPage(1)
-              }}
-              scrollable
-              options={[
-                {
-                  value: 'all',
-                  label: t('landlordDepositsStatusAll'),
-                  variant: 'default',
-                },
-                {
-                  value: 'holding',
-                  label: t('landlordDepositsStatusHolding'),
-                  count:
-                    selectedDepositTypeTab === 'hold'
-                      ? stats.holdTypeHoldingCountTotal
-                      : stats.holdingCountTotal - stats.holdTypeHoldingCountTotal,
-                  variant: 'success',
-                },
-                {
-                  value: 'refunded',
-                  label: t('landlordDepositsStatusRefunded'),
-                  count: stats.refundedCountTotal,
-                  variant: 'purple',
-                },
-                {
-                  value: 'deducted',
-                  label: t('landlordDepositsStatusDeducted'),
-                  count: stats.deductedCountTotal,
-                  variant: 'danger',
-                },
-              ]}
-            />
-          </div>
         }
       />
 
@@ -769,9 +742,9 @@ function DepositsContent() {
                 onClick={() => setSelectedDeposit(dep)}
                 className="flex flex-col justify-between space-y-4 group"
               >
-                <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0 border-0 space-y-3">
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5 border-0">
                   {/* Top Badge & Room */}
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 w-full">
                     <div className="flex items-center gap-2">
                       <span className="p-2 rounded-xl bg-card-hover text-foreground/90 font-black text-xs">
                         <Text as="span" size="xs" weight="black" color="inherit">
@@ -781,25 +754,22 @@ function DepositsContent() {
                           )}
                         </Text>
                       </span>
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 text-[10px] font-black rounded-md border',
-                          isHoldType
-                            ? 'bg-warning-soft text-warning border-warning-subtle'
-                            : 'bg-success-soft text-success border-success-subtle',
-                        )}
+                      <Chip
+                        preventHover
+                        size="sm"
+                        variant={isHoldType ? 'warning' : 'success'}
                       >
-                        <Text as="span" size="xs" weight="black" color="inherit">
-                          {getDepositTypeLabel(isHoldType ? 'Cọc giữ chỗ' : 'Cọc hợp đồng')}
-                        </Text>
-                      </span>
+                        {getDepositTypeLabel(isHoldType ? 'Cọc giữ chỗ' : 'Cọc hợp đồng')}
+                      </Chip>
                     </div>
 
                     {renderStatusBadge(dep)}
                   </div>
+                </Card.Header>
 
+                <Card.Body className="px-4 sm:px-5 py-0 space-y-3">
                   {/* Tenant Details */}
-                  <div className="space-y-1.5 text-xs">
+                  <div className="p-3 bg-surface rounded-xl space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <Text as="span" size="xs" color="secondary" weight="medium">
                         {t('landlordDepositsTenant')}
@@ -840,10 +810,10 @@ function DepositsContent() {
                       </Text>
                     </div>
                   </div>
-                </Card.Header>
+                </Card.Body>
 
                 {/* Amount & Action Footer */}
-                <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-3 space-y-3">
+                <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <Text as="span" size="xs" weight="bold" color="secondary" className="block uppercase tracking-wider">
@@ -855,68 +825,56 @@ function DepositsContent() {
                     </div>
 
                     {isHoldType && isHolding && (
-                      <span className="text-[10px] font-extrabold text-warning bg-warning-soft px-2 py-0.5 rounded-md">
-                        <Text as="span" size="xs" weight="black" color="inherit">
-                          {t('landlordDepositsHoldingDeposit')}
-                        </Text>
-                      </span>
+                      <Chip preventHover size="xs" variant="warning">
+                        {t('landlordDepositsHoldingDeposit')}
+                      </Chip>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSelectedDeposit(dep)}
-                      className="flex-1"
-                      leftIcon={<Eye className="w-3.5 h-3.5" />}
-                    >
-                      <Text as="span" size="xs" weight="bold" color="inherit">
-                        {t('landlordDepositsBtnDetail')}
-                      </Text>
-                    </Button>
+                  {((isHoldType && isHolding) || isHolding) && (
+                    <div className="flex items-center justify-end gap-2">
+                      {isHoldType && isHolding && (
+                        <Button
+                          variant="orange"
+                          size="sm"
+                          onClick={() => {
+                            setShowUpgradeModal(dep)
+                            setUpgradeForm({
+                              targetContractAmount: '',
+                              additionalAmount: 0,
+                              note: '',
+                            })
+                            setIsFormDirty(false)
+                          }}
+                          title={t('landlordDepositsTooltipUpgrade')}
+                          leftIcon={<FilePenLine />}
+                        >
+                          <Text as="span" size="xs" weight="bold" color="inherit">
+                            {t('landlordDepositsBtnUpgradeShort')}
+                          </Text>
+                        </Button>
+                      )}
 
-                    {isHoldType && isHolding && (
-                      <Button
-                        variant="orange"
-                        size="sm"
-                        onClick={() => {
-                          setShowUpgradeModal(dep)
-                          setUpgradeForm({
-                            targetContractAmount: '',
-                            additionalAmount: 0,
-                            note: '',
-                          })
-                          setIsFormDirty(false)
-                        }}
-                        title={t('landlordDepositsTooltipUpgrade')}
-                        leftIcon={<Sparkles className="w-3.5 h-3.5" />}
-                      >
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {t('landlordDepositsBtnUpgradeShort')}
-                        </Text>
-                      </Button>
-                    )}
-
-                    {isHolding && (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setShowRefundModal(dep)
-                          setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
-                          setIsFormDirty(false)
-                        }}
-                        title={t('landlordDepositsTooltipRefundDeduct')}
-                        leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
-                      >
-                        <Text as="span" size="xs" weight="bold" color="inherit">
-                          {t('landlordDepositsBtnRefundShort')}
-                        </Text>
-                      </Button>
-                    )}
-                  </div>
+                      {isHolding && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setShowRefundModal(dep)
+                            setRefundForm({ deductedAmount: '0', deductionReason: '', note: '' })
+                            setIsFormDirty(false)
+                          }}
+                          title={t('landlordDepositsTooltipRefundDeduct')}
+                          leftIcon={<RotateCcw />}
+                        >
+                          <Text as="span" size="xs" weight="bold" color="inherit">
+                            {t('landlordDepositsBtnRefundShort')}
+                          </Text>
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </Card.Footer>
-                </Card>
+              </Card>
             )
           })}
         </div>
@@ -949,13 +907,17 @@ function DepositsContent() {
                       className="group"
                       onClick={() => setSelectedDeposit(dep)}
                     >
-                      <td className="py-3.5 px-4 font-mono font-bold text-muted">
-                        {dep.id.slice(0, 8)}...
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="subtle" mono>
+                          {dep.id.slice(0, 8)}...
+                        </Text>
                       </td>
-                      <td className="py-3.5 px-4 font-extrabold text-foreground">
-                        {t('landlordContractsRoomPrefix').replace('{room}', String(dep.roomNumber))}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="black" color="default">
+                          {t('landlordContractsRoomPrefix').replace('{room}', String(dep.roomNumber))}
+                        </Text>
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <Text as="div" size="xs" weight="bold" color="default">
                           {dep.tenantName}
                         </Text>
@@ -963,53 +925,42 @@ function DepositsContent() {
                           {dep.tenantPhone || t('landlordDepositsNoPhoneShort')}
                         </Text>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={cn(
-                            'px-2 py-0.5 text-[10px] font-black rounded-md border',
-                            isHoldType
-                              ? 'bg-warning-soft text-warning border-warning-subtle'
-                              : 'bg-success-soft text-success border-success-subtle',
-                          )}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          preventHover
+                          variant={isHoldType ? 'warning' : 'success'}
                         >
-                          <Text as="span" size="xs" weight="black" color="inherit">
-                            {getDepositTypeLabel(isHoldType ? 'Cọc giữ chỗ' : 'Cọc hợp đồng')}
-                          </Text>
-                        </span>
+                          {getDepositTypeLabel(isHoldType ? 'Cọc giữ chỗ' : 'Cọc hợp đồng')}
+                        </Chip>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-black text-sm text-primary">
-                        {dep.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <Text as="span" size="sm" weight="black" color="brand">
+                          {dep.amount.toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')} ₫
+                        </Text>
                       </td>
-                      <td className="py-3.5 px-4 text-muted font-semibold">{dep.depositDate}</td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={cn(
-                            'font-semibold',
-                            isHoldType && isHolding ? 'text-warning font-bold' : 'text-muted',
-                          )}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <Text as="span" size="xs" color="secondary" weight="semibold">
+                          {dep.depositDate}
+                        </Text>
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <Text
+                          as="span"
+                          size="xs"
+                          weight={isHoldType && isHolding ? 'bold' : 'normal'}
+                          color={isHoldType && isHolding ? 'warning' : 'secondary'}
                         >
                           {dep.expiryDate || '—'}
-                        </span>
+                        </Text>
                       </td>
                       <td className="py-3.5 px-4 text-center">{renderStatusBadge(dep)}</td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={event => {
-                              event.stopPropagation()
-                              setSelectedDeposit(dep)
-                            }}
-                            title={t('landlordDepositsBtnDetail')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-
                           {isHoldType && isHolding && (
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              variant="accent"
+                              size="icon-sm"
                               onClick={event => {
                                 event.stopPropagation()
                                 setShowUpgradeModal(dep)
@@ -1022,14 +973,14 @@ function DepositsContent() {
                               }}
                               title={t('landlordDepositsBtnUpgrade')}
                             >
-                              <Sparkles className="w-4 h-4" />
+                              <FilePenLine />
                             </Button>
                           )}
 
                           {isHolding && (
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              variant="primary"
+                              size="icon-sm"
                               onClick={event => {
                                 event.stopPropagation()
                                 setShowRefundModal(dep)
@@ -1042,7 +993,7 @@ function DepositsContent() {
                               }}
                               title={t('landlordDepositsBtnRefundDeduct')}
                             >
-                              <RotateCcw className="w-4 h-4" />
+                              <RotateCcw />
                             </Button>
                           )}
                         </div>
@@ -1252,7 +1203,7 @@ function DepositsContent() {
                           setSelectedDeposit(null)
                           setIsFormDirty(false)
                         }}
-                        leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                        leftIcon={<Sparkles />}
                       >
                         <Text as="span" size="xs" weight="bold" color="inherit">
                           {t('landlordDepositsBtnUpgrade')}
@@ -1270,7 +1221,7 @@ function DepositsContent() {
                         setSelectedDeposit(null)
                         setIsFormDirty(false)
                       }}
-                      leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                      leftIcon={<RotateCcw />}
                     >
                       <Text as="span" size="xs" weight="bold" color="inherit">
                         {t('landlordDepositsBtnRefundDeduct')}
@@ -1336,10 +1287,10 @@ function DepositsContent() {
                           '{room}',
                           String(room.roomNumber),
                         )} - ${room.roomType?.name || t('landlordDepositsRoom')} (${isAvail
-                            ? t('landlordDepositsRoomStatusAvailable')
-                            : room.status === 'deposited'
-                              ? t('landlordDepositsRoomStatusDeposited')
-                              : t('landlordDepositsRoomStatusRented')
+                          ? t('landlordDepositsRoomStatusAvailable')
+                          : room.status === 'deposited'
+                            ? t('landlordDepositsRoomStatusDeposited')
+                            : t('landlordDepositsRoomStatusRented')
                           })`,
                       }
                     }),
@@ -1709,7 +1660,7 @@ function DepositsContent() {
                 variant="orange"
                 size="sm"
                 onClick={handleConfirmUpgradeToContract}
-                leftIcon={<FileText className="w-3.5 h-3.5" />}
+                leftIcon={<FileText />}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {t('landlordDepositsSignContractAndTransfer')}
