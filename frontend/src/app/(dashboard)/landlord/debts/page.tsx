@@ -26,7 +26,20 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, Card, TableRow } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  SearchInput,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  Card,
+  TableRow,
+  Text,
+  Chip,
+} from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -100,11 +113,8 @@ export default function LandlordDebtsPage() {
     setIsMounted(true)
   }, [])
 
-  // Update default pageSize on viewMode change per Rule #9
+  // Clear selection on viewMode change without refetching data
   useEffect(() => {
-    const defaultSize = viewMode === 'grid' ? 6 : 10
-    setPageSize(defaultSize)
-    setCurrentPage(1)
     setSelectedRoomIds([])
   }, [viewMode])
 
@@ -547,14 +557,6 @@ export default function LandlordDebtsPage() {
             const isBadDebt = room.agingCategory === 'bad_debt'
             const is2Months = room.agingCategory === '2_months'
 
-            const badgeBg = isBadDebt
-              ? 'bg-deposit-soft text-deposit border-deposit-subtle'
-              : is2Months
-                ? 'bg-danger-soft text-danger border-danger-subtle'
-                : room.maxAgingDays > 0
-                  ? 'bg-warning-soft text-warning border-warning-subtle'
-                  : 'bg-vacant-soft text-vacant border-vacant-subtle'
-
             const badgeLabel = isBadDebt
               ? t('landlordDebtsBadgeBadDebt')
               : is2Months
@@ -566,111 +568,141 @@ export default function LandlordDebtsPage() {
             return (
               <Card
                 key={room.roomId}
-                className={`flex flex-col justify-between overflow-hidden group ${isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : ''
-                  }`}
+                onClick={() => setInvoicesModalRoom(room)}
+                className={`flex flex-col justify-between overflow-hidden group ${
+                  isSelected ? 'border-primary ring-2 ring-primary/20' : ''
+                }`}
               >
                 {/* Card Header */}
-                <Card.Header className="p-5">
-                  <div className="flex items-start justify-between gap-3">
+                <Card.Header className="px-5 pt-5 pb-2.5 border-0">
+                  <div className="flex items-start justify-between gap-3 w-full">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-base font-black text-foreground group-hover:text-teal-600 transition-colors">
+                        <Text
+                          as="span"
+                          size="base"
+                          weight="black"
+                          color="default"
+                          className="group-hover:text-primary transition-colors"
+                        >
                           {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
-                        </span>
+                        </Text>
                         {room.floor !== null && (
-                          <span className="text-[10px] font-bold text-muted px-2 py-0.5 bg-card-hover rounded-md">
+                          <Text
+                            as="span"
+                            size="3xs"
+                            weight="bold"
+                            color="secondary"
+                            className="px-2 py-0.5 bg-card-hover rounded-md"
+                          >
                             {t('landlordDebtsFloorPrefix', { floor: room.floor })}
-                          </span>
+                          </Text>
                         )}
                       </div>
-                      <span className="text-[11px] text-muted font-medium block">
+                      <Text as="span" size="2xs" color="secondary" weight="medium" className="block mt-0.5">
                         {room.buildingName}
-                      </span>
+                      </Text>
                     </div>
 
-                    <span
-                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${badgeBg}`}
+                    <Chip
+                      size="sm"
+                      preventHover
+                      variant={
+                        isBadDebt
+                          ? 'danger'
+                          : is2Months
+                            ? 'danger'
+                            : room.maxAgingDays > 0
+                              ? 'warning'
+                              : 'neutral'
+                      }
                     >
                       {badgeLabel}
-                    </span>
+                    </Chip>
                   </div>
+                </Card.Header>
 
+                {/* Card Body */}
+                <Card.Body className="px-5 py-0 space-y-3">
                   {/* Tenant Details */}
-                  <div className="mt-4 pt-3 border-t border-line flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-card-hover text-muted flex items-center justify-center font-bold text-xs">
+                  <div className="flex items-center justify-between p-3 bg-surface rounded-xl">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-card-hover text-muted flex items-center justify-center font-bold text-xs shrink-0">
                         <User className="w-4 h-4" />
                       </div>
-                      <div>
-                        <span className="text-xs font-bold text-foreground block">
+                      <div className="min-w-0">
+                        <Text as="span" size="xs" weight="bold" color="default" clamp={1} className="block">
                           {room.tenant?.name || t('landlordDebtsNoTenant')}
-                        </span>
+                        </Text>
                         {room.tenant?.phone ? (
                           <a
                             href={`tel:${room.tenant.phone}`}
-                            className="text-[11px] text-muted hover:text-teal-600 flex items-center gap-1 font-semibold"
+                            onClick={e => e.stopPropagation()}
+                            className="text-[11px] text-muted hover:text-primary flex items-center gap-1 font-semibold"
                           >
                             <Phone className="w-3 h-3" />
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-[11px] text-muted">
+                          <Text as="span" size="3xs" color="subtle">
                             {t('landlordDebtsNoPhone')}
-                          </span>
+                          </Text>
                         )}
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                    <div className="text-right shrink-0">
+                      <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="tracking-wider block">
                         {t('landlordDebtsInvoicesCount')}
-                      </span>
-                      <span className="text-xs font-black text-foreground/90">
+                      </Text>
+                      <Text as="span" size="xs" weight="black" color="default">
                         {t('landlordDebtsInvoicesUnit', { count: room.invoicesCount })}
-                      </span>
+                      </Text>
                     </div>
                   </div>
-                </Card.Header>
 
-                {/* Card Financial Breakdown */}
-                <Card.Body className="p-5 bg-surface/60 space-y-3">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-bold text-muted">
-                      {t('landlordDebtsTotalDebtLabel')}
-                    </span>
-                    <span className="text-lg font-black text-danger tracking-tight">
-                      {formatCurrency(room.totalDebtAmount)}
-                    </span>
-                  </div>
-
-                  {room.overdueAmount > 0 && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted font-medium">
-                        {t('landlordDebtsOverduePartLabel')}
-                      </span>
-                      <span className="font-extrabold text-warning">
-                        {formatCurrency(room.overdueAmount)}
-                      </span>
+                  {/* Financial Breakdown */}
+                  <div className="p-3 bg-surface rounded-xl space-y-2 text-xs">
+                    <div className="flex items-baseline justify-between">
+                      <Text as="span" size="xs" weight="bold" color="secondary">
+                        {t('landlordDebtsTotalDebtLabel')}
+                      </Text>
+                      <Text as="span" size="lg" weight="black" color="danger" className="tracking-tight">
+                        {formatCurrency(room.totalDebtAmount)}
+                      </Text>
                     </div>
-                  )}
 
-                  {/* Oldest Debt Date */}
-                  <div className="flex items-center justify-between text-[11px] text-muted pt-2 border-t border-line">
-                    <span className="flex items-center gap-1 font-medium">
-                      <Calendar className="w-3 h-3 text-muted" />
-                      {t('landlordDebtsOldestDebtDate')}
-                    </span>
-                    <span className="font-bold text-foreground/90">
-                      {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
-                    </span>
+                    {room.overdueAmount > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <Text as="span" size="xs" color="secondary" weight="medium">
+                          {t('landlordDebtsOverduePartLabel')}
+                        </Text>
+                        <Text as="span" size="xs" weight="extrabold" color="orange">
+                          {formatCurrency(room.overdueAmount)}
+                        </Text>
+                      </div>
+                    )}
+
+                    {/* Oldest Debt Date */}
+                    <div className="flex items-center justify-between text-[11px] text-muted pt-2 border-t border-line">
+                      <span className="flex items-center gap-1 font-medium">
+                        <Calendar className="w-3 h-3 text-muted" />
+                        {t('landlordDebtsOldestDebtDate')}
+                      </span>
+                      <Text as="span" size="2xs" weight="bold" color="default">
+                        {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                      </Text>
+                    </div>
                   </div>
                 </Card.Body>
 
-                {/* Card Actions */}
-                <Card.Footer className="p-4 flex items-center gap-2">
+                {/* Card Actions Footer */}
+                <Card.Footer className="px-5 pt-3 pb-4 flex items-center justify-end gap-2">
                   <Button
                     variant="primary"
-                    onClick={() => {
+                    size="sm"
+                    onClick={e => {
+                      e.stopPropagation()
                       setReminderModalRoom(room)
                       setReminderNote('')
                       setIsReminderDirty(false)
@@ -708,14 +740,6 @@ export default function LandlordDebtsPage() {
                   const isBadDebt = room.agingCategory === 'bad_debt'
                   const is2Months = room.agingCategory === '2_months'
 
-                  const badgeBg = isBadDebt
-                    ? 'bg-deposit-soft text-deposit border-deposit-subtle'
-                    : is2Months
-                      ? 'bg-danger-soft text-danger border-danger-subtle'
-                      : room.maxAgingDays > 0
-                        ? 'bg-warning-soft text-warning border-warning-subtle'
-                        : 'bg-vacant-soft text-vacant border-vacant-subtle'
-
                   const badgeLabel = isBadDebt
                     ? t('landlordDebtsBadDebtStatus')
                     : is2Months
@@ -727,71 +751,82 @@ export default function LandlordDebtsPage() {
                   return (
                     <TableRow
                       key={room.roomId}
-                      className={`hover:bg-card-hover transition-colors duration-150 ${isSelected ? 'bg-primary-soft' : ''
-                        }`}
-                      onClick={() => {
-                        setReminderModalRoom(room)
-                        setReminderNote('')
-                        setIsReminderDirty(false)
-                        setReminderCopied(false)
-                      }}
+                      className={`hover:bg-card-hover transition-colors duration-150 ${
+                        isSelected ? 'bg-primary-soft' : ''
+                      }`}
+                      onClick={() => setInvoicesModalRoom(room)}
                     >
-                      <td className="p-4">
-                        <span className="font-bold text-foreground block">
+                      <td className="p-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default" className="block">
                           {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
                           {room.floor !== null && (
-                            <span className="text-[10px] text-muted font-normal ml-1.5">
+                            <Text as="span" size="3xs" color="secondary" className="ml-1.5 font-normal">
                               ({t('landlordDebtsFloorPrefix', { floor: room.floor })})
-                            </span>
+                            </Text>
                           )}
-                        </span>
-                        <span className="text-[11px] text-muted font-medium">
+                        </Text>
+                        <Text as="span" size="2xs" color="secondary" weight="medium">
                           {room.tenant?.name || t('landlordDebtsNoTenant')}
-                        </span>
+                        </Text>
                       </td>
 
-                      <td className="p-4">
+                      <td className="p-4 whitespace-nowrap">
                         {room.tenant?.phone ? (
                           <a
                             href={`tel:${room.tenant.phone}`}
-                            className="text-xs text-foreground/90 hover:text-teal-600 font-semibold"
+                            onClick={e => e.stopPropagation()}
+                            className="text-xs text-foreground/90 hover:text-primary font-semibold"
                           >
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-muted">-</span>
+                          <Text as="span" size="xs" color="secondary">-</Text>
                         )}
                       </td>
 
-                      <td className="p-4 text-right">
-                        <span className="font-black text-danger text-sm">
+                      <td className="p-4 text-right whitespace-nowrap">
+                        <Text as="span" size="sm" weight="black" color="danger">
                           {formatCurrency(room.totalDebtAmount)}
-                        </span>
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-right">
-                        <span className="font-extrabold text-warning">
+                      <td className="p-4 text-right whitespace-nowrap">
+                        <Text as="span" size="xs" weight="extrabold" color="orange">
                           {formatCurrency(room.overdueAmount)}
-                        </span>
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-center font-bold text-foreground/90">
-                        {t('landlordDebtsMonthsCount', { count: room.invoicesCount })}
+                      <td className="p-4 text-center whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {t('landlordDebtsMonthsCount', { count: room.invoicesCount })}
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-muted font-medium">
-                        {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                      <td className="p-4 whitespace-nowrap">
+                        <Text as="span" size="xs" color="secondary">
+                          {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-center">
-                        <span
-                          className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${badgeBg}`}
+                      <td className="p-4 text-center whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          preventHover
+                          variant={
+                            isBadDebt
+                              ? 'danger'
+                              : is2Months
+                                ? 'danger'
+                                : room.maxAgingDays > 0
+                                  ? 'warning'
+                                  : 'neutral'
+                          }
                         >
                           {badgeLabel}
-                        </span>
+                        </Chip>
                       </td>
 
-                      <td className="p-4 text-center">
+                      <td className="p-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <Button
                             variant="primary"
