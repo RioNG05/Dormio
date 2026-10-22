@@ -32,6 +32,7 @@ import {
   Text,
   Modal,
   ViewModeToggle,
+  TableRow,
   type TextColor,
 } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
@@ -1061,7 +1062,7 @@ export default function RoomsPage() {
                     const statusMeta = getRoomStatusMeta(room.status)
 
                     return (
-                      <tr
+                      <TableRow
                         key={`${room.building}-${room.id}`}
                         onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
                         className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
@@ -1116,7 +1117,7 @@ export default function RoomsPage() {
                             <Edit />
                           </Button>
                         </td>
-                      </tr>
+                      </TableRow>
                     )
                   })}
                 </tbody>

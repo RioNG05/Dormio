@@ -34,6 +34,8 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
+  TableRow,
 } from '@/components/ui'
 import {
   landlordInvoiceService,
@@ -587,14 +589,15 @@ function InvoicesContent() {
             const isOverdue = inv.status === 'Quá hạn'
 
             return (
-              <div
+              <Card
                 key={inv.id}
-                className={`bg-card border rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between ${isPaid
+                className={`p-4 sm:p-5 space-y-4 flex flex-col justify-between ${isPaid
                   ? 'border-success-subtle hover:border-emerald-300'
                   : isOverdue
                     ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
                     : 'border-line hover:border-primary/40'
                   }`}
+                onClick={() => setSelectedInvoice(inv)}
               >
                 {/* Header info */}
                 <div className="space-y-2">
@@ -692,7 +695,10 @@ function InvoicesContent() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => setSelectedInvoice(inv)}
+                      onClick={event => {
+                        event.stopPropagation()
+                        setSelectedInvoice(inv)
+                      }}
                       className="flex-1"
                       leftIcon={<Eye />}
                     >
@@ -708,9 +714,9 @@ function InvoicesContent() {
                         {t('landlordInvoicesBtnCollect')}
                       </Button>
                     )}
-                  </div>
                 </div>
-              </div>
+                </div>
+              </Card>
             )
           })}
         </div>
@@ -733,7 +739,7 @@ function InvoicesContent() {
               </thead>
               <tbody className="divide-y divide-line font-semibold">
                 {paginatedInvoices.map(inv => (
-                  <tr key={inv.id} className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer">
+                  <TableRow key={inv.id} className="group">
                     <td className="px-4 py-3.5 font-bold font-mono text-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
                       {inv.id}
@@ -767,13 +773,16 @@ function InvoicesContent() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => setSelectedInvoice(inv)}
+                        onClick={event => {
+                          event.stopPropagation()
+                          setSelectedInvoice(inv)
+                        }}
                         leftIcon={<Eye />}
                       >
                         {t('landlordInvoicesBtnViewDetail')}
                       </Button>
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>

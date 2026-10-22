@@ -31,6 +31,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  TableRow,
   Modal,
   Text,
 } from '@/components/ui'
@@ -794,7 +795,7 @@ export default function AssetsPage() {
                       depreciationYears: 5,
                     })
                     return (
-                      <tr
+                      <TableRow
                         key={asset.id}
                         onClick={() => router.push(`/landlord/assets/${asset.id}`)}
                         className="hover:bg-card-hover transition-colors duration-150 cursor-pointer group"
@@ -884,7 +885,7 @@ export default function AssetsPage() {
                             </Button>
                           </div>
                         </td>
-                      </tr>
+                      </TableRow>
                     )
                   })
                 )}

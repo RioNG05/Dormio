@@ -32,6 +32,8 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
+  TableRow,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -629,9 +631,10 @@ export default function ExpensesPage() {
         /* GRID VIEW (Rule #9 Default) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {expensesList.map(exp => (
-            <div
+            <Card
               key={exp.id}
-              className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              className="p-4 sm:p-5 space-y-4 flex flex-col justify-between"
+              onClick={() => setSelectedExpense(exp)}
             >
               {/* Header Info */}
               <div className="space-y-3">
@@ -680,7 +683,10 @@ export default function ExpensesPage() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setSelectedExpense(exp)}
+                  onClick={event => {
+                    event.stopPropagation()
+                    setSelectedExpense(exp)
+                  }}
                   className="flex-1"
                 >
                   {t('landlordExpensesViewDetail')}
@@ -727,7 +733,7 @@ export default function ExpensesPage() {
                   </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       ) : (
@@ -758,7 +764,7 @@ export default function ExpensesPage() {
               </thead>
               <tbody className="divide-y divide-line font-semibold text-foreground/90">
                 {expensesList.map(exp => (
-                  <tr key={exp.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                  <TableRow key={exp.id} className="group">
                     <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -842,7 +848,7 @@ export default function ExpensesPage() {
                         )}
                       </div>
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>

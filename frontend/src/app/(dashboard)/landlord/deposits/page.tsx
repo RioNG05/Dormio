@@ -38,6 +38,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  TableRow,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -941,7 +942,7 @@ function DepositsContent() {
                   const isHolding = dep.status === 'paid'
 
                   return (
-                    <tr key={dep.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                    <TableRow key={dep.id} className="group">
                       <td className="py-3.5 px-4 font-mono font-bold text-muted">
                         {dep.id.slice(0, 8)}...
                       </td>
@@ -1035,7 +1036,7 @@ function DepositsContent() {
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   )
                 })}
               </tbody>

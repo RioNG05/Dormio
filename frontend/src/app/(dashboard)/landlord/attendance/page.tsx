@@ -24,7 +24,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, TableRow } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -817,7 +817,7 @@ export default function AttendancePage() {
               </thead>
               <tbody className="divide-y divide-line font-medium text-foreground/90">
                 {records.map(item => (
-                  <tr key={item.workScheduleId} className="hover:bg-card-hover transition-colors duration-150 group">
+                  <TableRow key={item.workScheduleId} className="group">
                     <td className="py-3 px-4 font-bold text-foreground">
                       {formatDisplayDate(item.workDate)}
                     </td>
@@ -854,7 +854,7 @@ export default function AttendancePage() {
                         <Edit3 className="w-4 h-4" />
                       </Button>
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>

@@ -43,6 +43,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  TableRow,
   Modal,
   Text,
   Switch,
@@ -794,7 +795,7 @@ export default function ServicesPage() {
                     const formattedPrice = formatCurrency(service.numericPrice, locale)
 
                     return (
-                      <tr key={service.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                      <TableRow key={service.id} className="group">
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div
@@ -888,7 +889,7 @@ export default function ServicesPage() {
                             </Button>
                           </div>
                         </td>
-                      </tr>
+                      </TableRow>
                     )
                   })
                 )}

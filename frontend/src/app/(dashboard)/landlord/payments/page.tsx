@@ -38,7 +38,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
@@ -650,7 +650,7 @@ function PaymentsContent() {
                   const evidencePhotos = p.meterReadings.filter(mr => mr.imageUrl)
 
                   return (
-                    <tr key={p.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                    <TableRow key={p.id} className="group">
                       <td className="px-5 py-4">
                         <div className="font-mono font-black text-foreground text-xs">
                           {p.receiptNumber || `REC-${p.id.substring(0, 8)}`}
@@ -740,7 +740,7 @@ function PaymentsContent() {
                           <Eye className="w-3.5 h-3.5" /> Biên Nhận
                         </Button>
                       </td>
-                    </tr>
+                    </TableRow>
                   )
                 })}
               </tbody>

@@ -36,6 +36,7 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  TableRow,
   Chip,
 } from '@/components/ui'
 
@@ -587,7 +588,7 @@ export default function NotificationsPage() {
                     const isRent = notif.category === 'Tiền nhà' || notif.category === 'Rent'
 
                     return (
-                      <tr
+                      <TableRow
                         key={notif.id}
                         onClick={() => setSelectedNotifDetail(notif)}
                         className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
@@ -664,7 +665,7 @@ export default function NotificationsPage() {
                             </Button>
                           </div>
                         </td>
-                      </tr>
+                      </TableRow>
                     )
                   })}
                 </tbody>

@@ -34,6 +34,8 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  TableRow,
+  Card,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
@@ -699,9 +701,9 @@ export default function StaffPage() {
           {staffList.map(staff => {
             const isActive = staff.status === 'active'
             return (
-              <div
+              <Card
                 key={staff.assignmentId}
-                className="bg-card border border-line rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between space-y-4 group"
+                className="p-4 sm:p-5 flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-4">
                   {/* Card Header: Avatar, Name & Status */}
@@ -814,7 +816,7 @@ export default function StaffPage() {
                     {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
                   </Button>
                 </div>
-              </div>
+              </Card>
             )
           })}
         </div>
@@ -837,7 +839,7 @@ export default function StaffPage() {
                 {staffList.map(staff => {
                   const isActive = staff.status === 'active'
                   return (
-                    <tr key={staff.assignmentId} className="hover:bg-card-hover transition-colors duration-150 group">
+                    <TableRow key={staff.assignmentId} className="group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar
@@ -922,7 +924,7 @@ export default function StaffPage() {
                           </Button>
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   )
                 })}
               </tbody>

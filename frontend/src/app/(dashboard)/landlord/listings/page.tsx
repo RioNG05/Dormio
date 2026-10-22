@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
@@ -369,12 +369,12 @@ export default function ListingsPage() {
                 : 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80'
 
             return (
-              <div
+              <Card
                 key={item.id}
-                className="bg-card rounded-2xl border border-line overflow-hidden shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 flex flex-col group cursor-pointer"
+                className="overflow-hidden shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 flex flex-col group"
               >
                 {/* Thumbnail Image */}
-                <div className="relative aspect-video w-full bg-card-hover overflow-hidden">
+                <Card.Header className="relative aspect-video w-full bg-card-hover overflow-hidden p-0">
                   <img
                     src={firstImage}
                     alt={item.title}
@@ -411,10 +411,10 @@ export default function ListingsPage() {
                     <Eye className="w-3 h-3 text-primary" />{' '}
                     {t('landlordListingsViewsBadge', { count: item.viewsCount })}
                   </div>
-                </div>
+                </Card.Header>
 
                 {/* Content */}
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <Card.Body className="p-6 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs text-muted">
                       <span className="font-bold text-foreground/90">
@@ -443,7 +443,7 @@ export default function ListingsPage() {
                   </div>
 
                   {/* Financial & Controls */}
-                  <div className="pt-4 border-t border-line flex items-center justify-between">
+                  <Card.Footer className="pt-4 border-t border-line flex items-center justify-between">
                     <div>
                       <div className="text-[10px] font-bold uppercase text-muted">
                         {t('landlordListingsDepositHolding')}
@@ -479,9 +479,9 @@ export default function ListingsPage() {
                         )}
                       </Button>
                     </div>
-                  </div>
-                </div>
-              </div>
+                    </Card.Footer>
+                  </Card.Body>
+                </Card>
             )
           })}
         </div>
@@ -503,7 +503,7 @@ export default function ListingsPage() {
               </thead>
               <tbody className="divide-y divide-line text-xs">
                 {listings.map(item => (
-                  <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                  <TableRow key={item.id} className="group">
                     <td className="px-6 py-4 max-w-xs">
                       <div className="font-bold text-foreground line-clamp-1">{item.title}</div>
                       <div className="text-[11px] text-muted mt-0.5 line-clamp-1">
@@ -558,7 +558,7 @@ export default function ListingsPage() {
                           : t('landlordListingsBtnToggleShow')}
                       </Button>
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>

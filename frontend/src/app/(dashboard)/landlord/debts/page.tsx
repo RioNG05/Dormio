@@ -3,12 +3,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   AlertTriangle,
-  RefreshCw,
   FileSpreadsheet,
   DollarSign,
   Calendar,
   Send,
-  Eye,
   CheckCircle2,
   Copy,
   Check,
@@ -28,7 +26,7 @@ import {
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, SelectInput, TextareaInput, Checkbox, SearchInput, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow } from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
@@ -727,7 +725,7 @@ export default function LandlordDebtsPage() {
                         : t('landlordDebtsBadgeDue')
 
                   return (
-                    <tr
+                    <TableRow
                       key={room.roomId}
                       className={`hover:bg-card-hover transition-colors duration-150 ${isSelected ? 'bg-primary-soft' : ''
                         }`}
@@ -804,7 +802,7 @@ export default function LandlordDebtsPage() {
                           </Button>
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   )
                 })}
               </tbody>

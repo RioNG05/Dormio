@@ -40,6 +40,7 @@ import {
   SearchInput,
   Pagination,
   ViewModeToggle,
+  TableRow,
 } from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
@@ -974,7 +975,7 @@ export default function WorkforceSchedulePage() {
                 </thead>
                 <tbody className="divide-y divide-line font-medium text-foreground/90">
                   {schedules.map(item => (
-                    <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                    <TableRow key={item.id} className="group">
                       <td className="py-3 px-4 font-bold text-foreground">
                         {formatDisplayDate(item.workDate)}
                       </td>
@@ -1042,7 +1043,7 @@ export default function WorkforceSchedulePage() {
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   ))}
                 </tbody>
               </table>

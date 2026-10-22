@@ -36,6 +36,8 @@ import {
   Pagination,
   ViewModeToggle,
   FilterToolbar,
+  Card,
+  TableRow,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -500,10 +502,10 @@ export default function ContractsPage() {
                 ) : (
                   paginatedContracts.map((c, idx) => {
                     return (
-                      <div
+                      <Card
                         key={c.id || idx}
                         onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                        className="bg-card border border-line hover:border-primary/40 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                        className="p-4 sm:p-5 group flex flex-col justify-between relative overflow-hidden"
                       >
                         <div>
                           {/* Card Header: Room & Status */}
@@ -650,7 +652,7 @@ export default function ContractsPage() {
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      </Card>
                     )
                   })
                 )}
@@ -711,10 +713,10 @@ export default function ContractsPage() {
                       ) : (
                         paginatedContracts.map((c, idx) => {
                           return (
-                            <tr
+                            <TableRow
                               key={c.id || idx}
                               onClick={() => router.push(`/landlord/contracts/${c.id}`)}
-                              className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
+                              className="group"
                             >
                               <td className="px-5 py-4 whitespace-nowrap">
                                 <Text as="span" size="sm" weight="black" color="brand">
@@ -818,7 +820,7 @@ export default function ContractsPage() {
                                   </Button>
                                 </div>
                               </td>
-                            </tr>
+                            </TableRow>
                           )
                         })
                       )}

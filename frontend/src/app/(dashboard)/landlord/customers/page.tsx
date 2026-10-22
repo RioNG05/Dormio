@@ -20,7 +20,17 @@ import { Customer } from './data'
 import { getLandlordContracts } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, SelectInput, SearchInput, ChipGroup, Pagination, ViewModeToggle, FilterToolbar } from '@/components/ui'
+import {
+  Button,
+  SelectInput,
+  SearchInput,
+  ChipGroup,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  Card,
+  TableRow,
+} from '@/components/ui'
 import { LandlordPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function CustomersPage() {
@@ -441,9 +451,10 @@ export default function CustomersPage() {
             </div>
           ) : (
             paginatedCustomers.map(customer => (
-              <div
+              <Card
                 key={customer.id}
-                className="bg-card rounded-2xl border border-line p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 space-y-3 relative group cursor-pointer"
+                className="p-4 sm:p-5 space-y-3 relative group"
+                onClick={() => router.push(`/landlord/customers/${customer.userId || customer.id}`)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -540,18 +551,8 @@ export default function CustomersPage() {
                   >
                     {t('landlordCustomersMessageBtn')}
                   </Button>
-                  <Link href={`/landlord/customers/${customer.userId || customer.id}`}>
-                    <Button
-                      size='sm'
-                      variant='secondary'
-                      leftIcon={<Eye />}
-                      fullWidth
-                    >
-                      {t('landlordCustomersViewBtn')}
-                    </Button>
-                  </Link>
                 </div>
-              </div>
+              </Card>
             ))
           )}
         </div>
@@ -599,9 +600,9 @@ export default function CustomersPage() {
                   </tr>
                 ) : (
                   paginatedCustomers.map(customer => (
-                    <tr
+                    <TableRow
                       key={customer.id}
-                      className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
+                      className="group"
                       onClick={() =>
                         router.push(`/landlord/customers/${customer.userId || customer.id}`)
                       }
@@ -659,14 +660,9 @@ export default function CustomersPage() {
                           >
                             <MessageCircle />
                           </Button>
-                          <Link href={`/landlord/customers/${customer.userId || customer.id}`}>
-                            <Button size='icon-sm' variant='secondary' title={t('landlordCustomersViewBtn')} >
-                              <Eye />
-                            </Button>
-                          </Link>
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   ))
                 )}
               </tbody>

@@ -60,7 +60,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
-import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle } from '@/components/ui'
+import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle, TableRow } from '@/components/ui'
 import { LandlordPageHeader } from '@/components/landlord'
 import {
   getBoardingHouseOverview,
@@ -842,7 +842,7 @@ export default function ReportsPage() {
                         {displayedProperties.map(p => {
                           const occNum = parseFloat(p.occupancyRate) || 0
                           return (
-                            <tr key={p.id} className="hover:bg-card-hover transition-colors duration-150 group">
+                            <TableRow key={p.id} className="group">
                               <td className="p-3 font-bold text-foreground">
                                 <div>{p.name}</div>
                                 <div className="text-[10px] text-muted font-normal">
@@ -890,7 +890,7 @@ export default function ReportsPage() {
                                   <span className="text-muted">—</span>
                                 )}
                               </td>
-                            </tr>
+                            </TableRow>
                           )
                         })}
                       </tbody>
