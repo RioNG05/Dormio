@@ -252,11 +252,22 @@ export class BoardingHousesService {
         }
       }
 
-      // Step 8 — Promote user role to landlord
-      await tx.user.update({
-        where: { id: userId },
-        data: { role: UserRole.landlord },
-      })
+      // Step 8 — Promote user role to landlord (admins retain their admin authority)
+      let isAlreadyAdmin = false
+      if (typeof tx.user?.findUnique === 'function') {
+        const currentUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { role: true },
+        })
+        isAlreadyAdmin = currentUser?.role === UserRole.admin
+      }
+
+      if (!isAlreadyAdmin) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: UserRole.landlord },
+        })
+      }
 
       // Step 9 — Upsert bank account if provided
       if (dto.bankAccount) {
@@ -346,10 +357,21 @@ export class BoardingHousesService {
         },
       })
 
-      await tx.user.update({
-        where: { id: userId },
-        data: { role: UserRole.landlord },
-      })
+      let isAlreadyAdmin = false
+      if (typeof tx.user?.findUnique === 'function') {
+        const currentUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { role: true },
+        })
+        isAlreadyAdmin = currentUser?.role === UserRole.admin
+      }
+
+      if (!isAlreadyAdmin) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { role: UserRole.landlord },
+        })
+      }
 
       return createdBoardingHouse
     })
