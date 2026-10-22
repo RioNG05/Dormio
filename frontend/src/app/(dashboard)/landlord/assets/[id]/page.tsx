@@ -41,6 +41,7 @@ import {
 import { getRooms, RoomItem } from '@/services/room.service'
 import {
   Button,
+  TableActionButton,
   TextInput,
   SelectInput,
   TextareaInput,
@@ -857,13 +858,13 @@ export default function AssetDetailPage() {
 
               <div className="flex items-center justify-end gap-2 pt-1">
                 <Link href="/landlord/customers">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline">
                     {t('landlordAssetsDetailViewTenant')}
                   </Button>
                 </Link>
                 {asset.tenant.contractId && (
                   <Link href="/landlord/contracts">
-                    <Button variant="secondary" size="sm">
+                    <Button variant="secondary">
                       {t('landlordAssetsDetailViewContract')}
                     </Button>
                   </Link>
@@ -970,7 +971,6 @@ export default function AssetDetailPage() {
                 </div>
                 <Button
                   variant="warning"
-                  size="sm"
                   onClick={() => {
                     setLogType('routine')
                     setLogDescription('')
@@ -1027,14 +1027,12 @@ export default function AssetDetailPage() {
                           <span className="font-black text-success text-xs sm:text-sm bg-success-soft px-2 py-0.5 rounded-md border border-success-subtle shrink-0">
                             {formatCurrency(log.cost, locale)}
                           </span>
-                          <button
-                            type="button"
+                          <TableActionButton
+                            icon={<Trash2 />}
+                            variant="ghost-danger"
                             onClick={() => setLogToDelete(log)}
                             title={t('landlordAssetsDetailLogDeleteBtn')}
-                            className="text-muted hover:text-danger p-1 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          />
                         </div>
                       </div>
 
@@ -1230,15 +1228,12 @@ export default function AssetDetailPage() {
         <Modal.Footer className="flex items-center justify-end gap-3 p-4 bg-surface border-t border-line">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRequestCloseEditModal}
             disabled={isSavingEdit}
           >
             {t('landlordAssetsBtnCancel')}
           </Button>
           <Button
-            variant="primary"
-            size="sm"
             onClick={handleSaveEditAsset}
             isLoading={isSavingEdit}
             disabled={isSavingEdit}
@@ -1340,15 +1335,12 @@ export default function AssetDetailPage() {
         <Modal.Footer className="flex justify-end gap-2 p-4 bg-surface border-t border-line">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setIsLogModalOpen(false)}
             disabled={isSavingLog}
           >
             {t('landlordAssetsBtnCancel')}
           </Button>
           <Button
-            variant="primary"
-            size="sm"
             onClick={handleSaveMaintenanceLog}
             isLoading={isSavingLog}
           >
@@ -1404,7 +1396,6 @@ export default function AssetDetailPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
-              type="button"
               variant="outline"
               onClick={() => setShowDeleteModal(false)}
               className="flex-1"
@@ -1413,7 +1404,6 @@ export default function AssetDetailPage() {
               {t('landlordAssetsBtnCancel')}
             </Button>
             <Button
-              type="button"
               variant="danger"
               onClick={handleDeleteAsset}
               className="flex-1"
@@ -1464,7 +1454,6 @@ export default function AssetDetailPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
-              type="button"
               variant="outline"
               onClick={() => setLogToDelete(null)}
               className="flex-1"
@@ -1473,7 +1462,6 @@ export default function AssetDetailPage() {
               {t('landlordAssetsBtnCancel')}
             </Button>
             <Button
-              type="button"
               variant="danger"
               onClick={handleConfirmDeleteLog}
               className="flex-1"
@@ -1509,7 +1497,6 @@ export default function AssetDetailPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
-              type="button"
               variant="outline"
               onClick={() => setShowConfirmCloseEditModal(false)}
               className="flex-1"
@@ -1517,7 +1504,6 @@ export default function AssetDetailPage() {
               {t('landlordAssetsConfirmCloseKeep')}
             </Button>
             <Button
-              type="button"
               variant="danger"
               onClick={handleDiscardAndCloseEdit}
               className="flex-1"

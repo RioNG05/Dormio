@@ -35,6 +35,7 @@ import {
 } from '@/services/service.service'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -536,7 +537,6 @@ export default function ServicesPage() {
         subtitle={t('landlordServicesSubtitle')}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={handleOpenAddModal}
             className="sm:w-auto"
@@ -886,28 +886,24 @@ export default function ServicesPage() {
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
-                            <Button
+                            <TableActionButton
+                              icon={<Edit3 />}
                               variant="outline"
-                              size='icon-sm'
                               onClick={event => {
                                 event.stopPropagation()
                                 handleOpenEditModal(service)
                               }}
                               title={t('landlordServicesEdit')}
-                            >
-                              <Edit3 />
-                            </Button>
-                            <Button
-                              size='icon-sm'
+                            />
+                            <TableActionButton
+                              icon={<Trash2 />}
                               variant="ghost-danger"
                               onClick={event => {
                                 event.stopPropagation()
                                 setDeleteTarget(service)
                               }}
                               title={t('landlordServicesDeleteTooltip')}
-                            >
-                              <Trash2 />
-                            </Button>
+                            />
                           </div>
                         </td>
                       </TableRow>
@@ -1055,21 +1051,16 @@ export default function ServicesPage() {
 
         <Modal.Footer>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={handleCloseModal}
           >
             {t('landlordServicesModalCancel')}
           </Button>
           <Button
-            type="button"
-            variant="primary"
-            size="sm"
             onClick={handleSaveService}
             disabled={isSubmitting}
+            isLoading={isSubmitting}
           >
-            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {t('landlordServicesModalSave')}
           </Button>
         </Modal.Footer>
@@ -1152,9 +1143,6 @@ export default function ServicesPage() {
             <Modal.Footer>
               <Button
                 fullWidth
-                type="button"
-                variant="primary"
-                size="sm"
                 onClick={() => setRoomsModalService(null)}
               >
                 {t('landlordServicesRoomsClose')}
@@ -1189,23 +1177,19 @@ export default function ServicesPage() {
 
         <Modal.Footer className="flex items-center justify-center gap-3 pt-2 bg-transparent border-t-0 p-6 pt-0">
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => setDeleteTarget(null)}
             className="flex-1"
           >
             {t('landlordServicesDeleteCancel')}
           </Button>
           <Button
-            type="button"
             variant="danger"
-            size="sm"
             onClick={handleDeleteService}
             disabled={isDeleting}
+            isLoading={isDeleting}
             className="flex-1"
           >
-            {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {t('landlordServicesDeleteConfirm')}
           </Button>
         </Modal.Footer>
@@ -1279,18 +1263,13 @@ function ConfirmModal({
 
       <Modal.Footer className="flex items-center justify-center gap-3 pt-2 bg-transparent border-t-0 p-6 pt-0">
         <Button
-          type="button"
           variant="outline"
-          size="sm"
           onClick={onCancel}
           className="flex-1"
         >
           {cancelText || t('landlordServicesConfirmCloseKeep')}
         </Button>
         <Button
-          type="button"
-          variant="primary"
-          size="sm"
           onClick={onConfirm}
           className="flex-1"
         >
@@ -1367,7 +1346,7 @@ function AlertModal({
       </Modal.Body>
 
       <Modal.Footer className="bg-transparent border-t-0 p-6 pt-0">
-        <Button fullWidth variant="dark" onClick={onClose} size="sm">
+        <Button fullWidth variant="dark" onClick={onClose}>
           {btnText || t('landlordServicesAlertUnderstand')}
         </Button>
       </Modal.Footer>

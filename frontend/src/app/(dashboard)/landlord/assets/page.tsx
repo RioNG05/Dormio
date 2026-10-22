@@ -21,6 +21,7 @@ import { getRooms, RoomItem } from '@/services/room.service'
 import { calculateDepreciation } from './data'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -518,12 +519,11 @@ export default function AssetsPage() {
         subtitle={t('landlordAssetsPageSubtitle')}
         actions={
           <Button
-            type="button"
-            variant="primary"
             size="md"
             onClick={handleOpenAddModal}
+            leftIcon={<Plus />}
           >
-            <Plus className="w-4 h-4" /> {t('landlordAssetsAddBtn')}
+            {t('landlordAssetsAddBtn')}
           </Button>
         }
       />
@@ -629,10 +629,8 @@ export default function AssetsPage() {
                   description={t('landlordAssetsSubtitle')}
                   action={
                     <Button
-                      variant="primary"
-                      size="sm"
                       onClick={handleOpenAddModal}
-                      leftIcon={<Plus className="w-4 h-4" />}
+                      leftIcon={<Plus />}
                     >
                       {t('landlordAssetsBtnAdd')}
                     </Button>
@@ -766,7 +764,6 @@ export default function AssetsPage() {
                         {t('landlordAssetsBtnEditSku')}
                       </Button>
                       <Button
-                        type="button"
                         variant="danger"
                         onClick={e => handleOpenDeleteModal(asset, e)}
                         leftIcon={<Trash2 />}
@@ -819,10 +816,8 @@ export default function AssetsPage() {
                         bordered={false}
                         action={
                           <Button
-                            variant="primary"
-                            size="sm"
                             onClick={handleOpenAddModal}
-                            leftIcon={<Plus className="w-4 h-4" />}
+                            leftIcon={<Plus />}
                           >
                             {t('landlordAssetsBtnAdd')}
                           </Button>
@@ -929,22 +924,18 @@ export default function AssetsPage() {
                             className="flex items-center justify-end gap-1.5"
                             onClick={e => e.stopPropagation()}
                           >
-                            <Button
+                            <TableActionButton
+                              icon={<Edit3 />}
                               variant="secondary"
-                              size="icon-sm"
                               onClick={e => handleOpenEditModal(asset, e)}
                               title={t('landlordAssetsBtnEdit')}
-                            >
-                              <Edit3 />
-                            </Button>
-                            <Button
+                            />
+                            <TableActionButton
+                              icon={<Trash2 />}
                               variant="ghost-danger"
-                              size="icon-sm"
                               onClick={e => handleOpenDeleteModal(asset, e)}
                               title={t('landlordAssetsBtnDelete')}
-                            >
-                              <Trash2 />
-                            </Button>
+                            />
                           </div>
                         </td>
                       </TableRow>
@@ -1141,9 +1132,7 @@ export default function AssetsPage() {
 
         <Modal.Footer className="p-4 border-t border-line flex items-center justify-end gap-3 bg-surface">
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={handleRequestCloseModal}
             disabled={isSubmitting}
           >
@@ -1151,8 +1140,6 @@ export default function AssetsPage() {
           </Button>
           <Button
             type="submit"
-            variant="primary"
-            size="sm"
             disabled={isSubmitting}
             isLoading={isSubmitting}
           >
@@ -1185,7 +1172,6 @@ export default function AssetsPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
-              type="button"
               variant="outline"
               onClick={() => setShowConfirmCloseModal(false)}
               className="flex-1"
@@ -1193,7 +1179,6 @@ export default function AssetsPage() {
               {t('landlordAssetsConfirmCloseKeep')}
             </Button>
             <Button
-              type="button"
               variant="danger"
               onClick={resetAndCloseModal}
               className="flex-1"
@@ -1251,7 +1236,6 @@ export default function AssetsPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
-              type="button"
               variant="outline"
               onClick={() => setAssetToDelete(null)}
               className="flex-1"
@@ -1260,7 +1244,6 @@ export default function AssetsPage() {
               {t('landlordAssetsBtnCancel')}
             </Button>
             <Button
-              type="button"
               variant="danger"
               onClick={handleConfirmDeleteAsset}
               className="flex-1"

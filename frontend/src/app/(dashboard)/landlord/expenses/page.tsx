@@ -23,6 +23,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -494,7 +495,6 @@ export default function ExpensesPage() {
             </Button>
 
             <Button
-              variant="primary"
               size="md"
               onClick={() => {
                 resetForm()
@@ -595,13 +595,11 @@ export default function ExpensesPage() {
           description={t('landlordExpensesNotFoundDesc')}
           action={
             <Button
-              variant="primary"
-              size="sm"
               onClick={() => {
                 resetForm()
                 setShowCreateModal(true)
               }}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus />}
             >
               {t('landlordExpensesAddNew')}
             </Button>
@@ -785,43 +783,36 @@ export default function ExpensesPage() {
                     <td className="py-3 px-3.5 sm:px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         {exp.status === 'paid' ? (
-                          <Button
-                            variant="orange"
-                            size='icon-sm'
+                          <TableActionButton
+                            variant="secondary"
+                            icon={<Lock className="text-amber-500" />}
                             onClick={() => openEditModal(exp)}
                             title={t('landlordExpensesLockedTooltip')}
-                          >
-                            <Lock />
-                          </Button>
+                          />
                         ) : (
-                          <Button
+                          <TableActionButton
                             variant="secondary"
-                            size="icon-sm"
+                            icon={<Edit3 />}
                             onClick={() => openEditModal(exp)}
                             title={t('landlordExpensesEditTooltip')}
-                          >
-                            <Edit3 />
-                          </Button>
+                          />
                         )}
-                        {exp.status === 'paid' ? (
-                          <Button
-                            variant="danger"
-                            size="icon-sm"
-                            onClick={() => openEditModal(exp)}
-                            title={t('landlordExpensesLockedDeleteTooltip')}
-                          >
-                            <Trash2 />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="danger"
-                            size="icon-sm"
-                            onClick={() => handleDeleteExpense(exp)}
-                            title={t('landlordExpensesDeleteTooltip')}
-                          >
-                            <Trash2 />
-                          </Button>
-                        )}
+                        <TableActionButton
+                          variant="ghost-danger"
+                          icon={<Trash2 />}
+                          onClick={() => {
+                            if (exp.status === 'paid') {
+                              openEditModal(exp)
+                            } else {
+                              handleDeleteExpense(exp)
+                            }
+                          }}
+                          title={
+                            exp.status === 'paid'
+                              ? t('landlordExpensesLockedDeleteTooltip')
+                              : t('landlordExpensesDeleteTooltip')
+                          }
+                        />
                       </div>
                     </td>
                   </TableRow>
@@ -860,21 +851,21 @@ export default function ExpensesPage() {
           footerClassName="justify-between"
           footer={
             <>
-              <Button variant="secondary" size="sm" onClick={() => setSelectedExpense(null)}>
+              <Button variant="secondary" onClick={() => setSelectedExpense(null)}>
                 {t('landlordExpensesCloseBtn')}
               </Button>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {selectedExpense.status === 'pending' && (
-                  <Button variant="dark" size="sm" onClick={() => handleMarkAsPaid(selectedExpense.id)} leftIcon={<Check />}>
+                  <Button variant="dark" onClick={() => handleMarkAsPaid(selectedExpense.id)} leftIcon={<Check />}>
                     {t('landlordExpensesStatusPaid')}
                   </Button>
                 )}
                 {selectedExpense.status === 'paid' ? (
-                  <Button variant="secondary" size="sm" onClick={() => openEditModal(selectedExpense)} leftIcon={<Lock />}>
+                  <Button variant="secondary" onClick={() => openEditModal(selectedExpense)} leftIcon={<Lock />}>
                     {t('landlordExpensesLockedBtn')}
                   </Button>
                 ) : (
-                  <Button variant="dark" size="sm" onClick={() => {
+                  <Button variant="dark" onClick={() => {
                     const expToEdit = selectedExpense
                     setSelectedExpense(null)
                     openEditModal(expToEdit)
@@ -968,10 +959,10 @@ export default function ExpensesPage() {
           }}
           footer={
             <>
-              <Button variant="secondary" size="sm" type="button" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
+              <Button variant="secondary" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
                 {t('landlordExpensesCancelBtn')}
               </Button>
-              <Button variant="dark" size="sm" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
+              <Button variant="dark" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
                 {showCreateModal ? t('landlordExpensesSaveExpense') : t('landlordExpensesUpdateExpense')}
               </Button>
             </>
