@@ -193,6 +193,8 @@ export const enLandlord = {
     landlordCustomersFloorPrefix: "Floor",
     landlordCustomersFromDate: "From",
     landlordCustomersFrontIdCard: "Front Side of ID",
+    landlordCustomersFrontIdCardEmpty: "Front ID photo not updated",
+    landlordCustomersBackIdCardEmpty: "Back ID photo not updated",
     landlordCustomersFullNameLabel: "Tenant Full Name",
     landlordCustomersFullNamePlaceholder: "e.g. John Doe",
     landlordCustomersGenderFemale: "Female",
@@ -3834,6 +3836,8 @@ export const enLandlord = {
     landlordMeterRecordNoteLabel: "Period Notes (Optional)",
     landlordMeterRecordNotePlaceholder: "e.g. Meter replaced, numbers verified with tenant...",
     landlordMeterRecordUnitRate: "Rate: {price} / {unit}",
+    landlordMeterRecordEmptyTitle: "No Metered Services",
+    landlordMeterRecordEmptyDesc: "This room currently has no metered services attached (Electricity, Water).",
 }
 
 export default enLandlord

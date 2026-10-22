@@ -49,6 +49,7 @@ import {
   Text,
   Switch,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { formatCurrency, resolveErrorMessage, localizeDbEnum } from '@/utils'
@@ -746,14 +747,13 @@ export default function ServicesPage() {
               )
             })
           ) : (
-            <div className="col-span-full py-16 flex flex-col items-center justify-center bg-card rounded-3xl border border-line border-dashed p-6 text-center space-y-2">
-              <Wrench className="w-12 h-12 text-zinc-300 mb-1" />
-              <Text weight="black" color="default" size="base">
-                {t('landlordServicesEmptyTitle')}
-              </Text>
-              <Text size="xs" color="secondary">
-                {t('landlordServicesEmptyDesc')}
-              </Text>
+            <div className="col-span-full">
+              <EmptyState
+                icon={Wrench}
+                title={t('landlordServicesEmptyTitle')}
+                description={t('landlordServicesEmptyDesc')}
+                bordered
+              />
             </div>
           )}
         </div>
@@ -785,10 +785,12 @@ export default function ServicesPage() {
               <tbody className="divide-y divide-line font-medium">
                 {services.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-muted">
-                      <Text size="xs" color="secondary">
-                        {t('landlordServicesEmptyTitle')}
-                      </Text>
+                    <td colSpan={8} className="p-8">
+                      <EmptyState
+                        icon={Wrench}
+                        title={t('landlordServicesEmptyTitle')}
+                        description={t('landlordServicesEmptyDesc')}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -1124,11 +1126,11 @@ export default function ServicesPage() {
                   <Loader2 className="w-6 h-6 text-primary animate-spin" />
                 </div>
               ) : serviceRooms.length === 0 ? (
-                <div className="py-6 text-center text-muted text-xs">
-                  <Text size="xs" color="secondary">
-                    {t('landlordServicesRoomsEmpty')}
-                  </Text>
-                </div>
+                <EmptyState
+                  icon={Home}
+                  title={t('landlordServicesRoomsEmpty')}
+                  size="sm"
+                />
               ) : (
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
                   {serviceRooms.map(room => (

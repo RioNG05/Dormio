@@ -19,7 +19,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SearchInput, Card } from '@/components/ui'
+import { Button, TextInput, SearchInput, Card, Modal, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ShiftsPage() {
@@ -35,6 +35,7 @@ export default function ShiftsPage() {
   const [editingShift, setEditingShift] = useState<ShiftItem | null>(null)
   const [isDirty, setIsDirty] = useState(false)
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
+  const [deleteConfirmShift, setDeleteConfirmShift] = useState<ShiftItem | null>(null)
 
   const [formName, setFormName] = useState('')
   const [formStart, setFormStart] = useState('08:00')
@@ -148,11 +149,16 @@ export default function ShiftsPage() {
     }
   }
 
-  const handleDelete = async (shift: ShiftItem) => {
-    if (!confirm(t('landlordShiftsDeleteConfirm', { name: shift.name }))) return
+  const handleDelete = (shift: ShiftItem) => {
+    setDeleteConfirmShift(shift)
+  }
+
+  const handleConfirmDeleteShift = async () => {
+    if (!deleteConfirmShift) return
     try {
-      await scheduleService.deleteShift(buildingId, shift.id)
+      await scheduleService.deleteShift(buildingId, deleteConfirmShift.id)
       showToast('success', t('landlordShiftsToastDeleteSuccess'))
+      setDeleteConfirmShift(null)
       fetchShifts()
     } catch (err: any) {
       showToast('error', err?.response?.data?.message || t('landlordShiftsDeleteError'))
@@ -309,26 +315,20 @@ export default function ShiftsPage() {
           <p className="text-xs text-muted font-medium">{t('landlordShiftsLoading')}</p>
         </div>
       ) : filteredShifts.length === 0 ? (
-        <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center">
-            <Clock className="w-8 h-8" />
-          </div>
-          <div className="max-w-sm space-y-1">
-            <h3 className="text-base font-extrabold text-foreground">
-              {searchQuery ? t('landlordShiftsSearchNotFound') : t('landlordShiftsEmptyTitle')}
-            </h3>
-            <p className="text-xs text-muted leading-relaxed">
-              {searchQuery ? t('landlordShiftsSearchNotFoundDesc') : t('landlordShiftsEmptyDesc')}
-            </p>
-          </div>
-          {!searchQuery && (
-            <Button size="xs"
-              onClick={openCreateModal}
-            >
-              {t('landlordShiftsAddNow')}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title={searchQuery ? t('landlordShiftsSearchNotFound') : t('landlordShiftsEmptyTitle')}
+          description={
+            searchQuery ? t('landlordShiftsSearchNotFoundDesc') : t('landlordShiftsEmptyDesc')
+          }
+          action={
+            !searchQuery ? (
+              <Button size="sm" onClick={openCreateModal} leftIcon={<Plus className="w-4 h-4" />}>
+                {t('landlordShiftsAddNow')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredShifts.map(shift => {
@@ -550,6 +550,49 @@ export default function ShiftsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal (Rule #10) */}
+      {deleteConfirmShift && (
+        <Modal
+          isOpen={!!deleteConfirmShift}
+          onClose={() => setDeleteConfirmShift(null)}
+          size="sm"
+        >
+          <div className="space-y-4 pt-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-danger-soft text-danger flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">
+                {t('landlordShiftsDeleteModalTitle') || 'Xóa ca làm việc'}
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                {t('landlordShiftsDeleteConfirm', { name: deleteConfirmShift.name })}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-line">
+              <Button
+                size="sm"
+                variant="secondary"
+                type="button"
+                onClick={() => setDeleteConfirmShift(null)}
+                className="flex-1"
+              >
+                {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                type="button"
+                onClick={handleConfirmDeleteShift}
+                className="flex-1"
+              >
+                {t('landlordShiftsDeleteBtn') || 'Xác nhận xóa'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

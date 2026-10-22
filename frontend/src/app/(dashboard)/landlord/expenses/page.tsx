@@ -36,6 +36,7 @@ import {
   Text,
   Modal,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import {
   expenseService,
@@ -588,21 +589,24 @@ export default function ExpensesPage() {
           <Text size="sm" weight="bold" color="default">{t('landlordExpensesLoading')}</Text>
         </div>
       ) : expensesList.length === 0 ? (
-        <div className="p-12 text-center bg-card border border-line rounded-2xl space-y-3">
-          <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <Text as="h3" size="sm" weight="extrabold" color="default">{t('landlordExpensesNotFound')}</Text>
-          <Text size="xs" color="secondary">{t('landlordExpensesNotFoundDesc')}</Text>
-          <Button variant="dark"
-            size="sm"
-            onClick={() => {
-              resetForm()
-              setShowCreateModal(true)
-            }}
-            leftIcon={<Plus />}
-          >
-            {t('landlordExpensesAddNew')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Wallet className="w-8 h-8" />}
+          title={t('landlordExpensesNotFound')}
+          description={t('landlordExpensesNotFoundDesc')}
+          action={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                resetForm()
+                setShowCreateModal(true)
+              }}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              {t('landlordExpensesAddNew')}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

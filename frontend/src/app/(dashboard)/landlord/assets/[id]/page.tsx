@@ -48,6 +48,7 @@ import {
   Text,
   Chip,
   Breadcrumb,
+  EmptyState,
 } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { uploadImageToBackend } from '@/services/upload.service'
@@ -526,21 +527,17 @@ export default function AssetDetailPage() {
   // Error or Not Found state
   if (loadError || !asset) {
     return (
-      <div className="p-8 text-center space-y-4 max-w-md mx-auto">
-        <div className="w-14 h-14 bg-danger-soft text-danger rounded-2xl flex items-center justify-center mx-auto">
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="font-black text-lg text-foreground">
-            {loadError || t('landlordAssetsLoadFailed')}
-          </h3>
-          <p className="text-xs text-muted font-medium">{t('landlordAssetsEmptySub')}</p>
-        </div>
-        <Link href="/landlord/assets">
-          <Button variant="primary" size="sm" leftIcon={<ArrowLeft />}>
-            {t('landlordAssetsDetailBack')}
-          </Button>
-        </Link>
+      <div className="py-12 max-w-lg mx-auto">
+        <EmptyState
+          icon={AlertTriangle}
+          title={loadError || t('landlordAssetsLoadFailed')}
+          description={t('landlordAssetsEmptySub')}
+          action={{
+            label: t('landlordAssetsDetailBack'),
+            onClick: () => router.push('/landlord/assets'),
+          }}
+          bordered
+        />
       </div>
     )
   }
@@ -1003,19 +1000,12 @@ export default function AssetDetailPage() {
 
               {/* Maintenance Logs List */}
               {maintenanceLogs.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-muted text-xs space-y-2.5 my-auto">
-                  <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center shadow-2xs">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-extrabold text-foreground text-sm">
-                      {t('landlordAssetsDetailNoMaintenance')}
-                    </p>
-                    <p className="text-xs text-muted font-medium max-w-xs mx-auto mt-1">
-                      {t('landlordAssetsDetailNoMaintenanceDesc')}
-                    </p>
-                  </div>
-                </div>
+                <EmptyState
+                  icon={Clock}
+                  title={t('landlordAssetsDetailNoMaintenance')}
+                  description={t('landlordAssetsDetailNoMaintenanceDesc')}
+                  size="sm"
+                />
               ) : (
                 <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1 max-h-[460px]">
                   {maintenanceLogs.map(log => (

@@ -37,6 +37,7 @@ import {
   Text,
   Chip,
   Modal,
+  EmptyState,
 } from '@/components/ui'
 import {
   landlordInvoiceService,
@@ -551,35 +552,41 @@ function InvoicesContent() {
 
       {/* Main Content Display (Grid or Table View) */}
       {invoices.length === 0 ? (
-        <div className="py-16 px-6 text-center bg-card border border-line rounded-3xl space-y-4 shadow-2xs">
-          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-            <Receipt className="w-8 h-8" />
-          </div>
-          <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-foreground">
-              {t('landlordInvoicesNoDataTitle')}
-            </h3>
-            <p className="text-xs text-muted font-medium leading-relaxed">
-              {t('landlordInvoicesNoDataDesc')}
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleOpenCreateModal}
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            {t('landlordInvoicesBtnCreateInvoice')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Receipt className="w-8 h-8" />}
+          title={t('landlordInvoicesNoDataTitle')}
+          description={t('landlordInvoicesNoDataDesc')}
+          action={
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleOpenCreateModal}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              {t('landlordInvoicesBtnCreateInvoice')}
+            </Button>
+          }
+        />
       ) : paginatedInvoices.length === 0 ? (
-        <div className="p-12 text-center bg-card border border-line rounded-2xl space-y-3">
-          <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-foreground">
-            {t('landlordInvoicesEmptyTitle')}
-          </h3>
-          <p className="text-xs text-muted">{t('landlordInvoicesEmptyDesc')}</p>
-        </div>
+        <EmptyState
+          icon={<Receipt className="w-8 h-8" />}
+          title={t('landlordInvoicesEmptyTitle')}
+          description={t('landlordInvoicesEmptyDesc')}
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchTerm('')
+                setSelectedMonth('all')
+                setSelectedYear('all')
+                setActiveTab('all')
+              }}
+            >
+              {t('landlordInvoicesBtnResetFilter') || 'Reset'}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

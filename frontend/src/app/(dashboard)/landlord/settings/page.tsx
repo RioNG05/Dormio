@@ -28,6 +28,7 @@ import {
   Text,
   TextInput,
   TextareaInput,
+  EmptyState,
 } from '@/components/ui'
 import { MapAddressPicker, type SelectedMapAddress } from '@/components/landlord/MapAddressPicker'
 import { CoverPhotoUpload } from '@/components/landlord/CoverPhotoUpload'
@@ -341,24 +342,16 @@ export default function LandlordSettingsPage() {
   if (!isBuildingsLoading && buildings.length === 0) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4">
-        <div className="rounded-3xl border border-line bg-card p-8 sm:p-12 text-center shadow-xs space-y-5">
-          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-            <Building2 className="w-8 h-8" />
-          </div>
-          <div className="space-y-1">
-            <Text as="h2" variant="heading" size="xl">
-              {t('landlordSettingsNoProperty')}
-            </Text>
-            <Text as="p" variant="subtitle" color="secondary">
-              {t('landlordSettingsPageSubtitle')}
-            </Text>
-          </div>
-          <div className="pt-2">
-            <Button variant="primary" onClick={() => router.push('/landlord/setup')}>
-              + {t('landlordSetupTitle')}
-            </Button>
-          </div>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title={t('landlordSettingsNoProperty')}
+          description={t('landlordSettingsPageSubtitle')}
+          action={{
+            label: `+ ${t('landlordSetupTitle')}`,
+            onClick: () => router.push('/landlord/setup'),
+          }}
+          bordered
+        />
       </div>
     )
   }

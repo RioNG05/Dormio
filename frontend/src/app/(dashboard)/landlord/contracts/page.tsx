@@ -38,6 +38,7 @@ import {
   Card,
   TableRow,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -494,10 +495,22 @@ export default function ContractsPage() {
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {paginatedContracts.length === 0 ? (
-                  <div className="col-span-full p-8 text-center bg-card border border-line rounded-2xl">
-                    <Text weight="bold" color="subtle">
-                      {t('landlordContractsNoContractsFound')}
-                    </Text>
+                  <div className="col-span-full">
+                    <EmptyState
+                      icon={<FileSignature className="w-8 h-8" />}
+                      title={t('landlordContractsNoContractsFound')}
+                      description={t('landlordContractsSubtitle')}
+                      action={
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => router.push('/landlord/contracts/create')}
+                          leftIcon={<Plus className="w-4 h-4" />}
+                        >
+                          {t('landlordContractsCreateBtn')}
+                        </Button>
+                      }
+                    />
                   </div>
                 ) : (
                   paginatedContracts.map((c, idx) => {

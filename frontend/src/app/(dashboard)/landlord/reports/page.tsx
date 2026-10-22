@@ -59,7 +59,7 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
-import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle, TableRow } from '@/components/ui'
+import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle, TableRow, EmptyState } from '@/components/ui'
 import { DashboardPageHeader } from '@/components/landlord'
 import {
   getBoardingHouseOverview,
@@ -75,7 +75,6 @@ export default function ReportsPage() {
   const { activeBuilding, buildings, selectBuilding } = useAuth()
   const { locale } = useLanguage()
   const t = useTranslations('landlord')
-  const isEn = locale === 'en'
 
   const [mounted, setMounted] = useState(false)
 
@@ -282,7 +281,7 @@ export default function ReportsPage() {
     <div className="space-y-6 animate-in fade-in duration-300 pb-12">
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-70 bg-zinc-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-zinc-700 flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-70 bg-card text-foreground px-5 py-3 rounded-2xl shadow-2xl border border-line flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-200">
           <CheckCircle2 className="w-5 h-5 text-primary" />
           <span className="text-xs sm:text-sm font-bold">{toast.message}</span>
         </div>
@@ -384,7 +383,7 @@ export default function ReportsPage() {
           ) : (
             <>
               {/* AI Marketing Strategy Banner Card */}
-              <div className="bg-linear-to-r from-teal-900 via-zinc-900 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden border border-teal-800/40">
+              <div className="bg-linear-to-r from-teal-900 via-emerald-950 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden border border-teal-800/40">
                 <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
                   <div className="space-y-1.5 max-w-2xl">
@@ -392,14 +391,14 @@ export default function ReportsPage() {
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
                         <Sparkles className="w-3 h-3" /> {t('landlordReportsAiBannerBadge')}
                       </span>
-                      <span className="text-xs text-zinc-300">
+                      <span className="text-xs text-white/80">
                         {t('landlordReportsAiBannerTag')}
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
                       {t('landlordReportsAiBannerTitle')}
                     </h3>
-                    <p className="text-xs text-zinc-300 leading-relaxed">
+                    <p className="text-xs text-white/80 leading-relaxed">
                       {t('landlordReportsAiBannerDesc', {
                         count: portfolioSummary.totalProperties,
                       })}
@@ -557,12 +556,11 @@ export default function ReportsPage() {
 
                   {!portfolioOverview?.revenueChart ||
                   portfolioOverview.revenueChart.length === 0 ? (
-                    <div className="py-16 text-center space-y-2">
-                      <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-muted">
-                        {t('landlordReportsChartEmptyTransactions')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Inbox}
+                      title={t('landlordReportsChartEmptyTransactions')}
+                      size="sm"
+                    />
                   ) : (
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -633,12 +631,11 @@ export default function ReportsPage() {
 
                   {!portfolioOverview?.occupancyChart ||
                   portfolioOverview.occupancyChart.length === 0 ? (
-                    <div className="py-16 text-center space-y-2">
-                      <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-muted">
-                        {t('landlordReportsChartEmptyRooms')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Inbox}
+                      title={t('landlordReportsChartEmptyRooms')}
+                      size="sm"
+                    />
                   ) : (
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -716,12 +713,11 @@ export default function ReportsPage() {
                 </div>
 
                 {displayedProperties.length === 0 ? (
-                  <div className="py-16 text-center space-y-2">
-                    <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                    <p className="text-xs font-bold text-muted">
-                      {t('landlordReportsCompareEmpty')}
-                    </p>
-                  </div>
+                  <EmptyState
+                    icon={Inbox}
+                    title={t('landlordReportsCompareEmpty')}
+                    bordered
+                  />
                 ) : viewMode === 'grid' ? (
                   /* Grid View (Default) */
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1094,12 +1090,11 @@ export default function ReportsPage() {
                   </div>
 
                   {!singleOverview?.revenueChart || singleOverview.revenueChart.length === 0 ? (
-                    <div className="py-16 text-center space-y-2">
-                      <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-muted">
-                        {t('landlordReportsChartEmptyTransactions')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Inbox}
+                      title={t('landlordReportsChartEmptyTransactions')}
+                      size="sm"
+                    />
                   ) : (
                     <div className="h-64 sm:h-72 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -1229,7 +1224,7 @@ export default function ReportsPage() {
                   </h3>
                   <p className="text-xs text-muted">
                     {t('landlordReportsAiCreatedAt', {
-                      date: new Date(aiStrategy.createdAt).toLocaleString(isEn ? 'en-US' : 'vi-VN'),
+                      date: new Date(aiStrategy.createdAt).toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN'),
                     })}
                   </p>
                 </div>

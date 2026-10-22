@@ -326,7 +326,7 @@ export default function LandlordDashboardPage() {
                     <div className="flex-1 space-y-1.5 relative">
                       {hoveredIndex !== null && chartData[hoveredIndex] && (
                         <div
-                          className="absolute z-20 -top-8 bg-zinc-900/95 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs shadow-xl border border-white/20 transition-all duration-150 animate-in fade-in zoom-in-95 pointer-events-none"
+                          className="absolute z-20 -top-8 bg-card/95 backdrop-blur-md text-foreground px-3 py-1.5 rounded-xl text-xs shadow-xl border border-line transition-all duration-150 animate-in fade-in zoom-in-95 pointer-events-none"
                           style={{
                             left: `${Math.max(12, Math.min(88, (chartData[hoveredIndex].x / 600) * 100))}%`,
                             transform: 'translateX(-50%)',
@@ -357,7 +357,8 @@ export default function LandlordDashboardPage() {
                             y1="15"
                             x2="600"
                             y2="15"
-                            stroke="#f1f5f9"
+                            stroke="currentColor"
+                            className="text-line"
                             strokeDasharray="3 3"
                             strokeWidth="1"
                           />
@@ -366,7 +367,8 @@ export default function LandlordDashboardPage() {
                             y1="50"
                             x2="600"
                             y2="50"
-                            stroke="#f1f5f9"
+                            stroke="currentColor"
+                            className="text-line"
                             strokeDasharray="3 3"
                             strokeWidth="1"
                           />

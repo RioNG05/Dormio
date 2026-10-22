@@ -33,8 +33,10 @@ import {
   ViewModeToggle,
   Card,
   TableRow,
+  EmptyState,
   type TextColor,
 } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import { ImageUpload } from '@/components/ImageUpload'
 import { formatCurrency } from '@/utils'
 import {
@@ -777,44 +779,40 @@ export default function RoomsPage() {
   return (
     <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <Text as="h1" size="4xl" weight="black" className="tracking-tight">
-            {t('landlordRoomsPageTitle')}
-          </Text>
-          <Text variant="subtitle" size="sm" color="secondary" className="mt-0.5">
-            {t('landlordRoomsPageSubtitle')}
-          </Text>
-        </div>
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
-          {/* Bulk Generate Trigger Button */}
-          <Button
-            type="button"
-            variant="accent"
-            size='md'
-            onClick={() => {
-              resetBulkForm()
-              setIsBulkModalOpen(true)
-            }}
-            leftIcon={<ListFilterPlus />}
-            title={t('landlordRoomsBulkGenerateTooltip')}
-          >
+      <DashboardPageHeader
+        title={t('landlordRoomsPageTitle')}
+        subtitle={t('landlordRoomsPageSubtitle')}
+        actions={
+          <>
+            {/* Bulk Generate Trigger Button */}
+            <Button
+              type="button"
+              variant="accent"
+              size='md'
+              onClick={() => {
+                resetBulkForm()
+                setIsBulkModalOpen(true)
+              }}
+              leftIcon={<ListFilterPlus />}
+              title={t('landlordRoomsBulkGenerateTooltip')}
+            >
               {t('landlordRoomsBulkGenerateBtn')}
-          </Button>
+            </Button>
 
-          {/* Single Room Add Button */}
-          <Button
-            type="button"
-            variant="primary"
-            size='md'
-            onClick={handleOpenCreateModal}
-            leftIcon={<Plus className='w-5 h-5' />}
-            className="sm:w-auto"
-          >
-            {t('landlordRoomsAddRoomBtn')}
-          </Button>
-        </div>
-      </div>
+            {/* Single Room Add Button */}
+            <Button
+              type="button"
+              variant="primary"
+              size='md'
+              onClick={handleOpenCreateModal}
+              leftIcon={<Plus className='w-5 h-5' />}
+              className="sm:w-auto"
+            >
+              {t('landlordRoomsAddRoomBtn')}
+            </Button>
+          </>
+        }
+      />
 
       {/* Building Overview Banner */}
       <div className="bg-zinc-900 rounded-3xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden">
@@ -918,29 +916,11 @@ export default function RoomsPage() {
               </Text>
             </div>
           ) : filteredRooms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 bg-surface/50 rounded-2xl border border-line border-dashed text-center">
-              <div className="w-16 h-16 bg-card rounded-2xl shadow-sm border border-line flex items-center justify-center mb-4 text-muted">
-                <Search className="w-8 h-8" />
-              </div>
-              <Text as="h3" weight="bold" size="base" className="text-foreground mb-1">
-                {t('landlordRoomsEmptyTitle')}
-              </Text>
-              <Text variant="subtitle" size="xs" color="secondary" className="max-w-sm">
-                {t('landlordRoomsEmptyDesc')}
-              </Text>
-              <div className="flex items-center gap-3 mt-5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSearchQuery('')
-                    setStatusFilter('')
-                    setContractFilter('')
-                    setInvoiceFilter('')
-                  }}
-                >
-                  {t('landlordRoomsClearFilter')}
-                </Button>
+            <EmptyState
+              icon={<Search className="w-8 h-8" />}
+              title={t('landlordRoomsEmptyTitle')}
+              description={t('landlordRoomsEmptyDesc')}
+              action={
                 <Button
                   variant="primary"
                   size="sm"
@@ -949,8 +929,24 @@ export default function RoomsPage() {
                 >
                   {t('landlordRoomsBulkGenerateBtn')}
                 </Button>
-              </div>
-            </div>
+              }
+              secondaryAction={
+                (searchQuery || statusFilter || contractFilter || invoiceFilter) ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setStatusFilter('')
+                      setContractFilter('')
+                      setInvoiceFilter('')
+                    }}
+                  >
+                    {t('landlordRoomsClearFilter')}
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : viewMode === 'grid' ? (
             /* GRID VIEW (Grouped by floor - all rooms displayed) */
             <div className="space-y-4">

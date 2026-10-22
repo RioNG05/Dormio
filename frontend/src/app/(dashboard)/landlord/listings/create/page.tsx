@@ -31,7 +31,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { getRooms, type RoomItem } from '@/services/room.service'
 import { getMyBoardingHouses } from '@/services/boarding-house.service'
 import { formatCurrency } from '@/utils'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb, EmptyState } from '@/components/ui'
 
 function CreateListingForm() {
   const router = useRouter()
@@ -659,13 +659,12 @@ function CreateListingForm() {
               ))}
             </div>
           ) : (
-            <div className="p-8 border-2 border-dashed border-line rounded-2xl text-center space-y-2">
-              <ImageIcon className="w-8 h-8 text-zinc-300 mx-auto" />
-              <p className="text-xs font-semibold text-muted">
-                {t('landlordListingsCreateNoImages')}
-              </p>
-              <p className="text-[11px] text-muted">{t('landlordListingsCreateNoImagesHelp')}</p>
-            </div>
+            <EmptyState
+              icon={ImageIcon}
+              title={t('landlordListingsCreateNoImages')}
+              description={t('landlordListingsCreateNoImagesHelp')}
+              size="sm"
+            />
           )}
         </div>
 

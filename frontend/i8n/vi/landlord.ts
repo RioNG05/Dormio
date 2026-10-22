@@ -193,6 +193,8 @@ export const viLandlord = {
     landlordCustomersFloorPrefix: "Tầng",
     landlordCustomersFromDate: "Từ ngày",
     landlordCustomersFrontIdCard: "Mặt trước CCCD",
+    landlordCustomersFrontIdCardEmpty: "Chưa cập nhật ảnh mặt trước",
+    landlordCustomersBackIdCardEmpty: "Chưa cập nhật ảnh mặt sau",
     landlordCustomersFullNameLabel: "Họ và tên khách thuê",
     landlordCustomersFullNamePlaceholder: "VD: Nguyễn Văn A",
     landlordCustomersGenderFemale: "Nữ",
@@ -3834,6 +3836,8 @@ export const viLandlord = {
     landlordMeterRecordNoteLabel: "Ghi chú kỳ chốt số (tùy chọn)",
     landlordMeterRecordNotePlaceholder: "VD: Đồng hồ số mới thay, số liệu đã đối soát cùng khách thuê...",
     landlordMeterRecordUnitRate: "Đơn giá: {price} / {unit}",
+    landlordMeterRecordEmptyTitle: "Không có dịch vụ đồng hồ đo",
+    landlordMeterRecordEmptyDesc: "Phòng này hiện chưa gắn dịch vụ nào tính theo chỉ số đồng hồ (Điện, Nước).",
 }
 
 export default viLandlord

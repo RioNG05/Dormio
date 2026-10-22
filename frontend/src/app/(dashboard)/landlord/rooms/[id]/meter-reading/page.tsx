@@ -26,6 +26,7 @@ import {
   Modal,
   Text,
   Breadcrumb,
+  EmptyState,
 } from '@/components/ui'
 import {
   meterReadingService,
@@ -508,17 +509,12 @@ export default function LandlordRoomMeterReadingPage({
       {/* Metered Services Cards List */}
       <div className="space-y-5">
         {servicesList.length === 0 ? (
-          <div className="bg-card border border-line rounded-2xl p-10 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-card-hover text-muted flex items-center justify-center mx-auto">
-              <Check className="w-6 h-6" />
-            </div>
-            <Text as="h3" size="base" weight="bold" className="text-foreground">
-              Không có dịch vụ đồng hồ đo
-            </Text>
-            <Text size="xs" color="secondary" className="max-w-md mx-auto">
-              Phòng này hiện chưa gắn dịch vụ nào tính theo chỉ số đồng hồ (Điện, Nước).
-            </Text>
-          </div>
+          <EmptyState
+            icon={Check}
+            title={t('landlordMeterRecordEmptyTitle')}
+            description={t('landlordMeterRecordEmptyDesc')}
+            bordered
+          />
         ) : (
           servicesList.map(service => {
             const state = readingsState[service.serviceId] || {
@@ -607,7 +603,7 @@ export default function LandlordRoomMeterReadingPage({
                     />
 
                     {state.imageUrl ? (
-                      <div className="relative group rounded-2xl overflow-hidden border border-line bg-zinc-900 h-48 flex items-center justify-center shadow-inner">
+                      <div className="relative group rounded-2xl overflow-hidden border border-line bg-surface h-48 flex items-center justify-center shadow-inner">
                         <img
                           src={state.imageUrl}
                           alt={service.serviceName}
@@ -893,7 +889,7 @@ export default function LandlordRoomMeterReadingPage({
                   const subtotal = cons * s.unitPrice
 
                   return (
-                    <tr key={s.serviceId} className="hover:bg-zinc-50/50">
+                    <tr key={s.serviceId} className="hover:bg-card-hover">
                       <td className="p-3 font-bold text-foreground">
                         {s.serviceName}
                         <span className="block text-[10px] font-normal text-muted">

@@ -38,6 +38,7 @@ import {
   Card,
   TableRow,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 
 export default function NotificationsPage() {
@@ -435,26 +436,21 @@ export default function NotificationsPage() {
             <p className="text-xs font-bold text-muted">{t('landlordNotificationsLoading')}</p>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-2xl border border-line border-dashed text-center">
-            <div className="w-16 h-16 bg-card-hover rounded-full flex items-center justify-center mb-3 text-muted">
-              <Send className="w-8 h-8" />
-            </div>
-            <h3 className="text-base font-bold text-foreground">
-              {t('landlordNotificationsEmptyTitle')}
-            </h3>
-            <p className="text-xs text-muted mt-1 max-w-sm">
-              {t('landlordNotificationsEmptyDesc')}
-            </p>
-            <Button
-              size='sm'
-              variant='primary'
-              onClick={() => setIsNotifModalOpen(true)}
-              className="mt-4"
-              leftIcon={<Plus />}
-            >
-              {t('landlordNotificationsCreateFirstNotif')}
-            </Button>
-          </div>
+          <EmptyState
+            icon={<Send className="w-8 h-8" />}
+            title={t('landlordNotificationsEmptyTitle')}
+            description={t('landlordNotificationsEmptyDesc')}
+            action={
+              <Button
+                size='sm'
+                variant='primary'
+                onClick={() => setIsNotifModalOpen(true)}
+                leftIcon={<Plus />}
+              >
+                {t('landlordNotificationsCreateFirstNotif')}
+              </Button>
+            }
+          />
         ) : viewMode === 'grid' ? (
           /* Parallel View 1: Grid View (Default) */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

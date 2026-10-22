@@ -24,7 +24,7 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow } from '@/components/ui'
+import { Button, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -659,31 +659,26 @@ export default function AttendancePage() {
         <div className="bg-card border border-line rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[350px]">
           <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
           <p className="text-xs font-bold text-muted">
-            {isEn ? 'Loading attendance logs...' : 'Đang tải dữ liệu chấm công...'}
+            {t('landlordAttendanceLoading') || 'Loading attendance logs...'}
           </p>
         </div>
       ) : records.length === 0 ? (
         /* Empty State */
-        <div className="bg-card border border-line rounded-3xl shadow-sm p-12 text-center text-muted py-20 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 text-primary">
-            <Clock className="w-8 h-8" />
-          </div>
-          <h3 className="text-base font-extrabold text-foreground mb-1">
-            {t('landlordAttendanceEmptyTitle')}
-          </h3>
-          <p className="max-w-md mx-auto mb-4 text-xs text-muted leading-relaxed">
-            {t('landlordAttendanceEmptyDesc')}
-          </p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDatePresetChange('month')}
-
-          >
-            {isEn ? 'View Entire Month' : 'Xem toàn bộ tháng này'}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title={t('landlordAttendanceEmptyTitle')}
+          description={t('landlordAttendanceEmptyDesc')}
+          action={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleDatePresetChange('month')}
+            >
+              {t('landlordAttendanceViewMonth') || 'View Month'}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* ═══════════════════════════════════════════════════════════════════
  PARALLEL VIEW 1: GRID VIEW (Default = 6 items per page)

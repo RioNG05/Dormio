@@ -41,6 +41,8 @@ import {
   Pagination,
   ViewModeToggle,
   TableRow,
+  Modal,
+  EmptyState,
 } from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
@@ -131,6 +133,11 @@ export default function WorkforceSchedulePage() {
   const [pendingModalToClose, setPendingModalToClose] = useState<
     'recurring' | 'adhoc' | 'shifts' | 'edit' | null
   >(null)
+  const [actionConfirm, setActionConfirm] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
 
   // ─── Modal Form Drafts ─────────────────────────────────────────────────
   // Recurring form
@@ -443,15 +450,20 @@ export default function WorkforceSchedulePage() {
   }
 
   // ─── Delete Shift Template ─────────────────────────────────────────────
-  const handleDeleteShift = async (shiftId: string, shiftName: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa ca mẫu "${shiftName}"?`)) return
-    try {
-      await scheduleService.deleteShift(buildingId, shiftId)
-      showToast('success', t('landlordShiftsToastDeleteSuccess'))
-      setShifts(prev => prev.filter(s => s.id !== shiftId))
-    } catch (err: any) {
-      showToast('error', err?.response?.data?.message || 'Không thể xóa ca đang có lịch làm việc')
-    }
+  const handleDeleteShift = (shiftId: string, shiftName: string) => {
+    setActionConfirm({
+      title: t('landlordShiftsDeleteModalTitle') || 'Xóa ca mẫu',
+      message: `Bạn có chắc chắn muốn xóa ca mẫu "${shiftName}"?`,
+      onConfirm: async () => {
+        try {
+          await scheduleService.deleteShift(buildingId, shiftId)
+          showToast('success', t('landlordShiftsToastDeleteSuccess'))
+          setShifts(prev => prev.filter(s => s.id !== shiftId))
+        } catch (err: any) {
+          showToast('error', err?.response?.data?.message || 'Không thể xóa ca đang có lịch làm việc')
+        }
+      },
+    })
   }
 
   // ─── Open Edit Modal ───────────────────────────────────────────────────
@@ -509,36 +521,30 @@ export default function WorkforceSchedulePage() {
   }
 
   // ─── Cancel / Delete Single Schedule ───────────────────────────────────
-  const handleDeleteSchedule = async (item: WorkScheduleItem) => {
+  const handleDeleteSchedule = (item: WorkScheduleItem) => {
     const isRecurring = item.isRecurring && item.recurrenceId
-    let mode: 'single' | 'future' = 'single'
-
-    if (isRecurring) {
-      const confirmAction = confirm(
-        t('landlordScheduleConfirmRecurringDelete', {
+    const message = isRecurring
+      ? t('landlordScheduleConfirmRecurringDelete', {
           date: formatDisplayDate(item.workDate),
-        }),
-      )
-      if (!confirmAction) return
-    } else {
-      if (
-        !confirm(
-          t('landlordScheduleDeleteConfirm', {
-            name: item.employeeName,
-            date: formatDisplayDate(item.workDate),
-          }),
-        )
-      )
-        return
-    }
+        })
+      : t('landlordScheduleDeleteConfirm', {
+          name: item.employeeName,
+          date: formatDisplayDate(item.workDate),
+        })
 
-    try {
-      await scheduleService.deleteSchedule(buildingId, item.id, mode)
-      showToast('success', t('landlordScheduleToastSuccessCancel'))
-      fetchSchedules()
-    } catch (err: any) {
-      showToast('error', err?.response?.data?.message || t('landlordScheduleToastFailedCancel'))
-    }
+    setActionConfirm({
+      title: t('landlordScheduleConfirmCancelTitle') || 'Xóa lịch làm việc',
+      message,
+      onConfirm: async () => {
+        try {
+          await scheduleService.deleteSchedule(buildingId, item.id, isRecurring ? 'future' : 'single')
+          showToast('success', t('landlordScheduleToastSuccessCancel'))
+          fetchSchedules()
+        } catch (err: any) {
+          showToast('error', err?.response?.data?.message || t('landlordScheduleToastFailedCancel'))
+        }
+      },
+    })
   }
 
   // ─── Shift Badge Styler ────────────────────────────────────────────────
@@ -1847,6 +1853,53 @@ export default function WorkforceSchedulePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Action Confirmation Modal (Rule #10) */}
+      {actionConfirm && (
+        <Modal
+          isOpen={!!actionConfirm}
+          onClose={() => setActionConfirm(null)}
+          size="sm"
+        >
+          <div className="space-y-4 pt-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-danger-soft text-danger flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">
+                {actionConfirm.title}
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                {actionConfirm.message}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-line">
+              <Button
+                size="sm"
+                variant="secondary"
+                type="button"
+                onClick={() => setActionConfirm(null)}
+                className="flex-1"
+              >
+                {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                type="button"
+                onClick={() => {
+                  const onConf = actionConfirm.onConfirm
+                  setActionConfirm(null)
+                  onConf()
+                }}
+                className="flex-1"
+              >
+                {t('btnConfirm') || 'Xác nhận'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

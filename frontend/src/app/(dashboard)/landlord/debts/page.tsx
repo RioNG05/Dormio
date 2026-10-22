@@ -20,6 +20,7 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   landlordInvoiceService,
   RoomDebtItem,
@@ -39,6 +40,7 @@ import {
   TableRow,
   Text,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
@@ -46,6 +48,7 @@ export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
   const { locale } = useLanguage()
+  const { toast } = useToast()
   const isEn = locale === 'en'
 
   const [isMounted, setIsMounted] = useState(false)
@@ -217,7 +220,7 @@ export default function LandlordDebtsPage() {
       }
     } catch (err: unknown) {
       const errorMsg = (err as Error)?.message || t('landlordDebtsToastReminderFailed')
-      alert(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsSendingReminder(false)
     }
@@ -245,7 +248,7 @@ export default function LandlordDebtsPage() {
       setInvoicesModalRoom(null)
       await fetchDebts()
     } catch (err: unknown) {
-      alert((err as Error)?.message || t('landlordDebtsToastPaymentFailed'))
+      toast.error((err as Error)?.message || t('landlordDebtsToastPaymentFailed'))
     } finally {
       setIsSubmittingPayment(false)
     }
@@ -288,7 +291,7 @@ export default function LandlordDebtsPage() {
   // Export CSV
   const handleExportCSV = () => {
     if (debtRooms.length === 0) {
-      alert(t('landlordDebtsExportNoData'))
+      toast.warning(t('landlordDebtsExportNoData'))
       return
     }
 
@@ -521,33 +524,30 @@ export default function LandlordDebtsPage() {
           <p className="text-xs text-muted mt-1">{t('landlordDebtsLoadingDesc')}</p>
         </div>
       ) : debtRooms.length === 0 ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
-          <div className="w-16 h-16 rounded-full bg-success-soft text-success flex items-center justify-center mb-4 shadow-sm">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-          <h3 className="text-base font-black text-foreground">
-            {t('landlordDebtsEmptyFilteredTitle')}
-          </h3>
-          <p className="text-xs text-muted max-w-md mt-1.5">
-            {searchTerm || durationFilter !== 'all'
+        <EmptyState
+          icon={<CheckCircle2 className="w-8 h-8 text-success" />}
+          title={t('landlordDebtsEmptyFilteredTitle')}
+          description={
+            searchTerm || durationFilter !== 'all'
               ? t('landlordDebtsEmptyFilteredDesc')
-              : t('landlordDebtsEmptyAllPaidDesc')}
-          </p>
-          {(searchTerm || durationFilter !== 'all') && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchTerm('')
-                setDurationFilter('all')
-              }}
-              className="mt-4"
-            >
-              {t('landlordDebtsClearFilter')}
-            </Button>
-          )}
-        </div>
+              : t('landlordDebtsEmptyAllPaidDesc')
+          }
+          action={
+            (searchTerm || durationFilter !== 'all') ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('')
+                  setDurationFilter('all')
+                }}
+              >
+                {t('landlordDebtsClearFilter')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* ─── Grid View (Default per Rule #9) ─────────────────────────────────── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

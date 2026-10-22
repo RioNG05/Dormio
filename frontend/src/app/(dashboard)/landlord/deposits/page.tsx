@@ -36,6 +36,7 @@ import {
   Card,
   TableRow,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -702,17 +703,11 @@ function DepositsContent() {
           </Text>
         </div>
       ) : depositsList.length === 0 ? (
-        <div className="p-12 text-center bg-card border border-line rounded-3xl space-y-3">
-          <div className="w-12 h-12 bg-card-hover text-muted rounded-2xl flex items-center justify-center mx-auto">
-            <PiggyBank className="w-6 h-6" />
-          </div>
-          <Text as="h3" size="base" weight="bold" color="default">
-            {t('landlordDepositsNoDataTitle')}
-          </Text>
-          <Text size="xs" color="secondary" className="max-w-md mx-auto">
-            {t('landlordDepositsNoDataDesc')}
-          </Text>
-          <div className="pt-2">
+        <EmptyState
+          icon={<PiggyBank className="w-8 h-8" />}
+          title={t('landlordDepositsNoDataTitle')}
+          description={t('landlordDepositsNoDataDesc')}
+          action={
             <Button
               variant="outline"
               size="sm"
@@ -727,8 +722,8 @@ function DepositsContent() {
                 {t('landlordDepositsAddNew')}
               </Text>
             </Button>
-          </div>
-        </div>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9: Default view, 6 items per page) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

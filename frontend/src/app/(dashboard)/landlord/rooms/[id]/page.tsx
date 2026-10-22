@@ -44,6 +44,7 @@ import {
   Modal,
   Breadcrumb,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -848,21 +849,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
   if (!room) {
     return (
-      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6 shadow-xs">
-        <Text as="p" variant="heading" size="lg" weight="bold" color="default" className="mb-2">
-          {t('landlordRoomDetailNotFound')}
-        </Text>
-        <Text variant="subtitle" size="xs" color="subtle" className="mb-4">
-          {t('landlordRoomDetailRoomCode')}: {resolvedParams.id}
-        </Text>
-        <Link
-          href="/landlord/rooms"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary  text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors"
-        >
-          <Text as="span" size="xs" weight="bold" color="white">
-            &larr; {t('landlordRoomDetailBack')}
-          </Text>
-        </Link>
+      <div className="py-12">
+        <EmptyState
+          icon={Home}
+          title={t('landlordRoomDetailNotFound')}
+          description={`${t('landlordRoomDetailRoomCode')}: ${resolvedParams.id}`}
+          action={{
+            label: t('landlordRoomDetailBack'),
+            onClick: () => router.push('/landlord/rooms'),
+          }}
+          bordered
+        />
       </div>
     )
   }
@@ -1273,15 +1270,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="space-y-3">
               {invoicesHistory.length === 0 ? (
-                <div className="p-8 text-center bg-surface border border-line rounded-2xl space-y-2">
-                  <Receipt className="w-8 h-8 text-zinc-300 mx-auto" />
-                  <Text size="xs" weight="bold" color="secondary">
-                    {t('landlordRoomDetailNoInvoicesTitle')}
-                  </Text>
-                  <Text size="2xs" color="subtle">
-                    {t('landlordRoomDetailNoInvoicesDesc')}
-                  </Text>
-                </div>
+                <EmptyState
+                  icon={Receipt}
+                  title={t('landlordRoomDetailNoInvoicesTitle')}
+                  description={t('landlordRoomDetailNoInvoicesDesc')}
+                  bordered
+                />
               ) : filteredInvoices.length === 0 ? (
                 <div className="p-6 text-center bg-surface rounded-xl">
                   <Text size="xs" weight="bold" color="subtle">
@@ -1588,17 +1582,12 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="space-y-3">
               {meterHistory.length === 0 ? (
-                <div className="p-8 text-center bg-surface border border-line rounded-2xl space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-line/70 text-muted flex items-center justify-center mx-auto">
-                    <Gauge className="w-5 h-5" />
-                  </div>
-                  <Text weight="bold" size="sm" color="default">
-                    {t('landlordRoomDetailNoMeterDataTitle')}
-                  </Text>
-                  <Text size="xs" color="subtle" weight="medium" className="max-w-sm mx-auto">
-                    {t('landlordRoomDetailNoMeterDataDesc')}
-                  </Text>
-                </div>
+                <EmptyState
+                  icon={Gauge}
+                  title={t('landlordRoomDetailNoMeterDataTitle')}
+                  description={t('landlordRoomDetailNoMeterDataDesc')}
+                  bordered
+                />
               ) : filteredMeterHistory.length === 0 ? (
                 <div className="p-6 text-center bg-surface rounded-xl">
                   <Text size="xs" color="subtle" weight="bold">

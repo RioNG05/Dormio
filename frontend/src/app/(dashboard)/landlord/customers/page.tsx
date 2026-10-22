@@ -31,6 +31,7 @@ import {
   TableRow,
   Chip,
   Text,
+  EmptyState,
 } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
@@ -425,29 +426,28 @@ export default function CustomersPage() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {sortedCustomers.length === 0 ? (
-            <div className="col-span-full py-14 text-center bg-card rounded-2xl border border-line text-muted">
+            <div className="col-span-full">
               {isLoading ? (
-                <div className="flex flex-col items-center gap-2">
+                <div className="py-14 text-center bg-card rounded-2xl border border-line text-muted flex flex-col items-center gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   <span className="text-xs font-bold">{t('landlordCustomersLoading')}</span>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Users className="w-8 h-8 text-zinc-300" />
-                  <p className="text-sm font-bold text-foreground/90">
-                    {t('landlordCustomersEmptyTitle')}
-                  </p>
-                  <p className="text-xs text-muted">{t('landlordCustomersEmptyDesc')}</p>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => router.push('/landlord/contracts/create')}
-                    className="mt-2"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{t('landlordCustomersBtnCreateContract')}</span>
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={<Users className="w-8 h-8" />}
+                  title={t('landlordCustomersEmptyTitle')}
+                  description={t('landlordCustomersEmptyDesc')}
+                  action={
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => router.push('/landlord/contracts/create')}
+                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                    >
+                      {t('landlordCustomersBtnCreateContract')}
+                    </Button>
+                  }
+                />
               )}
             </div>
           ) : (
@@ -587,22 +587,29 @@ export default function CustomersPage() {
               <tbody className="divide-y divide-line">
                 {sortedCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-muted">
+                    <td colSpan={6} className="px-6 py-12">
                       {isLoading ? (
                         <div className="flex items-center justify-center gap-2">
                           <Loader2 className="w-5 h-5 animate-spin text-primary" />
                           <span className="text-xs font-bold">{t('landlordCustomersLoading')}</span>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-1.5 py-4">
-                          <Users className="w-7 h-7 text-zinc-300" />
-                          <p className="text-xs font-bold text-foreground/90">
-                            {t('landlordCustomersEmptyTitle')}
-                          </p>
-                          <p className="text-[11px] text-muted">
-                            {t('landlordCustomersEmptyDescTable')}
-                          </p>
-                        </div>
+                        <EmptyState
+                          icon={<Users className="w-8 h-8" />}
+                          title={t('landlordCustomersEmptyTitle')}
+                          description={t('landlordCustomersEmptyDescTable')}
+                          bordered={false}
+                          action={
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => router.push('/landlord/contracts/create')}
+                              leftIcon={<Plus className="w-3.5 h-3.5" />}
+                            >
+                              {t('landlordCustomersBtnCreateContract')}
+                            </Button>
+                          }
+                        />
                       )}
                     </td>
                   </tr>

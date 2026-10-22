@@ -37,7 +37,7 @@ import {
   LandlordPaymentsSummary,
 } from '@/services/landlord-payment.service'
 import { getRooms, RoomItem } from '@/services/room.service'
-import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, Text, Chip } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, Text, Chip, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 function PaymentsContent() {
@@ -382,7 +382,7 @@ function PaymentsContent() {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold">
             <Button
               type="button"
-              variant="ghost"
+              variant={activeTab === 'all' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => {
                 setActiveTab('all')
@@ -395,7 +395,7 @@ function PaymentsContent() {
 
             <Button
               type="button"
-              variant="ghost"
+              variant={activeTab === 'banking' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => {
                 setActiveTab('banking')
@@ -403,13 +403,13 @@ function PaymentsContent() {
               }}
               className="shrink-0"
             >
-              <span className="w-2 h-2 rounded-full bg-indigo-400" />
+              <span className={`w-2 h-2 rounded-full ${activeTab === 'banking' ? 'bg-white' : 'bg-indigo-400'}`} />
               VietQR / Ngân hàng ({formatLargeMoney(summary.bankingRevenue)})
             </Button>
 
             <Button
               type="button"
-              variant="ghost"
+              variant={activeTab === 'cash' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => {
                 setActiveTab('cash')
@@ -417,7 +417,7 @@ function PaymentsContent() {
               }}
               className="shrink-0"
             >
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <span className={`w-2 h-2 rounded-full ${activeTab === 'cash' ? 'bg-white' : 'bg-amber-400'}`} />
               Tiền mặt ({formatLargeMoney(summary.cashRevenue)})
             </Button>
           </div>
@@ -431,43 +431,27 @@ function PaymentsContent() {
           <p className="text-xs text-muted font-bold">Đang tải lịch sử giao dịch...</p>
         </div>
       ) : payments.length === 0 ? (
-        /* Clean Empty State (No Mockup Data!) */
-        <div className="py-16 px-6 text-center bg-card border border-line rounded-3xl space-y-4 shadow-2xs">
-          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-            <CreditCard className="w-8 h-8" />
-          </div>
-          <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-foreground">Chưa có dữ liệu thanh toán nào</h3>
-            <p className="text-xs text-muted font-medium leading-relaxed">
-              Tòa nhà hiện chưa phát sinh giao dịch thanh toán thành công nào theo bộ lọc đã chọn.
-              Giao dịch sẽ tự động hiển thị tại đây khi khách thuê quét mã VietQR hoặc khi bạn xác
-              nhận thu tiền.
-            </p>
-          </div>
-          <div className="pt-2 flex items-center justify-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchQuery('')
-                setSelectedRoom('all')
-                setSelectedMethod('all')
-                setSelectedMonth('all')
-                setSelectedYear('all')
-                setActiveTab('all')
-              }}
-            >
-              Đặt lại bộ lọc
-            </Button>
-            <Link
-              href="/landlord/invoices?status=unpaid"
-              className="px-4 py-2 bg-primary hover:bg-[#25ad87] text-white text-xs font-black rounded-xl shadow-sm transition-all"
-            >
-              Xem hóa đơn cần thu
-            </Link>
-          </div>
-        </div>
+        <EmptyState
+          icon={CreditCard}
+          title="Chưa có dữ liệu thanh toán nào"
+          description="Tòa nhà hiện chưa phát sinh giao dịch thanh toán thành công nào theo bộ lọc đã chọn. Giao dịch sẽ tự động hiển thị tại đây khi khách thuê quét mã VietQR hoặc khi bạn xác nhận thu tiền."
+          action={{
+            label: "Xem hóa đơn cần thu",
+            onClick: () => router.push("/landlord/invoices?status=unpaid"),
+          }}
+          secondaryAction={{
+            label: "Đặt lại bộ lọc",
+            onClick: () => {
+              setSearchQuery('')
+              setSelectedRoom('all')
+              setSelectedMethod('all')
+              setSelectedMonth('all')
+              setSelectedYear('all')
+              setActiveTab('all')
+            },
+          }}
+          bordered
+        />
       ) : viewMode === 'grid' ? (
         /* Parallel Grid View (Default - Rule 9) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -492,7 +476,7 @@ function PaymentsContent() {
                   {/* Top Badges Row */}
                   <div className="flex items-center justify-between gap-2 pt-1">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="px-2.5 py-1 bg-zinc-900 text-white font-black text-xs rounded-xl shrink-0">
+                      <span className="px-2.5 py-1 bg-foreground text-background font-black text-xs rounded-xl shrink-0">
                         {p.roomNumber}
                       </span>
                       {p.roomTypeName && (
@@ -740,7 +724,7 @@ function PaymentsContent() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-zinc-300">—</span>
+                          <span className="text-muted">—</span>
                         )}
                       </td>
 
@@ -836,7 +820,7 @@ function PaymentsContent() {
                 )}
               </div>
 
-              <div className="space-y-1.5 sm:border-l sm:border-zinc-200 sm:pl-4">
+              <div className="space-y-1.5 sm:border-l sm:border-line sm:pl-4">
                 <span className="text-[10px] font-black uppercase text-muted tracking-wider">
                   THÔNG TIN GIAO DỊCH
                 </span>
@@ -878,7 +862,7 @@ function PaymentsContent() {
                   <tbody className="divide-y divide-line">
                     {selectedPayment.items.length > 0 ? (
                       selectedPayment.items.map(item => (
-                        <tr key={item.id} className="hover:bg-zinc-50/50">
+                        <tr key={item.id} className="hover:bg-card-hover">
                           <td className="px-4 py-3 font-bold text-foreground">{item.serviceName}</td>
                           <td className="px-3 py-3 text-center text-muted font-medium">
                             {item.quantity}

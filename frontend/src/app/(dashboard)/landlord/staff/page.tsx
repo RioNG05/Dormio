@@ -38,6 +38,8 @@ import {
   Card,
   Text,
   Chip,
+  Modal,
+  EmptyState,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
@@ -86,6 +88,11 @@ export default function StaffPage() {
   const [pendingCloseTarget, setPendingCloseTarget] = useState<
     'onboard' | 'assignRole' | 'positions' | null
   >(null)
+  const [actionConfirm, setActionConfirm] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
 
   const [credentialModal, setCredentialModal] = useState<{
     isOpen: boolean
@@ -399,28 +406,32 @@ export default function StaffPage() {
   }
 
   // Toggle Staff Status ( Step 2 & 4)
-  const handleToggleStatus = async (staff: StaffItem) => {
+  const handleToggleStatus = (staff: StaffItem) => {
     const nextStatus = staff.status === 'active' ? 'inactive' : 'active'
     const confirmMsg =
       nextStatus === 'inactive'
         ? t('landlordStaffConfirmDeactivate', { name: staff.fullName })
         : t('landlordStaffConfirmActivate', { name: staff.fullName })
 
-    if (!window.confirm(confirmMsg)) return
-
-    try {
-      await staffService.updateStaffStatus(buildingId, staff.assignmentId, {
-        status: nextStatus,
-      })
-      toast.success(
-        nextStatus === 'active'
-          ? t('landlordStaffConfirmActivate', { name: staff.fullName })
-          : t('landlordStaffConfirmDeactivate', { name: staff.fullName }),
-      )
-      await fetchStaffData()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t('landlordStaffAlertUpdateStatusError'))
-    }
+    setActionConfirm({
+      title: t('btnConfirm') || 'Xác nhận thay đổi trạng thái',
+      message: confirmMsg,
+      onConfirm: async () => {
+        try {
+          await staffService.updateStaffStatus(buildingId, staff.assignmentId, {
+            status: nextStatus,
+          })
+          toast.success(
+            nextStatus === 'active'
+              ? t('landlordStaffConfirmActivate', { name: staff.fullName })
+              : t('landlordStaffConfirmDeactivate', { name: staff.fullName }),
+          )
+          await fetchStaffData()
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || t('landlordStaffAlertUpdateStatusError'))
+        }
+      },
+    })
   }
 
   // Manage Positions Actions (CRUD)
@@ -463,16 +474,20 @@ export default function StaffPage() {
     }
   }
 
-  const handleDeletePosition = async (pos: JobPosition) => {
-    if (!window.confirm(t('landlordStaffConfirmDeletePos', { name: pos.name }))) return
-
-    try {
-      await staffService.deletePosition(buildingId, pos.id)
-      toast.success(t('landlordStaffPositionsDeleteTooltip'))
-      await fetchStaffData()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t('landlordStaffAlertDeletePosError'))
-    }
+  const handleDeletePosition = (pos: JobPosition) => {
+    setActionConfirm({
+      title: t('btnConfirm') || 'Xác nhận xóa vị trí',
+      message: t('landlordStaffConfirmDeletePos', { name: pos.name }),
+      onConfirm: async () => {
+        try {
+          await staffService.deletePosition(buildingId, pos.id)
+          toast.success(t('landlordStaffPositionsDeleteTooltip'))
+          await fetchStaffData()
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || t('landlordStaffAlertDeletePosError'))
+        }
+      },
+    })
   }
 
   const copyToClipboard = (text: string) => {
@@ -660,30 +675,27 @@ export default function StaffPage() {
           <p className="text-xs text-muted font-medium">{t('landlordStaffLoading')}</p>
         </div>
       ) : staffList.length === 0 ? (
-        <div className="bg-card border border-line rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center">
-            <Users className="w-8 h-8" />
-          </div>
-          <div className="max-w-sm space-y-1">
-            <h3 className="text-base font-extrabold text-foreground">
-              {t('landlordStaffEmptyTitle')}
-            </h3>
-            <p className="text-xs text-muted leading-relaxed">
-              {searchQuery || statusFilter !== 'all' || positionFilter !== 'all'
-                ? t('landlordStaffEmptyFiltered')
-                : t('landlordStaffEmptyDesc')}
-            </p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              resetOnboardForm()
-              setIsOnboardModalOpen(true)
-            }}
-          >
-            {t('landlordStaffAddNow')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Users className="w-8 h-8" />}
+          title={t('landlordStaffEmptyTitle')}
+          description={
+            searchQuery || statusFilter !== 'all' || positionFilter !== 'all'
+              ? t('landlordStaffEmptyFiltered')
+              : t('landlordStaffEmptyDesc')
+          }
+          action={
+            <Button
+              size="sm"
+              onClick={() => {
+                resetOnboardForm()
+                setIsOnboardModalOpen(true)
+              }}
+              leftIcon={<Plus className="w-4 h-4" />}
+            >
+              {t('landlordStaffAddNow')}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 default) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1823,6 +1835,53 @@ export default function StaffPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Action Confirmation Modal (Rule #10) */}
+      {actionConfirm && (
+        <Modal
+          isOpen={!!actionConfirm}
+          onClose={() => setActionConfirm(null)}
+          size="sm"
+        >
+          <div className="space-y-4 pt-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">
+                {actionConfirm.title}
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                {actionConfirm.message}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-line">
+              <Button
+                size="sm"
+                variant="secondary"
+                type="button"
+                onClick={() => setActionConfirm(null)}
+                className="flex-1"
+              >
+                {t('landlordStaffConfirmCloseKeep') || 'Hủy bỏ'}
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                type="button"
+                onClick={() => {
+                  const onConf = actionConfirm.onConfirm
+                  setActionConfirm(null)
+                  onConf()
+                }}
+                className="flex-1"
+              >
+                {t('btnConfirm') || 'Xác nhận'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

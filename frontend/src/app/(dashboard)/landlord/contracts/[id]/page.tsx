@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use, useCallback, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Edit2,
   Trash2,
@@ -44,9 +45,11 @@ import {
   Modal,
   Text,
   Breadcrumb,
+  EmptyState,
 } from '@/components/ui'
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter()
   const resolvedParams = use(params)
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
@@ -507,19 +510,17 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
   if (!contract) {
     return (
-      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6">
-        <p className="font-bold text-lg mb-2 text-foreground">
-          {t('landlordContractsNoContractsFound')}
-        </p>
-        <p className="text-xs text-muted mb-4">
-          {t('landlordContractDetailContractId', { id: resolvedParams.id })}
-        </p>
-        <Link
-          href="/landlord/contracts"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors"
-        >
-          &larr; {t('landlordContractDetailBack')}
-        </Link>
+      <div className="py-12">
+        <EmptyState
+          icon={FileText}
+          title={t('landlordContractsNoContractsFound')}
+          description={t('landlordContractDetailContractId', { id: resolvedParams.id })}
+          action={{
+            label: t('landlordContractDetailBack'),
+            onClick: () => router.push('/landlord/contracts'),
+          }}
+          bordered
+        />
       </div>
     )
   }

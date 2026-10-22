@@ -35,6 +35,7 @@ import {
   Modal,
   Text,
   Breadcrumb,
+  EmptyState,
 } from '@/components/ui'
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -396,21 +397,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   if (!customer) {
     return (
-      <div className="p-8 text-center bg-card rounded-2xl border border-line text-muted my-6 space-y-3 shadow-xs">
-        <div className="w-12 h-12 rounded-full bg-card-hover flex items-center justify-center mx-auto text-muted">
-          <User className="w-6 h-6" />
-        </div>
-        <p className="font-bold text-lg text-foreground">{t('landlordCustomersTenantNotFound')}</p>
-        <p className="text-xs text-muted">
-          {t('landlordCustomersUserId')}:{' '}
-          <span className="font-mono font-bold text-foreground/90">{resolvedParams.id}</span>
-        </p>
-        <Link
-          href="/landlord/customers"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-hover transition-colors shadow-2xs"
-        >
-          &larr; {t('landlordCustomersBackToList')}
-        </Link>
+      <div className="py-12">
+        <EmptyState
+          icon={User}
+          title={t('landlordCustomersTenantNotFound')}
+          description={`${t('landlordCustomersUserId')}: ${resolvedParams.id}`}
+          action={{
+            label: t('landlordCustomersBackToList'),
+            onClick: () => router.push('/landlord/customers'),
+          }}
+          bordered
+        />
       </div>
     )
   }
@@ -639,8 +636,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-line rounded-2xl h-44 bg-surface/50 flex flex-col items-center justify-center text-muted gap-2">
-                    <ImageIcon className="w-8 h-8 text-zinc-300" />
-                    <span className="text-xs font-semibold">Chưa cập nhật ảnh mặt trước</span>
+                    <ImageIcon className="w-8 h-8 text-muted" />
+                    <span className="text-xs font-semibold">{t('landlordCustomersFrontIdCardEmpty')}</span>
                   </div>
                 )}
               </div>
@@ -665,8 +662,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-line rounded-2xl h-44 bg-surface/50 flex flex-col items-center justify-center text-muted gap-2">
-                    <ImageIcon className="w-8 h-8 text-zinc-300" />
-                    <span className="text-xs font-semibold">Chưa cập nhật ảnh mặt sau</span>
+                    <ImageIcon className="w-8 h-8 text-muted" />
+                    <span className="text-xs font-semibold">{t('landlordCustomersBackIdCardEmpty')}</span>
                   </div>
                 )}
               </div>

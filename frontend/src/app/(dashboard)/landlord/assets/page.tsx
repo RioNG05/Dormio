@@ -34,6 +34,7 @@ import {
   Modal,
   Text,
   Chip,
+  EmptyState,
 } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { uploadImageToBackend } from '@/services/upload.service'
@@ -621,9 +622,22 @@ export default function AssetsPage() {
           /* GRID VIEW */
           <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {assets.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-muted font-medium">
-                <Package className="w-10 h-10 mx-auto text-zinc-300 mb-2" />
-                {t('landlordAssetsEmptyTitle')}
+              <div className="col-span-full">
+                <EmptyState
+                  icon={<Package className="w-8 h-8" />}
+                  title={t('landlordAssetsEmptyTitle')}
+                  description={t('landlordAssetsSubtitle')}
+                  action={
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleOpenAddModal}
+                      leftIcon={<Plus className="w-4 h-4" />}
+                    >
+                      {t('landlordAssetsBtnAdd')}
+                    </Button>
+                  }
+                />
               </div>
             ) : (
               assets.map(asset => {
@@ -797,8 +811,23 @@ export default function AssetsPage() {
               <tbody className="divide-y divide-line font-medium">
                 {assets.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-8 text-center text-muted">
-                      {t('landlordAssetsEmptyTitle')}
+                    <td colSpan={9} className="px-6 py-8">
+                      <EmptyState
+                        icon={<Package className="w-8 h-8" />}
+                        title={t('landlordAssetsEmptyTitle')}
+                        description={t('landlordAssetsSubtitle')}
+                        bordered={false}
+                        action={
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={handleOpenAddModal}
+                            leftIcon={<Plus className="w-4 h-4" />}
+                          >
+                            {t('landlordAssetsBtnAdd')}
+                          </Button>
+                        }
+                      />
                     </td>
                   </tr>
                 ) : (

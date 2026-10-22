@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card } from '@/components/ui'
+import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
@@ -341,24 +341,18 @@ export default function ListingsPage() {
           <span className="text-xs font-bold text-muted">{t('landlordListingsLoading')}</span>
         </div>
       ) : listings.length === 0 ? (
-        /* Empty State */
-        <div className="bg-card border border-line rounded-3xl p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-full bg-accent-soft text-accent flex items-center justify-center">
-            <ImageIcon className="w-8 h-8" />
-          </div>
-          <div className="space-y-1 max-w-sm">
-            <h3 className="text-base font-black text-foreground">
-              {t('landlordListingsEmptyTitle')}
-            </h3>
-            <p className="text-xs text-muted">{t('landlordListingsEmptyDesc')}</p>
-          </div>
-          <Link
-            href="/landlord/listings/create"
-            className="flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-accent hover:bg-[#ff5518] rounded-xl shadow-md shadow-accent/20 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> {t('landlordListingsCreateFirstBtn')}
-          </Link>
-        </div>
+        <EmptyState
+          icon={<ImageIcon className="w-8 h-8 text-accent" />}
+          title={t('landlordListingsEmptyTitle')}
+          description={t('landlordListingsEmptyDesc')}
+          action={
+            <Link href="/landlord/listings/create">
+              <Button variant="accent" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
+                {t('landlordListingsCreateFirstBtn')}
+              </Button>
+            </Link>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Default) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
