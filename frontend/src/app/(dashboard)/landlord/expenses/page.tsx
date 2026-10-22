@@ -36,8 +36,6 @@ import {
   TableRow,
   Text,
   Modal,
-  ModalBody,
-  ModalFooter,
   Chip,
 } from '@/components/ui'
 import {
@@ -862,8 +860,9 @@ export default function ExpensesPage() {
           closeOnOverlayClick
           closeOnEsc
           bodyClassName="text-xs"
+          footerClassName="justify-between"
           footer={
-            <ModalFooter>
+            <>
               <Button variant="secondary" size="sm" onClick={() => setSelectedExpense(null)}>
                 {t('landlordExpensesCloseBtn')}
               </Button>
@@ -887,68 +886,68 @@ export default function ExpensesPage() {
                   </Button>
                 )}
               </div>
-            </ModalFooter>
+            </>
           }
         >
-          <ModalBody className="space-y-4 sm:space-y-5">
-              {/* Financial Highlight Box */}
-              <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
-                <div className="flex items-center justify-between gap-2">
-                  <Text as="span" size="3xs" weight="extrabold" color="secondary" uppercase className="whitespace-nowrap">
-                    {t('landlordExpensesPaymentAmountLabel')}
+          <div className="space-y-4 sm:space-y-5">
+            {/* Financial Highlight Box */}
+            <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
+              <div className="flex items-center justify-between gap-2">
+                <Text as="span" size="3xs" weight="extrabold" color="secondary" uppercase className="whitespace-nowrap">
+                  {t('landlordExpensesPaymentAmountLabel')}
+                </Text>
+                <Text as="span" size="xs" weight="semibold" color="subtle" className="whitespace-nowrap">
+                  {t('landlordExpensesPaymentDateLabel')}{' '}
+                  <Text as="strong" color="white" weight="black" className="whitespace-nowrap">
+                    {formatDate(selectedExpense.paidAt)}
                   </Text>
-                  <Text as="span" size="xs" weight="semibold" color="subtle" className="whitespace-nowrap">
-                    {t('landlordExpensesPaymentDateLabel')}{' '}
-                    <Text as="strong" color="white" weight="black" className="whitespace-nowrap">
-                      {formatDate(selectedExpense.paidAt)}
-                    </Text>
-                  </Text>
-                </div>
-
-                <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-primary tracking-tight whitespace-nowrap">
-                  <Text as="span" size={{ base: '2xl', sm: '3xl' }} weight="black" color="brand">
-                    -{formatCurrency(selectedExpense.amount)}
-                  </Text>
-                </div>
-
-                <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center justify-between gap-2">
-                  <Text as="span" color="subtle" className="shrink-0">{t('landlordExpensesNameColon')}</Text>
-                  <Text as="strong" color="white" weight="black" align="right" clamp={1}>
-                    {selectedExpense.name}
-                  </Text>
-                </div>
+                </Text>
               </div>
 
-              {/* Expense Details Breakdown Card */}
-              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-muted gap-2">
-                  <Text as="span" weight="semibold" color="secondary" className="shrink-0">
-                    {t('landlordExpensesScopeColon')}
-                  </Text>
-                  <Text as="span" weight="black" color="default" truncate>
-                    {getScopeLabel(selectedExpense)}
-                  </Text>
-                </div>
-
-                <div className="flex justify-between items-center text-muted border-t border-line pt-2 gap-2">
-                  <Text as="span" weight="semibold" color="secondary" className="shrink-0">
-                    {t('landlordExpensesStatusColon')}
-                  </Text>
-                  <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
-                </div>
-
-                {selectedExpense.description && (
-                  <div className="border-t border-line pt-2.5 space-y-1">
-                    <Text as="span" weight="extrabold" color="default" className="block">
-                      {t('landlordExpensesDescriptionLabel')}
-                    </Text>
-                    <Text as="p" color="secondary" className="leading-relaxed bg-card p-3 rounded-xl border border-line">
-                      {selectedExpense.description}
-                    </Text>
-                  </div>
-                )}
+              <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-primary tracking-tight whitespace-nowrap">
+                <Text as="span" size={{ base: '2xl', sm: '3xl' }} weight="black" color="brand">
+                  -{formatCurrency(selectedExpense.amount)}
+                </Text>
               </div>
-          </ModalBody>
+
+              <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center justify-between gap-2">
+                <Text as="span" color="subtle" className="shrink-0">{t('landlordExpensesNameColon')}</Text>
+                <Text as="strong" color="white" weight="black" align="right" clamp={1}>
+                  {selectedExpense.name}
+                </Text>
+              </div>
+            </div>
+
+            {/* Expense Details Breakdown Card */}
+            <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+              <div className="flex justify-between items-center text-muted gap-2">
+                <Text as="span" weight="semibold" color="secondary" className="shrink-0">
+                  {t('landlordExpensesScopeColon')}
+                </Text>
+                <Text as="span" weight="black" color="default" truncate>
+                  {getScopeLabel(selectedExpense)}
+                </Text>
+              </div>
+
+              <div className="flex justify-between items-center text-muted border-t border-line pt-2 gap-2">
+                <Text as="span" weight="semibold" color="secondary" className="shrink-0">
+                  {t('landlordExpensesStatusColon')}
+                </Text>
+                <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
+              </div>
+
+              {selectedExpense.description && (
+                <div className="border-t border-line pt-2.5 space-y-1">
+                  <Text as="span" weight="extrabold" color="default" className="block">
+                    {t('landlordExpensesDescriptionLabel')}
+                  </Text>
+                  <Text as="p" color="secondary" className="leading-relaxed bg-card p-3 rounded-xl border border-line">
+                    {selectedExpense.description}
+                  </Text>
+                </div>
+              )}
+            </div>
+          </div>
         </Modal>
       )}
 
@@ -962,9 +961,7 @@ export default function ExpensesPage() {
             : t('landlordExpensesEditTitleWithCode', { code: editingExpense?.code || '' })}
           description={t('landlordExpensesFormSubtitle')}
           icon={<Wallet className="w-5 h-5 text-primary" />}
-          size="lg"
-          closeOnOverlayClick={false}
-          closeOnEsc
+          size="xl"
           asForm
           onSubmit={event => {
             event.preventDefault()
@@ -973,123 +970,103 @@ export default function ExpensesPage() {
             }
           }}
           footer={
-            <ModalFooter>
+            <>
               <Button variant="secondary" size="sm" type="button" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
                 {t('landlordExpensesCancelBtn')}
               </Button>
               <Button variant="dark" size="sm" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
                 {showCreateModal ? t('landlordExpensesSaveExpense') : t('landlordExpensesUpdateExpense')}
               </Button>
-            </ModalFooter>
+            </>
           }
         >
-          <ModalBody className="text-xs">
-              <TextInput
-                label={t('landlordExpensesNameLabel')}
+          <div className="text-xs space-y-4">
+            <TextInput
+              label={t('landlordExpensesNameLabel')}
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+              value={expenseForm.name}
+              onChange={e => {
+                setExpenseForm({ ...expenseForm, name: e.target.value })
+                setIsFormDirty(true)
+              }}
+              placeholder={t('landlordExpensesExpenseNamePlaceholder')}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectInput
+                label={t('landlordExpensesCategoryLabel')}
                 labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                value={expenseForm.name}
+                value={expenseForm.category}
                 onChange={e => {
-                  setExpenseForm({ ...expenseForm, name: e.target.value })
+                  setExpenseForm({ ...expenseForm, category: e.target.value })
                   setIsFormDirty(true)
                 }}
-                placeholder={t('landlordExpensesExpenseNamePlaceholder')}
+                options={[
+                  { value: 'Bảo trì & Sửa chữa', label: t('landlordExpensesCatMaintenance') },
+                  { value: 'Điện nước & Dịch vụ', label: t('landlordExpensesCatUtilities') },
+                  { value: 'Vệ sinh & An ninh', label: t('landlordExpensesCatCleaning') },
+                  { value: 'Trang thiết bị', label: t('landlordExpensesCatEquipment') },
+                  { value: 'Chi phí khác', label: t('landlordExpensesCatOther') },
+                ]}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <NumberInput
+                label={t('landlordExpensesAmountLabel')}
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                min={0}
+                value={expenseForm.amount}
+                onChange={e => {
+                  setExpenseForm({ ...expenseForm, amount: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectInput
+                label={t('landlordExpensesScopeLabel')}
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                value={expenseForm.roomScope}
+                onChange={e => {
+                  const newScope = e.target.value as 'property' | 'room'
+                  setExpenseForm({
+                    ...expenseForm,
+                    roomScope: newScope,
+                    roomId:
+                      newScope === 'room' && availableRooms.length > 0
+                        ? availableRooms[0].id
+                        : '',
+                  })
+                  setIsFormDirty(true)
+                }}
+                options={[
+                  { value: 'property', label: t('landlordExpensesEntirePropertyOption') },
+                  { value: 'room', label: t('landlordExpensesSpecificRoom') },
+                ]}
+              />
+
+              {expenseForm.roomScope === 'room' ? (
                 <SelectInput
-                  label={t('landlordExpensesCategoryLabel')}
+                  label={t('landlordExpensesSelectRoomLabel')}
                   labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                  value={expenseForm.category}
+                  value={expenseForm.roomId}
                   onChange={e => {
-                    setExpenseForm({ ...expenseForm, category: e.target.value })
+                    setExpenseForm({ ...expenseForm, roomId: e.target.value })
                     setIsFormDirty(true)
                   }}
                   options={[
-                    { value: 'Bảo trì & Sửa chữa', label: t('landlordExpensesCatMaintenance') },
-                    { value: 'Điện nước & Dịch vụ', label: t('landlordExpensesCatUtilities') },
-                    { value: 'Vệ sinh & An ninh', label: t('landlordExpensesCatCleaning') },
-                    { value: 'Trang thiết bị', label: t('landlordExpensesCatEquipment') },
-                    { value: 'Chi phí khác', label: t('landlordExpensesCatOther') },
+                    { value: '', label: t('landlordExpensesSelectRoomPlaceholder') },
+                    ...availableRooms.map(r => ({
+                      value: r.id,
+                      label: t('landlordExpensesRoomFloorOption', {
+                        room: r.roomNumber,
+                        floor: r.floor,
+                      }),
+                    })),
                   ]}
                 />
-
-                <NumberInput
-                  label={t('landlordExpensesAmountLabel')}
-                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                  min={0}
-                  value={expenseForm.amount}
-                  onChange={e => {
-                    setExpenseForm({ ...expenseForm, amount: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <SelectInput
-                  label={t('landlordExpensesScopeLabel')}
-                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                  value={expenseForm.roomScope}
-                  onChange={e => {
-                    const newScope = e.target.value as 'property' | 'room'
-                    setExpenseForm({
-                      ...expenseForm,
-                      roomScope: newScope,
-                      roomId:
-                        newScope === 'room' && availableRooms.length > 0
-                          ? availableRooms[0].id
-                          : '',
-                    })
-                    setIsFormDirty(true)
-                  }}
-                  options={[
-                    { value: 'property', label: t('landlordExpensesEntirePropertyOption') },
-                    { value: 'room', label: t('landlordExpensesSpecificRoom') },
-                  ]}
-                />
-
-                {expenseForm.roomScope === 'room' ? (
-                  <SelectInput
-                    label={t('landlordExpensesSelectRoomLabel')}
-                    labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                    value={expenseForm.roomId}
-                    onChange={e => {
-                      setExpenseForm({ ...expenseForm, roomId: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    options={[
-                      { value: '', label: t('landlordExpensesSelectRoomPlaceholder') },
-                      ...availableRooms.map(r => ({
-                        value: r.id,
-                        label: t('landlordExpensesRoomFloorOption', {
-                          room: r.roomNumber,
-                          floor: r.floor,
-                        }),
-                      })),
-                    ]}
-                  />
-                ) : (
-                  <SelectInput
-                    label={t('landlordExpensesPaymentStatusLabel')}
-                    labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                    value={expenseForm.status}
-                    onChange={e => {
-                      setExpenseForm({
-                        ...expenseForm,
-                        status: e.target.value as 'paid' | 'pending',
-                      })
-                      setIsFormDirty(true)
-                    }}
-                    options={[
-                      { value: 'paid', label: t('landlordExpensesOptionPaid') },
-                      { value: 'pending', label: t('landlordExpensesOptionPending') },
-                    ]}
-                  />
-                )}
-              </div>
-
-              {expenseForm.roomScope === 'room' && (
+              ) : (
                 <SelectInput
                   label={t('landlordExpensesPaymentStatusLabel')}
                   labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
@@ -1107,30 +1084,50 @@ export default function ExpensesPage() {
                   ]}
                 />
               )}
+            </div>
 
-              <TextInput
-                type="date"
-                label={t('landlordExpensesDateLabel')}
+            {expenseForm.roomScope === 'room' && (
+              <SelectInput
+                label={t('landlordExpensesPaymentStatusLabel')}
                 labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                value={expenseForm.paidAt}
+                value={expenseForm.status}
                 onChange={e => {
-                  setExpenseForm({ ...expenseForm, paidAt: e.target.value })
+                  setExpenseForm({
+                    ...expenseForm,
+                    status: e.target.value as 'paid' | 'pending',
+                  })
                   setIsFormDirty(true)
                 }}
+                options={[
+                  { value: 'paid', label: t('landlordExpensesOptionPaid') },
+                  { value: 'pending', label: t('landlordExpensesOptionPending') },
+                ]}
               />
+            )}
 
-              <TextareaInput
-                label={t('landlordExpensesNoteLabel')}
-                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
-                rows={2}
-                value={expenseForm.description}
-                onChange={e => {
-                  setExpenseForm({ ...expenseForm, description: e.target.value })
-                  setIsFormDirty(true)
-                }}
-                placeholder={t('landlordExpensesDescriptionPlaceholder')}
-              />
-          </ModalBody>
+            <TextInput
+              type="date"
+              label={t('landlordExpensesDateLabel')}
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+              value={expenseForm.paidAt}
+              onChange={e => {
+                setExpenseForm({ ...expenseForm, paidAt: e.target.value })
+                setIsFormDirty(true)
+              }}
+            />
+
+            <TextareaInput
+              label={t('landlordExpensesNoteLabel')}
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+              rows={2}
+              value={expenseForm.description}
+              onChange={e => {
+                setExpenseForm({ ...expenseForm, description: e.target.value })
+                setIsFormDirty(true)
+              }}
+              placeholder={t('landlordExpensesDescriptionPlaceholder')}
+            />
+          </div>
         </Modal>
       )}
 
@@ -1144,19 +1141,17 @@ export default function ExpensesPage() {
           icon={<AlertTriangle className="w-5 h-5 text-warning" />}
           size="sm"
           closeOnOverlayClick={false}
-          closeOnEsc
           footer={
-            <ModalFooter>
+            <>
               <Button variant="secondary" onClick={() => setConfirmCloseTarget(null)} className="flex-1">
                 {t('landlordExpensesContinueTyping')}
               </Button>
               <Button variant="danger" onClick={handleConfirmCloseModal} className="flex-1">
                 {t('landlordExpensesDiscardAndClose')}
               </Button>
-            </ModalFooter>
+            </>
           }
-        >
-        </Modal>
+        />
       )}
 
       {/* ─── Modal 4: Delete Confirmation Pop-up Modal ────────────────────────── */}
@@ -1171,20 +1166,17 @@ export default function ExpensesPage() {
           })}
           icon={<Trash2 className="w-5 h-5 text-danger" />}
           size="sm"
-          closeOnOverlayClick
-          closeOnEsc
           footer={
-            <ModalFooter>
+            <>
               <Button variant="secondary" onClick={() => setDeletingExpenseTarget(null)} className="flex-1">
                 {t('landlordExpensesCancelBtn')}
               </Button>
               <Button variant="danger" onClick={confirmDeleteExpense} className="flex-1">
                 {t('landlordExpensesDeleteBtn')}
               </Button>
-            </ModalFooter>
+            </>
           }
-        >
-        </Modal>
+        />
       )}
 
       {/* ─── Modal 5: Locked Paid Expense Pop-up Modal ────────────────────────── */}
@@ -1199,17 +1191,14 @@ export default function ExpensesPage() {
           })}
           icon={<Lock className="w-5 h-5 text-warning" />}
           size="sm"
-          closeOnOverlayClick
-          closeOnEsc
           footer={
-            <ModalFooter>
+            <>
               <Button fullWidth variant="dark" onClick={() => setLockedExpenseTarget(null)}>
                 {t('landlordExpensesUnderstand')}
               </Button>
-            </ModalFooter>
+            </>
           }
-        >
-        </Modal>
+        />
       )}
     </div>
   )
