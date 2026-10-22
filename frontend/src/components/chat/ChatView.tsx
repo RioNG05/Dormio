@@ -32,7 +32,7 @@ import { NewChatModal } from './NewChatModal'
 import { ImageLightboxModal } from './ImageLightboxModal'
 
 export interface ChatViewProps {
-  role?: 'landlord' | 'tenant'
+  role?: 'landlord' | 'tenant' | 'staff'
   onNavigateRoom?: (roomName?: string | null) => void
   onNavigateContract?: (roomName?: string | null) => void
   onNavigateInvoice?: () => void
@@ -51,6 +51,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const searchParams = useSearchParams()
 
   const isLandlord = role === 'landlord'
+  const basePath = useMemo(() => {
+    if (role === 'landlord') return '/landlord/messages'
+    if (role === 'staff') return '/staff/messages'
+    return '/tenant/messages'
+  }, [role])
 
   const urlConversationId = searchParams.get('conversationId') || searchParams.get('id') || ''
   const urlRoom = searchParams.get('room') || searchParams.get('search') || ''
@@ -90,8 +95,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
     contactsRef,
   } = useChatSession({
     currentUserId: user?.id,
-    autoSelectFirst: !isLandlord,
-    autoCreateWithFirstContactIfEmpty: !isLandlord,
+    autoSelectFirst: role === 'tenant',
+    autoCreateWithFirstContactIfEmpty: role === 'tenant',
     initialConversationId: urlConversationId,
     defaultAttachmentText: 'Tệp đính kèm',
   })
@@ -124,6 +129,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
         'Hạn đóng tiền phòng tháng này là ngày 05 nhé.',
         'Bạn có thể gửi lại ảnh hóa đơn chuyển khoản không?',
         'Bên mình sẽ cho người qua kiểm tra thiết bị trong hôm nay.',
+      ]
+    }
+    if (role === 'staff') {
+      return [
+        'Bên em đã tiếp nhận thông tin và sẽ kiểm tra ngay ạ.',
+        'Em đã kiểm tra thiết bị phòng xong rồi ạ.',
+        'Anh/chị cần hỗ trợ thêm vấn đề gì không ạ?',
+        'Dạ em đã nhận được thông tin từ quản lý.',
       ]
     }
     return [
@@ -253,7 +266,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
             }
           }
 
-          const basePath = isLandlord ? '/landlord/messages' : '/tenant/messages'
           const newParams = new URLSearchParams()
           newParams.set('conversationId', match.id)
           router.replace(`${basePath}?${newParams.toString()}`, { scroll: false })
@@ -324,12 +336,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
       if (activeChatRef.current?.id === chat.id) return
       selectConversation(chat)
       setMobileShowChat(true)
-      const basePath = isLandlord ? '/landlord/messages' : '/tenant/messages'
       const params = new URLSearchParams()
       params.set('conversationId', chat.id)
       router.replace(`${basePath}?${params.toString()}`, { scroll: false })
     },
-    [isLandlord, router, selectConversation],
+    [basePath, router, selectConversation],
   )
 
   // Start new conversation from contact modal
@@ -353,7 +364,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleBackToList = () => {
     selectConversation(null)
     setMobileShowChat(false)
-    const basePath = isLandlord ? '/landlord/messages' : '/tenant/messages'
     router.replace(basePath, { scroll: false })
   }
 

@@ -21,7 +21,7 @@ export interface ChatSidebarProps {
   onOpenNewChat: () => void
   mobileShowChat: boolean
   hasContacts: boolean
-  role?: 'landlord' | 'tenant'
+  role?: 'landlord' | 'tenant' | 'staff'
   locale?: string
 }
 
@@ -74,6 +74,39 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           label: 'Khách xem phòng',
           count: conversations.filter(c => c.participant.role !== 'tenant').length,
           variant: 'purple' as const,
+        },
+      ]
+    : role === 'staff'
+    ? [
+        {
+          value: 'all',
+          label: 'Tất cả',
+          count: conversations.length,
+          variant: 'default' as const,
+        },
+        {
+          value: 'unread',
+          label: 'Chưa đọc',
+          count: conversations.filter(c => c.unreadCount > 0).length,
+          variant: 'warning' as const,
+        },
+        {
+          value: 'landlord',
+          label: 'Chủ nhà',
+          count: conversations.filter(c => c.participant.role === 'landlord').length,
+          variant: 'info' as const,
+        },
+        {
+          value: 'tenant',
+          label: 'Khách thuê',
+          count: conversations.filter(c => c.participant.role === 'tenant').length,
+          variant: 'purple' as const,
+        },
+        {
+          value: 'staff',
+          label: 'Đồng nghiệp',
+          count: conversations.filter(c => c.participant.role === 'employee').length,
+          variant: 'neutral' as const,
         },
       ]
     : [

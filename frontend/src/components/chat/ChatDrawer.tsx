@@ -27,7 +27,7 @@ export interface ChatDrawerProps {
   activeBuildingName?: string
   activeChatMedia: ChatMediaInfo
   onPreviewImage: (url: string) => void
-  role?: 'landlord' | 'tenant'
+  role?: 'landlord' | 'tenant' | 'staff'
   onNavigateRoom?: (roomName?: string | null) => void
   onNavigateContract?: (roomName?: string | null) => void
   onNavigateInvoice?: () => void
