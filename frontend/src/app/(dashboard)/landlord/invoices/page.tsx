@@ -9,7 +9,6 @@ import {
   Receipt,
   Sparkles,
   FileSpreadsheet,
-  Eye,
   Calendar,
   AlertTriangle,
   QrCode,
@@ -30,12 +29,14 @@ import {
   NumberInput,
   SelectInput,
   SearchInput,
-  ChipGroup,
   Pagination,
   ViewModeToggle,
   FilterToolbar,
   Card,
   TableRow,
+  Text,
+  Chip,
+  Modal,
 } from '@/components/ui'
 import {
   landlordInvoiceService,
@@ -43,6 +44,7 @@ import {
   LandlordInvoicesSummary,
 } from '@/services/landlord-invoice.service'
 import { getRooms, RoomItem } from '@/services/room.service'
+import { formatDate } from '@/utils'
 
 type InvoiceItem = LandlordInvoiceItem
 
@@ -76,10 +78,22 @@ function InvoicesContent() {
 
   const [isMounted, setIsMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  const currentYear = useMemo(() => new Date().getFullYear(), [])
   const [activeTab, setActiveTab] = useState<'all' | 'unpaid' | 'paid' | 'overdue'>('all')
   const [searchTerm, setSearchTerm] = useState(urlSearch)
   const [selectedMonth, setSelectedMonth] = useState('all')
-  const [selectedYear, setSelectedYear] = useState('2026')
+  const [selectedYear, setSelectedYear] = useState<string>(() => String(new Date().getFullYear()))
+
+  const yearOptions = useMemo(
+    () => [
+      { value: 'all', label: t('landlordInvoicesAllYears') },
+      ...Array.from({ length: 5 }, (_, i) => {
+        const y = String(currentYear - i)
+        return { value: y, label: y }
+      }),
+    ],
+    [currentYear, t],
+  )
 
   // Pagination State (Rule #9: Grid=6, Table=10, 5-page window jumping)
   const [pageSize, setPageSize] = useState<number>(viewMode === 'grid' ? 6 : 10)
@@ -497,11 +511,32 @@ function InvoicesContent() {
                 setCurrentPage(1)
               }}
               containerClassName="w-auto min-w-[110px] space-y-0"
+              options={yearOptions}
+            />
+            <SelectInput
+              value={activeTab}
+              onChange={e => {
+                setActiveTab(e.target.value as 'all' | 'unpaid' | 'paid' | 'overdue')
+                setCurrentPage(1)
+              }}
+              containerClassName="w-auto min-w-[150px] space-y-0"
               options={[
-                { value: 'all', label: t('landlordInvoicesAllYears') },
-                { value: '2026', label: '2026' },
-                { value: '2025', label: '2025' },
-                { value: '2024', label: '2024' },
+                {
+                  value: 'all',
+                  label: t('landlordInvoicesTabAll', { count: totalInvoicesCount }),
+                },
+                {
+                  value: 'unpaid',
+                  label: t('landlordInvoicesTabUnpaid', { count: unpaidCount }),
+                },
+                {
+                  value: 'paid',
+                  label: t('landlordInvoicesTabPaid', { count: paidCount }),
+                },
+                {
+                  value: 'overdue',
+                  label: t('landlordInvoicesTabOverdue', { count: overdueCount }),
+                },
               ]}
             />
           </>
@@ -510,42 +545,6 @@ function InvoicesContent() {
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
-          />
-        }
-        subRow={
-          <ChipGroup<'all' | 'unpaid' | 'paid' | 'overdue'>
-            value={activeTab}
-            onChange={val => {
-              setActiveTab(val)
-              setCurrentPage(1)
-            }}
-            scrollable
-            options={[
-              {
-                value: 'all',
-                label: t('landlordInvoicesTabAll').replace(/\s*\(?\{count\}\)?/, ''),
-                count: totalInvoicesCount,
-                variant: 'default',
-              },
-              {
-                value: 'unpaid',
-                label: t('landlordInvoicesTabUnpaid').replace(/\s*\(?\{count\}\)?/, ''),
-                count: unpaidCount,
-                variant: 'warning',
-              },
-              {
-                value: 'paid',
-                label: t('landlordInvoicesTabPaid').replace(/\s*\(?\{count\}\)?/, ''),
-                count: paidCount,
-                variant: 'success',
-              },
-              {
-                value: 'overdue',
-                label: t('landlordInvoicesTabOverdue').replace(/\s*\(?\{count\}\)?/, ''),
-                count: overdueCount,
-                variant: 'danger',
-              },
-            ]}
           />
         }
       />
@@ -603,77 +602,81 @@ function InvoicesContent() {
                 }}
               >
                 {/* Header info */}
-                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-sm text-foreground flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-primary" /> {inv.roomName}
-                    </span>
-                    <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${isPaid
-                        ? 'bg-success-soft text-success border-success-subtle'
-                        : isOverdue
-                          ? 'bg-danger-soft text-danger border-danger-subtle'
-                          : 'bg-warning-soft text-warning border-warning-subtle'
-                        }`}
-                    >
-                      {inv.status}
-                    </span>
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <Text as="span" size="sm" weight="extrabold" color="default">
+                      {inv.roomName}
+                    </Text>
                   </div>
+                  <Chip
+                    preventHover
+                    size="sm"
+                    variant={isPaid ? 'success' : isOverdue ? 'danger' : 'warning'}
+                  >
+                    {getInvoiceStatusLabel(inv.status)}
+                  </Chip>
                 </Card.Header>
 
                 <Card.Body className="px-4 sm:px-5 py-0 space-y-2">
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted font-semibold">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="semibold">
                         {t('landlordInvoicesLabelTenant')}
-                      </span>
-                      <span className="font-bold text-foreground">{inv.tenantName}</span>
+                      </Text>
+                      <Text as="span" size="xs" weight="bold" color="default">
+                        {inv.tenantName}
+                      </Text>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted font-semibold">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="semibold">
                         {t('landlordInvoicesLabelPeriod')}
-                      </span>
-                      <span className="font-bold text-foreground">
+                      </Text>
+                      <Text as="span" size="xs" weight="bold" color="default">
                         {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
-                      </span>
+                      </Text>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted font-semibold">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="semibold">
                         {t('landlordInvoicesLabelInvoiceId')}
-                      </span>
-                      <span className="font-mono text-muted text-[11px]">{inv.id}</span>
+                      </Text>
+                      <Text as="span" size="2xs" color="subtle" mono>
+                        {inv.id}
+                      </Text>
                     </div>
                   </div>
 
                   {/* Fee Items Breakdown Summary */}
-                  <div className="p-3 bg-surface rounded-xl space-y-1.5 text-[11px]">
-                    <div className="flex justify-between text-muted">
-                      <span>{t('landlordInvoicesFeeRent')}</span>
-                      <span className="font-bold text-foreground">
+                  <div className="p-3 bg-surface rounded-xl space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <Text as="span" size="2xs" color="secondary">
+                        {t('landlordInvoicesFeeRent')}
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default">
                         {inv.rentAmount.toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
-                    <div className="flex justify-between text-muted">
-                      <span>
+                    <div className="flex justify-between items-center">
+                      <Text as="span" size="2xs" color="secondary">
                         {t('landlordInvoicesFeeElec').replace(
                           '{usage}',
                           String(inv.elecNew - inv.elecOld),
                         )}
-                      </span>
-                      <span className="font-bold text-foreground">
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default">
                         {((inv.elecNew - inv.elecOld) * inv.elecRate).toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
-                    <div className="flex justify-between text-muted">
-                      <span>
+                    <div className="flex justify-between items-center">
+                      <Text as="span" size="2xs" color="secondary">
                         {t('landlordInvoicesFeeWater').replace(
                           '{usage}',
                           String(inv.waterNew - inv.waterOld),
                         )}
-                      </span>
-                      <span className="font-bold text-foreground">
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default">
                         {((inv.waterNew - inv.waterOld) * inv.waterRate).toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
                   </div>
                 </Card.Body>
@@ -682,44 +685,37 @@ function InvoicesContent() {
                 <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-muted block uppercase tracking-wider">
+                      <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block tracking-wider">
                         {t('landlordInvoicesLabelTotal')}
-                      </span>
-                      <span className="font-black text-base text-primary">
+                      </Text>
+                      <Text as="span" size="base" weight="black" color="brand">
                         {inv.totalAmount.toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold ${isOverdue ? 'text-danger font-black' : 'text-muted'}`}
+                    <Text
+                      as="span"
+                      size="3xs"
+                      weight={isOverdue ? 'black' : 'bold'}
+                      color={isOverdue ? 'danger' : 'secondary'}
                     >
-                      {t('landlordInvoicesLabelDeadline').replace('{deadline}', inv.deadline)}
-                    </span>
+                      {t('landlordInvoicesLabelDeadline').replace('{deadline}', formatDate(inv.deadline))}
+                    </Text>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={event => {
-                        event.stopPropagation()
-                        setSelectedInvoice(inv)
-                      }}
-                      className="flex-1"
-                      leftIcon={<Eye />}
-                    >
-                      {t('landlordInvoicesBtnViewDetail')}
-                    </Button>
-                    {!isPaid && (
-                      <Button variant="success"
+                  {!isPaid && (
+                    <div className="flex items-center justify-end">
+                      <Button
+                        variant="success"
                         size="sm"
+                        fullWidth
                         onClick={() => handleMarkAsPaid(inv.id)}
                         title={t('landlordInvoicesTooltipMarkPaid')}
                         leftIcon={<Check />}
                       >
                         {t('landlordInvoicesBtnCollect')}
                       </Button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </Card.Footer>
               </Card>
             )
@@ -749,47 +745,75 @@ function InvoicesContent() {
                     className="group"
                     onClick={() => setSelectedInvoice(inv)}
                   >
-                    <td className="px-4 py-3.5 font-bold font-mono text-foreground flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-primary" />
-                      {inv.id}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary shrink-0" />
+                        <Text as="span" size="xs" weight="bold" color="default" mono>
+                          {inv.id}
+                        </Text>
+                      </div>
                     </td>
-                    <td className="px-4 py-3.5 font-black text-foreground">{inv.roomName}</td>
-                    <td className="px-4 py-3.5 text-foreground/90">{inv.tenantName}</td>
-                    <td className="px-4 py-3.5 text-muted">
-                      {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="xs" weight="black" color="default">
+                        {inv.roomName}
+                      </Text>
                     </td>
-                    <td className="px-4 py-3.5 font-black text-primary text-sm">
-                      {inv.totalAmount.toLocaleString('vi-VN')} ₫
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="xs" weight="medium" color="default">
+                        {inv.tenantName}
+                      </Text>
                     </td>
-                    <td
-                      className={`px-4 py-3.5 font-bold ${inv.status === 'Quá hạn' ? 'text-danger font-black' : 'text-muted'}`}
-                    >
-                      {inv.deadline}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="xs" color="secondary">
+                        {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
+                      </Text>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${inv.status === 'Đã thu'
-                          ? 'bg-success-soft text-success border-success-subtle'
-                          : inv.status === 'Quá hạn'
-                            ? 'bg-danger-soft text-danger border-danger-subtle'
-                            : 'bg-warning-soft text-warning border-warning-subtle'
-                          }`}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="sm" weight="black" color="brand">
+                        {inv.totalAmount.toLocaleString('vi-VN')} ₫
+                      </Text>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text
+                        as="span"
+                        size="xs"
+                        weight={inv.status === 'Quá hạn' ? 'black' : 'bold'}
+                        color={inv.status === 'Quá hạn' ? 'danger' : 'secondary'}
+                      >
+                        {formatDate(inv.deadline)}
+                      </Text>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Chip
+                        preventHover
+                        size="sm"
+                        variant={
+                          inv.status === 'Đã thu'
+                            ? 'success'
+                            : inv.status === 'Quá hạn'
+                              ? 'danger'
+                              : 'warning'
+                        }
                       >
                         {getInvoiceStatusLabel(inv.status)}
-                      </span>
+                      </Chip>
                     </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={event => {
-                          event.stopPropagation()
-                          setSelectedInvoice(inv)
-                        }}
-                        leftIcon={<Eye />}
-                      >
-                        {t('landlordInvoicesBtnViewDetail')}
-                      </Button>
+                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                      {inv.status !== 'Đã thu' ? (
+                        <Button
+                          variant="success"
+                          onClick={event => {
+                            event.stopPropagation()
+                            handleMarkAsPaid(inv.id)
+                          }}
+                          size='icon-sm'
+                          title={t('landlordInvoicesTooltipMarkPaid')}
+                        >
+                          <Check />
+                        </Button>
+                      ) : (
+                        <Text as="span" size="xs" color="secondary">—</Text>
+                      )}
                     </td>
                   </TableRow>
                 ))}
@@ -813,56 +837,50 @@ function InvoicesContent() {
       )}
 
       {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}
-      {selectedInvoice && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setSelectedInvoice(null)
-          }}
-        >
-          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-line">
+      <Modal
+        isOpen={Boolean(selectedInvoice)}
+        onClose={() => setSelectedInvoice(null)}
+        size="3xl"
+      >
+        {selectedInvoice && (
+          <>
             {/* Modal Header */}
-            <div className="p-5 border-b border-line flex items-center justify-between bg-surface/50">
-              <div className="flex items-center gap-3">
+            <Modal.Header
+              icon={
                 <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
                   <Receipt className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-black text-base text-foreground flex items-center gap-2">
+              }
+              title={
+                <div className="flex items-center gap-2">
+                  <span>
                     {t('landlordInvoicesModalDetailTitle').replace(
                       '{room}',
                       selectedInvoice.roomName,
                     )}
-                    <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${selectedInvoice.status === 'Đã thu'
-                        ? 'bg-success-soft text-success border-success-subtle'
+                  </span>
+                  <Chip
+                    size="sm"
+                    preventHover
+                    variant={
+                      selectedInvoice.status === 'Đã thu'
+                        ? 'success'
                         : selectedInvoice.status === 'Quá hạn'
-                          ? 'bg-danger-soft text-danger border-danger-subtle'
-                          : 'bg-warning-soft text-warning border-warning-subtle'
-                        }`}
-                    >
-                      {getInvoiceStatusLabel(selectedInvoice.status)}
-                    </span>
-                  </h3>
-                  <p className="text-xs text-muted font-semibold">
-                    {t('landlordInvoicesModalDetailSub')
-                      .replace('{id}', selectedInvoice.id)
-                      .replace('{period}', selectedInvoice.period)}
-                  </p>
+                          ? 'danger'
+                          : 'warning'
+                    }
+                  >
+                    {getInvoiceStatusLabel(selectedInvoice.status)}
+                  </Chip>
                 </div>
-              </div>
-
-              <Button rounded="full"
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedInvoice(null)}
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+              }
+              description={t('landlordInvoicesModalDetailSub')
+                .replace('{id}', selectedInvoice.id)
+                .replace('{period}', selectedInvoice.period)}
+            />
 
             {/* Modal Scroll Content */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
+            <Modal.Body className="p-6 space-y-6 text-xs">
               {/* Tenant & Building Info Card */}
               <div className="p-4 bg-surface border border-line rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -1052,10 +1070,10 @@ function InvoicesContent() {
                   )}
                 </div>
               </div>
-            </div>
+            </Modal.Body>
 
             {/* Modal Footer Actions */}
-            <div className="p-4 border-t border-line bg-card flex flex-wrap items-center justify-between gap-3">
+            <Modal.Footer className="flex flex-wrap items-center justify-between gap-3 bg-card">
               {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
               {selectedInvoice.status !== 'Đã thu' ? (
                 <Button
@@ -1099,46 +1117,30 @@ function InvoicesContent() {
                   </Button>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* ➕ CREATE NEW INVOICE MODAL */}
-      {isCreateModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleRequestCloseCreate()
-          }}
-        >
-          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-line">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-line flex items-center justify-between bg-card">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
-                  <Plus className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-foreground">
-                    {t('landlordInvoicesModalCreateTitle')}
-                  </h3>
-                  <p className="text-xs text-muted font-semibold">
-                    {t('landlordInvoicesModalCreateSub')}
-                  </p>
-                </div>
-              </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="icon"
-                onClick={handleRequestCloseCreate}
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={handleRequestCloseCreate}
+        size="2xl"
+      >
+        {/* Modal Header */}
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
+              <Plus className="w-5 h-5" />
             </div>
+          }
+          title={t('landlordInvoicesModalCreateTitle')}
+          description={t('landlordInvoicesModalCreateSub')}
+        />
 
-            {/* Modal Form Content */}
-            <div className="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
+        {/* Modal Form Content */}
+        <Modal.Body className="p-6 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <SelectInput
                   label={t('landlordInvoicesFieldRoom')}
@@ -1271,215 +1273,196 @@ function InvoicesContent() {
                   {t('landlordInvoicesDeadlinePrefix')} {createForm.deadline}
                 </span>
               </div>
-            </div>
+        </Modal.Body>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-line bg-card flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRequestCloseCreate}
-              >
-                {t('landlordInvoicesBtnCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={isSubmitting}
-                isLoading={isSubmitting}
-                onClick={handleCreateInvoiceSubmit}
-              >
-                {isSubmitting
-                  ? t('landlordInvoicesBtnSubmitting')
-                  : t('landlordInvoicesBtnSubmitCreate')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* Footer */}
+        <Modal.Footer className="bg-card flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRequestCloseCreate}
+          >
+            {t('landlordInvoicesBtnCancel')}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            onClick={handleCreateInvoiceSubmit}
+          >
+            {isSubmitting
+              ? t('landlordInvoicesBtnSubmitting')
+              : t('landlordInvoicesBtnSubmitCreate')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* 🤖 AI OCR METER READING SPLIT-SCREEN VERIFICATION MODAL */}
-      {isOcrModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleRequestCloseOcr()
-          }}
-        >
-          <div className="bg-card rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-line">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-line bg-card">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-amber-500/10 text-warning rounded-2xl">
-                  <Sparkles className="w-6 h-6 fill-amber-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-foreground">
-                    {t('landlordInvoicesOcrModalTitle')}
-                  </h2>
-                  <p className="text-xs text-muted font-medium">
-                    {t('landlordInvoicesOcrModalSub')}
-                  </p>
+      <Modal
+        isOpen={isOcrModalOpen}
+        onClose={handleRequestCloseOcr}
+        size="4xl"
+      >
+        {/* Header */}
+        <Modal.Header
+          icon={
+            <div className="p-3 bg-amber-500/10 text-warning rounded-2xl">
+              <Sparkles className="w-6 h-6 fill-amber-500" />
+            </div>
+          }
+          title={t('landlordInvoicesOcrModalTitle')}
+          description={t('landlordInvoicesOcrModalSub')}
+        />
+
+        {/* Split Screen Content */}
+        <Modal.Body className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Side: Photo with AI Bounding Box */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Text as="span" size="xs" weight="black" color="default" uppercase className="tracking-wider">
+                  {t('landlordInvoicesOcrPhotoTitle')}
+                </Text>
+                <Chip size="sm" preventHover variant="success">
+                  {t('landlordInvoicesOcrAccuracy')}
+                </Chip>
+              </div>
+
+              <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
+                <div className="text-center space-y-2">
+                  <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
+                    {ocrMeterValue}
+                    <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
+                      OCR Box
+                    </span>
+                  </div>
+                  <Text size="2xs" color="secondary">{t('landlordInvoicesOcrMeterDesc')}</Text>
                 </div>
               </div>
-              <Button rounded="full"
-                variant="ghost"
-                size="icon"
-                onClick={handleRequestCloseOcr}
-              >
-                <X className="w-5 h-5" />
-              </Button>
             </div>
 
-            {/* Split Screen Content */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto custom-scrollbar">
-              {/* Left Side: Photo with AI Bounding Box */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-foreground/90 uppercase tracking-wider">
-                    {t('landlordInvoicesOcrPhotoTitle')}
-                  </span>
-                  <span className="px-2.5 py-0.5 bg-success-soft text-success border border-success-subtle rounded-full text-[10px] font-extrabold">
-                    {t('landlordInvoicesOcrAccuracy')}
-                  </span>
+            {/* Right Side: AI Extracted Details & Inputs */}
+            <div className="space-y-4 bg-surface p-5 rounded-2xl border border-line flex flex-col justify-between">
+              <div className="space-y-4">
+                <Text as="span" size="xs" weight="black" color="default" uppercase className="tracking-wider block">
+                  {t('landlordInvoicesOcrDetailsTitle')}
+                </Text>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-card rounded-xl border border-line">
+                    <Text as="span" size="3xs" weight="extrabold" color="secondary" className="block">
+                      {t('landlordInvoicesOcrOldIndex')}
+                    </Text>
+                    <Text as="span" size="base" weight="black" color="default">1.318 kWh</Text>
+                  </div>
+                  <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
+                    <TextInput
+                      label={t('landlordInvoicesOcrNewIndex')}
+                      value={ocrMeterValue}
+                      onChange={e => {
+                        setOcrMeterValue(e.target.value)
+                        setIsOcrFormDirty(true)
+                      }}
+                      labelClassName="text-warning text-[10px]"
+                      className="text-base font-black text-warning border-none bg-transparent"
+                    />
+                  </div>
                 </div>
 
-                <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
-                  <div className="text-center space-y-2">
-                    <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
-                      {ocrMeterValue}
-                      <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
-                        OCR Box
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted">{t('landlordInvoicesOcrMeterDesc')}</p>
+                <div className="p-4 bg-card rounded-xl border border-line space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-muted">
+                    <span>{t('landlordInvoicesOcrUsage')}</span>
+                    <Text as="span" weight="black" color="default">
+                      {Math.max(0, parseInt(ocrMeterValue || '0') - 1318)} kWh
+                    </Text>
+                  </div>
+                  <div className="flex justify-between text-xs font-bold text-muted">
+                    <span>{t('landlordInvoicesOcrUnitPrice')}</span>
+                    <Text as="span" color="default">3.500 ₫ / kWh</Text>
+                  </div>
+                  <div className="border-t border-line pt-2 flex justify-between text-sm font-black text-foreground">
+                    <span>{t('landlordInvoicesOcrAmount')}</span>
+                    <Text as="span" color="brand" weight="black">
+                      {(
+                        Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld) *
+                        createForm.elecRate
+                      ).toLocaleString('vi-VN')}{' '}
+                      ₫
+                    </Text>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: AI Extracted Details & Inputs */}
-              <div className="space-y-4 bg-surface p-5 rounded-2xl border border-line flex flex-col justify-between">
-                <div className="space-y-4">
-                  <span className="text-xs font-black text-foreground/90 uppercase tracking-wider block">
-                    {t('landlordInvoicesOcrDetailsTitle')}
-                  </span>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-card rounded-xl border border-line">
-                      <span className="text-[10px] font-extrabold text-muted block">
-                        {t('landlordInvoicesOcrOldIndex')}
-                      </span>
-                      <span className="text-base font-black text-foreground">1.318 kWh</span>
-                    </div>
-                    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
-                      <TextInput
-                        label={t('landlordInvoicesOcrNewIndex')}
-                        value={ocrMeterValue}
-                        onChange={e => {
-                          setOcrMeterValue(e.target.value)
-                          setIsOcrFormDirty(true)
-                        }}
-                        labelClassName="text-warning text-[10px]"
-                        className="text-base font-black text-warning border-none bg-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-card rounded-xl border border-line space-y-2">
-                    <div className="flex justify-between text-xs font-bold text-muted">
-                      <span>{t('landlordInvoicesOcrUsage')}</span>
-                      <span className="text-foreground font-black">
-                        {Math.max(0, parseInt(ocrMeterValue || '0') - 1318)} kWh
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs font-bold text-muted">
-                      <span>{t('landlordInvoicesOcrUnitPrice')}</span>
-                      <span className="text-foreground">3.500 ₫ / kWh</span>
-                    </div>
-                    <div className="border-t border-line pt-2 flex justify-between text-sm font-black text-foreground">
-                      <span>{t('landlordInvoicesOcrAmount')}</span>
-                      <span className="text-primary">
-                        {(
-                          Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld) *
-                          createForm.elecRate
-                        ).toLocaleString('vi-VN')}{' '}
-                        ₫
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRequestCloseOcr}
-                    className="flex-1"
-                  >
-                    {t('landlordInvoicesBtnCancel')}
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => {
-                      setIsOcrModalOpen(false)
-                      setIsOcrFormDirty(false)
-                    }}
-                    className="flex-1"
-                  >
-                    {t('landlordInvoicesOcrConfirm')}
-                  </Button>
-                </div>
+              <div className="pt-2 flex gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRequestCloseOcr}
+                  className="flex-1"
+                >
+                  {t('landlordInvoicesBtnCancel')}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    setIsOcrModalOpen(false)
+                    setIsOcrFormDirty(false)
+                  }}
+                  className="flex-1"
+                >
+                  {t('landlordInvoicesOcrConfirm')}
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+      </Modal>
 
       {/* ⚠️ SYSTEM POP-UP CONFIRMATION MODAL (Rule #10 Dormio Standard) */}
-      {confirmCloseTarget && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setConfirmCloseTarget(null)
-          }}
-        >
-          <div className="bg-card rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-line text-center space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="w-14 h-14 bg-warning-soft text-amber-500 border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-foreground">
-                {t('landlordInvoicesConfirmCloseTitle')}
-              </h3>
-              <p className="text-xs text-muted font-semibold leading-relaxed">
-                {t('landlordInvoicesConfirmCloseDesc')}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1"
-              >
-                {t('landlordInvoicesConfirmCloseKeep')}
-              </Button>
-
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleConfirmCloseModal}
-                className="flex-1"
-              >
-                {t('landlordInvoicesConfirmCloseDiscard')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={Boolean(confirmCloseTarget)}
+        onClose={() => setConfirmCloseTarget(null)}
+        size="sm"
+        zIndex={60}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 sm:p-7 text-center space-y-5">
+          <div className="w-14 h-14 bg-warning-soft text-amber-500 border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
+            <AlertTriangle className="w-7 h-7" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <Text as="h3" size="lg" weight="black" color="default">
+              {t('landlordInvoicesConfirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" weight="semibold" className="leading-relaxed">
+              {t('landlordInvoicesConfirmCloseDesc')}
+            </Text>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmCloseTarget(null)}
+              className="flex-1"
+            >
+              {t('landlordInvoicesConfirmCloseKeep')}
+            </Button>
+
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleConfirmCloseModal}
+              className="flex-1"
+            >
+              {t('landlordInvoicesConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }
