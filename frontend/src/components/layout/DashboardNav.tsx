@@ -37,6 +37,7 @@ import { FEATURE_FLAGS } from '@/config/features'
 import { Button, Text } from '@/components/ui'
 import { useUnreadMessages } from '@/hooks'
 
+
 export interface DashboardNavProps {
   persistScroll?: boolean
 }
@@ -98,13 +99,14 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
   const isLandlord = !isAdmin && !isStaff && !isTenant
 
   const { unreadCount: unreadMessagesCount } = useUnreadMessages(
-    isLoggedIn && (Boolean(isTenant) || isLandlord),
+    isLoggedIn && (Boolean(isTenant) || isLandlord || Boolean(isStaff)),
   )
 
   const staffMenus = [
     { name: tNav('staffOverview'), href: '/staff', icon: LayoutDashboard },
     { name: tNav('staffShiftsAttendance'), href: '/staff/schedule', icon: Calendar },
     { name: tNav('staffShiftHistory'), href: '/staff/shift-history', icon: Clock },
+    { name: tNav('messages'), href: '/staff/messages', icon: MessageCircle },
   ]
 
   const adminMenus = [
@@ -176,7 +178,14 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
 
   const tenantMenus = [
     { name: tNav('home'), href: '/tenant', icon: Building },
+    {
+      name: tNav('roomInfo'),
+      href: "/tenant/room",
+      icon: DoorOpen,
+    },
+    { name: tNav('contracts'), href: '/tenant/contract', icon: FileText },
     { name: tNav('invoices'), href: '/tenant/invoices', icon: Receipt },
+    { name: tNav('complaints'), href: '/tenant/complaints', icon: AlertTriangle },
     { name: tNav('messages'), href: '/tenant/messages', icon: MessageCircle },
   ]
 
@@ -246,6 +255,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
             item.href === '/staff'
               ? pathname === '/staff'
               : pathname === item.href || pathname?.startsWith(item.href + '/')
+          const isMessages = item.href === '/staff/messages'
           return (
             <Link
               key={idx}
@@ -267,6 +277,17 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">
                 {item.name}
               </Text>
+              {isMessages && unreadMessagesCount > 0 && (
+                <Text
+                  as="span"
+                  size="2xs"
+                  weight="extrabold"
+                  color="white"
+                  className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger shadow-2xs animate-in zoom-in-75 duration-150"
+                >
+                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                </Text>
+              )}
             </Link>
           )
         })}
@@ -281,8 +302,16 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
         onScroll={handleScroll}
         className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5"
       >
+        <div className="px-3 pb-2 flex items-center gap-1.5">
+          <DoorOpen className="w-3.5 h-3.5 text-primary" />
+          <Text as="span" variant="overline" color="brand">
+            {tNav('tenantTag')}
+          </Text>
+        </div>
         {tenantMenus.map((item, idx) => {
+          const isRoomItem = item.href === "/tenant/room"
           const isActive =
+            (isRoomItem && Boolean(pathname === "/tenant/room" || pathname?.startsWith("/tenant/room"))) ||
             pathname === item.href ||
             (item.href !== '/tenant' && pathname?.startsWith(item.href + '/'))
           const isMessages = item.href === '/tenant/messages'

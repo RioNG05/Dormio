@@ -33,6 +33,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           pathname?.startsWith('/staff/attendance')
         ) {
           pageTitle = tNav('staffTitleShiftHistory')
+        } else if (pathname?.startsWith('/staff/messages')) {
+          pageTitle = tNav('staffTitleMessages')
         } else {
           pageTitle = tNav('staffTitlePortal')
         }
@@ -51,6 +53,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           pageTitle = tNav('adminTitleAnalytics')
         } else {
           pageTitle = tNav('adminTitlePortal')
+        }
+      } else if (isTenant) {
+        if (pathname === '/tenant') {
+          pageTitle = tNav('tenantTitleOverview')
+        } else if (pathname === '/tenant/room' || pathname?.startsWith('/tenant/room')) {
+          pageTitle = tNav('tenantTitleRoomDetails')
+        } else if (pathname?.startsWith('/tenant/contract')) {
+          pageTitle = tNav('tenantTitleContract')
+        } else if (pathname?.startsWith('/tenant/complaints')) {
+          pageTitle = tNav('tenantTitleComplaints')
+        } else if (pathname?.startsWith('/tenant/invoices')) {
+          pageTitle = tNav('tenantTitleInvoices')
+        } else if (pathname?.startsWith('/tenant/messages')) {
+          pageTitle = tNav('tenantTitleMessages')
+        } else {
+          pageTitle = tNav('tenantTitlePortal')
         }
       } else if (activeBuilding?.name) {
         if (pathname === '/landlord') {
@@ -77,7 +95,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       document.title = pageTitle
     }
-  }, [activeBuilding?.name, pathname, isAdmin, isStaff, tNav])
+  }, [activeBuilding?.name, pathname, isAdmin, isStaff, isTenant, tNav])
 
   return (
     <AuthGuard>
