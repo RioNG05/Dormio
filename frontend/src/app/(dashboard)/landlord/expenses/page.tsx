@@ -28,7 +28,6 @@ import {
   SelectInput,
   TextareaInput,
   SearchInput,
-  ChipGroup,
   Pagination,
   ViewModeToggle,
   FilterToolbar,
@@ -528,62 +527,56 @@ export default function ExpensesPage() {
           />
         }
         filters={
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <Text as="span" size="2xs" weight="extrabold" color="secondary" uppercase className="mr-1 hidden sm:inline shrink-0">
-              {t('landlordExpensesCategoryColon')}
-            </Text>
-            <ChipGroup
-              value={activeCategoryTab}
-              onChange={val => {
-                setActiveCategoryTab(val)
+          <>
+            <SelectInput
+              value={activeStatusTab}
+              onChange={e => {
+                setActiveStatusTab(e.target.value as 'all' | 'paid' | 'pending' | 'canceled')
                 setCurrentPage(1)
               }}
-              scrollable
+              containerClassName="w-full sm:w-auto min-w-[150px] space-y-0"
+              options={[
+                {
+                  value: 'all',
+                  label: t('landlordExpensesAllStatuses'),
+                },
+                {
+                  value: 'paid',
+                  label: t('landlordExpensesStatusPaid'),
+                },
+                {
+                  value: 'pending',
+                  label: t('landlordExpensesStatusPending'),
+                },
+                {
+                  value: 'canceled',
+                  label: t('landlordExpensesStatusCanceled'),
+                },
+              ]}
+            />
+            <SelectInput
+              value={activeCategoryTab}
+              onChange={e => {
+                setActiveCategoryTab(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-full sm:w-auto min-w-[170px] space-y-0"
               options={categoriesList.map(cat => ({
                 value: cat,
-                label: cat === 'all' ? t('landlordExpensesAllCategories') : getCategoryLabel(cat),
-                count: cat === 'all' ? summary.totalCount : undefined,
-                variant: 'default' as const,
+                label:
+                  cat === 'all'
+                    ? summary.totalCount
+                      ? `${t('landlordExpensesAllCategories')} (${summary.totalCount})`
+                      : t('landlordExpensesAllCategories')
+                    : getCategoryLabel(cat),
               }))}
             />
-          </div>
+          </>
         }
         viewMode={
           <ViewModeToggle
             value={viewMode}
             onChange={setViewMode}
-          />
-        }
-        subRow={
-          <ChipGroup<'all' | 'paid' | 'pending' | 'canceled'>
-            value={activeStatusTab}
-            onChange={val => {
-              setActiveStatusTab(val)
-              setCurrentPage(1)
-            }}
-            scrollable
-            options={[
-              {
-                value: 'all',
-                label: t('landlordExpensesAllStatuses'),
-                variant: 'neutral',
-              },
-              {
-                value: 'paid',
-                label: t('landlordExpensesStatusPaid'),
-                variant: 'success',
-              },
-              {
-                value: 'pending',
-                label: t('landlordExpensesStatusPending'),
-                variant: 'warning',
-              },
-              {
-                value: 'canceled',
-                label: t('landlordExpensesStatusCanceled'),
-                variant: 'danger',
-              },
-            ]}
           />
         }
       />
