@@ -34,8 +34,12 @@ import {
   FilterToolbar,
   Card,
   TableRow,
+  Text,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  Chip,
 } from '@/components/ui'
-import { cn } from '@/lib/utils'
 import {
   expenseService,
   ExpenseItem,
@@ -148,13 +152,6 @@ export default function ExpensesPage() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
-
-  // Update pageSize on viewMode change per Rule #9
-  useEffect(() => {
-    const defaultSize = viewMode === 'grid' ? 6 : 10
-    setPageSize(defaultSize)
-    setCurrentPage(1)
-  }, [viewMode])
 
   // Load Rooms list for dropdown
   useEffect(() => {
@@ -414,38 +411,26 @@ export default function ExpensesPage() {
     document.body.removeChild(link)
   }
 
-  // Rule #9 Pagination Calculation with 5-page window jumping
-  const totalPages = Math.ceil(totalRecords / pageSize) || 1
-  const windowSize = 5
-  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-  const visiblePages = Array.from(
-    { length: windowEnd - windowStart + 1 },
-    (_, i) => windowStart + i,
-  )
-  const startIndex = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endIndex = Math.min(currentPage * pageSize, totalRecords)
-
   // Status Badge Helper
   const renderStatusBadge = (status: ExpenseItem['status']) => {
     if (status === 'paid') {
       return (
-        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-primary/15 text-[#0d6e6b] border border-primary/30 flex items-center gap-1 shrink-0">
-          <Check className="w-3 h-3" /> {t('landlordExpensesStatusPaid')}
-        </span>
+        <Chip preventHover variant='primary' className='w-full' leftIcon={<Check className='text-primary' />}>
+          {t('landlordExpensesStatusPaid')}
+        </Chip>
       )
     }
     if (status === 'pending') {
       return (
-        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-warning-soft text-warning border border-warning-subtle flex items-center gap-1 shrink-0">
-          <Clock className="w-3 h-3 text-amber-500" /> {t('landlordExpensesStatusPending')}
-        </span>
+        <Chip preventHover variant='accent' className='w-full' leftIcon={<Check className='text-accent' />}>
+          {t('landlordExpensesStatusPaid')}
+        </Chip>
       )
     }
     return (
-      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-card-hover text-muted border border-line flex items-center gap-1 shrink-0">
-        <X className="w-3 h-3" /> {t('landlordExpensesStatusCanceled')}
-      </span>
+      <Chip preventHover variant='default' className='w-full' leftIcon={<X />}>
+        {t('landlordExpensesStatusCanceled')}
+      </Chip>
     )
   }
 
@@ -546,9 +531,9 @@ export default function ExpensesPage() {
         }
         filters={
           <div className="flex items-center gap-2 overflow-x-auto">
-            <span className="text-muted text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
+            <Text as="span" size="2xs" weight="extrabold" color="secondary" uppercase className="mr-1 hidden sm:inline shrink-0">
               {t('landlordExpensesCategoryColon')}
-            </span>
+            </Text>
             <ChipGroup
               value={activeCategoryTab}
               onChange={val => {
@@ -609,13 +594,13 @@ export default function ExpensesPage() {
       {isLoading ? (
         <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
           <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
-          <p className="text-sm font-bold text-foreground/90">{t('landlordExpensesLoading')}</p>
+          <Text size="sm" weight="bold" color="default">{t('landlordExpensesLoading')}</Text>
         </div>
       ) : expensesList.length === 0 ? (
         <div className="p-12 text-center bg-card border border-line rounded-2xl space-y-3">
           <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-foreground">{t('landlordExpensesNotFound')}</h3>
-          <p className="text-xs text-muted">{t('landlordExpensesNotFoundDesc')}</p>
+          <Text as="h3" size="sm" weight="extrabold" color="default">{t('landlordExpensesNotFound')}</Text>
+          <Text size="xs" color="secondary">{t('landlordExpensesNotFoundDesc')}</Text>
           <Button variant="dark"
             size="sm"
             onClick={() => {
@@ -640,71 +625,56 @@ export default function ExpensesPage() {
               }}
             >
               {/* Header Info */}
-              <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-primary shrink-0" />
-                    <span className="font-black text-xs text-foreground">{exp.code}</span>
-                  </div>
-                  {renderStatusBadge(exp.status)}
+              <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-primary shrink-0" />
+                  <Text as="span" size="xs" weight="black" color="default">{exp.code}</Text>
                 </div>
+                <Chip preventHover size='sm'>
+                  {getCategoryLabel(exp.category)}
+                </Chip>
               </Card.Header>
 
               <Card.Body className="px-4 sm:px-5 py-0 space-y-3">
                 <div>
-                  <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-card-hover text-foreground/90 border border-line inline-block mb-1.5">
-                    {getCategoryLabel(exp.category)}
-                  </span>
-                  <h4 className="font-black text-sm text-foreground leading-snug line-clamp-2">
+                  <Text as="h4" size="sm" weight="black" color="default" clamp={2} className="leading-snug">
                     {exp.name}
-                  </h4>
+                  </Text>
                 </div>
 
                 {/* Amount Highlight */}
                 <div className="p-3 bg-danger-soft border border-danger-subtle rounded-xl flex items-center justify-between">
-                  <span className="text-[11px] font-extrabold text-danger uppercase">
+                  <Text as="span" size="2xs" weight="extrabold" color="danger" uppercase>
                     {t('landlordExpensesExpenseAmount')}
-                  </span>
-                  <span className="text-base font-black text-danger whitespace-nowrap">
+                  </Text>
+                  <Text as="span" size="base" weight="black" color="danger" className="whitespace-nowrap">
                     -{formatCurrency(exp.amount)}
-                  </span>
+                  </Text>
                 </div>
 
                 {/* Scope & Date Meta */}
-                <div className="space-y-1.5 text-xs text-muted font-medium">
+                <div className="space-y-1.5 my-4 text-xs text-muted font-medium">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted">{t('landlordExpensesScopeColon')}</span>
-                    <span className="font-extrabold text-foreground">{getScopeLabel(exp)}</span>
+                    <Text as="span" size="xs" color="secondary">{t('landlordExpensesScopeColon')}</Text>
+                    <Text as="span" size="xs" weight="extrabold" color="default">{getScopeLabel(exp)}</Text>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted">{t('landlordExpensesDateColon')}</span>
-                    <span className="font-semibold text-foreground/90">{formatDate(exp.paidAt)}</span>
+                    <Text as="span" size="xs" color="secondary">{t('landlordExpensesDateColon')}</Text>
+                    <Text as="span" size="xs" weight="semibold" color="default">{formatDate(exp.paidAt)}</Text>
                   </div>
                 </div>
+                {renderStatusBadge(exp.status)}
               </Card.Body>
 
               {/* Action Buttons */}
-              <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-between gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={event => {
-                    event.stopPropagation()
-                    setSelectedExpense(exp)
-                  }}
-                  className="flex-1"
-                >
-                  {t('landlordExpensesViewDetail')}
-                </Button>
-
+              <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-end gap-2">
                 {exp.status === 'pending' && (
-                  <Button variant="dark"
-                    size="sm"
+                  <Button
+                    variant="dark"
                     onClick={event => {
                       event.stopPropagation()
                       handleMarkAsPaid(exp.id)
                     }}
-                    className="whitespace-nowrap"
                     title={t('landlordExpensesMarkPaid')}
                   >
                     {t('landlordExpensesMarkPaid')}
@@ -714,42 +684,39 @@ export default function ExpensesPage() {
                 <div className="flex items-center gap-1">
                   {exp.status === 'paid' ? (
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      variant="secondary"
                       onClick={event => {
                         event.stopPropagation()
                         openEditModal(exp)
                       }}
-                      title={t('landlordExpensesLockedTooltip')}
+                      leftIcon={<Lock className="text-amber-500" />}
                     >
-                      <Lock className="w-4 h-4 text-amber-500" />
+                      {t('landlordExpensesLockedTooltip')}
                     </Button>
                   ) : (
                     <Button
                       variant="ghost"
-                      size="sm"
                       onClick={event => {
                         event.stopPropagation()
                         openEditModal(exp)
                       }}
                       title={t('landlordExpensesEditTooltip')}
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 />
                     </Button>
                   )}
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="danger"
                     onClick={event => {
                       event.stopPropagation()
                       handleDeleteExpense(exp)
                     }}
-                    title={t('landlordExpensesDeleteTooltip')}
+                    leftIcon={<Trash2 />}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {t('landlordExpensesDeleteTooltip')}
                   </Button>
                 </div>
-                </Card.Footer>
+              </Card.Footer>
             </Card>
           ))}
         </div>
@@ -789,31 +756,31 @@ export default function ExpensesPage() {
                     <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span>{exp.code}</span>
+                        <Text as="span" size="xs" weight="black" color="default">{exp.code}</Text>
                       </div>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4">
                       <div className="min-w-[180px] max-w-[260px]">
-                        <div className="font-extrabold text-foreground text-xs leading-snug line-clamp-2">
+                        <Text as="div" size="xs" weight="extrabold" color="default" clamp={2} className="leading-snug">
                           {exp.name}
-                        </div>
-                        <span className="text-[10px] text-muted font-medium block mt-0.5">
+                        </Text>
+                        <Text as="span" size="3xs" color="secondary" weight="medium" className="block mt-0.5">
                           {getCategoryLabel(exp.category)}
-                        </span>
+                        </Text>
                       </div>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 font-bold text-foreground whitespace-nowrap">
-                      {getScopeLabel(exp)}
+                      <Text as="span" size="xs" weight="bold" color="default">{getScopeLabel(exp)}</Text>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 text-muted whitespace-nowrap">
-                      {formatDate(exp.paidAt)}
+                      <Text as="span" size="xs" color="secondary">{formatDate(exp.paidAt)}</Text>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 font-black text-danger whitespace-nowrap">
-                      -{formatCurrency(exp.amount)}
+                      <Text as="span" size="xs" weight="black" color="danger">-{formatCurrency(exp.amount)}</Text>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 whitespace-nowrap">
@@ -822,49 +789,42 @@ export default function ExpensesPage() {
 
                     <td className="py-3 px-3.5 sm:px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setSelectedExpense(exp)}
-                        >
-                          {t('landlordExpensesDetailBtn')}
-                        </Button>
                         {exp.status === 'paid' ? (
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="orange"
+                            size='icon-sm'
                             onClick={() => openEditModal(exp)}
                             title={t('landlordExpensesLockedTooltip')}
                           >
-                            <Lock className="w-3.5 h-3.5 text-amber-500" />
+                            <Lock />
                           </Button>
                         ) : (
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="secondary"
+                            size="icon-sm"
                             onClick={() => openEditModal(exp)}
                             title={t('landlordExpensesEditTooltip')}
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 />
                           </Button>
                         )}
                         {exp.status === 'paid' ? (
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="danger"
+                            size="icon-sm"
                             onClick={() => openEditModal(exp)}
                             title={t('landlordExpensesLockedDeleteTooltip')}
                           >
-                            <Trash2 className="w-3.5 h-3.5 text-zinc-300 hover:text-amber-500" />
+                            <Trash2 />
                           </Button>
                         ) : (
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="danger"
+                            size="icon-sm"
                             onClick={() => handleDeleteExpense(exp)}
                             title={t('landlordExpensesDeleteTooltip')}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 />
                           </Button>
                         )}
                       </div>
@@ -892,192 +852,138 @@ export default function ExpensesPage() {
 
       {/* ─── Modal 1: View Detail Lightbox ───────────────────────────────────── */}
       {selectedExpense && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setSelectedExpense(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-card border border-line rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between bg-primary/5 shrink-0">
-              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
-                <div className="p-2 sm:p-2.5 bg-primary/10 text-primary rounded-2xl shadow-xs shrink-0">
-                  <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-black text-sm sm:text-base text-foreground truncate">
-                    {t('landlordExpensesDetailTitle', { code: selectedExpense.code })}
-                  </h3>
-                  <p className="text-[11px] sm:text-xs text-muted font-semibold truncate">
-                    {getCategoryLabel(selectedExpense.category)}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                rounded="full"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setSelectedExpense(null)}
-              >
-                <X className="w-5 h-5" />
+        <Modal
+          isOpen
+          onClose={() => setSelectedExpense(null)}
+          title={t('landlordExpensesDetailTitle', { code: selectedExpense.code })}
+          description={getCategoryLabel(selectedExpense.category)}
+          icon={<Receipt className="w-5 h-5 text-primary" />}
+          size="lg"
+          closeOnOverlayClick
+          closeOnEsc
+          bodyClassName="text-xs"
+          footer={
+            <ModalFooter>
+              <Button variant="secondary" size="sm" onClick={() => setSelectedExpense(null)}>
+                {t('landlordExpensesCloseBtn')}
               </Button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar text-xs">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                {selectedExpense.status === 'pending' && (
+                  <Button variant="dark" size="sm" onClick={() => handleMarkAsPaid(selectedExpense.id)} leftIcon={<Check />}>
+                    {t('landlordExpensesStatusPaid')}
+                  </Button>
+                )}
+                {selectedExpense.status === 'paid' ? (
+                  <Button variant="secondary" size="sm" onClick={() => openEditModal(selectedExpense)} leftIcon={<Lock />}>
+                    {t('landlordExpensesLockedBtn')}
+                  </Button>
+                ) : (
+                  <Button variant="dark" size="sm" onClick={() => {
+                    const expToEdit = selectedExpense
+                    setSelectedExpense(null)
+                    openEditModal(expToEdit)
+                  }} leftIcon={<Edit3 />}>
+                    {t('landlordExpensesEditBtn')}
+                  </Button>
+                )}
+              </div>
+            </ModalFooter>
+          }
+        >
+          <ModalBody className="space-y-4 sm:space-y-5">
               {/* Financial Highlight Box */}
               <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted whitespace-nowrap">
+                  <Text as="span" size="3xs" weight="extrabold" color="secondary" uppercase className="whitespace-nowrap">
                     {t('landlordExpensesPaymentAmountLabel')}
-                  </span>
-                  <span className="text-xs text-zinc-300 font-semibold whitespace-nowrap">
+                  </Text>
+                  <Text as="span" size="xs" weight="semibold" color="subtle" className="whitespace-nowrap">
                     {t('landlordExpensesPaymentDateLabel')}{' '}
-                    <strong className="text-white font-black whitespace-nowrap">
+                    <Text as="strong" color="white" weight="black" className="whitespace-nowrap">
                       {formatDate(selectedExpense.paidAt)}
-                    </strong>
-                  </span>
+                    </Text>
+                  </Text>
                 </div>
 
                 <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-primary tracking-tight whitespace-nowrap">
-                  <span>-{formatCurrency(selectedExpense.amount)}</span>
+                  <Text as="span" size={{ base: '2xl', sm: '3xl' }} weight="black" color="brand">
+                    -{formatCurrency(selectedExpense.amount)}
+                  </Text>
                 </div>
 
                 <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center justify-between gap-2">
-                  <span className="shrink-0">{t('landlordExpensesNameColon')}</span>
-                  <strong className="text-white font-black text-right line-clamp-1">
+                  <Text as="span" color="subtle" className="shrink-0">{t('landlordExpensesNameColon')}</Text>
+                  <Text as="strong" color="white" weight="black" align="right" clamp={1}>
                     {selectedExpense.name}
-                  </strong>
+                  </Text>
                 </div>
               </div>
 
               {/* Expense Details Breakdown Card */}
               <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-muted gap-2">
-                  <span className="font-semibold text-muted shrink-0">
+                  <Text as="span" weight="semibold" color="secondary" className="shrink-0">
                     {t('landlordExpensesScopeColon')}
-                  </span>
-                  <span className="font-black text-foreground truncate">
+                  </Text>
+                  <Text as="span" weight="black" color="default" truncate>
                     {getScopeLabel(selectedExpense)}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="flex justify-between items-center text-muted border-t border-line pt-2 gap-2">
-                  <span className="font-semibold text-muted shrink-0">
+                  <Text as="span" weight="semibold" color="secondary" className="shrink-0">
                     {t('landlordExpensesStatusColon')}
-                  </span>
+                  </Text>
                   <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
                 </div>
 
                 {selectedExpense.description && (
                   <div className="border-t border-line pt-2.5 space-y-1">
-                    <span className="font-extrabold text-foreground/90 block">
+                    <Text as="span" weight="extrabold" color="default" className="block">
                       {t('landlordExpensesDescriptionLabel')}
-                    </span>
-                    <p className="text-muted leading-relaxed bg-card p-3 rounded-xl border border-line">
+                    </Text>
+                    <Text as="p" color="secondary" className="leading-relaxed bg-card p-3 rounded-xl border border-line">
                       {selectedExpense.description}
-                    </p>
+                    </Text>
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div className="p-3.5 sm:p-4 border-t border-line bg-card flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setSelectedExpense(null)}
-                className="sm:w-auto"
-              >
-                {t('landlordExpensesCloseBtn')}
-              </Button>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                {selectedExpense.status === 'pending' && (
-                  <Button variant="dark"
-                    size="sm"
-                    onClick={() => handleMarkAsPaid(selectedExpense.id)}
-                    className="sm:w-auto whitespace-nowrap"
-                    leftIcon={<Check className="shrink-0" />}
-                  >
-                    {t('landlordExpensesStatusPaid')}
-                  </Button>
-                )}
-
-                {selectedExpense.status === 'paid' ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openEditModal(selectedExpense)}
-                    className="sm:w-auto whitespace-nowrap"
-                    title={t('landlordExpensesLockedTooltip')}
-                    leftIcon={<Lock className="shrink-0" />}
-                  >
-                    {t('landlordExpensesLockedBtn')}
-                  </Button>
-                ) : (
-                  <Button variant="dark"
-                    size="sm"
-                    onClick={() => {
-                      const expToEdit = selectedExpense
-                      setSelectedExpense(null)
-                      openEditModal(expToEdit)
-                    }}
-                    className="sm:w-auto whitespace-nowrap"
-                    leftIcon={<Edit3 className="shrink-0" />}
-                  >
-                    {t('landlordExpensesEditBtn')}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+          </ModalBody>
+        </Modal>
       )}
 
       {/* ─── Modal 2: Create / Edit Expense Modal ────────────────────────────── */}
       {(showCreateModal || editingExpense) && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) requestCloseModal(showCreateModal ? 'create' : 'edit')
+        <Modal
+          isOpen
+          onClose={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
+          title={showCreateModal
+            ? t('landlordExpensesCreateTitle')
+            : t('landlordExpensesEditTitleWithCode', { code: editingExpense?.code || '' })}
+          description={t('landlordExpensesFormSubtitle')}
+          icon={<Wallet className="w-5 h-5 text-primary" />}
+          size="lg"
+          closeOnOverlayClick={false}
+          closeOnEsc
+          asForm
+          onSubmit={event => {
+            event.preventDefault()
+            if (!isSubmitting) {
+              void (showCreateModal ? handleCreateExpense() : handleUpdateExpense())
+            }
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-card border border-line rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="p-5 border-b border-line flex items-center justify-between bg-gradient-to-r from-teal-50/50 via-white to-teal-50/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl shadow-xs">
-                  <Wallet className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-foreground">
-                    {showCreateModal
-                      ? t('landlordExpensesCreateTitle')
-                      : t('landlordExpensesEditTitleWithCode', {
-                        code: editingExpense?.code || '',
-                      })}
-                  </h3>
-                  <p className="text-xs text-muted font-semibold">
-                    {t('landlordExpensesFormSubtitle')}
-                  </p>
-                </div>
-              </div>
-
-              <Button rounded="full"
-                variant="ghost"
-                size="sm"
-                onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-              >
-                <X className="w-5 h-5" />
+          footer={
+            <ModalFooter>
+              <Button variant="secondary" size="sm" type="button" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
+                {t('landlordExpensesCancelBtn')}
               </Button>
-            </div>
-
-            {/* Modal Body Form */}
-            <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
+              <Button variant="dark" size="sm" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
+                {showCreateModal ? t('landlordExpensesSaveExpense') : t('landlordExpensesUpdateExpense')}
+              </Button>
+            </ModalFooter>
+          }
+        >
+          <ModalBody className="text-xs">
               <TextInput
                 label={t('landlordExpensesNameLabel')}
                 labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
@@ -1224,145 +1130,86 @@ export default function ExpensesPage() {
                 }}
                 placeholder={t('landlordExpensesDescriptionPlaceholder')}
               />
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-line bg-card flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-              >
-                {t('landlordExpensesCancelBtn')}
-              </Button>
-              <Button variant="dark"
-                size="sm"
-                disabled={isSubmitting}
-                isLoading={isSubmitting}
-                onClick={showCreateModal ? handleCreateExpense : handleUpdateExpense}
-                leftIcon={!isSubmitting ? <Check /> : undefined}
-              >
-                {showCreateModal
-                  ? t('landlordExpensesSaveExpense')
-                  : t('landlordExpensesUpdateExpense')}
-              </Button>
-            </div>
-          </div>
-        </div>
+          </ModalBody>
+        </Modal>
       )}
 
       {/* ─── Modal 3: Rule #10 Unsaved Changes Confirmation Modal ────────────── */}
       {confirmCloseTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 bg-amber-500/10 text-warning rounded-2xl flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-black text-base text-foreground">
-                {t('landlordExpensesFormCloseTitle')}
-              </h4>
-              <p className="text-xs text-muted font-medium mt-1">
-                {t('landlordExpensesFormCloseDesc')}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1"
-              >
+        <Modal
+          isOpen
+          onClose={() => setConfirmCloseTarget(null)}
+          title={t('landlordExpensesFormCloseTitle')}
+          description={t('landlordExpensesFormCloseDesc')}
+          icon={<AlertTriangle className="w-5 h-5 text-warning" />}
+          size="sm"
+          closeOnOverlayClick={false}
+          closeOnEsc
+          footer={
+            <ModalFooter>
+              <Button variant="secondary" onClick={() => setConfirmCloseTarget(null)} className="flex-1">
                 {t('landlordExpensesContinueTyping')}
               </Button>
-
-              <Button
-                variant="danger"
-                onClick={handleConfirmCloseModal}
-                className="flex-1"
-              >
+              <Button variant="danger" onClick={handleConfirmCloseModal} className="flex-1">
                 {t('landlordExpensesDiscardAndClose')}
               </Button>
-            </div>
-          </div>
-        </div>
+            </ModalFooter>
+          }
+        >
+        </Modal>
       )}
 
       {/* ─── Modal 4: Delete Confirmation Pop-up Modal ────────────────────────── */}
       {deletingExpenseTarget && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setDeletingExpenseTarget(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
-            <div className="w-12 h-12 bg-danger/10 text-danger rounded-2xl flex items-center justify-center mx-auto shadow-xs">
-              <Trash2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-black text-base text-foreground">
-                {t('landlordExpensesDeleteConfirmTitle')}
-              </h4>
-              <p className="text-xs text-muted font-medium mt-1.5 leading-relaxed">
-                {t('landlordExpensesDeleteConfirmDesc', {
-                  name: deletingExpenseTarget.name,
-                  code: deletingExpenseTarget.code,
-                })}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setDeletingExpenseTarget(null)}
-                className="flex-1"
-              >
+        <Modal
+          isOpen
+          onClose={() => setDeletingExpenseTarget(null)}
+          title={t('landlordExpensesDeleteConfirmTitle')}
+          description={t('landlordExpensesDeleteConfirmDesc', {
+            name: deletingExpenseTarget.name,
+            code: deletingExpenseTarget.code,
+          })}
+          icon={<Trash2 className="w-5 h-5 text-danger" />}
+          size="sm"
+          closeOnOverlayClick
+          closeOnEsc
+          footer={
+            <ModalFooter>
+              <Button variant="secondary" onClick={() => setDeletingExpenseTarget(null)} className="flex-1">
                 {t('landlordExpensesCancelBtn')}
               </Button>
-
-              <Button
-                variant="danger"
-                onClick={confirmDeleteExpense}
-                className="flex-1"
-              >
+              <Button variant="danger" onClick={confirmDeleteExpense} className="flex-1">
                 {t('landlordExpensesDeleteBtn')}
               </Button>
-            </div>
-          </div>
-        </div>
+            </ModalFooter>
+          }
+        >
+        </Modal>
       )}
 
       {/* ─── Modal 5: Locked Paid Expense Pop-up Modal ────────────────────────── */}
       {lockedExpenseTarget && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setLockedExpenseTarget(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div className="bg-card border border-line rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
-            <div className="w-12 h-12 bg-amber-500/10 text-warning rounded-2xl flex items-center justify-center mx-auto shadow-xs">
-              <Lock className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-black text-base text-foreground">
-                {t('landlordExpensesLockedTitle')}
-              </h4>
-              <p className="text-xs text-muted font-medium mt-1.5 leading-relaxed">
-                {t('landlordExpensesLockedDesc', {
-                  name: lockedExpenseTarget.name,
-                  code: lockedExpenseTarget.code,
-                })}
-              </p>
-            </div>
-            <div className="pt-2">
-              <Button fullWidth variant="dark"
-                onClick={() => setLockedExpenseTarget(null)}
-              >
+        <Modal
+          isOpen
+          onClose={() => setLockedExpenseTarget(null)}
+          title={t('landlordExpensesLockedTitle')}
+          description={t('landlordExpensesLockedDesc', {
+            name: lockedExpenseTarget.name,
+            code: lockedExpenseTarget.code,
+          })}
+          icon={<Lock className="w-5 h-5 text-warning" />}
+          size="sm"
+          closeOnOverlayClick
+          closeOnEsc
+          footer={
+            <ModalFooter>
+              <Button fullWidth variant="dark" onClick={() => setLockedExpenseTarget(null)}>
                 {t('landlordExpensesUnderstand')}
               </Button>
-            </div>
-          </div>
-        </div>
+            </ModalFooter>
+          }
+        >
+        </Modal>
       )}
     </div>
   )
