@@ -23,6 +23,7 @@ import { getLandlordContracts, ContractItem, exportContract } from '@/services/c
 import ContractPreviewModal from '@/components/landlord/ContractPreviewModal'
 import {
   Button,
+  TableActionButton,
   DateInput,
   NumberInput,
   SelectInput,
@@ -410,10 +411,9 @@ export default function ContractsPage() {
           subtitle={t('landlordContractsSubtitle')}
           actions={
             <Button
-              variant="primary"
               size="md"
               onClick={() => router.push('/landlord/contracts/create')}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus />}
             >
               {t('landlordContractsCreateBtn')}
             </Button>
@@ -480,8 +480,6 @@ export default function ContractsPage() {
               {loadError}
             </Text>
             <Button
-              variant="primary"
-              size="sm"
               onClick={fetchContracts}
             >
               {t('landlordContractsRetry')}
@@ -502,10 +500,8 @@ export default function ContractsPage() {
                       description={t('landlordContractsSubtitle')}
                       action={
                         <Button
-                          variant="primary"
-                          size="sm"
                           onClick={() => router.push('/landlord/contracts/create')}
-                          leftIcon={<Plus className="w-4 h-4" />}
+                          leftIcon={<Plus />}
                         >
                           {t('landlordContractsCreateBtn')}
                         </Button>
@@ -611,7 +607,6 @@ export default function ContractsPage() {
                           <div className="flex items-center gap-1.5">
                             <Button
                               variant="secondary"
-                              size="sm"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
@@ -623,7 +618,6 @@ export default function ContractsPage() {
                             </Button>
                             <Button
                               variant="danger"
-                              size="sm"
                               onClick={e => {
                                 e.stopPropagation()
                                 setSelectedContract(c)
@@ -759,30 +753,26 @@ export default function ContractsPage() {
                               </td>
                               <td className="px-5 py-4 text-right whitespace-nowrap">
                                 <div className="flex items-center justify-end gap-1 text-muted">
-                                  <Button
+                                  <TableActionButton
+                                    icon={<CalendarDays />}
                                     variant="secondary"
-                                    size="icon-sm"
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedContract(c)
                                       setIsExtendModalOpen(true)
                                     }}
                                     title={t('landlordContractsBtnExtend')}
-                                  >
-                                    <CalendarDays />
-                                  </Button>
-                                  <Button
+                                  />
+                                  <TableActionButton
+                                    icon={<Ban />}
                                     variant="ghost-danger"
-                                    size="icon-sm"
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedContract(c)
                                       setIsTerminateModalOpen(true)
                                     }}
                                     title={t('landlordContractsBtnTerminate')}
-                                  >
-                                    <Ban />
-                                  </Button>
+                                  />
                                 </div>
                               </td>
                             </TableRow>
@@ -826,7 +816,6 @@ export default function ContractsPage() {
               {t('landlordContractsBtnCancel')}
             </Button>
             <Button
-              variant="primary"
               onClick={handleExtendContract}
             >
               {t('landlordContractsBtnExtend')}

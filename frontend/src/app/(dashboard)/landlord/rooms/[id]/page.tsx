@@ -980,7 +980,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           {isOccupied && (
             <Button
-              variant="primary"
               onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
               leftIcon={<Gauge />}
               className="flex-1 md:flex-initial"
@@ -1014,7 +1013,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <Button
                 fullWidth
                 size="md"
-                variant="primary"
                 leftIcon={<FileSignature />}
               >
                 {t('landlordRoomDetailBtnCreateContract')}
@@ -1125,7 +1123,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                       <a href={`tel:${primaryTenant?.phoneNumber || room.tenantPhone || '0977815704'}`}>
                         <Button
-                          size='sm'
                           variant='success'
                           leftIcon={<Phone />}
                         >
@@ -1140,8 +1137,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                         }).toString()}`}
                       >
                         <Button
-                          size='sm'
-                          variant='primary'
                           leftIcon={<MessageSquare />}
                         >
                           {t('landlordRoomDetailMessageBtn')}
@@ -1149,7 +1144,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </Link>
                       <Link href={`/landlord/customers/${primaryTenant?.id || ''}`}>
                         <Button
-                          size='sm'
                           variant='white'
                           leftIcon={<User />}
                         >
@@ -1200,8 +1194,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     {t('landlordRoomDetailVacantDesc')}
                   </Text>
                   <Button
-                    size="sm"
-                    variant="primary"
                     leftIcon={<Plus />}
                     onClick={() =>
                       router.push(
@@ -1432,7 +1424,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </Text>
                   <div className="flex items-center gap-1">
                     <Button
-                      size="sm"
                       variant="outline"
                       disabled={invoicePage === 1}
                       onClick={() => setInvoicePage(p => Math.max(1, p - 1))}
@@ -1444,7 +1435,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     {Array.from({ length: totalInvoicePages }).map((_, idx) => (
                       <Button
                         key={idx}
-                        size="sm"
                         variant={invoicePage === idx + 1 ? 'primary' : 'secondary'}
                         onClick={() => setInvoicePage(idx + 1)}
                       >
@@ -1454,7 +1444,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </Button>
                     ))}
                     <Button
-                      size="sm"
                       variant="outline"
                       disabled={invoicePage === totalInvoicePages}
                       onClick={() => setInvoicePage(p => Math.min(totalInvoicePages, p + 1))}
@@ -1542,7 +1531,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                           {t('landlordRoomDetailRentPerMonth')}
                         </Text>
                         <Link href={`/landlord/contracts/${hist.id}`}>
-                          <Button size='sm' variant='white'>
+                          <Button variant='white'>
                             {t('landlordRoomDetailViewContractShort')}
                           </Button>
                         </Link>
@@ -1569,8 +1558,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </Text>
 
               <Button
-                size="sm"
-                variant="primary"
                 leftIcon={<Gauge />}
                 onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
               >
@@ -1639,7 +1626,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                             </span>
                           ) : (
                             <Button
-                              size="sm"
                               variant="outline"
                               onClick={e => {
                                 e.preventDefault()
@@ -1820,7 +1806,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </Text>
                   <div className="flex items-center gap-1">
                     <Button
-                      size="sm"
                       variant="outline"
                       disabled={meterPage === 1}
                       onClick={() => setMeterPage(p => Math.max(1, p - 1))}
@@ -1832,7 +1817,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     {Array.from({ length: totalMeterPages }).map((_, idx) => (
                       <Button
                         key={idx}
-                        size="sm"
                         variant={meterPage === idx + 1 ? 'primary' : 'secondary'}
                         onClick={() => setMeterPage(idx + 1)}
                       >
@@ -1842,7 +1826,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </Button>
                     ))}
                     <Button
-                      size="sm"
                       variant="outline"
                       disabled={meterPage === totalMeterPages}
                       onClick={() => setMeterPage(p => Math.min(totalMeterPages, p + 1))}
@@ -1871,7 +1854,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                     )}
                   </Text>
                   <Button
-                    size="sm"
                     variant="accent"
                     onClick={() => setIsIncidentModalOpen(true)}
                   >
@@ -1960,7 +1942,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   </Text>
                   <div className="flex gap-1">
                     <Button
-                      size="sm"
                       variant="secondary"
                       onClick={() => setMaintPage(prev => Math.max(1, prev - 1))}
                       disabled={maintPage === 1}
@@ -1970,7 +1951,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                       </Text>
                     </Button>
                     <Button
-                      size="sm"
                       variant="secondary"
                       onClick={() =>
                         setMaintPage(prev =>
@@ -2048,10 +2028,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="space-y-2 pt-1">
                 <Button fullWidth
-                  size="sm"
-                  variant="primary"
                   onClick={() => showToast(t('landlordRoomDetailRefundToast'), 'success')}
-                  leftIcon={<Wallet className='w-5 h-5' />}
+                  leftIcon={<Wallet />}
                   className="from-deposit to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                 >
                   {t('landlordRoomDetailRefundDepositBtn')}
@@ -2220,7 +2198,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </Text>
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  size="sm"
                   variant={isVacant ? 'primary' : 'secondary'}
                   className={isVacant ? 'bg-vacant hover:bg-vacant-hover' : ''}
                   onClick={() => handleUpdateStatus('Trống')}
@@ -2231,7 +2208,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </Button>
 
                 <Button
-                  size="sm"
                   variant={isOccupied ? 'primary' : 'secondary'}
                   className={isOccupied ? 'bg-primary hover:bg-primary-hover ' : ''}
                   onClick={() => handleUpdateStatus('Đang thuê')}
@@ -2242,7 +2218,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </Button>
 
                 <Button
-                  size="sm"
                   variant={isMaintenance ? 'primary' : 'secondary'}
                   className={isMaintenance ? 'bg-accent hover:bg-accent-hover ' : ''}
                   onClick={() => handleUpdateStatus('Bảo trì')}
@@ -2253,7 +2228,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 </Button>
 
                 <Button
-                  size="sm"
                   variant={isReserved ? 'primary' : 'secondary'}
                   className={isReserved ? 'bg-deposit hover:bg-deposit-hover ' : ''}
                   onClick={() => handleUpdateStatus('Đặt cọc')}
@@ -2348,7 +2322,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         <Modal.Footer>
           <Button
             variant="outline"
-            size="sm"
             onClick={handleCloseCorrectionModal}
           >
             <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2356,7 +2329,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </Text>
           </Button>
           <Button variant="orange"
-            size="sm"
             onClick={handleSaveCorrection}
             isLoading={isSubmittingCorrection}
           >
@@ -2526,7 +2498,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
                     {service.isRemovable && (
                       <Button
-                        type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() =>
@@ -2542,8 +2513,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <Button fullWidth
-              type="button"
-              variant="primary"
               size="md"
               leftIcon={<Plus />}
               onClick={() =>
@@ -2581,7 +2550,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         <Modal.Footer>
           <Button
             variant="outline"
-            size="sm"
             onClick={handleCloseEditModal}
           >
             <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2589,8 +2557,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </Text>
           </Button>
           <Button
-            variant="primary"
-            size="sm"
             onClick={handleSaveRoomDetails}
           >
             <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2653,9 +2619,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
         <Modal.Footer>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => setIsIncidentModalOpen(false)}
           >
             <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2664,7 +2628,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </Button>
           <Button variant="orange"
             type="submit"
-            size="sm"
           >
             <Text as="span" size="xs" weight="bold" color="inherit">
               {t('landlordRoomDetailSendIncidentBtn')}
@@ -2691,7 +2654,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2700,7 +2662,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             </Button>
             <Button
               variant="danger"
-              size="sm"
               onClick={confirmModal.onConfirm}
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2734,9 +2695,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
             >
               <Text as="span" size="xs" weight="bold" color="inherit">
@@ -2744,9 +2703,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               </Text>
             </Button>
             <Button
-              type="button"
               variant="danger"
-              size="sm"
               onClick={discardConfirmModal.onConfirm}
             >
               <Text as="span" size="xs" weight="bold" color="inherit">

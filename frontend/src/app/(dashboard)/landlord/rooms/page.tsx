@@ -21,6 +21,7 @@ import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -786,7 +787,6 @@ export default function RoomsPage() {
           <>
             {/* Bulk Generate Trigger Button */}
             <Button
-              type="button"
               variant="accent"
               size='md'
               onClick={() => {
@@ -801,11 +801,9 @@ export default function RoomsPage() {
 
             {/* Single Room Add Button */}
             <Button
-              type="button"
-              variant="primary"
               size='md'
               onClick={handleOpenCreateModal}
-              leftIcon={<Plus className='w-5 h-5' />}
+              leftIcon={<Plus />}
               className="sm:w-auto"
             >
               {t('landlordRoomsAddRoomBtn')}
@@ -922,10 +920,8 @@ export default function RoomsPage() {
               description={t('landlordRoomsEmptyDesc')}
               action={
                 <Button
-                  variant="primary"
-                  size="sm"
                   onClick={() => setIsBulkModalOpen(true)}
-                  leftIcon={<Sparkles className="w-4 h-4" />}
+                  leftIcon={<Sparkles />}
                 >
                   {t('landlordRoomsBulkGenerateBtn')}
                 </Button>
@@ -934,7 +930,6 @@ export default function RoomsPage() {
                 (searchQuery || statusFilter || contractFilter || invoiceFilter) ? (
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => {
                       setSearchQuery('')
                       setStatusFilter('')
@@ -977,18 +972,17 @@ export default function RoomsPage() {
                           className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all duration-200 ${statusMeta.gridContainer}`}
                         >
                           <Button
-                            type="button"
                             variant="ghost"
                             rounded='full'
-                            size="sm"
+                            size="icon-xs"
                             onClick={e => {
                               e.stopPropagation()
                               handleOpenEditModal(room)
                             }}
-                            className="absolute h-6 w-6 p-1 top-0 right-0 opacity-80 hover:opacity-100 z-10"
+                            className="absolute top-1 right-1 opacity-80 hover:opacity-100 z-10"
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
-                            <Edit className="w-3.5 h-3.5" />
+                            <Edit />
                           </Button>
 
                           <Text
@@ -1104,14 +1098,12 @@ export default function RoomsPage() {
                           </div>
                         </td>
                         <td className="p-3 text-right space-x-1">
-                          <Button
+                          <TableActionButton
+                            icon={<Edit />}
                             variant="secondary"
-                            size="icon-sm"
                             onClick={() => handleOpenEditModal(room)}
                             title={t('landlordRoomsEditRoomTooltip')}
-                          >
-                            <Edit />
-                          </Button>
+                          />
                         </td>
                       </TableRow>
                     )
@@ -1166,7 +1158,6 @@ export default function RoomsPage() {
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
               onClick={handleCloseBulkModal}
             >
@@ -1174,10 +1165,9 @@ export default function RoomsPage() {
             </Button>
             <Button
               type="submit"
-              variant="primary"
               disabled={isBulkSubmitting || isOverQuota}
               isLoading={isBulkSubmitting}
-              leftIcon={<Sparkles className="w-4 h-4" />}
+              leftIcon={<Sparkles />}
             >
               {isBulkSubmitting
                 ? t('landlordRoomsBulkBtnSubmitting')
@@ -1283,9 +1273,7 @@ export default function RoomsPage() {
                 {t('landlordRoomsBulkSuggestedPatterns')}
               </Text>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => {
                   setBulkNameFormat('P{floor}0{index}')
                   setIsBulkDirty(true)
@@ -1295,9 +1283,7 @@ export default function RoomsPage() {
                 P&#123;floor&#125;0&#123;index&#125;
               </Button>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => {
                   setBulkNameFormat('{floor}0{index}')
                   setIsBulkDirty(true)
@@ -1307,9 +1293,7 @@ export default function RoomsPage() {
                 &#123;floor&#125;0&#123;index&#125;
               </Button>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => {
                   setBulkNameFormat('P{floor}{index:02}')
                   setIsBulkDirty(true)
@@ -1463,7 +1447,6 @@ export default function RoomsPage() {
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
               onClick={handleCloseSingleModal}
               disabled={isSingleSubmitting || isImageUploading}
@@ -1472,11 +1455,10 @@ export default function RoomsPage() {
             </Button>
             <Button
               type="submit"
-              variant="primary"
               disabled={isSingleSubmitting || isImageUploading}
               isLoading={isSingleSubmitting}
               leftIcon={
-                selectedRoomId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />
+                selectedRoomId ? <Edit /> : <Plus />
               }
             >
               {getSingleSubmitLabel()}
@@ -1745,9 +1727,7 @@ export default function RoomsPage() {
                   ].map(item => (
                     <Button
                       key={item}
-                      type="button"
                       variant={selectedAmenities.includes(item) ? 'primary' : 'outline'}
-                      size="sm"
                       onClick={() => {
                         setSelectedAmenities(prev =>
                           prev.includes(item)
@@ -1821,7 +1801,6 @@ function ConfirmModal({
       footer={
         <div className="flex items-center justify-center gap-3 w-full">
           <Button
-            type="button"
             variant="outline"
             onClick={onCancel}
             className="flex-1"
@@ -1829,7 +1808,6 @@ function ConfirmModal({
             {t('landlordRoomsContinueEditing')}
           </Button>
           <Button
-            type="button"
             variant="danger"
             onClick={onConfirm}
             className="flex-1"

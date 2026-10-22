@@ -300,23 +300,21 @@ export default function ReportsPage() {
             {/* Mode Switcher Tabs */}
             <div className="bg-card-hover p-1 rounded-xl flex items-center gap-1 border border-line shadow-2xs">
               <Button
-                type="button"
-                variant="ghost"
+                variant={reportMode === 'portfolio' ? 'secondary' : 'ghost'}
                 size="md"
                 onClick={() => setReportMode('portfolio')}
                 className="text-xs font-bold"
+                leftIcon={<Layers className="text-primary" />}
               >
-                <Layers className="w-3.5 h-3.5 text-primary" />
                 <span>{t('landlordReportsTabPortfolio')}</span>
               </Button>
               <Button
-                type="button"
-                variant="ghost"
+                variant={reportMode === 'single' ? 'secondary' : 'ghost'}
                 size="md"
                 onClick={() => setReportMode('single')}
                 className="text-xs font-bold"
+                leftIcon={<Building2 className="text-vacant" />}
               >
-                <Building2 className="w-3.5 h-3.5 text-vacant" />
                 <span>{t('landlordReportsTabSingle')}</span>
               </Button>
             </div>
@@ -340,16 +338,12 @@ export default function ReportsPage() {
             {reportMode === 'portfolio' && (
               <Button
                 size="md"
-                type="button"
                 disabled={isAiGenerating}
+                isLoading={isAiGenerating}
                 onClick={handleGenerateAiStrategy}
+                leftIcon={<Sparkles className="text-amber-300" />}
                 className="from-primary to-teal-600 hover:opacity-95"
               >
-                {isAiGenerating ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                )}
                 <span>
                   {isAiGenerating ? t('landlordReportsAiAnalyzing') : t('landlordReportsAiButton')}
                 </span>
@@ -359,11 +353,10 @@ export default function ReportsPage() {
             {/* Export Excel / CSV Button */}
             <Button
               size="md"
-              type="button"
               variant="outline"
               onClick={handleExportCsv}
+              leftIcon={<FileSpreadsheet className="text-primary" />}
             >
-              <FileSpreadsheet className="w-4 h-4 text-primary" />
               <span>{t('landlordReportsExportCsv')}</span>
             </Button>
           </div>
@@ -405,26 +398,19 @@ export default function ReportsPage() {
                     </p>
                   </div>
                   <Button size="xs" variant="dark"
-                    type="button"
                     disabled={isAiGenerating}
+                    isLoading={isAiGenerating}
                     onClick={handleGenerateAiStrategy}
+                    leftIcon={<Sparkles className="text-amber-500 fill-amber-500" />}
                     className="shrink-0"
                   >
-                    {isAiGenerating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span>{t('landlordReportsAiBannerCalculating')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span>
-                          {aiStrategy
-                            ? t('landlordReportsAiBannerReview')
-                            : t('landlordReportsAiBannerGenerate')}
-                        </span>
-                      </>
-                    )}
+                    <span>
+                      {isAiGenerating
+                        ? t('landlordReportsAiBannerCalculating')
+                        : aiStrategy
+                          ? t('landlordReportsAiBannerReview')
+                          : t('landlordReportsAiBannerGenerate')}
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -1230,12 +1216,11 @@ export default function ReportsPage() {
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setShowAiModal(false)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1323,14 +1308,12 @@ export default function ReportsPage() {
             {/* Modal Footer */}
             <div className="p-4 sm:p-5 border-t border-line flex items-center justify-end gap-2.5 bg-surface/50">
               <Button size="xs"
-                type="button"
                 variant="ghost"
                 onClick={() => setShowAiModal(false)}
               >
                 {t('landlordReportsAiCloseBtn')}
               </Button>
               <Button size="xs"
-                type="button"
                 onClick={() => {
                   setShowAiModal(false)
                   showToast(t('landlordReportsToastAiPlanSaved'))

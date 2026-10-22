@@ -155,10 +155,9 @@ export default function LandlordDashboardPage() {
         subtitle={activeBuilding.address || t('landlordOverviewNoAddress')}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={() => router.push('/landlord/setup')}
-            leftIcon={<Plus className="w-4 h-4" />}
+            leftIcon={<Plus />}
           >
             {t('landlordOverviewBtnCreateHouse')}
           </Button>
@@ -274,17 +273,13 @@ export default function LandlordDashboardPage() {
                     </Text>
                     <div className="flex items-center bg-card-hover p-0.5 rounded-lg border border-line ml-1">
                       <Button
-                        type="button"
                         variant={rangeMode === '6m' ? 'primary' : 'ghost'}
-                        size="sm"
                         onClick={() => setRangeMode('6m')}
                       >
                         {t('landlordOverviewRange6m')}
                       </Button>
                       <Button
-                        type="button"
                         variant={rangeMode === '12m' ? 'primary' : 'ghost'}
-                        size="sm"
                         onClick={() => setRangeMode('12m')}
                       >
                         {t('landlordOverviewRange12m')}
@@ -687,9 +682,7 @@ export default function LandlordDashboardPage() {
         {speedDialOpen && (
           <div className="flex flex-col items-end gap-2 animate-in fade-in slide-in-from-bottom-5 duration-200">
             <Button rounded="full"
-              type="button"
               variant="ghost"
-              size="sm"
               onClick={() => router.push('/landlord/rooms')}
               className="group"
             >
@@ -702,9 +695,7 @@ export default function LandlordDashboardPage() {
             </Button>
 
             <Button rounded="full"
-              type="button"
               variant="ghost"
-              size="sm"
               onClick={() => router.push('/landlord/contracts')}
               className="group"
             >
@@ -717,9 +708,7 @@ export default function LandlordDashboardPage() {
             </Button>
 
             <Button rounded="full"
-              type="button"
               variant="ghost"
-              size="sm"
               onClick={() => router.push('/landlord/invoices')}
               className="group"
             >
@@ -734,7 +723,6 @@ export default function LandlordDashboardPage() {
         )}
 
         <Button
-          type="button"
           variant={speedDialOpen ? 'dark' : 'primary'}
           size="icon-lg"
           rounded="full"
@@ -742,7 +730,7 @@ export default function LandlordDashboardPage() {
           className={speedDialOpen ? 'rotate-45' : ''}
           title={t('landlordOverviewQuickActions')}
         >
-          <Plus className="w-6 h-6" />
+          <Plus />
         </Button>
       </div>
     </div>

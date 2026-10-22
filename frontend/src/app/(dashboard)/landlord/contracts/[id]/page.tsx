@@ -577,7 +577,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* Action Toolbar using Base Button Components */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <Button
-            variant="primary"
             onClick={handlePrintContract}
             leftIcon={<Printer />}
           >
@@ -643,7 +642,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                     ...(contract.room ? { room: contract.room } : {}),
                   }).toString()}`}
                 >
-                  <Button size="sm" variant="primary" leftIcon={<MessageSquare />}>
+                  <Button leftIcon={<MessageSquare />}>
                     {t('landlordContractDetailMessageBtn')}
                   </Button>
                 </Link>
@@ -943,7 +942,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              variant="primary"
               onClick={handleSaveExtension}
             >
               {t('landlordContractDetailModalExtendSubmit')}
@@ -1000,8 +998,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              variant="primary"
-
               isLoading={isUpdatingContract}
               disabled={isUpdatingContract}
               onClick={handleSaveContractEdit}
@@ -1096,8 +1092,6 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               {t('landlordContractsCreateCancelBtn')}
             </Button>
             <Button
-              variant="primary"
-
               onClick={handleAddMember}
             >
               {addMemberTab === 'select'

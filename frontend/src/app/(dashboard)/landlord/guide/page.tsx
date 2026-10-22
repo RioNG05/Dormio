@@ -350,13 +350,12 @@ export default function GuidePage() {
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => setSelectedGuideId(null)}
                 className="shrink-0"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -436,10 +435,8 @@ export default function GuidePage() {
               <div className="flex items-center gap-2">
                 {currentGuideIndex > 0 && (
                   <Button
-                    type="button"
                     variant="outline"
-                    size="sm"
-                    leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    leftIcon={<ArrowLeft />}
                     onClick={() => setSelectedGuideId(GUIDES[currentGuideIndex - 1].id)}
                   >
                     {t('landlordGuideModalPrev')}
@@ -447,10 +444,8 @@ export default function GuidePage() {
                 )}
                 {currentGuideIndex < GUIDES.length - 1 && (
                   <Button
-                    type="button"
                     variant="outline"
-                    size="sm"
-                    rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                    rightIcon={<ArrowRight />}
                     onClick={() => setSelectedGuideId(GUIDES[currentGuideIndex + 1].id)}
                   >
                     {t('landlordGuideModalNext')}
@@ -460,19 +455,14 @@ export default function GuidePage() {
 
               <div className="flex items-center gap-2 ml-auto">
                 <Button
-                  type="button"
                   variant="secondary"
-                  size="sm"
                   onClick={() => setSelectedGuideId(null)}
                 >
                   {t('landlordGuideModalClose')}
                 </Button>
                 <Link href={selectedGuide.actionHref}>
                   <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    rightIcon={<ExternalLink className="w-3.5 h-3.5" />}
+                    rightIcon={<ExternalLink />}
                   >
                     {t(selectedGuide.actionBtnKey)}
                   </Button>

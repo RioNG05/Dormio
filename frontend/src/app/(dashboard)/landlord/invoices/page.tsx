@@ -25,6 +25,7 @@ import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -448,7 +449,6 @@ function InvoicesContent() {
             </Button>
 
             <Button
-              variant="primary"
               size="md"
               onClick={handleOpenCreateModal}
               className="sm:w-auto"
@@ -558,10 +558,8 @@ function InvoicesContent() {
           description={t('landlordInvoicesNoDataDesc')}
           action={
             <Button
-              variant="primary"
-              size="sm"
               onClick={handleOpenCreateModal}
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus />}
             >
               {t('landlordInvoicesBtnCreateInvoice')}
             </Button>
@@ -575,7 +573,6 @@ function InvoicesContent() {
           action={
             <Button
               variant="outline"
-              size="sm"
               onClick={() => {
                 setSearchTerm('')
                 setSelectedMonth('all')
@@ -713,7 +710,6 @@ function InvoicesContent() {
                     <div className="flex items-center justify-end">
                       <Button
                         variant="success"
-                        size="sm"
                         fullWidth
                         onClick={() => handleMarkAsPaid(inv.id)}
                         title={t('landlordInvoicesTooltipMarkPaid')}
@@ -807,17 +803,15 @@ function InvoicesContent() {
                     </td>
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">
                       {inv.status !== 'Đã thu' ? (
-                        <Button
+                        <TableActionButton
+                          icon={<Check />}
                           variant="success"
                           onClick={event => {
                             event.stopPropagation()
                             handleMarkAsPaid(inv.id)
                           }}
-                          size='icon-sm'
                           title={t('landlordInvoicesTooltipMarkPaid')}
-                        >
-                          <Check />
-                        </Button>
+                        />
                       ) : (
                         <Text as="span" size="xs" color="secondary">—</Text>
                       )}
@@ -1085,7 +1079,6 @@ function InvoicesContent() {
               {selectedInvoice.status !== 'Đã thu' ? (
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     const roomNum = selectedInvoice.roomId
                     const tenantName = selectedInvoice.tenantName
@@ -1114,7 +1107,6 @@ function InvoicesContent() {
                 {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
                 {selectedInvoice.status !== 'Đã thu' && (
                   <Button variant="success"
-                    size="sm"
                     onClick={() =>
                       handleMarkAsPaid(selectedInvoice.id, t('landlordInvoicesPaymentMethodManual'))
                     }
@@ -1286,14 +1278,11 @@ function InvoicesContent() {
         <Modal.Footer className="bg-card flex items-center justify-end gap-2">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRequestCloseCreate}
           >
             {t('landlordInvoicesBtnCancel')}
           </Button>
           <Button
-            variant="primary"
-            size="sm"
             disabled={isSubmitting}
             isLoading={isSubmitting}
             onClick={handleCreateInvoiceSubmit}
@@ -1404,15 +1393,12 @@ function InvoicesContent() {
               <div className="pt-2 flex gap-3">
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={handleRequestCloseOcr}
                   className="flex-1"
                 >
                   {t('landlordInvoicesBtnCancel')}
                 </Button>
                 <Button
-                  variant="primary"
-                  size="sm"
                   onClick={() => {
                     setIsOcrModalOpen(false)
                     setIsOcrFormDirty(false)
@@ -1452,7 +1438,6 @@ function InvoicesContent() {
           <div className="flex items-center gap-3 pt-2">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setConfirmCloseTarget(null)}
               className="flex-1"
             >
@@ -1461,7 +1446,6 @@ function InvoicesContent() {
 
             <Button
               variant="danger"
-              size="sm"
               onClick={handleConfirmCloseModal}
               className="flex-1"
             >
