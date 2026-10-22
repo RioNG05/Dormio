@@ -693,7 +693,7 @@ export default function LandlordSettingsPage() {
             description={t('landlordSettingsServicesDesc')}
             actions={
               <Link href="/landlord/services">
-                <Button type="button" variant="outline" size="sm">
+                <Button variant="outline">
                   {t('landlordSettingsManageServicesBtn')}
                 </Button>
               </Link>
@@ -779,21 +779,19 @@ export default function LandlordSettingsPage() {
           {/* Form Actions */}
           <Form.Actions align="between" className="pt-4 border-t border-line">
             <Button
-              type="button"
               variant="outline"
               onClick={handleReset}
               disabled={!hasChanges || isSaving}
-              leftIcon={<RotateCcw className="w-4 h-4" />}
+              leftIcon={<RotateCcw />}
             >
               {t('landlordSettingsResetBtn')}
             </Button>
 
             <Button
               type="submit"
-              variant="primary"
               disabled={!hasChanges || isSaving}
               isLoading={isSaving}
-              leftIcon={<Save className="w-4 h-4" />}
+              leftIcon={<Save />}
             >
               {isSaving ? t('landlordSettingsSaving') : t('landlordSettingsBtnSaveSettings')}
             </Button>

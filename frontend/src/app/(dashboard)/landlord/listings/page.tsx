@@ -29,7 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, EmptyState } from '@/components/ui'
+import { Button, TableActionButton, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ListingsPage() {
@@ -212,12 +212,12 @@ export default function ListingsPage() {
         subtitle={t('landlordListingsPageSubtitle')}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={() => router.push('/landlord/listings/create')}
+            leftIcon={<Plus />}
             className="bg-accent hover:bg-[#ff5518] text-white"
           >
-            <Plus className="w-4 h-4" /> {t('landlordListingsNewListingBtn')}
+            {t('landlordListingsNewListingBtn')}
           </Button>
         }
       />
@@ -347,7 +347,7 @@ export default function ListingsPage() {
           description={t('landlordListingsEmptyDesc')}
           action={
             <Link href="/landlord/listings/create">
-              <Button variant="accent" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
+              <Button variant="accent" leftIcon={<Plus />}>
                 {t('landlordListingsCreateFirstBtn')}
               </Button>
             </Link>
@@ -452,9 +452,8 @@ export default function ListingsPage() {
 
                     <div className="flex items-center gap-2">
                       <Button
-                        type="button"
                         variant="ghost"
-                        size="sm"
+                        leftIcon={item.status === 'posted' ? <EyeOff /> : <Eye />}
                         onClick={() => handleToggleStatus(item)}
                         title={
                           item.status === 'posted'
@@ -462,15 +461,9 @@ export default function ListingsPage() {
                             : t('landlordListingsTitleShow')
                         }
                       >
-                        {item.status === 'posted' ? (
-                          <>
-                            <EyeOff className="w-3.5 h-3.5" /> {t('landlordListingsBtnToggleHide')}
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-3.5 h-3.5" /> {t('landlordListingsActionRepublish')}
-                          </>
-                        )}
+                        {item.status === 'posted'
+                          ? t('landlordListingsBtnToggleHide')
+                          : t('landlordListingsActionRepublish')}
                       </Button>
                     </div>
                     </Card.Footer>
@@ -541,16 +534,15 @@ export default function ListingsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
+                      <TableActionButton
+                        icon={item.status === 'posted' ? <EyeOff /> : <Eye />}
+                        title={
+                          item.status === 'posted'
+                            ? t('landlordListingsBtnToggleHide')
+                            : t('landlordListingsBtnToggleShow')
+                        }
                         onClick={() => handleToggleStatus(item)}
-                      >
-                        {item.status === 'posted'
-                          ? t('landlordListingsBtnToggleHide')
-                          : t('landlordListingsBtnToggleShow')}
-                      </Button>
+                      />
                     </td>
                   </TableRow>
                 ))}

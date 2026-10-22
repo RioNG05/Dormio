@@ -26,6 +26,7 @@ import {
 } from '@/services/announcement.service'
 import {
   Button,
+  TableActionButton,
   TextInput,
   SelectInput,
   TextareaInput,
@@ -367,7 +368,6 @@ export default function NotificationsPage() {
         subtitle={t('landlordNotificationsHeroSubtitle')}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={() => setIsNotifModalOpen(true)}
             leftIcon={<Plus />}
@@ -442,8 +442,6 @@ export default function NotificationsPage() {
             description={t('landlordNotificationsEmptyDesc')}
             action={
               <Button
-                size='sm'
-                variant='primary'
                 onClick={() => setIsNotifModalOpen(true)}
                 leftIcon={<Plus />}
               >
@@ -681,14 +679,12 @@ export default function NotificationsPage() {
 
                         <td className="px-4 py-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost-danger"
-                              size="icon-sm"
+                            <TableActionButton
+                              danger
+                              icon={<Trash2 />}
                               onClick={() => setDeletingNotifId(notif.id)}
                               title={t('landlordNotificationsBtnDelete')}
-                            >
-                              <Trash2 />
-                            </Button>
+                            />
                           </div>
                         </td>
                       </TableRow>
@@ -738,9 +734,7 @@ export default function NotificationsPage() {
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={requestCloseNotifModal}
               disabled={isSubmitting}
             >
@@ -751,7 +745,7 @@ export default function NotificationsPage() {
               type="submit"
               disabled={isSubmitting}
               isLoading={isSubmitting}
-              leftIcon={!isSubmitting ? <Send className="w-4 h-4" /> : undefined}
+              leftIcon={!isSubmitting ? <Send /> : undefined}
             >
               <span>
                 {isSubmitting
@@ -890,13 +884,12 @@ export default function NotificationsPage() {
                   setDeletingNotifId(selectedNotifDetail.id)
                   setSelectedNotifDetail(null)
                 }}
-                leftIcon={<Trash2 className="w-4 h-4" />}
+                leftIcon={<Trash2 />}
               >
                 {t('landlordNotificationsDetailDelete')}
               </Button>
 
               <Button
-                variant="primary"
                 onClick={() => setSelectedNotifDetail(null)}
               >
                 {t('landlordNotificationsDetailClose')}
@@ -959,9 +952,7 @@ export default function NotificationsPage() {
         footer={
           <div className="flex items-center justify-center gap-3 w-full">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               disabled={isDeleting}
               onClick={() => setDeletingNotifId(null)}
               className="flex-1"
@@ -969,12 +960,10 @@ export default function NotificationsPage() {
               {t('landlordNotificationsBtnCancel')}
             </Button>
             <Button
-              type="button"
               variant="danger"
-              size="sm"
               disabled={isDeleting}
               isLoading={isDeleting}
-              leftIcon={!isDeleting ? <Trash2 className="w-4 h-4" /> : undefined}
+              leftIcon={!isDeleting ? <Trash2 /> : undefined}
               onClick={() => deletingNotifId && handleDeleteAnnouncement(deletingNotifId)}
               className="flex-1"
             >

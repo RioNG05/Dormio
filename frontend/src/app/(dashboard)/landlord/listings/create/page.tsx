@@ -574,14 +574,12 @@ function CreateListingForm() {
 
             {/* AI Suggestion Trigger Button */}
             <Button
-              type="button"
               variant="outline"
-              size="sm"
+              leftIcon={<Sparkles className="text-amber-300" />}
               onClick={handleOpenAiModal}
               className="from-teal-600 to-primary hover:opacity-95"
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>{t('landlordListingsCreateAiSuggestBtn')}</span>
+              {t('landlordListingsCreateAiSuggestBtn')}
             </Button>
           </div>
 
@@ -618,12 +616,10 @@ function CreateListingForm() {
               containerClassName="flex-1 space-y-0"
             />
             <Button
-              type="button"
-              variant="primary"
-              size="sm"
               onClick={handleAddImage}
+              leftIcon={<Plus />}
             >
-              <Plus className="w-4 h-4" /> {t('landlordListingsCreateAddImageBtn')}
+              {t('landlordListingsCreateAddImageBtn')}
             </Button>
           </div>
 
@@ -645,14 +641,14 @@ function CreateListingForm() {
                     }}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button rounded="full"
-                      type="button"
+                    <Button
+                      rounded="full"
                       variant="danger"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleRemoveImage(idx)}
                       title={t('landlordListingsCreateDeleteImage')}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 />
                     </Button>
                   </div>
                 </div>
@@ -671,42 +667,27 @@ function CreateListingForm() {
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-3 pt-6 border-t border-line">
           <Button
-            type="button"
             variant="ghost"
-            size="sm"
             onClick={handleCancelClick}
             disabled={isSubmitting}
           >
             {t('landlordListingsCreateCancelBtn')}
           </Button>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => handleSubmit('draft')}
             disabled={isSubmitting}
           >
             {t('landlordListingsCreateSaveDraftBtn')}
           </Button>
           <Button
-            type="button"
-            variant="primary"
-            size="sm"
             onClick={() => handleSubmit('posted')}
             disabled={isSubmitting}
+            isLoading={isSubmitting}
+            leftIcon={!isSubmitting ? <Check /> : undefined}
             className="from-accent to-orange-600 hover:opacity-95"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{t('landlordListingsCreateSubmitting')}</span>
-              </>
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                <span>{t('landlordListingsCreatePublishBtn')}</span>
-              </>
-            )}
+            {isSubmitting ? t('landlordListingsCreateSubmitting') : t('landlordListingsCreatePublishBtn')}
           </Button>
         </div>
       </div>
@@ -736,12 +717,11 @@ function CreateListingForm() {
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setIsAiModalOpen(false)}
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -798,9 +778,9 @@ function CreateListingForm() {
                         icon: '💰',
                       },
                     ].map(t => (
-                      <Button fullWidth
+                      <Button
+                        fullWidth
                         key={t.id}
-                        type="button"
                         variant="ghost"
                         onClick={() => setAiTone(t.id as any)}
                       >
@@ -830,28 +810,19 @@ function CreateListingForm() {
                 )}
 
                 {/* Generate Button */}
-                <Button fullWidth size="icon"
-                  type="button"
-                  variant="primary"
+                <Button
+                  fullWidth
                   disabled={isGeneratingAi}
+                  isLoading={isGeneratingAi}
                   onClick={handleGenerateAi}
+                  leftIcon={!isGeneratingAi ? <Wand2 /> : undefined}
                   className="from-teal-600 to-primary hover:opacity-95"
                 >
-                  {isGeneratingAi ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{t('landlordListingsCreateAiExtracting')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4" />
-                      <span>
-                        {aiDraftResult
-                          ? t('landlordListingsCreateAiRegenerateBtn')
-                          : t('landlordListingsCreateAiGenerateBtn')}
-                      </span>
-                    </>
-                  )}
+                  {isGeneratingAi
+                    ? t('landlordListingsCreateAiExtracting')
+                    : aiDraftResult
+                      ? t('landlordListingsCreateAiRegenerateBtn')
+                      : t('landlordListingsCreateAiGenerateBtn')}
                 </Button>
               </div>
 
@@ -924,22 +895,17 @@ function CreateListingForm() {
             {/* Modal Footer */}
             <div className="p-4 sm:p-5 border-t border-line flex items-center justify-end gap-2.5 bg-surface/50">
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={() => setIsAiModalOpen(false)}
               >
                 {t('landlordListingsCreateAiCloseBtn')}
               </Button>
               {aiDraftResult && (
                 <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={handleApplyAiDraft}
+                  leftIcon={<Check />}
                 >
-                  <Check className="w-4 h-4" />
-                  <span>{t('landlordListingsCreateAiApplyBtn')}</span>
+                  {t('landlordListingsCreateAiApplyBtn')}
                 </Button>
               )}
             </div>
@@ -971,17 +937,13 @@ function CreateListingForm() {
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setIsConfirmCloseModalOpen(false)}
               >
                 {t('landlordListingsCreateConfirmCloseKeep')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={() => {
                   setIsConfirmCloseModalOpen(false)
                   setIsDirty(false)

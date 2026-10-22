@@ -21,6 +21,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import {
   Button,
+  TableActionButton,
   SelectInput,
   SearchInput,
   ChipGroup,
@@ -341,13 +342,12 @@ export default function CustomersPage() {
         subtitle={t('landlordCustomersPageSubheading')}
         actions={
           <Button
-            variant="primary"
             size="md"
             onClick={() => router.push('/landlord/contracts/create')}
+            leftIcon={<Plus />}
             className="sm:w-auto text-sm"
           >
-            <Plus className="w-4 h-4" />
-            <span>{t('landlordCustomersBtnAddContract')}</span>
+            {t('landlordCustomersBtnAddContract')}
           </Button>
         }
       />
@@ -439,10 +439,8 @@ export default function CustomersPage() {
                   description={t('landlordCustomersEmptyDesc')}
                   action={
                     <Button
-                      variant="primary"
-                      size="sm"
                       onClick={() => router.push('/landlord/contracts/create')}
-                      leftIcon={<Plus className="w-3.5 h-3.5" />}
+                      leftIcon={<Plus />}
                     >
                       {t('landlordCustomersBtnCreateContract')}
                     </Button>
@@ -550,7 +548,6 @@ export default function CustomersPage() {
                     </Button>
                   </a>
                   <Button
-                    variant="primary"
                     leftIcon={<MessageCircle />}
                     onClick={e => {
                       e.stopPropagation()
@@ -601,10 +598,8 @@ export default function CustomersPage() {
                           bordered={false}
                           action={
                             <Button
-                              variant="primary"
-                              size="sm"
                               onClick={() => router.push('/landlord/contracts/create')}
-                              leftIcon={<Plus className="w-3.5 h-3.5" />}
+                              leftIcon={<Plus />}
                             >
                               {t('landlordCustomersBtnCreateContract')}
                             </Button>
@@ -674,22 +669,19 @@ export default function CustomersPage() {
                           onClick={e => e.stopPropagation()}
                         >
                           <a href={`tel:${customer.phone}`} onClick={e => e.stopPropagation()}>
-                            <Button variant='success' size='icon-sm' title={t('landlordCustomersCallBtn')}>
-                              <PhoneCall />
-                            </Button>
+                            <TableActionButton
+                              icon={<PhoneCall />}
+                              title={t('landlordCustomersCallBtn')}
+                            />
                           </a>
-                          <Button
-                            variant="primary"
-                            size="icon-sm"
+                          <TableActionButton
+                            icon={<MessageCircle />}
                             title={t('landlordCustomersMessageBtn')}
-                            className="whitespace-nowrap"
                             onClick={e => {
                               e.stopPropagation()
                               handleOpenChat(customer)
                             }}
-                          >
-                            <MessageCircle />
-                          </Button>
+                          />
                         </div>
                       </td>
                     </TableRow>

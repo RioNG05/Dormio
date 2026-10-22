@@ -455,9 +455,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* Action Buttons Toolbar */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <Button
-            type="button"
             variant="success"
-            size="sm"
             leftIcon={<PhoneCall />}
             onClick={() => {
               if (customer.phone && customer.phone !== '—') {
@@ -468,27 +466,20 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             {t('landlordCustomersCallBtn')}
           </Button>
           <Button
-            type="button"
-            variant="primary"
-            size="sm"
             leftIcon={<MessageCircle />}
             onClick={handleOpenChat}
           >
             {t('landlordCustomersMessageBtn')}
           </Button>
           <Button
-            type="button"
             variant="secondary"
-            size="sm"
             leftIcon={<Edit2 />}
             onClick={() => setIsEditModalOpen(true)}
           >
             {t('landlordCustomersEditInfo')}
           </Button>
           <Button
-            type="button"
             variant="danger"
-            size="sm"
             leftIcon={<Trash2 />}
             onClick={() => {
               setConfirmModal({
@@ -920,14 +911,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         <Modal.Footer>
           <Button
             variant="outline"
-            size="sm"
             onClick={handleCloseEditModal}
           >
             {t('landlordCustomersCancelBtn')}
           </Button>
           <Button
-            variant="primary"
-            size="sm"
             onClick={handleSaveCustomer}
           >
             {t('landlordCustomersSaveChangesBtn')}
@@ -958,17 +946,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
           <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
             >
               Tiếp tục chỉnh sửa
             </Button>
             <Button
-              type="button"
               variant="danger"
-              size="sm"
               onClick={discardConfirmModal.onConfirm}
             >
               Hủy thay đổi & Đóng
@@ -988,11 +972,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <Button
             rounded="full"
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setIsImagePreviewOpen(null)}
             className="absolute top-2 right-2 z-10 text-white hover:bg-white/20"
           >
-            <X className="w-5 h-5" />
+            <X />
           </Button>
           {isImagePreviewOpen && (
             <img
@@ -1026,14 +1010,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             >
               {t('landlordCustomersCancelBtn')}
             </Button>
             <Button
               variant="danger"
-              size="sm"
               onClick={confirmModal.onConfirm}
             >
               {t('landlordCustomersConfirmDeleteBtn')}
@@ -1065,7 +1047,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
           <Button
             fullWidth
-            size="sm"
             variant="dark"
             onClick={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
           >
