@@ -1,4 +1,5 @@
 export * from './Button'
+export * from './TableActionButton'
 export * from './TextInput'
 export * from './DateInput'
 export * from './NumberInput'
