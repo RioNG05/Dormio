@@ -55,6 +55,7 @@ export const viNav = {
     managingBuilding: "TÒA NHÀ ĐANG QUẢN LÝ",
     managingPropertiesCount: "{count} Cơ sở",
     messages: "Tin nhắn",
+    meterReadings: "Ghi số điện/nước",
     myContracts: "Hợp đồng của tôi",
     myInvoices: "Hóa đơn tiền phòng",
     myProfile: "Thông tin cá nhân",

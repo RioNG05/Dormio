@@ -55,6 +55,7 @@ export const enNav = {
     managingBuilding: "MANAGING BUILDING",
     managingPropertiesCount: "{count} Properties",
     messages: "Messages",
+    meterReadings: "Meter Readings",
     myContracts: "My Contracts",
     myInvoices: "My Invoices",
     myProfile: "Personal Profile",

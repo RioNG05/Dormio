@@ -27,6 +27,7 @@ import {
   Megaphone,
   ShieldCheck,
   Layers,
+  Gauge,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
@@ -129,6 +130,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
       key: 'van-hanh',
       items: [
         { name: tNav('rooms'), href: '/landlord/rooms', icon: DoorOpen },
+        { name: tNav('meterReadings'), href: '/landlord/meter-readings', icon: Gauge },
         { name: tNav('customers'), href: '/landlord/customers', icon: Users },
         { name: tNav('contracts'), href: '/landlord/contracts', icon: FileText },
         { name: tNav('assets'), href: '/landlord/assets', icon: Package },
