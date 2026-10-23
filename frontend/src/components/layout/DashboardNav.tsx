@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
@@ -16,8 +15,6 @@ import {
   Clock,
   Settings,
   HelpCircle,
-  ChevronDown,
-  ChevronRight,
   AlertTriangle,
   Shield,
   Package,
@@ -34,8 +31,12 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
-import { Button, Text } from '@/components/ui'
 import { useUnreadMessages } from '@/hooks'
+import {
+  DashboardNavItem,
+  DashboardNavSectionHeader,
+  DashboardNavGroupToggle,
+} from './DashboardNavItem'
 
 
 export interface DashboardNavProps {
@@ -185,8 +186,8 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
     },
     { name: tNav('contracts'), href: '/tenant/contract', icon: FileText },
     { name: tNav('invoices'), href: '/tenant/invoices', icon: Receipt },
-    { name: tNav('complaints'), href: '/tenant/complaints', icon: AlertTriangle },
     { name: tNav('messages'), href: '/tenant/messages', icon: MessageCircle },
+    { name: tNav('complaints'), href: '/tenant/complaints', icon: AlertTriangle },
   ]
 
   if (isAdmin) {
@@ -196,41 +197,25 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
         onScroll={handleScroll}
         className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
       >
-        <div className="px-3 pb-2 flex items-center gap-1.5">
-          <Shield className="w-3 h-3 text-orange-600" />
-          <Text as="span" variant="overline" color="orange">
-            {tNav('adminTag')}
-          </Text>
-        </div>
+        <DashboardNavSectionHeader
+          icon={Shield}
+          title={tNav('adminTag')}
+          color="orange"
+        />
         {adminMenus.map((item, idx) => {
           const isActive =
             item.href === '/admin'
               ? pathname === '/admin'
               : pathname === item.href || pathname?.startsWith(item.href + '/')
           return (
-            <Link
+            <DashboardNavItem
               key={idx}
               href={item.href}
-              scroll={false}
-              className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-                isActive
-                  ? 'bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 font-bold shadow-2xs'
-                  : 'text-muted hover:bg-card-hover hover:text-foreground'
-              }`}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-orange-500 rounded-r-full" />
-              )}
-              <item.icon
-                className={`h-4.5 w-4.5 shrink-0 ${
-                  isActive ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-400'
-                }`}
-                strokeWidth={isActive ? 2.2 : 1.75}
-              />
-              <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">
-                {item.name}
-              </Text>
-            </Link>
+              icon={item.icon}
+              label={item.name}
+              isActive={isActive}
+              theme="orange"
+            />
           )
         })}
       </nav>
@@ -244,12 +229,11 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
         onScroll={handleScroll}
         className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
       >
-        <div className="px-3 pb-2 flex items-center gap-1.5">
-          <UserCircle className="w-3.5 h-3.5 text-primary" />
-          <Text as="span" variant="overline" color="brand">
-            {tNav('staffTag')}
-          </Text>
-        </div>
+        <DashboardNavSectionHeader
+          icon={UserCircle}
+          title={tNav('staffTag')}
+          color="brand"
+        />
         {staffMenus.map((item, idx) => {
           const isActive =
             item.href === '/staff'
@@ -257,38 +241,15 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
               : pathname === item.href || pathname?.startsWith(item.href + '/')
           const isMessages = item.href === '/staff/messages'
           return (
-            <Link
+            <DashboardNavItem
               key={idx}
               href={item.href}
-              scroll={false}
-              className={`relative flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-                isActive
-                  ? 'bg-primary/10 text-primary font-bold shadow-2xs'
-                  : 'text-muted hover:bg-card-hover hover:text-foreground'
-              }`}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3.5px] h-5 bg-primary rounded-r-full" />
-              )}
-              <item.icon
-                className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
-                strokeWidth={isActive ? 2.2 : 1.75}
-              />
-              <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">
-                {item.name}
-              </Text>
-              {isMessages && unreadMessagesCount > 0 && (
-                <Text
-                  as="span"
-                  size="2xs"
-                  weight="extrabold"
-                  color="white"
-                  className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger shadow-2xs animate-in zoom-in-75 duration-150"
-                >
-                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                </Text>
-              )}
-            </Link>
+              icon={item.icon}
+              label={item.name}
+              isActive={isActive}
+              badge={isMessages && unreadMessagesCount > 0 ? unreadMessagesCount : undefined}
+              theme="brand"
+            />
           )
         })}
       </nav>
@@ -300,56 +261,30 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
       <nav
         ref={navRef}
         onScroll={handleScroll}
-        className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-0.5"
+        className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
       >
-        <div className="px-3 pb-2 flex items-center gap-1.5">
-          <DoorOpen className="w-3.5 h-3.5 text-primary" />
-          <Text as="span" variant="overline" color="brand">
-            {tNav('tenantTag')}
-          </Text>
-        </div>
+        <DashboardNavSectionHeader
+          icon={DoorOpen}
+          title={tNav('tenantTag')}
+          color="brand"
+        />
         {tenantMenus.map((item, idx) => {
-          const isRoomItem = item.href === "/tenant/room"
+          const isRoomItem = item.href === '/tenant/room'
           const isActive =
-            (isRoomItem && Boolean(pathname === "/tenant/room" || pathname?.startsWith("/tenant/room"))) ||
+            (isRoomItem && Boolean(pathname === '/tenant/room' || pathname?.startsWith('/tenant/room'))) ||
             pathname === item.href ||
             (item.href !== '/tenant' && pathname?.startsWith(item.href + '/'))
           const isMessages = item.href === '/tenant/messages'
           return (
-            <Link
+            <DashboardNavItem
               key={idx}
               href={item.href}
-              scroll={false}
-              className={`relative flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted hover:bg-card-hover hover:text-foreground'
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
-                )}
-                <item.icon
-                  className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
-                  strokeWidth={isActive ? 2 : 1.75}
-                />
-                <Text as="span" size="sm" weight={isActive ? 'bold' : 'medium'} color="inherit">
-                  {item.name}
-                </Text>
-              </div>
-              {isMessages && unreadMessagesCount > 0 && (
-                <Text
-                  as="span"
-                  size="2xs"
-                  weight="extrabold"
-                  color="white"
-                  className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger shadow-2xs animate-in zoom-in-75 duration-150"
-                >
-                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                </Text>
-              )}
-            </Link>
+              icon={item.icon}
+              label={item.name}
+              isActive={isActive}
+              badge={isMessages && unreadMessagesCount > 0 ? unreadMessagesCount : undefined}
+              theme="brand"
+            />
           )
         })}
       </nav>
@@ -360,7 +295,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
     <nav
       ref={navRef}
       onScroll={handleScroll}
-      className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar"
+      className="flex-1 px-3 py-4 overflow-y-auto hide-scrollbar space-y-1"
     >
       {landlordMenus.map((block, idx) => {
         if (!('group' in block)) {
@@ -368,117 +303,46 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
             pathname === block.href ||
             (block.href !== '/landlord' && pathname?.startsWith(block.href + '/'))
           return (
-            <Link
+            <DashboardNavItem
               key={idx}
               href={block.href!}
-              scroll={false}
-              className={`relative flex items-center gap-3 px-3 py-2 mb-3 text-sm font-semibold rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-foreground/90 hover:bg-card-hover hover:text-foreground'
-              }`}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
-              )}
-              <block.icon
-                className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
-                strokeWidth={isActive ? 2 : 1.75}
-              />
-              <Text as="span" size="sm" weight={isActive ? 'bold' : 'semibold'} color="inherit">
-                {block.name}
-              </Text>
-            </Link>
+              icon={block.icon}
+              label={block.name}
+              isActive={isActive}
+              theme="brand"
+              className="mb-2"
+            />
           )
         }
 
         const isOpen = openGroups[block.key!]
+        const hasUnread = block.key === 'van-hanh' && !isOpen && unreadMessagesCount > 0
         return (
-          <div key={idx} className="mb-1">
-            <Button
-              fullWidth
-              variant="ghost"
-              onClick={() => toggleGroup(block.key!)}
-              className="justify-between"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <Text
-                  as="span"
-                  variant="overline"
-                  weight="bold"
-                  color="subtle"
-                  className="hover:text-foreground transition-colors"
-                >
-                  {block.group}
-                </Text>
-                {block.key === 'van-hanh' && !isOpen && unreadMessagesCount > 0 && (
-                  <Text
-                    as="span"
-                    size="3xs"
-                    weight="bold"
-                    color="white"
-                    className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-danger shadow-2xs"
-                  >
-                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                  </Text>
-                )}
-              </div>
-              {isOpen ? (
-                <ChevronDown className="w-3.5 h-3.5 text-muted" />
-              ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-muted" />
-              )}
-            </Button>
+          <div key={idx} className="mb-1.5">
+            <DashboardNavGroupToggle
+              label={block.group}
+              isOpen={isOpen}
+              onToggle={() => toggleGroup(block.key!)}
+              badge={hasUnread ? unreadMessagesCount : undefined}
+            />
 
             {isOpen && (
-              <div className="mt-0.5 mb-3 space-y-0.5">
+              <div className="mt-1 space-y-1">
                 {block.items!.map((item, i) => {
                   const isActive =
                     pathname === item.href ||
                     (item.href !== '/landlord' && pathname?.startsWith(item.href + '/'))
                   const isMessages = item.href === '/landlord/messages'
                   return (
-                    <Link
+                    <DashboardNavItem
                       key={i}
                       href={item.href}
-                      scroll={false}
-                      className={`relative flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        isActive
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted hover:bg-card-hover hover:text-foreground'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-r-full" />
-                        )}
-                        <item.icon
-                          className={`h-4 w-4 shrink-0 ${
-                            isActive ? 'text-primary' : 'text-muted'
-                          }`}
-                          strokeWidth={isActive ? 2 : 1.75}
-                        />
-                        <Text
-                          as="span"
-                          size="sm"
-                          weight={isActive ? 'bold' : 'medium'}
-                          color="inherit"
-                        >
-                          {item.name}
-                        </Text>
-                      </div>
-                      {isMessages && unreadMessagesCount > 0 && (
-                        <Text
-                          as="span"
-                          size="2xs"
-                          weight="extrabold"
-                          color="white"
-                          className="ml-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger shadow-2xs animate-in zoom-in-75 duration-150"
-                        >
-                          {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                        </Text>
-                      )}
-                    </Link>
+                      icon={item.icon}
+                      label={item.name}
+                      isActive={isActive}
+                      badge={isMessages && unreadMessagesCount > 0 ? unreadMessagesCount : undefined}
+                      theme="brand"
+                    />
                   )
                 })}
               </div>
