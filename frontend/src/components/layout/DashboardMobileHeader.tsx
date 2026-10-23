@@ -4,12 +4,14 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, Shield, UserCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/context/AuthContext'
 import Logo from '@/components/Logo'
 import NotificationBell from '@/components/NotificationBell'
 import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, Text, SelectInput } from '@/components/ui'
+import { navRoleTagStyles } from './DashboardNavItem'
 
 export interface DashboardMobileHeaderProps {
   onOpenMobileMenu: () => void
@@ -25,7 +27,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
   const isStaff = pathname?.startsWith('/staff')
 
   return (
-    <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-zinc-200 dark:border-line bg-card sticky top-0 z-30 gap-2">
+    <header className="flex lg:hidden items-center justify-between h-14 px-3 border-b border-line bg-card sticky top-0 z-30 gap-2">
       <div className="flex items-center gap-2 shrink-0">
         <Button
           variant="ghost"
@@ -41,15 +43,15 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
 
       {/* Admin badge or Staff Badge or Building Selector Dropdown on Mobile Topbar */}
       {isAdmin ? (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-soft border border-accent-subtle">
-          <Shield className="w-3.5 h-3.5 text-orange-600" />
+        <div className={navRoleTagStyles.accent.badge}>
+          <Shield className={navRoleTagStyles.accent.icon} />
           <Text as="span" variant="overline" color="orange">
             {tNav('adminTag')}
           </Text>
         </div>
       ) : isStaff ? (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30">
-          <UserCircle className="w-3.5 h-3.5 text-primary" />
+        <div className={navRoleTagStyles.brand.badge}>
+          <UserCircle className={navRoleTagStyles.brand.icon} />
           <Text as="span" variant="overline" color="brand">
             {tNav('staffTag')}
           </Text>
@@ -64,7 +66,7 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
                 value: b.id,
                 label: b.name,
               }))}
-              className="w-full bg-card-hover border border-line rounded-xl px-2 py-1 text-[11px] font-black text-foreground focus:outline-none focus:border-primary cursor-pointer pr-6 truncate h-8"
+              className="w-full bg-card-hover border border-line rounded-xl px-2 py-1 text-2xs font-black text-foreground focus:outline-none focus:border-primary cursor-pointer pr-6 truncate h-8"
               containerClassName="space-y-0"
             />
           </div>
@@ -75,13 +77,12 @@ export function DashboardMobileHeader({ onOpenMobileMenu }: DashboardMobileHeade
         <ThemeSwitcher />
         <Link
           href={isTenant ? '/tenant/profile' : '/profile'}
-          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity ${
+          className={cn(
+            'w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 hover:opacity-85 transition-opacity',
             isAdmin
-              ? 'bg-accent-soft text-orange-600'
-              : isStaff
-                ? 'bg-primary/15 text-primary'
-                : 'bg-primary/10 text-primary'
-          }`}
+              ? 'bg-accent-soft text-accent'
+              : 'bg-primary-soft text-primary',
+          )}
           title={tNav('viewProfileTooltip')}
         >
           <Text as="span" size="xs" weight="bold" color="inherit">

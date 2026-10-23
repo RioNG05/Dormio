@@ -67,6 +67,7 @@ export const viNav = {
     postAnalytics: "Thống kê hiệu quả tin đăng",
     postListing: "Đăng tin tìm khách",
     pricing: "Bảng giá",
+    primaryBadge: "Chính",
     register: "Đăng ký tài khoản",
     notification: "Thông báo toà nhà",
     reminders: "Thông báo toà nhà",

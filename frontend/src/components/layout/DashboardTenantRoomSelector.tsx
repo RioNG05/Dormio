@@ -25,7 +25,7 @@ export function DashboardTenantRoomSelector() {
           as="span"
           variant="badge"
           color="brand"
-          className="bg-primary/10 px-1.5 py-0.5 rounded-md"
+          className="bg-primary-soft px-1.5 py-0.5 rounded-md"
         >
           {tNav('rentingRoomsCount', { count: tenancies.length })}
         </Text>
@@ -94,13 +94,13 @@ export function DashboardTenantRoomSelector() {
                             {t.roomNumber}
                           </Text>
                           {t.roomTypeName && (
-                            <span className="text-[10px] px-1 py-0.5 rounded bg-muted/10 text-muted leading-none">
+                            <span className="text-3xs px-1.5 py-0.5 rounded bg-muted/10 text-muted leading-none">
                               {t.roomTypeName}
                             </span>
                           )}
                           {t.isPrimary && (
-                            <span className="text-[9px] px-1 py-0.5 rounded bg-primary/10 text-primary font-bold leading-none">
-                              Chính
+                            <span className="text-3xs px-1.5 py-0.5 rounded bg-primary-soft text-primary font-bold leading-none">
+                              {tNav('primaryBadge')}
                             </span>
                           )}
                         </div>

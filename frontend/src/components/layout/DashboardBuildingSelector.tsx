@@ -22,7 +22,7 @@ export function DashboardBuildingSelector() {
           as="span"
           variant="badge"
           color="brand"
-          className="bg-primary/10 px-1.5 py-0.5 rounded-md"
+          className="bg-primary-soft px-1.5 py-0.5 rounded-md"
         >
           {tNav('managingPropertiesCount', { count: buildings.length })}
         </Text>
@@ -99,7 +99,7 @@ export function DashboardBuildingSelector() {
               <Link
                 href="/landlord/setup"
                 onClick={() => setBuildingDropdownOpen(false)}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-black text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-black text-primary hover:bg-primary-soft rounded-xl transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <Text as="span" size="xs" weight="black" color="brand">

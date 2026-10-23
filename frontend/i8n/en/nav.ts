@@ -67,6 +67,7 @@ export const enNav = {
     postAnalytics: "Listing Analytics",
     postListing: "Post Rental Listing",
     pricing: "Pricing",
+    primaryBadge: "Primary",
     register: "Sign up",
     notification: "Building Notifications",
     reminders: "Building Notifications",

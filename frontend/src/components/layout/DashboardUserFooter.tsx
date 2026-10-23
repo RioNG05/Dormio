@@ -51,7 +51,7 @@ export function DashboardUserFooter() {
       icon: Building2,
       allowed: capabilities.isLandlord,
       color: 'text-primary',
-      bg: 'hover:bg-primary/10',
+      bg: 'hover:bg-primary-soft',
     },
     {
       label: tNav('userMenuTenantDashboard'),
@@ -59,15 +59,15 @@ export function DashboardUserFooter() {
       icon: Home,
       allowed: capabilities.isTenant,
       color: 'text-vacant',
-      bg: 'hover:bg-vacant/10',
+      bg: 'hover:bg-vacant-soft',
     },
     {
       label: tNav('userMenuStaffDashboard'),
       href: '/staff',
       icon: UserCircle,
       allowed: capabilities.isEmployee,
-      color: 'text-teal-500',
-      bg: 'hover:bg-teal-500/10',
+      color: 'text-primary',
+      bg: 'hover:bg-primary-soft',
     },
     {
       label: tNav('userMenuAdminDashboard'),
@@ -75,7 +75,7 @@ export function DashboardUserFooter() {
       icon: Shield,
       allowed: capabilities.isAdmin,
       color: 'text-accent',
-      bg: 'hover:bg-accent/10',
+      bg: 'hover:bg-accent-soft',
     },
   ]
 
@@ -88,7 +88,7 @@ export function DashboardUserFooter() {
   }
 
   return (
-    <div className="border-t border-zinc-100 dark:border-line p-3">
+    <div className="border-t border-line p-3">
       {/* Theme & Language toggle row */}
       <div className="flex items-center justify-end gap-1.5 px-2 mb-2">
         <ThemeSwitcher />
