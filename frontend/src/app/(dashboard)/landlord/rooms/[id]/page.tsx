@@ -980,7 +980,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           {isOccupied && (
             <Button
-              onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
+              onClick={() => router.push(`/landlord/meter-readings?roomId=${resolvedParams.id}`)}
               leftIcon={<Gauge />}
               className="flex-1 md:flex-initial"
             >
@@ -1559,7 +1559,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
 
               <Button
                 leftIcon={<Gauge />}
-                onClick={() => router.push(`/landlord/rooms/${resolvedParams.id}/meter-reading`)}
+                onClick={() => router.push(`/landlord/meter-readings?roomId=${resolvedParams.id}`)}
               >
                 <Text as="span" size="xs" weight="bold" color="inherit">
                   {t('landlordRoomDetailMeterLogBtn')}

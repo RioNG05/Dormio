@@ -11,20 +11,16 @@ import {
   Clock,
   Sparkles,
   AlertTriangle,
-  Calendar,
   Building2,
-  RotateCcw,
   Check,
   ArrowRight,
   X,
-  Upload,
 } from 'lucide-react'
 import {
   Button,
   SelectInput,
   TextInput,
   DateInput,
-  TextareaInput,
   Modal,
   Text,
   Breadcrumb,
@@ -502,6 +498,7 @@ function LandlordMeterReadingsContent() {
       setShowSuccessModal(false)
       setSelectedRoomId(nextRoom.id)
       setRecordedNote('')
+      router.replace(`/landlord/meter-readings?roomId=${nextRoom.id}`, { scroll: false })
       toast.info(`Chuyển sang Phòng ${nextRoom.roomNumber}`)
     } else {
       toast.success(t('landlordMeterAllRoomsCompleted'))
@@ -519,6 +516,7 @@ function LandlordMeterReadingsContent() {
     setRecordedNote('')
     setSavedSummary(null)
     setRecordedDate(new Date().toISOString().split('T')[0])
+    router.replace('/landlord/meter-readings', { scroll: false })
   }
 
   const currentMonth = new Date(recordedDate).getMonth() + 1
@@ -615,7 +613,15 @@ function LandlordMeterReadingsContent() {
             <div className="flex-1 min-w-0">
               <SelectInput
                 value={selectedRoomId}
-                onChange={e => setSelectedRoomId(e.target.value)}
+                onChange={e => {
+                  const val = e.target.value
+                  setSelectedRoomId(val)
+                  if (val) {
+                    router.replace(`/landlord/meter-readings?roomId=${val}`, { scroll: false })
+                  } else {
+                    router.replace('/landlord/meter-readings', { scroll: false })
+                  }
+                }}
                 options={[
                   { value: '', label: t('landlordMeterSelectRoomPlaceholder') },
                   ...rooms.map(r => ({
