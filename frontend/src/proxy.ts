@@ -58,6 +58,18 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Spec: Rule 7 - block dashboard if mustChangePassword is true, redirect to change-password
+  const mustChangePassword = request.cookies.get('dormio_must_change_password')?.value === 'true'
+  if (
+    mustChangePassword &&
+    (pathname.startsWith('/landlord') ||
+      pathname.startsWith('/tenant') ||
+      pathname.startsWith('/staff') ||
+      pathname.startsWith('/admin'))
+  ) {
+    return NextResponse.redirect(new URL('/change-password', request.url))
+  }
+
   // Setup wizard is accessible to all authenticated users
   if (pathname === '/landlord/setup' || pathname.startsWith('/landlord/setup')) {
     return NextResponse.next()

@@ -111,6 +111,7 @@ function syncAuthCookies(
   role?: string | null,
   token?: string | null,
   capabilities?: UserCapabilities | null,
+  mustChangePassword?: boolean | null,
 ) {
   if (typeof document === 'undefined') return
   if (role) {
@@ -129,6 +130,13 @@ function syncAuthCookies(
     document.cookie = `dormio_user_capabilities=${encodeURIComponent(JSON.stringify(capabilities))}; path=/; max-age=2592000; SameSite=Lax`
   } else if (capabilities === null) {
     document.cookie = `dormio_user_capabilities=; path=/; max-age=0; SameSite=Lax`
+  }
+  if (mustChangePassword !== undefined) {
+    if (mustChangePassword) {
+      document.cookie = `dormio_must_change_password=true; path=/; max-age=2592000; SameSite=Lax`
+    } else {
+      document.cookie = `dormio_must_change_password=; path=/; max-age=0; SameSite=Lax`
+    }
   }
 }
 
@@ -356,6 +364,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedId = typeof window !== 'undefined' ? localStorage.getItem('dormio_user_id') : null
     const savedCapsStr =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_capabilities') : null
+    const savedMustChange =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('dormio_must_change_password') === 'true'
+        : false
 
     if (savedState === 'true' && savedToken) {
       const resolvedRole = savedRole || 'tenant'
@@ -371,6 +383,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
         houseName: savedHouseName || undefined,
         houseAddress: savedHouseAddress || undefined,
+        mustChangePassword: savedMustChange,
       })
 
       if (savedBuildingId) {
@@ -409,7 +422,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Hydration complete — user state and capabilities are resolved from localStorage
       setIsHydrating(false)
-      syncAuthCookies(resolvedRole, savedToken, parsedCaps)
+      syncAuthCookies(resolvedRole, savedToken, parsedCaps, savedMustChange)
       loadBuildingsFromApi()
       loadCapabilitiesFromApi()
       loadTenanciesFromApi()
@@ -425,7 +438,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsTenanciesLoading(false)
       setCapabilities(DEFAULT_CAPABILITIES)
       setIsHydrating(false)
-      syncAuthCookies(null, null, null)
+      syncAuthCookies(null, null, null, null)
     }
   }, [loadBuildingsFromApi, loadCapabilitiesFromApi, loadTenanciesFromApi])
 
@@ -504,7 +517,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('dormio_logged_in', 'true')
     localStorage.setItem('dormio_user_role', resolvedRole)
     localStorage.setItem('dormio_user_capabilities', JSON.stringify(initialCaps))
-    syncAuthCookies(resolvedRole, token, initialCaps)
+    if (typeof userData.mustChangePassword === 'boolean') {
+      if (userData.mustChangePassword) {
+        localStorage.setItem('dormio_must_change_password', 'true')
+      } else {
+        localStorage.removeItem('dormio_must_change_password')
+      }
+    }
+    syncAuthCookies(resolvedRole, token, initialCaps, !!userData.mustChangePassword)
     if (userData.id) localStorage.setItem('dormio_user_id', userData.id)
     if (userData.name) localStorage.setItem('dormio_user_name', userData.name)
     if (userData.email) localStorage.setItem('dormio_user_email', userData.email)
@@ -570,9 +590,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setActiveTenancyId('')
     setIsTenanciesLoading(false)
     setCapabilities(DEFAULT_CAPABILITIES)
-    syncAuthCookies(null, null, null)
+    syncAuthCookies(null, null, null, null)
     localStorage.removeItem('dormio_logged_in')
     localStorage.removeItem('dormio_user_role')
+    localStorage.removeItem('dormio_must_change_password')
     localStorage.removeItem('dormio_house_name')
     localStorage.removeItem('dormio_house_address')
     localStorage.removeItem('dormio_active_building_id')
@@ -600,6 +621,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.name) localStorage.setItem('dormio_user_name', data.name)
       if (data.email) localStorage.setItem('dormio_user_email', data.email)
       if (data.phone) localStorage.setItem('dormio_user_phone', data.phone)
+      if (typeof data.mustChangePassword === 'boolean') {
+        if (data.mustChangePassword) {
+          localStorage.setItem('dormio_must_change_password', 'true')
+          document.cookie = `dormio_must_change_password=true; path=/; max-age=2592000; SameSite=Lax`
+        } else {
+          localStorage.removeItem('dormio_must_change_password')
+          document.cookie = `dormio_must_change_password=; path=/; max-age=0; SameSite=Lax`
+        }
+      }
     }
   }, [])
 

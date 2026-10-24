@@ -97,6 +97,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return
     }
 
+    // Spec: Rule 7 - block dashboard if mustChangePassword is true, redirect to change-password
+    if (user.mustChangePassword) {
+      router.replace('/change-password')
+      return
+    }
+
     // Redirect authenticated users with wrong role to the dedicated unauthorized page
     const hasPermission = checkUserPermission(pathname ?? '', user, capabilities)
     if (!hasPermission) {
@@ -114,8 +120,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  // While redirect is pending (not logged in or wrong role), render spinner
-  if (!isLoggedIn || user === null) {
+  // While redirect is pending (not logged in or wrong role or mustChangePassword), render spinner
+  if (!isLoggedIn || user === null || user.mustChangePassword) {
     return <HydrationSpinner />
   }
 
