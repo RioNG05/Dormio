@@ -390,7 +390,7 @@ export function AddTenantModal({
         footer={
           <div className="flex flex-col-reverse sm:flex-row items-center gap-2.5 w-full">
             <Button
-              type="button"
+              size='md'
               variant="secondary"
               onClick={() => setShowConfirmClose(false)}
               className="w-full sm:flex-1 text-xs"
@@ -398,7 +398,7 @@ export function AddTenantModal({
               {t('landlordTenantConfirmCloseStay')}
             </Button>
             <Button
-              type="button"
+              size='md'
               variant="danger"
               onClick={handleConfirmDiscard}
               className="w-full sm:flex-1 text-xs"

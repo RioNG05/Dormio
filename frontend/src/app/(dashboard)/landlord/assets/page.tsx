@@ -629,6 +629,7 @@ export default function AssetsPage() {
                   description={t('landlordAssetsSubtitle')}
                   action={
                     <Button
+                      size='md'
                       onClick={handleOpenAddModal}
                       leftIcon={<Plus />}
                     >
@@ -816,6 +817,7 @@ export default function AssetsPage() {
                         bordered={false}
                         action={
                           <Button
+                            size='md'
                             onClick={handleOpenAddModal}
                             leftIcon={<Plus />}
                           >

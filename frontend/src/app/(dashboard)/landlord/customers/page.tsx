@@ -271,7 +271,6 @@ export default function CustomersPage() {
     return 0
   })
 
-  const totalPages = Math.ceil(sortedCustomers.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedCustomers = sortedCustomers.slice(startIndex, startIndex + itemsPerPage)
 
@@ -400,6 +399,7 @@ export default function CustomersPage() {
                   action={
                     <div className="flex flex-col sm:flex-row items-center gap-2.5">
                       <Button
+                        size='md'
                         variant="primary"
                         onClick={() => {
                           if (!activeBuilding?.id) {
@@ -413,6 +413,7 @@ export default function CustomersPage() {
                         {t('landlordTenantBtnAdd')}
                       </Button>
                       <Button
+                        size='md'
                         variant="outline"
                         onClick={() => router.push('/landlord/contracts/create')}
                         leftIcon={<Plus />}

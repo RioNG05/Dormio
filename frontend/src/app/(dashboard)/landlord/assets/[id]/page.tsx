@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   Package,
   Wrench,
   Calendar,
@@ -14,18 +13,12 @@ import {
   Edit3,
   Trash2,
   Clock,
-  ChevronRight,
   Info,
   BarChart3,
   Loader2,
   AlertTriangle,
-  QrCode,
-  Printer,
-  Copy,
-  Check,
   Phone,
   Mail,
-  Building,
   Eye,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -195,6 +188,44 @@ export default function AssetDetailPage() {
       }
     },
     [t],
+  )
+
+  const getConditionChipVariant = useCallback(
+    (condition?: string): 'default' | 'primary' | 'secondary' | 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' => {
+      switch (condition) {
+        case 'good':
+          return 'success'
+        case 'new':
+          return 'info'
+        case 'under_repair':
+          return 'warning'
+        case 'damaged':
+          return 'danger'
+        case 'lost':
+        case 'disposed':
+        default:
+          return 'neutral'
+      }
+    },
+    [],
+  )
+
+  const getLogTypeChipVariant = useCallback(
+    (type?: string): 'default' | 'primary' | 'secondary' | 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' => {
+      switch (type) {
+        case 'routine':
+          return 'info'
+        case 'repair':
+          return 'warning'
+        case 'clean_gas':
+          return 'primary'
+        case 'replace':
+          return 'danger'
+        default:
+          return 'neutral'
+      }
+    },
+    [],
   )
 
   // ─── Data Fetching ────────────────────────────────────────────────────────
@@ -419,6 +450,31 @@ export default function AssetDetailPage() {
     setEditImagePreview('')
   }
 
+  const isLogDirty = useMemo(() => {
+    return Boolean(
+      logDescription.trim() ||
+      (logCost && logCost !== '0') ||
+      logPerformer.trim()
+    )
+  }, [logDescription, logCost, logPerformer])
+
+  const handleRequestCloseLogModal = () => {
+    if (isLogDirty) {
+      setShowConfirmCloseLogModal(true)
+    } else {
+      setIsLogModalOpen(false)
+    }
+  }
+
+  const handleDiscardAndCloseLog = () => {
+    setShowConfirmCloseLogModal(false)
+    setIsLogModalOpen(false)
+    setLogDescription('')
+    setLogCost('0')
+    setLogPerformer('')
+    setLogSetCondition('')
+  }
+
   const handleEditImageSelect = (file: File) => {
     const reader = new FileReader()
     reader.onload = e => {
@@ -602,31 +658,29 @@ export default function AssetDetailPage() {
                 size="sm"
                 variant="default"
                 preventHover
+                className="font-mono"
               >
                 SKU: {asset.code}
               </Chip>
               <Chip
                 size="sm"
-                variant={
-                  isGood
-                    ? 'default'
-                    : isReady
-                      ? 'info'
-                      : isMaintenance
-                        ? 'warning'
-                        : isBroken
-                          ? 'danger'
-                          : 'neutral'
-                }
+                variant={getConditionChipVariant(asset.condition)}
                 preventHover
+                className="font-bold"
               >
                 {getStatusLabel(asset.condition)}
               </Chip>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-snug">
+            <Text
+              as="h1"
+              size="2xl"
+              weight="black"
+              color="default"
+              className="tracking-tight leading-snug"
+            >
               {asset.name}
-            </h1>
+            </Text>
 
             {/* Room Location & Live Tenant Sub-bar */}
             <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted pt-2 border-t border-line">
@@ -686,6 +740,7 @@ export default function AssetDetailPage() {
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
           {/* Notice / Finish Maintenance Action Button */}
           <Button
+            size='md'
             variant={isMaintenance ? 'success' : 'warning'}
             onClick={handleInitiateMaintenanceWorkflow}
             leftIcon={
@@ -705,6 +760,7 @@ export default function AssetDetailPage() {
 
           {/* Edit Asset Button */}
           <Button
+            size='md'
             variant="secondary"
             onClick={handleOpenEditModal}
             leftIcon={<Edit3 className="text-primary" />}
@@ -714,6 +770,7 @@ export default function AssetDetailPage() {
 
           {/* Delete Asset Button */}
           <Button
+            size='md'
             variant="danger"
             onClick={() => setShowDeleteModal(true)}
             leftIcon={<Trash2 />}
@@ -732,13 +789,13 @@ export default function AssetDetailPage() {
             <div className="flex items-center justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-2">
                 <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-primary" />
-                <h2 className="text-sm sm:text-base font-black text-foreground">
+                <Text as="h2" size="base" weight="black" color="default">
                   {t('landlordAssetsDetailGeneral')}
-                </h2>
+                </Text>
               </div>
-              <span className="text-xs font-semibold text-muted">
+              <Chip size="sm" variant="neutral" preventHover className="font-semibold">
                 {t('landlordAssetsQuantityCount', { count: asset.quantity })}
-              </span>
+              </Chip>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
@@ -804,16 +861,21 @@ export default function AssetDetailPage() {
               <div className="flex items-center justify-between pb-3 border-b border-line">
                 <div className="flex items-center gap-2">
                   <User className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-success" />
-                  <h2 className="text-sm sm:text-base font-black text-foreground">
+                  <Text as="h2" size="base" weight="black" color="default">
                     {t('landlordAssetsDetailTenant')} {asset.roomName}
-                  </h2>
+                  </Text>
                 </div>
                 {asset.tenant.contractId && (
-                  <span className="text-[11px] font-mono font-bold text-success bg-success-soft px-2 py-0.5 rounded-md border border-success-subtle">
+                  <Chip
+                    size="xs"
+                    variant="success"
+                    preventHover
+                    className="font-mono font-bold"
+                  >
                     {t('landlordAssetsDetailContractPrefix', {
                       code: asset.tenant.contractId.slice(-6).toUpperCase(),
                     })}
-                  </span>
+                  </Chip>
                 )}
               </div>
 
@@ -879,16 +941,16 @@ export default function AssetDetailPage() {
               <div className="flex items-center justify-between pb-3 border-b border-line">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-success" />
-                  <h2 className="text-sm sm:text-base font-black text-foreground">
+                  <Text as="h2" size="base" weight="black" color="default">
                     {t('landlordAssetsDetailDepreciation')}
-                  </h2>
+                  </Text>
                 </div>
-                <span className="text-[10px] font-black text-muted bg-surface px-2 py-1 rounded-lg border border-line">
+                <Chip size="xs" variant="neutral" preventHover className="font-bold">
                   {t('landlordAssetsDetailYearsUsed', {
                     years: asset.depreciationYears || 5,
                     months: dep.totalMonths,
                   })}
-                </span>
+                </Chip>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
@@ -965,9 +1027,9 @@ export default function AssetDetailPage() {
               <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-line shrink-0">
                 <div className="flex items-center gap-2">
                   <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-warning shrink-0" />
-                  <h2 className="text-sm sm:text-base font-black text-foreground">
+                  <Text as="h2" size="base" weight="black" color="default">
                     {t('landlordAssetsDetailMaintenanceHistory')}
-                  </h2>
+                  </Text>
                 </div>
                 <Button
                   variant="warning"
@@ -989,12 +1051,17 @@ export default function AssetDetailPage() {
               {/* Maintenance Expenditure Summary */}
               {totalMaintenanceCost > 0 && (
                 <div className="p-3 bg-surface border border-line rounded-2xl flex items-center justify-between text-xs">
-                  <span className="font-semibold text-muted">
+                  <Text size="xs" weight="semibold" color="secondary">
                     {t('landlordAssetsDetailTotalMaintenanceCost')}
-                  </span>
-                  <span className="font-black text-foreground text-sm">
+                  </Text>
+                  <Chip
+                    size="sm"
+                    variant="warning"
+                    preventHover
+                    className="font-mono font-black"
+                  >
                     {formatCurrency(totalMaintenanceCost, locale)}
-                  </span>
+                  </Chip>
                 </div>
               )}
 
@@ -1015,18 +1082,28 @@ export default function AssetDetailPage() {
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2 py-0.5 bg-warning-soft text-warning rounded-md font-extrabold text-[10px]">
+                          <Chip
+                            size="xs"
+                            variant={getLogTypeChipVariant(log.type)}
+                            preventHover
+                            className="font-bold"
+                          >
                             {getLogTypeLabel(log.type)}
-                          </span>
+                          </Chip>
                           <span className="text-muted font-medium text-[11px] flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-muted inline shrink-0" />{' '}
                             {formatDate(log.performedAt, locale)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-success text-xs sm:text-sm bg-success-soft px-2 py-0.5 rounded-md border border-success-subtle shrink-0">
+                          <Chip
+                            size="xs"
+                            variant="success"
+                            preventHover
+                            className="font-mono font-black shrink-0"
+                          >
                             {formatCurrency(log.cost, locale)}
-                          </span>
+                          </Chip>
                           <TableActionButton
                             icon={<Trash2 />}
                             variant="ghost-danger"
@@ -1227,6 +1304,7 @@ export default function AssetDetailPage() {
         </Modal.Body>
         <Modal.Footer className="flex items-center justify-end gap-3 p-4 bg-surface border-t border-line">
           <Button
+            size='md'
             variant="outline"
             onClick={handleRequestCloseEditModal}
             disabled={isSavingEdit}
@@ -1234,6 +1312,7 @@ export default function AssetDetailPage() {
             {t('landlordAssetsBtnCancel')}
           </Button>
           <Button
+            size='md'
             onClick={handleSaveEditAsset}
             isLoading={isSavingEdit}
             disabled={isSavingEdit}
@@ -1246,7 +1325,7 @@ export default function AssetDetailPage() {
       {/* ─── MODAL 2: MAINTENANCE LOG MODAL ────────────────────────────────── */}
       <Modal
         isOpen={isLogModalOpen}
-        onClose={() => setIsLogModalOpen(false)}
+        onClose={handleRequestCloseLogModal}
         size="lg"
         zIndex={50}
         showCloseButton={true}
@@ -1334,13 +1413,15 @@ export default function AssetDetailPage() {
         </Modal.Body>
         <Modal.Footer className="flex justify-end gap-2 p-4 bg-surface border-t border-line">
           <Button
+            size='md'
             variant="outline"
-            onClick={() => setIsLogModalOpen(false)}
+            onClick={handleRequestCloseLogModal}
             disabled={isSavingLog}
           >
             {t('landlordAssetsBtnCancel')}
           </Button>
           <Button
+            size='md'
             onClick={handleSaveMaintenanceLog}
             isLoading={isSavingLog}
           >
@@ -1353,7 +1434,7 @@ export default function AssetDetailPage() {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        size="sm"
+        size="md"
         zIndex={60}
         showCloseButton={false}
       >
@@ -1377,10 +1458,12 @@ export default function AssetDetailPage() {
           {asset && (
             <div className="p-3 bg-surface border border-line rounded-xl text-left space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-mono font-bold text-primary">{asset.code}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-card border border-line text-muted font-medium">
+                <Chip size="xs" variant="primary" preventHover className="font-mono font-bold">
+                  {asset.code}
+                </Chip>
+                <Chip size="xs" variant="neutral" preventHover>
                   {getCategoryLabel(asset.category)}
-                </span>
+                </Chip>
               </div>
               <p className="font-bold text-sm text-foreground truncate">{asset.name}</p>
               <div className="flex items-center justify-between text-muted text-[11px] pt-1 border-t border-line/60">
@@ -1396,6 +1479,7 @@ export default function AssetDetailPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
+              size='md'
               variant="outline"
               onClick={() => setShowDeleteModal(false)}
               className="flex-1"
@@ -1404,6 +1488,7 @@ export default function AssetDetailPage() {
               {t('landlordAssetsBtnCancel')}
             </Button>
             <Button
+              size='md'
               variant="danger"
               onClick={handleDeleteAsset}
               className="flex-1"
@@ -1440,20 +1525,35 @@ export default function AssetDetailPage() {
           {logToDelete && (
             <div className="p-3 bg-surface border border-line rounded-xl text-left space-y-1 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-warning">{getLogTypeLabel(logToDelete.type)}</span>
+                <Chip
+                  size="xs"
+                  variant={getLogTypeChipVariant(logToDelete.type)}
+                  preventHover
+                  className="font-bold"
+                >
+                  {getLogTypeLabel(logToDelete.type)}
+                </Chip>
                 <span className="font-mono text-muted text-[11px]">
                   {formatDate(logToDelete.performedAt, locale)}
                 </span>
               </div>
               <p className="font-medium text-foreground line-clamp-2">{logToDelete.description}</p>
-              <div className="font-black text-success pt-1">
-                {formatCurrency(logToDelete.cost, locale)}
+              <div className="pt-1">
+                <Chip
+                  size="xs"
+                  variant="success"
+                  preventHover
+                  className="font-mono font-black"
+                >
+                  {formatCurrency(logToDelete.cost, locale)}
+                </Chip>
               </div>
             </div>
           )}
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
+              size='md'
               variant="outline"
               onClick={() => setLogToDelete(null)}
               className="flex-1"
@@ -1462,6 +1562,7 @@ export default function AssetDetailPage() {
               {t('landlordAssetsBtnCancel')}
             </Button>
             <Button
+              size='md'
               variant="danger"
               onClick={handleConfirmDeleteLog}
               className="flex-1"
@@ -1497,6 +1598,7 @@ export default function AssetDetailPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button
+              size='md'
               variant="outline"
               onClick={() => setShowConfirmCloseEditModal(false)}
               className="flex-1"
@@ -1504,8 +1606,52 @@ export default function AssetDetailPage() {
               {t('landlordAssetsConfirmCloseKeep')}
             </Button>
             <Button
+              size='md'
               variant="danger"
               onClick={handleDiscardAndCloseEdit}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* ─── MODAL 5B: CONFIRM CLOSE MODAL FOR LOG (Rule #10) ──────────────── */}
+      <Modal
+        isOpen={showConfirmCloseLogModal}
+        onClose={() => setShowConfirmCloseLogModal(false)}
+        size="sm"
+        zIndex={75}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-warning-soft text-warning rounded-2xl flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsConfirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsConfirmCloseDesc')}
+            </Text>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setShowConfirmCloseLogModal(false)}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={handleDiscardAndCloseLog}
               className="flex-1"
             >
               {t('landlordAssetsConfirmCloseDiscard')}
