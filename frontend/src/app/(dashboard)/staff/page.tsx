@@ -47,7 +47,7 @@ import {
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { staffAttendanceService, StaffMonthlySummary } from '@/services/staff-attendance.service'
-import { Button, TextInput, TextareaInput, Checkbox } from '@/components/ui'
+import { Button, TextInput, TextareaInput, Checkbox, Text, Chip, Modal } from '@/components/ui'
 
 function getDutyTitle(duty: DutyTaskItem, _isEn = false): string {
   return duty.title
@@ -737,16 +737,16 @@ export default function StaffOverviewPage() {
       <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-2 z-10">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-primary/15 text-primary">
+            <Chip variant="primary" size="sm" preventHover className="tracking-wider uppercase font-black">
               {t('badge')}
-            </span>
+            </Chip>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+          <Text as="h1" size={{ base: '2xl', sm: '3xl' }} weight="black" className="tracking-tight">
             {t('greeting', { name: currentStaffName })}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted font-medium">
+          </Text>
+          <Text size={{ base: 'xs', sm: 'sm' }} color="secondary" weight="medium">
             {t('greetingSubtitle', { date: todayFormattedDate })}
-          </p>
+          </Text>
         </div>
 
         {/* Live Digital Clock Widget */}
@@ -757,9 +757,9 @@ export default function StaffOverviewPage() {
               <div className="text-xl sm:text-2xl font-black font-mono tracking-wider text-emerald-400">
                 {effectiveTimeString}
               </div>
-              <div className="text-[10px] font-bold text-muted uppercase tracking-widest text-right">
+              <Text size="3xs" weight="bold" color="secondary" uppercase align="right" className="tracking-widest">
                 {t('realSystemTime')}
-              </div>
+              </Text>
             </div>
           </div>
         </div>
@@ -776,16 +776,16 @@ export default function StaffOverviewPage() {
               </div>
 
               <div className="space-y-2 max-w-md mx-auto">
-                <h2 className="text-xl sm:text-2xl font-black text-foreground">
+                <Text as="h2" size={{ base: 'xl', sm: '2xl' }} weight="black">
                   {t('noShiftTitle')}
-                </h2>
-                <p className="text-xs sm:text-sm text-muted leading-relaxed">
+                </Text>
+                <Text size={{ base: 'xs', sm: 'sm' }} color="secondary" className="leading-relaxed">
                   {fetchError
                     ? fetchError === 'ERR_FETCH_FAILED'
                       ? t('errFailedLoad')
                       : fetchError
                     : t('noShiftDesc')}
-                </p>
+                </Text>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -826,33 +826,48 @@ export default function StaffOverviewPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
-                    <span className="text-xs font-black text-primary uppercase tracking-wider">
+                    <Text as="span" size="xs" weight="black" color="brand" uppercase className="tracking-wider">
                       {t('todayShiftTitle')}
-                    </span>
+                    </Text>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-black text-foreground">
+                  <Text as="h2" size={{ base: 'xl', sm: '2xl' }} weight="black">
                     {getShiftName(todaySchedule.shift)} ({todaySchedule.shift.startTime} -{' '}
                     {todaySchedule.shift.endTime})
-                  </h2>
+                  </Text>
                 </div>
 
                 {/* Status Badge */}
                 <div>
                   {attendance?.checkOut ? (
-                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-success-soft text-success inline-flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4" />
+                    <Chip
+                      variant="success"
+                      size="md"
+                      preventHover
+                      leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                      className="font-black"
+                    >
                       {t('badgeShiftCompleted')}
-                    </span>
+                    </Chip>
                   ) : attendance?.checkIn ? (
-                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-primary/15 text-primary inline-flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 animate-spin" />
+                    <Chip
+                      variant="primary"
+                      size="md"
+                      preventHover
+                      leftIcon={<Clock className="w-4 h-4 animate-spin" />}
+                      className="font-black"
+                    >
                       {t('badgeOnDuty')}
-                    </span>
+                    </Chip>
                   ) : (
-                    <span className="px-3.5 py-1.5 rounded-xl text-xs font-black bg-warning-soft text-warning inline-flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4" />
+                    <Chip
+                      variant="warning"
+                      size="md"
+                      preventHover
+                      leftIcon={<AlertCircle className="w-4 h-4" />}
+                      className="font-black"
+                    >
                       {t('badgeNotCheckedIn')}
-                    </span>
+                    </Chip>
                   )}
                 </div>
               </div>
@@ -860,9 +875,9 @@ export default function StaffOverviewPage() {
               {/* Shift Metadata Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-1">
-                  <span className="text-[11px] font-bold text-muted block uppercase">
+                  <Text as="span" size="2xs" weight="bold" color="secondary" uppercase className="block">
                     {t('shiftLocationLabel')}
-                  </span>
+                  </Text>
                   <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
                     <Building2 className="w-4 h-4 text-primary" />
                     <span className="truncate">{todaySchedule.boardingHouseName}</span>
@@ -870,9 +885,9 @@ export default function StaffOverviewPage() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-1">
-                  <span className="text-[11px] font-bold text-muted block uppercase">
+                  <Text as="span" size="2xs" weight="bold" color="secondary" uppercase className="block">
                     {t('assignedRoleLabel')}
-                  </span>
+                  </Text>
                   <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
                     <Shield className="w-4 h-4 text-primary" />
                     <span className="truncate">{getPositionName(todaySchedule.position)}</span>
@@ -880,9 +895,9 @@ export default function StaffOverviewPage() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-1">
-                  <span className="text-[11px] font-bold text-muted block uppercase">
+                  <Text as="span" size="2xs" weight="bold" color="secondary" uppercase className="block">
                     {t('shiftDurationLabel')}
-                  </span>
+                  </Text>
                   <div className="flex items-center gap-2 font-black text-foreground text-xs sm:text-sm">
                     <Clock className="w-4 h-4 text-primary" />
                     <span>
@@ -895,13 +910,13 @@ export default function StaffOverviewPage() {
               {/* TIMEKEEPING ACTION CONTAINER */}
               <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-line space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <Text as="h3" size="xs" weight="black" uppercase className="tracking-wider flex items-center gap-1.5">
                     <Camera className="w-4 h-4 text-primary" />
                     <span>{t('attendanceTitle')}</span>
-                  </h3>
-                  <span className="text-[11px] font-semibold text-muted">
+                  </Text>
+                  <Text as="span" size="2xs" weight="semibold" color="secondary">
                     {t('attendanceSubtitle')}
-                  </span>
+                  </Text>
                 </div>
 
                 {/* Status details line */}
@@ -910,28 +925,27 @@ export default function StaffOverviewPage() {
                   <div className="p-3.5 rounded-xl bg-card border border-line flex flex-col justify-between gap-2.5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-muted block">
+                        <Text as="span" size="3xs" weight="bold" color="secondary" className="block">
                           {t('checkInTime')}
-                        </span>
+                        </Text>
                         <span className="font-black text-foreground text-sm">
                           {attendance?.checkIn ? `${attendance.checkIn}` : '--:--:--'}
                         </span>
                       </div>
                       <div>
                         {attendance?.checkIn ? (
-                          <span
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                              attendance.status === 'late'
-                                ? 'bg-warning-soft text-warning'
-                                : 'bg-success-soft text-success'
-                            }`}
+                          <Chip
+                            variant={attendance.status === 'late' ? 'warning' : 'success'}
+                            size="xs"
+                            preventHover
+                            className="font-black"
                           >
                             {attendance.status === 'late' ? t('statusLate') : t('statusOnTime')}
-                          </span>
+                          </Chip>
                         ) : (
-                          <span className="text-[10px] text-muted font-bold">
+                          <Text as="span" size="3xs" color="secondary" weight="bold">
                             {t('windowCheckIn')}
-                          </span>
+                          </Text>
                         )}
                       </div>
                     </div>
@@ -1032,11 +1046,11 @@ export default function StaffOverviewPage() {
                             ? t('explanationLate')
                             : t('explanationCheckIn')}
                         </span>
-                        <p className="italic text-foreground/90 truncate">
+                        <Text size="xs" italic className="text-foreground/90 truncate">
                           &quot;
                           {getLocalizedExplanation(attendance.checkInExplanation, locale === 'en')}
                           &quot;
-                        </p>
+                        </Text>
                       </div>
                     )}
                   </div>
@@ -1045,28 +1059,27 @@ export default function StaffOverviewPage() {
                   <div className="p-3.5 rounded-xl bg-card border border-line flex flex-col justify-between gap-2.5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-muted block">
+                        <Text as="span" size="3xs" weight="bold" color="secondary" className="block">
                           {t('checkOutTime')}
-                        </span>
+                        </Text>
                         <span className="font-black text-foreground text-sm">
                           {attendance?.checkOut ? `${attendance.checkOut}` : '--:--:--'}
                         </span>
                       </div>
                       <div>
                         {attendance?.checkOut ? (
-                          <span
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${
-                              attendance.isEarlyCheckOut
-                                ? 'bg-warning-soft text-warning'
-                                : 'bg-success-soft text-success'
-                            }`}
+                          <Chip
+                            variant={attendance.isEarlyCheckOut ? 'warning' : 'success'}
+                            size="xs"
+                            preventHover
+                            className="font-black"
                           >
                             {attendance.isEarlyCheckOut ? t('statusEarly') : t('statusCompleted')}
-                          </span>
+                          </Chip>
                         ) : (
-                          <span className="text-[10px] text-muted font-bold">
+                          <Text as="span" size="3xs" color="secondary" weight="bold">
                             {t('windowCheckOut')}
-                          </span>
+                          </Text>
                         )}
                       </div>
                     </div>
@@ -1163,11 +1176,11 @@ export default function StaffOverviewPage() {
                     {attendance?.checkOutExplanation && (
                       <div className="p-2 rounded-lg bg-warning-soft border border-warning-subtle text-[11px] text-warning">
                         <span className="font-bold block">{t('explanationEarly')}</span>
-                        <p className="italic text-foreground/90 truncate">
+                        <Text size="xs" italic className="text-foreground/90 truncate">
                           &quot;
                           {getLocalizedExplanation(attendance.checkOutExplanation, locale === 'en')}
                           &quot;
-                        </p>
+                        </Text>
                       </div>
                     )}
                   </div>
@@ -1268,8 +1281,8 @@ export default function StaffOverviewPage() {
                     <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                     <span>{t('rulesTitle')}</span>
                   </div>
-                  <p className="leading-relaxed">{t('rule1')}</p>
-                  <p className="leading-relaxed">{t('rule2')}</p>
+                  <Text size="2xs" color="secondary" className="leading-relaxed">{t('rule1')}</Text>
+                  <Text size="2xs" color="secondary" className="leading-relaxed">{t('rule2')}</Text>
                 </div>
               </div>
 
@@ -1281,12 +1294,12 @@ export default function StaffOverviewPage() {
                     <span>{t('checklistTitle')}</span>
                   </div>
                   <div className="flex items-center gap-2.5 self-start sm:self-auto">
-                    <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                    <Chip variant="primary" size="sm" preventHover className="font-bold">
                       {t('checklistProgress', {
                         completed: completedCount,
                         total: dutyList.length,
                       })}
-                    </span>
+                    </Chip>
                     <Link
                       href="/staff/schedule"
                       className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
@@ -1347,30 +1360,40 @@ export default function StaffOverviewPage() {
 
                                 {/* Requirement Tag */}
                                 {duty.requiresPhoto ? (
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle inline-flex items-center gap-1 shrink-0">
-                                    <Camera className="w-3 h-3 text-warning" />
+                                  <Chip
+                                    variant="warning"
+                                    size="xs"
+                                    preventHover
+                                    leftIcon={<Camera className="w-3 h-3 text-warning" />}
+                                    className="font-black shrink-0"
+                                  >
                                     {t('requiresPhoto')}
-                                  </span>
+                                  </Chip>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-card-hover text-muted inline-flex items-center gap-1 shrink-0">
+                                  <Chip
+                                    variant="secondary"
+                                    size="xs"
+                                    preventHover
+                                    className="font-semibold shrink-0"
+                                  >
                                     {t('photoOptional')}
-                                  </span>
+                                  </Chip>
                                 )}
                               </div>
 
                               {duty.note && (
-                                <p className="text-[11px] text-muted font-medium italic">
+                                <Text size="2xs" color="secondary" italic weight="medium">
                                   {t('notePrefix', {
                                     note: getDutyNote(duty.note, locale === 'en'),
                                   })}
-                                </p>
+                                </Text>
                               )}
 
                               {duty.completedAt && (
-                                <div className="text-[10px] text-success font-bold flex items-center gap-1">
+                                <Text size="3xs" color="success" weight="bold" className="flex items-center gap-1">
                                   <Check className="w-3 h-3" />{' '}
                                   {t('completedAtPrefix', { time: duty.completedAt })}
-                                </div>
+                                </Text>
                               )}
                             </div>
                           </div>
@@ -1435,8 +1458,8 @@ export default function StaffOverviewPage() {
                 ) : (
                   <div className="p-6 rounded-2xl bg-surface border border-dashed border-line text-center space-y-1">
                     <CheckSquare className="w-5 h-5 text-muted mx-auto" />
-                    <p className="text-xs font-bold text-muted">{t('noDutiesTitle')}</p>
-                    <p className="text-[11px] text-muted">{t('noDutiesDesc')}</p>
+                    <Text size="xs" weight="bold" color="secondary">{t('noDutiesTitle')}</Text>
+                    <Text size="2xs" color="secondary">{t('noDutiesDesc')}</Text>
                   </div>
                 )}
               </div>
@@ -1454,9 +1477,9 @@ export default function StaffOverviewPage() {
                 <span>{t('coworkersTitle')}</span>
               </div>
               {todaySchedule && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/10 text-primary">
+                <Chip variant="primary" size="xs" preventHover className="font-black">
                   {t('coworkersCount', { count: todaySchedule.coWorkers.length })}
-                </span>
+                </Chip>
               )}
             </div>
 
@@ -1477,10 +1500,10 @@ export default function StaffOverviewPage() {
                         className="w-10 h-10 rounded-full object-cover border border-line shrink-0"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-black text-foreground truncate">{cw.name}</h4>
-                        <p className="text-[11px] font-semibold text-muted truncate">
+                        <Text as="h4" size="xs" weight="black" className="truncate">{cw.name}</Text>
+                        <Text size="2xs" weight="semibold" color="secondary" className="truncate">
                           {getPositionName(cw.positionName)}
-                        </p>
+                        </Text>
                       </div>
                     </div>
                     {cw.phone ? (
@@ -1498,10 +1521,10 @@ export default function StaffOverviewPage() {
             ) : (
               <div className="text-center py-6 text-muted text-xs font-medium space-y-1">
                 <Users className="w-6 h-6 text-zinc-300 mx-auto" />
-                <p>{todaySchedule ? t('onlyStaffAssigned') : t('noScheduledShifts')}</p>
-                <p className="text-[11px] text-muted">
+                <Text size="xs" weight="medium" color="secondary">{todaySchedule ? t('onlyStaffAssigned') : t('noScheduledShifts')}</Text>
+                <Text size="2xs" color="secondary">
                   {todaySchedule ? t('coworkerNote') : t('coWorkersEmptyDesc')}
-                </p>
+                </Text>
               </div>
             )}
 
@@ -1514,60 +1537,60 @@ export default function StaffOverviewPage() {
 
           {/* MONTHLY SUMMARY METRICS WIDGET */}
           <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs font-black text-foreground uppercase tracking-wider">
+            <Text as="h3" size="xs" weight="black" uppercase className="tracking-wider">
               {monthlySummaryTitle}
-            </h3>
+            </Text>
 
             {monthlySummary && monthlySummary.totalShifts > 0 ? (
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
-                  <span className="text-[10px] font-bold text-muted uppercase">
+                  <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block">
                     {t('metricTotalShifts')}
-                  </span>
-                  <div className="text-xl font-black text-foreground">
+                  </Text>
+                  <Text size="xl" weight="black">
                     {t('shiftsUnit', { count: monthlySummary.totalShifts })}
-                  </div>
-                  <span className="text-[10px] text-success font-bold">
+                  </Text>
+                  <Text as="span" size="3xs" color="success" weight="bold">
                     {t('totalHoursUnit', { hours: monthlySummary.totalHours })}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
-                  <span className="text-[10px] font-bold text-muted uppercase">
+                  <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block">
                     {t('onTimeLabel')}
-                  </span>
-                  <div className="text-xl font-black text-primary">
+                  </Text>
+                  <Text size="xl" weight="black" color="brand">
                     {monthlySummary.onTimeRate}%
-                  </div>
-                  <span className="text-[10px] text-muted font-bold">
+                  </Text>
+                  <Text as="span" size="3xs" color="secondary" weight="bold">
                     {t('onTimeStandard', {
                       count: `${monthlySummary.onTimeCount}/${monthlySummary.totalShifts}`,
                     })}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
-                  <span className="text-[10px] font-bold text-muted uppercase">
+                  <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block">
                     {t('lateLabel')}
-                  </span>
-                  <div className="text-xl font-black text-warning">
+                  </Text>
+                  <Text size="xl" weight="black" color="warning">
                     {t('shiftsUnit', { count: monthlySummary.lateCount })}
-                  </div>
-                  <span className="text-[10px] text-muted font-medium">
+                  </Text>
+                  <Text as="span" size="3xs" color="secondary" weight="medium">
                     {t('lateHasExplanation')}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-0.5">
-                  <span className="text-[10px] font-bold text-muted uppercase">
+                  <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block">
                     {t('earlyLabel')}
-                  </span>
-                  <div className="text-xl font-black text-warning">
+                  </Text>
+                  <Text size="xl" weight="black" color="warning">
                     {t('shiftsUnit', { count: monthlySummary.earlyCount })}
-                  </div>
-                  <span className="text-[10px] text-muted font-medium">
+                  </Text>
+                  <Text as="span" size="3xs" color="secondary" weight="medium">
                     {t('earlyApproved')}
-                  </span>
+                  </Text>
                 </div>
               </div>
             ) : (
@@ -1575,12 +1598,12 @@ export default function StaffOverviewPage() {
                 <div className="w-8 h-8 mx-auto rounded-full bg-card border border-line flex items-center justify-center text-muted">
                   <Calendar className="w-4 h-4 text-primary" />
                 </div>
-                <div className="text-xs font-bold text-foreground/90">
+                <Text size="xs" weight="bold">
                   {t('noMonthlyAttendanceTitle')}
-                </div>
-                <p className="text-[11px] text-muted leading-relaxed">
+                </Text>
+                <Text size="2xs" color="secondary" className="leading-relaxed">
                   {t('noMonthlyAttendanceDesc')}
-                </p>
+                </Text>
               </div>
             )}
 
@@ -1641,42 +1664,29 @@ export default function StaffOverviewPage() {
       {/* ========================================================================= */}
       {/* MODAL 3: FULL SCREEN IMAGE VIEWER WITH WATERMARK AUDIT STAMP */}
       {/* ========================================================================= */}
-      {previewImageModal && previewImageModal.isOpen && (
-        <div
-          onClick={() => setPreviewImageModal(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 cursor-pointer"
+      {previewImageModal && (
+        <Modal
+          isOpen={previewImageModal.isOpen}
+          onClose={() => setPreviewImageModal(null)}
+          size="xl"
+          className="bg-zinc-900 text-white border-zinc-800"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-zinc-900 text-white rounded-3xl border border-zinc-800 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col cursor-default"
-          >
-            {/* Lightbox Header */}
-            <div className="p-4 sm:p-5 flex items-center justify-between border-b border-zinc-800">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-primary" />
-                <h3 className="font-bold text-sm sm:text-base text-zinc-100">
-                  {previewImageModal.title}
-                </h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Đóng"
-                onClick={() => setPreviewImageModal(null)}
-              >
-                <X />
-              </Button>
-            </div>
-
+          <Modal.Header
+            title={previewImageModal.title}
+            icon={<ShieldCheck className="w-5 h-5 text-primary" />}
+            onClose={() => setPreviewImageModal(null)}
+            className="border-b border-zinc-800 text-zinc-100"
+          />
+          <Modal.Body className="p-0 overflow-hidden">
             {/* Read-only audit banner */}
             <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-300 text-xs font-bold flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>{t('auditLockedBanner')}</span>
+                <Text as="span" size="xs" weight="bold" color="warning">{t('auditLockedBanner')}</Text>
               </span>
-              <span className="text-[10px] text-muted font-mono tracking-wider">
+              <Text as="span" size="3xs" color="secondary" mono className="tracking-wider">
                 {t('auditVerified')}
-              </span>
+              </Text>
             </div>
 
             {/* Lightbox Image with Watermark Overlay */}
@@ -1694,9 +1704,9 @@ export default function StaffOverviewPage() {
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> {previewImageModal.watermark.time}
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px]">
+                    <Chip variant="success" size="xs" preventHover className="border border-emerald-500/30">
                       {t('validLocation')}
-                    </span>
+                    </Chip>
                   </div>
                   <div className="text-[11px] font-bold text-zinc-200 flex items-center gap-1.5 truncate">
                     <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
@@ -1723,62 +1733,63 @@ export default function StaffOverviewPage() {
             {/* Note / Explanation section if present */}
             {previewImageModal.note && (
               <div className="p-4 bg-zinc-800/80 border-t border-zinc-700/60 text-xs space-y-1">
-                <span className="font-bold text-zinc-300 block">{t('explanationNoteTitle')}</span>
-                <p className="text-zinc-300 italic">
+                <Text as="span" size="xs" weight="bold" className="text-zinc-300 block">{t('explanationNoteTitle')}</Text>
+                <Text size="xs" italic className="text-zinc-300">
                   &quot;{getLocalizedExplanation(previewImageModal.note, locale === 'en')}&quot;
-                </p>
+                </Text>
               </div>
             )}
-
-            {/* Footer */}
-            <div className="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-end">
-              <Button
-                variant="ghost"
-                onClick={() => setPreviewImageModal(null)}
-              >
-                {t('btnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
+          </Modal.Body>
+          <Modal.Footer className="p-4 bg-zinc-900 border-t border-zinc-800 flex justify-end">
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setPreviewImageModal(null)}
+            >
+              {t('btnClose')}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       )}
 
       {/* ========================================================================= */}
       {/* RULE #10 POP-UP CONFIRMATION MODAL ("Xác nhận đóng form") */}
       {/* ========================================================================= */}
-      {showConfirmClose && (
-        <div
-          onClick={() => setShowConfirmClose(false)}
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-100 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl border border-line shadow-2xl max-w-sm w-full p-6 space-y-5 text-center cursor-default"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-warning-subtle text-warning flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div className="space-y-1.5">
-              <h3 className="text-base font-black text-foreground">{t('confirmCloseTitle')}</h3>
-              <p className="text-xs text-muted leading-relaxed">{t('confirmCloseDesc')}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmClose(false)}
-              >
-                {t('btnContinueEditing')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleConfirmDiscardClose}
-              >
-                {t('btnDiscardAndClose')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={showConfirmClose}
+        onClose={() => setShowConfirmClose(false)}
+        size="sm"
+      >
+        <Modal.Body className="p-6 space-y-5 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-warning-subtle text-warning flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </div>
-      )}
+          <div className="space-y-1.5">
+            <Text as="h3" size="base" weight="black">
+              {t('confirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('confirmCloseDesc')}
+            </Text>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="grid grid-cols-2 gap-2.5 p-6 pt-0 border-t-0">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setShowConfirmClose(false)}
+          >
+            {t('btnContinueEditing')}
+          </Button>
+          <Button
+            variant="danger"
+            size="md"
+            onClick={handleConfirmDiscardClose}
+          >
+            {t('btnDiscardAndClose')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }
@@ -1811,10 +1822,15 @@ function LiveClockBadge() {
   }, [locale])
 
   return (
-    <span className="text-[11px] font-mono font-bold text-primary bg-primary-soft border border-primary-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 tabular-nums shrink-0 shadow-2xs">
-      <Clock className="w-3.5 h-3.5 text-primary" />
-      <span>{clockStr || '--/--/---- --:--:--'}</span>
-    </span>
+    <Chip
+      variant="primary"
+      size="xs"
+      preventHover
+      leftIcon={<Clock className="w-3.5 h-3.5 text-primary" />}
+      className="font-mono font-bold tabular-nums shrink-0"
+    >
+      {clockStr || '--/--/---- --:--:--'}
+    </Chip>
   )
 }
 
@@ -2326,369 +2342,365 @@ function CheckInOutCameraModal({
     (!isRequireExplanation || explanation.trim().length > 0)
 
   return (
-    <div
-      onClick={() => {
+    <Modal
+      isOpen
+      onClose={() => {
         stopCamera()
         onClose()
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto cursor-pointer"
+      size="xl"
     >
-      <div
-        onClick={e => e.stopPropagation()}
-        className="bg-card rounded-3xl border border-line shadow-2xl max-w-xl w-full my-auto overflow-hidden flex flex-col cursor-default"
-      >
-        {/* Modal Header */}
-        <div className="p-5 border-b border-line flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-primary' : 'bg-success'}`}
-            >
-              {mode === 'checkin' ? <Camera className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-foreground">
-                {mode === 'checkin' ? t('modalCheckInTitle') : t('modalCheckOutTitle')}
-              </h3>
-              <p className="text-xs text-muted font-medium">
-                {shiftName} • {boardingHouseName}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title="Đóng"
-            onClick={() => {
-              stopCamera()
-              onClose()
-            }}
+      <Modal.Header
+        title={mode === 'checkin' ? t('modalCheckInTitle') : t('modalCheckOutTitle')}
+        description={`${shiftName} • ${boardingHouseName}`}
+        icon={
+          <div
+            className={`p-2 rounded-xl text-white ${mode === 'checkin' ? 'bg-primary' : 'bg-success'}`}
           >
-            <X />
-          </Button>
+            {mode === 'checkin' ? <Camera className="w-5 h-5" /> : <LogOut className="w-5 h-5" />}
+          </div>
+        }
+        onClose={() => {
+          stopCamera()
+          onClose()
+        }}
+      />
+
+      <Modal.Body className="p-5 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-success-soft border border-success-subtle text-success text-xs">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-success shrink-0" />
+            <Text as="span" size="2xs" weight="black" uppercase className="tracking-wide text-success">
+              {t('cameraNotice')}
+            </Text>
+          </div>
         </div>
 
-        <div className="p-5 sm:p-6 space-y-4 overflow-y-auto max-h-[75vh]">
-          <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-success-soft border border-success-subtle text-success text-xs">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-success shrink-0" />
-              <span className="font-black text-[11px] uppercase tracking-wide">
-                {t('cameraNotice')}
+        <div className="space-y-2">
+          {/* Stable Non-Jitter Status Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <Text as="span" size="xs" weight="bold" className="flex items-center gap-1.5 shrink-0 text-foreground/90">
+              <Camera className="w-4 h-4 text-primary" />
+              <span>
+                {t('cameraLabel', {
+                  facing: facingMode === 'user' ? t('cameraFront') : t('cameraRear'),
+                })}
               </span>
+            </Text>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Isolated Live Clock Badge */}
+              <LiveClockBadge />
+
+              {/* Stable GPS Status Badge */}
+              {geoState.status === 'locating' && (
+                <Chip
+                  variant="warning"
+                  size="xs"
+                  preventHover
+                  leftIcon={<RefreshCw className="w-3 h-3 animate-spin text-warning" />}
+                  className="font-bold shrink-0"
+                >
+                  {t('locatingGps')}
+                </Chip>
+              )}
+              {geoState.status === 'ready' && (
+                <Chip
+                  variant="success"
+                  size="xs"
+                  preventHover
+                  leftIcon={<span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />}
+                  className="font-bold shrink-0"
+                  title={geoState.place}
+                >
+                  {t('gpsReady', { coords: geoState.coordinates })}
+                </Chip>
+              )}
+              {geoState.status === 'error' && (
+                <Chip
+                  variant="secondary"
+                  size="xs"
+                  leftIcon={<MapPin className="w-3 h-3 text-muted" />}
+                  className="font-bold shrink-0"
+                  title={geoState.error}
+                >
+                  {t('gpsDisabled')}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={locateUser}
+                    className="hover:underline ml-1 inline text-[10px] p-0 h-auto"
+                  >
+                    {t('gpsRetry')}
+                  </Button>
+                </Chip>
+              )}
             </div>
           </div>
 
-          <div className="space-y-2">
-            {/* Stable Non-Jitter Status Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-foreground/90 flex items-center gap-1.5 shrink-0">
-                <Camera className="w-4 h-4 text-primary" />
-                <span>
-                  {t('cameraLabel', {
-                    facing: facingMode === 'user' ? t('cameraFront') : t('cameraRear'),
-                  })}
-                </span>
+          {/* Resolved GPS Address Banner (Pure address, no boarding house suffix) */}
+          {geoState.status === 'ready' && (
+            <div className="px-3 py-1.5 rounded-xl bg-card-hover text-foreground/90 text-[11px] font-medium flex items-center gap-1.5 truncate border border-line shadow-2xs">
+              <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <Text as="span" size="2xs" weight="bold" className="text-foreground shrink-0">{t('realLocation')}</Text>
+              <span
+                className="truncate text-foreground/90"
+                title={getLocalizedPlace(geoState.place, isEn)}
+              >
+                {getLocalizedPlace(geoState.place, isEn)}
               </span>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                {/* Isolated Live Clock Badge */}
-                <LiveClockBadge />
-
-                {/* Stable GPS Status Badge */}
-                {geoState.status === 'locating' && (
-                  <span className="text-[10px] font-bold text-warning bg-warning-soft border border-warning-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0">
-                    <RefreshCw className="w-3 h-3 animate-spin text-warning" />
-                    {t('locatingGps')}
-                  </span>
-                )}
-                {geoState.status === 'ready' && (
-                  <span
-                    className="text-[10px] font-bold text-success bg-success-soft border border-success-subtle px-2.5 py-1 rounded-lg flex items-center gap-1.5 shrink-0"
-                    title={geoState.place}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    {t('gpsReady', { coords: geoState.coordinates })}
-                  </span>
-                )}
-                {geoState.status === 'error' && (
-                  <span
-                    className="text-[10px] font-bold text-muted bg-card-hover border border-line px-2 py-1 rounded-lg flex items-center gap-1 shrink-0"
-                    title={geoState.error}
-                  >
-                    <MapPin className="w-3 h-3 text-muted" />
-                    {t('gpsDisabled')}
-                    <Button
-                      variant="ghost"
-                      onClick={locateUser}
-                      className="hover:underline ml-1 inline"
-                    >
-                      {t('gpsRetry')}
-                    </Button>
-                  </span>
-                )}
-              </div>
             </div>
+          )}
 
-            {/* Resolved GPS Address Banner (Pure address, no boarding house suffix) */}
-            {geoState.status === 'ready' && (
-              <div className="px-3 py-1.5 rounded-xl bg-card-hover text-foreground/90 text-[11px] font-medium flex items-center gap-1.5 truncate border border-line shadow-2xs">
-                <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                <span className="font-bold text-foreground shrink-0">{t('realLocation')}</span>
-                <span
-                  className="truncate text-foreground/90"
-                  title={getLocalizedPlace(geoState.place, isEn)}
-                >
-                  {getLocalizedPlace(geoState.place, isEn)}
-                </span>
-              </div>
-            )}
-
-            {/* Camera Viewport (aspect-video with object-contain to prevent any text clipping) */}
-            <div className="relative rounded-2xl overflow-hidden bg-zinc-950 border-2 border-zinc-800 shadow-inner group aspect-video max-h-[360px] w-full flex items-center justify-center">
-              {!capturedPhoto ? (
-                <>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`w-full h-full object-contain ${facingMode === 'user' ? 'scale-x-[-1]' : ''} ${cameraStatus === 'ready' ? 'block' : 'hidden'}`}
-                  />
-                  {cameraStatus === 'starting' && (
-                    <div className="text-center p-6 text-muted text-xs space-y-3">
-                      <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
-                      <p className="font-semibold text-zinc-300">{t('cameraStarting')}</p>
-                    </div>
-                  )}
-                  {(cameraStatus === 'error' || cameraStatus === 'unsupported') && (
-                    <div className="text-center p-6 text-muted text-xs space-y-3 max-w-sm">
-                      <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
-                      <p className="font-bold text-zinc-200">{cameraError}</p>
-                      <TextInput
-                        ref={fallbackFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        containerClassName="hidden"
-                        className="hidden"
-                        onChange={handleFallbackImageUpload}
-                      />
-                      <div className="flex flex-col sm:flex-row gap-2 pt-1 justify-center">
-                        <Button
-                          variant="ghost"
-                          onClick={() => startCamera(facingMode)}
-                        >
-                          {t('retryCamera')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          onClick={() => fallbackFileInputRef.current?.click()}
-                          leftIcon={<Upload />}
-                        >
-                          {t('btnUploadDuty')}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {cameraStatus === 'ready' && (
-                    <Button
-                      variant="ghost"
-                      onClick={handleToggleFacingMode}
-                      leftIcon={<RefreshCw />}
-                      className="absolute top-3 right-3 z-20 backdrop-blur-md"
-                    >
-                      {facingMode === 'user' ? t('cameraRear') : t('cameraFront')}
-                    </Button>
-                  )}
-                  <div className="absolute inset-4 border border-white/20 rounded-xl pointer-events-none flex flex-col justify-between">
-                    <div className="flex justify-between p-2">
-                      <div className="w-4 h-4 border-t-2 border-l-2 border-primary" />
-                      <div className="w-4 h-4 border-t-2 border-r-2 border-primary" />
-                    </div>
-                    <div className="flex justify-between p-2">
-                      <div className="w-4 h-4 border-b-2 border-l-2 border-primary" />
-                      <div className="w-4 h-4 border-b-2 border-r-2 border-primary" />
+          {/* Camera Viewport (aspect-video with object-contain to prevent any text clipping) */}
+          <div className="relative rounded-2xl overflow-hidden bg-zinc-950 border-2 border-zinc-800 shadow-inner group aspect-video max-h-[360px] w-full flex items-center justify-center">
+            {!capturedPhoto ? (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-contain ${facingMode === 'user' ? 'scale-x-[-1]' : ''} ${cameraStatus === 'ready' ? 'block' : 'hidden'}`}
+                />
+                {cameraStatus === 'starting' && (
+                  <div className="text-center p-6 text-muted text-xs space-y-3">
+                    <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
+                    <Text size="xs" weight="semibold" className="text-zinc-300">{t('cameraStarting')}</Text>
+                  </div>
+                )}
+                {(cameraStatus === 'error' || cameraStatus === 'unsupported') && (
+                  <div className="text-center p-6 text-muted text-xs space-y-3 max-w-sm">
+                    <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
+                    <Text size="xs" weight="bold" className="text-zinc-200">{cameraError}</Text>
+                    <TextInput
+                      ref={fallbackFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      containerClassName="hidden"
+                      className="hidden"
+                      onChange={handleFallbackImageUpload}
+                    />
+                    <div className="flex flex-col sm:flex-row gap-2 pt-1 justify-center">
+                      <Button
+                        variant="ghost"
+                        onClick={() => startCamera(facingMode)}
+                      >
+                        {t('retryCamera')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => fallbackFileInputRef.current?.click()}
+                        leftIcon={<Upload />}
+                      >
+                        {t('btnUploadDuty')}
+                      </Button>
                     </div>
                   </div>
-                </>
-              ) : (
-                <img
-                  src={capturedPhoto}
-                  alt="Captured frame"
-                  className="w-full h-full object-contain animate-in fade-in duration-200"
-                />
-              )}
-              {isFlashing && (
-                <div className="absolute inset-0 bg-card animate-out fade-out duration-250 pointer-events-none z-30" />
-              )}
-            </div>
-
-            {/* Captured Watermark Verification HUD below picture */}
-            {capturedPhoto && capturedWatermark && (
-              <div className="p-3.5 bg-zinc-900 rounded-2xl text-white text-xs border border-zinc-800 space-y-1.5 animate-in fade-in">
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-bold text-primary flex items-center gap-1.5 font-mono">
-                    <Clock className="w-3.5 h-3.5" /> {capturedWatermark.time}
-                  </span>
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-md">
-                    {t('stampedReal')}
-                  </span>
-                </div>
-                <div className="text-zinc-200 text-[11px] font-medium flex items-center gap-1.5 truncate">
-                  <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                  <span className="truncate">
-                    {getLocalizedPlace(capturedWatermark.place, isEn)}
-                  </span>
-                </div>
-                <div className="text-muted text-[10px] flex items-center justify-between pt-1 border-t border-zinc-800">
-                  <span>{getLocalizedStaffName(capturedWatermark.staffName, isEn)}</span>
-                  <span className="font-mono text-zinc-300">
-                    GPS: {capturedWatermark.coordinates}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Snap Button */}
-            <div className="flex items-center justify-center gap-3 pt-1">
-              {!capturedPhoto ? (
-                <Button
-                  fullWidth
-                  disabled={cameraStatus !== 'ready' || geoState.status === 'locating'}
-                  onClick={handleCaptureRealFrame}
-                  leftIcon={
-                    geoState.status === 'locating' ? (
-                      <RefreshCw />
-                    ) : (
-                      <Camera />
-                    )
-                  }
-                >
-                  {geoState.status === 'locating' ? t('waitingGps') : t('btnCaptureNow')}
-                </Button>
-              ) : (
-                <Button
-                  fullWidth
-                  variant="outline"
-                  onClick={handleRetakePhoto}
-                  leftIcon={<RefreshCw />}
-                >
-                  {t('btnRetake')}
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* EXPLANATION / NOTE SECTION */}
-          <div className="space-y-3 pt-1 border-t border-line">
-            <div className="p-4 sm:p-5 rounded-2xl bg-warning-soft border border-warning-subtle space-y-3">
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-black text-warning uppercase">
-                    {mode === 'checkin'
-                      ? isLate
-                        ? t('lateCheckInTitle')
-                        : t('onTimeCheckInTitle')
-                      : isEarly
-                        ? t('earlyCheckOutTitle')
-                        : t('normalCheckOutTitle')}
-                  </h4>
-                  <p className="text-[11px] text-warning leading-relaxed font-medium">
-                    {mode === 'checkin'
-                      ? isLate
-                        ? t('lateCheckInDesc', { time: shiftStartTime || '07:00' })
-                        : t('onTimeCheckInDesc')
-                      : isEarly
-                        ? t('earlyCheckOutDesc', { time: shiftEndTime || '15:00' })
-                        : t('normalCheckOutDesc')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Preset Chips */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-warning uppercase block tracking-wider">
-                  {t('commonReasonsTitle')}
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {currentPresets.map((chip, idx) => (
-                    <Button
-                      key={idx}
-                      variant="ghost"
-                      onClick={() => handleSelectChip(chip)}
-                    >
-                      {chip}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Textarea */}
-              <div className="space-y-1">
-                <TextareaInput
-                  rows={2}
-                  value={explanation}
-                  onChange={e => {
-                    setExplanation(e.target.value)
-                    onChangeDraft()
-                  }}
-                  placeholder={
-                    mode === 'checkin'
-                      ? isLate
-                        ? t('placeholderExplanation')
-                        : t('placeholderNote')
-                      : isEarly
-                        ? t('placeholderExplanation')
-                        : t('placeholderCheckOutNote')
-                  }
-                  className="w-full p-2.5 rounded-xl bg-card border border-amber-300 text-xs text-foreground font-medium focus:outline-none focus:border-warning focus:ring-1 focus:ring-amber-500/20"
-                  containerClassName="space-y-0"
-                />
-                {isRequireExplanation && !explanation.trim() ? (
-                  <span className="text-[10px] font-bold text-red-600 block">
-                    {t('explanationRequiredNotice')}
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-amber-700/80 font-medium block">
-                    {t('explanationOptionalNotice')}
-                  </span>
                 )}
+                {cameraStatus === 'ready' && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleToggleFacingMode}
+                    leftIcon={<RefreshCw />}
+                    className="absolute top-3 right-3 z-20 backdrop-blur-md"
+                  >
+                    {facingMode === 'user' ? t('cameraRear') : t('cameraFront')}
+                  </Button>
+                )}
+                <div className="absolute inset-4 border border-white/20 rounded-xl pointer-events-none flex flex-col justify-between">
+                  <div className="flex justify-between p-2">
+                    <div className="w-4 h-4 border-t-2 border-l-2 border-primary" />
+                    <div className="w-4 h-4 border-t-2 border-r-2 border-primary" />
+                  </div>
+                  <div className="flex justify-between p-2">
+                    <div className="w-4 h-4 border-b-2 border-l-2 border-primary" />
+                    <div className="w-4 h-4 border-b-2 border-r-2 border-primary" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <img
+                src={capturedPhoto}
+                alt="Captured frame"
+                className="w-full h-full object-contain animate-in fade-in duration-200"
+              />
+            )}
+            {isFlashing && (
+              <div className="absolute inset-0 bg-card animate-out fade-out duration-250 pointer-events-none z-30" />
+            )}
+          </div>
+
+          {/* Captured Watermark Verification HUD below picture */}
+          {capturedPhoto && capturedWatermark && (
+            <div className="p-3.5 bg-zinc-900 rounded-2xl text-white text-xs border border-zinc-800 space-y-1.5 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold text-primary flex items-center gap-1.5 font-mono">
+                  <Clock className="w-3.5 h-3.5" /> {capturedWatermark.time}
+                </span>
+                <Chip variant="success" size="xs" preventHover className="border border-emerald-500/40">
+                  {t('stampedReal')}
+                </Chip>
+              </div>
+              <div className="text-zinc-200 text-[11px] font-medium flex items-center gap-1.5 truncate">
+                <MapPin className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                <span className="truncate">
+                  {getLocalizedPlace(capturedWatermark.place, isEn)}
+                </span>
+              </div>
+              <div className="text-muted text-[10px] flex items-center justify-between pt-1 border-t border-zinc-800">
+                <span>{getLocalizedStaffName(capturedWatermark.staffName, isEn)}</span>
+                <span className="font-mono text-zinc-300">
+                  GPS: {capturedWatermark.coordinates}
+                </span>
               </div>
             </div>
+          )}
+
+          {/* Snap Button */}
+          <div className="flex items-center justify-center gap-3 pt-1">
+            {!capturedPhoto ? (
+              <Button
+                fullWidth
+                disabled={cameraStatus !== 'ready' || geoState.status === 'locating'}
+                onClick={handleCaptureRealFrame}
+                leftIcon={
+                  geoState.status === 'locating' ? (
+                    <RefreshCw />
+                  ) : (
+                    <Camera />
+                  )
+                }
+              >
+                {geoState.status === 'locating' ? t('waitingGps') : t('btnCaptureNow')}
+              </Button>
+            ) : (
+              <Button
+                fullWidth
+                variant="outline"
+                onClick={handleRetakePhoto}
+                leftIcon={<RefreshCw />}
+              >
+                {t('btnRetake')}
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* MODAL FOOTER */}
-        <div className="p-4 sm:p-5 bg-surface border-t border-line flex items-center justify-end gap-2.5">
-          <Button
-            variant="outline"
-            onClick={() => {
-              stopCamera()
-              onClose()
-            }}
-          >
-            {t('btnCancel')}
-          </Button>
-          <Button
-            disabled={!isFormValid}
-            onClick={() => {
-              if (capturedPhoto && capturedWatermark && capturedTime && isFormValid) {
-                stopCamera()
-                onSubmit({
-                  photo: capturedPhoto,
-                  watermark: capturedWatermark,
-                  capturedTime: capturedTime,
-                  capturedDate: capturedDate || undefined,
-                  explanation: explanation.trim() || undefined,
-                })
-              }
-            }}
-            leftIcon={<Check />}
-          >
-            {mode === 'checkin' ? t('btnConfirmCheckIn') : t('btnConfirmCheckOut')}
-          </Button>
+        {/* EXPLANATION / NOTE SECTION */}
+        <div className="space-y-3 pt-1 border-t border-line">
+          <div className="p-4 sm:p-5 rounded-2xl bg-warning-soft border border-warning-subtle space-y-3">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <Text as="h4" size="xs" weight="black" color="warning" uppercase>
+                  {mode === 'checkin'
+                    ? isLate
+                      ? t('lateCheckInTitle')
+                      : t('onTimeCheckInTitle')
+                    : isEarly
+                      ? t('earlyCheckOutTitle')
+                      : t('normalCheckOutTitle')}
+                </Text>
+                <Text size="2xs" color="warning" weight="medium" className="leading-relaxed">
+                  {mode === 'checkin'
+                    ? isLate
+                      ? t('lateCheckInDesc', { time: shiftStartTime || '07:00' })
+                      : t('onTimeCheckInDesc')
+                    : isEarly
+                      ? t('earlyCheckOutDesc', { time: shiftEndTime || '15:00' })
+                      : t('normalCheckOutDesc')}
+                </Text>
+              </div>
+            </div>
+
+            {/* Preset Chips */}
+            <div className="space-y-1.5">
+              <Text as="span" size="3xs" weight="bold" color="warning" uppercase className="block tracking-wider">
+                {t('commonReasonsTitle')}
+              </Text>
+              <div className="flex flex-wrap gap-1.5">
+                {currentPresets.map((chip, idx) => (
+                  <Chip
+                    key={idx}
+                    variant={explanation.includes(chip) ? 'warning' : 'secondary'}
+                    size="xs"
+                    onClick={() => handleSelectChip(chip)}
+                  >
+                    {chip}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+
+            {/* Textarea */}
+            <div className="space-y-1">
+              <TextareaInput
+                rows={2}
+                value={explanation}
+                onChange={e => {
+                  setExplanation(e.target.value)
+                  onChangeDraft()
+                }}
+                placeholder={
+                  mode === 'checkin'
+                    ? isLate
+                      ? t('placeholderExplanation')
+                      : t('placeholderNote')
+                    : isEarly
+                      ? t('placeholderExplanation')
+                      : t('placeholderCheckOutNote')
+                }
+                className="w-full p-2.5 rounded-xl bg-card border border-amber-300 text-xs text-foreground font-medium focus:outline-none focus:border-warning focus:ring-1 focus:ring-amber-500/20"
+                containerClassName="space-y-0"
+              />
+              {isRequireExplanation && !explanation.trim() ? (
+                <Text as="span" size="3xs" weight="bold" color="danger" className="block">
+                  {t('explanationRequiredNotice')}
+                </Text>
+              ) : (
+                <Text as="span" size="3xs" weight="medium" className="text-amber-700/80 block">
+                  {t('explanationOptionalNotice')}
+                </Text>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </Modal.Body>
+
+      {/* MODAL FOOTER */}
+      <Modal.Footer className="p-4 sm:p-5 bg-surface border-t border-line flex items-center justify-end gap-2.5">
+        <Button
+          variant="outline"
+          size="md"
+          onClick={() => {
+            stopCamera()
+            onClose()
+          }}
+        >
+          {t('btnCancel')}
+        </Button>
+        <Button
+          size="md"
+          disabled={!isFormValid}
+          onClick={() => {
+            if (capturedPhoto && capturedWatermark && capturedTime && isFormValid) {
+              stopCamera()
+              onSubmit({
+                photo: capturedPhoto,
+                watermark: capturedWatermark,
+                capturedTime: capturedTime,
+                capturedDate: capturedDate || undefined,
+                explanation: explanation.trim() || undefined,
+              })
+            }
+          }}
+          leftIcon={<Check />}
+        >
+          {mode === 'checkin' ? t('btnConfirmCheckIn') : t('btnConfirmCheckOut')}
+        </Button>
+      </Modal.Footer>
+    </Modal>
   )
 }
 
@@ -2750,187 +2762,175 @@ function DutyProofModal({
   }
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto cursor-pointer"
+    <Modal
+      isOpen
+      onClose={onClose}
+      size="lg"
     >
-      <div
-        onClick={e => e.stopPropagation()}
-        className="bg-card rounded-3xl border border-line shadow-2xl max-w-lg w-full my-auto overflow-hidden flex flex-col cursor-default"
-      >
-        {/* Header */}
-        <div className="p-5 border-b border-line flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-primary text-white">
+      <Modal.Header
+        title={t('dutyProofTitle')}
+        description={getDutyTitle(duty, locale === 'en')}
+        icon={
+          <div className="p-2 rounded-xl bg-primary text-white">
+            <Camera className="w-5 h-5" />
+          </div>
+        }
+        onClose={onClose}
+      />
+
+      {/* Content */}
+      <Modal.Body className="p-5 sm:p-6 space-y-4">
+        <div className="p-3 rounded-xl bg-primary-soft border border-primary-subtle text-xs text-primary flex items-start gap-2">
+          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <Text size="xs" color="brand" className="leading-relaxed">{t('dutyProofNotice')}</Text>
+        </div>
+
+        {/* Photo Preview Frame */}
+        {photo ? (
+          <div className="relative rounded-2xl overflow-hidden bg-zinc-900 aspect-16/10 flex items-center justify-center border border-zinc-800 shadow-inner">
+            <img src={photo} alt="Duty proof" className="w-full h-full object-cover" />
+
+            {/* Embedded Watermark Stamp */}
+            <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-black/75 backdrop-blur-md rounded-xl p-2.5 border border-white/15 text-white text-[10px] space-y-0.5">
+              <div className="flex items-center justify-between font-black text-primary">
+                <span>🕒 {proofTimeStr}</span>
+                <span className="text-emerald-400 font-bold">{t('stampedReal')}</span>
+              </div>
+              <div className="text-zinc-200 font-medium truncate">
+                📍 {getLocalizedPlace(boardingHouseName, locale === 'en')}
+              </div>
+              <div className="text-muted text-[9px]">
+                👤{' '}
+                {getLocalizedStaffName(
+                  staffName || t('employeeDefaultStaffName'),
+                  locale === 'en',
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileRef.current?.click()}
+            className="rounded-2xl border-2 border-dashed border-line hover:border-primary bg-surface hover:bg-primary/5 aspect-16/10 flex flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer transition-colors"
+          >
+            <div className="w-10 h-10 rounded-xl bg-card border border-line flex items-center justify-center shadow-2xs text-primary">
               <Camera className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-foreground">{t('dutyProofTitle')}</h3>
-              <p className="text-xs text-muted font-medium truncate max-w-xs">
-                {getDutyTitle(duty, locale === 'en')}
-              </p>
+              <Text size="xs" weight="bold">{t('dutyProofUploadTitle')}</Text>
+              <Text size="2xs" color="secondary">
+                {duty.requiresPhoto ? t('requiresPhoto') : t('photoOptional')}
+              </Text>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-          >
-            <X />
-          </Button>
-        </div>
+        )}
 
-        {/* Content */}
-        <div className="p-5 sm:p-6 space-y-4">
-          <div className="p-3 rounded-xl bg-primary-soft border border-primary-subtle text-xs text-primary flex items-start gap-2">
-            <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-            <p className="leading-relaxed">{t('dutyProofNotice')}</p>
-          </div>
-
-          {/* Photo Preview Frame */}
-          {photo ? (
-            <div className="relative rounded-2xl overflow-hidden bg-zinc-900 aspect-16/10 flex items-center justify-center border border-zinc-800 shadow-inner">
-              <img src={photo} alt="Duty proof" className="w-full h-full object-cover" />
-
-              {/* Embedded Watermark Stamp */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 bg-black/75 backdrop-blur-md rounded-xl p-2.5 border border-white/15 text-white text-[10px] space-y-0.5">
-                <div className="flex items-center justify-between font-black text-primary">
-                  <span>🕒 {proofTimeStr}</span>
-                  <span className="text-emerald-400 font-bold">{t('stampedReal')}</span>
-                </div>
-                <div className="text-zinc-200 font-medium truncate">
-                  📍 {getLocalizedPlace(boardingHouseName, locale === 'en')}
-                </div>
-                <div className="text-muted text-[9px]">
-                  👤{' '}
-                  {getLocalizedStaffName(
-                    staffName || t('employeeDefaultStaffName'),
-                    locale === 'en',
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="rounded-2xl border-2 border-dashed border-line hover:border-primary bg-surface hover:bg-primary/5 aspect-16/10 flex flex-col items-center justify-center gap-2 p-4 text-center cursor-pointer transition-colors"
-            >
-              <div className="w-10 h-10 rounded-xl bg-card border border-line flex items-center justify-center shadow-2xs text-primary">
-                <Camera className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-foreground/90">{t('dutyProofUploadTitle')}</p>
-                <p className="text-[11px] text-muted">
-                  {duty.requiresPhoto ? t('requiresPhoto') : t('photoOptional')}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <TextInput
-              ref={cameraRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              containerClassName="hidden"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-            <TextInput
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              containerClassName="hidden"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-            <Button
-              onClick={() => cameraRef.current?.click()}
-              leftIcon={<Camera />}
-              className="flex-1"
-            >
-              <span>{t('btnCaptureNewDuty')}</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => fileRef.current?.click()}
-              leftIcon={<Upload />}
-            >
-              <span>{t('btnUploadDuty')}</span>
-            </Button>
-          </div>
-
-          {/* Note Input */}
+        {/* Actions */}
+        <div className="flex items-center gap-2">
           <TextInput
-            label={t('dutyNoteLabel')}
-            value={note}
-            onChange={e => {
-              setNote(e.target.value)
-              onChangeDraft()
-            }}
-            placeholder={t('dutyNotePlaceholder')}
-            className="w-full p-2.5 rounded-xl bg-surface border border-line text-xs text-foreground font-medium focus:outline-none focus:border-primary"
-            containerClassName="space-y-1"
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            containerClassName="hidden"
+            className="hidden"
+            onChange={handleFileUpload}
           />
-
-          {/* Warning notice if required photo is missing */}
-          {warningNotice && (
-            <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle text-warning text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-150">
-              <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
-              <span>{warningNotice}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Footer with 2 separate action buttons: Update Progress & Complete Task */}
-        <div className="p-4 sm:p-5 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-2.5">
+          <TextInput
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            containerClassName="hidden"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+          <Button
+            onClick={() => cameraRef.current?.click()}
+            leftIcon={<Camera />}
+            className="flex-1"
+          >
+            <span>{t('btnCaptureNewDuty')}</span>
+          </Button>
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={() => fileRef.current?.click()}
+            leftIcon={<Upload />}
           >
-            {t('btnCancel')}
+            <span>{t('btnUploadDuty')}</span>
+          </Button>
+        </div>
+
+        {/* Note Input */}
+        <TextInput
+          label={t('dutyNoteLabel')}
+          value={note}
+          onChange={e => {
+            setNote(e.target.value)
+            onChangeDraft()
+          }}
+          placeholder={t('dutyNotePlaceholder')}
+          className="w-full p-2.5 rounded-xl bg-surface border border-line text-xs text-foreground font-medium focus:outline-none focus:border-primary"
+          containerClassName="space-y-1"
+        />
+
+        {/* Warning notice if required photo is missing */}
+        {warningNotice && (
+          <div className="p-3 rounded-xl bg-warning-soft border border-warning-subtle text-warning text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-150">
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+            <span>{warningNotice}</span>
+          </div>
+        )}
+      </Modal.Body>
+
+      {/* Footer with 2 separate action buttons: Update Progress & Complete Task */}
+      <Modal.Footer className="p-4 sm:p-5 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-2.5">
+        <Button
+          variant="outline"
+          size="md"
+          onClick={onClose}
+        >
+          {t('btnCancel')}
+        </Button>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => {
+              onSubmit({
+                dutyId: duty.id,
+                photo: photo || undefined,
+                note: note.trim() || undefined,
+                proofTime: proofTimeStr,
+                markCompleted: false,
+              })
+            }}
+            leftIcon={<FileText />}
+          >
+            <span>{t('btnUpdateProgress')}</span>
           </Button>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                onSubmit({
-                  dutyId: duty.id,
-                  photo: photo || undefined,
-                  note: note.trim() || undefined,
-                  proofTime: proofTimeStr,
-                  markCompleted: false,
-                })
-              }}
-              leftIcon={<FileText />}
-            >
-              <span>{t('btnUpdateProgress')}</span>
-            </Button>
-
-            <Button
-              onClick={() => {
-                if (duty.requiresPhoto && !photo) {
-                  setWarningNotice(t('photoProofRequiredWarning'))
-                  return
-                }
-                onSubmit({
-                  dutyId: duty.id,
-                  photo: photo || undefined,
-                  note: note.trim() || undefined,
-                  proofTime: proofTimeStr,
-                  markCompleted: true,
-                })
-              }}
-              leftIcon={<Check />}
-            >
-              <span>{t('btnCompleteDuty')}</span>
-            </Button>
-          </div>
+          <Button
+            size="md"
+            onClick={() => {
+              if (duty.requiresPhoto && !photo) {
+                setWarningNotice(t('photoProofRequiredWarning'))
+                return
+              }
+              onSubmit({
+                dutyId: duty.id,
+                photo: photo || undefined,
+                note: note.trim() || undefined,
+                proofTime: proofTimeStr,
+                markCompleted: true,
+              })
+            }}
+            leftIcon={<Check />}
+          >
+            <span>{t('btnCompleteDuty')}</span>
+          </Button>
         </div>
-      </div>
-    </div>
+      </Modal.Footer>
+    </Modal>
   )
 }
