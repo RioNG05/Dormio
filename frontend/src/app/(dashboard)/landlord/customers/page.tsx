@@ -16,7 +16,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Customer } from './data'
-import { getLandlordTenants } from '@/services/tenant.service'
+import { getLandlordTenants, LandlordTenantItem } from '@/services/tenant.service'
 import { AddTenantModal } from '@/components/landlord/AddTenantModal'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
@@ -142,7 +142,12 @@ export default function CustomersPage() {
     try {
       setIsLoading(true)
       const tenantRes = await getLandlordTenants(activeBuilding.id, { limit: 100 })
-      const list = tenantRes?.data || []
+      const raw = tenantRes?.data as any
+      const list: LandlordTenantItem[] = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.data)
+          ? raw.data
+          : []
       const mapped: Customer[] = list.map(item => ({
         id: item.id,
         userId: item.userId,

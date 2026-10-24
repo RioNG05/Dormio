@@ -266,11 +266,18 @@ export function Step1RoomTenant() {
                 value={selectedOccupantId}
                 onChange={e => setSelectedOccupantId(e.target.value)}
               >
-                {roomOccupants.map(occ => (
-                  <option key={occ.tenantId} value={occ.tenantId}>
-                    {occ.tenant.fullName} - {occ.tenant.phoneNumber}
-                  </option>
-                ))}
+                {roomOccupants.map(occ => {
+                  const actual = (occ as any)?.data || occ
+                  const tenant = actual?.tenant || actual
+                  const fullName = tenant?.fullName || tenant?.username || '—'
+                  const phone = tenant?.phoneNumber || tenant?.phone || '—'
+                  const id = actual?.tenantId || actual?.id || ''
+                  return (
+                    <option key={id} value={id}>
+                      {fullName} - {phone}
+                    </option>
+                  )
+                })}
               </SelectInput>
             </div>
             <div className="w-full sm:w-auto">

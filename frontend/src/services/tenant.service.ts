@@ -82,37 +82,41 @@ export const searchTenantByPhone = async (
   boardingHouseId: string,
   phone: string,
 ): Promise<SearchTenantResult> => {
-  return api.get<SearchTenantResult>(
+  const res = await api.get<any>(
     `/v1/landlord/tenants/search-user?phone=${encodeURIComponent(phone)}`,
     {
       headers: { 'X-Boarding-House-Id': boardingHouseId },
     },
   )
+  return res?.data ?? res
 }
 
 export const quickAddTenant = async (
   boardingHouseId: string,
   payload: QuickAddTenantPayload,
 ): Promise<RoomOccupantDto> => {
-  return api.post<RoomOccupantDto>(
+  const res = await api.post<any>(
     '/v1/landlord/tenants/quick-add',
     payload,
     {
       headers: { 'X-Boarding-House-Id': boardingHouseId },
     },
   )
+  return res?.data ?? res
 }
 
 export const getRoomOccupants = async (
   boardingHouseId: string,
   roomId: string,
 ): Promise<RoomOccupantDto[]> => {
-  return api.get<RoomOccupantDto[]>(
+  const res = await api.get<any>(
     `/v1/landlord/tenants/rooms/${encodeURIComponent(roomId)}/occupants`,
     {
       headers: { 'X-Boarding-House-Id': boardingHouseId },
     },
   )
+  const payload = res?.data ?? res
+  return Array.isArray(payload) ? payload : []
 }
 
 export const getLandlordTenants = async (
@@ -127,23 +131,38 @@ export const getLandlordTenants = async (
   if (query?.status) params.set('status', query.status)
 
   const queryString = params.toString() ? `?${params.toString()}` : ''
-  return api.get<LandlordTenantListResult>(
+  const res = await api.get<any>(
     `/v1/landlord/tenants${queryString}`,
     {
       headers: { 'X-Boarding-House-Id': boardingHouseId },
     },
   )
+  const payload = res?.data ?? res
+  const rawList = Array.isArray(payload?.data)
+    ? payload.data
+    : Array.isArray(payload)
+      ? payload
+      : []
+
+  return {
+    data: rawList,
+    total: payload?.total ?? rawList.length,
+    page: payload?.page ?? 1,
+    limit: payload?.limit ?? 10,
+    totalPages: payload?.totalPages ?? 1,
+  }
 }
 
 export const checkoutOccupant = async (
   boardingHouseId: string,
   occupantId: string,
 ): Promise<{ success: boolean; message: string }> => {
-  return api.delete<{ success: boolean; message: string }>(
+  const res = await api.delete<any>(
     `/v1/landlord/tenants/occupants/${encodeURIComponent(occupantId)}`,
     {
       headers: { 'X-Boarding-House-Id': boardingHouseId },
     },
   )
+  return res?.data ?? res
 }
 

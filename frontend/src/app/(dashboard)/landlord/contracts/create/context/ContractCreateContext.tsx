@@ -147,7 +147,9 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     null,
   )
 
-  const selectedOccupant = roomOccupants.find(o => o.tenantId === selectedOccupantId)
+  const selectedOccupant = roomOccupants.find(
+    o => o.tenantId === selectedOccupantId || o.id === selectedOccupantId,
+  )
 
   // Landlord can edit tenant info if direct flow AND (tenant has no ID on file OR user has no registered account)
   const canEditTenantInfo =
@@ -156,37 +158,42 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     (!hasIdentification || selectedOccupant.tenant?.hasAccount === false)
 
   const applyOccupantSelection = useCallback((occupant: RoomOccupantDto) => {
-    setSelectedOccupantIdState(occupant.tenantId)
-    setTenantPhone(occupant.tenant?.phoneNumber || '')
-    setTenantFullName(occupant.tenant?.fullName || '')
-    setTenantEmail(occupant.tenant?.email || '')
+    if (!occupant) return
+    const actualOccupant = (occupant as any)?.data || occupant
+    const tenant = actualOccupant.tenant || actualOccupant
+    const id = actualOccupant.tenantId || actualOccupant.id || ''
+
+    setSelectedOccupantIdState(id)
+    setTenantPhone(tenant?.phoneNumber || '')
+    setTenantFullName(tenant?.fullName || '')
+    setTenantEmail(tenant?.email || '')
     setTenantFound(true)
-    const hasId = !!occupant.tenant?.identityNumber
+    const hasId = !!tenant?.identityNumber
     setHasIdentification(hasId)
-    setOccupantHasAccount(occupant.tenant?.hasAccount ?? true)
+    setOccupantHasAccount(tenant?.hasAccount ?? true)
 
     let dob = '2000-01-01'
-    if (occupant.tenant?.dateOfBirth) {
+    if (tenant?.dateOfBirth) {
       try {
-        dob = new Date(occupant.tenant.dateOfBirth).toISOString().split('T')[0]
+        dob = new Date(tenant.dateOfBirth).toISOString().split('T')[0]
       } catch {
         dob = '2000-01-01'
       }
     }
 
     setIdentification({
-      identityNumber: occupant.tenant?.identityNumber || '',
-      fullName: occupant.tenant?.fullName || '',
+      identityNumber: tenant?.identityNumber || '',
+      fullName: tenant?.fullName || '',
       dateOfBirth: dob,
-      gender: occupant.tenant?.gender === 'female' ? 'female' : 'male',
+      gender: tenant?.gender === 'female' ? 'female' : 'male',
       nationality: 'Việt Nam',
-      placeOfOrigin: formatAddress(occupant.tenant?.placeOfResidence),
-      placeOfResidence: formatAddress(occupant.tenant?.placeOfResidence),
+      placeOfOrigin: formatAddress(tenant?.placeOfResidence),
+      placeOfResidence: formatAddress(tenant?.placeOfResidence),
       issueDate: '',
       expiryDate: '',
-      note: occupant.note || '',
-      cardFrontUrl: occupant.tenant?.cardFrontUrl || '',
-      cardBackUrl: occupant.tenant?.cardBackUrl || '',
+      note: actualOccupant.note || '',
+      cardFrontUrl: tenant?.cardFrontUrl || '',
+      cardBackUrl: tenant?.cardBackUrl || '',
     })
   }, [])
 
@@ -205,8 +212,13 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
 
       setIsLoadingOccupants(true)
       try {
-        const occupants = await getRoomOccupants(activeBuilding.id, roomId)
-        const activeOccs = (occupants || []).filter(o => o.status === 'active')
+        const rawOccupants = await getRoomOccupants(activeBuilding.id, roomId)
+        const occupants = Array.isArray(rawOccupants)
+          ? rawOccupants
+          : (rawOccupants as any)?.data || []
+        const activeOccs = (occupants || []).filter(
+          (o: any) => o.status === 'active' || !o.status,
+        )
         setRoomOccupants(activeOccs)
         if (activeOccs.length > 0) {
           applyOccupantSelection(activeOccs[0])
@@ -247,7 +259,7 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     (tenantId: string) => {
       setSelectedOccupantIdState(tenantId)
       setIsDirty(true)
-      const occ = roomOccupants.find(o => o.tenantId === tenantId)
+      const occ = roomOccupants.find(o => o.tenantId === tenantId || o.id === tenantId)
       if (occ) {
         applyOccupantSelection(occ)
       }
@@ -256,7 +268,8 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
   )
 
   const handleOccupantAdded = useCallback(
-    (newOccupant: RoomOccupantDto) => {
+    (rawOccupant: RoomOccupantDto) => {
+      const newOccupant = (rawOccupant as any)?.data || rawOccupant
       setRoomOccupants(prev => {
         const existing = prev.filter(
           o => o.id !== newOccupant.id && o.tenantId !== newOccupant.tenantId,

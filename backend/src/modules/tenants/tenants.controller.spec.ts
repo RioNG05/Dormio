@@ -103,3 +103,4 @@ describe('TenantsController', () => {
     expect(res).toEqual(mockResult)
   })
 })
+
