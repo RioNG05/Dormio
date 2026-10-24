@@ -209,9 +209,10 @@ export default function AdminUsersManagementPage() {
 
   // Open Action Modal
   const handleOpenAction = (
-    user: AdminUserItem,
+    user: AdminUserItem | AdminUserDetail | null | undefined,
     type: 'ban' | 'unban' | 'role' | 'reset-password' | 'tier',
   ) => {
+    if (!user) return
     setActionTargetUser(user)
     setActionType(type)
     setActionReason('')
@@ -224,12 +225,13 @@ export default function AdminUsersManagementPage() {
   }
 
   // Check if root admin user
-  const isRootAdminUser = (user: AdminUserItem | AdminUserDetail) => {
+  const isRootAdminUser = (user: AdminUserItem | AdminUserDetail | null | undefined) => {
+    if (!user) return false
     return user.role === 'admin' && (user.username === 'admin' || user.phoneNumber === '0900000000')
   }
 
-  const canModifyUser = (user: AdminUserItem | AdminUserDetail) => {
-    if (isRootAdminUser(user)) {
+  const canModifyUser = (user: AdminUserItem | AdminUserDetail | null | undefined) => {
+    if (!user || isRootAdminUser(user)) {
       return false
     }
     return true
@@ -258,6 +260,7 @@ export default function AdminUsersManagementPage() {
 
   const requestCloseDetailModal = () => {
     setSelectedUser(null)
+    setDetailLoading(false)
   }
 
   const handleConfirmDiscard = () => {
@@ -959,7 +962,14 @@ export default function AdminUsersManagementPage() {
           </Button>
         }
       >
-        {selectedUser && (
+        {detailLoading && !selectedUser ? (
+          <div className="py-16 text-center space-y-3">
+            <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
+            <Text variant="body" size="sm" weight="bold" color="secondary">
+              {t('adminUsersRetrieving')}
+            </Text>
+          </div>
+        ) : selectedUser ? (
           <div className="space-y-5">
             {/* Modal Tab Switcher */}
             <div className="flex border-b border-line gap-2 pb-2">
@@ -990,14 +1000,7 @@ export default function AdminUsersManagementPage() {
             </div>
 
             {/* Modal Content */}
-            {detailLoading ? (
-              <div className="py-16 text-center space-y-3">
-                <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
-                <Text variant="body" size="sm" weight="bold" color="secondary">
-                  {t('adminUsersRetrieving')}
-                </Text>
-              </div>
-            ) : modalTab === 'profile' ? (
+            {modalTab === 'profile' ? (
               /* TAB 1: Profile & KYC Details */
               <div className="space-y-6">
                 <div className="p-4 rounded-2xl bg-surface border border-line space-y-3">
@@ -1207,13 +1210,13 @@ export default function AdminUsersManagementPage() {
                 )}
 
                 {/* Properties Owned if landlord */}
-                {selectedUser.houseNames.length > 0 && (
+                {(selectedUser.houseNames || []).length > 0 && (
                   <div className="space-y-2">
                     <Text as="h3" variant="heading" size="sm" className="font-extrabold text-foreground">
-                      {t('adminUsersManagedHouses', { count: selectedUser.houseNames.length })}
+                      {t('adminUsersManagedHouses', { count: (selectedUser.houseNames || []).length })}
                     </Text>
                     <div className="flex flex-wrap gap-2">
-                      {selectedUser.houseNames.map((name, i) => (
+                      {(selectedUser.houseNames || []).map((name, i) => (
                         <span
                           key={i}
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-primary/10 text-primary border border-primary/30"
@@ -1233,7 +1236,7 @@ export default function AdminUsersManagementPage() {
                   {t('adminUsersTabActivity')}
                 </Text>
 
-                {selectedUser.recentActivities.length === 0 ? (
+                {(selectedUser.recentActivities || []).length === 0 ? (
                   <div className="p-8 rounded-2xl bg-surface border border-line text-center space-y-2">
                     <Activity className="w-8 h-8 text-muted mx-auto" />
                     <Text as="p" size="xs" weight="semibold" color="secondary">
@@ -1242,7 +1245,7 @@ export default function AdminUsersManagementPage() {
                   </div>
                 ) : (
                   <div className="space-y-2.5 max-h-96 overflow-y-auto">
-                    {selectedUser.recentActivities.map(act => (
+                    {(selectedUser.recentActivities || []).map(act => (
                       <div
                         key={act.id}
                         className="p-3.5 rounded-2xl bg-surface border border-line space-y-1.5 text-xs hover:bg-card-hover transition-colors"
@@ -1415,7 +1418,7 @@ export default function AdminUsersManagementPage() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </Modal>
 
       {/* ADMIN ACTION EXECUTION MODAL using @/components/ui Modal */}
