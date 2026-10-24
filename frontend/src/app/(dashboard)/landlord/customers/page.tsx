@@ -20,6 +20,7 @@ import { getLandlordTenants, LandlordTenantItem } from '@/services/tenant.servic
 import { AddTenantModal } from '@/components/landlord/AddTenantModal'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   Button,
   TableActionButton,
@@ -42,6 +43,7 @@ export default function CustomersPage() {
   const { activeBuilding } = useAuth()
   const router = useRouter()
   const t = useTranslations('landlord')
+  const { toast } = useToast()
 
   const getCustomerStatusLabel = (status: string) => {
     switch (status) {
@@ -716,7 +718,7 @@ export default function CustomersPage() {
           onSuccess={async () => {
             setIsAddTenantModalOpen(false)
             await loadCustomers()
-            showAlert(t('landlordTenantSuccessToast'), 'success', t('landlordTenantSuccessToast'))
+            toast.success(t('landlordTenantSuccessToast'))
           }}
           boardingHouseId={activeBuilding.id}
         />
