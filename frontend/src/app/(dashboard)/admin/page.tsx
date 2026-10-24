@@ -215,7 +215,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Button
               size='md'
-              variant="outline"
+              variant="secondary"
               onClick={() => fetchDashboardData(true)}
               isLoading={isRefreshing}
               leftIcon={<RefreshCw />}
@@ -225,7 +225,7 @@ export default function AdminDashboardPage() {
             </Button>
             <Button
               size='md'
-              variant="outline"
+              variant="secondary"
               onClick={() => router.push('/admin/notifications')}
               leftIcon={<Megaphone />}
               className='text-white'
@@ -234,7 +234,7 @@ export default function AdminDashboardPage() {
             </Button>
             <Button
               size='md'
-              variant="outline"
+              variant="secondary"
               onClick={() => router.push('/admin/blogs')}
               leftIcon={<Newspaper />}
               className='text-white'
@@ -601,7 +601,7 @@ export default function AdminDashboardPage() {
                       onClick={() =>
                         router.push(`/admin/blogs?search=${encodeURIComponent(item.id)}`)
                       }
-                      className="shrink-0 hover:shadow-md whitespace-nowrap"
+                      className="shrink-0 whitespace-nowrap"
                     >
                       {t('adminInspectAndLock')}
                     </Button>
