@@ -285,19 +285,35 @@ export default function AdminUsersManagementPage() {
     setActionSubmitting(true)
     try {
       if (actionType === 'ban') {
-        await adminUsersService.banUser(actionTargetUser.id, actionReason || 'Vi phạm chính sách nền tảng')
+        await adminUsersService.updateUserStatus(actionTargetUser.id, {
+          status: 'banned',
+          reason: actionReason || 'Vi phạm chính sách nền tảng',
+        })
         toast.success(t('adminUsersBanSuccess'))
       } else if (actionType === 'unban') {
-        await adminUsersService.unbanUser(actionTargetUser.id, actionReason || 'Đã kiểm tra và mở khóa tài khoản')
+        await adminUsersService.updateUserStatus(actionTargetUser.id, {
+          status: 'active',
+          reason: actionReason || 'Đã kiểm tra và mở khóa tài khoản',
+        })
         toast.success(t('adminUsersUnbanSuccess'))
       } else if (actionType === 'role') {
-        await adminUsersService.changeUserRole(actionTargetUser.id, newRole, actionReason || 'Thay đổi phân quyền hệ thống')
+        await adminUsersService.updateUserRole(actionTargetUser.id, {
+          role: newRole,
+          reason: actionReason || 'Thay đổi phân quyền hệ thống',
+        })
         toast.success(t('adminUsersRoleSuccess'))
       } else if (actionType === 'reset-password') {
-        await adminUsersService.resetPassword(actionTargetUser.id, tempPassword, forceChangePassword)
+        await adminUsersService.resetUserPassword(actionTargetUser.id, {
+          temporaryPassword: tempPassword,
+          mustChangePassword: forceChangePassword,
+        })
         toast.success(t('adminUsersResetPassSuccess'))
       } else if (actionType === 'tier') {
-        await adminUsersService.updateSubscriptionTier(actionTargetUser.id, newTier, durationMonths, actionReason || 'Admin điều chỉnh gói tài khoản')
+        await adminUsersService.updateUserTier(actionTargetUser.id, {
+          tier: newTier as 'free' | 'plus' | 'pro',
+          durationMonths,
+          reason: actionReason || 'Admin điều chỉnh gói tài khoản',
+        })
         toast.success(t('adminUsersTierSuccess'))
       }
 
@@ -373,7 +389,7 @@ export default function AdminUsersManagementPage() {
     )
   }
 
-  const getTierBadge = (tier?: string) => {
+  const getTierBadge = (tier?: string | null) => {
     const normalized = (tier || 'free').toLowerCase()
     switch (normalized) {
       case 'pro':
@@ -661,8 +677,8 @@ export default function AdminUsersManagementPage() {
             />
           </>
         }
-        viewModeToggle={
-          <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+        viewMode={
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         }
       />
 
@@ -1079,7 +1095,7 @@ export default function AdminUsersManagementPage() {
                             {t('adminUsersCccdLabel')}
                           </Text>
                           <Text as="span" size="xs" weight="bold" className="font-mono text-foreground">
-                            {selectedUser.identification.idCardNumber || '---'}
+                            {selectedUser.identification.identityNumber || '---'}
                           </Text>
                         </div>
                         <div>
@@ -1097,7 +1113,9 @@ export default function AdminUsersManagementPage() {
                             {t('adminUsersHometownLabel')}
                           </Text>
                           <Text as="span" size="xs" weight="bold" className="text-foreground">
-                            {selectedUser.identification.hometown || '---'}
+                            {typeof selectedUser.identification.placeOfOrigin === 'string'
+                              ? selectedUser.identification.placeOfOrigin
+                              : selectedUser.identification.placeOfOrigin?.rawAddress || '---'}
                           </Text>
                         </div>
                       </Form.Grid>

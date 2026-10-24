@@ -368,7 +368,7 @@ export default function AdminBoardingHouseModerationPage() {
               {t('adminBlogsClearFilters') || 'Xóa bộ lọc'}
             </Button>
           )}
-          <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         </div>
       </div>
 

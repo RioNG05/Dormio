@@ -389,13 +389,17 @@ export default function AdminPostModerationPage() {
       const created = await postService.createPost({
         title: createTitle.trim(),
         content: createContent.trim(),
-        coverImage: createCoverImage.trim() || HOUSE_PLACEHOLDER,
+        imageUrls: createCoverImage.trim() ? [createCoverImage.trim()] : [HOUSE_PLACEHOLDER],
         depositAmount: createDepositAmount,
         status: createStatus,
       })
 
       if (created) {
-        setPosts(prev => [created, ...prev])
+        const publicCreated: PublicPostListing = {
+          ...created,
+          savedCount: 0,
+        }
+        setPosts(prev => [publicCreated, ...prev])
         setTotalItems(prev => prev + 1)
       }
 
@@ -540,7 +544,7 @@ export default function AdminPostModerationPage() {
               {t('adminBlogsClearFilters')}
             </Button>
           )}
-          <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         </div>
       </div>
 
@@ -638,8 +642,8 @@ export default function AdminPostModerationPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {posts.map(item => {
               const coverImg =
-                item.coverImage && item.coverImage !== 'string'
-                  ? item.coverImage
+                item.images?.[0]?.url && item.images[0].url !== 'string'
+                  ? item.images[0].url
                   : HOUSE_PLACEHOLDER
 
               const formattedDate = item.createdAt
@@ -826,8 +830,8 @@ export default function AdminPostModerationPage() {
               ) : (
                 posts.map(item => {
                   const coverImg =
-                    item.coverImage && item.coverImage !== 'string'
-                      ? item.coverImage
+                    item.images?.[0]?.url && item.images[0].url !== 'string'
+                      ? item.images[0].url
                       : HOUSE_PLACEHOLDER
 
                   const formattedDate = item.createdAt

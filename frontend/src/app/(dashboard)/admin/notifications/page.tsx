@@ -16,10 +16,12 @@ import {
   AlertTriangle,
   RefreshCw,
   RotateCcw,
+  CheckCircle2,
 } from 'lucide-react'
 import {
   adminNotificationService,
   MassNotificationStatusCounts,
+  AdminNotifyChannel,
 } from '@/services/admin-notification.service'
 import {
   Button,
@@ -137,26 +139,23 @@ export default function AdminNotificationsPage() {
       setError(null)
 
       try {
-        const [listRes, countsRes] = await Promise.all([
-          adminNotificationService.getCampaigns({
-            page: 1,
-            limit: 100,
-            status: statusFilter !== 'all' ? statusFilter : undefined,
-            channel: channelFilter !== 'all' ? channelFilter : undefined,
-          }),
-          adminNotificationService.getStatusCounts().catch(() => null),
-        ])
+        const listRes = await adminNotificationService.getMassNotificationJobs({
+          page: 1,
+          limit: 100,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          channel: channelFilter !== 'all' ? channelFilter : undefined,
+        })
 
         if (listRes?.items) {
-          const mapped: NotificationCampaign[] = listRes.items.map(item => ({
+          const mapped: NotificationCampaign[] = listRes.items.map((item: any) => ({
             id: item.id,
-            name: item.name,
+            name: item.name || item.title,
             title: item.title,
             content: item.content,
-            targetGroup: (item.targetGroup as any) || 'all_users',
-            targetLabel: item.targetLabel || item.targetGroup,
+            targetGroup: (item.targetType as any) || 'all_users',
+            targetLabel: item.targetLabel || item.targetType,
             targetId: item.targetId,
-            channels: (item.channels as any) || ['in_app'],
+            channels: (item.channels as any) || [item.channel] || ['in_app'],
             status: (item.status as any) || 'sent',
             totalRecipients: item.totalRecipients || 0,
             sentCount: item.sentCount || 0,
@@ -177,8 +176,8 @@ export default function AdminNotificationsPage() {
           setCampaigns(mapped)
         }
 
-        if (countsRes) {
-          setLiveCounts(countsRes)
+        if (listRes?.counts) {
+          setLiveCounts(listRes.counts)
         }
       } catch (err: any) {
         console.error('Failed to load mass notifications:', err)
@@ -343,14 +342,12 @@ export default function AdminNotificationsPage() {
 
     setIsSubmitting(true)
     try {
-      await adminNotificationService.createCampaign({
-        name: composeName.trim() || composeTitle.trim(),
+      await adminNotificationService.createMassNotificationJob({
+        channel: (composeChannels[0] as AdminNotifyChannel) || 'in_app',
+        targetType: composeTarget as any,
+        targetId: composeTarget === 'specific_user' ? specificUserId.trim() : undefined,
         title: composeTitle.trim(),
         content: composeContent.trim(),
-        targetGroup: composeTarget,
-        targetId: composeTarget === 'specific_user' ? specificUserId.trim() : undefined,
-        channels: composeChannels,
-        scheduledFor: composeScheduleType === 'later' ? composeScheduleTime : undefined,
       })
 
       setFeedbackMsg({
@@ -375,7 +372,7 @@ export default function AdminNotificationsPage() {
   // Retry campaign
   const handleRetryCampaign = async (campaignId: string) => {
     try {
-      await adminNotificationService.retryCampaign(campaignId)
+      await adminNotificationService.retryMassNotificationJob(campaignId)
       setFeedbackMsg({
         type: 'success',
         text: t('adminNotifyRetrySuccess'),
@@ -700,8 +697,8 @@ export default function AdminNotificationsPage() {
             </div>
           </div>
         }
-        viewModeToggle={
-          <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+        viewMode={
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         }
       />
 

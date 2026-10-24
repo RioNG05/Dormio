@@ -115,18 +115,15 @@ export default function AdminGrievancesPage() {
       setError(null)
 
       try {
-        const [queueRes, countsRes] = await Promise.all([
-          grievanceService.getAdminGrievanceQueue({
-            page: 1,
-            limit: 100,
-            status: statusFilter !== 'all' ? statusFilter : undefined,
-            priority: priorityFilter !== 'all' ? priorityFilter : undefined,
-          }),
-          grievanceService.getAdminGrievanceCounts().catch(() => null),
-        ])
+        const queueRes = await grievanceService.getAdminGrievanceQueue({
+          page: 1,
+          limit: 100,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        })
 
         if (queueRes?.items) {
-          const mapped: GrievanceItem[] = queueRes.items.map(item => ({
+          const mapped: GrievanceItem[] = queueRes.items.map((item: any) => ({
             id: item.id,
             type: (item.type as any) || 'complaint',
             tenantId: item.tenantId,
@@ -171,8 +168,8 @@ export default function AdminGrievancesPage() {
           setGrievances(mapped)
         }
 
-        if (countsRes) {
-          setLiveCounts(countsRes)
+        if (queueRes?.counts) {
+          setLiveCounts(queueRes.counts)
         }
       } catch (err: any) {
         console.error('Failed to load admin grievances:', err)
@@ -279,7 +276,7 @@ export default function AdminGrievancesPage() {
         })
       } else {
         await grievanceService.rejectGrievance(resolveTargetItem.id, {
-          reason: resolutionNoteInput.trim(),
+          resolutionNote: resolutionNoteInput.trim(),
         })
         setToastMsg({
           type: 'success',
@@ -300,7 +297,7 @@ export default function AdminGrievancesPage() {
   // Fast In-Progress Investigation Tag
   const handleMarkInProgress = async (item: GrievanceItem) => {
     try {
-      await grievanceService.investigateGrievance(item.id)
+      await grievanceService.updateGrievanceInProgress(item.id)
       setToastMsg({
         type: 'success',
         text: t('adminGrievancesInvestigatingSuccess'),
@@ -315,7 +312,9 @@ export default function AdminGrievancesPage() {
   }
 
   // Metric counts
-  const totalCases = liveCounts?.total ?? grievances.length
+  const totalCases = liveCounts
+    ? liveCounts.pending + liveCounts.inProgress + liveCounts.resolved + liveCounts.rejected
+    : grievances.length
   const urgentCases =
     liveCounts?.urgent ?? grievances.filter(g => g.priority === 'urgent').length
   const pendingCases =
@@ -607,8 +606,8 @@ export default function AdminGrievancesPage() {
             </div>
           </div>
         }
-        viewModeToggle={
-          <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+        viewMode={
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         }
       />
 
