@@ -573,7 +573,7 @@ export default function ShiftsPage() {
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-bold text-foreground">
-                {t('landlordShiftsDeleteModalTitle') || 'Xóa ca làm việc'}
+                {t('landlordShiftsDeleteModalTitle')}
               </h3>
               <p className="text-xs text-muted leading-relaxed">
                 {t('landlordShiftsDeleteConfirm', { name: deleteConfirmShift.name })}
@@ -589,7 +589,7 @@ export default function ShiftsPage() {
                 onClick={() => setDeleteConfirmShift(null)}
                 className="flex-1"
               >
-                {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
+                {t('landlordShiftsModalBtnCancel')}
               </Button>
               <Button
                 size="md"
@@ -597,7 +597,7 @@ export default function ShiftsPage() {
                 onClick={handleConfirmDeleteShift}
                 className="flex-1"
               >
-                {t('landlordShiftsDeleteBtn') || 'Xác nhận xóa'}
+                {t('landlordShiftsDeleteBtn')}
               </Button>
             </div>
           </Modal.Footer>

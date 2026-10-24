@@ -1791,7 +1791,7 @@ export default function StaffPage() {
                 onClick={() => setActionConfirm(null)}
                 className="flex-1"
               >
-                {t('landlordStaffConfirmCloseKeep') || 'Hủy bỏ'}
+                {t('landlordStaffConfirmCloseKeep')}
               </Button>
               <Button
                 size="md"
@@ -1802,7 +1802,7 @@ export default function StaffPage() {
                 }}
                 className="flex-1"
               >
-                {t('btnConfirm') || 'Xác nhận'}
+                {t('btnConfirm')}
               </Button>
             </div>
           </Modal.Footer>

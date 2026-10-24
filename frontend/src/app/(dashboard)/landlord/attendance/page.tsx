@@ -201,7 +201,7 @@ export default function AttendancePage() {
       console.error('Failed to fetch attendance:', err)
       showToast(
         'error',
-        isEn ? 'Could not load attendance logs.' : 'Không thể tải dữ liệu bảng chấm công.',
+        t('landlordAttendanceLoadError'),
       )
     } finally {
       setIsLoading(false)
@@ -304,8 +304,7 @@ export default function AttendancePage() {
     } catch (err: any) {
       showToast(
         'error',
-        err?.response?.data?.message ||
-        (isEn ? 'Error updating attendance' : 'Lỗi khi cập nhật chấm công'),
+        err?.response?.data?.message || t('landlordAttendanceUpdateError'),
       )
     } finally {
       setIsSubmittingOverride(false)
@@ -345,7 +344,7 @@ export default function AttendancePage() {
             variant="danger"
             leftIcon={<XCircle className="w-3 h-3 text-danger" />}
           >
-            {isEn ? 'Absent' : 'Vắng mặt'}
+            {t('landlordAttendanceStatusAbsent')}
           </Chip>
         )
       default:
@@ -356,7 +355,7 @@ export default function AttendancePage() {
             variant="neutral"
             leftIcon={<HelpCircle className="w-3 h-3 text-muted" />}
           >
-            {isEn ? 'Not checked in' : 'Chưa chấm công'}
+            {t('landlordAttendanceStatusNotYet')}
           </Chip>
         )
     }
@@ -367,7 +366,7 @@ export default function AttendancePage() {
     if (records.length === 0) {
       showToast(
         'error',
-        isEn ? 'No attendance data to export' : 'Không có dữ liệu để xuất bảng công',
+        t('landlordAttendanceExportNoData'),
       )
       return
     }
@@ -381,7 +380,7 @@ export default function AttendancePage() {
         ...records.map(
           r =>
             `"${formatDisplayDate(r.workDate)}","${r.employeeName}","${r.employeePhone
-            }","${r.positionName || (isEn ? 'Staff' : 'Nhân viên')}","${r.shiftName}","${r.shiftStartTime
+            }","${r.positionName || t('landlordAttendanceStaffDefault')}","${r.shiftName}","${r.shiftStartTime
             }-${r.shiftEndTime}","${formatDisplayTime(
               r.checkIn,
             )}","${formatDisplayTime(r.checkOut)}","${r.attendanceStatus === 'on_time'
@@ -445,7 +444,7 @@ export default function AttendancePage() {
       },
       {
         key: 'absent',
-        label: isEn ? 'Absent' : 'Vắng mặt',
+        label: t('landlordAttendanceStatusAbsent'),
         value: summary.absentCount,
         icon: (
           <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
@@ -458,7 +457,7 @@ export default function AttendancePage() {
       },
       {
         key: 'notYet',
-        label: isEn ? 'Upcoming' : 'Chưa tới giờ',
+        label: t('landlordAttendanceStatusUpcoming'),
         value: summary.notYetCount,
         icon: <HelpCircle className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
         containerClassName:
@@ -469,7 +468,7 @@ export default function AttendancePage() {
       },
       {
         key: 'rate',
-        label: isEn ? 'Diligence' : 'Chuyên cần',
+        label: t('landlordAttendanceStatDiligence'),
         value: `${summary.attendanceRate}%`,
         icon: (
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] shrink-0" />
@@ -534,25 +533,25 @@ export default function AttendancePage() {
                 variant={datePreset === 'today' ? 'primary' : 'ghost'}
                 onClick={() => handleDatePresetChange('today')}
               >
-                {isEn ? 'Today' : 'Hôm nay'}
+                {t('landlordAttendancePresetToday')}
               </Button>
               <Button
                 variant={datePreset === 'week' ? 'primary' : 'ghost'}
                 onClick={() => handleDatePresetChange('week')}
               >
-                {isEn ? 'This Week' : 'Tuần này'}
+                {t('landlordAttendancePresetWeek')}
               </Button>
               <Button
                 variant={datePreset === 'month' ? 'primary' : 'ghost'}
                 onClick={() => handleDatePresetChange('month')}
               >
-                {isEn ? 'This Month' : 'Tháng này'}
+                {t('landlordAttendancePresetMonth')}
               </Button>
               <Button
                 variant={datePreset === 'custom' ? 'primary' : 'ghost'}
                 onClick={() => setDatePreset('custom')}
               >
-                {isEn ? 'Custom' : 'Tùy chọn'}
+                {t('landlordAttendancePresetCustom')}
               </Button>
             </div>
 
@@ -616,7 +615,7 @@ export default function AttendancePage() {
                 },
                 ...staffList.map(s => ({
                   value: s.employeeId,
-                  label: `${s.fullName} (${s.positionName || (isEn ? 'Staff' : 'Nhân viên')})`,
+                  label: `${s.fullName} (${s.positionName || t('landlordAttendanceStaffDefault')})`,
                 })),
               ]}
               className="text-xs font-semibold bg-surface/50 cursor-pointer"
@@ -653,8 +652,8 @@ export default function AttendancePage() {
                 { value: 'all', label: t('landlordAttendanceFilterStatusPh') },
                 { value: 'on_time', label: t('landlordAttendanceStatusOnTime') },
                 { value: 'late', label: t('landlordAttendanceStatusLate') },
-                { value: 'absent', label: isEn ? 'Absent' : 'Vắng mặt' },
-                { value: 'not_yet', label: isEn ? 'Not checked in' : 'Chưa chấm công' },
+                { value: 'absent', label: t('landlordAttendanceStatusAbsent') },
+                { value: 'not_yet', label: t('landlordAttendanceStatusNotYet') },
               ]}
               className="text-xs font-semibold bg-surface/50 cursor-pointer"
               containerClassName="w-auto min-w-[130px] space-y-0"
@@ -676,7 +675,7 @@ export default function AttendancePage() {
         <div className="bg-card border border-line rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[350px]">
           <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
           <p className="text-xs font-bold text-muted">
-            {t('landlordAttendanceLoading') || 'Loading attendance logs...'}
+            {t('landlordAttendanceLoading')}
           </p>
         </div>
       ) : records.length === 0 ? (
@@ -691,7 +690,7 @@ export default function AttendancePage() {
               variant="outline"
               onClick={() => handleDatePresetChange('month')}
             >
-              {t('landlordAttendanceViewMonth') || 'View Month'}
+              {t('landlordAttendanceViewMonth')}
             </Button>
           }
         />
@@ -735,7 +734,7 @@ export default function AttendancePage() {
                         {item.employeeName}
                       </div>
                       <div className="text-[11px] text-muted truncate">
-                        {item.positionName || (isEn ? 'Staff' : 'Nhân viên')} · {item.employeePhone}
+                        {item.positionName || t('landlordAttendanceStaffDefault')} · {item.employeePhone}
                       </div>
                     </div>
                   </div>
@@ -817,13 +816,13 @@ export default function AttendancePage() {
                 <tr className="border-b border-line bg-surface/70 text-muted font-extrabold uppercase text-[10px] tracking-wider">
                   <th className="py-3.5 px-4">{t('landlordAttendanceColDate')}</th>
                   <th className="py-3.5 px-4">{t('landlordAttendanceColStaff')}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Position' : 'Vị trí'}</th>
+                  <th className="py-3.5 px-4">{t('landlordAttendanceColPosition')}</th>
                   <th className="py-3.5 px-4">{t('landlordAttendanceColShift')}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Scheduled Time' : 'Khung giờ quy định'}</th>
+                  <th className="py-3.5 px-4">{t('landlordAttendanceColScheduledTime')}</th>
                   <th className="py-3.5 px-4">Check-in</th>
                   <th className="py-3.5 px-4">Check-out</th>
                   <th className="py-3.5 px-4">{t('landlordAttendanceColStatus')}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Adjusted By' : 'Người điều chỉnh'}</th>
+                  <th className="py-3.5 px-4">{t('landlordAttendanceColAdjustedBy')}</th>
                   <th className="py-3.5 px-4 text-right">{t('landlordAttendanceColActions')}</th>
                 </tr>
               </thead>
@@ -842,7 +841,7 @@ export default function AttendancePage() {
                       <div className="text-[10px] text-muted">{item.employeePhone}</div>
                     </td>
                     <td className="py-3 px-4 text-muted font-semibold">
-                      {item.positionName || (isEn ? 'Staff' : 'Nhân viên')}
+                      {item.positionName || t('landlordAttendanceStaffDefault')}
                     </td>
                     <td className="py-3 px-4 font-bold text-foreground">{item.shiftName}</td>
                     <td className="py-3 px-4 text-muted font-semibold">
@@ -933,14 +932,14 @@ export default function AttendancePage() {
                     {selectedRecord.shiftName} ({selectedRecord.shiftStartTime} -{' '}
                     {selectedRecord.shiftEndTime})
                   </span>
-                  <span>{selectedRecord.positionName || (isEn ? 'Staff' : 'Nhân viên')}</span>
+                  <span>{selectedRecord.positionName || t('landlordAttendanceStaffDefault')}</span>
                 </div>
               </div>
 
               {/* Attendance Status Selector */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
-                  <span>{isEn ? 'Attendance Status' : 'Trạng thái chấm công'}</span>
+                  <span>{t('landlordAttendanceModalStatusLabel')}</span>
                   <span className="text-danger">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1001,7 +1000,7 @@ export default function AttendancePage() {
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
-                    <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
+                    <span>{t('landlordAttendanceStatusAbsent')}</span>
                   </Button>
 
                   <Button
@@ -1021,7 +1020,7 @@ export default function AttendancePage() {
                         <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
-                    <span>{isEn ? 'Not checked in' : 'Chưa chấm công'}</span>
+                    <span>{t('landlordAttendanceStatusNotYet')}</span>
                   </Button>
                 </div>
               </div>
@@ -1075,19 +1074,7 @@ export default function AttendancePage() {
               <div className="p-3 bg-info-soft border border-info-subtle rounded-xl text-xs text-info flex items-start gap-2">
                 <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
                 <span className="leading-relaxed text-[11px]">
-                  {isEn ? (
-                    <>
-                      The system strictly complies with <strong>Rule #4</strong>: Every manual
-                      attendance adjustment by the landlord is logged into an AuditLog transaction
-                      along with user ID and exact timestamp.
-                    </>
-                  ) : (
-                    <>
-                      Hệ thống tuân thủ <strong>Rule #4</strong>: Mỗi điều chỉnh chấm công thủ công
-                      của chủ nhà sẽ được lưu vào giao dịch kiểm toán (AuditLog) cùng ID tài khoản
-                      và dấu thời gian thực.
-                    </>
-                  )}
+                  {t('landlordAttendanceModalAuditRuleNotice')}
                 </span>
               </div>
 
@@ -1137,9 +1124,7 @@ export default function AttendancePage() {
               {t('landlordShiftsConfirmCloseTitle')}
             </h4>
             <p className="text-xs text-muted leading-relaxed">
-              {isEn
-                ? 'You have unsaved attendance adjustment details. If you close now, all changes will be discarded.'
-                : 'Bạn có thông tin điều chỉnh chấm công chưa lưu. Nếu đóng bây giờ, toàn bộ các thay đổi sẽ bị hủy bỏ.'}
+              {t('landlordAttendanceConfirmCloseDesc')}
             </p>
           </div>
         </Modal.Body>
