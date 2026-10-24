@@ -7,7 +7,6 @@ import {
   Edit3,
   Trash2,
   Loader2,
-  X,
   Check,
   AlertTriangle,
   CheckCircle2,
@@ -322,7 +321,7 @@ export default function ShiftsPage() {
           }
           action={
             !searchQuery ? (
-              <Button onClick={openCreateModal} leftIcon={<Plus />}>
+              <Button size="md" onClick={openCreateModal} leftIcon={<Plus />}>
                 {t('landlordShiftsAddNow')}
               </Button>
             ) : undefined
@@ -411,154 +410,164 @@ export default function ShiftsPage() {
         </div>
       )}
 
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={handleAttemptClose}
-        >
-          <div
-            className="bg-card rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in zoom-in-95 duration-200"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-black text-foreground">
-                  {editingShift
-                    ? t('landlordShiftsModalEditTitle')
-                    : t('landlordShiftsModalAddTitle')}
-                </h2>
-                <p className="text-xs text-muted mt-0.5">
-                  {editingShift
-                    ? t('landlordShiftsEditSubtitle')
-                    : t('landlordShiftsCreateSubtitle')}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleAttemptClose}
-              >
-                <X />
-              </Button>
+      {/* 1. Add / Edit Shift Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleAttemptClose}
+        size="md"
+      >
+        <Modal.Header
+          title={
+            editingShift
+              ? t('landlordShiftsModalEditTitle')
+              : t('landlordShiftsModalAddTitle')
+          }
+          description={
+            editingShift
+              ? t('landlordShiftsEditSubtitle')
+              : t('landlordShiftsCreateSubtitle')
+          }
+          icon={
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Clock className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <Modal.Body className="space-y-4">
+            <TextInput
+              label={t('landlordShiftsFieldName')}
+              required
+              value={formName}
+              onChange={e => {
+                setFormName(e.target.value)
+                setIsDirty(true)
+              }}
+              placeholder={t('landlordShiftsFieldNamePh')}
+              autoFocus
+            />
+
+            <div className="grid grid-cols-2 gap-3">
               <TextInput
-                label={t('landlordShiftsFieldName')}
+                type="time"
+                label={t('landlordShiftsFieldStartTime')}
                 required
-                value={formName}
+                value={formStart}
                 onChange={e => {
-                  setFormName(e.target.value)
+                  setFormStart(e.target.value)
                   setIsDirty(true)
                 }}
-                placeholder={t('landlordShiftsFieldNamePh')}
-                autoFocus
               />
+              <TextInput
+                type="time"
+                label={t('landlordShiftsFieldEndTime')}
+                required
+                value={formEnd}
+                onChange={e => {
+                  setFormEnd(e.target.value)
+                  setIsDirty(true)
+                }}
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <TextInput
-                  type="time"
-                  label={t('landlordShiftsFieldStartTime')}
-                  required
-                  value={formStart}
-                  onChange={e => {
-                    setFormStart(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
-                <TextInput
-                  type="time"
-                  label={t('landlordShiftsFieldEndTime')}
-                  required
-                  value={formEnd}
-                  onChange={e => {
-                    setFormEnd(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
+            {formStart && formEnd && (
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-xl text-xs font-semibold text-primary">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  {t('landlordShiftsDuration')}:{' '}
+                  <strong>{getDurationHours(formStart, formEnd)}</strong>
+                </span>
               </div>
+            )}
 
-              {formStart && formEnd && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-xl text-xs font-semibold text-primary">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    {t('landlordShiftsDuration')}:{' '}
-                    <strong>{getDurationHours(formStart, formEnd)}</strong>
-                  </span>
-                </div>
-              )}
-
-              {formError && (
-                <div className="flex items-center gap-2 px-3 py-2.5 bg-danger-soft border border-danger-subtle rounded-xl text-xs font-bold text-danger">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              <div className="flex gap-2.5 pt-2">
-                <Button size="xs"
-                  variant="outline"
-                  onClick={handleAttemptClose}
-                  className="flex-1"
-                >
-                  {t('landlordShiftsModalBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  isLoading={isSubmitting}
-                  className="flex-1"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  {editingShift
-                    ? t('landlordShiftsSaveShiftBtn')
-                    : t('landlordShiftsCreateShiftBtn')}
-                </Button>
+            {formError && (
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-danger-soft border border-danger-subtle rounded-xl text-xs font-bold text-danger">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{formError}</span>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+          </Modal.Body>
 
-      {isConfirmCloseOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-150">
-            <h3 className="text-base font-black text-foreground mb-1">
-              {t('landlordShiftsConfirmCloseTitle')}
-            </h3>
-            <p className="text-xs text-muted mb-5">{t('landlordShiftsConfirmCloseDesc')}</p>
-            <div className="flex gap-2.5">
-              <Button size="xs"
+          <Modal.Footer>
+            <div className="flex items-center gap-2.5 w-full">
+              <Button
+                size="md"
                 variant="outline"
-                onClick={() => setIsConfirmCloseOpen(false)}
+                onClick={handleAttemptClose}
                 className="flex-1"
               >
-                {t('landlordShiftsConfirmCloseKeep')}
+                {t('landlordShiftsModalBtnCancel')}
               </Button>
-              <Button size="xs"
-                variant="ghost"
-                onClick={handleConfirmClose}
+              <Button
+                size="md"
+                type="submit"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                leftIcon={!isSubmitting ? <Check className="w-4 h-4" /> : undefined}
                 className="flex-1"
               >
-                {t('landlordShiftsConfirmCloseDiscard')}
+                {editingShift
+                  ? t('landlordShiftsSaveShiftBtn')
+                  : t('landlordShiftsCreateShiftBtn')}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </Modal.Footer>
+        </form>
+      </Modal>
 
-      {/* Delete Confirmation Modal (Rule #10) */}
+      {/* 2. Unsaved Changes Confirmation Modal (Rule #10) */}
+      <Modal
+        isOpen={isConfirmCloseOpen}
+        onClose={() => setIsConfirmCloseOpen(false)}
+        size="sm"
+        zIndex={60}
+      >
+        <Modal.Body className="p-6 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
+          </div>
+
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-foreground">
+              {t('landlordShiftsConfirmCloseTitle')}
+            </h4>
+            <p className="text-xs text-muted leading-relaxed">
+              {t('landlordShiftsConfirmCloseDesc')}
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="flex items-center gap-2.5 w-full">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={handleConfirmClose}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 3. Delete Confirmation Modal (Rule #10) */}
       {deleteConfirmShift && (
         <Modal
           isOpen={!!deleteConfirmShift}
           onClose={() => setDeleteConfirmShift(null)}
           size="sm"
         >
-          <div className="space-y-4 pt-2 text-center">
+          <Modal.Body className="p-6 space-y-4 text-center">
             <div className="w-12 h-12 rounded-2xl bg-danger-soft text-danger flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -570,8 +579,12 @@ export default function ShiftsPage() {
                 {t('landlordShiftsDeleteConfirm', { name: deleteConfirmShift.name })}
               </p>
             </div>
-            <div className="flex items-center gap-3 pt-3 border-t border-line">
+          </Modal.Body>
+
+          <Modal.Footer>
+            <div className="flex items-center gap-3 w-full">
               <Button
+                size="md"
                 variant="secondary"
                 onClick={() => setDeleteConfirmShift(null)}
                 className="flex-1"
@@ -579,6 +592,7 @@ export default function ShiftsPage() {
                 {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
               </Button>
               <Button
+                size="md"
                 variant="danger"
                 onClick={handleConfirmDeleteShift}
                 className="flex-1"
@@ -586,7 +600,7 @@ export default function ShiftsPage() {
                 {t('landlordShiftsDeleteBtn') || 'Xác nhận xóa'}
               </Button>
             </div>
-          </div>
+          </Modal.Footer>
         </Modal>
       )}
     </div>
