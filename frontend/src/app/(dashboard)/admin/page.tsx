@@ -191,7 +191,7 @@ export default function AdminDashboardPage() {
                 variant="warning"
                 size="sm"
                 preventHover
-                leftIcon={<ShieldAlert className="w-3.5 h-3.5" />}
+                leftIcon={<ShieldAlert />}
                 className="font-black uppercase tracking-wider"
               >
                 {t('adminHubBadge')}
@@ -229,7 +229,6 @@ export default function AdminDashboardPage() {
               onClick={() => fetchDashboardData(true)}
               isLoading={isRefreshing}
               leftIcon={<RefreshCw />}
-              className='text-white'
             >
               {t('adminRefresh')}
             </Button>
@@ -238,7 +237,6 @@ export default function AdminDashboardPage() {
               variant="secondary"
               onClick={() => router.push('/admin/notifications')}
               leftIcon={<Megaphone />}
-              className='text-white'
             >
               {t('adminActionSendBroadcast')}
             </Button>
@@ -247,7 +245,6 @@ export default function AdminDashboardPage() {
               variant="secondary"
               onClick={() => router.push('/admin/blogs')}
               leftIcon={<Newspaper />}
-              className='text-white'
             >
               {t('adminActionNewBlog')}
             </Button>
@@ -255,7 +252,6 @@ export default function AdminDashboardPage() {
               size='md'
               onClick={() => router.push('/admin/analytics')}
               leftIcon={<TrendingUp />}
-              className='text-white'
             >
               {t('adminActionFullAnalytics')}
             </Button>
@@ -323,13 +319,7 @@ export default function AdminDashboardPage() {
                         variant={item.isPositive ? 'success' : 'accent'}
                         size="xs"
                         preventHover
-                        leftIcon={
-                          item.isPositive ? (
-                            <TrendingUp className="w-3 h-3 shrink-0" />
-                          ) : (
-                            <AlertTriangle className="w-3 h-3 shrink-0" />
-                          )
-                        }
+                        leftIcon={item.isPositive ? <TrendingUp /> : <AlertTriangle />}
                         className="font-extrabold whitespace-nowrap"
                       >
                         {item.growth}

@@ -131,25 +131,53 @@ const inactiveBadgeColorStyles: Record<ChipVariant, string> = {
   purple: 'bg-deposit-soft text-deposit',
 }
 
-const iconSizeClasses: Record<ChipSize, string> = {
-  xs: 'w-3 h-3',
-  sm: 'w-3.5 h-3.5',
-  md: 'w-4 h-4',
-  lg: 'w-4.5 h-4.5',
+const CHIP_ICON_DIMENSIONS: Record<
+  ChipSize,
+  {
+    className: string
+    pixelSize: number
+  }
+> = {
+  xs: {
+    className: 'w-3 h-3',
+    pixelSize: 12,
+  },
+  sm: {
+    className: 'w-3.5 h-3.5',
+    pixelSize: 14,
+  },
+  md: {
+    className: 'w-4 h-4',
+    pixelSize: 16,
+  },
+  lg: {
+    className: 'w-4.5 h-4.5',
+    pixelSize: 18,
+  },
 }
 
-const removeIconSizeClasses: Record<ChipSize, string> = {
-  xs: 'w-2.5 h-2.5',
-  sm: 'w-3 h-3',
-  md: 'w-3.5 h-3.5',
-  lg: 'w-4 h-4',
+const REMOVE_ICON_DIMENSIONS: Record<
+  ChipSize,
+  {
+    className: string
+    pixelSize: number
+  }
+> = {
+  xs: { className: 'w-2.5 h-2.5', pixelSize: 10 },
+  sm: { className: 'w-3 h-3', pixelSize: 12 },
+  md: { className: 'w-3.5 h-3.5', pixelSize: 14 },
+  lg: { className: 'w-4 h-4', pixelSize: 16 },
 }
 
 const cleanIconClassName = (className?: string): string => {
   if (!className) return ''
   return className
     .split(/\s+/)
-    .filter(cls => !/^(w-|h-|size-)/.test(cls))
+    .filter(
+      cls =>
+        cls.trim().length > 0 &&
+        !/^(w-|h-|size-|min-w-|min-h-|max-w-|max-h-|!w-|!h-|!size-)/.test(cls),
+    )
     .join(' ')
 }
 
@@ -182,25 +210,63 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
   ) => {
     const isSelected = Boolean(active ?? selected)
     const isHoverPrevented = Boolean(preventHover || disableHover)
-    const targetIconSize = iconSizeClasses[size] || 'w-4 h-4'
+    const iconDimension = CHIP_ICON_DIMENSIONS[size] || CHIP_ICON_DIMENSIONS.md
 
     const renderIcon = (icon: React.ReactNode) => {
       if (!icon) return null
 
-      if (React.isValidElement(icon)) {
-        const iconElement = icon as React.ReactElement<{ className?: string }>
-        const baseClass = cleanIconClassName(iconElement.props?.className)
+      // Check if it's an icon component passed directly (e.g. leftIcon={ShieldAlert})
+      if (
+        typeof icon === 'function' ||
+        (typeof icon === 'object' && icon !== null && '$$typeof' in (icon as any) && !React.isValidElement(icon))
+      ) {
+        const IconComponent = icon as unknown as React.ComponentType<any>
         return (
-          <span className="shrink-0 inline-flex items-center justify-center">
+          <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">
+            <IconComponent
+              size={iconDimension.pixelSize}
+              width={iconDimension.pixelSize}
+              height={iconDimension.pixelSize}
+              className={cn(iconDimension.className, 'shrink-0')}
+            />
+          </span>
+        )
+      }
+
+      if (React.isValidElement(icon)) {
+        const iconElement = icon as React.ReactElement<any>
+
+        // If it's a pulse dot indicator, e.g. <span className="w-2 h-2 rounded-full ..." />
+        const isStatusDot =
+          typeof iconElement.type === 'string' &&
+          iconElement.props?.className &&
+          iconElement.props.className.includes('rounded-full')
+
+        if (isStatusDot) {
+          return (
+            <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">
+              {iconElement}
+            </span>
+          )
+        }
+
+        const baseClass = cleanIconClassName(iconElement.props?.className)
+
+        // Forcefully override size, width, height, and className dimensions
+        return (
+          <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">
             {React.cloneElement(iconElement, {
-              className: cn(baseClass, targetIconSize, 'shrink-0'),
+              size: iconDimension.pixelSize,
+              width: iconDimension.pixelSize,
+              height: iconDimension.pixelSize,
+              className: cn(baseClass, iconDimension.className, 'shrink-0'),
             })}
           </span>
         )
       }
 
       return (
-        <span className="shrink-0 inline-flex items-center justify-center">
+        <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">
           {icon}
         </span>
       )
@@ -266,7 +332,10 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
               (variant === 'neutral' ? 'hover:bg-white/25 dark:hover:bg-black/15' : 'hover:bg-white/25'),
             )}
           >
-            <X className={cn(removeIconSizeClasses[size] || 'w-3 h-3', 'shrink-0')} />
+            <X
+              size={REMOVE_ICON_DIMENSIONS[size]?.pixelSize || 12}
+              className={cn(REMOVE_ICON_DIMENSIONS[size]?.className || 'w-3 h-3', 'shrink-0')}
+            />
           </span>
         )}
       </button>
