@@ -549,7 +549,7 @@ export class RoomsService {
       activeContract?.tenantContracts.map(tc => tc.tenant?.id).filter(Boolean) || [],
     )
 
-    const occupants: RoomDashboardOccupantDto[] = (room.occupants || []).map(occ => {
+    let occupants: RoomDashboardOccupantDto[] = (room.occupants || []).map(occ => {
       const tenant = occ.tenant
       const ident = tenant?.userIdentification
       const isContracted = Boolean(tenant?.id && activeContractTenantIds.has(tenant.id))
@@ -572,6 +572,51 @@ export class RoomsService {
         contractId: isContracted ? activeContract?.id : null,
       }
     })
+
+    // Auto-heal & fallback: If room has active contract with tenants but no room_occupants rows exist yet
+    if (occupants.length === 0 && activeContract && activeContract.tenantContracts.length > 0) {
+      occupants = activeContract.tenantContracts.map(tc => {
+        const tenant = tc.tenant
+        const ident = tenant?.userIdentification
+        return {
+          id: tc.id,
+          tenantId: tenant?.id || tc.tenantId,
+          fullName: ident?.fullName || tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+          phoneNumber: tenant?.phoneNumber || '',
+          email: tenant?.email ?? null,
+          avatarUrl: tenant?.avatarUrl ?? null,
+          hasAccount: Boolean(tenant?.id),
+          hasIdentification: Boolean(ident),
+          identityNumber: ident?.identityNumber ?? null,
+          dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
+          gender: ident?.gender ?? null,
+          status: OccupantStatus.active,
+          joinedAt: activeContract.startDate ? activeContract.startDate.toISOString() : new Date().toISOString(),
+          note: 'Khách thuê theo hợp đồng',
+          hasContract: true,
+          contractId: activeContract.id,
+        }
+      })
+
+      // Asynchronously heal database so subsequent queries find room_occupants
+      if (this.prisma.roomOccupant?.createMany) {
+        this.prisma.roomOccupant
+          .createMany({
+            data: activeContract.tenantContracts.map(tc => ({
+              boardingHouseId,
+              roomId,
+              tenantId: tc.tenantId,
+              status: OccupantStatus.active,
+              joinedAt: activeContract.startDate,
+              note: 'Khách thuê theo hợp đồng',
+            })),
+            skipDuplicates: true,
+          })
+          .catch(syncErr => {
+            this.logger.warn(`Could not auto-sync room occupants for room ${roomId}: ${syncErr}`)
+          })
+      }
+    }
 
     // Map rental history from all contracts
     const rentalHistory = room.contracts.map(c => {

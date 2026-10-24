@@ -258,7 +258,28 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           return
         }
         const activeContract = res.currentContract
-        const occupants = res.occupants || []
+        const rawOccupants = res.occupants || []
+        const occupants =
+          rawOccupants.length > 0
+            ? rawOccupants
+            : (activeContract?.tenants || []).map((t: any) => ({
+                id: t.id,
+                tenantId: t.id,
+                fullName: t.fullName,
+                phoneNumber: t.phoneNumber,
+                email: t.email,
+                avatarUrl: t.avatarUrl,
+                hasAccount: true,
+                hasIdentification: Boolean(t.hasIdentification),
+                identityNumber: t.identityNumber,
+                dateOfBirth: t.dateOfBirth,
+                gender: t.gender,
+                status: 'active' as const,
+                joinedAt: activeContract?.startDate || new Date().toISOString(),
+                note: 'Khách thuê theo hợp đồng',
+                hasContract: true,
+                contractId: activeContract?.id,
+              }))
         const primaryTenant = occupants[0] || activeContract?.tenants?.[0]
 
         const formattedPrice = activeContract?.rentPrice
@@ -761,7 +782,28 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   const unpaidFinancials = unpaidRecord ? computeRecordFinancials(unpaidRecord) : null
 
   const currentContract = dashboardData?.currentContract
-  const occupants = dashboardData?.occupants || []
+  const rawOccupants = dashboardData?.occupants || []
+  const occupants =
+    rawOccupants.length > 0
+      ? rawOccupants
+      : (currentContract?.tenants || []).map((t: any) => ({
+          id: t.id,
+          tenantId: t.id,
+          fullName: t.fullName,
+          phoneNumber: t.phoneNumber,
+          email: t.email,
+          avatarUrl: t.avatarUrl,
+          hasAccount: true,
+          hasIdentification: Boolean(t.hasIdentification),
+          identityNumber: t.identityNumber,
+          dateOfBirth: t.dateOfBirth,
+          gender: t.gender,
+          status: 'active' as const,
+          joinedAt: currentContract?.startDate || new Date().toISOString(),
+          note: 'Khách thuê theo hợp đồng',
+          hasContract: true,
+          contractId: currentContract?.id,
+        }))
 
   const availablePeriods = Array.from(
     new Set([

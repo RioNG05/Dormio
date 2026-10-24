@@ -586,9 +586,7 @@ async function main() {
     for (let r = 1; r <= 5; r++) {
       const roomNumber = `${f}0${r}`;
       let status: RoomStatus = RoomStatus.available;
-      if (f === 1 && r === 1) status = RoomStatus.occupied; // 101
-      else if (f === 3 && r === 1) status = RoomStatus.occupied; // 301
-      else if (f === 1 && r === 2) status = RoomStatus.deposited; // 102
+      if (f === 1 && r === 2) status = RoomStatus.deposited; // 102
       else if (f === 2 && r === 4) status = RoomStatus.maintainace; // 204
 
       const room = await prisma.room.create({
