@@ -614,6 +614,15 @@ export const enLandlord = {
     landlordDepositsConfirmCloseDesc: "You have unsaved changes. Draft data will be discarded if you close now.",
     landlordDepositsConfirmCloseKeep: "Continue editing",
     landlordDepositsConfirmCloseDiscard: "Discard changes & Close",
+    landlordDepositsOriginalDepositAmount: "Original deposit amount:",
+    landlordDepositsDeductedAmount: "Deducted amount:",
+    landlordDepositsDeductionReason: "Deduction reason",
+    landlordDepositsLoadingData: "Loading deposit list...",
+    landlordDepositsNoDataTitle: "No deposit records found",
+    landlordDepositsNoDataDesc: "No deposits found for this boarding house. You can add a new deposit record.",
+    landlordDepositsColId: "DEPOSIT CODE",
+    landlordDepositsColDate: "DEPOSIT DATE",
+    landlordDepositsColAction: "ACTIONS",
 
     // --- Property operational expenses (app/(dashboard)/landlord/expenses) ---
     landlordExpensesActions: "Actions",

@@ -16,6 +16,7 @@ import {
   Loader2,
   DiamondPlus,
   FilePenLine,
+  ArrowUpFromLine,
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
@@ -838,7 +839,7 @@ function DepositsContent() {
                             setIsFormDirty(false)
                           }}
                           title={t('landlordDepositsTooltipUpgrade')}
-                          leftIcon={<FilePenLine />}
+                          leftIcon={<ArrowUpFromLine />}
                         >
                           <Text as="span" size="xs" weight="bold" color="inherit">
                             {t('landlordDepositsBtnUpgradeShort')}
@@ -950,7 +951,7 @@ function DepositsContent() {
                           {isHoldType && isHolding && (
                             <TableActionButton
                               variant="accent"
-                              icon={<FilePenLine />}
+                              icon={<ArrowUpFromLine />}
                               onClick={event => {
                                 event.stopPropagation()
                                 setShowUpgradeModal(dep)
@@ -967,6 +968,7 @@ function DepositsContent() {
 
                           {isHolding && (
                             <TableActionButton
+                              variant='secondary'
                               icon={<RotateCcw />}
                               onClick={event => {
                                 event.stopPropagation()
@@ -1158,6 +1160,7 @@ function DepositsContent() {
             <Modal.Footer>
               <div className="flex items-center justify-between w-full gap-2">
                 <Button
+                  size='md'
                   variant="secondary"
                   onClick={() => {
                     router.push(
@@ -1175,6 +1178,7 @@ function DepositsContent() {
                   {selectedDeposit.depositCategory === 'hold' &&
                     selectedDeposit.status === 'paid' && (
                       <Button
+                        size='md'
                         variant="orange"
                         onClick={() => {
                           setShowUpgradeModal(selectedDeposit)
@@ -1186,7 +1190,7 @@ function DepositsContent() {
                           setSelectedDeposit(null)
                           setIsFormDirty(false)
                         }}
-                        leftIcon={<Sparkles />}
+                        leftIcon={<ArrowUpFromLine />}
                       >
                         <Text as="span" size="xs" weight="bold" color="inherit">
                           {t('landlordDepositsBtnUpgrade')}
@@ -1196,6 +1200,7 @@ function DepositsContent() {
 
                   {selectedDeposit.status === 'paid' && (
                     <Button
+                      size='md'
                       variant="dark"
                       onClick={() => {
                         setShowRefundModal(selectedDeposit)

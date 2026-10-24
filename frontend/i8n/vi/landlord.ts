@@ -614,6 +614,15 @@ export const viLandlord = {
     landlordDepositsConfirmCloseDesc: "Bạn có các thay đổi chưa được lưu. Dữ liệu nháp sẽ bị hủy bỏ nếu bạn đóng form ngay bây giờ.",
     landlordDepositsConfirmCloseKeep: "Tiếp tục chỉnh sửa",
     landlordDepositsConfirmCloseDiscard: "Hủy thay đổi & Đóng",
+    landlordDepositsOriginalDepositAmount: "Số tiền cọc ban đầu:",
+    landlordDepositsDeductedAmount: "Số tiền đã khấu trừ:",
+    landlordDepositsDeductionReason: "Lý do khấu trừ",
+    landlordDepositsLoadingData: "Đang tải danh sách đặt cọc...",
+    landlordDepositsNoDataTitle: "Chưa có khoản đặt cọc nào",
+    landlordDepositsNoDataDesc: "Hiện tại chưa có khoản tiền cọc nào cho nhà trọ này. Bạn có thể thêm khoản đặt cọc mới.",
+    landlordDepositsColId: "MÃ CỌC",
+    landlordDepositsColDate: "NGÀY CỌC",
+    landlordDepositsColAction: "THAO TÁC",
 
     // --- Property operational expenses (app/(dashboard)/landlord/expenses) ---
     landlordExpensesActions: "Thao Tác",
