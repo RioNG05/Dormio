@@ -21,7 +21,7 @@ export interface ChatSidebarProps {
   onOpenNewChat: () => void
   mobileShowChat: boolean
   hasContacts: boolean
-  role?: 'landlord' | 'tenant' | 'staff'
+  role?: 'landlord' | 'tenant' | 'staff' | 'public'
   locale?: string
 }
 

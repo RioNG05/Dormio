@@ -32,10 +32,11 @@ import { NewChatModal } from './NewChatModal'
 import { ImageLightboxModal } from './ImageLightboxModal'
 
 export interface ChatViewProps {
-  role?: 'landlord' | 'tenant' | 'staff'
+  role?: 'landlord' | 'tenant' | 'staff' | 'public'
   onNavigateRoom?: (roomName?: string | null) => void
   onNavigateContract?: (roomName?: string | null) => void
   onNavigateInvoice?: () => void
+  onNavigateListing?: () => void
   customQuickReplies?: string[]
 }
 
@@ -44,6 +45,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onNavigateRoom,
   onNavigateContract,
   onNavigateInvoice,
+  onNavigateListing,
   customQuickReplies,
 }) => {
   const { user, activeBuilding } = useAuth()
@@ -54,6 +56,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const basePath = useMemo(() => {
     if (role === 'landlord') return '/landlord/messages'
     if (role === 'staff') return '/staff/messages'
+    if (role === 'public') return '/messages'
     return '/tenant/messages'
   }, [role])
 
@@ -95,7 +98,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     contactsRef,
   } = useChatSession({
     currentUserId: user?.id,
-    autoSelectFirst: role === 'tenant',
+    autoSelectFirst: role === 'tenant' || role === 'public',
     autoCreateWithFirstContactIfEmpty: role === 'tenant',
     initialConversationId: urlConversationId,
     defaultAttachmentText: 'Tệp đính kèm',
