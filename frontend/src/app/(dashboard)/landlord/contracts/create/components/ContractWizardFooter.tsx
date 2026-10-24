@@ -24,6 +24,7 @@ export function ContractWizardFooter() {
         </Button>
       ) : (
         <Button
+          size='md'
           variant="outline"
           onClick={() => goToStep((step - 1) as 1 | 2)}
           disabled={isPending}
