@@ -109,6 +109,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
     { name: tNav('staffShiftsAttendance'), href: '/staff/schedule', icon: Calendar },
     { name: tNav('staffShiftHistory'), href: '/staff/shift-history', icon: Clock },
     { name: tNav('messages'), href: '/staff/messages', icon: MessageCircle },
+    { name: tNav('complaints'), href: '/staff/complaints', icon: AlertTriangle },
   ]
 
   const adminMenus = [
@@ -136,6 +137,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
         { name: tNav('assets'), href: '/landlord/assets', icon: Package },
         { name: tNav('services'), href: '/landlord/services', icon: Wrench },
         { name: tNav('messages'), href: '/landlord/messages', icon: MessageCircle },
+        { name: tNav('complaints'), href: '/landlord/complaints', icon: AlertTriangle },
         { name: tNav('notification'), href: '/landlord/notifications', icon: Bell },
       ],
     },
