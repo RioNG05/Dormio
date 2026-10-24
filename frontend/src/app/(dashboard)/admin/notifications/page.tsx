@@ -10,16 +10,9 @@ import {
   Send,
   AlertCircle,
   Search,
-  LayoutGrid,
-  Table as TableIcon,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   X,
   Plus,
   Smartphone,
-  Eye,
   AlertTriangle,
   RefreshCw,
   RotateCcw,
@@ -28,16 +21,21 @@ import {
   adminNotificationService,
   MassNotificationStatusCounts,
 } from '@/services/admin-notification.service'
-import { Button } from '@/components/ui/Button'
-import { TableActionButton } from '@/components/ui/TableActionButton'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { TextInput } from '@/components/ui/TextInput'
-import { TextareaInput } from '@/components/ui/TextareaInput'
-import { SelectInput } from '@/components/ui/SelectInput'
-import { NumberInput } from '@/components/ui/NumberInput'
-import { Pagination } from '@/components/ui/Pagination'
-import { ViewModeToggle } from '@/components/ui/ViewModeToggle'
-import { FilterToolbar } from '@/components/ui/FilterToolbar'
+import {
+  Button,
+  TableActionButton,
+  Checkbox,
+  TextInput,
+  TextareaInput,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  Card,
+  TableRow,
+  Modal,
+  EmptyState,
+} from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 
 interface NotificationCampaign {
   id: string
@@ -107,157 +105,156 @@ export default function AdminNotificationsPage() {
   // Inspect Campaign Modal
   const [inspectCampaign, setInspectCampaign] = useState<NotificationCampaign | null>(null)
 
-  // Rule #10: Modal Reset Confirmation
+  // Rule #10: Modal Reset Confirmation Pop-up
   const [confirmCloseModal, setConfirmCloseModal] = useState<{
     isOpen: boolean
     onDiscard: () => void
   }>({ isOpen: false, onDiscard: () => {} })
 
-  // Live Campaigns Data
+  // Data & State
   const [campaigns, setCampaigns] = useState<NotificationCampaign[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [liveCounts, setLiveCounts] = useState<MassNotificationStatusCounts | null>(null)
+  const [feedbackMsg, setFeedbackMsg] = useState<{
+    type: 'success' | 'error'
+    text: string
+  } | null>(null)
 
-  const fetchLiveCampaigns = useCallback(
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (!feedbackMsg) return
+    const timer = setTimeout(() => setFeedbackMsg(null), 4000)
+    return () => clearTimeout(timer)
+  }, [feedbackMsg])
+
+  // Fetch campaigns from backend
+  const fetchCampaigns = useCallback(
     async (isManualRefresh = false) => {
       if (isManualRefresh) setRefreshing(true)
       else setLoading(true)
+      setError(null)
 
       try {
-        const rawRes: any = await adminNotificationService.getMassNotificationJobs({
-          status: statusFilter !== 'all' ? statusFilter : undefined,
-          channel: channelFilter !== 'all' ? channelFilter : undefined,
-          search: searchQuery.trim() || undefined,
-          page: 1,
-          limit: 100,
-        })
+        const [listRes, countsRes] = await Promise.all([
+          adminNotificationService.getCampaigns({
+            page: 1,
+            limit: 100,
+            status: statusFilter !== 'all' ? statusFilter : undefined,
+            channel: channelFilter !== 'all' ? channelFilter : undefined,
+          }),
+          adminNotificationService.getStatusCounts().catch(() => null),
+        ])
 
-        const res = rawRes?.data ?? rawRes
-
-        if (res && Array.isArray(res.items)) {
-          const mapped: NotificationCampaign[] = res.items.map((item: any) => ({
+        if (listRes?.items) {
+          const mapped: NotificationCampaign[] = listRes.items.map(item => ({
             id: item.id,
-            name: item.title,
+            name: item.name,
             title: item.title,
             content: item.content,
-            targetGroup: item.targetType as any,
-            targetLabel: item.targetLabel || item.targetType,
+            targetGroup: (item.targetGroup as any) || 'all_users',
+            targetLabel: item.targetLabel || item.targetGroup,
             targetId: item.targetId,
-            channels: [item.channel as any],
-            status: item.status,
+            channels: (item.channels as any) || ['in_app'],
+            status: (item.status as any) || 'sent',
             totalRecipients: item.totalRecipients || 0,
             sentCount: item.sentCount || 0,
             failedCount: item.failedCount || 0,
-            createdAt: item.createdAt ? item.createdAt.replace('T', ' ').substring(0, 16) : '',
-            createdBy: item.creatorName || t('adminBlogsAdminAuthor'),
+            createdAt: item.createdAt
+              ? new Date(item.createdAt).toLocaleDateString('vi-VN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : '---',
+            scheduledFor: item.scheduledFor,
+            createdBy: item.createdBy || 'Admin',
           }))
+
           setCampaigns(mapped)
-          if (res.counts) setLiveCounts(res.counts)
-        } else {
-          setCampaigns([])
         }
-      } catch (err) {
-        console.warn('Failed to fetch live mass notifications:', err)
-        setCampaigns([])
+
+        if (countsRes) {
+          setLiveCounts(countsRes)
+        }
+      } catch (err: any) {
+        console.error('Failed to load mass notifications:', err)
+        setError(t('adminNotifyLoadError'))
       } finally {
         setLoading(false)
         setRefreshing(false)
       }
     },
-    [statusFilter, channelFilter, searchQuery, t],
+    [statusFilter, channelFilter, t],
   )
 
   useEffect(() => {
-    fetchLiveCampaigns()
-  }, [fetchLiveCampaigns])
+    fetchCampaigns()
+  }, [fetchCampaigns])
 
-  // Filtered dataset
-  const currentDataset = useMemo(() => {
-    return campaigns.filter(item => {
-      const q = searchQuery.toLowerCase().trim()
+  // Client-side search and filtering
+  const filteredCampaigns = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim()
+    return campaigns.filter(c => {
       const matchSearch =
         !q ||
-        item.id.toLowerCase().includes(q) ||
-        item.name.toLowerCase().includes(q) ||
-        item.title.toLowerCase().includes(q) ||
-        item.content.toLowerCase().includes(q)
+        c.name.toLowerCase().includes(q) ||
+        c.title.toLowerCase().includes(q) ||
+        c.content.toLowerCase().includes(q) ||
+        c.id.toLowerCase().includes(q)
 
-      const matchStatus = statusFilter === 'all' || item.status === statusFilter
-      const matchChannel = channelFilter === 'all' || item.channels.includes(channelFilter as any)
+      const matchStatus = statusFilter === 'all' || c.status === statusFilter
+      const matchChannel = channelFilter === 'all' || c.channels.includes(channelFilter as any)
 
       return matchSearch && matchStatus && matchChannel
     })
   }, [campaigns, searchQuery, statusFilter, channelFilter])
 
-  // View mode toggle
-  const handleViewModeChange = (mode: 'grid' | 'table') => {
-    setViewMode(mode)
-  }
-
-  const totalItems = currentDataset.length
-  const validPageSize = Math.max(1, Number(pageSize) || (viewMode === 'grid' ? 6 : 10))
-  const totalPages = Math.max(1, Math.ceil(totalItems / validPageSize))
+  // Pagination calculation
+  const totalItems = filteredCampaigns.length
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
+  const validPageSize = Math.max(1, Number(pageSize) || (viewMode === 'grid' ? 6 : 10))
 
   const paginatedItems = useMemo(() => {
     const start = (safeCurrentPage - 1) * validPageSize
-    return currentDataset.slice(start, start + validPageSize)
-  }, [currentDataset, safeCurrentPage, validPageSize])
+    return filteredCampaigns.slice(start, start + validPageSize)
+  }, [filteredCampaigns, safeCurrentPage, validPageSize])
 
-  // Selection
-  const isAllCurrentSelected =
-    paginatedItems.length > 0 && paginatedItems.every(item => selectedIds.includes(item.id))
+  // Switch view mode
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode)
+    setPageSize(mode === 'grid' ? 6 : 10)
+    setCurrentPage(1)
+  }
+
+  // Selection handlers
+  const isAllCurrentSelected = useMemo(() => {
+    if (paginatedItems.length === 0) return false
+    return paginatedItems.every(item => selectedIds.includes(item.id))
+  }, [paginatedItems, selectedIds])
 
   const toggleSelectAllCurrent = () => {
     if (isAllCurrentSelected) {
-      setSelectedIds(prev => prev.filter(id => !paginatedItems.some(item => item.id === id)))
+      const currentIds = new Set(paginatedItems.map(i => i.id))
+      setSelectedIds(prev => prev.filter(id => !currentIds.has(id)))
     } else {
-      const pageIds = paginatedItems.map(item => item.id)
-      setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])))
+      const newIds = new Set([...selectedIds, ...paginatedItems.map(i => i.id)])
+      setSelectedIds(Array.from(newIds))
     }
   }
 
   const toggleSelectItem = (id: string) => {
-    setSelectedIds(prev => (prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]))
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
+    )
   }
 
-  // Compose Channels toggle
-  const toggleComposeChannel = (ch: 'in_app' | 'email' | 'sms' | 'zalo') => {
-    setComposeChannels(prev => {
-      if (prev.includes(ch)) {
-        if (prev.length === 1) return prev // keep at least 1
-        return prev.filter(c => c !== ch)
-      } else {
-        return [...prev, ch]
-      }
-    })
-  }
-
-  // Rule #10: Check dirty form on close
-  const isComposerDirty =
-    composeName.trim().length > 0 ||
-    composeTitle.trim().length > 0 ||
-    composeContent.trim().length > 0 ||
-    specificUserId.trim().length > 0
-
-  const handleRequestCloseComposer = () => {
-    if (isComposerDirty) {
-      setConfirmCloseModal({
-        isOpen: true,
-        onDiscard: () => {
-          setIsComposeOpen(false)
-          resetComposer()
-          setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })
-        },
-      })
-    } else {
-      setIsComposeOpen(false)
-      resetComposer()
-    }
-  }
-
-  const resetComposer = () => {
+  // Compose flow with Rule #10 validation
+  const resetComposeForm = useCallback(() => {
     setComposeName('')
     setComposeTitle('')
     setComposeContent('')
@@ -269,118 +266,130 @@ export default function AdminNotificationsPage() {
     setFormError('')
     setFieldErrors({})
     setIsSubmitting(false)
+  }, [])
+
+  const isComposeDirty = useMemo(() => {
+    return Boolean(
+      composeName.trim() ||
+      composeTitle.trim() ||
+      composeContent.trim() ||
+      specificUserId.trim() ||
+      composeChannels.length > 1 ||
+      !composeChannels.includes('in_app') ||
+      composeScheduleType !== 'now',
+    )
+  }, [
+    composeName,
+    composeTitle,
+    composeContent,
+    specificUserId,
+    composeChannels,
+    composeScheduleType,
+  ])
+
+  const handleOpenCompose = () => {
+    resetComposeForm()
+    setIsComposeOpen(true)
   }
 
-  const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-  // Validate form fields matching backend CreateMassNotificationDto & service requirements
-  const validateComposer = (): boolean => {
-    const errors: {
-      channels?: string
-      targetId?: string
-      title?: string
-      content?: string
-      scheduleTime?: string
-    } = {}
-
-    if (!composeChannels || composeChannels.length === 0) {
-      errors.channels = t('adminNotifyErrorChannelRequired')
+  const handleRequestCloseComposer = () => {
+    if (isComposeDirty) {
+      setConfirmCloseModal({
+        isOpen: true,
+        onDiscard: () => {
+          resetComposeForm()
+          setIsComposeOpen(false)
+          setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })
+        },
+      })
+    } else {
+      resetComposeForm()
+      setIsComposeOpen(false)
     }
+  }
 
-    const trimmedTitle = composeTitle.trim()
-    if (!trimmedTitle) {
-      errors.title = t('adminNotifyErrorTitleRequired')
-    } else if (trimmedTitle.length < 3) {
-      errors.title = t('adminNotifyErrorTitleMin')
+  const toggleComposeChannel = (channel: 'in_app' | 'email' | 'sms' | 'zalo') => {
+    setComposeChannels(prev =>
+      prev.includes(channel) ? prev.filter(c => c !== channel) : [...prev, channel],
+    )
+  }
+
+  // Submit Mass Notification
+  const handleSendCampaign = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError('')
+    const errors: typeof fieldErrors = {}
+
+    if (composeChannels.length === 0) {
+      errors.channels = t('adminNotifyErrorNoChannel')
     }
-
-    const trimmedContent = composeContent.trim()
-    if (!trimmedContent) {
-      errors.content = t('adminNotifyErrorContentRequired')
-    } else if (trimmedContent.length < 5) {
-      errors.content = t('adminNotifyErrorContentMin')
+    if (composeTarget === 'specific_user' && !specificUserId.trim()) {
+      errors.targetId = t('adminNotifyErrorTargetIdRequired')
     }
-
-    if (composeTarget === 'specific_user') {
-      const trimmedId = specificUserId.trim()
-      if (!trimmedId) {
-        errors.targetId = t('adminNotifyErrorTargetIdRequired')
-      } else if (!UUID_V4_REGEX.test(trimmedId)) {
-        errors.targetId = t('adminNotifyErrorTargetIdUuid')
-      }
+    if (!composeTitle.trim() || composeTitle.trim().length < 3) {
+      errors.title = t('adminNotifyErrorTitleLength')
     }
-
-    if (composeScheduleType === 'later') {
-      if (!composeScheduleTime) {
-        errors.scheduleTime = t('adminNotifyErrorScheduleTimeRequired')
-      } else {
-        const scheduleTimestamp = new Date(composeScheduleTime).getTime()
-        if (isNaN(scheduleTimestamp) || scheduleTimestamp <= Date.now()) {
-          errors.scheduleTime = t('adminNotifyErrorScheduleTimeFuture')
-        }
-      }
+    if (!composeContent.trim() || composeContent.trim().length < 5) {
+      errors.content = t('adminNotifyErrorContentLength')
     }
-
-    setFieldErrors(errors)
+    if (composeScheduleType === 'later' && !composeScheduleTime) {
+      errors.scheduleTime = t('adminNotifyErrorScheduleTime')
+    }
 
     if (Object.keys(errors).length > 0) {
-      setFormError(t('adminNotifyErrorCreate'))
-      return false
-    }
-
-    setFormError('')
-    return true
-  }
-
-  // Send campaign
-  const handleSendCampaign = async () => {
-    if (!validateComposer()) {
+      setFieldErrors(errors)
       return
     }
 
     setIsSubmitting(true)
-    setFormError('')
-
-    const channelsToSend = composeChannels.length > 0 ? composeChannels : ['in_app']
-
     try {
-      await Promise.all(
-        channelsToSend.map(ch =>
-          adminNotificationService.createMassNotificationJob({
-            channel: ch as any,
-            targetType: composeTarget === 'all_tenants' ? 'all_users' : (composeTarget as any),
-            targetId: composeTarget === 'specific_user' ? specificUserId.trim() : undefined,
-            title: composeTitle.trim(),
-            content: composeContent.trim(),
-          }),
-        ),
-      )
-      await fetchLiveCampaigns(true)
+      await adminNotificationService.createCampaign({
+        name: composeName.trim() || composeTitle.trim(),
+        title: composeTitle.trim(),
+        content: composeContent.trim(),
+        targetGroup: composeTarget,
+        targetId: composeTarget === 'specific_user' ? specificUserId.trim() : undefined,
+        channels: composeChannels,
+        scheduledFor: composeScheduleType === 'later' ? composeScheduleTime : undefined,
+      })
+
+      setFeedbackMsg({
+        type: 'success',
+        text:
+          composeScheduleType === 'later'
+            ? t('adminNotifyCampaignScheduledSuccess')
+            : t('adminNotifyCampaignDispatchedSuccess'),
+      })
+
       setIsComposeOpen(false)
-      resetComposer()
+      resetComposeForm()
+      fetchCampaigns(true)
     } catch (err: any) {
-      console.error('Failed to create mass notification on backend:', err)
-      const apiErrorMessage = err?.message || t('adminNotifyErrorCreate')
-      setFormError(apiErrorMessage)
+      console.error('Failed to submit mass notification:', err)
+      setFormError(err?.response?.data?.message || t('adminNotifySubmitError'))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   // Retry campaign
-  const handleRetryCampaign = async (jobId: string) => {
+  const handleRetryCampaign = async (campaignId: string) => {
     try {
-      await adminNotificationService.retryMassNotificationJob(jobId)
-      await fetchLiveCampaigns(true)
-      if (inspectCampaign?.id === jobId) {
-        setInspectCampaign(prev => (prev ? { ...prev, status: 'pending', failedCount: 0 } : null))
+      await adminNotificationService.retryCampaign(campaignId)
+      setFeedbackMsg({
+        type: 'success',
+        text: t('adminNotifyRetrySuccess'),
+      })
+      if (inspectCampaign?.id === campaignId) {
+        setInspectCampaign(null)
       }
+      fetchCampaigns(true)
     } catch (err) {
-      console.warn('Failed to retry campaign:', err)
+      console.error('Retry failed:', err)
     }
   }
 
-  // Helper Channel Icon
+  // Render channel badges
   const renderChannelBadges = (channels: NotificationCampaign['channels']) => (
     <div className="flex items-center gap-1.5 flex-wrap">
       {channels.map(ch => {
@@ -480,9 +489,35 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      {/* Toast Feedback */}
+      {feedbackMsg && (
+        <div
+          className={`fixed top-4 right-4 z-70 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold animate-fadeIn ${
+            feedbackMsg.type === 'success'
+              ? 'bg-success-soft text-success border-success-subtle'
+              : 'bg-danger-soft text-danger border-danger-subtle'
+          }`}
+        >
+          {feedbackMsg.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-danger shrink-0" />
+          )}
+          <span>{feedbackMsg.text}</span>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => setFeedbackMsg(null)}
+            className="ml-2"
+          >
+            <X />
+          </Button>
+        </div>
+      )}
+
+      {/* Header using DashboardPageHeader with size='md' action buttons */}
+      <DashboardPageHeader
+        badge={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-accent-soft text-accent tracking-wide uppercase">
               <Megaphone className="w-3.5 h-3.5" />
@@ -492,70 +527,100 @@ export default function AdminNotificationsPage() {
               • {t('adminNotifySubbadge')}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight mt-1">
-            {t('adminNotifyTitle')}
-          </h1>
-          <p className="text-xs text-muted mt-0.5">
-            {t('adminNotifySubtitle')}
-          </p>
+        }
+        title={t('adminNotifyTitle')}
+        subtitle={t('adminNotifySubtitle')}
+        actions={
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => fetchCampaigns(true)}
+              isLoading={refreshing}
+              leftIcon={<RefreshCw />}
+            >
+              <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
+            </Button>
+            <Button
+              size="md"
+              onClick={handleOpenCompose}
+              leftIcon={<Plus />}
+            >
+              <span>{t('adminNotifyBtnCompose')}</span>
+            </Button>
+          </div>
+        }
+      />
+
+      {/* KPI Cards summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-2xl bg-card border border-line text-foreground shadow-2xs">
+          <span className="text-[10px] font-black uppercase tracking-wider block text-muted">
+            {t('adminNotifyTotalCampaigns')}
+          </span>
+          {loading ? (
+            <div className="h-5 w-12 bg-line/60 rounded animate-pulse my-0.5" />
+          ) : (
+            <span className="text-xl font-black leading-tight block text-foreground">
+              {campaigns.length}
+            </span>
+          )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Live KPI summary with skeleton placeholders during loading */}
-          <div className="hidden md:flex items-center gap-2">
-            <div className="px-3 py-1.5 rounded-xl bg-success-soft border border-success-subtle text-success min-w-[70px]">
-              <span className="text-[10px] font-bold uppercase tracking-wider block text-success">
-                {t('adminNotifySent')}
-              </span>
-              {loading ? (
-                <div className="h-4 w-10 bg-emerald-200/60 rounded animate-pulse my-0.5" />
-              ) : (
-                <span className="text-sm font-black leading-tight block">
-                  {liveCounts ? liveCounts.sent : campaigns.filter(c => c.status === 'sent').length}
-                </span>
-              )}
-            </div>
-            <div className="px-3 py-1.5 rounded-xl bg-info-soft border border-info-subtle text-info min-w-[70px]">
-              <span className="text-[10px] font-bold uppercase tracking-wider block text-info">
-                {t('adminNotifyPending')}
-              </span>
-              {loading ? (
-                <div className="h-4 w-10 bg-blue-200/60 rounded animate-pulse my-0.5" />
-              ) : (
-                <span className="text-sm font-black leading-tight block">
-                  {liveCounts
-                    ? liveCounts.pending
-                    : campaigns.filter(c => c.status === 'pending').length}
-                </span>
-              )}
-            </div>
-            <div className="px-3 py-1.5 rounded-xl bg-danger-soft border border-danger-subtle text-danger min-w-[70px]">
-              <span className="text-[10px] font-bold uppercase tracking-wider block text-danger">
-                {t('adminNotifyFailed')}
-              </span>
-              {loading ? (
-                <div className="h-4 w-10 bg-rose-200/60 rounded animate-pulse my-0.5" />
-              ) : (
-                <span className="text-sm font-black leading-tight block">
-                  {liveCounts
-                    ? liveCounts.failed
-                    : campaigns.filter(c => c.status === 'failed').length}
-                </span>
-              )}
-            </div>
-          </div>
+        <div className="p-3.5 rounded-2xl bg-success-soft border border-success-subtle text-success shadow-2xs">
+          <span className="text-[10px] font-black uppercase tracking-wider block text-success">
+            {t('adminNotifySent')}
+          </span>
+          {loading ? (
+            <div className="h-5 w-12 bg-emerald-200/60 rounded animate-pulse my-0.5" />
+          ) : (
+            <span className="text-xl font-black leading-tight block">
+              {liveCounts ? liveCounts.sent : campaigns.filter(c => c.status === 'sent').length}
+            </span>
+          )}
+        </div>
 
-          <Button
-            onClick={() => setIsComposeOpen(true)}
-            leftIcon={<Plus />}
-            className="self-start sm:self-auto"
-          >
-            {t('adminNotifyComposeCampaign')}
-          </Button>
+        <div className="p-3.5 rounded-2xl bg-info-soft border border-info-subtle text-info shadow-2xs">
+          <span className="text-[10px] font-black uppercase tracking-wider block text-info">
+            {t('adminNotifyPending')}
+          </span>
+          {loading ? (
+            <div className="h-5 w-12 bg-blue-200/60 rounded animate-pulse my-0.5" />
+          ) : (
+            <span className="text-xl font-black leading-tight block">
+              {liveCounts ? liveCounts.pending : campaigns.filter(c => c.status === 'pending').length}
+            </span>
+          )}
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-danger-soft border border-danger-subtle text-danger shadow-2xs">
+          <span className="text-[10px] font-black uppercase tracking-wider block text-danger">
+            {t('adminNotifyFailed')}
+          </span>
+          {loading ? (
+            <div className="h-5 w-12 bg-orange-200/60 rounded animate-pulse my-0.5" />
+          ) : (
+            <span className="text-xl font-black leading-tight block">
+              {liveCounts ? liveCounts.failed : campaigns.filter(c => c.status === 'failed').length}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Control Bar: Search, Filters, View Mode (Rule #9) */}
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center justify-between p-4 bg-danger-soft border border-danger-subtle rounded-2xl text-danger text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-danger shrink-0" />
+            <span>{error}</span>
+          </div>
+          <Button variant="danger" size="md" onClick={() => fetchCampaigns()}>
+            {t('adminBlogsRetry')}
+          </Button>
+        </div>
+      )}
+
+      {/* Control Bar: Search, Filters, View Mode */}
       <FilterToolbar
         search={
           <TextInput
@@ -567,7 +632,7 @@ export default function AdminNotificationsPage() {
             }}
             placeholder={t('adminNotifySearchPlaceholder')}
             containerClassName="w-full space-y-0"
-            className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:outline-hidden focus:border-orange-500 focus:bg-white transition-all"
+            className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground placeholder:text-muted focus:border-primary transition-all"
             leftIcon={<Search className="w-4 h-4 text-muted" />}
             rightIcon={
               searchQuery ? (
@@ -583,209 +648,166 @@ export default function AdminNotificationsPage() {
           />
         }
         filters={
-          <>
-            {/* Status chips */}
-            <div className="flex items-center gap-1 bg-card-hover p-1 rounded-xl">
-              {(
-                [
-                  { id: 'all', label: t('adminNotifyAllStatus') },
-                  { id: 'sent', label: t('adminNotifyStatusSent') },
-                  { id: 'pending', label: t('adminNotifyStatusPending') },
-                  { id: 'failed', label: t('adminNotifyStatusFailed') },
-                  { id: 'canceled', label: t('adminNotifyStatusCanceled') },
-                ] as const
-              ).map(chip => (
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-line text-xs font-semibold">
+              {(['all', 'sent', 'pending', 'failed', 'canceled'] as const).map(s => (
                 <Button
-                  key={chip.id}
-                  variant={statusFilter === chip.id ? 'secondary' : 'ghost'}
+                  key={s}
+                  size="sm"
+                  variant={statusFilter === s ? 'secondary' : 'ghost'}
                   onClick={() => {
-                    setStatusFilter(chip.id)
+                    setStatusFilter(s)
                     setCurrentPage(1)
                   }}
+                  className="rounded-lg text-xs"
                 >
-                  {chip.label}
+                  {s === 'all'
+                    ? t('adminNotifyFilterStatusAll')
+                    : s === 'sent'
+                      ? t('adminNotifyStatusSent')
+                      : s === 'pending'
+                        ? t('adminNotifyStatusPending')
+                        : s === 'failed'
+                          ? t('adminNotifyStatusFailed')
+                          : t('adminNotifyStatusCanceled')}
                 </Button>
               ))}
             </div>
 
-            {/* Channel filter dropdown */}
-            <SelectInput
-              value={channelFilter}
-              onChange={e => {
-                setChannelFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              containerClassName="space-y-0 w-auto min-w-[140px]"
-              className="py-2 bg-surface border-line rounded-xl text-xs font-semibold text-foreground/90 cursor-pointer focus:border-orange-500"
-            >
-              <option value="all">{t('adminNotifyAllChannels')}</option>
-              <option value="in_app">{t('adminNotifyChannelInApp')}</option>
-              <option value="email">{t('adminNotifyChannelEmail')}</option>
-              <option value="sms">{t('adminNotifyChannelSms')}</option>
-              <option value="zalo">{t('adminNotifyChannelZalo')}</option>
-            </SelectInput>
-          </>
+            <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-line text-xs font-semibold">
+              {(['all', 'in_app', 'email', 'sms', 'zalo'] as const).map(ch => (
+                <Button
+                  key={ch}
+                  size="sm"
+                  variant={channelFilter === ch ? 'secondary' : 'ghost'}
+                  onClick={() => {
+                    setChannelFilter(ch)
+                    setCurrentPage(1)
+                  }}
+                  className="rounded-lg text-xs"
+                >
+                  {ch === 'all'
+                    ? t('adminNotifyAllChannels')
+                    : ch === 'in_app'
+                      ? 'In-App'
+                      : ch === 'email'
+                        ? 'Email'
+                        : ch === 'sms'
+                          ? 'SMS'
+                          : 'Zalo'}
+                </Button>
+              ))}
+            </div>
+          </div>
         }
-        actions={
-          <Button
-            variant="outline"
-            onClick={() => fetchLiveCampaigns(true)}
-            isLoading={refreshing}
-            leftIcon={<RefreshCw />}
-            title={t('adminNotifyRefreshTooltip')}
-          >
-            <span className="hidden sm:inline">{t('adminNotifyRefresh')}</span>
-          </Button>
-        }
-        viewMode={
-          <ViewModeToggle
-            value={viewMode}
-            onChange={handleViewModeChange}
-          />
+        viewModeToggle={
+          <ViewModeToggle viewMode={viewMode} onViewModeChange={handleViewModeChange} />
         }
       />
 
-      {/* Select All on Current Page Bar */}
-      {!loading && paginatedItems.length > 0 && (
-        <div className="flex items-center justify-between px-2 text-xs font-semibold text-muted">
-          <Checkbox
-            checked={isAllCurrentSelected}
-            onChange={toggleSelectAllCurrent}
-            label={t('adminNotifySelectAllPage')}
-            size="sm"
-          />
-          <span>
-            {t('adminNotifyShowingOf', {
-              showing: paginatedItems.length,
-              total: totalItems,
-            })}
-          </span>
-        </div>
-      )}
-
-      {/* Main Content */}
-      {loading ? (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+      {/* Main Content: Parallel Grid & Table Views */}
+      {viewMode === 'grid' ? (
+        /* GRID VIEW (Rule #9: Default Grid view) */
+        loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
               <div
                 key={i}
                 className="bg-card rounded-2xl border border-line p-5 space-y-4 animate-pulse"
               >
-                <div className="flex items-center justify-between">
-                  <div className="h-4 bg-card-hover rounded-md w-20" />
-                  <div className="h-4 bg-card-hover rounded-md w-16" />
-                </div>
-                <div className="h-5 bg-card-hover rounded-md w-3/4" />
-                <div className="h-12 bg-card-hover rounded-md w-full" />
-                <div className="h-16 bg-surface rounded-xl" />
+                <div className="h-4 bg-line rounded w-1/3" />
+                <div className="h-5 bg-line rounded w-3/4" />
+                <div className="h-12 bg-card-hover rounded-xl" />
+                <div className="h-4 bg-line rounded w-1/2" />
               </div>
             ))}
           </div>
+        ) : paginatedItems.length === 0 ? (
+          <EmptyState
+            icon={<Megaphone className="w-10 h-10 text-muted" />}
+            title={t('adminNotifyNoCampaignsFound')}
+            description={t('adminNotifyTryAdjustingFilter')}
+            action={
+              <Button size="md" onClick={handleOpenCompose} leftIcon={<Plus />}>
+                {t('adminNotifyBtnCompose')}
+              </Button>
+            }
+          />
         ) : (
-          <div className="bg-card rounded-2xl border border-line overflow-hidden shadow-2xs animate-pulse p-4 space-y-3">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-12 bg-card-hover rounded-xl w-full" />
-            ))}
-          </div>
-        )
-      ) : paginatedItems.length === 0 ? (
-        <div className="bg-card rounded-3xl border border-line p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-card-hover text-muted flex items-center justify-center mx-auto">
-            <Megaphone className="w-6 h-6" />
-          </div>
-          <h3 className="text-base font-bold text-foreground">
-            {t('adminNotifyNoCampaigns')}
-          </h3>
-          <p className="text-xs text-muted max-w-sm mx-auto">
-            {t('adminNotifyNoCampaignsDesc')}
-          </p>
-        </div>
-      ) : viewMode === 'grid' ? (
-        /* GRID VIEW (Rule #9: Default 6 items) */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {paginatedItems.map(item => {
-            const isSelected = selectedIds.includes(item.id)
-            const percent =
-              item.totalRecipients > 0
-                ? Math.min(100, Math.round((item.sentCount / item.totalRecipients) * 100))
-                : 0
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedItems.map(item => {
+              const percent =
+                item.totalRecipients > 0
+                  ? Math.min(100, Math.round((item.sentCount / item.totalRecipients) * 100))
+                  : 0
 
-            return (
-              <div
-                key={item.id}
-                className={`bg-card rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer p-5 space-y-4 ${
-                  isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-line'
-                }`}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => toggleSelectItem(item.id)}
-                        size="sm"
-                      />
+              return (
+                <Card
+                  key={item.id}
+                  interactive
+                  onClick={() => setInspectCampaign(item)}
+                  className="overflow-hidden flex flex-col justify-between group cursor-pointer border border-line hover:border-primary/50 transition-all duration-200 p-5 space-y-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-xs font-black text-foreground/90 bg-card-hover px-2 py-0.5 rounded-md">
                         {item.id}
                       </span>
+                      {renderStatusBadge(item.status)}
                     </div>
-                    {renderStatusBadge(item.status)}
-                  </div>
 
-                  <div>
-                    <h3 className="text-sm font-black text-foreground line-clamp-1">{item.name}</h3>
-                    <p className="text-xs font-bold text-orange-600 mt-0.5 line-clamp-1">
-                      {item.title}
+                    <div>
+                      <h3 className="text-sm font-black text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
+                      <h4 className="text-xs font-bold text-orange-600 line-clamp-1 mt-0.5">
+                        {item.title}
+                      </h4>
+                    </div>
+
+                    <p className="text-xs text-muted line-clamp-2 leading-relaxed">
+                      {item.content}
                     </p>
                   </div>
 
-                  <p className="text-xs text-muted line-clamp-2 leading-relaxed">
-                    {item.content}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-line space-y-3 text-xs">
-                  {/* Target & Channels */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-muted bg-card-hover px-2 py-0.5 rounded-md">
-                      {getTargetLabel(item.targetGroup)}
-                    </span>
-                    {renderChannelBadges(item.channels)}
-                  </div>
-
-                  {/* Dispatch Stats Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold">
-                      <span className="text-muted">
-                        {item.sentCount.toLocaleString()} / {item.totalRecipients.toLocaleString()}{' '}
-                        {t('adminNotifyRecipientsUnit')}
+                  <div className="pt-3 border-t border-line space-y-3 text-xs">
+                    {/* Target & Channels */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-muted bg-card-hover px-2 py-0.5 rounded-md">
+                        {getTargetLabel(item.targetGroup)}
                       </span>
-                      <span className="text-success">{percent}%</span>
+                      {renderChannelBadges(item.channels)}
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-card-hover overflow-hidden">
-                      <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
-                    </div>
-                  </div>
 
-                  {/* Actions & Created Date */}
-                  <div className="flex items-center justify-between pt-1 text-[11px] text-muted">
-                    <span>{item.createdAt}</span>
-                    <Button
-                      variant="outline"
-                      onClick={() => setInspectCampaign(item)}
-                      leftIcon={<Eye />}
-                    >
-                      {t('adminNotifyDetailsBtn')}
-                    </Button>
+                    {/* Dispatch Stats Progress Bar */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px] font-bold">
+                        <span className="text-muted">
+                          {item.sentCount.toLocaleString()} / {item.totalRecipients.toLocaleString()}{' '}
+                          {t('adminNotifyRecipientsUnit')}
+                        </span>
+                        <span className="text-success">{percent}%</span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-card-hover overflow-hidden">
+                        <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+
+                    {/* Footer Date & Status (View button removed; clicking card inspects) */}
+                    <div className="flex items-center justify-between pt-1 text-[11px] text-muted">
+                      <span>{item.createdAt}</span>
+                      <span className="font-semibold text-foreground/80">
+                        {item.createdBy}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                </Card>
+              )
+            })}
+          </div>
+        )
       ) : (
-        /* TABLE VIEW */
+        /* TABLE VIEW (Row click navigates/inspects; view button removed) */
         <div className="bg-card rounded-2xl border border-line overflow-hidden shadow-2xs">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -814,13 +836,13 @@ export default function AdminNotificationsPage() {
                     : 0
 
                 return (
-                  <tr
+                  <TableRow
                     key={item.id}
-                    className={`hover:bg-card-hover transition-colors duration-150 ${
-                      isSelected ? 'bg-primary/5' : ''
-                    }`}
+                    interactive
+                    onClick={() => setInspectCampaign(item)}
+                    className={isSelected ? 'bg-primary/5' : ''}
                   >
-                    <td className="p-3.5">
+                    <td className="p-3.5" onClick={e => e.stopPropagation()}>
                       <Checkbox
                         checked={isSelected}
                         onChange={() => toggleSelectItem(item.id)}
@@ -832,7 +854,9 @@ export default function AdminNotificationsPage() {
                       <span className="font-mono text-xs font-black text-foreground/90 bg-card-hover px-2 py-0.5 rounded-md inline-block">
                         {item.id}
                       </span>
-                      <div className="font-bold text-foreground">{item.name}</div>
+                      <div className="font-bold text-foreground group-hover:text-primary transition-colors">
+                        {item.name}
+                      </div>
                       <div className="text-[10px] text-muted">{item.createdAt}</div>
                     </td>
 
@@ -863,13 +887,17 @@ export default function AdminNotificationsPage() {
                     <td className="p-3.5">{renderStatusBadge(item.status)}</td>
 
                     <td className="p-3.5 text-right whitespace-nowrap">
-                      <TableActionButton
-                        icon={<Eye />}
-                        onClick={() => setInspectCampaign(item)}
-                        title={t('adminNotifyDetailsBtn')}
-                      />
+                      {item.status === 'failed' || item.status === 'pending' ? (
+                        <TableActionButton
+                          icon={<RotateCcw />}
+                          onClick={() => handleRetryCampaign(item.id)}
+                          title={t('adminRetry')}
+                        />
+                      ) : (
+                        <span className="text-[11px] text-muted font-medium">--</span>
+                      )}
                     </td>
-                  </tr>
+                  </TableRow>
                 )
               })}
             </tbody>
@@ -877,7 +905,7 @@ export default function AdminNotificationsPage() {
         </div>
       )}
 
-      {/* Standardized Pagination Bar (Rule #9) */}
+      {/* Standardized Pagination Bar */}
       <Pagination
         currentPage={safeCurrentPage}
         totalItems={totalItems}
@@ -887,418 +915,308 @@ export default function AdminNotificationsPage() {
         pageSizeMax={100}
       />
 
-      {/* COMPOSE CAMPAIGN MODAL (Rule #10 compliant) */}
-      {isComposeOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-line flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center">
-                  <Megaphone className="w-4 h-4" />
-                </div>
-                <h2 className="text-base font-black text-foreground">
-                  {t('adminNotifyComposeTitle')}
-                </h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleRequestCloseComposer}
-              >
-                <X />
-              </Button>
+      {/* COMPOSE CAMPAIGN MODAL using @/components/ui Modal with size='md' buttons */}
+      <Modal
+        isOpen={isComposeOpen}
+        onClose={handleRequestCloseComposer}
+        size="2xl"
+        icon={<Megaphone className="w-5 h-5 text-primary" />}
+        title={t('adminNotifyComposeTitle')}
+        asForm
+        onSubmit={handleSendCampaign}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={handleRequestCloseComposer}
+              disabled={isSubmitting}
+            >
+              {t('adminNotifyBtnCancel')}
+            </Button>
+            <Button
+              type="submit"
+              size="md"
+              isLoading={isSubmitting}
+              leftIcon={<Send />}
+            >
+              {t('adminNotifyBtnSubmit')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          {formError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
+              <span>{formError}</span>
             </div>
+          )}
 
-            <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-              {formError && (
-                <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
-                  <span>{formError}</span>
-                </div>
-              )}
+          <TextInput
+            label={t('adminNotifyCampaignName')}
+            value={composeName}
+            onChange={e => setComposeName(e.target.value)}
+            placeholder={t('adminNotifyCampaignNamePlaceholder')}
+          />
 
-              {/* Campaign Internal Name */}
-              <div className="space-y-1">
-                <TextInput
-                  label={t('adminNotifyCampaignName')}
-                  value={composeName}
-                  onChange={e => setComposeName(e.target.value)}
-                  placeholder={t('adminNotifyCampaignNamePlaceholder')}
-                />
-              </div>
-
-              {/* Channels Selection */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-foreground/90 block">
-                    {t('adminNotifyDeliveryChannels')}
-                    <span className="text-danger ml-1 font-bold">*</span>
-                  </label>
-                  <span className="text-[11px] font-bold text-muted">
-                    {composeChannels.length} {t('adminNotifyAllChannels')}
-                  </span>
-                </div>
-                <div
-                  className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${fieldErrors.channels ? 'p-1.5 rounded-2xl ring-2 ring-rose-400 bg-rose-50/20' : ''}`}
-                >
-                  {[
-                    {
-                      id: 'in_app' as const,
-                      label: 'In-App Notification',
-                      icon: Bell,
-                    },
-                    {
-                      id: 'email' as const,
-                      label: 'Email Broadcast',
-                      icon: Mail,
-                    },
-                    {
-                      id: 'sms' as const,
-                      label: 'SMS Brandname',
-                      icon: Smartphone,
-                    },
-                    {
-                      id: 'zalo' as const,
-                      label: 'Zalo ZNS',
-                      icon: MessageSquare,
-                    },
-                  ].map(ch => {
-                    const isSelected = composeChannels.includes(ch.id)
-                    const Icon = ch.icon
-                    return (
-                      <button
-                        key={ch.id}
-                        type="button"
-                        onClick={() => {
-                          toggleComposeChannel(ch.id)
-                          if (fieldErrors.channels)
-                            setFieldErrors(prev => ({ ...prev, channels: undefined }))
-                        }}
-                        className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 ${
+          {/* Delivery Channels */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-foreground/90 block">
+                {t('adminNotifyDeliveryChannels')}
+                <span className="text-danger ml-1 font-bold">*</span>
+              </label>
+              <span className="text-[11px] font-bold text-muted">
+                {composeChannels.length} {t('adminNotifyAllChannels')}
+              </span>
+            </div>
+            <div
+              className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${fieldErrors.channels ? 'p-1.5 rounded-2xl ring-2 ring-danger bg-danger/5' : ''}`}
+            >
+              {[
+                { id: 'in_app' as const, label: 'In-App Notification', icon: Bell },
+                { id: 'email' as const, label: 'Email Broadcast', icon: Mail },
+                { id: 'sms' as const, label: 'SMS Brandname', icon: Smartphone },
+                { id: 'zalo' as const, label: 'Zalo ZNS', icon: MessageSquare },
+              ].map(ch => {
+                const isSelected = composeChannels.includes(ch.id)
+                const Icon = ch.icon
+                return (
+                  <button
+                    key={ch.id}
+                    type="button"
+                    onClick={() => {
+                      toggleComposeChannel(ch.id)
+                      if (fieldErrors.channels)
+                        setFieldErrors(prev => ({ ...prev, channels: undefined }))
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                        : 'border-line bg-surface hover:bg-card-hover text-foreground/80'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <Icon className="w-4 h-4" />
+                      <div
+                        className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
                           isSelected
-                            ? 'border-orange-500 bg-orange-50/20 text-orange-600 ring-1 ring-orange-400'
-                            : 'border-line bg-surface hover:bg-card-hover text-foreground/80'
+                            ? 'border-primary bg-primary text-white'
+                            : 'border-line'
                         }`}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <Icon className="w-4 h-4" />
-                          <div
-                            className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                              isSelected
-                                ? 'border-orange-600 bg-orange-600 text-white'
-                                : 'border-line'
-                            }`}
-                          >
-                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-card" />}
-                          </div>
-                        </div>
-                        <span className="text-[11px] leading-tight font-bold">{ch.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-                {fieldErrors.channels && (
-                  <p className="text-[11px] text-danger font-semibold flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{fieldErrors.channels}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Target Audience Group (Prisma NotifyTarget) */}
-              <div className="space-y-1.5">
-                <label className="font-bold text-foreground/90 block">
-                  {t('adminNotifyTargetGroup')}
-                  <span className="text-danger ml-1 font-bold">*</span>
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    { id: 'all_users' as const, label: t('adminNotifyTargetAllUsers') },
-                    { id: 'all_landlords' as const, label: t('adminNotifyTargetAllLandlords') },
-                    { id: 'all_tenants' as const, label: t('adminNotifyTargetAllTenants') },
-                    { id: 'all_staff' as const, label: t('adminNotifyTargetAllStaff') },
-                    { id: 'all_admins' as const, label: t('adminNotifyTargetAllAdmins') },
-                    { id: 'specific_user' as const, label: t('adminNotifyTargetSpecificUser') },
-                  ].map(tgt => (
-                    <Button
-                      key={tgt.id}
-                      variant={composeTarget === tgt.id ? 'secondary' : 'ghost'}
-                      onClick={() => {
-                        setComposeTarget(tgt.id)
-                        if (tgt.id !== 'specific_user' && fieldErrors.targetId) {
-                          setFieldErrors(prev => ({ ...prev, targetId: undefined }))
-                        }
-                      }}
-                    >
-                      {tgt.label}
-                    </Button>
-                  ))}
-                </div>
-
-                {composeTarget === 'specific_user' && (
-                  <div className="space-y-1 pt-1.5 animate-in fade-in duration-200">
-                    <TextInput
-                      label={t('adminNotifySpecificUserUuid')}
-                      required
-                      value={specificUserId}
-                      onChange={e => {
-                        setSpecificUserId(e.target.value)
-                        if (fieldErrors.targetId)
-                          setFieldErrors(prev => ({ ...prev, targetId: undefined }))
-                      }}
-                      placeholder="123e4567-e89b-12d3-a456-426614174000"
-                      error={fieldErrors.targetId}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Title / Subject (min 3 chars per backend) */}
-              <div className="space-y-1">
-                <TextInput
-                  label={t('adminNotifyMessageTitle')}
-                  required
-                  value={composeTitle}
-                  onChange={e => {
-                    setComposeTitle(e.target.value)
-                    if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: undefined }))
-                  }}
-                  placeholder={t('adminNotifyMessageTitlePlaceholder')}
-                  error={fieldErrors.title}
-                />
-              </div>
-
-              {/* Content / Body (min 5 chars per backend) */}
-              <div className="space-y-1">
-                <TextareaInput
-                  label={t('adminNotifyMessageContent')}
-                  required
-                  rows={5}
-                  value={composeContent}
-                  onChange={e => {
-                    setComposeContent(e.target.value)
-                    if (fieldErrors.content)
-                      setFieldErrors(prev => ({ ...prev, content: undefined }))
-                  }}
-                  placeholder={t('adminNotifyMessageContentPlaceholder')}
-                  error={fieldErrors.content}
-                />
-              </div>
-
-              {/* Schedule options */}
-              <div className="space-y-1.5">
-                <div
-                  className={`p-3 rounded-2xl bg-surface border transition-colors ${
-                    fieldErrors.scheduleTime
-                      ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-400'
-                      : 'border-line'
-                  } flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
-                >
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer font-bold text-foreground/90">
-                      <TextInput
-                        type="radio"
-                        name="schedule"
-                        checked={composeScheduleType === 'now'}
-                        onChange={() => {
-                          setComposeScheduleType('now')
-                          if (fieldErrors.scheduleTime)
-                            setFieldErrors(prev => ({ ...prev, scheduleTime: undefined }))
-                        }}
-                        containerClassName="space-y-0 inline-block w-auto"
-                        className="text-orange-600 focus:ring-orange-500 cursor-pointer w-4 h-4"
-                      />
-                      <span>{t('adminNotifyScheduleNow')}</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer font-bold text-foreground/90">
-                      <TextInput
-                        type="radio"
-                        name="schedule"
-                        checked={composeScheduleType === 'later'}
-                        onChange={() => setComposeScheduleType('later')}
-                        containerClassName="space-y-0 inline-block w-auto"
-                        className="text-orange-600 focus:ring-orange-500 cursor-pointer w-4 h-4"
-                      />
-                      <span>{t('adminNotifyScheduleLater')}</span>
-                    </label>
-                  </div>
-
-                  {composeScheduleType === 'later' && (
-                    <TextInput
-                      type="datetime-local"
-                      value={composeScheduleTime}
-                      onChange={e => {
-                        setComposeScheduleTime(e.target.value)
-                        if (fieldErrors.scheduleTime)
-                          setFieldErrors(prev => ({ ...prev, scheduleTime: undefined }))
-                      }}
-                      containerClassName="space-y-0"
-                      className={`px-3 py-1.5 bg-card border rounded-xl text-xs font-bold text-foreground ${
-                        fieldErrors.scheduleTime
-                          ? 'border-danger focus:border-danger'
-                          : 'border-line focus:border-orange-500'
-                      }`}
-                    />
-                  )}
-                </div>
-                {fieldErrors.scheduleTime && (
-                  <p className="text-[11px] text-danger font-semibold flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>{fieldErrors.scheduleTime}</span>
-                  </p>
-                )}
-              </div>
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-card" />}
+                      </div>
+                    </div>
+                    <span className="text-[11px] leading-tight font-bold">{ch.label}</span>
+                  </button>
+                )
+              })}
             </div>
-
-            <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
-              <Button
-                variant="outline"
-                onClick={handleRequestCloseComposer}
-                disabled={isSubmitting}
-              >
-                {t('adminNotifyBtnCancel')}
-              </Button>
-              <Button
-                onClick={handleSendCampaign}
-                isLoading={isSubmitting}
-                leftIcon={<Send />}
-              >
-                {t('adminNotifyBtnSubmit')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* INSPECT REPORT MODAL */}
-      {inspectCampaign && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-line flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-muted">
-                  ({inspectCampaign.id})
-                </span>
-                <h3 className="text-base font-black text-foreground line-clamp-1">
-                  {inspectCampaign.name}
-                </h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setInspectCampaign(null)}
-              >
-                <X />
-              </Button>
-            </div>
-
-            <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-muted block">
-                  {t('adminNotifyMessageTitle')}
-                </span>
-                <h4 className="text-sm font-black text-foreground">{inspectCampaign.title}</h4>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-surface border border-line text-foreground/90 leading-relaxed">
-                {inspectCampaign.content}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-surface border border-line">
-                <div>
-                  <span className="text-[10px] font-bold text-muted uppercase block">
-                    {t('adminNotifyTargetGroup')}
-                  </span>
-                  <span className="font-bold text-foreground text-sm mt-0.5 block">
-                    {getTargetLabel(inspectCampaign.targetGroup)}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-muted uppercase block">
-                    {t('adminNotifyDetailCreatedBy')}
-                  </span>
-                  <span className="font-bold text-foreground text-sm mt-0.5 block">
-                    {inspectCampaign.createdBy}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-muted uppercase block">
-                    {t('adminNotifyDetailSentCount')}
-                  </span>
-                  <span className="font-black text-success text-sm mt-0.5 block">
-                    {inspectCampaign.sentCount.toLocaleString()}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-muted uppercase block">
-                    {t('adminNotifyDetailFailedCount')}
-                  </span>
-                  <span className="font-black text-orange-600 text-sm mt-0.5 block">
-                    {inspectCampaign.failedCount}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[10px] font-bold text-muted uppercase block mb-1.5">
-                  {t('adminNotifyDetailChannels')}
-                </span>
-                {renderChannelBadges(inspectCampaign.channels)}
-              </div>
-            </div>
-
-            <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2">
-              {(inspectCampaign.status === 'failed' || inspectCampaign.status === 'pending') && (
-                <Button
-                  onClick={() => handleRetryCampaign(inspectCampaign.id)}
-                  leftIcon={<RotateCcw />}
-                >
-                  {t('adminRetry')}
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => setInspectCampaign(null)}
-              >
-                {t('adminNotifyDetailClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rule #10: Custom Pop-up Confirmation Modal */}
-      {confirmCloseModal.isOpen && (
-        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-foreground">
-                {t('adminNotifyDiscardTitle')}
-              </h3>
-              <p className="text-xs text-muted mt-1 leading-relaxed">
-                {t('adminNotifyDiscardDesc')}
+            {fieldErrors.channels && (
+              <p className="text-[11px] text-danger font-semibold flex items-center gap-1 mt-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{fieldErrors.channels}</span>
               </p>
+            )}
+          </div>
+
+          {/* Target Audience */}
+          <div className="space-y-1.5">
+            <label className="font-bold text-foreground/90 block">
+              {t('adminNotifyTargetGroup')}
+              <span className="text-danger ml-1 font-bold">*</span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { id: 'all_users' as const, label: t('adminNotifyTargetAllUsers') },
+                { id: 'all_landlords' as const, label: t('adminNotifyTargetAllLandlords') },
+                { id: 'all_tenants' as const, label: t('adminNotifyTargetAllTenants') },
+                { id: 'all_staff' as const, label: t('adminNotifyTargetAllStaff') },
+                { id: 'all_admins' as const, label: t('adminNotifyTargetAllAdmins') },
+                { id: 'specific_user' as const, label: t('adminNotifyTargetSpecificUser') },
+              ].map(tgt => (
+                <Button
+                  key={tgt.id}
+                  variant={composeTarget === tgt.id ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => {
+                    setComposeTarget(tgt.id)
+                    if (tgt.id !== 'specific_user' && fieldErrors.targetId) {
+                      setFieldErrors(prev => ({ ...prev, targetId: undefined }))
+                    }
+                  }}
+                >
+                  {tgt.label}
+                </Button>
+              ))}
             </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
+
+            {composeTarget === 'specific_user' && (
+              <div className="space-y-1 pt-1.5 animate-in fade-in duration-200">
+                <TextInput
+                  label={t('adminNotifySpecificUserUuid')}
+                  required
+                  value={specificUserId}
+                  onChange={e => {
+                    setSpecificUserId(e.target.value)
+                    if (fieldErrors.targetId)
+                      setFieldErrors(prev => ({ ...prev, targetId: undefined }))
+                  }}
+                  placeholder="123e4567-e89b-12d3-a456-426614174000"
+                  error={fieldErrors.targetId}
+                />
+              </div>
+            )}
+          </div>
+
+          <TextInput
+            label={t('adminNotifyMessageTitle')}
+            required
+            value={composeTitle}
+            onChange={e => {
+              setComposeTitle(e.target.value)
+              if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: undefined }))
+            }}
+            placeholder={t('adminNotifyMessageTitlePlaceholder')}
+            error={fieldErrors.title}
+          />
+
+          <TextareaInput
+            label={t('adminNotifyMessageContent')}
+            required
+            rows={5}
+            value={composeContent}
+            onChange={e => {
+              setComposeContent(e.target.value)
+              if (fieldErrors.content)
+                setFieldErrors(prev => ({ ...prev, content: undefined }))
+            }}
+            placeholder={t('adminNotifyMessageContentPlaceholder')}
+            error={fieldErrors.content}
+          />
+        </div>
+      </Modal>
+
+      {/* INSPECT REPORT MODAL using @/components/ui Modal */}
+      <Modal
+        isOpen={Boolean(inspectCampaign)}
+        onClose={() => setInspectCampaign(null)}
+        size="lg"
+        icon={<Megaphone className="w-5 h-5 text-primary" />}
+        title={inspectCampaign?.name}
+        description={inspectCampaign ? `ID: ${inspectCampaign.id}` : undefined}
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            {(inspectCampaign?.status === 'failed' || inspectCampaign?.status === 'pending') && (
               <Button
-                variant="outline"
-                onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+                size="md"
+                onClick={() => handleRetryCampaign(inspectCampaign.id)}
+                leftIcon={<RotateCcw />}
               >
-                {t('adminNotifyContinueEditing')}
+                {t('adminRetry')}
               </Button>
-              <Button
-                variant="danger"
-                onClick={confirmCloseModal.onDiscard}
-              >
-                {t('adminNotifyDiscardAndClose')}
-              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setInspectCampaign(null)}
+            >
+              {t('adminNotifyDetailClose')}
+            </Button>
+          </div>
+        }
+      >
+        {inspectCampaign && (
+          <div className="space-y-4 text-xs">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-muted block">
+                {t('adminNotifyMessageTitle')}
+              </span>
+              <h4 className="text-sm font-black text-foreground">{inspectCampaign.title}</h4>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-surface border border-line text-foreground/90 leading-relaxed">
+              {inspectCampaign.content}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-surface border border-line">
+              <div>
+                <span className="text-[10px] font-bold text-muted uppercase block">
+                  {t('adminNotifyTargetGroup')}
+                </span>
+                <span className="font-bold text-foreground text-sm mt-0.5 block">
+                  {getTargetLabel(inspectCampaign.targetGroup)}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-muted uppercase block">
+                  {t('adminNotifyDetailCreatedBy')}
+                </span>
+                <span className="font-bold text-foreground text-sm mt-0.5 block">
+                  {inspectCampaign.createdBy}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-muted uppercase block">
+                  {t('adminNotifyDetailSentCount')}
+                </span>
+                <span className="font-black text-success text-sm mt-0.5 block">
+                  {inspectCampaign.sentCount.toLocaleString()}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-muted uppercase block">
+                  {t('adminNotifyDetailFailedCount')}
+                </span>
+                <span className="font-black text-danger text-sm mt-0.5 block">
+                  {inspectCampaign.failedCount}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[10px] font-bold text-muted uppercase block mb-1.5">
+                {t('adminNotifyDetailChannels')}
+              </span>
+              {renderChannelBadges(inspectCampaign.channels)}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
+
+      {/* RULE #10: POP-UP CONFIRMATION MODAL using @/components/ui Modal */}
+      <Modal
+        isOpen={confirmCloseModal.isOpen}
+        onClose={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+        size="sm"
+        icon={<AlertTriangle className="w-5 h-5 text-warning" />}
+        title={t('adminNotifyDiscardTitle')}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+            >
+              {t('adminNotifyContinueEditing')}
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={confirmCloseModal.onDiscard}
+            >
+              {t('adminNotifyDiscardAndClose')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-xs text-muted leading-relaxed">
+          {t('adminNotifyDiscardDesc')}
+        </p>
+      </Modal>
     </div>
   )
 }
+

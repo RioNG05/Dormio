@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { postService, PublicPostListing } from '@/services/post.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb, Modal } from '@/components/ui'
 import {
   ArrowLeft,
   Newspaper,
@@ -436,6 +436,7 @@ export default function AdminPostDetailPage() {
           {/* Lock / Unlock Post */}
           {post.status === 'locked' ? (
             <Button
+              size="md"
               onClick={() => setIsUnlockModalOpen(true)}
               disabled={actionLoading}
               title={t('adminModActionUnlock')}
@@ -445,6 +446,7 @@ export default function AdminPostDetailPage() {
             </Button>
           ) : (
             <Button
+              size="md"
               variant="danger"
               onClick={() => {
                 setLockReason('')
@@ -463,6 +465,7 @@ export default function AdminPostDetailPage() {
           {post.status !== 'locked' &&
             (post.status === 'posted' ? (
               <Button
+                size="md"
                 variant="secondary"
                 onClick={handleRevertToDraft}
                 disabled={actionLoading}
@@ -473,6 +476,7 @@ export default function AdminPostDetailPage() {
               </Button>
             ) : (
               <Button
+                size="md"
                 variant="secondary"
                 onClick={handlePublishPost}
                 disabled={actionLoading}
@@ -485,6 +489,7 @@ export default function AdminPostDetailPage() {
 
           {/* Edit Content */}
           <Button
+            size="md"
             variant="secondary"
             onClick={handleOpenEdit}
             leftIcon={<Edit3 />}
@@ -494,6 +499,7 @@ export default function AdminPostDetailPage() {
 
           {/* Delete Post */}
           <Button
+            size="md"
             variant="ghost-danger"
             onClick={() => {
               setDeleteReason('')
@@ -507,8 +513,8 @@ export default function AdminPostDetailPage() {
 
           {/* Refresh */}
           <Button
+            size="md"
             variant="secondary"
-            size="icon"
             onClick={() => fetchPostDetail(true)}
             isLoading={loading}
             title={t('adminModRefresh')}
@@ -865,328 +871,342 @@ export default function AdminPostDetailPage() {
         </div>
       </div>
 
-      {/* ─── MODAL 1: EDIT POST MODAL (Rule #10 compliant) ─── */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-line flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center">
-                  <Edit3 className="w-4 h-4" />
-                </div>
-                <h2 className="text-base font-black text-foreground">
-                  {t('adminBlogsDetailEditModalTitle')}
-                </h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleRequestCloseEdit}
-              >
-                <X />
-              </Button>
+      {/* MODAL 1: EDIT POST MODAL (Rule #10 compliant) */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleRequestCloseEdit}
+        size="xl"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center">
+              <Edit3 className="w-4 h-4" />
+            </div>
+          }
+          title={t('adminBlogsDetailEditModalTitle')}
+          onClose={handleRequestCloseEdit}
+        />
+
+        <Modal.Body className="space-y-4 text-xs">
+          {editError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{editError}</span>
+            </div>
+          )}
+
+          {/* Title */}
+          <TextInput
+            label={`${t('adminBlogsFieldTitle')}:`}
+            type="text"
+            value={formTitle}
+            onChange={e => setFormTitle(e.target.value)}
+            className="px-3 py-2 bg-surface border border-line rounded-xl font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
+          />
+
+          {/* Status & Deposit */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SelectInput
+              label={`${t('adminBlogsFieldStatus')}:`}
+              value={formStatus}
+              onChange={e => setFormStatus(e.target.value as any)}
+              className="px-3 py-2 bg-surface border border-line rounded-xl font-semibold text-foreground cursor-pointer focus:outline-none focus:border-orange-500"
+              options={[
+                { value: 'posted', label: t('adminBlogsStatusPublished') },
+                { value: 'draft', label: t('adminBlogsStatusDraft') },
+                { value: 'hidden', label: t('adminBlogsStatusHidden') },
+                { value: 'locked', label: t('adminModBadgeLocked') },
+              ]}
+            />
+
+            <NumberInput
+              label={`${t('adminBlogsFieldDeposit')}:`}
+              min={0}
+              step={100000}
+              value={formDepositAmount}
+              onChange={e => setFormDepositAmount(Number(e.target.value) || 0)}
+              className="px-3 py-2 bg-surface border border-line rounded-xl font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
+            />
+          </div>
+
+          {/* Cover Image URL */}
+          <TextInput
+            label={`${t('adminBlogsFieldCoverImage')}:`}
+            type="text"
+            value={formCoverImage}
+            onChange={e => setFormCoverImage(e.target.value)}
+            className="px-3 py-2 bg-surface border border-line rounded-xl font-medium text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
+          />
+
+          {/* Content */}
+          <TextareaInput
+            label={`${t('adminBlogsFieldContent')}:`}
+            rows={8}
+            value={formContent}
+            onChange={e => setFormContent(e.target.value)}
+            className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
+          />
+        </Modal.Body>
+
+        <Modal.Footer className="flex items-center justify-end gap-2.5">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRequestCloseEdit}
+            disabled={isSaving}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            onClick={handleSaveEdit}
+            disabled={isSaving}
+            isLoading={isSaving}
+          >
+            <span>{t('adminBlogsDetailSaveChanges')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* MODAL 2: LOCK POST MODAL (Rule #10 compliant) */}
+      <Modal
+        isOpen={isLockModalOpen}
+        onClose={handleRequestCloseLock}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5 text-red-600" />
+            </div>
+          }
+          title={t('adminModLockTitle')}
+          description={post.id}
+          onClose={handleRequestCloseLock}
+        />
+
+        <Modal.Body className="space-y-4 text-xs">
+          <p className="text-xs text-muted leading-relaxed">{t('adminModLockSubtitle')}</p>
+
+          {lockReasonError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{lockReasonError}</span>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="font-bold text-foreground/90 block">
+              {t('adminModLockReasonLabel')}
+            </label>
+
+            {/* Preset Chips */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                t('adminModLockPresetFakePrice'),
+                t('adminModLockPresetScamDeposit'),
+                t('adminModLockPresetViolation'),
+              ].map(preset => (
+                <Button
+                  key={preset}
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => {
+                    setLockReason(preset)
+                    setLockReasonError('')
+                  }}
+                >
+                  {preset}
+                </Button>
+              ))}
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-              {editError && (
-                <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                  <span>{editError}</span>
-                </div>
-              )}
+            <TextareaInput
+              rows={3}
+              value={lockReason}
+              onChange={e => {
+                setLockReason(e.target.value)
+                if (e.target.value.trim()) setLockReasonError('')
+              }}
+              placeholder={t('adminModLockReasonPlaceholder')}
+              className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed mt-1"
+            />
+          </div>
+        </Modal.Body>
 
-              {/* Title */}
-              <TextInput
-                label={`${t('adminBlogsFieldTitle')}:`}
-                type="text"
-                value={formTitle}
-                onChange={e => setFormTitle(e.target.value)}
-                className="px-3 py-2 bg-surface border border-line rounded-xl font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
-              />
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRequestCloseLock}
+            disabled={isLocking}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            onClick={handleConfirmLock}
+            disabled={isLocking}
+            isLoading={isLocking}
+          >
+            <span>{t('adminModLockConfirmBtn')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-              {/* Status & Deposit */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <SelectInput
-                  label={`${t('adminBlogsFieldStatus')}:`}
-                  value={formStatus}
-                  onChange={e => setFormStatus(e.target.value as any)}
-                  className="px-3 py-2 bg-surface border border-line rounded-xl font-semibold text-foreground cursor-pointer focus:outline-none focus:border-orange-500"
-                  options={[
-                    { value: 'posted', label: t('adminBlogsStatusPublished') },
-                    { value: 'draft', label: t('adminBlogsStatusDraft') },
-                    { value: 'hidden', label: t('adminBlogsStatusHidden') },
-                    { value: 'locked', label: t('adminModBadgeLocked') },
-                  ]}
-                />
-
-                <NumberInput
-                  label={`${t('adminBlogsFieldDeposit')}:`}
-                  min={0}
-                  step={100000}
-                  value={formDepositAmount}
-                  onChange={e => setFormDepositAmount(Number(e.target.value) || 0)}
-                  className="px-3 py-2 bg-surface border border-line rounded-xl font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
-                />
-              </div>
-
-              {/* Cover Image URL */}
-              <TextInput
-                label={`${t('adminBlogsFieldCoverImage')}:`}
-                type="text"
-                value={formCoverImage}
-                onChange={e => setFormCoverImage(e.target.value)}
-                className="px-3 py-2 bg-surface border border-line rounded-xl font-medium text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
-              />
-
-              {/* Content */}
-              <TextareaInput
-                label={`${t('adminBlogsFieldContent')}:`}
-                rows={8}
-                value={formContent}
-                onChange={e => setFormContent(e.target.value)}
-                className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
-              />
+      {/* MODAL 3: UNLOCK POST MODAL */}
+      <Modal
+        isOpen={isUnlockModalOpen}
+        onClose={() => setIsUnlockModalOpen(false)}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
+              <Unlock className="w-5 h-5 text-success" />
             </div>
+          }
+          title={t('adminModUnlockTitle')}
+          description={post.id}
+          onClose={() => setIsUnlockModalOpen(false)}
+        />
 
-            <div className="px-6 py-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
-              <Button
-                variant="secondary"
-                onClick={handleRequestCloseEdit}
-                disabled={isSaving}
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                onClick={handleSaveEdit}
-                disabled={isSaving}
-                isLoading={isSaving}
-              >
-                <span>{t('adminBlogsDetailSaveChanges')}</span>
-              </Button>
+        <Modal.Body className="space-y-4">
+          <p className="text-xs text-muted leading-relaxed">
+            {t('adminModUnlockConfirm', { title: post.title })}
+          </p>
+        </Modal.Body>
+
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => setIsUnlockModalOpen(false)}
+            disabled={isUnlocking}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            onClick={handleConfirmUnlock}
+            disabled={isUnlocking}
+            isLoading={isUnlocking}
+          >
+            <span>{t('adminModUnlockConfirmBtn')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* MODAL 4: DELETE POST MODAL (Rule #10 compliant) */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleRequestCloseDelete}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+          }
+          title={t('adminBlogsDetailDeleteModalTitle')}
+          description={post.id}
+          onClose={handleRequestCloseDelete}
+        />
+
+        <Modal.Body className="space-y-4 text-xs">
+          <p className="text-xs text-muted leading-relaxed">
+            {t('adminBlogsDetailDeleteModalDesc', {
+              title: post.title,
+              author: post.poster?.username || 'the author',
+            })}
+          </p>
+
+          {deleteError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+
+          <div className="space-y-1 text-xs">
+            <TextareaInput
+              label={t('adminBlogsDeleteReasonLabel')}
+              rows={3}
+              value={deleteReason}
+              onChange={e => {
+                setDeleteReason(e.target.value)
+                if (e.target.value.trim()) setDeleteError('')
+              }}
+              placeholder={t('adminBlogsDeleteReasonPlaceholder')}
+              className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed"
+            />
+            <div className="text-[10px] text-muted text-right">
+              {deleteReason.length} / 500 {t('adminBlogsDetailCharsUnit')}
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
 
-      {/* ─── MODAL 2: LOCK POST MODAL (Rule #10 compliant) ─── */}
-      {isLockModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-foreground">{t('adminModLockTitle')}</h3>
-                <p className="text-xs text-muted font-mono truncate max-w-[240px]">{post.id}</p>
-              </div>
-            </div>
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRequestCloseDelete}
+            disabled={isDeleting}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            onClick={handleConfirmDelete}
+            disabled={isDeleting || !deleteReason.trim()}
+            isLoading={isDeleting}
+          >
+            <span>{t('adminBlogsDetailConfirmDeleteAndDispatch')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-            <p className="text-xs text-muted leading-relaxed">{t('adminModLockSubtitle')}</p>
-
-            {lockReasonError && (
-              <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{lockReasonError}</span>
-              </div>
-            )}
-
-            <div className="space-y-2 text-xs">
-              <label className="font-bold text-foreground/90 block">
-                {t('adminModLockReasonLabel')}
-              </label>
-
-              {/* Preset Chips */}
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  t('adminModLockPresetFakePrice'),
-                  t('adminModLockPresetScamDeposit'),
-                  t('adminModLockPresetViolation'),
-                ].map(preset => (
-                  <Button
-                    key={preset}
-                    variant="secondary"
-                    onClick={() => {
-                      setLockReason(preset)
-                      setLockReasonError('')
-                    }}
-                  >
-                    {preset}
-                  </Button>
-                ))}
-              </div>
-
-              <TextareaInput
-                label={t('adminModLockReasonLabel')}
-                rows={3}
-                value={lockReason}
-                onChange={e => {
-                  setLockReason(e.target.value)
-                  if (e.target.value.trim()) setLockReasonError('')
-                }}
-                placeholder={t('adminModLockReasonPlaceholder')}
-                className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed mt-1"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
-              <Button
-                variant="secondary"
-                onClick={handleRequestCloseLock}
-                disabled={isLocking}
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleConfirmLock}
-                disabled={isLocking}
-                isLoading={isLocking}
-              >
-                <span>{t('adminModLockConfirmBtn')}</span>
-              </Button>
-            </div>
+      {/* MODAL 5: RULE #10 CONFIRMATION POP-UP */}
+      <Modal
+        isOpen={confirmCloseModal.isOpen}
+        onClose={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+        size="sm"
+      >
+        <Modal.Body className="space-y-4 pt-4 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 3: UNLOCK POST MODAL ─── */}
-      {isUnlockModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-success">
-              <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
-                <Unlock className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-foreground">{t('adminModUnlockTitle')}</h3>
-                <p className="text-xs text-muted font-mono truncate max-w-[240px]">{post.id}</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted leading-relaxed">
-              {t('adminModUnlockConfirm', { title: post.title })}
+          <div>
+            <h3 className="text-base font-black text-foreground">
+              {t('adminBlogsDiscardModalTitle')}
+            </h3>
+            <p className="text-xs text-muted mt-1 leading-relaxed">
+              {t('adminBlogsDiscardModalDesc')}
             </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
-              <Button
-                variant="secondary"
-                onClick={() => setIsUnlockModalOpen(false)}
-                disabled={isUnlocking}
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                onClick={handleConfirmUnlock}
-                disabled={isUnlocking}
-                isLoading={isUnlocking}
-              >
-                <span>{t('adminModUnlockConfirmBtn')}</span>
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 4: DELETE POST MODAL (Rule #10 compliant) ─── */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-foreground">
-                  {t('adminBlogsDetailDeleteModalTitle')}
-                </h3>
-                <p className="text-xs text-muted font-mono truncate max-w-[240px]">{post.id}</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted leading-relaxed">
-              {t('adminBlogsDetailDeleteModalDesc', {
-                title: post.title,
-                author: post.poster?.username || 'the author',
-              })}
-            </p>
-
-            {deleteError && (
-              <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{deleteError}</span>
-              </div>
-            )}
-
-            <div className="space-y-1 text-xs">
-              <TextareaInput
-                label={t('adminBlogsDeleteReasonLabel')}
-                rows={3}
-                value={deleteReason}
-                onChange={e => {
-                  setDeleteReason(e.target.value)
-                  if (e.target.value.trim()) setDeleteError('')
-                }}
-                placeholder={t('adminBlogsDeleteReasonPlaceholder')}
-                className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed"
-              />
-              <div className="text-[10px] text-muted text-right">
-                {deleteReason.length} / 500 {t('adminBlogsDetailCharsUnit')}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
-              <Button
-                variant="secondary"
-                onClick={handleRequestCloseDelete}
-                disabled={isDeleting}
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleConfirmDelete}
-                disabled={isDeleting || !deleteReason.trim()}
-                isLoading={isDeleting}
-              >
-                <span>{t('adminBlogsDetailConfirmDeleteAndDispatch')}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 5: RULE #10 CONFIRMATION POP-UP ─── */}
-      {confirmCloseModal.isOpen && (
-        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-foreground">
-                {t('adminBlogsDiscardModalTitle')}
-              </h3>
-              <p className="text-xs text-muted mt-1 leading-relaxed">
-                {t('adminBlogsDiscardModalDesc')}
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-              >
-                {t('adminBlogsContinueEditing')}
-              </Button>
-              <Button
-                onClick={confirmCloseModal.onDiscard}
-              >
-                {t('adminBlogsDiscardAndClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+        </Modal.Body>
+        <Modal.Footer className="flex items-center gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            className="flex-1"
+            onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+          >
+            {t('adminBlogsContinueEditing')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            className="flex-1"
+            onClick={confirmCloseModal.onDiscard}
+          >
+            {t('adminBlogsDiscardAndClose')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }

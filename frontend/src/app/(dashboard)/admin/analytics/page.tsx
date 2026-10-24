@@ -45,6 +45,7 @@ import {
 } from 'recharts'
 import { Button } from '@/components/ui/Button'
 import { SelectInput } from '@/components/ui/SelectInput'
+import { DashboardPageHeader } from '@/components/layout'
 
 type ActiveTab = 'revenue' | 'users' | 'properties' | 'listings'
 
@@ -166,9 +167,9 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      {/* Header & Controls using DashboardPageHeader with size='md' action buttons */}
+      <DashboardPageHeader
+        badge={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-accent-soft text-accent tracking-wide uppercase">
               <TrendingUp className="w-3.5 h-3.5" />
@@ -178,47 +179,46 @@ export default function AdminAnalyticsPage() {
               • {t('adminAnalyticsRealtime')}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight mt-1">
-            {t('adminAnalyticsTitle')}
-          </h1>
-          <p className="text-xs text-muted mt-0.5 max-w-3xl">
-            {t('adminAnalyticsSubtitle')}
-          </p>
-        </div>
+        }
+        title={t('adminAnalyticsTitle')}
+        subtitle={t('adminAnalyticsSubtitle')}
+        actions={
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            {/* Year selector */}
+            <div className="w-32">
+              <SelectInput
+                value={selectedYear}
+                onChange={e => setSelectedYear(Number(e.target.value))}
+                options={[2024, 2025, 2026, 2027].map(y => ({
+                  value: y,
+                  label: t('adminAnalyticsYear', { year: y }),
+                }))}
+              />
+            </div>
 
-        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
-          {/* Year selector */}
-          <div className="w-32">
-            <SelectInput
-              value={selectedYear}
-              onChange={e => setSelectedYear(Number(e.target.value))}
-              options={[2024, 2025, 2026, 2027].map(y => ({
-                value: y,
-                label: t('adminAnalyticsYear', { year: y }),
-              }))}
-            />
+            {/* Refresh button */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => fetchAnalytics(true)}
+              isLoading={refreshing}
+              leftIcon={<RefreshCw />}
+              title={t('adminAnalyticsRefreshTooltip')}
+            >
+              <span className="hidden sm:inline">{t('adminAnalyticsRefresh')}</span>
+            </Button>
+
+            {/* Export button */}
+            <Button
+              size="md"
+              onClick={handleExportReport}
+              leftIcon={<Download />}
+            >
+              <span>{t('adminAnalyticsExport')}</span>
+            </Button>
           </div>
-
-          {/* Refresh button */}
-          <Button
-            variant="outline"
-            onClick={() => fetchAnalytics(true)}
-            isLoading={refreshing}
-            leftIcon={<RefreshCw />}
-            title={t('adminAnalyticsRefreshTooltip')}
-          >
-            <span className="hidden sm:inline">{t('adminAnalyticsRefresh')}</span>
-          </Button>
-
-          {/* Export button */}
-          <Button
-            onClick={handleExportReport}
-            leftIcon={<Download />}
-          >
-            <span>{t('adminAnalyticsExport')}</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Error Banner */}
       {error && (

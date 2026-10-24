@@ -10,7 +10,7 @@ import {
   AdminBoardingHouseDetail,
   UserProfileDetails,
 } from '@/services/boarding-house.service'
-import { Button, TextareaInput, Breadcrumb } from '@/components/ui'
+import { Button, TextareaInput, Breadcrumb, Modal } from '@/components/ui'
 import {
   Building2,
   MapPin,
@@ -230,6 +230,7 @@ export default function AdminBoardingHouseDetailPage() {
         {/* Top Actions */}
         <div className="flex items-center gap-2 shrink-0">
           <Button
+            size="md"
             variant="secondary"
             onClick={fetchHouseData}
             leftIcon={<RefreshCw />}
@@ -239,6 +240,7 @@ export default function AdminBoardingHouseDetailPage() {
 
           {house.status === 'locked' ? (
             <Button
+              size="md"
               onClick={() => setShowUnlockModal(true)}
               leftIcon={<Unlock />}
             >
@@ -246,6 +248,7 @@ export default function AdminBoardingHouseDetailPage() {
             </Button>
           ) : (
             <Button
+              size="md"
               variant="danger"
               onClick={() => setShowLockModal(true)}
               leftIcon={<Lock />}
@@ -751,61 +754,57 @@ export default function AdminBoardingHouseDetailPage() {
 
       {/* OWNER PROFILE MODAL */}
       {selectedOwner && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setSelectedOwner(null)}
+        <Modal
+          isOpen={Boolean(selectedOwner)}
+          onClose={() => setSelectedOwner(null)}
+          title={selectedOwner.name}
+          size="md"
         >
-          <div
-            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleIn"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between pb-3 border-b border-line">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedOwner.avatarUrl || '/avatar-placeholder.png'}
-                  alt={selectedOwner.name}
-                  className="w-14 h-14 rounded-2xl object-cover border-2 border-orange-500 shadow-sm"
-                />
-                <div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-accent-soft text-accent inline-block mb-1">
-                    {t('adminHouseDetailModalOwnerTitle')}
-                  </span>
-                  <h3 className="text-base font-black text-foreground">{selectedOwner.name}</h3>
-                  <p className="text-[11px] text-muted font-mono">ID: {selectedOwner.id}</p>
-                </div>
+          <Modal.Header
+            icon={<User className="w-5 h-5 text-primary" />}
+            title={selectedOwner.name}
+            description={`ID: ${selectedOwner.id}`}
+            onClose={() => setSelectedOwner(null)}
+          />
+          <Modal.Body className="space-y-4">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-line">
+              <img
+                src={selectedOwner.avatarUrl || '/avatar-placeholder.png'}
+                alt={selectedOwner.name}
+                className="w-12 h-12 rounded-xl object-cover border border-line shadow-xs"
+              />
+              <div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-accent-soft text-accent inline-block mb-1">
+                  {t('adminHouseDetailModalOwnerTitle')}
+                </span>
+                <h4 className="text-sm font-bold text-foreground">{selectedOwner.name}</h4>
+                <p className="text-[11px] text-muted font-mono">{selectedOwner.email}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setSelectedOwner(null)}
-              >
-                <X />
-              </Button>
             </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelFullName')}
                 </span>
                 <span className="font-bold text-foreground">{selectedOwner.name}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelPhoneNumber')}
                 </span>
                 <span className="font-bold text-foreground">{selectedOwner.phoneNumber}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">Email</span>
                 <span className="font-bold text-foreground truncate max-w-[200px]">
                   {selectedOwner.email}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelCitizenId')}
                 </span>
@@ -815,7 +814,7 @@ export default function AdminBoardingHouseDetailPage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelAccountStatus')}
                 </span>
@@ -824,7 +823,7 @@ export default function AdminBoardingHouseDetailPage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelMemberSince')}
                 </span>
@@ -835,62 +834,59 @@ export default function AdminBoardingHouseDetailPage() {
                 </span>
               </div>
             </div>
-
-            <div className="pt-2">
-              <Button fullWidth
-                variant="secondary"
-                onClick={() => setSelectedOwner(null)}
-              >
-                {t('adminHouseDetailBtnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              fullWidth
+              size="md"
+              variant="secondary"
+              onClick={() => setSelectedOwner(null)}
+            >
+              {t('adminHouseDetailBtnClose')}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       )}
 
       {/* GRIEVANCE SENDER (TENANT) PROFILE MODAL */}
       {selectedSender && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setSelectedSender(null)}
+        <Modal
+          isOpen={Boolean(selectedSender)}
+          onClose={() => setSelectedSender(null)}
+          title={selectedSender.name}
+          size="md"
         >
-          <div
-            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-scaleIn"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between pb-3 border-b border-line">
-              <div className="flex items-center gap-3">
-                <img
-                  src={selectedSender.avatarUrl || '/avatar-placeholder.png'}
-                  alt={selectedSender.name}
-                  className="w-14 h-14 rounded-2xl object-cover border-2 border-vacant shadow-sm"
-                />
-                <div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-info-soft text-info inline-block mb-1">
-                    {t('adminHouseDetailModalTenantTitle')}
-                  </span>
-                  <h3 className="text-base font-black text-foreground">{selectedSender.name}</h3>
-                  <p className="text-[11px] text-muted font-mono">ID: {selectedSender.id}</p>
-                </div>
+          <Modal.Header
+            icon={<User className="w-5 h-5 text-info" />}
+            title={selectedSender.name}
+            description={`ID: ${selectedSender.id}`}
+            onClose={() => setSelectedSender(null)}
+          />
+          <Modal.Body className="space-y-4">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-line">
+              <img
+                src={selectedSender.avatarUrl || '/avatar-placeholder.png'}
+                alt={selectedSender.name}
+                className="w-12 h-12 rounded-xl object-cover border border-line shadow-xs"
+              />
+              <div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-info-soft text-info inline-block mb-1">
+                  {t('adminHouseDetailModalTenantTitle')}
+                </span>
+                <h4 className="text-sm font-bold text-foreground">{selectedSender.name}</h4>
+                <p className="text-[11px] text-muted font-mono">{selectedSender.email}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setSelectedSender(null)}
-              >
-                <X />
-              </Button>
             </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelFullName')}
                 </span>
                 <span className="font-bold text-foreground">{selectedSender.name}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelRentedRoom')}
                 </span>
@@ -899,21 +895,21 @@ export default function AdminBoardingHouseDetailPage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelPhoneNumber')}
                 </span>
                 <span className="font-bold text-foreground">{selectedSender.phoneNumber}</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">Email</span>
                 <span className="font-bold text-foreground truncate max-w-[200px]">
                   {selectedSender.email}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelCitizenId')}
                 </span>
@@ -923,7 +919,7 @@ export default function AdminBoardingHouseDetailPage() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface border border-line">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-line">
                 <span className="text-muted font-medium">
                   {t('adminHouseDetailLabelRentalContract')}
                 </span>
@@ -932,168 +928,154 @@ export default function AdminBoardingHouseDetailPage() {
                 </span>
               </div>
             </div>
-
-            <div className="pt-2">
-              <Button fullWidth
-                variant="secondary"
-                onClick={() => setSelectedSender(null)}
-              >
-                {t('adminHouseDetailBtnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              fullWidth
+              size="md"
+              variant="secondary"
+              onClick={() => setSelectedSender(null)}
+            >
+              {t('adminHouseDetailBtnClose')}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       )}
 
-      {/* LOCK MODAL (Rule #10 compliant) */}
-      {showLockModal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={handleCloseLockModal}
-        >
-          <div
-            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
-            onClick={e => e.stopPropagation()}
+      {/* LOCK MODAL */}
+      <Modal
+        isOpen={showLockModal}
+        onClose={handleCloseLockModal}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5 text-red-600" />
+            </div>
+          }
+          title={t('adminHouseDetailModalLockTitle')}
+          description={house.name}
+          onClose={handleCloseLockModal}
+        />
+        <Modal.Body className="space-y-4">
+          <p className="text-xs text-muted leading-relaxed">
+            {t('adminHouseDetailModalLockDesc')}
+          </p>
+
+          <TextareaInput
+            label={t('adminHouseDetailLabelLockReason')}
+            required
+            rows={3}
+            value={lockReasonInput}
+            onChange={e => {
+              setLockReasonInput(e.target.value)
+              if (lockReasonError) setLockReasonError('')
+            }}
+            placeholder={t('adminHouseDetailPlaceholderLockReason')}
+            error={lockReasonError}
+          />
+        </Modal.Body>
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleCloseLockModal}
           >
-            <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-foreground">
-                  {t('adminHouseDetailModalLockTitle')}
-                </h3>
-                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
-                  {house.name}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted leading-relaxed">
-              {t('adminHouseDetailModalLockDesc')}
-            </p>
-
-            <div className="text-left">
-              <TextareaInput
-                label={t('adminHouseDetailLabelLockReason')}
-                required
-                rows={3}
-                value={lockReasonInput}
-                onChange={e => {
-                  setLockReasonInput(e.target.value)
-                  if (lockReasonError) setLockReasonError('')
-                }}
-                placeholder={t('adminHouseDetailPlaceholderLockReason')}
-                error={lockReasonError}
-                className={
-                  lockReasonError
-                    ? 'border-red-400 bg-red-50/20'
-                    : 'border-line focus:border-red-500'
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
-              <Button
-                variant="secondary"
-                onClick={handleCloseLockModal}
-              >
-                {t('adminHouseDetailBtnCancel')}
-              </Button>
-              <Button
-                variant="danger"
-                disabled={isSubmittingLock}
-                isLoading={isSubmittingLock}
-                onClick={handleConfirmLock}
-                leftIcon={<Lock />}
-              >
-                <span>{t('adminHouseDetailBtnConfirmLock')}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            {t('adminHouseDetailBtnCancel')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            disabled={isSubmittingLock}
+            isLoading={isSubmittingLock}
+            onClick={handleConfirmLock}
+            leftIcon={<Lock />}
+          >
+            {t('adminHouseDetailBtnConfirmLock')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* UNLOCK MODAL */}
-      {showUnlockModal && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setShowUnlockModal(false)}
-        >
-          <div
-            className="bg-card rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn"
-            onClick={e => e.stopPropagation()}
+      <Modal
+        isOpen={showUnlockModal}
+        onClose={() => setShowUnlockModal(false)}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
+              <Unlock className="w-5 h-5 text-success" />
+            </div>
+          }
+          title={t('adminHouseDetailModalUnlockTitle')}
+          description={house.name}
+          onClose={() => setShowUnlockModal(false)}
+        />
+        <Modal.Body className="space-y-4">
+          <p className="text-xs text-muted leading-relaxed">
+            {t('adminHouseDetailModalUnlockDesc')}
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => setShowUnlockModal(false)}
           >
-            <div className="flex items-center gap-3 text-success">
-              <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
-                <Unlock className="w-5 h-5 text-success" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-foreground">
-                  {t('adminHouseDetailModalUnlockTitle')}
-                </h3>
-                <p className="text-xs text-muted font-mono truncate max-w-[240px]">
-                  {house.name}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted leading-relaxed">
-              {t('adminHouseDetailModalUnlockDesc')}
-            </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
-              <Button
-                variant="secondary"
-                onClick={() => setShowUnlockModal(false)}
-              >
-                {t('adminHouseDetailBtnCancel')}
-              </Button>
-              <Button
-                disabled={isSubmittingUnlock}
-                isLoading={isSubmittingUnlock}
-                onClick={handleConfirmUnlock}
-                leftIcon={<Unlock />}
-              >
-                <span>{t('adminHouseDetailBtnConfirmUnlock')}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            {t('adminHouseDetailBtnCancel')}
+          </Button>
+          <Button
+            size="md"
+            disabled={isSubmittingUnlock}
+            isLoading={isSubmittingUnlock}
+            onClick={handleConfirmUnlock}
+            leftIcon={<Unlock />}
+          >
+            {t('adminHouseDetailBtnConfirmUnlock')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Confirmation Modal for Discarding Unsaved Draft (Rule #10) */}
-      {confirmDiscardModal.isOpen && (
-        <div className="fixed inset-0 z-60 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-base font-black text-foreground">
-                {t('adminHouseDetailDiscardTitle')}
-              </h4>
-              <p className="text-xs text-muted mt-1 leading-relaxed">
-                {t('adminHouseDetailDiscardDesc')}
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmDiscardModal({ isOpen: false, onDiscard: () => {} })}
-              >
-                {t('adminHouseDetailBtnKeepEditing')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={confirmDiscardModal.onDiscard}
-              >
-                {t('adminHouseDetailBtnDiscardAndClose')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={confirmDiscardModal.isOpen}
+        onClose={() => setConfirmDiscardModal({ isOpen: false, onDiscard: () => {} })}
+        size="sm"
+      >
+        <Modal.Body className="space-y-4 pt-4 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </div>
-      )}
+          <div>
+            <h4 className="text-base font-black text-foreground">
+              {t('adminHouseDetailDiscardTitle')}
+            </h4>
+            <p className="text-xs text-muted mt-1 leading-relaxed">
+              {t('adminHouseDetailDiscardDesc')}
+            </p>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="flex items-center gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            className="flex-1"
+            onClick={() => setConfirmDiscardModal({ isOpen: false, onDiscard: () => {} })}
+          >
+            {t('adminHouseDetailBtnKeepEditing')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            className="flex-1"
+            onClick={confirmDiscardModal.onDiscard}
+          >
+            {t('adminHouseDetailBtnDiscardAndClose')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }
