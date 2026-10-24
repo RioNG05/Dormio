@@ -43,7 +43,7 @@ import {
 } from '@/components/ui'
 
 export default function NotificationsPage() {
-  const { activeBuilding } = useAuth()
+  const { activeBuilding, buildings } = useAuth()
   const t = useTranslations('landlord')
 
   const tRef = useRef(t)
@@ -84,7 +84,7 @@ export default function NotificationsPage() {
   const [notifTitle, setNotifTitle] = useState('')
   const [notifContent, setNotifContent] = useState('')
   const [notifCategory, setNotifCategory] = useState('Điện nước')
-  const [notifTargetScope, setNotifTargetScope] = useState('')
+  const [selectedTargetBuildingId, setSelectedTargetBuildingId] = useState<string>('')
   const [notifChannel, setNotifChannel] = useState('Thông báo hệ thống')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -101,10 +101,10 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     setIsMounted(true)
-    if (activeBuilding?.name) {
-      setNotifTargetScope(activeBuilding.name)
+    if (activeBuilding?.id && !selectedTargetBuildingId) {
+      setSelectedTargetBuildingId(activeBuilding.id)
     }
-  }, [activeBuilding?.name])
+  }, [activeBuilding?.id, selectedTargetBuildingId])
 
   // Localized category label helper
   const getCategoryLabel = useCallback(
@@ -153,9 +153,9 @@ export default function NotificationsPage() {
     setNotifTitle('')
     setNotifContent('')
     setNotifCategory('Điện nước')
-    setNotifTargetScope(activeBuilding?.name || '')
+    setSelectedTargetBuildingId(activeBuilding?.id || buildings[0]?.id || '')
     setNotifChannel('Thông báo hệ thống')
-  }, [activeBuilding?.name])
+  }, [activeBuilding?.id, buildings])
 
   // Directly close modal and reset form
   const requestCloseNotifModal = useCallback(() => {
@@ -204,20 +204,35 @@ export default function NotificationsPage() {
   // Broadcast announcement handler
   const handleBroadcastAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!notifTitle.trim() || !notifContent.trim() || !activeBuilding?.id) return
+    if (!notifTitle.trim() || !notifContent.trim()) return
 
     setIsSubmitting(true)
     try {
-      await announcementService.broadcastAnnouncement(activeBuilding.id, {
-        title: notifTitle.trim(),
-        content: notifContent.trim(),
-        category: notifCategory,
-        targetScope:
-          notifTargetScope.trim() ||
-          activeBuilding.name ||
-          tRef.current('landlordNotificationsEntireBuilding'),
-        channel: notifChannel,
-      })
+      if (selectedTargetBuildingId === 'all') {
+        await Promise.all(
+          buildings.map(b =>
+            announcementService.broadcastAnnouncement(b.id, {
+              title: notifTitle.trim(),
+              content: notifContent.trim(),
+              category: notifCategory,
+              targetScope: b.name,
+              channel: notifChannel,
+            }),
+          ),
+        )
+      } else {
+        const targetHouse =
+          buildings.find(b => b.id === selectedTargetBuildingId) || activeBuilding
+        if (!targetHouse?.id) return
+
+        await announcementService.broadcastAnnouncement(targetHouse.id, {
+          title: notifTitle.trim(),
+          content: notifContent.trim(),
+          category: notifCategory,
+          targetScope: targetHouse.name,
+          channel: notifChannel,
+        })
+      }
 
       resetNotifForm()
       setIsNotifModalOpen(false)
@@ -442,6 +457,7 @@ export default function NotificationsPage() {
             description={t('landlordNotificationsEmptyDesc')}
             action={
               <Button
+                size='md'
                 onClick={() => setIsNotifModalOpen(true)}
                 leftIcon={<Plus />}
               >
@@ -734,6 +750,7 @@ export default function NotificationsPage() {
         footer={
           <div className="flex items-center justify-end gap-3 w-full">
             <Button
+              size='md'
               variant="outline"
               onClick={requestCloseNotifModal}
               disabled={isSubmitting}
@@ -741,7 +758,7 @@ export default function NotificationsPage() {
               {t('landlordNotificationsBtnCancel')}
             </Button>
             <Button
-              size="xs"
+              size="md"
               type="submit"
               disabled={isSubmitting}
               isLoading={isSubmitting}
@@ -810,11 +827,28 @@ export default function NotificationsPage() {
 
         {/* Target & Channel */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <TextInput
+          <SelectInput
             label={t('landlordNotificationsFieldTargetScope')}
-            value={notifTargetScope}
-            onChange={e => setNotifTargetScope(e.target.value)}
-            placeholder={t('landlordNotificationsFieldTargetScopePlaceholder')}
+            value={selectedTargetBuildingId || activeBuilding?.id || buildings[0]?.id || ''}
+            onChange={e => setSelectedTargetBuildingId(e.target.value)}
+            options={[
+              ...(buildings.length > 1
+                ? [
+                    {
+                      value: 'all',
+                      label: `${t('landlordNotificationsAllHouses')} (${buildings.length})`,
+                    },
+                  ]
+                : []),
+              ...(buildings.length > 0
+                ? buildings.map(b => ({
+                    value: b.id,
+                    label: b.name,
+                  }))
+                : activeBuilding
+                  ? [{ value: activeBuilding.id, label: activeBuilding.name }]
+                  : []),
+            ]}
           />
 
           <SelectInput

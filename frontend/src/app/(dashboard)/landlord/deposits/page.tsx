@@ -1011,7 +1011,7 @@ function DepositsContent() {
       <Modal
         isOpen={Boolean(selectedDeposit)}
         onClose={() => setSelectedDeposit(null)}
-        size="lg"
+        size="xl"
       >
         {selectedDeposit && (
           <>
