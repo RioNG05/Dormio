@@ -3897,6 +3897,7 @@ export const viLandlord = {
     landlordContractTenancyTypeContract: "Có hợp đồng",
     landlordContractTenancyTypeDirect: "Ở trực tiếp",
         // --- Room Occupants Display ---
+    landlordRoomDetailTitle: "Chi tiết phòng",
     landlordRoomDetailOccupantsTitle: "Cư dân trong phòng",
     landlordRoomDetailOccupantsCount: "Cư dân ({count})",
     landlordRoomDetailAddOccupantBtn: "Thêm khách thuê vào phòng",

@@ -3897,6 +3897,7 @@ export const enLandlord = {
     landlordContractTenancyTypeContract: "Contracted",
     landlordContractTenancyTypeDirect: "Direct Resident",
         // --- Room Occupants Display ---
+    landlordRoomDetailTitle: "Room Details",
     landlordRoomDetailOccupantsTitle: "Room Occupants",
     landlordRoomDetailOccupantsCount: "Occupants ({count})",
     landlordRoomDetailAddOccupantBtn: "Add Tenant to Room",

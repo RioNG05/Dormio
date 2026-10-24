@@ -13,7 +13,7 @@ import {
   User,
 } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, Modal, SelectInput, TextInput } from '@/components/ui'
+import { Button, Modal, SelectInput, TextInput, Chip } from '@/components/ui'
 import { searchTenantByPhone, quickAddTenant, RoomOccupantDto } from '@/services/tenant.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { resolveErrorMessage } from '@/utils'
@@ -258,9 +258,14 @@ export function AddTenantModal({
                   {fixedRoomNumber || t('landlordContractDetailRoomPrefix')}
                 </span>
               </div>
-              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-primary-soft text-primary">
+              <Chip
+                size="xs"
+                variant="primary"
+                preventHover
+                className="uppercase font-black"
+              >
                 {t('landlordRoomDetailTitle')}
-              </span>
+              </Chip>
             </div>
           ) : (
             <SelectInput
