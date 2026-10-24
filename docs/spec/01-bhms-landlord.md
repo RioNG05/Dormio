@@ -51,7 +51,7 @@ This flow starts in `05-bhrp-platform-user.md` (UC-PU-04: tenant creates `UserId
 2. Guard: reject if `Deposit.status != 'paid'` (it may already be auto-refunded — see UC-PU-04's refund job).
 3. Landlord submits `startDate`, `endDate`, `rentPrice`, `monthlyPaymentDate`, `rentPaymentCycle`, `note`. **Deposit amount is read-only**, pre-filled from the existing `Deposit.amount` — no new payment step runs here.
 4. Create `Contract(roomId, startDate, endDate, rentPrice, monthlyPaymentDate, rentPaymentCycle, note, status='draft')` — **starts as `draft`, not `active`.** This is a deliberate change: the contract only takes effect once the tenant explicitly confirms it (see `07-auth-and-roles.md`, UC-AUTH-04).
-5. Create `TenantContract(tenantId=<the depositing user>, contractId, isPrimary=true)`.
+5. Create `TenantContract(tenantId=<the depositing user>, contractId)`. (All co-tenants share equal rights and permissions; `isPrimary` is abolished).
 6. **Update** the existing `Deposit` row: `SET contractId = <new contract id>` — never insert a new `Deposit` for this flow.
 7. Set `Post.resultedContractId = <new contract id>` (unique FK, 1:1) and `Post.status = 'hidden'` — auto-closes the listing immediately, even though the contract itself is still `draft`. (If the tenant later rejects the contract, the post stays closed — re-opening a rejected listing is a separate landlord action, not automatic.)
 8. Set `Room.status = 'deposited'` (already the correct status since UC-PU-04's deposit step set it — no change needed here, listed for clarity).
@@ -73,7 +73,7 @@ This flow starts in `05-bhrp-platform-user.md` (UC-PU-04: tenant creates `UserId
    - **Present** → skip straight to contract creation, display existing verified identity for landlord confirmation.
 4. Landlord submits `roomId`, `startDate`, `endDate`, `rentPrice`, `monthlyPaymentDate`, `rentPaymentCycle`, `depositAmount`, `note`.
 5. Create `Contract(..., status='active')` — **this flow goes straight to `active`, no `draft`/confirmation step**, since the landlord is directly attesting the arrangement is already agreed (this is the key behavioral difference from Flow A).
-6. Create `TenantContract(tenantId, contractId, isPrimary=true)`.
+6. Link all active room occupants to contract: for each occupant in room, create `TenantContract(tenantId, contractId)`.
 7. **Deposit recording:** create `Deposit(roomId, boardingHouseId, contractId=<new contract>, postId=NULL, type='contract', amount=depositAmount, status='paid', recordedManually=true, recordedBy=<landlord user id>)`. **Do not create a `Payment` row** — no money moved through the system.
 8. Set `Room.status = 'occupied'`.
 9. Generate the printable contract file → `ContractDocument(contractId, url)`.
@@ -83,7 +83,23 @@ This flow starts in `05-bhrp-platform-user.md` (UC-PU-04: tenant creates `UserId
 
 ---
 
-*(The general capability "chủ trọ có thể thêm người vào phòng mà không cần hợp đồng" from the source business description is interpreted here as: no physical/paper contract document is legally required for occupancy to be recorded — but the system still creates a `Contract` row via Flow B as the internal record of the arrangement, since `TenantContract.contractId` is a required (non-nullable) FK and there is no way to associate a tenant with a room in the current schema without one. If the intent was instead "occupancy can exist with zero `Contract` row at all" (e.g. for very informal arrangements), that needs a schema change — `TenantContract.contractId` would need to become nullable, or a separate `RoomOccupant` concept would need to be introduced. Flag this to the product owner if Flow B's "always creates a Contract row" assumption is wrong.)*
+### UC-L-04B — Thêm khách thuê vào phòng không cần hợp đồng (RoomOccupant)
+**Tier:** Free · **Models:** `RoomOccupant`, `User`, `Room`
+
+1. **Quick-Add Flow:** Landlord clicks "Thêm khách thuê" on Customers tab or in Contract Creation Wizard.
+2. Enter Phone Number:
+   - If phone already exists in this boarding house: Reject with warning `TENANT_ALREADY_IN_HOUSE`.
+   - If phone exists in Dormio system (different property or registered): Autofill tenant name, lock name input.
+   - If phone does not exist in system: Prompt landlord to enter full name. System auto-provisions a `User(phoneNumber, fullName, role='tenant', mustChangePassword=true, defaultPassword='88888888')`.
+3. Landlord selects Room (or prefilled).
+4. System creates `RoomOccupant(boardingHouseId, roomId, tenantId, status='active', joinedAt=NOW())`.
+5. Room status updates to `occupied` if currently vacant.
+
+---
+
+### Room-First Contract Creation Rule & Equal Co-tenancy
+1. **Room-First Constraint:** Landlords cannot create contracts with arbitrary phone numbers. The target room must already have active occupants (via `RoomOccupant`). The landlord selects the contract signer/representative from the active occupants of that room. If the room has no occupants, landlord must click "Thêm người thuê vào phòng" first.
+2. **Equal Co-tenancy:** When a contract is established, all active occupants in that room are automatically linked via `TenantContract(tenantId, contractId)`. All co-tenants share equal permissions: invoice notifications, PayOS billing payments, meter reading submissions, and grievance reporting.
 
 
 ### UC-L-05 — View Room Dashboard

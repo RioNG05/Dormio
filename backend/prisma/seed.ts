@@ -8,6 +8,7 @@ import {
   Gender,
   BoardingHouseStatus,
   RoomStatus,
+  OccupantStatus,
   ContractStatus,
   SubscriptionPackage,
   SubscriptionStatus,
@@ -82,6 +83,7 @@ async function main() {
   await prisma.userSubscription.deleteMany();
   await prisma.subscriptionPlan.deleteMany();
   await prisma.tenantContract.deleteMany();
+  await prisma.roomOccupant.deleteMany();
   await prisma.contractDocument.deleteMany();
   await prisma.contract.deleteMany();
   await prisma.meterReading.deleteMany();
@@ -212,6 +214,20 @@ async function main() {
       mustChangePassword: false,
     },
   });
+  // 1.3b Tenant 3 (Direct occupant without contract in Room 102)
+  const tenant3 = await prisma.user.create({
+    data: {
+      username: 'Hoàng Tuấn Anh',
+      email: 'tuananh.hoang@gmail.com',
+      phoneNumber: '0934567890',
+      hashedPassword: passwordCommon,
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
+      role: UserRole.tenant,
+      status: UserStatus.active,
+      mustChangePassword: false,
+    },
+  });
+
 
   // 1.4 Staff / Employee 1
   const employeeUser1 = await prisma.user.create({
@@ -761,7 +777,17 @@ async function main() {
     data: {
       tenantId: tenant1.id,
       contractId: contract1.id,
-      isPrimary: true,
+          },
+  });
+
+  await prisma.roomOccupant.create({
+    data: {
+      boardingHouseId: house1.id,
+      roomId: house1Rooms[0].id,
+      tenantId: tenant1.id,
+      status: OccupantStatus.active,
+      joinedAt: new Date('2026-01-01'),
+      note: 'Khách thuê theo hợp đồng',
     },
   });
 
@@ -794,7 +820,29 @@ async function main() {
     data: {
       tenantId: tenant2.id,
       contractId: contract2.id,
-      isPrimary: true,
+          },
+  });
+
+  await prisma.roomOccupant.create({
+    data: {
+      boardingHouseId: house1.id,
+      roomId: house1Rooms[10].id,
+      tenantId: tenant2.id,
+      status: OccupantStatus.active,
+      joinedAt: new Date('2026-03-01'),
+      note: 'Khách thuê duplex theo hợp đồng',
+    },
+  });
+
+  // Room 102 House 1: Direct Occupant without contract (Tenant 3: Tuan Anh)
+  await prisma.roomOccupant.create({
+    data: {
+      boardingHouseId: house1.id,
+      roomId: house1Rooms[1].id, // Room 102 House 1
+      tenantId: tenant3.id,
+      status: OccupantStatus.active,
+      joinedAt: new Date('2026-09-01'),
+      note: 'Khách ở trực tiếp chưa lập hợp đồng',
     },
   });
 
