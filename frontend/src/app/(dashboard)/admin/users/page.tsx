@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import {
   adminUsersService,
   AdminUserItem,
@@ -73,7 +74,7 @@ export default function AdminUsersManagementPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [errorKey, setErrorKey] = useState<string | null>(null)
-  const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; textKey?: string; text?: string } | null>(null)
+  const { toast } = useToast()
 
   // View mode (Rule 9: Grid view as default)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
@@ -134,14 +135,6 @@ export default function AdminUsersManagementPage() {
     fetchUsers()
   }, [fetchUsers])
 
-  // Toast auto-dismiss
-  useEffect(() => {
-    if (toastMsg) {
-      const timer = setTimeout(() => setToastMsg(null), 4000)
-      return () => clearTimeout(timer)
-    }
-  }, [toastMsg])
-
   // Detail Modal State
   const [selectedUser, setSelectedUser] = useState<AdminUserDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -172,7 +165,7 @@ export default function AdminUsersManagementPage() {
       setSelectedUser(data)
     } catch (err) {
       console.error('Failed to fetch user detail:', err)
-      setToastMsg({ type: 'error', textKey: 'adminUsersActionError' })
+      toast.error(t('adminUsersActionError'))
     } finally {
       setDetailLoading(false)
     }
@@ -216,7 +209,7 @@ export default function AdminUsersManagementPage() {
   // Open action modal
   const handleOpenAction = (user: AdminUserItem, type: 'ban' | 'unban' | 'role' | 'reset-password' | 'tier') => {
     if (!canModifyUser(user)) {
-      setToastMsg({ type: 'error', textKey: 'adminUsersRootAdminProtectedDesc' })
+      toast.error(t('adminUsersRootAdminProtectedDesc'))
       return
     }
     setActionTargetUser(user)
@@ -271,7 +264,7 @@ export default function AdminUsersManagementPage() {
   const handleExecuteAction = async () => {
     if (!actionTargetUser || !actionType) return
     if (!canModifyUser(actionTargetUser)) {
-      setToastMsg({ type: 'error', textKey: 'adminUsersRootAdminProtectedDesc' })
+      toast.error(t('adminUsersRootAdminProtectedDesc'))
       setActionType(null)
       setActionTargetUser(null)
       return
@@ -283,35 +276,32 @@ export default function AdminUsersManagementPage() {
           status: 'banned',
           reason: actionReason.trim() || undefined,
         })
-        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+        toast.success(t('adminUsersActionSuccess'))
       } else if (actionType === 'unban') {
         await adminUsersService.updateUserStatus(actionTargetUser.id, {
           status: 'active',
           reason: actionReason.trim() || undefined,
         })
-        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+        toast.success(t('adminUsersActionSuccess'))
       } else if (actionType === 'role') {
         await adminUsersService.updateUserRole(actionTargetUser.id, {
           role: newRole,
           reason: actionReason.trim() || undefined,
         })
-        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+        toast.success(t('adminUsersActionSuccess'))
       } else if (actionType === 'reset-password') {
         await adminUsersService.resetUserPassword(actionTargetUser.id, {
           temporaryPassword: tempPassword,
           mustChangePassword: forceChangePassword,
         })
-        setToastMsg({
-          type: 'success',
-          text: `${t('adminUsersActionSuccess')} (${tempPassword})`,
-        })
+        toast.success(`${t('adminUsersActionSuccess')} (${tempPassword})`)
       } else if (actionType === 'tier') {
         await adminUsersService.updateUserTier(actionTargetUser.id, {
           tier: newTier,
           durationMonths: newTier === 'free' ? undefined : Number(durationMonths) || 1,
           reason: actionReason.trim() || undefined,
         })
-        setToastMsg({ type: 'success', textKey: 'adminUsersActionSuccess' })
+        toast.success(t('adminUsersActionSuccess'))
       }
 
       // Close modal and refresh data
@@ -328,7 +318,7 @@ export default function AdminUsersManagementPage() {
       }
     } catch (err) {
       console.error('Action failed:', err)
-      setToastMsg({ type: 'error', textKey: 'adminUsersActionError' })
+      toast.error(t('adminUsersActionError'))
     } finally {
       setActionSubmitting(false)
     }
@@ -480,28 +470,6 @@ export default function AdminUsersManagementPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-3 duration-300">
-          <div
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${
-              toastMsg.type === 'success'
-                ? 'bg-success-soft text-success border-success-subtle'
-                : 'bg-danger-soft text-danger border-danger-subtle'
-            }`}
-          >
-            {toastMsg.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
-            ) : (
-              <AlertTriangle className="w-5 h-5 text-danger shrink-0" />
-            )}
-            <Text as="span" size="sm" weight="bold">
-              {toastMsg.textKey ? t(toastMsg.textKey) : toastMsg.text}
-            </Text>
-          </div>
-        </div>
-      )}
-
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-3xl border border-line shadow-xs">
         <div className="space-y-1">

@@ -4,14 +4,15 @@ import React, { useState } from 'react'
 import { ShieldCheck, Edit3, Save, X, Upload } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { Button, Form, Text, TextInput } from '@/components/ui'
 
 export default function PersonalInfoTab() {
   const t = useTranslations('guest')
   const { user } = useAuth()
+  const { toast } = useToast()
 
   const [isEditingInfo, setIsEditingInfo] = useState(false)
-  const [infoSavedSuccess, setInfoSavedSuccess] = useState(false)
 
   const [fullName, setFullName] = useState(user?.name || t('guestProfileDefaultFullName'))
   const [phone, setPhone] = useState(user?.phone || '0987.654.321')
@@ -29,21 +30,11 @@ export default function PersonalInfoTab() {
   const handleSaveInfo = (e: React.FormEvent) => {
     e.preventDefault()
     setIsEditingInfo(false)
-    setInfoSavedSuccess(true)
-    setTimeout(() => setInfoSavedSuccess(false), 3000)
+    toast.success(t('guestProfileInfoSuccess'))
   }
 
   return (
     <Form onSubmit={handleSaveInfo} className="space-y-6 animate-in fade-in duration-300">
-      {/* Success Toast Banner */}
-      {infoSavedSuccess && (
-        <Form.Alert
-          variant="success"
-          message={t('guestProfileInfoSuccess')}
-          onClose={() => setInfoSavedSuccess(false)}
-        />
-      )}
-
       <div className="bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-sm space-y-6">
         {/* Card Header with Edit Buttons */}
         <Form.Header

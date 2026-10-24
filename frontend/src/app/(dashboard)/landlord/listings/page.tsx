@@ -29,6 +29,7 @@ import {
   UnlistedVacantRoom,
 } from '@/services/post.service'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { Button, TableActionButton, TextInput, SelectInput, NumberInput, SearchInput, Pagination, ViewModeToggle, FilterToolbar, TableRow, Card, EmptyState } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
@@ -59,12 +60,7 @@ export default function ListingsPage() {
   const [quota, setQuota] = useState<PostQuotaStatus | null>(null)
   const [unlistedRooms, setUnlistedRooms] = useState<UnlistedVacantRoom[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
-  }
+  const { toast } = useToast()
 
   // Fetch listings and quota
   const loadData = async () => {
@@ -136,14 +132,14 @@ export default function ListingsPage() {
     const newStatus = item.status === 'posted' ? 'hidden' : 'posted'
     try {
       await postService.updatePostStatus(item.id, newStatus)
-      showToast(
+      toast.success(
         newStatus === 'posted'
           ? t('landlordListingsToastShowSuccess', { title: item.title })
           : t('landlordListingsToastHideSuccess', { title: item.title }),
       )
       loadData()
     } catch (err: any) {
-      showToast(err.message || t('landlordListingsToastStatusError'), 'error')
+      toast.error(err.message || t('landlordListingsToastStatusError'))
     }
   }
 
@@ -188,24 +184,6 @@ export default function ListingsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
-      {/* Toast Alert */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold animate-in slide-in-from-bottom-2 duration-300 ${
-            toast.type === 'success'
-              ? 'bg-success text-white shadow-success/20'
-              : 'bg-danger text-white shadow-danger/20'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <ShieldCheck className="w-5 h-5" />
-          ) : (
-            <AlertCircle className="w-5 h-5" />
-          )}
-          <span>{toast.message}</span>
-        </div>
-      )}
-
       {/* Top Header & Action */}
       <DashboardPageHeader
         title={t('landlordListingsPageTitle')}

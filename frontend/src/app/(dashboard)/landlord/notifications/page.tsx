@@ -18,6 +18,7 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import {
   announcementService,
@@ -88,16 +89,7 @@ export default function NotificationsPage() {
   const [notifChannel, setNotifChannel] = useState('Thông báo hệ thống')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-
-  // Toast feedback notification
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-  // Auto-dismiss toast
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), 3500)
-    return () => clearTimeout(timer)
-  }, [toast])
+  const { toast } = useToast()
 
   useEffect(() => {
     setIsMounted(true)
@@ -183,10 +175,7 @@ export default function NotificationsPage() {
       }
     } catch (err: any) {
       console.error('Failed to fetch announcements:', err)
-      setToast({
-        type: 'error',
-        text: err?.message || tRef.current('landlordNotificationsToastFetchError'),
-      })
+      toast.error(err?.message || tRef.current('landlordNotificationsToastFetchError'))
     } finally {
       setIsLoading(false)
     }
@@ -236,16 +225,10 @@ export default function NotificationsPage() {
 
       resetNotifForm()
       setIsNotifModalOpen(false)
-      setToast({
-        type: 'success',
-        text: tRef.current('landlordNotificationsToastBroadcastSuccess'),
-      })
+      toast.success(tRef.current('landlordNotificationsToastBroadcastSuccess'))
       await fetchAnnouncements()
     } catch (err: any) {
-      setToast({
-        type: 'error',
-        text: err?.message || tRef.current('landlordNotificationsToastBroadcastError'),
-      })
+      toast.error(err?.message || tRef.current('landlordNotificationsToastBroadcastError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -261,16 +244,10 @@ export default function NotificationsPage() {
       if (selectedNotifDetail?.id === id) {
         setSelectedNotifDetail(null)
       }
-      setToast({
-        type: 'success',
-        text: tRef.current('landlordNotificationsToastDeleteSuccess'),
-      })
+      toast.success(tRef.current('landlordNotificationsToastDeleteSuccess'))
       await fetchAnnouncements()
     } catch (err: any) {
-      setToast({
-        type: 'error',
-        text: err?.message || tRef.current('landlordNotificationsToastDeleteError'),
-      })
+      toast.error(err?.message || tRef.current('landlordNotificationsToastDeleteError'))
     } finally {
       setIsDeleting(false)
     }
@@ -350,33 +327,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12">
-      {/* Toast Notification Banner */}
-      {toast && (
-        <div className="fixed top-6 right-6 z-70 animate-in slide-in-from-top-3 duration-200">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${toast.type === 'success'
-              ? 'bg-emerald-50/95 text-success border-success-subtle'
-              : 'bg-rose-50/95 text-danger border-danger-subtle'
-              }`}
-          >
-            {toast.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-danger shrink-0" />
-            )}
-            <span>{toast.text}</span>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setToast(null)}
-              className="ml-2"
-            >
-              <X />
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* 1. Page Header */}
       <DashboardPageHeader
         title={t('landlordNotificationsHeroTitle')}

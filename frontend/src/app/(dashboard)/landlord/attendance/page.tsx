@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   attendanceService,
   AttendanceRecord,
@@ -105,10 +106,7 @@ export default function AttendancePage() {
   })
 
   // Feedback Toast
-  const [toastMessage, setToastMessage] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
+  const { toast } = useToast()
 
   // ─── Modal States ──────────────────────────────────────────────────────
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false)
@@ -156,11 +154,6 @@ export default function AttendancePage() {
     setCurrentPage(1)
   }
 
-  const showToast = (type: 'success' | 'error', text: string) => {
-    setToastMessage({ type, text })
-    setTimeout(() => setToastMessage(null), 4000)
-  }
-
   // ─── Load Dependencies (Staff, Shifts) ─────────────────────────────────
   const loadDependencies = useCallback(async () => {
     if (!buildingId) return
@@ -199,10 +192,7 @@ export default function AttendancePage() {
       }
     } catch (err) {
       console.error('Failed to fetch attendance:', err)
-      showToast(
-        'error',
-        t('landlordAttendanceLoadError'),
-      )
+      toast.error(t('landlordAttendanceLoadError'))
     } finally {
       setIsLoading(false)
     }
@@ -298,14 +288,11 @@ export default function AttendancePage() {
         note: overrideNote || undefined,
       })
 
-      showToast('success', t('landlordAttendanceToastManualSuccess'))
+      toast.success(t('landlordAttendanceToastManualSuccess'))
       performCloseOverride()
       fetchAttendance()
     } catch (err: any) {
-      showToast(
-        'error',
-        err?.response?.data?.message || t('landlordAttendanceUpdateError'),
-      )
+      toast.error(err?.response?.data?.message || t('landlordAttendanceUpdateError'))
     } finally {
       setIsSubmittingOverride(false)
     }
@@ -364,10 +351,7 @@ export default function AttendancePage() {
   // ─── Export simulation ─────────────────────────────────────────────────
   const handleExportData = () => {
     if (records.length === 0) {
-      showToast(
-        'error',
-        t('landlordAttendanceExportNoData'),
-      )
+      toast.error(t('landlordAttendanceExportNoData'))
       return
     }
 
@@ -401,7 +385,7 @@ export default function AttendancePage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    showToast('success', t('landlordAttendanceExportSuccess'))
+    toast.success(t('landlordAttendanceExportSuccess'))
   }
 
   const statChips: LandlordStatChipItem[] = useMemo(
@@ -484,23 +468,6 @@ export default function AttendancePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-      {/* Toast Feedback */}
-      {toastMessage && (
-        <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${toastMessage.type === 'success'
-            ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
-            : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
-            }`}
-        >
-          {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-          ) : (
-            <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
-          )}
-          <span>{toastMessage.text}</span>
-        </div>
-      )}
-
       {/* ─── Top Header ─────────────────────────────────────────────────── */}
       <DashboardPageHeader
         title={t('landlordAttendanceTitle')}

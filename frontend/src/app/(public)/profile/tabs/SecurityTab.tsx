@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, ExternalLink } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { userService } from '@/services/user.service'
 import { TextInput, Button, Form, Text } from '@/components/ui'
 import { resolveErrorMessage } from '@/utils'
@@ -11,6 +12,7 @@ import { resolveErrorMessage } from '@/utils'
 export default function SecurityTab() {
   const t = useTranslations('guest')
   const tErrors = useTranslations('errors')
+  const { toast } = useToast()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -21,12 +23,10 @@ export default function SecurityTab() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false)
 
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMessage(null)
-    setPasswordSavedSuccess(false)
 
     if (newPassword.length < 8) {
       setErrorMessage(t('guestProfilePasswordErrorMinLength'))
@@ -50,11 +50,10 @@ export default function SecurityTab() {
         newPassword,
       })
 
-      setPasswordSavedSuccess(true)
+      toast.success(t('guestProfilePasswordSuccess'))
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setTimeout(() => setPasswordSavedSuccess(false), 4000)
     } catch (err) {
       setErrorMessage(resolveErrorMessage(err, tErrors, t('guestProfilePasswordErrorGeneral')))
     } finally {
@@ -64,15 +63,6 @@ export default function SecurityTab() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Password Toast Success */}
-      {passwordSavedSuccess && (
-        <Form.Alert
-          variant="success"
-          message={t('guestProfilePasswordSuccess')}
-          onClose={() => setPasswordSavedSuccess(false)}
-        />
-      )}
-
       {/* Password Error Alert */}
       {errorMessage && (
         <Form.Alert variant="error" message={errorMessage} onClose={() => setErrorMessage(null)} />

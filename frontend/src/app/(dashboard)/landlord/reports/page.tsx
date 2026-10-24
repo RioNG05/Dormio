@@ -3,46 +3,22 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   TrendingUp,
-  Users,
   DollarSign,
   FileSpreadsheet,
   Calendar,
   Building2,
-  ChevronDown,
-  CheckCircle2,
-  ArrowUpRight,
   ShieldCheck,
-  MessageSquare,
   Sparkles,
   Flame,
   Rocket,
-  Award,
   Clock,
   Compass,
-  Lightbulb,
   Zap,
-  HelpCircle,
-  Share2,
-  MapPin,
-  CheckCircle,
-  BarChart3,
-  PieChart,
   Home,
   Loader2,
-  Wrench,
   Inbox,
-  LayoutGrid,
-  List,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  AlertTriangle,
-  RefreshCw,
   X,
-  ArrowDownRight,
   Layers,
-  Target,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -52,12 +28,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  BarChart,
-  Bar,
 } from 'recharts'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { formatCurrency, formatVND } from '@/utils'
 import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle, TableRow, EmptyState } from '@/components/ui'
 import { DashboardPageHeader } from '@/components/landlord'
@@ -67,7 +41,6 @@ import {
   generateMultiPropertyAiStrategy,
   type BoardingHouseOverview,
   type MultiPropertyOverview,
-  type MultiPropertyBreakdown,
   type AiStrategyResponse,
 } from '@/services/boarding-house.service'
 
@@ -98,16 +71,7 @@ export default function ReportsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(6)
-
-  // Toast feedback state
-  const [toast, setToast] = useState<{
-    message: string
-    type: 'success' | 'info' | 'error'
-  } | null>(null)
-  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3500)
-  }
+  const { toast } = useToast()
 
   // Fetch Single Property Overview
   const fetchSingleOverview = useCallback(async (buildingId: string) => {
@@ -139,7 +103,7 @@ export default function ReportsPage() {
       setPortfolioOverview(data)
     } catch {
       setPortfolioOverview(null)
-      showToast(tRef.current('landlordReportsToastFetchError'), 'error')
+      toast.error(tRef.current('landlordReportsToastFetchError'))
     } finally {
       setIsPortfolioLoading(false)
     }
@@ -163,9 +127,9 @@ export default function ReportsPage() {
       const res = await generateMultiPropertyAiStrategy()
       setAiStrategy(res)
       setShowAiModal(true)
-      showToast(t('landlordReportsToastAiSuccess'), 'success')
+      toast.success(t('landlordReportsToastAiSuccess'))
     } catch (err: any) {
-      showToast(err?.message || t('landlordReportsToastAiError'), 'error')
+      toast.error(err?.message || t('landlordReportsToastAiError'))
     } finally {
       setIsAiGenerating(false)
     }
@@ -223,9 +187,9 @@ export default function ReportsPage() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      showToast(t('landlordReportsExportSuccess'))
+      toast.success(t('landlordReportsExportSuccess'))
     } else if (singleOverview) {
-      showToast(t('landlordReportsExportSingleStarting'))
+      toast.info(t('landlordReportsExportSingleStarting'))
     }
   }
 
@@ -279,14 +243,6 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12">
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-70 bg-card text-foreground px-5 py-3 rounded-2xl shadow-2xl border border-line flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-primary" />
-          <span className="text-xs sm:text-sm font-bold">{toast.message}</span>
-        </div>
-      )}
-
       {/* Header Bar */}
       <DashboardPageHeader
         title={t('landlordReportsTitle')}
@@ -1316,7 +1272,7 @@ export default function ReportsPage() {
               <Button size="xs"
                 onClick={() => {
                   setShowAiModal(false)
-                  showToast(t('landlordReportsToastAiPlanSaved'))
+                  toast.success(t('landlordReportsToastAiPlanSaved'))
                 }}
               >
                 {t('landlordReportsAiSavePlanBtn')}

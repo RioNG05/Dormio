@@ -28,6 +28,7 @@ import Link from 'next/link'
 import { postService, PostQuotaStatus, AiPostDraftResponse } from '@/services/post.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { getRooms, type RoomItem } from '@/services/room.service'
 import { getMyBoardingHouses } from '@/services/boarding-house.service'
 import { formatCurrency } from '@/utils'
@@ -63,7 +64,7 @@ function CreateListingForm() {
   const [isLoadingQuota, setIsLoadingQuota] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successToast, setSuccessToast] = useState<string | null>(null)
+  const { toast } = useToast()
 
   // AI Rental Post Suggestions State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
@@ -263,8 +264,7 @@ function CreateListingForm() {
 
     setIsDirty(true)
     setIsAiModalOpen(false)
-    setSuccessToast(t('landlordListingsCreateToastAiApplied'))
-    setTimeout(() => setSuccessToast(null), 3000)
+    toast.success(t('landlordListingsCreateToastAiApplied'))
   }
 
   const handleSubmit = async (publishStatus: 'posted' | 'draft') => {
@@ -316,7 +316,7 @@ function CreateListingForm() {
         .then(setQuota)
         .catch(() => {})
 
-      setSuccessToast(
+      toast.success(
         publishStatus === 'posted'
           ? t('landlordListingsCreateToastSuccess')
           : t('landlordListingsCreateToastDraftSuccess'),
@@ -389,14 +389,6 @@ function CreateListingForm() {
           </div>
         )}
       </div>
-
-      {/* Success Toast */}
-      {successToast && (
-        <div className="p-4 bg-success-soft border border-success-subtle text-success rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
-          <ShieldCheck className="w-5 h-5 text-success shrink-0" />
-          <span className="text-sm font-bold">{successToast}</span>
-        </div>
-      )}
 
       {/* Error Message */}
       {errorMessage && (

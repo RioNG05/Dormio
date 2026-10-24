@@ -17,6 +17,7 @@ import {
   saveAttendanceRecord,
 } from './data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { useAuth } from '@/context/AuthContext'
 import { staffAttendanceService, StaffMonthlySummary } from '@/services/staff-attendance.service'
 import {
@@ -62,14 +63,16 @@ export default function StaffOverviewPage() {
   const [monthlySummary, setMonthlySummary] = useState<StaffMonthlySummary | null>(null)
 
   // Toast notification
-  const [toast, setToast] = useState<{
-    message: string
-    type: 'success' | 'info' | 'warning'
-  } | null>(null)
+  const { toast } = useToast()
 
   const showToast = (message: string, type: 'success' | 'info' | 'warning' = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3800)
+    if (type === 'success') {
+      toast.success(message)
+    } else if (type === 'warning') {
+      toast.warning(message)
+    } else {
+      toast.info(message)
+    }
   }
 
   // Fetch live overview from backend
@@ -642,24 +645,6 @@ export default function StaffOverviewPage() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      {/* Toast popup */}
-      {toast && (
-        <div className="fixed top-5 right-5 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
-          <div
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white ${
-              toast.type === 'success'
-                ? 'bg-primary'
-                : toast.type === 'warning'
-                  ? 'bg-warning'
-                  : 'bg-zinc-800'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 shrink-0" />
-            <span>{toast.message}</span>
-          </div>
-        </div>
-      )}
-
       {/* TOP BANNER: GREETING & CLOCK */}
       <StaffBanner
         currentStaffName={currentStaffName}

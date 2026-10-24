@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   getBoardingHouseDetail,
   AdminBoardingHouseDetail,
@@ -69,7 +70,7 @@ export default function AdminBoardingHouseDetailPage() {
   }>({ isOpen: false, onDiscard: () => {} })
 
   // Notification Toast feedback
-  const [toastMsg, setToastMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const { toast } = useToast()
 
   const fetchHouseData = async () => {
     if (!houseId) return
@@ -110,16 +111,9 @@ export default function AdminBoardingHouseDetailPage() {
       setShowLockModal(false)
       setLockReasonInput('')
       setLockReasonError('')
-      setToastMsg({
-        type: 'success',
-        text: t('adminHouseDetailLockSuccess'),
-      })
-      setTimeout(() => setToastMsg(null), 3500)
+      toast.success(t('adminHouseDetailLockSuccess'))
     } catch {
-      setToastMsg({
-        type: 'error',
-        text: t('adminHouseDetailLockError'),
-      })
+      toast.error(t('adminHouseDetailLockError'))
     } finally {
       setIsSubmittingLock(false)
     }
@@ -139,16 +133,9 @@ export default function AdminBoardingHouseDetailPage() {
         })
       }
       setShowUnlockModal(false)
-      setToastMsg({
-        type: 'success',
-        text: t('adminHouseDetailUnlockSuccess'),
-      })
-      setTimeout(() => setToastMsg(null), 3500)
+      toast.success(t('adminHouseDetailUnlockSuccess'))
     } catch {
-      setToastMsg({
-        type: 'error',
-        text: t('adminHouseDetailUnlockError'),
-      })
+      toast.error(t('adminHouseDetailUnlockError'))
     } finally {
       setIsSubmittingUnlock(false)
     }
@@ -207,24 +194,6 @@ export default function AdminBoardingHouseDetailPage() {
 
   return (
     <div className="space-y-6 pb-12 animate-fadeIn max-w-7xl mx-auto">
-      {/* Toast */}
-      {toastMsg && (
-        <div
-          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2.5 text-xs font-bold animate-slideDown ${
-            toastMsg.type === 'success'
-              ? 'bg-success-soft text-success border-success-subtle'
-              : 'bg-danger-soft text-danger border-danger-subtle'
-          }`}
-        >
-          {toastMsg.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-          )}
-          <span>{toastMsg.text}</span>
-        </div>
-      )}
-
       {/* Breadcrumb Navigation */}
       <Breadcrumb
         items={[

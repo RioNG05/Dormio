@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Edit3, X, Save, QrCode } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { userService } from '@/services/user.service'
 import { Button, Form, Text, TextInput } from '@/components/ui'
 import { resolveErrorMessage } from '@/utils'
@@ -12,9 +13,9 @@ export default function BankAccountTab() {
   const t = useTranslations('guest')
   const tErrors = useTranslations('errors')
   const { isLoggedIn } = useAuth()
+  const { toast } = useToast()
 
   const [isEditingBank, setIsEditingBank] = useState(false)
-  const [bankSavedSuccess, setBankSavedSuccess] = useState(false)
   const [isSavingBank, setIsSavingBank] = useState(false)
   const [bankSaveError, setBankSaveError] = useState('')
 
@@ -39,8 +40,7 @@ export default function BankAccountTab() {
         accountName: bankAccountName.trim().toUpperCase(),
       })
       setIsEditingBank(false)
-      setBankSavedSuccess(true)
-      setTimeout(() => setBankSavedSuccess(false), 3000)
+      toast.success(t('guestProfileBankSuccess'))
     } catch (err) {
       setBankSaveError(resolveErrorMessage(err, tErrors, t('guestProfileBankErrorSaveFailed')))
     } finally {
@@ -87,15 +87,6 @@ export default function BankAccountTab() {
           variant="warning"
           message={bankLoadError}
           onClose={() => setBankLoadError('')}
-        />
-      )}
-
-      {/* Success Toast */}
-      {bankSavedSuccess && (
-        <Form.Alert
-          variant="success"
-          message={t('guestProfileBankSuccess')}
-          onClose={() => setBankSavedSuccess(false)}
         />
       )}
 

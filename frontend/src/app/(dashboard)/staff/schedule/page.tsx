@@ -13,14 +13,12 @@ import {
   Info,
   X,
   CheckCircle2,
-  AlertTriangle,
   Phone,
   ArrowLeft,
   ArrowRight,
   Camera,
   Eye,
   CheckSquare,
-  Sparkles,
   User,
   FileText,
   Trash2,
@@ -36,6 +34,7 @@ import {
   getTodayISODate,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   Button,
   TextInput,
@@ -83,14 +82,7 @@ function StaffScheduleContent() {
   const todayStr = getTodayISODate()
 
   // Toast notification
-  const [toast, setToast] = useState<{
-    message: string
-    type?: 'success' | 'info' | 'warning'
-  } | null>(null)
-  const showToast = (message: string, type: 'success' | 'info' | 'warning' = 'info') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3200)
-  }
+  const { toast } = useToast()
 
   // Helper translations for shift names
   const getShiftName = (name: string) => {
@@ -289,12 +281,12 @@ function StaffScheduleContent() {
   const handleToggleDuty = async (duty: DutyTaskItem) => {
     if (duty.requiresPhoto && !duty.photoProof && !duty.completed) {
       handleOpenDutyProofModal(duty)
-      showToast(t('toastDutyProofRequired'), 'warning')
+      toast.warning(t('toastDutyProofRequired'))
       return
     }
 
     if (!todayOverview?.schedule?.id) {
-      showToast(t('toastNoActiveShiftDuty'), 'warning')
+      toast.warning(t('toastNoActiveShiftDuty'))
       return
     }
 
@@ -309,9 +301,9 @@ function StaffScheduleContent() {
         setTodayDuties(res.schedule.duties)
       }
       window.dispatchEvent(new CustomEvent('dormio_attendance_updated'))
-      showToast(t('toastDutyStatusUpdated'), 'success')
-    } catch (err: any) {
-      showToast(err?.message || t('toastDutyUpdateFailed'), 'warning')
+      toast.success(t('toastDutyStatusUpdated'))
+    } catch (err: unknown) {
+      toast.warning(err instanceof Error ? err.message : t('toastDutyUpdateFailed'))
     }
   }
 
@@ -324,12 +316,12 @@ function StaffScheduleContent() {
       !dutyDraftPhoto &&
       !activeDutyForProof.photoProof
     ) {
-      showToast(t('toastDutyProofRequired'), 'warning')
+      toast.warning(t('toastDutyProofRequired'))
       return
     }
 
     if (!todayOverview?.schedule?.id) {
-      showToast(t('toastNoActiveShiftProof'), 'warning')
+      toast.warning(t('toastNoActiveShiftProof'))
       return
     }
 
@@ -349,12 +341,12 @@ function StaffScheduleContent() {
       setActiveDutyForProof(null)
 
       if (markComplete) {
-        showToast(t('toastDutyCompleted'), 'success')
+        toast.success(t('toastDutyCompleted'))
       } else {
-        showToast(t('toastDutyProgressUpdated'), 'info')
+        toast.info(t('toastDutyProgressUpdated'))
       }
-    } catch (err: any) {
-      showToast(err?.message || t('toastDutyProofSaveFailed'), 'warning')
+    } catch (err: unknown) {
+      toast.warning(err instanceof Error ? err.message : t('toastDutyProofSaveFailed'))
     }
   }
 
@@ -378,32 +370,6 @@ function StaffScheduleContent() {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-16">
-      {/* TOAST NOTIFICATION */}
-      {toast && (
-        <div className="fixed top-5 right-5 z-50 animate-in fade-in slide-in-from-top-3 duration-200 pointer-events-none">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-2.5 text-xs font-bold ${
-              toast.type === 'warning'
-                ? 'bg-amber-900 text-amber-100 border-amber-800'
-                : toast.type === 'success'
-                  ? 'bg-emerald-900 text-emerald-100 border-emerald-800'
-                  : 'bg-zinc-900 text-white border-zinc-800'
-            }`}
-          >
-            {toast.type === 'warning' && (
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-            )}
-            {toast.type === 'success' && (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            )}
-            {(!toast.type || toast.type === 'info') && (
-              <Sparkles className="w-4 h-4 text-primary shrink-0" />
-            )}
-            <span>{toast.message}</span>
-          </div>
-        </div>
-      )}
-
       {/* HEADER BAR */}
       <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="space-y-1">

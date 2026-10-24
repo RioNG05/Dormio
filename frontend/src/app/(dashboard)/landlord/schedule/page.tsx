@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { staffService, StaffItem } from '@/services/staff.service'
 import {
   scheduleService,
@@ -113,11 +114,8 @@ export default function WorkforceSchedulePage() {
     adhocCount: 0,
   })
 
-  // Feedback banner
-  const [toastMessage, setToastMessage] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
+  // Feedback toast
+  const { toast } = useToast()
 
   // ─── Modal States ──────────────────────────────────────────────────────
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false)
@@ -283,8 +281,11 @@ export default function WorkforceSchedulePage() {
 
   // ─── Toast helper ──────────────────────────────────────────────────────
   const showToast = (type: 'success' | 'error', text: string) => {
-    setToastMessage({ type, text })
-    setTimeout(() => setToastMessage(null), 4000)
+    if (type === 'success') {
+      toast.success(text)
+    } else {
+      toast.error(text)
+    }
   }
 
   // ─── Week navigation ───────────────────────────────────────────────────
@@ -621,23 +622,6 @@ export default function WorkforceSchedulePage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-      {/* Toast notification */}
-      {toastMessage && (
-        <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${toastMessage.type === 'success'
-            ? 'bg-success-soft text-success border-success-subtle shadow-emerald-500/10'
-            : 'bg-danger-soft text-danger border-danger-subtle shadow-danger/10'
-            }`}
-        >
-          {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-          ) : (
-            <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
-          )}
-          <span>{toastMessage.text}</span>
-        </div>
-      )}
-
       {/* ─── Top Header & Primary Actions ───────────────────────────────── */}
       <DashboardPageHeader
         title={t('landlordScheduleTitle')}
