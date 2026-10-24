@@ -37,7 +37,18 @@ import {
   getLocalizedExplanation,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, NumberInput, SelectInput, Pagination, Modal, EmptyState, TableActionButton } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  Pagination,
+  Modal,
+  EmptyState,
+  TableActionButton,
+  Text,
+  Chip,
+} from '@/components/ui'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -259,14 +270,16 @@ function StaffShiftHistoryContent() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <span className="text-xs font-black text-primary uppercase tracking-wider">
+            <Chip variant="primary" size="xs" preventHover>
               {t('attHistoryTag')}
-            </span>
+            </Chip>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+          <Text as="h1" size={{ base: '2xl', sm: '3xl' }} weight="black" color="default" className="tracking-tight">
             {t('attHistoryTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted font-medium">{t('attHistorySubtitle')}</p>
+          </Text>
+          <Text size={{ base: 'xs', sm: 'sm' }} color="secondary" weight="medium">
+            {t('attHistorySubtitle')}
+          </Text>
         </div>
 
         {/* Action Link to Work Schedule */}
@@ -300,53 +313,63 @@ function StaffShiftHistoryContent() {
         ) : (
           <>
             <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-muted uppercase block">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricTotalShifts')}
-              </span>
-              <div className="text-2xl font-black text-foreground">{summary.total}</div>
-              <span className="text-[10px] font-semibold text-muted block">
+              </Text>
+              <Text size="2xl" weight="black" color="default">
+                {summary.total}
+              </Text>
+              <Text size="3xs" weight="semibold" color="secondary" className="block">
                 {t('metricMonthSub')}
-              </span>
+              </Text>
             </div>
 
             <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-muted uppercase block">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricOnTime')}
-              </span>
-              <div className="text-2xl font-black text-primary">{summary.onTime}</div>
-              <span className="text-[10px] font-bold text-success block">
+              </Text>
+              <Text size="2xl" weight="black" color="brand">
+                {summary.onTime}
+              </Text>
+              <Text size="3xs" weight="bold" color="success" className="block">
                 {t('metricOnTimeSub')}
-              </span>
+              </Text>
             </div>
 
             <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-muted uppercase block">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricLate')}
-              </span>
-              <div className="text-2xl font-black text-warning">{summary.late}</div>
-              <span className="text-[10px] font-medium text-warning block">
+              </Text>
+              <Text size="2xl" weight="black" color="warning">
+                {summary.late}
+              </Text>
+              <Text size="3xs" weight="medium" color="warning" className="block">
                 {t('metricLateSub')}
-              </span>
+              </Text>
             </div>
 
             <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-muted uppercase block">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricAbsent')}
-              </span>
-              <div className="text-2xl font-black text-muted">{summary.absent}</div>
-              <span className="text-[10px] font-medium text-muted block">
+              </Text>
+              <Text size="2xl" weight="black" color="secondary">
+                {summary.absent}
+              </Text>
+              <Text size="3xs" weight="medium" color="secondary" className="block">
                 {t('metricAbsentSub')}
-              </span>
+              </Text>
             </div>
 
             <div className="col-span-2 sm:col-span-1 bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-muted uppercase block">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricHours')}
-              </span>
-              <div className="text-2xl font-black text-deposit">{summary.hours}h</div>
-              <span className="text-[10px] font-bold text-muted block">
+              </Text>
+              <Text size="2xl" weight="black" color="default">
+                {summary.hours}h
+              </Text>
+              <Text size="3xs" weight="bold" color="secondary" className="block">
                 {t('metricHoursSub')}
-              </span>
+              </Text>
             </div>
           </>
         )}
@@ -371,73 +394,57 @@ function StaffShiftHistoryContent() {
             <div className="flex flex-wrap items-center gap-1.5">
               {/* Date Range Chip */}
               {(appliedStartDate || appliedEndDate) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
-                  <Calendar className="w-3 h-3 text-primary" />
-                  <span>
-                    {appliedStartDate && appliedEndDate
-                      ? `${appliedStartDate} → ${appliedEndDate}`
-                      : appliedStartDate
-                        ? t('filterDateFrom', { date: appliedStartDate })
-                        : t('filterDateTo', { date: appliedEndDate })}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      setAppliedStartDate('')
-                      setAppliedEndDate('')
-                      setCurrentPage(1)
-                    }}
-                    className="ml-0.5"
-                    title={t('titleRemoveDateFilter')}
-                  >
-                    <X />
-                  </Button>
-                </span>
+                <Chip
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Calendar className="w-3 h-3 text-primary" />}
+                  onRemove={() => {
+                    setAppliedStartDate('')
+                    setAppliedEndDate('')
+                    setCurrentPage(1)
+                  }}
+                  title={t('titleRemoveDateFilter')}
+                >
+                  {appliedStartDate && appliedEndDate
+                    ? `${appliedStartDate} → ${appliedEndDate}`
+                    : appliedStartDate
+                      ? t('filterDateFrom', { date: appliedStartDate })
+                      : t('filterDateTo', { date: appliedEndDate })}
+                </Chip>
               )}
 
               {/* Shift Chip */}
               {appliedShift !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
-                  <Clock className="w-3 h-3 text-primary" />
-                  <span>{getShiftName(appliedShift)}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      setAppliedShift('all')
-                      setCurrentPage(1)
-                    }}
-                    className="ml-0.5"
-                    title={t('titleRemoveShiftFilter')}
-                  >
-                    <X />
-                  </Button>
-                </span>
+                <Chip
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Clock className="w-3 h-3 text-primary" />}
+                  onRemove={() => {
+                    setAppliedShift('all')
+                    setCurrentPage(1)
+                  }}
+                  title={t('titleRemoveShiftFilter')}
+                >
+                  {getShiftName(appliedShift)}
+                </Chip>
               )}
 
               {/* Status Chip */}
               {appliedStatus !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-card-hover border border-line text-foreground text-xs font-semibold">
-                  <ShieldCheck className="w-3 h-3 text-primary" />
-                  <span>
-                    {appliedStatus === 'on_time' && t('tableStatusOnTime')}
-                    {appliedStatus === 'late' && t('tableStatusLate')}
-                    {appliedStatus === 'absent' && t('tableStatusAbsent')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      setAppliedStatus('all')
-                      setCurrentPage(1)
-                    }}
-                    className="ml-0.5"
-                    title={t('titleRemoveStatusFilter')}
-                  >
-                    <X />
-                  </Button>
-                </span>
+                <Chip
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<ShieldCheck className="w-3 h-3 text-primary" />}
+                  onRemove={() => {
+                    setAppliedStatus('all')
+                    setCurrentPage(1)
+                  }}
+                  title={t('titleRemoveStatusFilter')}
+                >
+                  {appliedStatus === 'on_time' && t('tableStatusOnTime')}
+                  {appliedStatus === 'late' && t('tableStatusLate')}
+                  {appliedStatus === 'absent' && t('tableStatusAbsent')}
+                </Chip>
               )}
 
               {/* Clear All Chip */}
@@ -450,7 +457,9 @@ function StaffShiftHistoryContent() {
               </Button>
             </div>
           ) : (
-            <span className="text-xs text-muted font-medium italic">{t('noActiveFilters')}</span>
+            <Text size="xs" color="secondary" weight="medium" italic>
+              {t('noActiveFilters')}
+            </Text>
           )}
         </div>
 
@@ -512,15 +521,23 @@ function StaffShiftHistoryContent() {
                 attendances.map(item => (
                   <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150">
                     <td className="py-4 px-3 font-bold text-foreground whitespace-nowrap">
-                      {item.workDate}
+                      <Text size="xs" weight="bold" color="default">
+                        {item.workDate}
+                      </Text>
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap font-bold">
-                      <div>{getShiftName(item.shiftName)}</div>
-                      <div className="text-[10px] text-muted font-normal">{item.shiftTime}</div>
+                      <Text size="xs" weight="bold" color="default">
+                        {getShiftName(item.shiftName)}
+                      </Text>
+                      <Text size="3xs" color="secondary" weight="normal">
+                        {item.shiftTime}
+                      </Text>
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <span>{item.checkIn || '--:--'}</span>
+                        <Text size="xs" weight="bold" color="default" className="font-mono">
+                          {item.checkIn || '--:--'}
+                        </Text>
                         {item.checkInPhoto && (
                           <TableActionButton
                             icon={<Camera />}
@@ -549,7 +566,9 @@ function StaffShiftHistoryContent() {
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <span>{item.checkOut || '--:--'}</span>
+                        <Text size="xs" weight="bold" color="default" className="font-mono">
+                          {item.checkOut || '--:--'}
+                        </Text>
                         {item.checkOutPhoto && (
                           <TableActionButton
                             icon={<Camera />}
@@ -578,27 +597,31 @@ function StaffShiftHistoryContent() {
                     </td>
                     <td className="py-4 px-3 whitespace-nowrap">
                       {item.status === 'on_time' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-success-soft text-success border border-success-subtle">
+                        <Chip variant="success" size="xs" preventHover>
                           {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
-                        </span>
+                        </Chip>
                       )}
                       {item.status === 'late' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle">
+                        <Chip variant="warning" size="xs" preventHover>
                           {t('tableStatusLate')}
-                        </span>
+                        </Chip>
                       )}
                       {item.status === 'absent' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-danger-soft text-danger border border-danger-subtle">
+                        <Chip variant="danger" size="xs" preventHover>
                           {t('tableStatusAbsent')}
-                        </span>
+                        </Chip>
                       )}
                       {item.status === 'not_yet' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-card-hover text-muted">
+                        <Chip variant="neutral" size="xs" preventHover>
                           {t('statusNotYet')}
-                        </span>
+                        </Chip>
                       )}
                     </td>
-                    <td className="py-4 px-3 font-black text-primary">{item.totalHours}h</td>
+                    <td className="py-4 px-3 font-black text-primary">
+                      <Text size="xs" weight="black" color="brand">
+                        {item.totalHours}h
+                      </Text>
+                    </td>
                     <td className="py-4 px-3 text-[11px] text-muted max-w-xs">
                       {item.checkInExplanation ? (
                         <div
@@ -701,7 +724,7 @@ function StaffShiftHistoryContent() {
           title={previewImageModal.title}
           size="md"
         >
-          <div className="space-y-4 pt-1">
+          <Modal.Body className="space-y-4 pt-1">
             <div className="relative bg-zinc-950 rounded-2xl overflow-hidden aspect-video max-h-[380px] flex items-center justify-center border border-line">
               <img
                 src={previewImageModal.imageUrl}
@@ -714,9 +737,9 @@ function StaffShiftHistoryContent() {
               <div className="p-4 rounded-xl bg-surface border border-line space-y-1.5 text-xs font-mono">
                 <div className="flex items-center justify-between text-primary font-bold">
                   <span>🕒 {previewImageModal.watermark.time}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <Chip variant="success" size="xs" preventHover>
                     AUDIT VERIFIED
-                  </span>
+                  </Chip>
                 </div>
                 <div className="text-foreground font-sans text-xs">
                   📍 {previewImageModal.watermark.place}
@@ -739,213 +762,204 @@ function StaffShiftHistoryContent() {
                 </p>
               </div>
             )}
-
-            <div className="pt-2 border-t border-line flex justify-end">
-              <Button
-                variant="secondary"
-                onClick={() => setPreviewImageModal(null)}
-              >
-                {t('btnClose')}
-              </Button>
-            </div>
-          </div>
+          </Modal.Body>
+          <Modal.Footer className="flex justify-end">
+            <Button
+              size="md"
+              variant="secondary"
+              onClick={() => setPreviewImageModal(null)}
+            >
+              {t('btnClose')}
+            </Button>
+          </Modal.Footer>
         </Modal>
       )}
 
       {/* FILTER MODAL */}
-      {isFilterModalOpen && (
-        <div
-          onClick={handleRequestCloseFilterModal}
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl max-w-md w-full shadow-2xl overflow-hidden cursor-default my-auto border border-line animate-in zoom-in-95 duration-200"
-          >
-            {/* Header */}
-            <div className="p-5 border-b border-line flex items-center justify-between bg-surface/50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center text-primary">
-                  <Filter className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-foreground">{t('titleFilterModal')}</h3>
-                  <p className="text-[11px] text-muted font-medium">{t('descFilterModal')}</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title={t('btnClose')}
-                onClick={handleRequestCloseFilterModal}
-              >
-                <X />
-              </Button>
+      <Modal
+        isOpen={isFilterModalOpen}
+        onClose={handleRequestCloseFilterModal}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center text-primary">
+              <Filter className="w-4 h-4" />
             </div>
+          }
+          title={t('titleFilterModal')}
+          description={t('descFilterModal')}
+          onClose={handleRequestCloseFilterModal}
+        />
 
-            {/* Body */}
-            <div className="p-5 space-y-4">
-              {/* Ngày trực: Date Range (From - To) */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-primary" />
-                    <span>{t('filterDateRange')}</span>
-                  </label>
-                  {(modalStartDate || modalEndDate) && (
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setModalStartDate('')
-                        setModalEndDate('')
-                      }}
-                    >
-                      {t('filterClearDates')}
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <span className="text-[10px] font-bold text-muted block mb-1">
-                      {t('filterFromDate')}
-                    </span>
-                    <TextInput
-                      type="date"
-                      value={modalStartDate}
-                      onChange={e => setModalStartDate(e.target.value)}
-                      containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-muted block mb-1">
-                      {t('filterToDate')}
-                    </span>
-                    <TextInput
-                      type="date"
-                      value={modalEndDate}
-                      min={modalStartDate || undefined}
-                      onChange={e => setModalEndDate(e.target.value)}
-                      containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
-                    />
-                  </div>
-                </div>
+        <Modal.Body className="space-y-4">
+          {/* Ngày trực: Date Range (From - To) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Text size="xs" weight="bold" color="default" className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                <span>{t('filterDateRange')}</span>
+              </Text>
+              {(modalStartDate || modalEndDate) && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => {
+                    setModalStartDate('')
+                    setModalEndDate('')
+                  }}
+                >
+                  {t('filterClearDates')}
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <Text size="3xs" weight="bold" color="secondary" className="block mb-1">
+                  {t('filterFromDate')}
+                </Text>
+                <TextInput
+                  type="date"
+                  value={modalStartDate}
+                  onChange={e => setModalStartDate(e.target.value)}
+                  containerClassName="space-y-0"
+                  className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+                />
               </div>
-
-              {/* Ca làm việc: Dynamic from backend */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-primary" />
-                  <span>{t('filterShiftType')}</span>
-                </label>
-                <div className="relative">
-                  <SelectInput
-                    value={modalShift}
-                    onChange={e => setModalShift(e.target.value)}
-                    disabled={isShiftsLoading}
-                    options={[
-                      { value: 'all', label: t('filterAllShifts') },
-                      ...availableShifts.map(s => ({
-                        value: s.name,
-                        label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
-                      })),
-                    ]}
-                    className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer disabled:opacity-50"
-                  />
-                  {isShiftsLoading && (
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                      <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Trạng thái chấm công */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                  <span>{t('filterStatus')}</span>
-                </label>
-                <SelectInput
-                  value={modalStatus}
-                  onChange={e =>
-                    setModalStatus(e.target.value as 'all' | 'on_time' | 'late' | 'absent')
-                  }
-                  options={[
-                    { value: 'all', label: t('filterAllStatuses') },
-                    { value: 'on_time', label: t('tableStatusOnTime') },
-                    { value: 'late', label: t('tableStatusLate') },
-                    { value: 'absent', label: t('tableStatusAbsent') },
-                  ]}
-                  className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+              <div>
+                <Text size="3xs" weight="bold" color="secondary" className="block mb-1">
+                  {t('filterToDate')}
+                </Text>
+                <TextInput
+                  type="date"
+                  value={modalEndDate}
+                  min={modalStartDate || undefined}
+                  onChange={e => setModalEndDate(e.target.value)}
+                  containerClassName="space-y-0"
+                  className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
                 />
               </div>
             </div>
+          </div>
 
-            {/* Footer */}
-            <div className="p-4 bg-surface/80 border-t border-line flex items-center justify-between gap-3">
-              <Button
-                variant="ghost"
-                onClick={handleResetModalDrafts}
-                title={t('titleResetDialog')}
-                leftIcon={<RotateCcw />}
-              >
-                {t('btnReset')}
-              </Button>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={handleRequestCloseFilterModal}
-                >
-                  {t('btnCancel')}
-                </Button>
-                <Button
-                  onClick={handleApplyModalFilter}
-                >
-                  {t('btnApplyFilters')}
-                </Button>
-              </div>
+          {/* Ca làm việc: Dynamic from backend */}
+          <div className="space-y-1.5">
+            <Text size="xs" weight="bold" color="default" className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-primary" />
+              <span>{t('filterShiftType')}</span>
+            </Text>
+            <div className="relative">
+              <SelectInput
+                value={modalShift}
+                onChange={e => setModalShift(e.target.value)}
+                disabled={isShiftsLoading}
+                options={[
+                  { value: 'all', label: t('filterAllShifts') },
+                  ...availableShifts.map(s => ({
+                    value: s.name,
+                    label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
+                  })),
+                ]}
+                className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer disabled:opacity-50"
+              />
+              {isShiftsLoading && (
+                <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+
+          {/* Trạng thái chấm công */}
+          <div className="space-y-1.5">
+            <Text size="xs" weight="bold" color="default" className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span>{t('filterStatus')}</span>
+            </Text>
+            <SelectInput
+              value={modalStatus}
+              onChange={e =>
+                setModalStatus(e.target.value as 'all' | 'on_time' | 'late' | 'absent')
+              }
+              options={[
+                { value: 'all', label: t('filterAllStatuses') },
+                { value: 'on_time', label: t('tableStatusOnTime') },
+                { value: 'late', label: t('tableStatusLate') },
+                { value: 'absent', label: t('tableStatusAbsent') },
+              ]}
+              className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+            />
+          </div>
+        </Modal.Body>
+
+        {/* Footer */}
+        <Modal.Footer className="flex items-center justify-between gap-3">
+          <Button
+            size="md"
+            variant="ghost"
+            onClick={handleResetModalDrafts}
+            title={t('titleResetDialog')}
+            leftIcon={<RotateCcw />}
+          >
+            {t('btnReset')}
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="md"
+              variant="secondary"
+              onClick={handleRequestCloseFilterModal}
+            >
+              {t('btnCancel')}
+            </Button>
+            <Button
+              size="md"
+              onClick={handleApplyModalFilter}
+            >
+              {t('btnApplyFilters')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
 
       {/* RULE #10 CONFIRMATION MODAL */}
-      {showConfirmCloseModal && (
-        <Modal
-          isOpen={showConfirmCloseModal}
-          onClose={() => setShowConfirmCloseModal(false)}
-          size="sm"
-        >
-          <div className="space-y-4 pt-2 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-foreground">{t('confirmCloseTitle')}</h3>
-              <p className="text-xs text-muted leading-relaxed">{t('filterConfirmCloseDesc')}</p>
-            </div>
-            <div className="flex items-center gap-3 pt-3 border-t border-line">
-              <Button
-                variant="secondary"
-                onClick={() => setShowConfirmCloseModal(false)}
-                className="flex-1"
-              >
-                {t('btnContinueEditing')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleConfirmDiscardAndClose}
-                className="flex-1"
-              >
-                {t('btnDiscardAndClose')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={showConfirmCloseModal}
+        onClose={() => setShowConfirmCloseModal(false)}
+        size="sm"
+      >
+        <Modal.Body className="pt-4 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </Modal>
-      )}
+          <div className="space-y-1">
+            <Text as="h3" size="base" weight="bold" color="default">
+              {t('confirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('filterConfirmCloseDesc')}
+            </Text>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="flex items-center gap-3">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => setShowConfirmCloseModal(false)}
+            className="flex-1"
+          >
+            {t('btnContinueEditing')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            onClick={handleConfirmDiscardAndClose}
+            className="flex-1"
+          >
+            {t('btnDiscardAndClose')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }

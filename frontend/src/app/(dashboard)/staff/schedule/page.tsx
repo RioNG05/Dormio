@@ -36,7 +36,17 @@ import {
   getTodayISODate,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, SelectInput, TextareaInput, Checkbox } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  Checkbox,
+  Text,
+  Chip,
+  Modal,
+  EmptyState,
+} from '@/components/ui'
 import {
   staffScheduleService,
   StaffBoardingHouse,
@@ -405,14 +415,16 @@ function StaffScheduleContent() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <span className="text-xs font-black text-primary uppercase tracking-wider">
+            <Chip variant="primary" size="xs" preventHover>
               {t('schedTag')}
-            </span>
+            </Chip>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+          <Text as="h1" size={{ base: '2xl', sm: '3xl' }} weight="black" color="default" className="tracking-tight">
             {t('schedTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted font-medium">{t('schedSubtitle')}</p>
+          </Text>
+          <Text size={{ base: 'xs', sm: 'sm' }} color="secondary" weight="medium">
+            {t('schedSubtitle')}
+          </Text>
         </div>
 
         {/* Action Button to Attendance History */}
@@ -500,9 +512,9 @@ function StaffScheduleContent() {
               {t('btnTodaySchedule')}
             </Button>
 
-            <span className="text-xs sm:text-sm font-black text-foreground ml-1">
+            <Text size={{ base: 'xs', sm: 'sm' }} weight="black" color="default" className="ml-1">
               {t('weekLabel')}
-            </span>
+            </Text>
           </div>
 
           <span className="text-xs font-semibold text-muted bg-surface px-3 py-1 rounded-xl border border-line font-mono self-start sm:self-center">
@@ -552,21 +564,21 @@ function StaffScheduleContent() {
                   {/* Day Header */}
                   <div className="border-b border-line pb-2 mb-2 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-muted uppercase block">
+                      <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                         {day.label}
-                      </span>
-                      <span
-                        className={`text-base font-black ${
-                          day.isToday ? 'text-primary' : 'text-foreground'
-                        }`}
+                      </Text>
+                      <Text
+                        size="base"
+                        weight="black"
+                        color={day.isToday ? 'brand' : 'default'}
                       >
                         {day.dayNum}/{day.date.split('-')[1] || '09'}
-                      </span>
+                      </Text>
                     </div>
                     {day.isToday && (
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-primary text-white">
+                      <Chip variant="primary" size="xs" preventHover>
                         {t('todayBadge')}
-                      </span>
+                      </Chip>
                     )}
                   </div>
 
@@ -584,37 +596,43 @@ function StaffScheduleContent() {
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[10px] font-black text-primary uppercase truncate">
+                            <Text size="3xs" weight="black" color="brand" uppercase className="truncate">
                               {getShiftName(item.shift.name)}
-                            </span>
+                            </Text>
                           </div>
 
-                          <div className="text-[11px] font-bold text-foreground">
+                          <Text size="2xs" weight="bold" color="default">
                             {item.shift.startTime} - {item.shift.endTime}
-                          </div>
+                          </Text>
 
-                          <div className="text-[10px] text-muted font-semibold truncate mt-1">
+                          <Text size="3xs" weight="semibold" color="secondary" className="truncate mt-1">
                             {getLocalizedPlace(item.boardingHouseName, isEn)}
-                          </div>
+                          </Text>
 
                           {item.coWorkers && item.coWorkers.length > 0 && (
                             <div className="flex items-center gap-1 text-[10px] text-muted mt-1.5 pt-1 border-t border-line">
-                              <Users className="w-3 h-3" />
-                              <span>{t('plusCoworkers', { count: item.coWorkers.length })}</span>
+                              <Users className="w-3 h-3 text-muted" />
+                              <Text size="3xs" color="secondary">
+                                {t('plusCoworkers', { count: item.coWorkers.length })}
+                              </Text>
                             </div>
                           )}
                         </div>
                       ))
                     ) : (
-                      <div className="h-full flex items-center justify-center text-center py-8 text-[11px] text-muted font-medium italic">
-                        {t('offShift')}
+                      <div className="h-full flex items-center justify-center text-center py-8">
+                        <Text size="2xs" color="secondary" weight="medium" italic>
+                          {t('offShift')}
+                        </Text>
                       </div>
                     )}
                   </div>
 
                   {/* Day Footer note */}
-                  <div className="pt-2 text-[10px] text-muted font-semibold text-center border-t border-line mt-2">
-                    {t('shiftCountPerDay', { count: schedulesForDay.length })}
+                  <div className="pt-2 border-t border-line mt-2 text-center">
+                    <Text size="3xs" color="secondary" weight="semibold">
+                      {t('shiftCountPerDay', { count: schedulesForDay.length })}
+                    </Text>
                   </div>
                 </div>
               )
@@ -634,25 +652,29 @@ function StaffScheduleContent() {
               <span className="p-1 rounded-lg bg-primary/10 text-primary">
                 <CheckSquare className="w-4 h-4" />
               </span>
-              <span className="text-xs font-black text-primary uppercase tracking-wider">
+              <Chip variant="primary" size="xs" preventHover>
                 {t('todayDutiesTag')}
-              </span>
-              <span className="text-xs text-muted font-medium">• {todayStr}</span>
+              </Chip>
+              <Text size="xs" color="secondary" weight="medium">• {todayStr}</Text>
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-foreground">{t('todayDutiesTitle')}</h2>
-            <p className="text-xs text-muted leading-relaxed font-medium">
+            <Text as="h2" size={{ base: 'lg', sm: 'xl' }} weight="black" color="default">
+              {t('todayDutiesTitle')}
+            </Text>
+            <Text size="xs" color="secondary" weight="medium" className="leading-relaxed">
               {t('todayDutiesDesc')}
-            </p>
+            </Text>
           </div>
 
           {/* Progress Indicator */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="bg-surface border border-line rounded-2xl p-3.5 min-w-[200px] space-y-1.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-muted">{t('dutyProgressLabel')}</span>
-                <span className="font-black text-primary text-sm font-mono">
+                <Text size="xs" weight="bold" color="secondary">
+                  {t('dutyProgressLabel')}
+                </Text>
+                <Text size="sm" weight="black" color="brand" className="font-mono">
                   {completedDuties}/{totalDuties} ({progressPercent}%)
-                </span>
+                </Text>
               </div>
               <div className="w-full bg-line rounded-full h-2 overflow-hidden">
                 <div
@@ -693,22 +715,28 @@ function StaffScheduleContent() {
                   <div className="space-y-1.5 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-mono font-bold text-muted">#{idx + 1}</span>
-                      <h3
-                        className={`text-sm font-black text-foreground leading-snug ${
-                          duty.completed ? 'line-through text-muted' : ''
-                        }`}
+                      <Text
+                        as="h3"
+                        size="sm"
+                        weight="black"
+                        color="default"
+                        className={`leading-snug ${duty.completed ? 'line-through text-muted' : ''}`}
                       >
                         {duty.title}
-                      </h3>
+                      </Text>
                       {duty.requiresPhoto ? (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-warning-soft text-warning border border-warning-subtle flex items-center gap-1">
-                          <Camera className="w-3 h-3 text-warning" />
+                        <Chip
+                          variant="warning"
+                          size="xs"
+                          preventHover
+                          leftIcon={<Camera className="w-3 h-3 text-warning" />}
+                        >
                           {t('dutyPhotoRequired')}
-                        </span>
+                        </Chip>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-card-hover text-muted">
+                        <Chip variant="neutral" size="xs" preventHover>
                           {t('dutyPhotoOptional')}
-                        </span>
+                        </Chip>
                       )}
                     </div>
 
@@ -719,9 +747,9 @@ function StaffScheduleContent() {
                     )}
 
                     {duty.completedAt && (
-                      <span className="text-[11px] text-success font-bold block">
+                      <Text size="2xs" weight="bold" color="success" className="block">
                         ✓ {t('dutyCompletedAt', { time: duty.completedAt })}
-                      </span>
+                      </Text>
                     )}
                   </div>
                 </div>
@@ -747,12 +775,17 @@ function StaffScheduleContent() {
                         className="w-10 h-10 rounded-lg object-cover"
                       />
                       <div className="text-left pr-1 hidden sm:block">
-                        <span className="text-[10px] font-bold text-foreground/90 group-hover:text-primary block flex items-center gap-1">
+                        <Text
+                          size="3xs"
+                          weight="bold"
+                          color="default"
+                          className="group-hover:text-primary flex items-center gap-1"
+                        >
                           <Eye className="w-2.5 h-2.5" /> {t('dutyAuditProof')}
-                        </span>
-                        <span className="text-[9px] text-muted font-mono">
+                        </Text>
+                        <Text size="3xs" color="secondary" className="font-mono">
                           {duty.photoProofTime || todayStr}
-                        </span>
+                        </Text>
                       </div>
                     </div>
                   )}
@@ -770,85 +803,73 @@ function StaffScheduleContent() {
           </div>
         ) : (
           /* Empty State: Thông báo không có nhiệm vụ */
-          <div className="p-8 rounded-3xl bg-card border border-dashed border-line text-center space-y-2.5">
-            <div className="w-12 h-12 mx-auto rounded-full bg-success-soft text-success flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-black text-foreground">{t('noTasksAssigned')}</h4>
-            <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
-              {t('noTasksAssignedDesc')}
-            </p>
-          </div>
+          <EmptyState
+            icon={<CheckCircle2 className="w-8 h-8 text-success" />}
+            title={t('noTasksAssigned')}
+            description={t('noTasksAssignedDesc')}
+          />
         )}
       </div>
 
       {/* ========================================================================= */}
       {/* UNIFIED SHIFT DETAIL MODAL: GỘP THÔNG TIN CA LÀM & NHIỆM VỤ CA LÀM       */}
       {/* ========================================================================= */}
-      {selectedSchedule && (
-        <div
-          onClick={() => setSelectedSchedule(null)}
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-7 space-y-5 animate-scaleIn cursor-default my-auto border border-line max-h-[90vh] overflow-y-auto"
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-line pb-4">
-              <div>
-                <span className="text-[10px] font-black text-primary uppercase tracking-wider block">
-                  {t('detailTag')}
-                </span>
-                <h3 className="text-lg sm:text-xl font-black text-foreground">
-                  {getShiftName(selectedSchedule.shift.name)}
-                </h3>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Đóng"
-                onClick={() => setSelectedSchedule(null)}
-              >
-                <X />
-              </Button>
-            </div>
-
-            {/* UNIFIED CONTENT: SHIFT INFO + CO-WORKERS + DUTIES (NO TABS) */}
-            <div className="space-y-5">
+      <Modal
+        isOpen={Boolean(selectedSchedule)}
+        onClose={() => setSelectedSchedule(null)}
+        size="xl"
+      >
+        {selectedSchedule && (
+          <>
+            <Modal.Header
+              title={
+                <div>
+                  <Chip variant="primary" size="xs" preventHover className="mb-1">
+                    {t('detailTag')}
+                  </Chip>
+                  <Text as="h3" size={{ base: 'lg', sm: 'xl' }} weight="black" color="default">
+                    {getShiftName(selectedSchedule.shift.name)}
+                  </Text>
+                </div>
+              }
+              onClose={() => setSelectedSchedule(null)}
+            />
+            <Modal.Body className="space-y-5">
               {/* 1. General Shift Info */}
               <div className="p-4 rounded-2xl bg-surface border border-line space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted font-medium">{t('detailDate')}</span>
-                  <span className="font-bold text-foreground">{selectedSchedule.workDate}</span>
+                  <Text size="xs" color="secondary" weight="medium">{t('detailDate')}</Text>
+                  <Text size="xs" weight="bold" color="default">{selectedSchedule.workDate}</Text>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted font-medium">{t('detailPlace')}</span>
-                  <span className="font-bold text-foreground">
+                  <Text size="xs" color="secondary" weight="medium">{t('detailPlace')}</Text>
+                  <Text size="xs" weight="bold" color="default">
                     {getLocalizedPlace(selectedSchedule.boardingHouseName, isEn)}
-                  </span>
+                  </Text>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted font-medium">{t('detailPosition')}</span>
-                  <span className="font-bold text-primary">
+                  <Text size="xs" color="secondary" weight="medium">{t('detailPosition')}</Text>
+                  <Text size="xs" weight="bold" color="brand">
                     {getPositionName(selectedSchedule.position.name)}
-                  </span>
+                  </Text>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted font-medium">{t('detailShiftType')}</span>
-                  <span className="font-bold text-foreground/90">
+                  <Text size="xs" color="secondary" weight="medium">{t('detailShiftType')}</Text>
+                  <Text size="xs" weight="bold" color="default">
                     {selectedSchedule.isRecurring ? t('shiftTypeRecurring') : t('shiftTypeOneTime')}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
               {/* 2. Co-workers on duty */}
               {selectedSchedule.coWorkers && selectedSchedule.coWorkers.length > 0 && (
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-primary" />
-                    <span>{t('detailCoworkersTitle')}</span>
-                  </h4>
+                    <Text size="xs" weight="black" color="default" uppercase className="tracking-wider">
+                      {t('detailCoworkersTitle')}
+                    </Text>
+                  </div>
                   <div className="space-y-2">
                     {selectedSchedule.coWorkers.map(cw => (
                       <div
@@ -867,12 +888,12 @@ function StaffScheduleContent() {
                             className="w-8 h-8 rounded-full object-cover border border-line"
                           />
                           <div>
-                            <span className="font-bold text-foreground block">
+                            <Text size="xs" weight="bold" color="default" className="block">
                               {getLocalizedStaffName(cw.name, isEn)}
-                            </span>
-                            <span className="text-[10px] text-muted">
+                            </Text>
+                            <Text size="3xs" color="secondary">
                               {getPositionName(cw.positionName)}
-                            </span>
+                            </Text>
                           </div>
                         </div>
                         {cw.phone && (
@@ -893,45 +914,51 @@ function StaffScheduleContent() {
               {/* 3. Fixed Daily Routine Duties */}
               <div className="space-y-2.5 pt-2 border-t border-line">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5">
                     <Shield className="w-4 h-4 text-primary" />
-                    <span>{t('routineDutiesTitle')}</span>
-                  </h4>
-                  <span className="text-[10px] font-bold text-primary px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                    <Text size="xs" weight="black" color="default" uppercase className="tracking-wider">
+                      {t('routineDutiesTitle')}
+                    </Text>
+                  </div>
+                  <Chip variant="primary" size="xs" preventHover>
                     {getPositionName(selectedSchedule.position.name)}
-                  </span>
+                  </Chip>
                 </div>
                 <div className="p-4 rounded-2xl bg-surface border border-line text-xs text-foreground space-y-2.5">
                   {getDutyLines(selectedSchedule).length > 0 ? (
                     getDutyLines(selectedSchedule).map((line, idx) => (
                       <div key={idx} className="flex items-start gap-2.5">
                         <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                        <span className="leading-relaxed font-medium">{line}</span>
+                        <Text size="xs" weight="medium" color="default" className="leading-relaxed">
+                          {line}
+                        </Text>
                       </div>
                     ))
                   ) : (
-                    <p className="text-muted italic">{t('noRoutineDuties')}</p>
+                    <Text size="xs" color="secondary" italic>{t('noRoutineDuties')}</Text>
                   )}
                 </div>
               </div>
 
               {/* 4. Additional tasks / Landlord reminders */}
               <div className="space-y-2.5 pt-2 border-t border-line">
-                <h4 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5">
                   <BellRing className="w-4 h-4 text-amber-500" />
-                  <span>{t('landlordTasksTitle')}</span>
-                </h4>
+                  <Text size="xs" weight="black" color="default" uppercase className="tracking-wider">
+                    {t('landlordTasksTitle')}
+                  </Text>
+                </div>
 
                 {selectedSchedule.additionalTasks && selectedSchedule.additionalTasks.length > 0 ? (
                   <div className="p-4 rounded-2xl bg-warning-soft border border-warning-subtle space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-black text-warning">
+                        <Text size="xs" weight="black" color="warning">
                           {t('upcomingDeadlines', {
                             count: selectedSchedule.additionalTasks.length,
                           })}
-                        </span>
+                        </Text>
                       </div>
                       <span className="px-2 py-0.5 rounded-md bg-amber-200/70 text-warning font-bold text-[10px]">
                         {selectedSchedule.workDate}
@@ -945,15 +972,15 @@ function StaffScheduleContent() {
                           className="p-2.5 rounded-xl bg-card border border-warning-subtle text-xs space-y-1 shadow-2xs"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-foreground">{task.title}</span>
-                            <span className="text-[10px] font-bold text-warning bg-warning-soft px-2 py-0.5 rounded-full shrink-0">
+                            <Text size="xs" weight="bold" color="default">{task.title}</Text>
+                            <Chip variant="warning" size="xs" preventHover>
                               {task.deadline}
-                            </span>
+                            </Chip>
                           </div>
                           {task.description && (
-                            <p className="text-[11px] text-muted leading-snug">
+                            <Text size="2xs" color="secondary" className="leading-snug">
                               {task.description}
-                            </p>
+                            </Text>
                           )}
                         </div>
                       ))}
@@ -962,150 +989,139 @@ function StaffScheduleContent() {
                 ) : (
                   <div className="p-3 rounded-2xl bg-surface border border-line text-muted text-xs flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                    <span>{t('noAdditionalTasks')}</span>
+                    <Text size="xs" color="secondary">{t('noAdditionalTasks')}</Text>
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Modal Close Button */}
-            <div className="pt-3 border-t border-line">
+            </Modal.Body>
+            <Modal.Footer>
               <Button
                 fullWidth
-                size="xs"
+                size="md"
                 variant="secondary"
                 onClick={() => setSelectedSchedule(null)}
               >
                 {t('btnClose')}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* DUTY PROOF & NOTE MODAL                                                   */}
       {/* ========================================================================= */}
-      {activeDutyForProof && (
-        <div
-          onClick={() => setActiveDutyForProof(null)}
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 cursor-default my-auto border border-line animate-scaleIn"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-line">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                <h3 className="text-base font-black text-foreground truncate">
-                  {t('dutyModalHeader')}
-                </h3>
+      <Modal
+        isOpen={Boolean(activeDutyForProof)}
+        onClose={() => setActiveDutyForProof(null)}
+        size="lg"
+      >
+        {activeDutyForProof && (
+          <>
+            <Modal.Header
+              icon={<FileText className="w-5 h-5 text-primary" />}
+              title={t('dutyModalHeader')}
+              onClose={() => setActiveDutyForProof(null)}
+            />
+            <Modal.Body className="space-y-4">
+              {/* Task Info */}
+              <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-1">
+                <Text size="3xs" weight="bold" color="secondary" uppercase className="tracking-wider block">
+                  {t('taskTitleLabel')}
+                </Text>
+                <Text as="h4" size="xs" weight="black" color="default" className="leading-snug">
+                  {activeDutyForProof.title}
+                </Text>
+                <div className="flex items-center gap-2 pt-1 text-[11px]">
+                  {activeDutyForProof.requiresPhoto ? (
+                    <Chip
+                      variant="warning"
+                      size="xs"
+                      preventHover
+                      leftIcon={<Camera className="w-3 h-3 text-warning" />}
+                    >
+                      {t('proofMandatory')}
+                    </Chip>
+                  ) : (
+                    <Chip variant="neutral" size="xs" preventHover>
+                      {t('proofOptional')}
+                    </Chip>
+                  )}
+                </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Đóng"
-                onClick={() => setActiveDutyForProof(null)}
-              >
-                <X />
-              </Button>
-            </div>
 
-            {/* Task Info */}
-            <div className="p-3.5 rounded-2xl bg-surface border border-line space-y-1">
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                {t('taskTitleLabel')}
-              </span>
-              <h4 className="text-xs font-black text-foreground leading-snug">
-                {activeDutyForProof.title}
-              </h4>
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-muted">
-                {activeDutyForProof.requiresPhoto ? (
-                  <span className="text-warning font-bold flex items-center gap-1">
-                    <Camera className="w-3 h-3 text-warning" />
-                    {t('proofMandatory')}
-                  </span>
+              {/* Hidden File Input */}
+              <TextInput
+                ref={dutyFileInputRef}
+                type="file"
+                accept="image/*"
+                containerClassName="hidden"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+
+              {/* Photo Upload / Preview */}
+              <div className="space-y-2">
+                <Text size="2xs" weight="bold" color="secondary" className="block">
+                  {t('auditPhotoLabel')}
+                </Text>
+
+                {dutyDraftPhoto ? (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-line">
+                    <img
+                      src={dutyDraftPhoto}
+                      alt="Proof"
+                      className="w-16 h-16 rounded-xl object-cover border border-line"
+                    />
+                    <div className="space-y-1 text-xs flex-1">
+                      <Chip variant="success" size="xs" preventHover>
+                        ✓ {t('photoAttached')}
+                      </Chip>
+                      <Text size="2xs" color="secondary" className="font-mono">{todayStr}</Text>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => setDutyDraftPhoto(null)}
+                      title={t('deletePhoto')}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
                 ) : (
-                  <span className="text-muted">{t('proofOptional')}</span>
+                  <Button
+                    fullWidth
+                    size="md"
+                    variant="ghost"
+                    onClick={() => dutyFileInputRef.current?.click()}
+                    className="flex-col py-6"
+                  >
+                    <Camera className="w-6 h-6 text-primary" />
+                    <span className="font-bold">{t('clickToCapturePhoto')}</span>
+                    <Text size="3xs" color="secondary" weight="normal">
+                      {t('autoTimestampDesc')}
+                    </Text>
+                  </Button>
                 )}
               </div>
-            </div>
 
-            {/* Hidden File Input */}
-            <TextInput
-              ref={dutyFileInputRef}
-              type="file"
-              accept="image/*"
-              containerClassName="hidden"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-
-            {/* Photo Upload / Preview */}
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-muted block">
-                {t('auditPhotoLabel')}
-              </label>
-
-              {dutyDraftPhoto ? (
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface border border-line">
-                  <img
-                    src={dutyDraftPhoto}
-                    alt="Proof"
-                    className="w-16 h-16 rounded-xl object-cover border border-line"
-                  />
-                  <div className="space-y-1 text-xs flex-1">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-success-soft text-success border border-success-subtle">
-                      ✓ {t('photoAttached')}
-                    </span>
-                    <p className="text-[11px] text-muted font-mono">{todayStr}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => setDutyDraftPhoto(null)}
-                    title={t('deletePhoto')}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  fullWidth
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => dutyFileInputRef.current?.click()}
-                  className="flex-col"
-                >
-                  <Camera className="w-6 h-6 text-primary" />
-                  <span>{t('clickToCapturePhoto')}</span>
-                  <span className="text-[10px] text-muted font-normal">
-                    {t('autoTimestampDesc')}
-                  </span>
-                </Button>
-              )}
-            </div>
-
-            {/* Note input */}
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-muted block">
-                {t('dutyNoteLabel')}
-              </label>
-              <TextareaInput
-                rows={3}
-                value={dutyDraftNote}
-                onChange={e => setDutyDraftNote(e.target.value)}
-                placeholder={t('dutyNotePlaceholder')}
-                className="w-full p-3 bg-surface border border-line rounded-xl text-xs font-medium focus:outline-none focus:border-primary leading-relaxed"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="pt-3 border-t border-line flex flex-wrap items-center justify-between gap-2.5">
+              {/* Note input */}
+              <div className="space-y-1">
+                <Text size="2xs" weight="bold" color="secondary" className="block">
+                  {t('dutyNoteLabel')}
+                </Text>
+                <TextareaInput
+                  rows={3}
+                  value={dutyDraftNote}
+                  onChange={e => setDutyDraftNote(e.target.value)}
+                  placeholder={t('dutyNotePlaceholder')}
+                  className="w-full p-3 bg-surface border border-line rounded-xl text-xs font-medium focus:outline-none focus:border-primary leading-relaxed"
+                />
+              </div>
+            </Modal.Body>
+            <Modal.Footer className="flex flex-wrap items-center justify-between gap-2.5">
               <Button
-                size="xs"
+                size="md"
                 variant="secondary"
                 onClick={() => setActiveDutyForProof(null)}
               >
@@ -1114,7 +1130,7 @@ function StaffScheduleContent() {
 
               <div className="flex items-center gap-2">
                 <Button
-                  size="xs"
+                  size="md"
                   variant="secondary"
                   onClick={() => handleSaveDutyProof(false)}
                   leftIcon={<FileText className="text-muted" />}
@@ -1123,78 +1139,65 @@ function StaffScheduleContent() {
                 </Button>
 
                 <Button
-                  size="xs"
+                  size="md"
                   onClick={() => handleSaveDutyProof(true)}
                   leftIcon={<CheckCircle2 />}
                 >
                   {t('btnCompleteDuty')}
                 </Button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* PHOTO PREVIEW LIGHTBOX                                                    */}
       {/* ========================================================================= */}
-      {previewPhotoModal && previewPhotoModal.isOpen && (
-        <div
-          onClick={() => setPreviewPhotoModal(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-card rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-line"
-          >
-            <div className="p-4 border-b border-line flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-black text-foreground truncate">
-                  {previewPhotoModal.title}
-                </h3>
+      <Modal
+        isOpen={Boolean(previewPhotoModal?.isOpen)}
+        onClose={() => setPreviewPhotoModal(null)}
+        size="lg"
+      >
+        {previewPhotoModal && (
+          <>
+            <Modal.Header
+              icon={<Camera className="w-4 h-4 text-primary" />}
+              title={previewPhotoModal.title}
+              onClose={() => setPreviewPhotoModal(null)}
+            />
+            <Modal.Body className="p-0">
+              <div className="relative bg-zinc-950 aspect-video max-h-[380px] flex items-center justify-center">
+                <img
+                  src={previewPhotoModal.imageUrl}
+                  alt="Audit proof"
+                  className="w-full h-full object-contain"
+                />
               </div>
+
+              {previewPhotoModal.note && (
+                <div className="p-4 bg-surface border-t border-line space-y-1">
+                  <Text size="3xs" weight="bold" color="secondary" uppercase className="tracking-wider block">
+                    {t('lightboxNoteLabel')}
+                  </Text>
+                  <Text size="xs" color="default" weight="medium" italic className="leading-relaxed">
+                    &quot;{previewPhotoModal.note}&quot;
+                  </Text>
+                </div>
+              )}
+            </Modal.Body>
+            <Modal.Footer className="flex justify-end">
               <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Đóng"
-                onClick={() => setPreviewPhotoModal(null)}
-              >
-                <X />
-              </Button>
-            </div>
-
-            <div className="relative bg-zinc-950 aspect-video max-h-[380px] flex items-center justify-center">
-              <img
-                src={previewPhotoModal.imageUrl}
-                alt="Audit proof"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {previewPhotoModal.note && (
-              <div className="p-4 bg-surface border-t border-line text-xs text-foreground/90 space-y-1">
-                <span className="font-bold text-muted uppercase tracking-wider text-[10px] block">
-                  {t('lightboxNoteLabel')}
-                </span>
-                <p className="italic text-foreground font-medium leading-relaxed">
-                  &quot;{previewPhotoModal.note}&quot;
-                </p>
-              </div>
-            )}
-
-            <div className="p-4 bg-surface border-t border-line flex justify-end">
-              <Button
-                size="xs"
+                size="md"
                 variant="secondary"
                 onClick={() => setPreviewPhotoModal(null)}
               >
                 {t('btnClose')}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
     </div>
   )
 }
