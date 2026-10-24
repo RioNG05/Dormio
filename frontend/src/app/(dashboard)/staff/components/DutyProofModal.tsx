@@ -208,23 +208,6 @@ export function DutyProofModal({
 
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
-            size="md"
-            onClick={() => {
-              onSubmit({
-                dutyId: duty.id,
-                photo: photo || undefined,
-                note: note.trim() || undefined,
-                proofTime: proofTimeStr,
-                markCompleted: false,
-              })
-            }}
-            leftIcon={<FileText />}
-          >
-            <span>{t('btnUpdateProgress')}</span>
-          </Button>
-
-          <Button
             size="md"
             onClick={() => {
               if (duty.requiresPhoto && !photo) {
@@ -241,7 +224,7 @@ export function DutyProofModal({
             }}
             leftIcon={<Check />}
           >
-            <span>{t('btnCompleteDuty')}</span>
+            <span>{t('btnUpdateProgress')}</span>
           </Button>
         </div>
       </Modal.Footer>

@@ -148,7 +148,7 @@ export function TodayShiftCard({
       </div>
 
       {/* TIMEKEEPING ACTION CONTAINER */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-br from-zinc-50 to-zinc-100/80 border border-line space-y-4">
+      <div className="p-5 sm:p-6 rounded-2xl border border-line space-y-4">
         <div className="flex items-center justify-between">
           <Text as="h3" size="xs" weight="black" uppercase className="tracking-wider flex items-center gap-1.5">
             <Camera className="w-4 h-4 text-primary" />
