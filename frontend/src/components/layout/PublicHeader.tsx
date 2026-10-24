@@ -400,11 +400,9 @@ export function PublicHeader() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Link href="/login">
-                  <Button variant="ghost" rounded="full">
-                    {tNav('login')}
-                  </Button>
-                </Link>
+                <Button href="/login" variant="ghost" rounded="full">
+                  {tNav('login')}
+                </Button>
               </div>
             )}
 
@@ -515,16 +513,15 @@ export function PublicHeader() {
                   >
                     {tNav('manageYourHouse')}
                   </Button>
-                  <Link href="/login" className="block w-full">
-                    <Button
-                      variant="outline"
-                      size="md"
-                      rounded="full"
-                      className="w-full justify-center"
-                    >
-                      {tNav('login')}
-                    </Button>
-                  </Link>
+                  <Button
+                    href="/login"
+                    variant="outline"
+                    size="md"
+                    rounded="full"
+                    className="w-full justify-center"
+                  >
+                    {tNav('login')}
+                  </Button>
                 </div>
               )}
             </div>

@@ -168,33 +168,38 @@ export function RoomOccupantsSection({
 
                 <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0 border-t lg:border-t-0 border-line justify-end">
                   {occ.phoneNumber && (
-                    <a href={`tel:${occ.phoneNumber}`}>
-                      <Button size="sm" variant="outline" leftIcon={<Phone />} className="text-xs">
-                        {t('landlordRoomDetailCallNow')}
-                      </Button>
-                    </a>
+                    <Button
+                      href={`tel:${occ.phoneNumber}`}
+                      size="sm"
+                      variant="outline"
+                      leftIcon={<Phone />}
+                      className="text-xs"
+                    >
+                      {t('landlordRoomDetailCallNow')}
+                    </Button>
                   )}
-                  <Link
+                  <Button
                     href={`/landlord/messages?${new URLSearchParams({
                       ...(occ.tenantId ? { userId: occ.tenantId } : {}),
                       ...(occ.fullName ? { tenant: occ.fullName } : {}),
                       ...(roomNumber ? { room: roomNumber } : {}),
                     }).toString()}`}
+                    size="sm"
+                    variant="secondary"
+                    leftIcon={<MessageSquare />}
+                    className="text-xs"
                   >
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      leftIcon={<MessageSquare />}
-                      className="text-xs"
-                    >
-                      {t('landlordRoomDetailMessageBtn')}
-                    </Button>
-                  </Link>
-                  <Link href={`/landlord/customers/${occ.tenantId || occ.id}`}>
-                    <Button size="sm" variant="ghost" leftIcon={<User />} className="text-xs">
-                      {t('landlordRoomDetailProfileBtn')}
-                    </Button>
-                  </Link>
+                    {t('landlordRoomDetailMessageBtn')}
+                  </Button>
+                  <Button
+                    href={`/landlord/customers/${occ.tenantId || occ.id}`}
+                    size="sm"
+                    variant="ghost"
+                    leftIcon={<User />}
+                    className="text-xs"
+                  >
+                    {t('landlordRoomDetailProfileBtn')}
+                  </Button>
                 </div>
               </div>
             ))}

@@ -197,20 +197,17 @@ function UniversalProfilePage() {
           </Text>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/login">
-            <Button
-              size="md"
-              rightIcon={<span>&rarr;</span>}
-              className="rounded-2xl shadow-lg shadow-primary/20"
-            >
-              {t('guestProfileLockLoginBtn')}
-            </Button>
-          </Link>
-          <Link href="/register">
-            <Button variant="dark" size="md" className="rounded-2xl">
-              {t('guestProfileLockRegisterBtn')}
-            </Button>
-          </Link>
+          <Button
+            href="/login"
+            size="md"
+            rightIcon={<span>&rarr;</span>}
+            className="rounded-2xl shadow-lg shadow-primary/20"
+          >
+            {t('guestProfileLockLoginBtn')}
+          </Button>
+          <Button href="/register" variant="dark" size="md" className="rounded-2xl">
+            {t('guestProfileLockRegisterBtn')}
+          </Button>
         </div>
       </div>
     )

@@ -25,6 +25,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import { Button } from '@/components/ui/Button'
+import { addCustomNotification } from '@/services/notification.service'
 import IdentityGuard from '@/components/IdentityGuard'
 
 // ─── Bank name map ─────────────────────────────────────────────────────────────
@@ -233,6 +234,14 @@ function BuyTurnsPageInner() {
               ? `Mua thành công ${pack.turns} lượt đăng tin ${pack.name}!`
               : `Successfully purchased ${pack.turns} ${pack.nameEn} listing turns!`,
           )
+          addCustomNotification({
+            title: isVi ? 'Mua lượt đăng tin thành công' : 'Listing Turns Purchased',
+            content: isVi
+              ? `Mua thành công ${pack.turns} lượt đăng tin ${pack.name}! Gói cước của bạn đã sẵn sàng sử dụng.`
+              : `Successfully purchased ${pack.turns} ${pack.nameEn} listing turns! Ready to post.`,
+            type: 'package_payment_success',
+            targetUrl: '/posts/create',
+          })
         }
       } catch {
         // silent
@@ -458,16 +467,12 @@ function BuyTurnsPageInner() {
                   </div>
                 </div>
                 <div className="pt-2 flex gap-3 justify-center flex-wrap">
-                  <Link href="/posts/create">
-                    <Button size="md" variant="orange" rightIcon={<ArrowRight />}>
-                      {isVi ? 'Đăng tin ngay' : 'Post Now'}
-                    </Button>
-                  </Link>
-                  <Link href="/pricing">
-                    <Button size="lg" variant="dark">
-                      {isVi ? 'Bảng giá' : 'Pricing'}
-                    </Button>
-                  </Link>
+                  <Button href="/posts/create" size="md" variant="orange" rightIcon={<ArrowRight />}>
+                    {isVi ? 'Đăng tin ngay' : 'Post Now'}
+                  </Button>
+                  <Button href="/pricing" size="lg" variant="dark">
+                    {isVi ? 'Bảng giá' : 'Pricing'}
+                  </Button>
                 </div>
               </div>
             ) : checkoutData ? (

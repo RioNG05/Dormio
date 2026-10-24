@@ -612,11 +612,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 <User className="w-4 h-4 text-primary" />{' '}
                 {t('landlordContractDetailTenantSection')}
               </h3>
-              <Link href={`/landlord/customers/${contract.tenantId || ''}`}>
-                <Button variant='secondary' rightIcon={<MoveRight />}>
-                  {t('landlordContractDetailTenantSection')}
-                </Button>
-              </Link>
+              <Button href={`/landlord/customers/${contract.tenantId || ''}`} variant='secondary' rightIcon={<MoveRight />}>
+                {t('landlordContractDetailTenantSection')}
+              </Button>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-surface rounded-2xl border border-line">
@@ -635,31 +633,27 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
-                <Link
+                <Button
                   href={`/landlord/messages?${new URLSearchParams({
                     ...(contract.tenantId ? { userId: contract.tenantId } : {}),
                     ...(contract.tenant ? { tenant: contract.tenant } : {}),
                     ...(contract.room ? { room: contract.room } : {}),
                   }).toString()}`}
+                  leftIcon={<MessageSquare />}
                 >
-                  <Button leftIcon={<MessageSquare />}>
-                    {t('landlordContractDetailMessageBtn')}
-                  </Button>
-                </Link>
-                <a href={`tel:${contract.tenantPhone}`}>
-                  <Button variant='success' leftIcon={<Phone />}>
-                    {t('landlordContractDetailCallBtn')}
-                  </Button>
-                </a>
-                <a
+                  {t('landlordContractDetailMessageBtn')}
+                </Button>
+                <Button href={`tel:${contract.tenantPhone}`} variant='success' leftIcon={<Phone />}>
+                  {t('landlordContractDetailCallBtn')}
+                </Button>
+                <Button
                   href={`https://zalo.me/${contract.tenantPhone}`}
                   target="_blank"
                   rel="noreferrer"
+                  className='bg-[#0068FF]'
                 >
-                  <Button className='bg-[#0068FF]'>
-                    Zalo
-                  </Button>
-                </a>
+                  Zalo
+                </Button>
               </div>
             </div>
           </div>
@@ -903,11 +897,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </span>
             </div>
 
-            <Link href={`/landlord/rooms/${fullRoomId}`}>
-              <Button size='md' variant='secondary' leftIcon={<Home />} fullWidth>
-                {t('landlordContractDetailViewRoomBtn')}
-              </Button>
-            </Link>
+            <Button href={`/landlord/rooms/${fullRoomId}`} size='md' variant='secondary' leftIcon={<Home />} fullWidth>
+              {t('landlordContractDetailViewRoomBtn')}
+            </Button>
           </div>
         </div>
       </div>

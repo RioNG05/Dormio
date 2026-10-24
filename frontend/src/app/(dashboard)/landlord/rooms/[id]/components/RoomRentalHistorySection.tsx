@@ -106,11 +106,9 @@ export function RoomRentalHistorySection({
                     {parseInt(hist.rentPrice).toLocaleString('vi-VN')}{' '}
                     {t('landlordRoomDetailRentPerMonth')}
                   </Text>
-                  <Link href={`/landlord/contracts/${hist.id}`}>
-                    <Button variant="white">
-                      {t('landlordRoomDetailViewContractShort')}
-                    </Button>
-                  </Link>
+                  <Button href={`/landlord/contracts/${hist.id}`} variant="white">
+                    {t('landlordRoomDetailViewContractShort')}
+                  </Button>
                 </div>
               </div>
             )

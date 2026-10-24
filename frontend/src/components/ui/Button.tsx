@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 import { Loader2 } from 'lucide-react'
@@ -26,8 +27,15 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   justify?: 'start' | 'center' | 'between' | 'end'
   /** Prevents a button click from triggering interactive parent elements. */
   preventPropagation?: boolean
-  /** Prevents the browser default action; non-submit buttons do this by default. */
+  /** Prevents the browser default action. Defaults to false. */
   preventDefault?: boolean
+  /** Next.js navigation route or external URL. When present, renders as Next.js Link. */
+  href?: string
+  target?: string
+  rel?: string
+  replace?: boolean
+  scroll?: boolean
+  prefetch?: boolean
 }
 
 const iconSizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
@@ -50,10 +58,11 @@ const cleanIconClassName = (className?: string): string => {
     .join(' ')
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = React.forwardRef<any, ButtonProps>(
   (
     {
       className,
+      href,
       variant = 'primary',
       size = 'sm',
       isLoading = false,
@@ -63,18 +72,22 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       rounded = 'default',
       justify = 'center',
       preventPropagation = true,
-      preventDefault,
+      preventDefault = false,
       onClick,
       children,
       disabled,
       type = 'button',
+      target,
+      rel,
+      replace,
+      scroll,
+      prefetch,
       ...props
     },
     ref,
   ) => {
     const isIconSize =
       size === 'icon' || size === 'icon-xs' || size === 'icon-sm' || size === 'icon-lg'
-    const shouldPreventDefault = preventDefault ?? type !== 'submit'
 
     const buttonClasses = cn(
       'relative inline-flex items-center font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none',
@@ -183,6 +196,29 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </>
     )
 
+    if (href) {
+      return (
+        <Link
+          ref={ref}
+          href={href}
+          target={target}
+          rel={rel}
+          replace={replace}
+          scroll={scroll}
+          prefetch={prefetch}
+          className={cn(buttonClasses, (disabled || isLoading) && 'pointer-events-none opacity-50')}
+          onClick={event => {
+            if (preventPropagation) event.stopPropagation()
+            if (preventDefault) event.preventDefault()
+            onClick?.(event as any)
+          }}
+          {...(props as any)}
+        >
+          {content}
+        </Link>
+      )
+    }
+
     return (
       <button
         ref={ref}
@@ -190,8 +226,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         className={buttonClasses}
         onClick={event => {
-          if (shouldPreventDefault) event.preventDefault()
-          if (preventPropagation) event.stopPropagation()
+          const isInsideLink = Boolean((event.currentTarget as HTMLElement).closest('a'))
+          if (preventDefault) event.preventDefault()
+          if (preventPropagation && !isInsideLink) event.stopPropagation()
           onClick?.(event)
         }}
         {...props}

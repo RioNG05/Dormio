@@ -36,17 +36,16 @@ export default function RoleDataTab() {
               </div>
             </div>
 
-            <Link href="/landlord" className="w-full sm:w-auto">
-              <Button
-                variant="accent"
-                size="md"
-                leftIcon={<Building2 className="shrink-0" />}
-                rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl hover:scale-105"
-              >
-                {t('guestProfileOpenDashboard')}
-              </Button>
-            </Link>
+            <Button
+              href="/landlord"
+              variant="accent"
+              size="md"
+              leftIcon={<Building2 className="shrink-0" />}
+              rightIcon={<span>&rarr;</span>}
+              className="w-full sm:w-auto rounded-2xl hover:scale-105"
+            >
+              {t('guestProfileOpenDashboard')}
+            </Button>
           </div>
 
           <Form.Grid cols={3}>
@@ -152,16 +151,15 @@ export default function RoleDataTab() {
             </div>
 
             {/* Direct Jump Button to Tenant Dashboard */}
-            <Link href="/tenant" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                leftIcon={<Home />}
-                rightIcon={<span>&rarr;</span>}
-                className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
-              >
-                {t('guestProfileTenantRoomDashboard')}
-              </Button>
-            </Link>
+            <Button
+              href="/tenant"
+              size="lg"
+              leftIcon={<Home />}
+              rightIcon={<span>&rarr;</span>}
+              className="w-full sm:w-auto rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
+            >
+              {t('guestProfileTenantRoomDashboard')}
+            </Button>
           </div>
 
           {/* Lease Details Cards */}

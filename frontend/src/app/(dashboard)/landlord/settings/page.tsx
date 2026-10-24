@@ -692,11 +692,9 @@ export default function LandlordSettingsPage() {
             title={t('landlordSettingsServicesSection')}
             description={t('landlordSettingsServicesDesc')}
             actions={
-              <Link href="/landlord/services">
-                <Button variant="outline">
-                  {t('landlordSettingsManageServicesBtn')}
-                </Button>
-              </Link>
+              <Button href="/landlord/services" variant="outline">
+                {t('landlordSettingsManageServicesBtn')}
+              </Button>
             }
             divider
           >

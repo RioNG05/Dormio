@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
@@ -31,16 +30,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <LanguageSwitcher />
             {isLegalPage && (
               <>
-                <Link href="/register">
-                  <Button variant="outline">
-                    {t('authLegalBackToRegister')}
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button>
-                    {t('authLoginBtn')}
-                  </Button>
-                </Link>
+                <Button href="/register" variant="outline">
+                  {t('authLegalBackToRegister')}
+                </Button>
+                <Button href="/login">
+                  {t('authLoginBtn')}
+                </Button>
               </>
             )}
           </div>

@@ -4,6 +4,7 @@ export const viLandlord = {
     landlordAssetsAddAsset: "Thêm tài sản mới",
     landlordAssetsBannerSub: "Quản lý trang thiết bị theo Mã SKU riêng biệt. Giá trị khấu hao được tự động tính toán theo số tháng sử dụng thực tế.",
     landlordAssetsBroken: "Hỏng hóc",
+    landlordAssetsBtnAdd: "Thêm tài sản mới",
     landlordAssetsBtnCancel: "Hủy bỏ",
     landlordAssetsBtnDelete: "Xóa",
     landlordAssetsBtnEdit: "Chỉnh sửa",

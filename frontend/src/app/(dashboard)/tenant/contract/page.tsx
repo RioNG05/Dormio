@@ -202,11 +202,9 @@ export default function TenantContractPage() {
             title={t('tenantNoActiveContractTitle')}
             description={t('tenantNoActiveContractDesc')}
             action={
-              <Link href="/tenant">
-                <Button size="md">
-                  Quay lại Tổng quan
-                </Button>
-              </Link>
+              <Button href="/tenant" size="md">
+                Quay lại Tổng quan
+              </Button>
             }
           />
         </div>
@@ -536,11 +534,9 @@ export default function TenantContractPage() {
             </div>
 
             <div className="pt-2">
-              <Link href="/tenant/room">
-                <Button variant="outline" className="w-full">
-                  Xem chi tiết phòng thuê
-                </Button>
-              </Link>
+              <Button href="/tenant/room" variant="outline" className="w-full">
+                Xem chi tiết phòng thuê
+              </Button>
             </div>
           </div>
 
@@ -602,11 +598,9 @@ export default function TenantContractPage() {
             </div>
 
             <div className="pt-2">
-              <Link href="/tenant/messages">
-                <Button variant="secondary" className="w-full">
-                  Nhắn tin với chủ trọ
-                </Button>
-              </Link>
+              <Button href="/tenant/messages" variant="secondary" className="w-full">
+                Nhắn tin với chủ trọ
+              </Button>
             </div>
           </div>
         </div>

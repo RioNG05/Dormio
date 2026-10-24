@@ -8,11 +8,13 @@ import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
 import { getHighestRoleRedirect, resolveErrorMessage } from '@/utils'
+import { addCustomNotification } from '@/services/notification.service'
 import { TextInput, Button, Checkbox, Form, Text } from '@/components/ui'
 
 export default function RegisterPage() {
   const t = useTranslations('auth')
   const tErrors = useTranslations('errors')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const { loginWithToken } = useAuth()
 
@@ -109,6 +111,13 @@ export default function RegisterPage() {
         phone: user.phoneNumber,
         role: displayRole,
         mustChangePassword: false,
+      })
+
+      addCustomNotification({
+        title: tCommon('notiRegisterSuccessTitle'),
+        content: tCommon('notiRegisterSuccessContent'),
+        type: 'account_registration_success',
+        targetUrl: redirectPath,
       })
 
       router.push(redirectPath)

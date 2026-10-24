@@ -321,32 +321,30 @@ export default function TenantOverviewPage() {
         subtitle={t('subtitle')}
         actions={
           <>
-            <Link href="/tenant/messages">
-              <Button
-                size="md"
-                className="relative sm:text-sm"
-                leftIcon={<MessageCircle />}
-              >
-                <span>{t('chatWithLandlord')}</span>
-                {unreadMessagesCount > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
-                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
+            <Button
+              href="/tenant/messages"
+              size="md"
+              className="relative sm:text-sm"
+              leftIcon={<MessageCircle />}
+            >
+              <span>{t('chatWithLandlord')}</span>
+              {unreadMessagesCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
+                  {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                </span>
+              )}
+            </Button>
 
             {roomInfo && (
-              <Link href="/tenant/contract">
-                <Button
-                  size="md"
-                  variant='accent'
-                  leftIcon={<FileSignature />}
-                  className="sm:text-sm"
-                >
-                  {t('viewContract')}
-                </Button>
-              </Link>
+              <Button
+                href="/tenant/contract"
+                size="md"
+                variant='accent'
+                leftIcon={<FileSignature />}
+                className="sm:text-sm"
+              >
+                {t('viewContract')}
+              </Button>
             )}
           </>
         }
@@ -377,11 +375,15 @@ export default function TenantOverviewPage() {
             </div>
           </div>
 
-          <Link href={`/tenant/invoices/${latestInvoice.id}`} className="w-full sm:w-auto">
-            <Button size="xs" variant="orange" rightIcon={<ArrowRight />} className="sm:w-auto">
-              {t('payNow')}
-            </Button>
-          </Link>
+          <Button
+            href={`/tenant/invoices/${latestInvoice.id}`}
+            size="xs"
+            variant="orange"
+            rightIcon={<ArrowRight />}
+            className="w-full sm:w-auto"
+          >
+            {t('payNow')}
+          </Button>
         </div>
       )}
 
@@ -552,11 +554,9 @@ export default function TenantOverviewPage() {
               description={t('noActiveContractDesc')}
               action={
                 FEATURE_FLAGS.ENABLE_BHRP ? (
-                  <Link href="/rooms">
-                    <Button>
-                      {t('exploreHousesBtn')}
-                    </Button>
-                  </Link>
+                  <Button href="/rooms">
+                    {t('exploreHousesBtn')}
+                  </Button>
                 ) : undefined
               }
             />

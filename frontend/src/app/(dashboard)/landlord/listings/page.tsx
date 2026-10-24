@@ -324,11 +324,9 @@ export default function ListingsPage() {
           title={t('landlordListingsEmptyTitle')}
           description={t('landlordListingsEmptyDesc')}
           action={
-            <Link href="/landlord/listings/create">
-              <Button variant="accent" leftIcon={<Plus />}>
-                {t('landlordListingsCreateFirstBtn')}
-              </Button>
-            </Link>
+            <Button href="/landlord/listings/create" variant="accent" leftIcon={<Plus />}>
+              {t('landlordListingsCreateFirstBtn')}
+            </Button>
           }
         />
       ) : viewMode === 'grid' ? (

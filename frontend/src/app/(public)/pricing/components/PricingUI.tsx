@@ -550,19 +550,17 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                     )}
                   </div>
 
-                  <Link
-                    href={
-                      isBhms
-                        ? idx === 1
-                          ? '/pricing/management-system/purchase?pack=plus'
-                          : idx === 2
-                            ? '/pricing/management-system/purchase?pack=pro'
-                            : '/register/landlord'
-                        : (planHref ?? '/register')
-                    }
-                    className="pt-4"
-                  >
+                  <div className="pt-4">
                     <Button
+                      href={
+                        isBhms
+                          ? idx === 1
+                            ? '/pricing/management-system/purchase?pack=plus'
+                            : idx === 2
+                              ? '/pricing/management-system/purchase?pack=pro'
+                              : '/register/landlord'
+                          : (planHref ?? '/register')
+                      }
                       fullWidth
                       size="md"
                       variant={plan.popular ? (isBhms ? 'primary' : 'accent') : 'dark'}
@@ -570,7 +568,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                     >
                       {plan.cta}
                     </Button>
-                  </Link>
+                  </div>
                 </div>
               )
             })}
@@ -783,14 +781,13 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
           >
             {t('guestPricingCtaSubtitle')}
           </Text>
-          <Link href="/register">
-            <Button
-              size="lg"
-              rightIcon={<MoveRight />}
-            >
-              {t('guestPricingCtaBtn')}
-            </Button>
-          </Link>
+          <Button
+            href="/register"
+            size="lg"
+            rightIcon={<MoveRight />}
+          >
+            {t('guestPricingCtaBtn')}
+          </Button>
         </section>
       </div>
     </div>

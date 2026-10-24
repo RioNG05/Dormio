@@ -1,5 +1,8 @@
 import { api } from './api'
 
+export const NOTIFICATIONS_STORAGE_KEY = 'dormio_custom_notifications'
+export const NOTIFICATION_EVENT_NAME = 'dormio_notification_added'
+
 export interface InAppNotification {
   id: string
   title?: string
@@ -15,11 +18,42 @@ export interface InAppNotification {
     | 'broadcast'
     | 'happy_new_year'
     | 'system_greeting'
+    | 'account_registration_success'
+    | 'package_payment_success'
     | string
   isRead: boolean
   createdAt: string
   boardingHouseId?: string | null
   targetUrl?: string | null
+}
+
+export function addCustomNotification(
+  noti: Omit<InAppNotification, 'id' | 'createdAt' | 'isRead'> & { id?: string },
+): InAppNotification {
+  const newNoti: InAppNotification = {
+    id: noti.id || `custom-noti-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    title: noti.title,
+    content: noti.content,
+    type: noti.type,
+    isRead: false,
+    createdAt: new Date().toISOString(),
+    boardingHouseId: noti.boardingHouseId || null,
+    targetUrl: noti.targetUrl || null,
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
+      const list: InAppNotification[] = stored ? JSON.parse(stored) : []
+      const updated = [newNoti, ...list.filter(item => item.id !== newNoti.id)].slice(0, 50)
+      localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated))
+      window.dispatchEvent(new CustomEvent(NOTIFICATION_EVENT_NAME, { detail: newNoti }))
+    } catch (e) {
+      console.error('Failed to save notification to localStorage', e)
+    }
+  }
+
+  return newNoti
 }
 
 export function resolveNotificationTarget(
@@ -31,6 +65,27 @@ export function resolveNotificationTarget(
   }
 
   const type = notification.type.toLowerCase()
+
+  // Account registration success
+  if (
+    type === 'account_registration_success' ||
+    type.includes('register') ||
+    type.includes('welcome')
+  ) {
+    if (userRole === 'landlord') return '/landlord'
+    if (userRole === 'tenant') return '/tenant'
+    return '/profile'
+  }
+
+  // Package payment success
+  if (
+    type === 'package_payment_success' ||
+    type.includes('package') ||
+    type.includes('subscription')
+  ) {
+    if (userRole === 'landlord') return '/landlord/reports'
+    return '/pricing'
+  }
 
   // Broadcast / holiday greetings: no redirection
   if (
@@ -83,13 +138,33 @@ export function resolveNotificationTarget(
 
 const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
   {
+    id: 'mock-noti-register',
+    title: 'Đăng ký tài khoản thành công',
+    content:
+      'Chào mừng bạn đến với Dormio! Tài khoản của bạn đã được khởi tạo và sẵn sàng sử dụng.',
+    type: 'account_registration_success',
+    isRead: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+    targetUrl: '/profile',
+  },
+  {
+    id: 'mock-noti-package-paid',
+    title: 'Thanh toán gói dịch vụ thành công',
+    content:
+      'Gói cước của bạn đã được thanh toán và kích hoạt thành công qua PayOS. Chúc bạn có trải nghiệm tuyệt vời!',
+    type: 'package_payment_success',
+    isRead: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 mins ago
+    targetUrl: '/pricing',
+  },
+  {
     id: 'mock-noti-1',
     title: 'Đến hạn thanh toán tiền trọ',
     content:
       'Hóa đơn tiền phòng tháng 09/2026 đã đến hạn. Vui lòng thanh toán trước ngày 15/09/2026.',
     type: 'rental_payment',
     isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
     targetUrl: '/tenant/invoices',
   },
   {
@@ -99,7 +174,7 @@ const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
       'Dormio kính chúc Quý khách hàng và cư dân một năm mới An Khang Thịnh Vượng, Vạn Sự Như Ý!',
     type: 'happy_new_year',
     isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
     targetUrl: null,
   },
   {
@@ -108,7 +183,7 @@ const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
     content: 'Chủ nhà trọ đã gửi bản dự thảo hợp đồng thuê phòng số P.203 cho bạn.',
     type: 'contract_created',
     isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     targetUrl: '/tenant/contracts',
   },
   {
@@ -117,13 +192,23 @@ const DEFAULT_MOCK_NOTIFICATIONS: InAppNotification[] = [
     content: 'Đã có chỉ số điện nước kỳ tháng này. Nhấn để kiểm tra và xác nhận số liệu.',
     type: 'meter_reading',
     isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
     targetUrl: '/tenant/meter-readings',
   },
 ]
 
 export const notificationService = {
   async getMyNotifications(): Promise<InAppNotification[]> {
+    let customList: InAppNotification[] = []
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
+        if (stored) customList = JSON.parse(stored)
+      } catch {
+        // Fallback
+      }
+    }
+
     try {
       const response = await api.get<any>('/v1/notifications', { silent: true })
       const list = Array.isArray(response)
@@ -132,18 +217,37 @@ export const notificationService = {
           ? response.data
           : null
 
-      if (list !== null) {
-        return list
-      }
-      return DEFAULT_MOCK_NOTIFICATIONS
+      const baseList: InAppNotification[] = list !== null ? list : DEFAULT_MOCK_NOTIFICATIONS
+      const merged = [
+        ...customList,
+        ...baseList.filter((b: InAppNotification) => !customList.some(c => c.id === b.id)),
+      ]
+      return merged
     } catch {
-      return DEFAULT_MOCK_NOTIFICATIONS
+      const merged = [
+        ...customList,
+        ...DEFAULT_MOCK_NOTIFICATIONS.filter((b: InAppNotification) => !customList.some(c => c.id === b.id)),
+      ]
+      return merged
     }
   },
 
   async markAsRead(id: string): Promise<void> {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
+        if (stored) {
+          const list: InAppNotification[] = JSON.parse(stored)
+          const updated = list.map(n => (n.id === id ? { ...n, isRead: true } : n))
+          localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated))
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
     try {
-      if (id.startsWith('mock-')) return
+      if (id.startsWith('mock-') || id.startsWith('custom-')) return
       await api.patch(`/v1/notifications/${id}/read`, {}, { silent: true })
     } catch {
       // Graceful fallback
@@ -151,6 +255,19 @@ export const notificationService = {
   },
 
   async markAllAsRead(): Promise<void> {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
+        if (stored) {
+          const list: InAppNotification[] = JSON.parse(stored)
+          const updated = list.map(n => ({ ...n, isRead: true }))
+          localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated))
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
     try {
       await api.patch('/v1/notifications/read-all', {}, { silent: true })
     } catch {

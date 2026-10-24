@@ -520,17 +520,13 @@ export default function CustomersPage() {
 
                 {/* Quick Inline Action Buttons */}
                 <Card.Footer className="px-4 sm:px-5 pt-1 pb-4 border-0 flex justify-end gap-1.5">
-                  <a
+                  <Button
                     href={`tel:${customer.phone}`}
-                    onClick={e => e.stopPropagation()}
+                    variant='success'
+                    leftIcon={<PhoneCall />}
                   >
-                    <Button
-                      variant='success'
-                      leftIcon={<PhoneCall />}
-                    >
-                      {t('landlordCustomersCallBtn')}
-                    </Button>
-                  </a>
+                    {t('landlordCustomersCallBtn')}
+                  </Button>
                   <Button
                     leftIcon={<MessageCircle />}
                     onClick={e => {
@@ -668,12 +664,11 @@ export default function CustomersPage() {
                           className="flex items-center justify-end gap-1.5"
                           onClick={e => e.stopPropagation()}
                         >
-                          <a href={`tel:${customer.phone}`} onClick={e => e.stopPropagation()}>
-                            <TableActionButton
-                              icon={<PhoneCall />}
-                              title={t('landlordCustomersCallBtn')}
-                            />
-                          </a>
+                          <TableActionButton
+                            href={`tel:${customer.phone}`}
+                            icon={<PhoneCall />}
+                            title={t('landlordCustomersCallBtn')}
+                          />
                           <TableActionButton
                             icon={<MessageCircle />}
                             title={t('landlordCustomersMessageBtn')}

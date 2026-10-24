@@ -502,15 +502,14 @@ export default function SendApplicationPage() {
                 {t('btnNewApplication')}
               </Button>
             ) : (
-              <Link href="/login?from=/send-application">
-                <Button
-                  size="md"
-                  leftIcon={<LogIn />}
-                  className="w-full sm:w-auto shadow-md shadow-primary/20"
-                >
-                  {t('loginBtn')}
-                </Button>
-              </Link>
+              <Button
+                href="/login?from=/send-application"
+                size="md"
+                leftIcon={<LogIn />}
+                className="w-full sm:w-auto shadow-md shadow-primary/20"
+              >
+                {t('loginBtn')}
+              </Button>
             )}
           </div>
         </div>
@@ -537,11 +536,9 @@ export default function SendApplicationPage() {
               {t('loginNoticeDesc')}
             </Text>
             <div className="pt-2">
-              <Link href="/login?from=/send-application">
-                <Button leftIcon={<LogIn />}>
-                  {t('loginBtn')}
-                </Button>
-              </Link>
+              <Button href="/login?from=/send-application" leftIcon={<LogIn />}>
+                {t('loginBtn')}
+              </Button>
             </div>
           </div>
         ) : (

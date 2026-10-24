@@ -460,13 +460,12 @@ export default function GuidePage() {
                 >
                   {t('landlordGuideModalClose')}
                 </Button>
-                <Link href={selectedGuide.actionHref}>
-                  <Button
-                    rightIcon={<ExternalLink />}
-                  >
-                    {t(selectedGuide.actionBtnKey)}
-                  </Button>
-                </Link>
+                <Button
+                  href={selectedGuide.actionHref}
+                  rightIcon={<ExternalLink />}
+                >
+                  {t(selectedGuide.actionBtnKey)}
+                </Button>
               </div>
             </div>
           </div>

@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import {
   notificationService,
   InAppNotification,
   resolveNotificationTarget,
+  NOTIFICATION_EVENT_NAME,
 } from '@/services/notification.service'
 import {
   Bell,
@@ -19,6 +20,8 @@ import {
   ChevronRight,
   Info,
   CheckCircle2,
+  UserCheck,
+  Crown,
 } from 'lucide-react'
 import { Button, Text, Chip } from '@/components/ui'
 
@@ -62,6 +65,26 @@ export default function NotificationBell({
 
   useEffect(() => {
     loadNotifications()
+  }, [])
+
+  // Listen for real-time local notification events
+  useEffect(() => {
+    const handleNotificationAdded = (event: Event) => {
+      const customEvent = event as CustomEvent<InAppNotification>
+      if (customEvent.detail) {
+        setNotifications(prev => [
+          customEvent.detail,
+          ...prev.filter(n => n.id !== customEvent.detail.id),
+        ])
+      } else {
+        loadNotifications()
+      }
+    }
+
+    window.addEventListener(NOTIFICATION_EVENT_NAME, handleNotificationAdded)
+    return () => {
+      window.removeEventListener(NOTIFICATION_EVENT_NAME, handleNotificationAdded)
+    }
   }, [])
 
   // Close when clicking outside
@@ -134,6 +157,28 @@ export default function NotificationBell({
 
   const getNotificationIcon = (type: string) => {
     const tLower = type.toLowerCase()
+    if (
+      tLower === 'account_registration_success' ||
+      tLower.includes('register') ||
+      tLower.includes('welcome')
+    ) {
+      return (
+        <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <UserCheck className="w-4 h-4" />
+        </div>
+      )
+    }
+    if (
+      tLower === 'package_payment_success' ||
+      tLower.includes('package') ||
+      tLower.includes('subscription')
+    ) {
+      return (
+        <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:bg-amber-500/25 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <Crown className="w-4 h-4" />
+        </div>
+      )
+    }
     if (tLower === 'happy_new_year' || tLower.includes('greeting') || tLower.includes('tet')) {
       return (
         <div className="w-8 h-8 rounded-xl bg-deposit-soft text-deposit flex items-center justify-center shrink-0">
@@ -194,7 +239,7 @@ export default function NotificationBell({
         aria-label={t('notifications')}
         title={t('notifications')}
       >
-        <Bell className='w-4 h-4' />
+        <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-xs animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -205,8 +250,9 @@ export default function NotificationBell({
       {/* Floating Popover Panel */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 w-80 sm:w-96 bg-card rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn ${align === 'right' ? 'right-0' : 'left-0'
-            }`}
+          className={`absolute top-full mt-2 w-80 sm:w-96 bg-card rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
         >
           {/* Popover Header */}
           <div className="flex items-center justify-between px-4 py-3.5 border-b border-line bg-surface/70">
@@ -224,11 +270,11 @@ export default function NotificationBell({
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
-                size='xs'
+                size="xs"
                 onClick={handleMarkAllAsRead}
-                leftIcon={<CheckCheck className='text-primary' />}
+                leftIcon={<CheckCheck className="text-primary" />}
               >
-                <Text color='brand' size='xs'>
+                <Text color="brand" size="xs">
                   {t('notificationsMarkAllRead')}
                 </Text>
               </Button>
@@ -265,7 +311,7 @@ export default function NotificationBell({
                   <div
                     key={item.id}
                     onClick={() => handleNotificationClick(item)}
-                    className={'p-3.5 transition-colors flex items-start gap-3 text-left bg-card hover:bg-card-hover'}
+                    className="p-3.5 transition-colors flex items-start gap-3 text-left bg-card hover:bg-card-hover cursor-pointer"
                   >
                     {getNotificationIcon(item.type)}
 
@@ -295,15 +341,16 @@ export default function NotificationBell({
                         </Text>
 
                         {hasRedirect ? (
-                          <Button variant='ghost' rightIcon={<ChevronRight className='text-accent' />}>
-                            <Text color='orange' size='xs' className='hover:underline'>
+                          <Button variant="ghost" rightIcon={<ChevronRight className="text-accent" />}>
+                            <Text color="orange" size="xs" className="hover:underline">
                               {t('viewDetail')}
                             </Text>
                           </Button>
                         ) : (
-                          <Button variant='ghost' leftIcon={<CheckCircle2 className='text-success' />}>
-                            <Text color='success' size='xs'>
-                              {t('notificationsSystemAnnouncement')}</Text>
+                          <Button variant="ghost" leftIcon={<CheckCircle2 className="text-success" />}>
+                            <Text color="success" size="xs">
+                              {t('notificationsSystemAnnouncement')}
+                            </Text>
                           </Button>
                         )}
                       </div>
@@ -319,7 +366,7 @@ export default function NotificationBell({
             <Button
               variant="ghost"
               onClick={() => setIsOpen(false)}
-              className="w-full "
+              className="w-full"
             >
               {t('close')}
             </Button>

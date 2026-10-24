@@ -487,11 +487,9 @@ function DepositPageInner() {
       <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 p-8">
         <AlertCircle className="w-10 h-10 text-muted" />
         <p className="text-muted font-semibold text-sm">{tGuest('guestRoomsErrorFetch')}</p>
-        <Link href={`/rooms/${id}`}>
-          <Button>
-            {tGuest('guestRoomDetailBackToList')}
-          </Button>
-        </Link>
+        <Button href={`/rooms/${id}`}>
+          {tGuest('guestRoomDetailBackToList')}
+        </Button>
       </div>
     )
   }

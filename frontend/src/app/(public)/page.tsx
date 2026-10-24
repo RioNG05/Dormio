@@ -298,26 +298,25 @@ export default function HomePage() {
           ) : (
             <div className="mt-8 sm:mt-10 flex flex-col items-center gap-6 w-full max-w-2xl animate-in fade-in duration-700">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
-                <Link href="/landlord" className="w-full sm:w-auto">
-                  <Button
-                    size="lg"
-                    rounded="full"
-                    rightIcon={<SquareArrowOutUpRight />}
-                  >
-                    {t('guestHomeTrialBtn')}
-                  </Button>
-                </Link>
-                <Link href="/pricing" className="w-full sm:w-auto">
-                  <Button
-                    variant="ghost"
-                    size="lg"
-                    rounded="full"
-                    rightIcon={<ArrowRight />}
-                    className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md transition-all duration-300"
-                  >
-                    {t('guestFeaturesViewPricingBtn')}
-                  </Button>
-                </Link>
+                <Button
+                  href="/landlord"
+                  size="lg"
+                  rounded="full"
+                  rightIcon={<SquareArrowOutUpRight />}
+                  className="w-full sm:w-auto"
+                >
+                  {t('guestHomeTrialBtn')}
+                </Button>
+                <Button
+                  href="/pricing"
+                  variant="ghost"
+                  size="lg"
+                  rounded="full"
+                  rightIcon={<ArrowRight />}
+                  className="w-full sm:w-auto px-8 py-3.5 text-white bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md transition-all duration-300"
+                >
+                  {t('guestFeaturesViewPricingBtn')}
+                </Button>
               </div>
 
               {/* Value Badges */}
@@ -341,16 +340,15 @@ export default function HomePage() {
           {/* Action Buttons Below Search (only when BHRP enabled) */}
           {FEATURE_FLAGS.ENABLE_BHRP && (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-              <Link href="#features">
-                <Button
-                  variant="dark"
-                  size="md"
-                  rounded="full"
-                  className="px-7 py-3 bg-zinc-900/80 hover:bg-accent text-white font-black text-xs sm:text-sm border border-zinc-700/80 hover:border-accent backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300"
-                >
-                  {t('guestHomeExploreBtn')}
-                </Button>
-              </Link>
+              <Button
+                href="#features"
+                variant="dark"
+                size="md"
+                rounded="full"
+                className="px-7 py-3 bg-zinc-900/80 hover:bg-accent text-white font-black text-xs sm:text-sm border border-zinc-700/80 hover:border-accent backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300"
+              >
+                {t('guestHomeExploreBtn')}
+              </Button>
             </div>
           )}
 
@@ -383,19 +381,14 @@ export default function HomePage() {
           </Text>
 
           {/* Main Headline */}
-          <Text
-            as="h2"
-            variant="heading"
-            size="2xl"
-            className="sm:text-4xl leading-snug"
-          >
-            <Text as="span" color="inherit" className="block sm:inline">
+          <div>
+            <Text size="4xl" weight='bold' color="inherit" className="block sm:inline">
               {t('guestHomeProcessTitle1')}{' '}
             </Text>
-            <Text as="span" color="inherit" className="block sm:inline">
+            <Text size="4xl" weight='bold' color="inherit" className="block sm:inline">
               {t('guestHomeProcessTitle2')}
             </Text>
-          </Text>
+          </div>
           <Text
             as="p"
             variant="subtitle"
@@ -516,11 +509,9 @@ export default function HomePage() {
                 <Text as="p" size="sm" weight="bold" color="secondary">
                   {t('guestHomeNoRooms')}
                 </Text>
-                <Link href="/rooms">
-                  <Button size="md" className="px-5 py-2.5 text-xs">
-                    {t('guestHomeExploreAllRooms')}
-                  </Button>
-                </Link>
+                <Button href="/rooms" size="md" className="px-5 py-2.5 text-xs">
+                  {t('guestHomeExploreAllRooms')}
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -585,16 +576,15 @@ export default function HomePage() {
                               {t('guestHomeMonth')}
                             </Text>
                           </div>
-                          <Link href={`/rooms/${room.id}`}>
-                            <Button
-                              variant="dark"
-                              size="xs"
-                              rightIcon={<ArrowRight />}
-                              className="px-4 py-2 rounded-xl"
-                            >
-                              {t('guestHomeViewDetail')}
-                            </Button>
-                          </Link>
+                          <Button
+                            href={`/rooms/${room.id}`}
+                            variant="dark"
+                            size="xs"
+                            rightIcon={<ArrowRight />}
+                            className="px-4 py-2 rounded-xl"
+                          >
+                            {t('guestHomeViewDetail')}
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -605,17 +595,16 @@ export default function HomePage() {
 
             {featuredRooms.length > 0 && (
               <div className="mt-12 text-center">
-                <Link href="/rooms">
-                  <Button
-                    variant="white"
-                    size="lg"
-                    rounded="full"
-                    rightIcon={<ArrowRight className="text-primary" />}
-                    className="px-8 py-3.5 font-extrabold text-xs hover:shadow-md"
-                  >
-                    {t('guestHomeExploreMoreRooms')}
-                  </Button>
-                </Link>
+                <Button
+                  href="/rooms"
+                  variant="white"
+                  size="lg"
+                  rounded="full"
+                  rightIcon={<ArrowRight className="text-primary" />}
+                  className="px-8 py-3.5 font-extrabold text-xs hover:shadow-md"
+                >
+                  {t('guestHomeExploreMoreRooms')}
+                </Button>
               </div>
             )}
           </>
@@ -695,17 +684,16 @@ export default function HomePage() {
             </div>
 
             <div className="text-center pt-4">
-              <Link href="/pricing">
-                <Button
-                  variant="white"
-                  size="lg"
-                  rounded="full"
-                  rightIcon={<ArrowRight className="text-primary" />}
-                  className="px-8 py-3.5 font-extrabold text-xs sm:text-sm hover:shadow-md"
-                >
-                  {t('guestHomeBhmsViewDetails')}
-                </Button>
-              </Link>
+              <Button
+                href="/pricing"
+                variant="white"
+                size="lg"
+                rounded="full"
+                rightIcon={<ArrowRight className="text-primary" />}
+                className="px-8 py-3.5 font-extrabold text-xs sm:text-sm hover:shadow-md"
+              >
+                {t('guestHomeBhmsViewDetails')}
+              </Button>
             </div>
           </div>
         )}
@@ -812,25 +800,23 @@ export default function HomePage() {
             </Text>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
-            <Link href="/register">
-              <Button
-                size="lg"
-                className="px-8 py-3.5"
-                rightIcon={<SquareArrowOutUpRight />}
-              >
-                {t('guestHomeCtaTrialBtn')}
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button
-                variant="accent"
-                size="lg"
-                className="px-8 py-3.5"
-                rightIcon={<Send />}
-              >
-                {t('guestHomeCtaConsultBtn')}
-              </Button>
-            </Link>
+            <Button
+              href="/register"
+              size="lg"
+              className="px-8 py-3.5"
+              rightIcon={<SquareArrowOutUpRight />}
+            >
+              {t('guestHomeCtaTrialBtn')}
+            </Button>
+            <Button
+              href="/contact"
+              variant="accent"
+              size="lg"
+              className="px-8 py-3.5"
+              rightIcon={<Send />}
+            >
+              {t('guestHomeCtaConsultBtn')}
+            </Button>
           </div>
         </div>
       </section>

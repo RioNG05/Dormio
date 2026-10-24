@@ -13,7 +13,6 @@ import {
   MoveRight,
   SquareArrowOutUpRight
 } from 'lucide-react'
-import Link from 'next/link'
 import { useTranslations } from '@/context/LanguageContext'
 import {
   Button,
@@ -320,25 +319,23 @@ export default function ContactPage() {
             {t('guestContactCtaSubtitle')}
           </Text>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link href="/landlord/setup" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                rightIcon={<SquareArrowOutUpRight />}
-                className="w-full sm:w-auto"
-              >
-                {t('guestContactUseFreeBtn')}
-              </Button>
-            </Link>
-            <Link href="/pricing" className="w-full sm:w-auto">
-              <Button
-                variant="accent"
-                size="lg"
-                rightIcon={<MoveRight />}
-                className="w-full sm:w-auto"
-              >
-                {t('guestFeaturesViewPricingBtn')}
-              </Button>
-            </Link>
+            <Button
+              href="/landlord/setup"
+              size="lg"
+              rightIcon={<SquareArrowOutUpRight />}
+              className="w-full sm:w-auto"
+            >
+              {t('guestContactUseFreeBtn')}
+            </Button>
+            <Button
+              href="/pricing"
+              variant="accent"
+              size="lg"
+              rightIcon={<MoveRight />}
+              className="w-full sm:w-auto"
+            >
+              {t('guestFeaturesViewPricingBtn')}
+            </Button>
           </div>
         </div>
       </div>

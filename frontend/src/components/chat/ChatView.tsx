@@ -476,11 +476,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
               {/* Top Action Controls */}
               <div className="flex items-center gap-1.5 shrink-0">
                 {activeChat.participant.phoneNumber && (
-                  <a href={`tel:${activeChat.participant.phoneNumber}`}>
-                    <Button variant="ghost" size="icon-sm" title="Gọi điện">
-                      <Phone className="w-4 h-4" />
-                    </Button>
-                  </a>
+                  <Button
+                    href={`tel:${activeChat.participant.phoneNumber}`}
+                    variant="ghost"
+                    size="icon-sm"
+                    title="Gọi điện"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </Button>
                 )}
                 <Button
                   variant="ghost"

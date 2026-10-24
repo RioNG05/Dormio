@@ -347,13 +347,11 @@ export default function TenantMeterReadingsPage() {
             </Button>
           }
           secondaryAction={
-            <Link href="/tenant">
-              <Button>
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('btnBackToDashboard')}
-                </Text>
-              </Button>
-            </Link>
+            <Button href="/tenant">
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('btnBackToDashboard')}
+              </Text>
+            </Button>
           }
         />
       </div>
@@ -369,13 +367,11 @@ export default function TenantMeterReadingsPage() {
           title={t('noMeteredServicesTitle')}
           description={t('noMeteredServicesDesc')}
           action={
-            <Link href="/tenant">
-              <Button>
-                <Text as="span" size="xs" weight="bold" color="inherit">
-                  {t('btnBackToDashboard')}
-                </Text>
-              </Button>
-            </Link>
+            <Button href="/tenant">
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('btnBackToDashboard')}
+              </Text>
+            </Button>
           }
         />
       </div>
@@ -944,27 +940,26 @@ export default function TenantMeterReadingsPage() {
 
               {/* Actions */}
               <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                <Link
+                <Button
                   href="/tenant/invoices"
+                  variant="outline"
+                  fullWidth
                   className="w-full sm:w-1/2"
                 >
-                  <Button variant="outline" fullWidth>
-                    <Text as="span" size="xs" weight="bold" color="inherit">
-                      {t('viewInvoicesListBtn')}
-                    </Text>
-                  </Button>
-                </Link>
+                  <Text as="span" size="xs" weight="bold" color="inherit">
+                    {t('viewInvoicesListBtn')}
+                  </Text>
+                </Button>
 
-                <Link
+                <Button
                   href="/tenant/invoices"
+                  fullWidth
                   className="w-full sm:w-1/2"
                 >
-                  <Button fullWidth>
-                    <Text as="span" size="xs" weight="bold" color="inherit">
-                      {t('payNowVietQrBtn')}
-                    </Text>
-                  </Button>
-                </Link>
+                  <Text as="span" size="xs" weight="bold" color="inherit">
+                    {t('payNowVietQrBtn')}
+                  </Text>
+                </Button>
               </div>
             </>
           )}

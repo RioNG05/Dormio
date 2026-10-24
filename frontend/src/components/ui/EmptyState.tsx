@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { FolderOpen } from 'lucide-react'
 import { Text } from './Text'
 import { Button } from './Button'
@@ -36,11 +35,9 @@ function renderAction(
     const variantProp = variant !== 'primary' ? variant : undefined
     if (config.href) {
       return (
-        <Link href={config.href}>
-          <Button variant={variantProp} onClick={config.onClick}>
-            {config.label}
-          </Button>
-        </Link>
+        <Button href={config.href} variant={variantProp} onClick={config.onClick}>
+          {config.label}
+        </Button>
       )
     }
     return (

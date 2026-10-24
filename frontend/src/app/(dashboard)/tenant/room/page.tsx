@@ -128,11 +128,9 @@ export default function TenantRoomPage() {
             title={t('tenantRoomNotFoundTitle')}
             description={t('tenantRoomNotFoundDesc')}
             action={
-              <Link href="/tenant">
-                <Button size="md">
-                  {t('tenantBackToDashboard')}
-                </Button>
-              </Link>
+              <Button href="/tenant" size="md">
+                {t('tenantBackToDashboard')}
+              </Button>
             }
           />
         </div>

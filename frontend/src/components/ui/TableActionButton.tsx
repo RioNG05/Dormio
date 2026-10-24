@@ -9,7 +9,7 @@ export interface TableActionButtonProps
   danger?: boolean
 }
 
-export const TableActionButton = React.forwardRef<HTMLButtonElement, TableActionButtonProps>(
+export const TableActionButton = React.forwardRef<any, TableActionButtonProps>(
   ({ title, icon, variant = 'ghost', danger = false, ...props }, ref) => {
     return (
       <Button

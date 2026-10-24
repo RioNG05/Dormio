@@ -107,74 +107,74 @@ export default function AdminDashboardPage() {
 
   const stats = overview
     ? [
-        {
-          id: 'users',
-          label: t('adminStatTotalUsers'),
-          value: new Intl.NumberFormat(numberLocale).format(overview.totalUsers || 0),
-          subtext: t('adminStatUserSubtext', {
-            tenants: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.tenant || 0),
-            landlords: new Intl.NumberFormat(numberLocale).format(
-              overview.userRoles?.landlord || 0,
-            ),
-            staff: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.employee || 0),
-          }),
-          growth: `${overview.userGrowthRate >= 0 ? '+' : ''}${overview.userGrowthRate || 0}%`,
-          isPositive: (overview.userGrowthRate || 0) >= 0,
-          icon: Users,
-          color: 'text-info bg-info-soft border-info-subtle',
-          link: '/admin/users',
-        },
-        {
-          id: 'properties',
-          label: t('adminStatHousesRooms'),
-          value: new Intl.NumberFormat(numberLocale).format(overview.totalHouses || 0),
-          subtext: t('adminStatPropSubtext', {
-            rooms: new Intl.NumberFormat(numberLocale).format(overview.totalRooms || 0),
-            occupancy: overview.occupancyRate || 0,
-          }),
-          growth: `${overview.propertyGrowthRate >= 0 ? '+' : ''}${overview.propertyGrowthRate || 0}%`,
-          isPositive: (overview.propertyGrowthRate || 0) >= 0,
-          icon: Building2,
-          color: 'text-success bg-success-soft border-success-subtle',
-          link: '/admin/boarding-houses',
-        },
-        {
-          id: 'revenue',
-          label: t('adminStatPlatformRevenue'),
-          value: new Intl.NumberFormat(numberLocale).format(overview.platformRevenue || 0),
-          unit: '₫',
-          subtext: t('adminStatRevenueSubtext'),
-          growth: `${overview.revenueGrowthRate >= 0 ? '+' : ''}${overview.revenueGrowthRate || 0}%`,
-          isPositive: (overview.revenueGrowthRate || 0) >= 0,
-          icon: Wallet,
-          color: 'text-orange-600 bg-accent-soft border-accent-subtle',
-          link: '/admin/analytics',
-        },
-        {
-          id: 'grievances',
-          label: t('adminStatPendingGrievances'),
-          value: String(overview.pendingGrievancesCount || 0),
-          subtext: t('adminStatUrgentGrvText', { count: overview.urgentGrievancesCount || 0 }),
-          growth: t('adminStatActionNeeded'),
-          isPositive: false,
-          icon: AlertTriangle,
-          color: 'text-orange-600 bg-accent-soft border-accent-subtle',
-          badge: t('adminStatUrgentBadge', { count: overview.urgentGrievancesCount || 0 }),
-          link: '/admin/grievances',
-        },
-        {
-          id: 'moderation',
-          label: t('adminStatReportedItems'),
-          value: String(overview.reportedItemsCount || 0),
-          subtext: t('adminStatReportedSubtext'),
-          growth: t('adminStatNeedsReview'),
-          isPositive: false,
-          icon: ShieldAlert,
-          color: 'text-warning bg-warning-soft border-warning-subtle',
-          badge: t('adminStatItemsBadge', { count: overview.reportedItemsCount || 0 }),
-          link: '/admin/blogs',
-        },
-      ]
+      {
+        id: 'users',
+        label: t('adminStatTotalUsers'),
+        value: new Intl.NumberFormat(numberLocale).format(overview.totalUsers || 0),
+        subtext: t('adminStatUserSubtext', {
+          tenants: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.tenant || 0),
+          landlords: new Intl.NumberFormat(numberLocale).format(
+            overview.userRoles?.landlord || 0,
+          ),
+          staff: new Intl.NumberFormat(numberLocale).format(overview.userRoles?.employee || 0),
+        }),
+        growth: `${overview.userGrowthRate >= 0 ? '+' : ''}${overview.userGrowthRate || 0}%`,
+        isPositive: (overview.userGrowthRate || 0) >= 0,
+        icon: Users,
+        color: 'text-info bg-info-soft border-info-subtle',
+        link: '/admin/users',
+      },
+      {
+        id: 'properties',
+        label: t('adminStatHousesRooms'),
+        value: new Intl.NumberFormat(numberLocale).format(overview.totalHouses || 0),
+        subtext: t('adminStatPropSubtext', {
+          rooms: new Intl.NumberFormat(numberLocale).format(overview.totalRooms || 0),
+          occupancy: overview.occupancyRate || 0,
+        }),
+        growth: `${overview.propertyGrowthRate >= 0 ? '+' : ''}${overview.propertyGrowthRate || 0}%`,
+        isPositive: (overview.propertyGrowthRate || 0) >= 0,
+        icon: Building2,
+        color: 'text-success bg-success-soft border-success-subtle',
+        link: '/admin/boarding-houses',
+      },
+      {
+        id: 'revenue',
+        label: t('adminStatPlatformRevenue'),
+        value: new Intl.NumberFormat(numberLocale).format(overview.platformRevenue || 0),
+        unit: '₫',
+        subtext: t('adminStatRevenueSubtext'),
+        growth: `${overview.revenueGrowthRate >= 0 ? '+' : ''}${overview.revenueGrowthRate || 0}%`,
+        isPositive: (overview.revenueGrowthRate || 0) >= 0,
+        icon: Wallet,
+        color: 'text-orange-600 bg-accent-soft border-accent-subtle',
+        link: '/admin/analytics',
+      },
+      {
+        id: 'grievances',
+        label: t('adminStatPendingGrievances'),
+        value: String(overview.pendingGrievancesCount || 0),
+        subtext: t('adminStatUrgentGrvText', { count: overview.urgentGrievancesCount || 0 }),
+        growth: t('adminStatActionNeeded'),
+        isPositive: false,
+        icon: AlertTriangle,
+        color: 'text-orange-600 bg-accent-soft border-accent-subtle',
+        badge: t('adminStatUrgentBadge', { count: overview.urgentGrievancesCount || 0 }),
+        link: '/admin/grievances',
+      },
+      {
+        id: 'moderation',
+        label: t('adminStatReportedItems'),
+        value: String(overview.reportedItemsCount || 0),
+        subtext: t('adminStatReportedSubtext'),
+        growth: t('adminStatNeedsReview'),
+        isPositive: false,
+        icon: ShieldAlert,
+        color: 'text-warning bg-warning-soft border-warning-subtle',
+        badge: t('adminStatItemsBadge', { count: overview.reportedItemsCount || 0 }),
+        link: '/admin/blogs',
+      },
+    ]
     : []
 
   return (
@@ -214,30 +214,38 @@ export default function AdminDashboardPage() {
           {/* Quick Actions & Refresh */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Button
+              size='md'
               variant="outline"
               onClick={() => fetchDashboardData(true)}
               isLoading={isRefreshing}
               leftIcon={<RefreshCw />}
+              className='text-white'
             >
               {t('adminRefresh')}
             </Button>
             <Button
+              size='md'
               variant="outline"
               onClick={() => router.push('/admin/notifications')}
               leftIcon={<Megaphone />}
+              className='text-white'
             >
               {t('adminActionSendBroadcast')}
             </Button>
             <Button
+              size='md'
               variant="outline"
               onClick={() => router.push('/admin/blogs')}
               leftIcon={<Newspaper />}
+              className='text-white'
             >
               {t('adminActionNewBlog')}
             </Button>
             <Button
+              size='md'
               onClick={() => router.push('/admin/analytics')}
               leftIcon={<TrendingUp />}
+              className='text-white'
             >
               {t('adminActionFullAnalytics')}
             </Button>
@@ -302,11 +310,10 @@ export default function AdminDashboardPage() {
                     </div>
                     {item.growth && (
                       <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
-                          item.isPositive
+                        className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${item.isPositive
                             ? 'text-success bg-success-soft border-success-subtle'
                             : 'text-accent bg-accent-soft border-accent-subtle'
-                        }`}
+                          }`}
                       >
                         {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
                         {!item.isPositive && <AlertTriangle className="w-3 h-3 shrink-0" />}
@@ -399,8 +406,8 @@ export default function AdminDashboardPage() {
                   {isLoading
                     ? t('adminViewAll')
                     : t('adminViewAllWithCount', {
-                        count: overview?.pendingGrievancesCount ?? urgentGrievances.length,
-                      })}
+                      count: overview?.pendingGrievancesCount ?? urgentGrievances.length,
+                    })}
                 </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
@@ -439,13 +446,12 @@ export default function AdminDashboardPage() {
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                            item.priority === 'high'
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${item.priority === 'high'
                               ? 'bg-orange-600 text-white'
                               : item.priority === 'medium'
                                 ? 'bg-amber-500 text-white'
                                 : 'bg-zinc-600 text-white'
-                          }`}
+                            }`}
                         >
                           {item.priority === 'high'
                             ? t('adminPriorityHigh')
@@ -522,8 +528,8 @@ export default function AdminDashboardPage() {
                   {isLoading
                     ? t('adminInspect')
                     : t('adminInspectWithCount', {
-                        count: overview?.reportedItemsCount ?? flaggedListings.length,
-                      })}
+                      count: overview?.reportedItemsCount ?? flaggedListings.length,
+                    })}
                 </span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>

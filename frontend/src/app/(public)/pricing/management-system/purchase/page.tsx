@@ -30,6 +30,7 @@ import {
   SubscriptionCheckoutResponse,
 } from '@/services/subscription.service'
 import { formatCurrency, formatDate, resolveErrorMessage } from '@/utils'
+import { addCustomNotification } from '@/services/notification.service'
 import IdentityGuard from '@/components/IdentityGuard'
 
 const BANK_NAMES: Record<string, string> = {
@@ -81,6 +82,7 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
   const { locale } = useLanguage()
   const t = useTranslations('guest')
   const tErrors = useTranslations('errors')
+  const tCommon = useTranslations('common')
 
   // Data states
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlanItem | null>(null)
@@ -226,6 +228,12 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
           setIsSuccess(true)
           const planTitle = planParam.toUpperCase()
           showToast('success', t('guestPricingCheckoutSuccessToast', { plan: planTitle }))
+          addCustomNotification({
+            title: tCommon('notiPackagePaymentSuccessTitle'),
+            content: tCommon('notiPackagePaymentSuccessContent'),
+            type: 'package_payment_success',
+            targetUrl: '/landlord/reports',
+          })
         }
       } catch (err) {
         // Silent poll error
@@ -284,16 +292,15 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen pb-28 animate-in fade-in duration-300">
       {/* Header bar */}
       <div className="mb-8">
-        <Link href="/pricing" className="inline-flex mb-4">
-          <Button
-            variant="ghost"
-            size="xs"
-            leftIcon={<ArrowLeft />}
-            className="text-muted hover:text-foreground -ml-2.5"
-          >
-            {t('guestPricingCheckoutBackToPricing')}
-          </Button>
-        </Link>
+        <Button
+          href="/pricing"
+          variant="ghost"
+          size="xs"
+          leftIcon={<ArrowLeft />}
+          className="text-muted hover:text-foreground -ml-2.5 mb-4 inline-flex"
+        >
+          {t('guestPricingCheckoutBackToPricing')}
+        </Button>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <Text
@@ -363,11 +370,9 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
           <Text variant="body" size="sm" color="secondary" className="mb-6">
             {t('guestPricingCheckoutNotFoundDesc')}
           </Text>
-          <Link href="/pricing">
-            <Button variant="dark">
-              {t('guestPricingCheckoutBackToPlansBtn')}
-            </Button>
-          </Link>
+          <Button href="/pricing" variant="dark">
+            {t('guestPricingCheckoutBackToPlansBtn')}
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -597,15 +602,14 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
                   )}
 
                   <div className="pt-2">
-                    <Link href="/landlord/reports">
-                      <Button
-                        size="md"
-                        variant="dark"
-                        rightIcon={<ArrowRight />}
-                      >
-                        {t('guestPricingCheckoutGoToDashboard')}
-                      </Button>
-                    </Link>
+                    <Button
+                      href="/landlord/reports"
+                      size="md"
+                      variant="dark"
+                      rightIcon={<ArrowRight />}
+                    >
+                      {t('guestPricingCheckoutGoToDashboard')}
+                    </Button>
                   </div>
                 </div>
               ) : checkoutData ? (

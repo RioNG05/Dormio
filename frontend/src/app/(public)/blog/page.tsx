@@ -393,25 +393,23 @@ export default function BlogPage() {
             {t('guestContactCtaSubtitle')}
           </Text>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2">
-            <Link href="/register" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                rightIcon={<SquareArrowOutUpRight />}
-                className="w-full sm:w-auto"
-              >
-                {t('guestFeaturesTrialBtn')}
-              </Button>
-            </Link>
-            <Link href="/pricing" className="w-full sm:w-auto">
-              <Button
-                variant="accent"
-                size="lg"
-                rightIcon={<MoveRight />}
-                className="w-full sm:w-auto"
-              >
-                {t('guestFeaturesViewPricingBtn')}
-              </Button>
-            </Link>
+            <Button
+              href="/register"
+              size="lg"
+              rightIcon={<SquareArrowOutUpRight />}
+              className="w-full sm:w-auto"
+            >
+              {t('guestFeaturesTrialBtn')}
+            </Button>
+            <Button
+              href="/pricing"
+              variant="accent"
+              size="lg"
+              rightIcon={<MoveRight />}
+              className="w-full sm:w-auto"
+            >
+              {t('guestFeaturesViewPricingBtn')}
+            </Button>
           </div>
         </div>
       </div>

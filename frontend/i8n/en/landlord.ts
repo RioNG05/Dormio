@@ -4,6 +4,7 @@ export const enLandlord = {
     landlordAssetsAddAsset: "Add New Asset",
     landlordAssetsBannerSub: "Equipment and asset management by SKU codes. Depreciation value is calculated automatically by months in service.",
     landlordAssetsBroken: "Damaged / Broken",
+    landlordAssetsBtnAdd: "Add New Asset",
     landlordAssetsBtnCancel: "Cancel",
     landlordAssetsBtnDelete: "Delete",
     landlordAssetsBtnEdit: "Edit",

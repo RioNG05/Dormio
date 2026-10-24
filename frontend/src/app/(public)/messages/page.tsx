@@ -1,7 +1,6 @@
 'use client'
 
 import React, { Suspense } from 'react'
-import Link from 'next/link'
 import { ChevronLeft, Lock } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
@@ -40,15 +39,14 @@ function GuestMessagesContent() {
         >
           {t('guestMessagesLockDesc')}
         </Text>
-        <Link href="/login?redirect=/messages">
-          <Button
-            size="lg"
-            rightIcon={<span>&rarr;</span>}
-            className="rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
-          >
-            {t('guestMessagesLoginBtn')}
-          </Button>
-        </Link>
+        <Button
+          href="/login?redirect=/messages"
+          size="lg"
+          rightIcon={<span>&rarr;</span>}
+          className="rounded-2xl shadow-lg shadow-primary/25 hover:scale-105"
+        >
+          {t('guestMessagesLoginBtn')}
+        </Button>
       </div>
     )
   }
@@ -57,11 +55,9 @@ function GuestMessagesContent() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-4">
       {/* Top Header Trail */}
       <div className="flex items-center gap-3">
-        <Link href="/">
-          <Button variant="ghost" size="icon-sm" title="Quay lại">
-            <ChevronLeft />
-          </Button>
-        </Link>
+        <Button href="/" variant="ghost" size="icon-sm" title="Quay lại">
+          <ChevronLeft />
+        </Button>
         <div>
           <Text as="h1" variant="heading" size="2xl" weight="black">
             {t('guestMessagesTitle')}

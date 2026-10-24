@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ShieldOff, Home, LogIn, LogOut, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -89,31 +88,29 @@ export default function UnauthorizedPage() {
               {t('unauthorizedBtnBack')}
             </Button>
 
-            <Link href="/" className="w-full">
-              <Button
-                variant="white"
-                size="md"
-                fullWidth
-                leftIcon={<Home strokeWidth={2} />}
-                className="font-semibold text-sm text-foreground/90"
-              >
-                {t('unauthorizedBtnHome')}
-              </Button>
-            </Link>
-          </div>
-
-          {/* Secondary: Log in (keep session, just navigate) */}
-          <Link href="/login" className="w-full">
             <Button
+              href="/"
               variant="white"
               size="md"
               fullWidth
-              leftIcon={<LogIn />}
-              className="font-semibold text-sm text-foreground/90"
+              leftIcon={<Home strokeWidth={2} />}
+              className="font-semibold text-sm text-foreground/90 w-full"
             >
-              {t('unauthorizedBtnLogin')}
+              {t('unauthorizedBtnHome')}
             </Button>
-          </Link>
+          </div>
+
+          {/* Secondary: Log in (keep session, just navigate) */}
+          <Button
+            href="/login"
+            variant="white"
+            size="md"
+            fullWidth
+            leftIcon={<LogIn />}
+            className="font-semibold text-sm text-foreground/90 w-full"
+          >
+            {t('unauthorizedBtnLogin')}
+          </Button>
 
           {/* Tertiary: Logout and switch account */}
           <Button

@@ -919,17 +919,13 @@ export default function AssetDetailPage() {
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-1">
-                <Link href="/landlord/customers">
-                  <Button variant="outline">
-                    {t('landlordAssetsDetailViewTenant')}
-                  </Button>
-                </Link>
+                <Button href="/landlord/customers" variant="outline">
+                  {t('landlordAssetsDetailViewTenant')}
+                </Button>
                 {asset.tenant.contractId && (
-                  <Link href="/landlord/contracts">
-                    <Button variant="secondary">
-                      {t('landlordAssetsDetailViewContract')}
-                    </Button>
-                  </Link>
+                  <Button href="/landlord/contracts" variant="secondary">
+                    {t('landlordAssetsDetailViewContract')}
+                  </Button>
                 )}
               </div>
             </div>
