@@ -23,6 +23,7 @@ import {
   Phone,
   DoorOpen,
   PieChart,
+  MapPin,
 } from 'lucide-react'
 import {
   Button,
@@ -416,11 +417,11 @@ export default function AdminBoardingHouseModerationPage() {
                   key={item.id}
                   interactive
                   onClick={() => router.push(`/admin/houses/${item.id}`)}
-                  className="overflow-hidden flex flex-col justify-between group cursor-pointer border border-line hover:border-primary/50 transition-all duration-200"
+                  className="p-4 flex flex-col justify-between h-full group"
                 >
-                  <div>
+                  <Card.Header className="flex-col items-stretch gap-3 border-b border-line pb-3">
                     {/* Cover Image & Status Badge */}
-                    <div className="relative h-44 w-full bg-surface overflow-hidden rounded-xl border border-line mb-3">
+                    <div className="relative h-44 w-full bg-surface overflow-hidden rounded-xl border border-line">
                       <img
                         src={item.coverImage || '/house-placeholder.jpg'}
                         alt={item.name}
@@ -445,16 +446,25 @@ export default function AdminBoardingHouseModerationPage() {
 
                     {/* House Info */}
                     <div className="space-y-1">
-                      <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      <h3
+                        className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1"
+                        title={item.name}
+                      >
                         {item.name}
                       </h3>
-                      <p className="text-xs text-muted line-clamp-1">
-                        {item.address}
+                      <p
+                        className="text-xs text-muted line-clamp-1 flex items-center gap-1.5"
+                        title={item.address}
+                      >
+                        <MapPin className="w-3.5 h-3.5 text-muted shrink-0" />
+                        <span className="truncate">{item.address}</span>
                       </p>
                     </div>
+                  </Card.Header>
 
+                  <Card.Body className="py-3 flex-1 flex flex-col justify-between space-y-3">
                     {/* Landlord Contact */}
-                    <div className="mt-3 p-2.5 rounded-xl bg-surface/60 border border-line space-y-1 text-xs">
+                    <div className="p-2.5 rounded-xl bg-surface/60 border border-line space-y-1 text-xs">
                       <div className="flex items-center gap-1.5 font-semibold text-foreground">
                         <User className="w-3.5 h-3.5 text-muted shrink-0" />
                         <span className="truncate">{item.landlordName || '---'}</span>
@@ -466,7 +476,7 @@ export default function AdminBoardingHouseModerationPage() {
                     </div>
 
                     {/* Metrics: Rooms & Occupancy */}
-                    <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="p-2 rounded-xl bg-card-hover flex items-center gap-2">
                         <DoorOpen className="w-4 h-4 text-primary shrink-0" />
                         <div>
@@ -482,10 +492,10 @@ export default function AdminBoardingHouseModerationPage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card.Body>
 
                   {/* Card Footer Actions (Row click navigates; button stops propagation) */}
-                  <div className="pt-3 mt-3 border-t border-line flex items-center justify-between">
+                  <Card.Footer className="border-t border-line pt-3 mt-auto flex items-center justify-between gap-2">
                     <span className="text-[11px] text-muted font-medium">
                       {item.occupiedRooms}/{item.totalRooms} phòng đã thuê
                     </span>
@@ -494,7 +504,10 @@ export default function AdminBoardingHouseModerationPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleOpenUnlock(item)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenUnlock(item)
+                          }}
                           leftIcon={<Unlock className="w-3.5 h-3.5 text-success" />}
                         >
                           {t('adminHouseModUnlockHouse')}
@@ -503,14 +516,17 @@ export default function AdminBoardingHouseModerationPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleOpenLock(item)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleOpenLock(item)
+                          }}
                           leftIcon={<Lock className="w-3.5 h-3.5 text-danger" />}
                         >
                           {t('adminHouseModLockHouse')}
                         </Button>
                       )}
                     </div>
-                  </div>
+                  </Card.Footer>
                 </Card>
               )
             })}
