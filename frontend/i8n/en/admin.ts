@@ -76,7 +76,7 @@ export const enAdmin = {
     adminAnalyticsTabUsers: "Users Analytics",
     adminAnalyticsTabProperties: "Properties & Rooms",
     adminAnalyticsTabListings: "BHRP Listings",
-    adminAnalyticsRevModeLabel: "Revenue Granularity Mode:",
+    adminAnalyticsRevModeLabel: "Period :",
     adminAnalyticsRevModeMonth: "By Month",
     adminAnalyticsRevModeQuarter: "By Quarter",
     adminAnalyticsRevModeYear: "By Year",

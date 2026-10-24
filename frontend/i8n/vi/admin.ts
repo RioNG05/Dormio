@@ -76,7 +76,7 @@ export const viAdmin = {
     adminAnalyticsTabUsers: "Người Dùng Toàn Hệ Thống",
     adminAnalyticsTabProperties: "Nhà Trọ & Phòng",
     adminAnalyticsTabListings: "Tin Đăng BHRP",
-    adminAnalyticsRevModeLabel: "Chế độ tổng hợp dòng tiền:",
+    adminAnalyticsRevModeLabel: "Khoảng thời gian:",
     adminAnalyticsRevModeMonth: "Theo Tháng",
     adminAnalyticsRevModeQuarter: "Theo Quý",
     adminAnalyticsRevModeYear: "Theo Năm",

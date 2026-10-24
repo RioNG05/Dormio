@@ -24,9 +24,9 @@ import {
   Bookmark,
   FileText,
   Layers,
-  Sparkles,
   AlertTriangle,
   Inbox,
+  CalendarMinus2,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -278,7 +278,7 @@ export default function AdminAnalyticsPage() {
           {/* Sub-controls: Granularity Period Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-3.5 rounded-2xl border border-line shadow-xs">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-orange-500" />
+              <CalendarMinus2 className="w-4 h-4 text-orange-500" />
               <span className="text-xs font-bold text-foreground">
                 {t('adminAnalyticsRevModeLabel')}
               </span>
@@ -343,11 +343,10 @@ export default function AdminAnalyticsPage() {
                   </div>
                   <div className="mt-3 flex items-center gap-2">
                     <span
-                      className={`inline-flex items-center gap-0.5 text-xs font-black px-2 py-0.5 rounded-full ${
-                        (revenueData?.summary.revenueGrowthRate || 0) >= 0
+                      className={`inline-flex items-center gap-0.5 text-xs font-black px-2 py-0.5 rounded-full ${(revenueData?.summary.revenueGrowthRate || 0) >= 0
                           ? 'bg-success-soft text-success'
                           : 'bg-danger-soft text-danger'
-                      }`}
+                        }`}
                     >
                       {(revenueData?.summary.revenueGrowthRate || 0) >= 0 ? (
                         <ArrowUpRight className="w-3.5 h-3.5" />
@@ -627,11 +626,10 @@ export default function AdminAnalyticsPage() {
                       {formatNumber(userData?.summary.totalUsers)}
                     </span>
                     <span
-                      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${
-                        (userData?.summary.growthRate || 0) >= 0
+                      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${(userData?.summary.growthRate || 0) >= 0
                           ? 'bg-success-soft text-success'
                           : 'bg-danger-soft text-danger'
-                      }`}
+                        }`}
                     >
                       {(userData?.summary.growthRate || 0) >= 0 ? '+' : ''}
                       {userData?.summary.growthRate || 0}%
@@ -680,7 +678,7 @@ export default function AdminAnalyticsPage() {
                   <div className="mt-2 text-2xl font-black text-success">
                     {formatNumber(
                       (userData?.summary.byRole.employee || 0) +
-                        (userData?.summary.byRole.leasing_agent || 0),
+                      (userData?.summary.byRole.leasing_agent || 0),
                     )}
                   </div>
                   <p className="text-xs text-muted mt-2">
@@ -859,7 +857,7 @@ export default function AdminAnalyticsPage() {
                     <tbody className="divide-y divide-line text-xs text-foreground/90">
                       {propertyData?.summary.regions && propertyData.summary.regions.length > 0 ? (
                         propertyData.summary.regions.map((reg, idx) => (
-                          <tr key={idx} className="hover:bg-zinc-50/80 transition-colors">
+                          <tr key={idx} className="transition-colors">
                             <td className="py-3 px-4 font-bold text-foreground">{reg.name}</td>
                             <td className="py-3 px-4">{formatNumber(reg.houses)}</td>
                             <td className="py-3 px-4 font-semibold">{formatNumber(reg.rooms)}</td>
