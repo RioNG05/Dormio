@@ -98,11 +98,6 @@ export function DashboardTenantRoomSelector() {
                               {t.roomTypeName}
                             </span>
                           )}
-                          {t.isPrimary && (
-                            <span className="text-3xs px-1.5 py-0.5 rounded bg-primary-soft text-primary font-bold leading-none">
-                              {tNav('primaryBadge')}
-                            </span>
-                          )}
                         </div>
                         <Text as="p" size="3xs" weight="medium" color="subtle" truncate className="mt-0.5 block">
                           {t.boardingHouseName} • {tNav('roomFloorBadge', { floor: t.floor })}

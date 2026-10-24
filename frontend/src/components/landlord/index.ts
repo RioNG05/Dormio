@@ -5,3 +5,5 @@ export * from './CoverPhotoUpload'
 export * from './MapAddressPicker'
 export { Pagination, usePagination } from '@/components/ui/Pagination'
 export { ViewModeToggle } from '@/components/ui/ViewModeToggle'
+
+export * from './AddTenantModal'

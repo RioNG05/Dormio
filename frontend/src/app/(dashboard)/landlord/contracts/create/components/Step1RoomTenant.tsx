@@ -17,20 +17,31 @@ import {
   Unlock,
   UploadCloud,
   User,
+  UserPlus,
   X,
 } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, DateInput, SelectInput, TextInput } from '@/components/ui'
+import { AddTenantModal } from '@/components/landlord/AddTenantModal'
 import { useContractCreate } from '../context/ContractCreateContext'
 import { ContractWizardFooter } from './ContractWizardFooter'
 
 export function Step1RoomTenant() {
+  const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
   const {
     rooms,
     selectedRoomId,
     setSelectedRoomId,
     selectedRoomObj,
+    roomOccupants,
+    isLoadingOccupants,
+    selectedOccupantId,
+    setSelectedOccupantId,
+    isAddOccupantModalOpen,
+    setIsAddOccupantModalOpen,
+    handleOccupantAdded,
     isCheckingDeposit,
     flowType,
     pendingDeposit,
@@ -86,7 +97,7 @@ export function Step1RoomTenant() {
             <Home className="w-4 h-4 text-primary" />
             {t('landlordContractsCreateRoomSelectLabel')}
           </h2>
-          {isCheckingDeposit && (
+          {(isCheckingDeposit || isLoadingOccupants) && (
             <span className="flex items-center gap-1.5 text-xs text-primary font-bold">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               {t('landlordContractsCreateTenantSearching')}
@@ -171,122 +182,156 @@ export function Step1RoomTenant() {
       </div>
 
       {/* Tenant Information Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-line pb-3">
-          <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
-            <User className="w-4 h-4 text-primary" />
-            {t('landlordContractsCreateStep1Header')}
-          </h2>
+      {!selectedRoomId ? (
+        <div className="p-5 bg-surface border border-line rounded-2xl flex items-center gap-3 text-xs text-muted">
+          <Info className="w-5 h-5 text-primary shrink-0" />
+          <span>{t('landlordContractNoRoomSelectedNotice')}</span>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Phone Input with search lookup */}
-          <div className="sm:col-span-2">
-            <div className="relative max-w-md">
-              <TextInput
-                label={t('landlordContractsCreateTenantPhoneLabel')}
-                required
-                type="tel"
-                placeholder={t('landlordContractsCreateTenantPhonePlaceholder')}
-                disabled={flowType === 'platform'}
-                value={tenantPhone}
-                onChange={e => handlePhoneChange(e.target.value)}
-                className="pr-24"
-              />
-              {flowType === 'direct' && (
-                <Button
-                  disabled={isSearchingPhone || tenantPhone.length !== 10}
-                  isLoading={isSearchingPhone}
-                  onClick={() => handleSearchPhone(tenantPhone)}
-                  leftIcon={<Search />}
-                  className="absolute right-1.5 bottom-1.5"
-                >
-                  {t('landlordContractsCreateTenantSearchBtn')}
-                </Button>
-              )}
-            </div>
-
-            {/* Status hints under phone input */}
-            {flowType === 'direct' && tenantPhone.length < 10 && tenantFound === null && (
-              <p className="text-[11px] text-muted font-medium mt-1.5 flex items-center gap-1.5 animate-in fade-in">
-                <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span>{t('landlordContractsCreateTenantPhoneLockedHint')}</span>
-              </p>
-            )}
-
-            {tenantFound === true && (
-              <div className="p-3 bg-success-soft border border-success-subtle rounded-xl flex items-start gap-2.5 text-xs text-success mt-2.5 animate-in fade-in">
-                <ShieldCheck className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-black text-success block">
-                    {t('landlordContractsCreateTenantFound')}: {tenantFullName}
-                  </span>
-                  <span className="text-[11px] text-success font-medium block mt-0.5">
-                    {t('landlordContractsCreateTenantLockedAccountDesc')}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {tenantFound === false && flowType === 'direct' && (
-              <div className="p-3 bg-warning-soft border border-warning-subtle rounded-xl flex items-start gap-2.5 text-xs text-warning mt-2.5 animate-in fade-in">
-                <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-black text-warning block">
-                    {t('landlordContractsCreateTenantNotFound')}
-                  </span>
-                  <span className="text-[11px] text-warning font-medium block mt-0.5">
-                    {t('landlordContractsCreateTenantNewAccountDesc')}
-                  </span>
-                </div>
-              </div>
-            )}
+      ) : flowType === 'platform' ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-line pb-3">
+            <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              {t('landlordContractsCreateStep1Header')}
+            </h2>
           </div>
 
-          {/* Full Name */}
-          <TextInput
-            label={t('landlordContractsCreateTenantNameLabel')}
-            required={flowType !== 'platform'}
-            placeholder={
-              !canEditTenantInfo && tenantPhone.length < 10
-                ? t('landlordContractsCreateEnterPhoneFirst')
-                : t('landlordContractsCreateTenantNamePlaceholder')
-            }
-            disabled={!canEditTenantInfo}
-            value={tenantFullName}
-            onChange={e => setTenantFullName(e.target.value)}
-          />
-
-          {/* Email */}
-          <TextInput
-            label={t('landlordContractsCreateTenantEmailLabel')}
-            type="email"
-            placeholder={
-              !canEditTenantInfo && tenantPhone.length < 10
-                ? t('landlordContractsCreateEnterPhoneFirst')
-                : t('landlordContractsCreateTenantEmailPlaceholder')
-            }
-            disabled={!canEditTenantInfo}
-            value={tenantEmail}
-            onChange={e => setTenantEmail(e.target.value)}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <TextInput
+              label={t('landlordContractsCreateTenantPhoneLabel')}
+              required
+              type="tel"
+              disabled
+              value={tenantPhone}
+            />
+            <TextInput
+              label={t('landlordContractsCreateTenantNameLabel')}
+              required
+              disabled
+              value={tenantFullName}
+            />
+            <TextInput
+              label={t('landlordContractsCreateTenantEmailLabel')}
+              type="email"
+              disabled
+              value={tenantEmail}
+            />
+          </div>
         </div>
-
-        {/* Notice when existing user has NO identification on file */}
-        {tenantFound === true && !hasIdentification && (
-          <div className="p-4 bg-vacant-soft border border-vacant-subtle rounded-2xl flex items-start gap-3 text-xs text-vacant animate-in fade-in">
-            <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+      ) : isLoadingOccupants ? (
+        <div className="p-8 flex flex-col items-center justify-center gap-2 text-muted">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <span className="text-xs font-bold">{t('landlordContractsCreateTenantSearching')}</span>
+        </div>
+      ) : roomOccupants.length === 0 ? (
+        <div className="p-5 bg-warning-soft border border-warning-subtle rounded-2xl space-y-3 animate-in fade-in">
+          <div className="flex items-start gap-2.5 text-warning text-xs">
+            <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
             <div>
-              <span className="font-black text-vacant block">
-                {t('landlordContractsCreateTenantFound')}: {tenantFullName}
+              <span className="font-black text-sm block">
+                {t('landlordContractRoomEmptyWarning', {
+                  room: selectedRoomObj?.roomNumber || '',
+                })}
               </span>
-              <p className="text-[11px] text-vacant font-medium mt-0.5">
-                {t('landlordContractsCreateTenantNoIdNotice')}
-              </p>
+              <span className="text-xs font-medium block mt-1">
+                {t('landlordCustomersModalDesc') ||
+                  'Thêm người thuê vào phòng để tiến hành ký hợp đồng và quản lý cư dân.'}
+              </span>
             </div>
           </div>
-        )}
-      </div>
+          <div>
+            <Button
+              onClick={() => setIsAddOccupantModalOpen(true)}
+              leftIcon={<UserPlus className="w-4 h-4" />}
+              className="shadow-2xs"
+            >
+              {t('landlordContractAddOccupantBtn')}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-line pb-3">
+            <h2 className="text-sm font-black text-foreground uppercase tracking-wider flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              {t('landlordContractsCreateStep1Header')}
+            </h2>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 bg-surface/80 border border-line p-3.5 rounded-xl">
+            <div className="flex-1 w-full">
+              <SelectInput
+                label={t('landlordContractSelectOccupantLabel')}
+                required
+                value={selectedOccupantId}
+                onChange={e => setSelectedOccupantId(e.target.value)}
+              >
+                {roomOccupants.map(occ => (
+                  <option key={occ.tenantId} value={occ.tenantId}>
+                    {occ.tenant.fullName} - {occ.tenant.phoneNumber}
+                  </option>
+                ))}
+              </SelectInput>
+            </div>
+            <div className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => setIsAddOccupantModalOpen(true)}
+                leftIcon={<UserPlus className="w-4 h-4" />}
+                className="w-full sm:w-auto"
+              >
+                {t('landlordContractAddOccupantBtn')}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Phone Input - Read-only from selected occupant */}
+            <TextInput
+              label={t('landlordContractOccupantPhoneLabel')}
+              required
+              type="tel"
+              disabled
+              value={tenantPhone}
+            />
+
+            {/* Full Name */}
+            <TextInput
+              label={t('landlordContractsCreateTenantNameLabel')}
+              required
+              placeholder={t('landlordContractsCreateTenantNamePlaceholder')}
+              disabled={!canEditTenantInfo}
+              value={tenantFullName}
+              onChange={e => setTenantFullName(e.target.value)}
+            />
+
+            {/* Email */}
+            <TextInput
+              label={t('landlordContractsCreateTenantEmailLabel')}
+              type="email"
+              placeholder={t('landlordContractsCreateTenantEmailPlaceholder')}
+              disabled={!canEditTenantInfo}
+              value={tenantEmail}
+              onChange={e => setTenantEmail(e.target.value)}
+            />
+          </div>
+
+          {/* Notice when existing user has NO identification on file */}
+          {tenantFound === true && !hasIdentification && (
+            <div className="p-4 bg-vacant-soft border border-vacant-subtle rounded-2xl flex items-start gap-3 text-xs text-vacant animate-in fade-in">
+              <Info className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-black text-vacant block">
+                  {t('landlordContractsCreateTenantFound')}: {tenantFullName}
+                </span>
+                <p className="text-[11px] text-vacant font-medium mt-0.5">
+                  {t('landlordContractsCreateTenantNoIdNotice')}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Citizen Identification (CCCD) Section */}
       <div className="p-5 bg-surface/80 border border-line rounded-2xl space-y-4 animate-in fade-in duration-200">
@@ -751,6 +796,18 @@ export function Step1RoomTenant() {
 
       {/* Navigation Footer */}
       <ContractWizardFooter />
+
+      {/* Add Tenant Directly to Room Modal */}
+      {activeBuilding?.id && (
+        <AddTenantModal
+          isOpen={isAddOccupantModalOpen}
+          onClose={() => setIsAddOccupantModalOpen(false)}
+          onSuccess={handleOccupantAdded}
+          boardingHouseId={activeBuilding.id}
+          fixedRoomId={selectedRoomId}
+          fixedRoomNumber={selectedRoomObj?.roomNumber}
+        />
+      )}
     </div>
   )
 }

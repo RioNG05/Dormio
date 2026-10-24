@@ -1,6 +1,7 @@
 import React from 'react'
 import { RoomItem } from '@/services/room.service'
 import { PendingDepositResponse } from '@/services/contract.service'
+import { RoomOccupantDto } from '@/services/tenant.service'
 import { ToastItem, ToastType } from '@/components/ui'
 
 export type ContractStep = 1 | 2 | 3
@@ -36,6 +37,16 @@ export interface ContractCreateContextValue {
   selectedRoomId: string
   selectedRoomObj: RoomItem | undefined
   setSelectedRoomId: (id: string) => void
+
+  // Room Occupants (Room-First Contract Creation)
+  roomOccupants: RoomOccupantDto[]
+  isLoadingOccupants: boolean
+  selectedOccupantId: string
+  setSelectedOccupantId: (tenantId: string) => void
+  isAddOccupantModalOpen: boolean
+  setIsAddOccupantModalOpen: (open: boolean) => void
+  fetchRoomOccupants: (roomId: string) => Promise<void>
+  handleOccupantAdded: (newOccupant: RoomOccupantDto) => void
 
   // Flow & Deposit
   flowType: ContractFlowType

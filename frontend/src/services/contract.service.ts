@@ -40,6 +40,7 @@ export interface TenantSearchResult {
 
 export interface CreateContractPlatformPayload {
   roomId: string
+  tenantId?: string
   startDate: string
   endDate: string
   rentPrice: number
@@ -65,6 +66,7 @@ export interface TenantIdentificationPayload {
 
 export interface CreateContractDirectPayload {
   roomId: string
+  tenantId?: string
   startDate: string
   endDate: string
   rentPrice: number
@@ -400,7 +402,7 @@ export interface TenantTenancyItem {
   boardingHouseName: string
   boardingHouseAddress: string
   rentPrice: number
-  isPrimary: boolean
+  isPrimary?: boolean
   startDate: string
   endDate: string
   coverPhotoUrl?: string

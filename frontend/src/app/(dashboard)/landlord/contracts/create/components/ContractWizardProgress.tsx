@@ -11,40 +11,43 @@ export function ContractWizardProgress() {
   const { step, goToStep } = useContractCreate()
 
   return (
-    <div className="flex items-center justify-center gap-2 sm:gap-3 bg-card p-3 rounded-2xl border border-line shadow-2xs">
+    <div className="flex items-center justify-between sm:justify-center gap-1.5 sm:gap-3 bg-card p-2 sm:p-3 rounded-2xl border border-line shadow-2xs overflow-x-auto">
       <Button
         variant={step === 1 ? 'primary' : 'ghost'}
         onClick={() => goToStep(1)}
-        size="md"
-        leftIcon={step > 1 ? <Check className="text-emerald-500" /> : <Home />}
-        className={step > 1 ? 'text-foreground' : undefined}
+        size="sm"
+        leftIcon={step > 1 ? <Check className="text-emerald-500 w-4 h-4" /> : <Home className="w-4 h-4" />}
+        className={`text-xs sm:text-sm shrink-0 ${step > 1 ? 'text-foreground' : ''}`}
       >
-        {t('landlordContractsCreateStep1Btn')}
+        <span className="hidden sm:inline">{t('landlordContractsCreateStep1Btn')}</span>
+        <span className="inline sm:hidden">1. {t('landlordContractDetailRoom')}</span>
       </Button>
 
-      <ChevronRight className="w-4 h-4 text-muted shrink-0" />
+      <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted shrink-0" />
 
       <Button
         variant={step === 2 ? 'primary' : 'ghost'}
         onClick={() => goToStep(2)}
-        size="md"
-        leftIcon={step > 2 ? <Check className="text-emerald-500" /> : <DollarSign />}
-        className={step > 2 ? 'text-foreground' : undefined}
+        size="sm"
+        leftIcon={step > 2 ? <Check className="text-emerald-500 w-4 h-4" /> : <DollarSign className="w-4 h-4" />}
+        className={`text-xs sm:text-sm shrink-0 ${step > 2 ? 'text-foreground' : ''}`}
       >
-        {t('landlordContractsCreateStep2Btn')}
+        <span className="hidden sm:inline">{t('landlordContractsCreateStep2Btn')}</span>
+        <span className="inline sm:hidden">2. {t('landlordContractDetailDeposit')}</span>
       </Button>
 
-      <ChevronRight className="w-4 h-4 text-muted shrink-0" />
+      <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted shrink-0" />
 
       <Button
         variant={step === 3 ? 'primary' : 'ghost'}
         onClick={() => goToStep(3)}
-        size="md"
-        leftIcon={<FileSignature />}
+        size="sm"
+        leftIcon={<FileSignature className="w-4 h-4" />}
+        className="text-xs sm:text-sm shrink-0"
       >
-        {t('landlordContractsCreateStep3Header')}
+        <span className="hidden sm:inline">{t('landlordContractsCreateStep3Header')}</span>
+        <span className="inline sm:hidden">3. {t('landlordContractsCreateConfirmTitle')}</span>
       </Button>
     </div>
   )
 }
-

@@ -309,14 +309,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             saved && UUID_RE.test(saved) && fetchedTenancies.some(t => t.contractId === saved)
           const validPrev =
             prev && UUID_RE.test(prev) && fetchedTenancies.some(t => t.contractId === prev)
-          const primary = fetchedTenancies.find(t => t.isPrimary)
           const nextId = validPrev
             ? prev
             : validSaved
               ? saved!
-              : primary
-                ? primary.contractId
-                : fetchedTenancies[0].contractId
+              : fetchedTenancies[0].contractId
           if (typeof window !== 'undefined')
             localStorage.setItem('dormio_active_tenancy_id', nextId)
           return nextId
@@ -715,7 +712,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Find active tenancy for tenant dashboard
   const activeTenancy =
     tenancies.find(t => t.contractId === activeTenancyId) ||
-    tenancies.find(t => t.isPrimary) ||
     tenancies[0] ||
     null
 

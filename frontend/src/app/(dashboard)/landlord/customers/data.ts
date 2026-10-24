@@ -21,6 +21,7 @@ export interface Customer {
   contractId?: string
   userId?: string
   roomId?: string
+  tenancyType?: 'contract' | 'direct_occupant'
   floor?: number
   rentPrice?: number
   depositAmount?: number

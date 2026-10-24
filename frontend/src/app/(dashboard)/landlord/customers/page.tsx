@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -16,7 +16,8 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Customer } from './data'
-import { getLandlordContracts } from '@/services/contract.service'
+import { getLandlordTenants } from '@/services/tenant.service'
+import { AddTenantModal } from '@/components/landlord/AddTenantModal'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import {
@@ -33,6 +34,7 @@ import {
   Chip,
   Text,
   EmptyState,
+  Modal,
 } from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
@@ -97,14 +99,18 @@ export default function CustomersPage() {
 
   const [customers, setCustomers] = useState<Customer[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isAddTenantModalOpen, setIsAddTenantModalOpen] = useState<boolean>(false)
 
   const handleOpenChat = (cust: Customer) => {
     const targetUserId = cust.userId || (cust.id && !cust.id.startsWith('cust_') ? cust.id : '')
     if (!targetUserId && !cust.hasAccount) {
       showAlert(
-        `Khách thuê ${cust.name} chưa có tài khoản trên hệ thống Dormio để nhắn tin trực tiếp. Vui lòng liên hệ qua số điện thoại ${cust.phone !== '—' ? cust.phone : 'đã lưu'}.`,
+        t('landlordCustomersChatNoAccountDesc', {
+          name: cust.name,
+          phone: cust.phone !== '—' ? cust.phone : t('landlordCustomersDefaultName'),
+        }),
         'info',
-        'Chưa có tài khoản liên kết',
+        t('landlordCustomersChatNoAccountTitle'),
       )
       return
     }
@@ -121,121 +127,57 @@ export default function CustomersPage() {
     router.push(`/landlord/messages?${query.toString()}`)
   }
 
-  // Load real customers from active property contracts
-  useEffect(() => {
-    async function loadCustomers() {
-      if (!activeBuilding?.id) {
-        setCustomers([])
-        return
-      }
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      if (!UUID_RE.test(activeBuilding.id)) {
-        setCustomers([])
-        return
-      }
-
-      try {
-        setIsLoading(true)
-        const res = await getLandlordContracts(activeBuilding.id, { limit: 100 })
-        const list = res?.data || []
-        const mapped: Customer[] = list.flatMap((c: any): Customer[] => {
-          const daysRemaining = c.endDate
-            ? Math.max(
-              0,
-              Math.ceil((new Date(c.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-            )
-            : undefined
-          const contractStatus =
-            c.status === 'active'
-              ? daysRemaining !== undefined && daysRemaining <= 30
-                ? 'Sắp hết hợp đồng'
-                : 'Đang ở'
-              : c.status === 'draft'
-                ? 'Sắp hết hợp đồng'
-                : 'Đã rời'
-
-          const tContracts =
-            c.tenantContracts && c.tenantContracts.length > 0 ? c.tenantContracts : []
-          let tenantsToMap: any[] = []
-
-          if (tContracts.length > 0) {
-            tenantsToMap = tContracts.map((tc: any) => tc.tenant).filter(Boolean)
-          } else if (c.tenant) {
-            tenantsToMap = [c.tenant]
-          }
-
-          if (tenantsToMap.length === 0) {
-            return [
-              {
-                id: `cust_${c.id}`,
-                contractId: c.id,
-                name: t('landlordCustomersDefaultName'),
-                phone: '—',
-                room: c.room?.roomNumber || '—',
-                building: activeBuilding.id,
-                cccd: '—',
-                joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString('vi-VN') : '—',
-                endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('vi-VN') : undefined,
-                daysRemaining,
-                status: contractStatus,
-                hasAccount: false,
-              },
-            ]
-          }
-
-          return tenantsToMap.map((tenantUser: any) => {
-            const ident = tenantUser?.userIdentification
-            let formattedAddress = ''
-            if (ident?.placeOfResidence) {
-              if (typeof ident.placeOfResidence === 'string') {
-                formattedAddress = ident.placeOfResidence
-              } else if (typeof ident.placeOfResidence === 'object') {
-                formattedAddress = Object.values(ident.placeOfResidence).filter(Boolean).join(', ')
-              }
-            } else if (ident?.permanentAddress) {
-              formattedAddress = ident.permanentAddress
-            }
-
-            return {
-              id: tenantUser?.id || `cust_${c.id}`,
-              userId: tenantUser?.id,
-              contractId: c.id,
-              name:
-                ident?.fullName ||
-                tenantUser?.fullName ||
-                tenantUser?.username ||
-                t('landlordCustomersDefaultName'),
-              phone: tenantUser?.phoneNumber || '—',
-              room: c.room?.roomNumber || '—',
-              building: activeBuilding.id,
-              cccd: ident?.identityNumber || '—',
-              joinDate: c.startDate ? new Date(c.startDate).toLocaleDateString('vi-VN') : '—',
-              endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('vi-VN') : undefined,
-              daysRemaining,
-              status: contractStatus,
-              email: tenantUser?.email || undefined,
-              dob: ident?.dateOfBirth
-                ? new Date(ident.dateOfBirth).toLocaleDateString('vi-VN')
-                : undefined,
-              gender: ident?.gender || 'nam',
-              address: formattedAddress || undefined,
-              cardFrontUrl: ident?.cardFrontUrl,
-              cardBackUrl: ident?.cardBackUrl,
-              hasAccount: !!tenantUser?.id,
-            }
-          })
-        })
-        setCustomers(mapped)
-      } catch (err) {
-        console.warn('Failed to load customers from contracts:', err)
-        setCustomers([])
-      } finally {
-        setIsLoading(false)
-      }
+  // Load real customers from unified landlord tenants endpoint
+  const loadCustomers = useCallback(async () => {
+    if (!activeBuilding?.id) {
+      setCustomers([])
+      return
+    }
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!UUID_RE.test(activeBuilding.id)) {
+      setCustomers([])
+      return
     }
 
+    try {
+      setIsLoading(true)
+      const tenantRes = await getLandlordTenants(activeBuilding.id, { limit: 100 })
+      const list = tenantRes?.data || []
+      const mapped: Customer[] = list.map(item => ({
+        id: item.id,
+        userId: item.userId,
+        contractId: item.contractId,
+        name: item.fullName || t('landlordCustomersDefaultName'),
+        phone: item.phoneNumber || '—',
+        room: item.roomNumber || '—',
+        building: activeBuilding.id,
+        cccd: item.identityNumber || '—',
+        joinDate: item.joinedAt || '—',
+        endDate: item.endDate,
+        daysRemaining: item.daysRemaining,
+        status: item.status,
+        email: item.email || undefined,
+        dob: item.dateOfBirth || undefined,
+        gender: item.gender || 'nam',
+        address: item.address || undefined,
+        cardFrontUrl: item.cardFrontUrl || undefined,
+        cardBackUrl: item.cardBackUrl || undefined,
+        hasAccount: item.hasAccount,
+        tenancyType: item.tenancyType,
+        roomId: item.roomId,
+      }))
+      setCustomers(mapped)
+    } catch (err) {
+      console.error('Failed to load tenants:', err)
+      setCustomers([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [activeBuilding?.id, t])
+
+  useEffect(() => {
     loadCustomers()
-  }, [activeBuilding?.id])
+  }, [loadCustomers])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -341,14 +283,32 @@ export default function CustomersPage() {
         title={t('landlordCustomersPageHeading')}
         subtitle={t('landlordCustomersPageSubheading')}
         actions={
-          <Button
-            size="md"
-            onClick={() => router.push('/landlord/contracts/create')}
-            leftIcon={<Plus />}
-            className="sm:w-auto text-sm"
-          >
-            {t('landlordCustomersBtnAddContract')}
-          </Button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => router.push('/landlord/contracts/create')}
+              leftIcon={<Plus />}
+              className="w-full sm:w-auto text-sm"
+            >
+              {t('landlordCustomersBtnAddContract')}
+            </Button>
+            <Button
+              size="md"
+              variant="primary"
+              onClick={() => {
+                if (!activeBuilding?.id) {
+                  showAlert(t('landlordCustomersSelectBuildingFirst'), 'warning')
+                  return
+                }
+                setIsAddTenantModalOpen(true)
+              }}
+              leftIcon={<Plus />}
+              className="w-full sm:w-auto text-sm"
+            >
+              {t('landlordTenantBtnAdd')}
+            </Button>
+          </div>
         }
       />
 
@@ -438,12 +398,28 @@ export default function CustomersPage() {
                   title={t('landlordCustomersEmptyTitle')}
                   description={t('landlordCustomersEmptyDesc')}
                   action={
-                    <Button
-                      onClick={() => router.push('/landlord/contracts/create')}
-                      leftIcon={<Plus />}
-                    >
-                      {t('landlordCustomersBtnCreateContract')}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          if (!activeBuilding?.id) {
+                            showAlert(t('landlordCustomersSelectBuildingFirst'), 'warning')
+                            return
+                          }
+                          setIsAddTenantModalOpen(true)
+                        }}
+                        leftIcon={<Plus />}
+                      >
+                        {t('landlordTenantBtnAdd')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => router.push('/landlord/contracts/create')}
+                        leftIcon={<Plus />}
+                      >
+                        {t('landlordCustomersBtnCreateContract')}
+                      </Button>
+                    </div>
                   }
                 />
               )}
@@ -597,12 +573,28 @@ export default function CustomersPage() {
                           description={t('landlordCustomersEmptyDescTable')}
                           bordered={false}
                           action={
-                            <Button
-                              onClick={() => router.push('/landlord/contracts/create')}
-                              leftIcon={<Plus />}
-                            >
-                              {t('landlordCustomersBtnCreateContract')}
-                            </Button>
+                            <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                              <Button
+                                variant="primary"
+                                onClick={() => {
+                                  if (!activeBuilding?.id) {
+                                    showAlert(t('landlordCustomersSelectBuildingFirst'), 'warning')
+                                    return
+                                  }
+                                  setIsAddTenantModalOpen(true)
+                                }}
+                                leftIcon={<Plus />}
+                              >
+                                {t('landlordTenantBtnAdd')}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => router.push('/landlord/contracts/create')}
+                                leftIcon={<Plus />}
+                              >
+                                {t('landlordCustomersBtnCreateContract')}
+                              </Button>
+                            </div>
                           }
                         />
                       )}
@@ -710,6 +702,19 @@ export default function CustomersPage() {
         type={alertModal.type}
         onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
       />
+
+      {activeBuilding?.id && (
+        <AddTenantModal
+          isOpen={isAddTenantModalOpen}
+          onClose={() => setIsAddTenantModalOpen(false)}
+          onSuccess={async () => {
+            setIsAddTenantModalOpen(false)
+            await loadCustomers()
+            showAlert(t('landlordTenantSuccessToast'), 'success', t('landlordTenantSuccessToast'))
+          }}
+          boardingHouseId={activeBuilding.id}
+        />
+      )}
     </div>
   )
 }
@@ -728,56 +733,46 @@ function AlertModal({
   onClose: () => void
 }) {
   const t = useTranslations('landlord')
-  if (!isOpen) return null
 
   const config = {
     warning: {
-      bgColor: 'bg-amber-500/10 text-warning border-warning-subtle',
-      icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: 'bg-amber-500 hover:bg-warning text-white shadow-amber-500/20',
+      bgColor: 'bg-warning-soft text-warning border-warning-subtle',
+      icon: <AlertTriangle className="w-6 h-6 text-warning" />,
     },
     error: {
-      bgColor: 'bg-danger/10 text-danger border-danger-subtle',
-      icon: <AlertCircle className="w-7 h-7 text-danger" />,
-      btnColor: 'bg-danger hover:bg-danger text-white shadow-danger/20',
+      bgColor: 'bg-danger-soft text-danger border-danger-subtle',
+      icon: <AlertCircle className="w-6 h-6 text-danger" />,
     },
     success: {
-      bgColor: 'bg-emerald-500/10 text-success border-success-subtle',
-      icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: 'bg-emerald-500 hover:bg-success text-white shadow-emerald-500/20',
+      bgColor: 'bg-success-soft text-success border-success-subtle',
+      icon: <CheckCircle2 className="w-6 h-6 text-success" />,
     },
     info: {
       bgColor: 'bg-accent-soft text-accent border-accent-subtle',
-      icon: <Info className="w-7 h-7 text-accent" />,
-      btnColor: 'bg-accent hover:bg-[#e05a2b] text-white shadow-accent/20',
+      icon: <Info className="w-6 h-6 text-accent" />,
     },
   }[type]
 
   return (
-    <div
-      className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
-      <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line p-6 space-y-4 text-center">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="sm"
+      title={title}
+      icon={
         <div
-          className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
+          className={`w-12 h-12 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
         >
           {config.icon}
         </div>
-
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-foreground">{title}</h3>
-          <p className="text-xs text-muted font-medium leading-relaxed">{message}</p>
-        </div>
-
-        <Button fullWidth size="xs" variant="dark"
-          onClick={onClose}
-        >
+      }
+      footer={
+        <Button fullWidth onClick={onClose}>
           {t('landlordCustomersUnderstood')}
         </Button>
-      </div>
-    </div>
+      }
+    >
+      <p className="text-xs text-muted font-medium leading-relaxed text-center">{message}</p>
+    </Modal>
   )
 }

@@ -71,6 +71,13 @@ export const viErrors = {
   ASSET_NOT_FOUND: 'Không tìm thấy thông tin tài sản / trang thiết bị.',
   ASSET_ROOM_MISMATCH: 'Phòng được chọn không thuộc nhà trọ đang quản lý.',
 
+  // --- Tenants & Occupants ---
+  TENANT_NOT_FOUND: 'Không tìm thấy thông tin khách thuê.',
+  TENANT_ALREADY_IN_HOUSE: 'Khách thuê với số điện thoại này đã có mặt trong nhà trọ.',
+  TENANT_NOT_IN_ROOM: 'Người thuê được chọn hiện không cư trú trong phòng này.',
+  ROOM_MAX_OCCUPANTS_REACHED: 'Phòng đã đạt giới hạn số lượng người ở tối đa.',
+  ROOM_HAS_NO_OCCUPANTS: 'Phòng trọ chưa có người thuê. Vui lòng thêm người thuê vào phòng để tạo hợp đồng.',
+
   // --- Common Infrastructure & Fallbacks ---
   COMMON_VALIDATION_ERROR: 'Dữ liệu gửi lên chưa hợp lệ. Vui lòng kiểm tra lại các trường thông tin.',
   COMMON_RESOURCE_NOT_FOUND: 'Không tìm thấy dữ liệu yêu cầu trên hệ thống.',

@@ -71,6 +71,13 @@ export const enErrors = {
   ASSET_NOT_FOUND: 'The requested asset/equipment could not be found.',
   ASSET_ROOM_MISMATCH: 'The selected room does not belong to the active boarding house.',
 
+  // --- Tenants & Occupants ---
+  TENANT_NOT_FOUND: 'Tenant record not found.',
+  TENANT_ALREADY_IN_HOUSE: 'A tenant with this phone number is already residing in this property.',
+  TENANT_NOT_IN_ROOM: 'The selected tenant does not currently reside in this room.',
+  ROOM_MAX_OCCUPANTS_REACHED: 'Room capacity has reached its maximum occupants limit.',
+  ROOM_HAS_NO_OCCUPANTS: 'Room has no active occupants. Please add tenants to the room before creating a contract.',
+
   // --- Common Infrastructure & Fallbacks ---
   COMMON_VALIDATION_ERROR: 'The submitted data is invalid. Please check the input fields.',
   COMMON_RESOURCE_NOT_FOUND: 'The requested resource was not found on the server.',

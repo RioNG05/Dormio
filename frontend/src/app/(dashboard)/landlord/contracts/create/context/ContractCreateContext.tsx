@@ -19,6 +19,7 @@ import {
   createDirectContract,
   PendingDepositResponse,
 } from '@/services/contract.service'
+import { getRoomOccupants, RoomOccupantDto } from '@/services/tenant.service'
 import { uploadImageToBackend } from '@/services/upload.service'
 import { ToastItem, ToastType } from '@/components/ui'
 import {
@@ -107,6 +108,13 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
   const [pendingDeposit, setPendingDeposit] = useState<PendingDepositResponse | null>(null)
   const [isCheckingDeposit, setIsCheckingDeposit] = useState(false)
 
+  // Room Occupants (Room-First Contract Creation)
+  const [roomOccupants, setRoomOccupants] = useState<RoomOccupantDto[]>([])
+  const [isLoadingOccupants, setIsLoadingOccupants] = useState(false)
+  const [selectedOccupantId, setSelectedOccupantIdState] = useState('')
+  const [isAddOccupantModalOpen, setIsAddOccupantModalOpen] = useState(false)
+  const [occupantHasAccount, setOccupantHasAccount] = useState(true)
+
   // Tenant Fields
   const [tenantPhone, setTenantPhone] = useState('')
   const [tenantFullName, setTenantFullName] = useState('')
@@ -139,8 +147,129 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     null,
   )
 
-  // Landlord can ONLY edit tenant info if Flow B AND user does NOT exist in system
-  const canEditTenantInfo = flowType !== 'platform' && tenantFound === false
+  const selectedOccupant = roomOccupants.find(o => o.tenantId === selectedOccupantId)
+
+  // Landlord can edit tenant info if direct flow AND (tenant has no ID on file OR user has no registered account)
+  const canEditTenantInfo =
+    flowType !== 'platform' &&
+    !!selectedOccupant &&
+    (!hasIdentification || selectedOccupant.tenant?.hasAccount === false)
+
+  const applyOccupantSelection = useCallback((occupant: RoomOccupantDto) => {
+    setSelectedOccupantIdState(occupant.tenantId)
+    setTenantPhone(occupant.tenant?.phoneNumber || '')
+    setTenantFullName(occupant.tenant?.fullName || '')
+    setTenantEmail(occupant.tenant?.email || '')
+    setTenantFound(true)
+    const hasId = !!occupant.tenant?.identityNumber
+    setHasIdentification(hasId)
+    setOccupantHasAccount(occupant.tenant?.hasAccount ?? true)
+
+    let dob = '2000-01-01'
+    if (occupant.tenant?.dateOfBirth) {
+      try {
+        dob = new Date(occupant.tenant.dateOfBirth).toISOString().split('T')[0]
+      } catch {
+        dob = '2000-01-01'
+      }
+    }
+
+    setIdentification({
+      identityNumber: occupant.tenant?.identityNumber || '',
+      fullName: occupant.tenant?.fullName || '',
+      dateOfBirth: dob,
+      gender: occupant.tenant?.gender === 'female' ? 'female' : 'male',
+      nationality: 'Việt Nam',
+      placeOfOrigin: formatAddress(occupant.tenant?.placeOfResidence),
+      placeOfResidence: formatAddress(occupant.tenant?.placeOfResidence),
+      issueDate: '',
+      expiryDate: '',
+      note: occupant.note || '',
+      cardFrontUrl: occupant.tenant?.cardFrontUrl || '',
+      cardBackUrl: occupant.tenant?.cardBackUrl || '',
+    })
+  }, [])
+
+  const fetchRoomOccupants = useCallback(
+    async (roomId: string) => {
+      if (
+        !activeBuilding?.id ||
+        !UUID_REGEX.test(activeBuilding.id) ||
+        !roomId ||
+        !UUID_REGEX.test(roomId)
+      ) {
+        setRoomOccupants([])
+        setSelectedOccupantIdState('')
+        return
+      }
+
+      setIsLoadingOccupants(true)
+      try {
+        const occupants = await getRoomOccupants(activeBuilding.id, roomId)
+        const activeOccs = (occupants || []).filter(o => o.status === 'active')
+        setRoomOccupants(activeOccs)
+        if (activeOccs.length > 0) {
+          applyOccupantSelection(activeOccs[0])
+        } else {
+          setSelectedOccupantIdState('')
+          setTenantPhone('')
+          setTenantFullName('')
+          setTenantEmail('')
+          setTenantFound(null)
+          setHasIdentification(false)
+          setIdentification({
+            identityNumber: '',
+            fullName: '',
+            dateOfBirth: '2000-01-01',
+            gender: 'male',
+            nationality: 'Việt Nam',
+            placeOfOrigin: '',
+            placeOfResidence: '',
+            issueDate: '',
+            expiryDate: '',
+            note: '',
+            cardFrontUrl: '',
+            cardBackUrl: '',
+          })
+        }
+      } catch (err) {
+        console.warn('Failed to load room occupants:', err)
+        setRoomOccupants([])
+        setSelectedOccupantIdState('')
+      } finally {
+        setIsLoadingOccupants(false)
+      }
+    },
+    [activeBuilding?.id, applyOccupantSelection],
+  )
+
+  const setSelectedOccupantId = useCallback(
+    (tenantId: string) => {
+      setSelectedOccupantIdState(tenantId)
+      setIsDirty(true)
+      const occ = roomOccupants.find(o => o.tenantId === tenantId)
+      if (occ) {
+        applyOccupantSelection(occ)
+      }
+    },
+    [applyOccupantSelection, roomOccupants],
+  )
+
+  const handleOccupantAdded = useCallback(
+    (newOccupant: RoomOccupantDto) => {
+      setRoomOccupants(prev => {
+        const existing = prev.filter(
+          o => o.id !== newOccupant.id && o.tenantId !== newOccupant.tenantId,
+        )
+        return [newOccupant, ...existing]
+      })
+      applyOccupantSelection(newOccupant)
+      setIsAddOccupantModalOpen(false)
+      setErrorMessage(null)
+      showToast(t('landlordCustomerAddSuccess') || 'Thêm khách thuê thành công!', 'success')
+    },
+    [applyOccupantSelection, showToast, t],
+  )
 
   // Terms & Financials
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
@@ -218,12 +347,14 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     loadRooms()
   }, [activeBuilding?.id])
 
-  // Check deposit whenever room selection changes
+  // Check deposit whenever room selection changes and load room occupants
   useEffect(() => {
-    async function checkDeposit() {
+    async function checkDepositAndOccupants() {
       if (!selectedRoomId || !activeBuilding?.id) {
         setPendingDeposit(null)
         setFlowType('direct')
+        setRoomOccupants([])
+        setSelectedOccupantIdState('')
         return
       }
 
@@ -231,6 +362,8 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
       if (!UUID_REGEX.test(activeBuilding.id) || !UUID_REGEX.test(selectedRoomId)) {
         setPendingDeposit(null)
         setFlowType('direct')
+        setRoomOccupants([])
+        setSelectedOccupantIdState('')
         return
       }
 
@@ -295,17 +428,19 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
           // Flow B
           setPendingDeposit(null)
           setFlowType('direct')
+          await fetchRoomOccupants(selectedRoomId)
         }
       } catch (err) {
         console.warn('Check deposit failed or none present, defaulting to direct flow:', err)
         setPendingDeposit(null)
         setFlowType('direct')
+        await fetchRoomOccupants(selectedRoomId)
       } finally {
         setIsCheckingDeposit(false)
       }
     }
-    checkDeposit()
-  }, [selectedRoomId, activeBuilding?.id])
+    checkDepositAndOccupants()
+  }, [selectedRoomId, activeBuilding?.id, fetchRoomOccupants])
 
   // Handle phone change & auto-reset
   const handlePhoneChange = useCallback(
@@ -546,6 +681,8 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     [canEditTenantInfo, handlePhotoUpload],
   )
 
+  const selectedRoomObj = rooms.find(r => r.id === selectedRoomId)
+
   // Step 1 Validation
   const handleStep1Next = useCallback((): boolean => {
     if (!selectedRoomId) {
@@ -553,19 +690,30 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
       return false
     }
     if (flowType === 'direct') {
+      if (roomOccupants.length === 0) {
+        const roomNum = selectedRoomObj?.roomNumber || ''
+        setErrorMessage(
+          t('landlordContractRoomEmptyWarning', { room: roomNum }) ||
+            `Phòng trọ ${roomNum} chưa có người thuê. Vui lòng thêm người thuê vào phòng để tạo hợp đồng.`,
+        )
+        return false
+      }
+      if (!selectedOccupantId) {
+        setErrorMessage(
+          t('landlordContractSelectOccupantPlaceholder') ||
+            'Vui lòng chọn người thuê trong phòng để lập hợp đồng.',
+        )
+        return false
+      }
       if (!tenantPhone || tenantPhone.length !== 10) {
         setErrorMessage(t('landlordContractsCreateErrPhone10Digits'))
         return false
       }
-      if (tenantFound === null) {
-        setErrorMessage(t('landlordContractsCreateErrCheckPhoneFirst'))
-        return false
-      }
-      if (tenantFound === false && !tenantFullName.trim()) {
-        setErrorMessage(t('landlordContractsCreateErrTenantInfo'))
-        return false
-      }
-      if (tenantFound === false) {
+      if (canEditTenantInfo) {
+        if (!tenantFullName.trim()) {
+          setErrorMessage(t('landlordContractsCreateErrTenantInfo'))
+          return false
+        }
         if (
           !identification.identityNumber.trim() ||
           !identification.placeOfOrigin.trim() ||
@@ -579,7 +727,18 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     }
     setErrorMessage(null)
     return true
-  }, [flowType, identification, selectedRoomId, t, tenantFound, tenantFullName, tenantPhone])
+  }, [
+    canEditTenantInfo,
+    flowType,
+    identification,
+    roomOccupants.length,
+    selectedOccupantId,
+    selectedRoomId,
+    selectedRoomObj?.roomNumber,
+    t,
+    tenantFullName,
+    tenantPhone,
+  ])
 
   // Step 2 Validation
   const handleStep2Next = useCallback((): boolean => {
@@ -685,6 +844,16 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
             })
           } else {
             // Flow B submission
+            if (!selectedOccupantId) {
+              const msg =
+                t('landlordContractSelectOccupantPlaceholder') ||
+                'Vui lòng chọn người thuê trong phòng để lập hợp đồng.'
+              setErrorMessage(msg)
+              showToast(msg, 'error')
+              goToStep(1)
+              return
+            }
+
             if (!tenantPhone || tenantPhone.length !== 10) {
               const msg = t('landlordContractsCreateErrPhone10Digits')
               setErrorMessage(msg)
@@ -693,23 +862,15 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
               return
             }
 
-            if (tenantFound === null) {
-              const msg = t('landlordContractsCreateErrCheckPhoneFirst')
-              setErrorMessage(msg)
-              showToast(msg, 'error')
-              goToStep(1)
-              return
-            }
+            if (canEditTenantInfo) {
+              if (!tenantFullName.trim()) {
+                const msg = t('landlordContractsCreateErrTenantInfo')
+                setErrorMessage(msg)
+                showToast(msg, 'error')
+                goToStep(1)
+                return
+              }
 
-            if (tenantFound === false && !tenantFullName.trim()) {
-              const msg = t('landlordContractsCreateErrTenantInfo')
-              setErrorMessage(msg)
-              showToast(msg, 'error')
-              goToStep(1)
-              return
-            }
-
-            if (tenantFound === false) {
               if (
                 !identification.identityNumber.trim() ||
                 !identification.placeOfOrigin.trim() ||
@@ -726,6 +887,7 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
 
             const payload: any = {
               roomId: selectedRoomId,
+              tenantId: selectedOccupantId,
               startDate: new Date(startDate).toISOString(),
               endDate: new Date(endDate).toISOString(),
               rentPrice: Number(rentPrice),
@@ -780,6 +942,7 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     })
   }, [
     activeBuilding?.id,
+    canEditTenantInfo,
     depositAmount,
     endDate,
     flowType,
@@ -790,17 +953,15 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     rentPaymentCycle,
     rentPrice,
     router,
+    selectedOccupantId,
     selectedRoomId,
     showToast,
     startDate,
     t,
     tenantEmail,
-    tenantFound,
     tenantFullName,
     tenantPhone,
   ])
-
-  const selectedRoomObj = rooms.find(r => r.id === selectedRoomId)
 
   const value: ContractCreateContextValue = {
     step,
@@ -811,6 +972,14 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     selectedRoomId,
     selectedRoomObj,
     setSelectedRoomId,
+    roomOccupants,
+    isLoadingOccupants,
+    selectedOccupantId,
+    setSelectedOccupantId,
+    isAddOccupantModalOpen,
+    setIsAddOccupantModalOpen,
+    fetchRoomOccupants,
+    handleOccupantAdded,
     flowType,
     pendingDeposit,
     isCheckingDeposit,

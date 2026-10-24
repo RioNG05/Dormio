@@ -45,7 +45,7 @@ export function Step2TermsFinancial() {
           required
           min={0}
           step={50000}
-          suffixText="VNĐ/tháng"
+          suffixText={t('landlordContractsCreateRentPriceSuffix')}
           helperText={`${Number(rentPrice || 0).toLocaleString('vi-VN')} ₫`}
           value={rentPrice}
           onChange={e => setRentPrice(Number(e.target.value))}
@@ -57,7 +57,7 @@ export function Step2TermsFinancial() {
           required
           min={0}
           disabled={flowType === 'platform'}
-          suffixText="VNĐ"
+          suffixText={t('landlordContractsCreateDepositSuffix')}
           helperText={
             flowType === 'platform'
               ? t('landlordContractsCreateDepositInheritedNote')
