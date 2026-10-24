@@ -9,7 +9,6 @@ import {
   XCircle,
   HelpCircle,
   Edit3,
-  X,
   Loader2,
   Download,
   Info,
@@ -24,7 +23,21 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TableActionButton, TextInput, SelectInput, TextareaInput, SearchInput, Pagination, ViewModeToggle, Card, TableRow, EmptyState } from '@/components/ui'
+import {
+  Button,
+  TableActionButton,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  SearchInput,
+  Pagination,
+  ViewModeToggle,
+  Card,
+  TableRow,
+  EmptyState,
+  Modal,
+  Chip,
+} from '@/components/ui'
 import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
@@ -304,31 +317,47 @@ export default function AttendancePage() {
     switch (status) {
       case 'on_time':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-success bg-success-soft rounded-xl border border-success-subtle">
-            <CheckCircle2 className="w-3 h-3 text-success" />
-            <span>{t('landlordAttendanceStatOnTime')}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="success"
+            leftIcon={<CheckCircle2 className="w-3 h-3 text-success" />}
+          >
+            {t('landlordAttendanceStatOnTime')}
+          </Chip>
         )
       case 'late':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-warning bg-warning-soft rounded-xl border border-warning-subtle">
-            <Clock className="w-3 h-3 text-warning" />
-            <span>{t('landlordAttendanceStatLate')}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="warning"
+            leftIcon={<Clock className="w-3 h-3 text-warning" />}
+          >
+            {t('landlordAttendanceStatLate')}
+          </Chip>
         )
       case 'absent':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-danger bg-danger-soft rounded-xl border border-danger-subtle">
-            <XCircle className="w-3 h-3 text-danger" />
-            <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="danger"
+            leftIcon={<XCircle className="w-3 h-3 text-danger" />}
+          >
+            {isEn ? 'Absent' : 'Vắng mặt'}
+          </Chip>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-muted bg-card-hover rounded-xl border border-line">
-            <HelpCircle className="w-3 h-3 text-muted" />
-            <span>{isEn ? 'Not checked in' : 'Chưa chấm công'}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="neutral"
+            leftIcon={<HelpCircle className="w-3 h-3 text-muted" />}
+          >
+            {isEn ? 'Not checked in' : 'Chưa chấm công'}
+          </Chip>
         )
     }
   }
@@ -658,6 +687,7 @@ export default function AttendancePage() {
           description={t('landlordAttendanceEmptyDesc')}
           action={
             <Button
+              size="md"
               variant="outline"
               onClick={() => handleDatePresetChange('month')}
             >
@@ -859,49 +889,35 @@ export default function AttendancePage() {
       {/* ═══════════════════════════════════════════════════════════════════
           MODAL: MANUAL ATTENDANCE OVERRIDE
           ═══════════════════════════════════════════════════════════════════ */}
-      {isOverrideModalOpen && selectedRecord && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseOverride()
-          }}
-        >
-          <div
-            className="bg-card rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
-            onInput={() => setIsDirty(true)}
-            onChange={() => setIsDirty(true)}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
+      <Modal
+        isOpen={isOverrideModalOpen && Boolean(selectedRecord)}
+        onClose={handleAttemptCloseOverride}
+        size="lg"
+      >
+        {selectedRecord && (
+          <>
+            <Modal.Header
+              title={t('landlordAttendanceModalManualTitle')}
+              description={
+                isEn
+                  ? 'Override status and append to AuditLog transaction'
+                  : 'Ghi đè trạng thái và lưu nhật ký kiểm toán (AuditLog)'
+              }
+              icon={
+                <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
-                <div>
-                  <h2 className="text-base font-extrabold text-foreground">
-                    {t('landlordAttendanceModalManualTitle')}
-                  </h2>
-                  <p className="text-[11px] text-muted font-semibold">
-                    {isEn
-                      ? 'Override status and append to AuditLog transaction'
-                      : 'Ghi đè trạng thái và lưu nhật ký kiểm toán (AuditLog)'}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={handleAttemptCloseOverride}
-              >
-                <X />
-              </Button>
-            </div>
+              }
+            />
 
             {/* Form */}
             <form
               onSubmit={handleSubmitOverride}
-              className="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar"
+              className="flex flex-col flex-1 overflow-hidden"
+              onInput={() => setIsDirty(true)}
+              onChange={() => setIsDirty(true)}
             >
+              <Modal.Body className="space-y-4">
               {/* Shift info preview card */}
               <div className="p-3.5 bg-surface border border-line rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
@@ -1075,75 +1091,83 @@ export default function AttendancePage() {
                 </span>
               </div>
 
+              </Modal.Body>
+
               {/* Actions */}
-              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={handleAttemptCloseOverride}
-                >
-                  {t('landlordShiftsModalBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmittingOverride}
-                  isLoading={isSubmittingOverride}
-                >
-                  <span>{t('landlordAttendanceModalBtnSubmit')}</span>
-                </Button>
-              </div>
+              <Modal.Footer>
+                <div className="flex items-center justify-end gap-3 w-full">
+                  <Button
+                    size="md"
+                    variant="outline"
+                    onClick={handleAttemptCloseOverride}
+                  >
+                    {t('landlordShiftsModalBtnCancel')}
+                  </Button>
+                  <Button
+                    size="md"
+                    type="submit"
+                    disabled={isSubmittingOverride}
+                    isLoading={isSubmittingOverride}
+                  >
+                    <span>{t('landlordAttendanceModalBtnSubmit')}</span>
+                  </Button>
+                </div>
+              </Modal.Footer>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* ═══════════════════════════════════════════════════════════════════
- CONFIRMATION MODAL ON UNSAVED CHANGES (Rule #10)
- ═══════════════════════════════════════════════════════════════════ */}
-      {isConfirmCloseOpen && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-1">
-              <h4 className="text-base font-black text-foreground">
-                {t('landlordShiftsConfirmCloseTitle')}
-              </h4>
-              <p className="text-xs text-muted leading-relaxed">
-                {isEn
-                  ? 'You have unsaved attendance adjustment details. If you close now, all changes will be discarded.'
-                  : 'Bạn có thông tin điều chỉnh chấm công chưa lưu. Nếu đóng bây giờ, toàn bộ các thay đổi sẽ bị hủy bỏ.'}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1"
-              >
-                {t('landlordShiftsConfirmCloseKeep')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => {
-                  setIsConfirmCloseOpen(false)
-                  performCloseOverride()
-                }}
-                className="flex-1"
-              >
-                {t('landlordShiftsConfirmCloseDiscard')}
-              </Button>
-            </div>
+          CONFIRMATION MODAL ON UNSAVED CHANGES (Rule #10)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Modal
+        isOpen={isConfirmCloseOpen}
+        onClose={() => setIsConfirmCloseOpen(false)}
+        size="sm"
+        zIndex={70}
+      >
+        <Modal.Body className="p-6 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-foreground">
+              {t('landlordShiftsConfirmCloseTitle')}
+            </h4>
+            <p className="text-xs text-muted leading-relaxed">
+              {isEn
+                ? 'You have unsaved attendance adjustment details. If you close now, all changes will be discarded.'
+                : 'Bạn có thông tin điều chỉnh chấm công chưa lưu. Nếu đóng bây giờ, toàn bộ các thay đổi sẽ bị hủy bỏ.'}
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="flex items-center gap-2.5 w-full">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={() => {
+                setIsConfirmCloseOpen(false)
+                performCloseOverride()
+              }}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }
