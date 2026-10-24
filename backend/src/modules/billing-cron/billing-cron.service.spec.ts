@@ -104,18 +104,21 @@ describe('BillingCronService', () => {
       })
     })
 
-    it('should send to the primary tenant (isPrimary=true)', async () => {
+    it('should send to all co-tenants equally', async () => {
       const contract = buildContract({})
       contract.tenantContracts = [
-        { tenantId: 'secondary', isPrimary: false },
-        { tenantId: 'primary', isPrimary: true },
+        { tenantId: 'tenant-a' },
+        { tenantId: 'tenant-b' },
       ]
       mockPrisma.contract.findMany.mockResolvedValue([contract])
 
       await service.processBillingReminders(10)
 
       expect(mockNotificationsService.createBillingReminderNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ receiverId: 'primary' }),
+        expect.objectContaining({ receiverId: 'tenant-a' }),
+      )
+      expect(mockNotificationsService.createBillingReminderNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ receiverId: 'tenant-b' }),
       )
     })
 

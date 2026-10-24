@@ -37,6 +37,12 @@ const mockPrisma = {
     findFirst: jest.fn(),
     update: jest.fn(),
   },
+  roomOccupant: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
   tenantContract: {
     create: jest.fn(),
     findFirst: jest.fn(),
@@ -105,6 +111,7 @@ describe('ContractsService', () => {
     it('should return null when no pending platform deposit exists', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({ id: roomId, roomNumber: '101' })
       mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
 
       const result = await service.getPendingPlatformDeposit(boardingHouseId, roomId)
       expect(result).toBeNull()
@@ -204,6 +211,7 @@ describe('ContractsService', () => {
     it('should throw BadRequestException if no platform deposit exists', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1' })
       mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
 
       await expect(
         service.createPlatformContract(landlordId, boardingHouseId, dto),
@@ -254,7 +262,6 @@ describe('ContractsService', () => {
         data: expect.objectContaining({
           contractId: 'contract-new-1',
           tenantId: 'tenant-1',
-          isPrimary: true,
         }),
       })
       // Verify deposit was UPDATED with contractId (Rule 8)
@@ -328,6 +335,7 @@ describe('ContractsService', () => {
     it('should create active contract, manual deposit, contract doc, and audit logs (Flow B)', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1' })
       mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
 
       mockAuthService.findOrCreateByPhone.mockResolvedValue({
         id: 'tenant-user-2',
@@ -416,8 +424,7 @@ describe('ContractsService', () => {
           room: { id: 'r-1', roomNumber: '101', floor: 1, roomType: { name: 'Studio' } },
           tenantContracts: [
             {
-              isPrimary: true,
-              tenant: {
+                  tenant: {
                 id: 'u-1',
                 username: 'Khách A',
                 phoneNumber: '0901234567',
@@ -620,7 +627,6 @@ describe('ContractsService', () => {
       tenantContracts: [
         {
           id: 'tc-1',
-          isPrimary: true,
           tenant: {
             id: 'tenant-1',
             username: 'nguyenvana',

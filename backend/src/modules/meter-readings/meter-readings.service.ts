@@ -1185,7 +1185,7 @@ export class MeterReadingsService {
           },
         },
       },
-      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {

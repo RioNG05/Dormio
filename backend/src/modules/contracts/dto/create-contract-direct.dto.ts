@@ -129,6 +129,14 @@ export class CreateContractDirectDto {
   @IsNotEmpty()
   roomId: string
 
+  @ApiPropertyOptional({
+    description: 'Tenant user UUID (must be an active occupant in target room)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsOptional()
+  @IsUUID('4')
+  tenantId?: string
+
   @ApiProperty({
     description: 'Tenant Vietnamese phone number (10 digits starting with 0)',
     example: '0987654321',

@@ -18,7 +18,7 @@ import { User, UserRole } from '@prisma'
 import * as bcrypt from 'bcrypt'
 
 const BCRYPT_ROUNDS = 10
-const DEFAULT_PASSWORD = '00000000'
+const DEFAULT_PASSWORD = '88888888'
 
 @Injectable()
 export class AuthService {

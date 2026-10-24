@@ -73,26 +73,27 @@ export class BillingCronService {
     )
 
     for (const contract of contracts) {
-      const primaryTenant = this.getPrimaryTenant(contract)
-      if (!primaryTenant) {
+      if (!contract.tenantContracts || contract.tenantContracts.length === 0) {
         this.logger.warn(
-          `[BillingCron] No primary tenant found for contract ${contract.id} — skipping`,
+          `[BillingCron] No tenants found for contract ${contract.id} — skipping`,
         )
         continue
       }
 
-      try {
-        await this.notificationsService.createBillingReminderNotification({
-          senderId: contract.room.boardingHouse.ownerId,
-          receiverId: primaryTenant.tenantId,
-          boardingHouseId: contract.room.boardingHouseId,
-          contractId: contract.id,
-        })
-      } catch (err) {
-        // Log and continue — a single failure must not block the rest of the batch
-        this.logger.error(
-          `[BillingCron] Failed billing_reminder for contract ${contract.id}: ${(err as Error).message}`,
-        )
+      for (const tc of contract.tenantContracts) {
+        try {
+          await this.notificationsService.createBillingReminderNotification({
+            senderId: contract.room.boardingHouse.ownerId,
+            receiverId: tc.tenantId,
+            boardingHouseId: contract.room.boardingHouseId,
+            contractId: contract.id,
+          })
+        } catch (err) {
+          // Log and continue — a single failure must not block the rest of the batch
+          this.logger.error(
+            `[BillingCron] Failed billing_reminder for contract ${contract.id}: ${(err as Error).message}`,
+          )
+        }
       }
     }
   }
@@ -113,10 +114,9 @@ export class BillingCronService {
     )
 
     for (const contract of contracts) {
-      const primaryTenant = this.getPrimaryTenant(contract)
-      if (!primaryTenant) {
+      if (!contract.tenantContracts || contract.tenantContracts.length === 0) {
         this.logger.warn(
-          `[BillingCron] No primary tenant found for contract ${contract.id} — skipping`,
+          `[BillingCron] No tenants found for contract ${contract.id} — skipping`,
         )
         continue
       }
@@ -127,25 +127,31 @@ export class BillingCronService {
       )
 
       try {
-        // UC-L-06 Part 1 Step 3 / Part 3:
-        // Automatically generate monthly draft invoice for this cycle (idempotent)
         if (!hasMeteredServices) {
           await this.invoicesService.generateFlatRateInvoice(contract.id, new Date())
         } else {
           await this.invoicesService.generateMonthlyDraftInvoice(contract.id, new Date())
         }
-
-        await this.notificationsService.createBillingDueNotification({
-          senderId: contract.room.boardingHouse.ownerId,
-          receiverId: primaryTenant.tenantId,
-          boardingHouseId: contract.room.boardingHouseId,
-          contractId: contract.id,
-          hasMeteredServices,
-        })
       } catch (err) {
         this.logger.error(
-          `[BillingCron] Failed billing_due for contract ${contract.id}: ${(err as Error).message}`,
+          `[BillingCron] Failed draft invoice for contract ${contract.id}: ${(err as Error).message}`,
         )
+      }
+
+      for (const tc of contract.tenantContracts) {
+        try {
+          await this.notificationsService.createBillingDueNotification({
+            senderId: contract.room.boardingHouse.ownerId,
+            receiverId: tc.tenantId,
+            boardingHouseId: contract.room.boardingHouseId,
+            contractId: contract.id,
+            hasMeteredServices,
+          })
+        } catch (err) {
+          this.logger.error(
+            `[BillingCron] Failed billing_due for contract ${contract.id}: ${(err as Error).message}`,
+          )
+        }
       }
     }
   }
@@ -170,7 +176,6 @@ export class BillingCronService {
         tenantContracts: {
           select: {
             tenantId: true,
-            isPrimary: true,
           },
         },
         room: {
@@ -200,6 +205,6 @@ export class BillingCronService {
   private getPrimaryTenant(
     contract: Awaited<ReturnType<typeof this.fetchActiveContractsForDay>>[number],
   ) {
-    return contract.tenantContracts.find(tc => tc.isPrimary) ?? contract.tenantContracts[0] ?? null
+    return contract.tenantContracts[0] ?? null
   }
 }

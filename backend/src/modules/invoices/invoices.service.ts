@@ -82,7 +82,7 @@ export class InvoicesService {
           },
         },
       },
-      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
@@ -685,8 +685,7 @@ export class InvoicesService {
           contract: {
             include: {
               tenantContracts: {
-                where: { isPrimary: true },
-                include: {
+                                include: {
                   tenant: {
                     include: {
                       userIdentification: true,
@@ -862,8 +861,7 @@ export class InvoicesService {
         contract: {
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -1022,8 +1020,7 @@ export class InvoicesService {
           where: { status: 'active' },
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -1235,8 +1232,7 @@ export class InvoicesService {
         contract: {
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-            },
+                          },
           },
         },
         payment: true,
@@ -1723,8 +1719,7 @@ export class InvoicesService {
         contract: {
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -1993,8 +1988,7 @@ export class InvoicesService {
           where: { status: 'active' },
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,

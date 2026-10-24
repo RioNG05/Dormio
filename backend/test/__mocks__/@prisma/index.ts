@@ -33,6 +33,11 @@ export enum RoomStatus {
   maintainace = 'maintainace',
 }
 
+export enum OccupantStatus {
+  active = 'active',
+  moved_out = 'moved_out',
+}
+
 export enum ContractStatus {
   draft = 'draft',
   active = 'active',

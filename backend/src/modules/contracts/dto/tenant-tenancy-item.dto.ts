@@ -28,8 +28,8 @@ export class TenantTenancyItemDto {
   @ApiProperty({ description: 'Monthly rent price in VND', example: 3500000 })
   rentPrice: number
 
-  @ApiProperty({ description: 'Whether this user is the primary tenant on the contract', example: true })
-  isPrimary: boolean
+  @ApiPropertyOptional({ description: 'Deprecated: All tenants now have equal permissions', example: true })
+  isPrimary?: boolean
 
   @ApiProperty({ description: 'Contract start date ISO' })
   startDate: string

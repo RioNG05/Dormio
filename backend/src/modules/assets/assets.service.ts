@@ -282,8 +282,7 @@ export class AssetsService {
                 startDate: true,
                 endDate: true,
                 tenantContracts: {
-                  where: { isPrimary: true },
-                  take: 1,
+                                    take: 1,
                   select: {
                     tenant: {
                       select: {

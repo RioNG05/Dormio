@@ -63,7 +63,7 @@ export class GrievancesService {
           },
         },
       },
-      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     return tenantContract?.contract || null

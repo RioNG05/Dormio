@@ -24,7 +24,7 @@ import { QueryContractsDto } from './dto/query-contracts.dto'
 import { ExportContractResponseDto } from './dto/export-contract-response.dto'
 import { UpdateContractDto } from './dto/update-contract.dto'
 import { ContractTemplateRenderer, ContractTemplateData } from './contract-template.renderer'
-import { Prisma } from '@prisma'
+import { Prisma, OccupantStatus } from '@prisma'
 import { randomUUID } from 'crypto'
 
 /**
@@ -270,9 +270,23 @@ export class ContractsService {
         data: {
           contractId: newContract.id,
           tenantId,
-          isPrimary: true,
         },
       })
+
+      // Ensure platform tenant is registered as active RoomOccupant
+      const existingPlatformOcc = await tx.roomOccupant.findFirst({
+        where: { roomId: deposit.roomId, tenantId, status: OccupantStatus.active },
+      })
+      if (!existingPlatformOcc) {
+        await tx.roomOccupant.create({
+          data: {
+            boardingHouseId,
+            roomId: deposit.roomId,
+            tenantId,
+            status: OccupantStatus.active,
+          },
+        })
+      }
 
       // 3. Update existing Deposit (Rule 8: never insert a new one)
       await tx.deposit.update({
@@ -454,6 +468,27 @@ export class ContractsService {
       })
     }
 
+    // Validate room occupancy (Room-First Contract Creation Rule)
+    const targetUserId = dto.tenantId || tenantUser.id
+    const activeOccupants = await this.prisma.roomOccupant.findMany({
+      where: { roomId: dto.roomId, status: OccupantStatus.active },
+    })
+
+    if (activeOccupants.length === 0) {
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.ROOM_HAS_NO_OCCUPANTS,
+        'Room has no active occupants. Please add tenants to the room before creating a contract.',
+      )
+    }
+
+    const isTargetUserInRoom = activeOccupants.some(o => o.tenantId === targetUserId)
+    if (!isTargetUserInRoom) {
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.TENANT_NOT_IN_ROOM,
+        'The selected tenant does not reside in this room.',
+      )
+    }
+
     // 3. Execute in atomic transaction
     const contract = await this.prisma.$transaction(async tx => {
       // Create Contract in active status
@@ -469,14 +504,18 @@ export class ContractsService {
         },
       })
 
-      // Create TenantContract
-      await tx.tenantContract.create({
-        data: {
-          contractId: newContract.id,
-          tenantId: tenantUser.id,
-          isPrimary: true,
-        },
-      })
+      // Link all active occupants to this contract (Equal co-tenancy)
+      const tenantIdsToLink = Array.from(
+        new Set([targetUserId, ...activeOccupants.map(o => o.tenantId)]),
+      )
+      for (const tId of tenantIdsToLink) {
+        await tx.tenantContract.create({
+          data: {
+            contractId: newContract.id,
+            tenantId: tId,
+          },
+        })
+      }
 
       // Create manual Deposit record (type: 'contract')
       const deposit = await tx.deposit.create({
@@ -642,7 +681,7 @@ export class ContractsService {
       totalPages: Math.ceil(total / limit),
       data: contracts.map(c => {
         const primaryTenant =
-          c.tenantContracts.find(tc => tc.isPrimary)?.tenant || c.tenantContracts[0]?.tenant
+          c.tenantContracts[0]?.tenant
 
         return {
           id: c.id,
@@ -673,8 +712,7 @@ export class ContractsService {
             : null,
           tenantContracts: c.tenantContracts.map(tc => ({
             id: tc.id,
-            isPrimary: tc.isPrimary,
-            tenant: {
+              tenant: {
               id: tc.tenant.id,
               fullName:
                 tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
@@ -744,8 +782,7 @@ export class ContractsService {
     }
 
     const primaryTenant =
-      contract.tenantContracts.find(tc => tc.isPrimary)?.tenant ||
-      contract.tenantContracts[0]?.tenant
+contract.tenantContracts[0]?.tenant
 
     return {
       id: contract.id,
@@ -779,7 +816,7 @@ export class ContractsService {
         : null,
       tenantContracts: contract.tenantContracts.map(tc => ({
         id: tc.id,
-        isPrimary: tc.isPrimary,
+        isPrimary: true,
         tenant: {
           id: tc.tenant.id,
           fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
@@ -1003,7 +1040,7 @@ export class ContractsService {
           },
         },
       },
-      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     return tenantContracts
@@ -1025,7 +1062,6 @@ export class ContractsService {
           boardingHouseName: boardingHouse.name,
           boardingHouseAddress: formattedAddress,
           rentPrice: Number(contract.rentPrice),
-          isPrimary: tc.isPrimary,
           startDate: contract.startDate.toISOString(),
           endDate: contract.endDate.toISOString(),
           coverPhotoUrl: boardingHouse.thumbnail || undefined,
@@ -1099,7 +1135,7 @@ export class ContractsService {
           },
         },
       },
-      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
@@ -1276,7 +1312,7 @@ export class ContractsService {
     }
 
     const primaryTenantContract =
-      contract.tenantContracts.find(tc => tc.isPrimary) || contract.tenantContracts[0]
+      contract.tenantContracts[0]
 
     if (!primaryTenantContract) {
       throw new BadRequestException('Contract lacks primary tenant representation information.')
@@ -1574,7 +1610,7 @@ export class ContractsService {
           },
         },
       },
-      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {

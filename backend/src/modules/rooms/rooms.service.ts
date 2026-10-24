@@ -13,6 +13,7 @@ import {
 import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import {
   ContractStatus,
+  OccupantStatus,
   Prisma,
   RoomStatus,
   SubscriptionPackage,
@@ -23,6 +24,7 @@ import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto'
 import { CreateRoomDto } from './dto/create-room.dto'
 import {
   RoomDashboardContractDto,
+  RoomDashboardOccupantDto,
   RoomDashboardResponseDto,
 } from './dto/room-dashboard-response.dto'
 import { RoomQueryDto } from './dto/room-query.dto'
@@ -262,6 +264,17 @@ export class RoomsService {
               service: true,
             },
           },
+          occupants: {
+            where: { status: OccupantStatus.active },
+            include: {
+              tenant: {
+                include: {
+                  userIdentification: true,
+                },
+              },
+            },
+            orderBy: { joinedAt: 'asc' },
+          },
         },
       }),
     ])
@@ -434,6 +447,17 @@ export class RoomsService {
             service: true,
           },
         },
+        occupants: {
+          where: { status: OccupantStatus.active },
+          include: {
+            tenant: {
+              include: {
+                userIdentification: true,
+              },
+            },
+          },
+          orderBy: { joinedAt: 'asc' },
+        },
         contracts: {
           orderBy: { startDate: 'desc' },
           include: {
@@ -487,7 +511,7 @@ export class RoomsService {
           phoneNumber: tenant.phoneNumber,
           email: tenant.email,
           avatarUrl: tenant.avatarUrl,
-          isPrimary: tc.isPrimary,
+          isPrimary: true,
           hasIdentification: Boolean(ident),
           identityNumber: ident?.identityNumber ?? null,
           dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
@@ -520,10 +544,39 @@ export class RoomsService {
       }
     }
 
+    // Map active room occupants
+    const activeContractTenantIds = new Set(
+      activeContract?.tenantContracts.map(tc => tc.tenant?.id).filter(Boolean) || [],
+    )
+
+    const occupants: RoomDashboardOccupantDto[] = (room.occupants || []).map(occ => {
+      const tenant = occ.tenant
+      const ident = tenant?.userIdentification
+      const isContracted = Boolean(tenant?.id && activeContractTenantIds.has(tenant.id))
+      return {
+        id: occ.id,
+        tenantId: tenant?.id || occ.tenantId,
+        fullName: ident?.fullName || tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+        phoneNumber: tenant?.phoneNumber || '',
+        email: tenant?.email ?? null,
+        avatarUrl: tenant?.avatarUrl ?? null,
+        hasAccount: Boolean(tenant?.id),
+        hasIdentification: Boolean(ident),
+        identityNumber: ident?.identityNumber ?? null,
+        dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
+        gender: ident?.gender ?? null,
+        status: occ.status,
+        joinedAt: occ.joinedAt ? occ.joinedAt.toISOString() : new Date().toISOString(),
+        note: occ.note ?? null,
+        hasContract: isContracted,
+        contractId: isContracted ? activeContract?.id : null,
+      }
+    })
+
     // Map rental history from all contracts
     const rentalHistory = room.contracts.map(c => {
       const primaryTenantContract =
-        c.tenantContracts.find(tc => tc.isPrimary) ?? c.tenantContracts[0]
+        c.tenantContracts[0]
       const primaryTenant = primaryTenantContract?.tenant
       const primaryTenantName =
         primaryTenant?.userIdentification?.fullName ||
@@ -593,6 +646,7 @@ export class RoomsService {
         updatedAt: room.updatedAt?.toISOString() ?? null,
       },
       services,
+      occupants,
       currentContract: currentContractDto,
       rentalHistory,
       invoices,

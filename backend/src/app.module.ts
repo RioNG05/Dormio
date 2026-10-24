@@ -32,6 +32,7 @@ import { UploadModule } from './modules/upload/upload.module'
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module'
 import { AiModule } from './modules/ai/ai.module'
 import { MapsModule } from './modules/maps/maps.module'
+import { TenantsModule } from './modules/tenants/tenants.module'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { SubscriptionTierGuard } from './common/guards/subscription-tier.guard'
 import { HttpExceptionFilter } from './common/filters/http-exception.filter'
@@ -103,6 +104,7 @@ import { AppService } from './app.service'
     SubscriptionsModule,
     AiModule,
     MapsModule,
+    TenantsModule,
   ],
 
   controllers: [AppController],
