@@ -23,11 +23,9 @@ import {
 } from '@nestjs/swagger'
 import { TenantsService } from './tenants.service'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
-import { RolesGuard } from '../../common/guards/roles.guard'
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
-import { Roles } from '../../common/decorators/roles.decorator'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
-import { User, UserRole } from '@prisma'
+import { User } from '@prisma'
 import { SearchTenantQueryDto } from './dto/search-tenant-query.dto'
 import { SearchTenantResponseDto } from './dto/search-tenant-response.dto'
 import { QuickAddTenantDto } from './dto/quick-add-tenant.dto'
@@ -42,8 +40,7 @@ import { LandlordTenantListResponseDto } from './dto/tenant-list-response.dto'
   required: true,
   description: 'Target Boarding House UUID context',
 })
-@UseGuards(JwtAuthGuard, RolesGuard, PropertyOwnershipGuard)
-@Roles(UserRole.landlord)
+@UseGuards(JwtAuthGuard, PropertyOwnershipGuard)
 @Controller('landlord/tenants')
 export class TenantsController {
   private readonly logger = new Logger(TenantsController.name)
