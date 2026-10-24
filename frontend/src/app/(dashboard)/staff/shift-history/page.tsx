@@ -21,7 +21,6 @@ import {
   ArrowLeft,
   Search,
   Camera,
-  Eye,
   ShieldCheck,
   ArrowRight,
   FileText,
@@ -48,7 +47,11 @@ import {
   TableActionButton,
   Text,
   Chip,
+  Card,
+  TableRow,
+  ViewModeToggle,
 } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -62,6 +65,9 @@ function StaffShiftHistoryContent() {
   // Dynamic Shift Types fetched from Backend (no hardcoded data)
   const [availableShifts, setAvailableShifts] = useState<StaffShiftType[]>([])
   const [isShiftsLoading, setIsShiftsLoading] = useState<boolean>(false)
+
+  // View Mode: Grid (default, Rule #9) vs Table
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   useEffect(() => {
     let mounted = true
@@ -192,17 +198,24 @@ function StaffShiftHistoryContent() {
   })
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Pagination states (Table view: default 10)
-  const [pageSizeInput, setPageSizeInput] = useState<number>(10)
+  // Pagination states (Rule #9: Grid=6, Table=10 default)
+  const [pageSizeInput, setPageSizeInput] = useState<number>(6)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalItems, setTotalItems] = useState<number>(0)
+
+  // Handle switching view mode (Rule #9)
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode)
+    setPageSizeInput(mode === 'grid' ? 6 : 10)
+    setCurrentPage(1)
+  }
 
   // Preview watermark photo modal
   const [previewImageModal, setPreviewImageModal] = useState<{
     isOpen: boolean
     title: string
-    imageUrl: string
+    imageUrl?: string
     watermark?: AttendanceWatermark
     note?: string
   } | null>(null)
@@ -218,7 +231,7 @@ function StaffShiftHistoryContent() {
   const fetchHistory = useCallback(async () => {
     setIsLoading(true)
     try {
-      const validPageSize = Math.max(1, pageSizeInput || 10)
+      const validPageSize = Math.max(1, pageSizeInput || 6)
       const res = await staffAttendanceService.getHistory({
         page: currentPage,
         limit: validPageSize,
@@ -257,43 +270,73 @@ function StaffShiftHistoryContent() {
     }
   }, [fetchHistory])
 
+  const renderStatusChip = (item: AttendanceRecord) => {
+    if (item.status === 'on_time') {
+      return (
+        <Chip variant="success" size="xs" preventHover>
+          {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
+        </Chip>
+      )
+    }
+    if (item.status === 'late') {
+      return (
+        <Chip variant="warning" size="xs" preventHover>
+          {t('tableStatusLate')}
+        </Chip>
+      )
+    }
+    if (item.status === 'absent') {
+      return (
+        <Chip variant="danger" size="xs" preventHover>
+          {t('tableStatusAbsent')}
+        </Chip>
+      )
+    }
+    return (
+      <Chip variant="neutral" size="xs" preventHover>
+        {t('statusNotYet')}
+      </Chip>
+    )
+  }
+
+  const handleOpenRecordDetail = (item: AttendanceRecord) => {
+    setPreviewImageModal({
+      isOpen: true,
+      title: `${item.workDate} (${getShiftName(item.shiftName)})`,
+      imageUrl: item.checkInPhoto || item.checkOutPhoto || undefined,
+      watermark: item.checkInWatermark
+        ? {
+            ...item.checkInWatermark,
+            place: getLocalizedPlace(item.checkInWatermark.place, locale),
+            staffName: getLocalizedStaffName(item.checkInWatermark.staffName, locale),
+          }
+        : undefined,
+      note: getLocalizedExplanation(
+        item.checkInExplanation || item.checkOutExplanation || item.note,
+        locale,
+      ),
+    })
+  }
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
       {/* HEADER BAR */}
-      <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/staff"
-              className="p-1.5 rounded-xl bg-card-hover hover:bg-line text-muted transition-colors"
-              title={t('btnBackToOverview')}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <Chip variant="primary" size="xs" preventHover>
-              {t('attHistoryTag')}
-            </Chip>
-          </div>
-          <Text as="h1" size={{ base: '2xl', sm: '3xl' }} weight="black" color="default" className="tracking-tight">
-            {t('attHistoryTitle')}
-          </Text>
-          <Text size={{ base: 'xs', sm: 'sm' }} color="secondary" weight="medium">
-            {t('attHistorySubtitle')}
-          </Text>
-        </div>
-
-        {/* Action Link to Work Schedule */}
-        <div className="flex items-center gap-2 self-start md:self-center shrink-0">
-          <Link
+      <DashboardPageHeader
+        title={t('attHistoryTitle')}
+        subtitle={t('attHistorySubtitle')}
+        badge={t('attHistoryTag')}
+        actions={
+          <Button
+            variant="secondary"
+            size="md"
             href="/staff/schedule"
-            className="px-4 py-2.5 rounded-2xl bg-card-hover hover:bg-line text-foreground text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-line cursor-pointer"
+            leftIcon={<Calendar className="w-4 h-4 text-primary" />}
+            rightIcon={<ArrowRight className="w-3.5 h-3.5 text-muted" />}
           >
-            <Calendar className="w-4 h-4 text-primary" />
-            <span>{t('btnViewWorkSchedule')}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-muted" />
-          </Link>
-        </div>
-      </div>
+            {t('btnViewWorkSchedule')}
+          </Button>
+        }
+      />
 
       {/* Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
@@ -375,10 +418,9 @@ function StaffShiftHistoryContent() {
         )}
       </div>
 
-      {/* FILTER CONTROLS BAR (Above Table) */}
+      {/* FILTER CONTROLS BAR (Above Content) */}
       <div className="bg-card rounded-2xl border border-line shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Nút bấm "Sử dụng bộ lọc" */}
           <Button
             variant="secondary"
             onClick={handleOpenFilterModal}
@@ -389,7 +431,6 @@ function StaffShiftHistoryContent() {
             {t('btnUseFilters')}
           </Button>
 
-          {/* Khi ấn apply ở modal thì hiện filter được áp dụng ở bên cạnh */}
           {hasAnyAppliedFilter ? (
             <div className="flex flex-wrap items-center gap-1.5">
               {/* Date Range Chip */}
@@ -463,228 +504,287 @@ function StaffShiftHistoryContent() {
           )}
         </div>
 
-        {/* Total records count */}
-        <div className="text-xs text-muted font-medium self-start md:self-center">
-          {t('totalRecords')} <strong className="text-foreground font-bold">{totalItems}</strong>
+        {/* Total records count & View Mode Toggle */}
+        <div className="flex items-center gap-4 self-start md:self-center">
+          <div className="text-xs text-muted font-medium">
+            {t('totalRecords')} <strong className="text-foreground font-bold">{totalItems}</strong>
+          </div>
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
         </div>
       </div>
 
-      {/* TABLE VIEW */}
-      <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-surface/80 border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">{t('tableColDate')}</th>
-                <th className="py-3.5 px-3">{t('tableColShift')}</th>
-                <th className="py-3.5 px-3">{t('tableColCheckIn')}</th>
-                <th className="py-3.5 px-3">{t('tableColCheckOut')}</th>
-                <th className="py-3.5 px-3">{t('tableColStatus')}</th>
-                <th className="py-3.5 px-3">{t('tableColHours')}</th>
-                <th className="py-3.5 px-3">{t('tableColNote')}</th>
-                <th className="py-3.5 px-3 text-center">{t('tableColAction')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line font-medium text-foreground">
-              {isLoading ? (
-                <>
-                  {[...Array(5)].map((_, idx) => (
-                    <tr key={idx} className="animate-pulse">
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-20 bg-line rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-28 bg-line rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-16 bg-line rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-16 bg-line rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-5 w-18 bg-card-hover rounded-lg" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-10 bg-line rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-36 bg-card-hover rounded" />
-                      </td>
-                      <td className="py-4 px-3 text-center">
-                        <div className="h-6 w-10 bg-card-hover rounded-lg mx-auto" />
-                      </td>
-                    </tr>
-                  ))}
-                </>
-              ) : attendances.length > 0 ? (
-                attendances.map(item => (
-                  <tr key={item.id} className="hover:bg-card-hover transition-colors duration-150">
-                    <td className="py-4 px-3 font-bold text-foreground whitespace-nowrap">
-                      <Text size="xs" weight="bold" color="default">
+      {/* CONTENT: GRID (Default) OR TABLE VIEW */}
+      {viewMode === 'grid' ? (
+        /* GRID VIEW */
+        isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, idx) => (
+              <div
+                key={idx}
+                className="bg-card rounded-2xl border border-line p-5 space-y-4 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-24 bg-line rounded" />
+                  <div className="h-5 w-16 bg-line rounded-lg" />
+                </div>
+                <div className="h-12 bg-surface rounded-xl" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-12 bg-card-hover rounded-xl" />
+                  <div className="h-12 bg-card-hover rounded-xl" />
+                </div>
+                <div className="h-4 w-28 bg-line rounded" />
+              </div>
+            ))}
+          </div>
+        ) : attendances.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {attendances.map(item => (
+              <Card
+                key={item.id}
+                interactive
+                onClick={() => handleOpenRecordDetail(item)}
+                className="p-5 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary shrink-0" />
+                      <Text size="sm" weight="black" color="default">
                         {item.workDate}
                       </Text>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap font-bold">
-                      <Text size="xs" weight="bold" color="default">
-                        {getShiftName(item.shiftName)}
+                    </div>
+                    {renderStatusChip(item)}
+                  </div>
+
+                  <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                    <Text size="xs" weight="bold" color="default">
+                      {getShiftName(item.shiftName)}
+                    </Text>
+                    <Text size="3xs" color="secondary">
+                      {item.shiftTime}
+                    </Text>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 rounded-xl bg-card-hover border border-line space-y-0.5">
+                      <Text size="3xs" color="secondary" weight="semibold">
+                        {t('tableColCheckIn')}
                       </Text>
-                      <Text size="3xs" color="secondary" weight="normal">
-                        {item.shiftTime}
-                      </Text>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <Text size="xs" weight="bold" color="default" className="font-mono">
+                      <div className="flex items-center justify-between">
+                        <Text size="xs" weight="black" className="font-mono">
                           {item.checkIn || '--:--'}
                         </Text>
                         {item.checkInPhoto && (
-                          <TableActionButton
-                            icon={<Camera />}
-                            onClick={() =>
-                              setPreviewImageModal({
-                                isOpen: true,
-                                title: `${t('tableColCheckIn')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                                imageUrl: item.checkInPhoto!,
-                                watermark: item.checkInWatermark
-                                  ? {
-                                      ...item.checkInWatermark,
-                                      place: getLocalizedPlace(item.checkInWatermark.place, locale),
-                                      staffName: getLocalizedStaffName(
-                                        item.checkInWatermark.staffName,
-                                        locale,
-                                      ),
-                                    }
-                                  : undefined,
-                                note: getLocalizedExplanation(item.checkInExplanation, locale),
-                              })
-                            }
-                            title={t('viewWatermarkCheckIn')}
-                          />
+                          <Camera className="w-3.5 h-3.5 text-primary" />
                         )}
                       </div>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <Text size="xs" weight="bold" color="default" className="font-mono">
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-card-hover border border-line space-y-0.5">
+                      <Text size="3xs" color="secondary" weight="semibold">
+                        {t('tableColCheckOut')}
+                      </Text>
+                      <div className="flex items-center justify-between">
+                        <Text size="xs" weight="black" className="font-mono">
                           {item.checkOut || '--:--'}
                         </Text>
                         {item.checkOutPhoto && (
-                          <TableActionButton
-                            icon={<Camera />}
-                            onClick={() =>
-                              setPreviewImageModal({
-                                isOpen: true,
-                                title: `${t('tableColCheckOut')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                                imageUrl: item.checkOutPhoto!,
-                                watermark: item.checkOutWatermark
-                                  ? {
-                                      ...item.checkOutWatermark,
-                                      place: getLocalizedPlace(item.checkOutWatermark.place, locale),
-                                      staffName: getLocalizedStaffName(
-                                        item.checkOutWatermark.staffName,
-                                        locale,
-                                      ),
-                                    }
-                                  : undefined,
-                                note: getLocalizedExplanation(item.checkOutExplanation, locale),
-                              })
-                            }
-                            title={t('viewWatermarkCheckOut')}
-                          />
+                          <Camera className="w-3.5 h-3.5 text-primary" />
                         )}
                       </div>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap">
-                      {item.status === 'on_time' && (
-                        <Chip variant="success" size="xs" preventHover>
-                          {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
-                        </Chip>
+                    </div>
+                  </div>
+
+                  {(item.checkInExplanation || item.checkOutExplanation || item.note) && (
+                    <div className="text-[11px] text-muted truncate">
+                      <span className="font-bold text-warning">{t('tableColNote')}: </span>
+                      {getLocalizedExplanation(
+                        item.checkInExplanation || item.checkOutExplanation || item.note,
+                        locale,
                       )}
-                      {item.status === 'late' && (
-                        <Chip variant="warning" size="xs" preventHover>
-                          {t('tableStatusLate')}
-                        </Chip>
-                      )}
-                      {item.status === 'absent' && (
-                        <Chip variant="danger" size="xs" preventHover>
-                          {t('tableStatusAbsent')}
-                        </Chip>
-                      )}
-                      {item.status === 'not_yet' && (
-                        <Chip variant="neutral" size="xs" preventHover>
-                          {t('statusNotYet')}
-                        </Chip>
-                      )}
-                    </td>
-                    <td className="py-4 px-3 font-black text-primary">
-                      <Text size="xs" weight="black" color="brand">
-                        {item.totalHours}h
-                      </Text>
-                    </td>
-                    <td className="py-4 px-3 text-[11px] text-muted max-w-xs">
-                      {item.checkInExplanation ? (
-                        <div
-                          className="text-warning font-medium truncate"
-                          title={getLocalizedExplanation(item.checkInExplanation, locale)}
-                        >
-                          <span className="font-bold">{t('tableLateShort')}</span> &quot;
-                          {getLocalizedExplanation(item.checkInExplanation, locale)}&quot;
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-line flex items-center justify-between text-xs">
+                  <Text size="3xs" color="secondary" weight="medium">
+                    {t('tableColHours')}
+                  </Text>
+                  <Text size="sm" weight="black" color="brand">
+                    {item.totalHours}h
+                  </Text>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : null
+      ) : (
+        /* TABLE VIEW */
+        <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-surface/80 border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
+                <tr>
+                  <th className="py-3.5 px-4">{t('tableColDate')}</th>
+                  <th className="py-3.5 px-3">{t('tableColShift')}</th>
+                  <th className="py-3.5 px-3">{t('tableColCheckIn')}</th>
+                  <th className="py-3.5 px-3">{t('tableColCheckOut')}</th>
+                  <th className="py-3.5 px-3">{t('tableColStatus')}</th>
+                  <th className="py-3.5 px-3">{t('tableColHours')}</th>
+                  <th className="py-3.5 px-3">{t('tableColNote')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line font-medium text-foreground">
+                {isLoading ? (
+                  <>
+                    {[...Array(5)].map((_, idx) => (
+                      <tr key={idx} className="animate-pulse">
+                        <td className="py-4 px-4">
+                          <div className="h-4 w-20 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-28 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-16 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-16 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-5 w-18 bg-card-hover rounded-lg" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-10 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-36 bg-card-hover rounded" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ) : attendances.length > 0 ? (
+                  attendances.map(item => (
+                    <TableRow
+                      key={item.id}
+                      interactive
+                      onClick={() => handleOpenRecordDetail(item)}
+                    >
+                      <td className="py-4 px-4 font-bold text-foreground whitespace-nowrap">
+                        <Text size="xs" weight="bold" color="default">
+                          {item.workDate}
+                        </Text>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap font-bold">
+                        <Text size="xs" weight="bold" color="default">
+                          {getShiftName(item.shiftName)}
+                        </Text>
+                        <Text size="3xs" color="secondary" weight="normal">
+                          {item.shiftTime}
+                        </Text>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 font-mono font-bold">
+                          <Text size="xs" weight="bold" color="default" className="font-mono">
+                            {item.checkIn || '--:--'}
+                          </Text>
+                          {item.checkInPhoto && (
+                            <TableActionButton
+                              icon={<Camera />}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  isOpen: true,
+                                  title: `${t('tableColCheckIn')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                  imageUrl: item.checkInPhoto!,
+                                  watermark: item.checkInWatermark
+                                    ? {
+                                        ...item.checkInWatermark,
+                                        place: getLocalizedPlace(item.checkInWatermark.place, locale),
+                                        staffName: getLocalizedStaffName(
+                                          item.checkInWatermark.staffName,
+                                          locale,
+                                        ),
+                                      }
+                                    : undefined,
+                                  note: getLocalizedExplanation(item.checkInExplanation, locale),
+                                })
+                              }
+                              title={t('viewWatermarkCheckIn')}
+                            />
+                          )}
                         </div>
-                      ) : item.checkOutExplanation ? (
-                        <div
-                          className="text-warning font-medium truncate"
-                          title={getLocalizedExplanation(item.checkOutExplanation, locale)}
-                        >
-                          <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
-                          {getLocalizedExplanation(item.checkOutExplanation, locale)}&quot;
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 font-mono font-bold">
+                          <Text size="xs" weight="bold" color="default" className="font-mono">
+                            {item.checkOut || '--:--'}
+                          </Text>
+                          {item.checkOutPhoto && (
+                            <TableActionButton
+                              icon={<Camera />}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  isOpen: true,
+                                  title: `${t('tableColCheckOut')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                  imageUrl: item.checkOutPhoto!,
+                                  watermark: item.checkOutWatermark
+                                    ? {
+                                        ...item.checkOutWatermark,
+                                        place: getLocalizedPlace(item.checkOutWatermark.place, locale),
+                                        staffName: getLocalizedStaffName(
+                                          item.checkOutWatermark.staffName,
+                                          locale,
+                                        ),
+                                      }
+                                    : undefined,
+                                  note: getLocalizedExplanation(item.checkOutExplanation, locale),
+                                })
+                              }
+                              title={t('viewWatermarkCheckOut')}
+                            />
+                          )}
                         </div>
-                      ) : item.editedByLandlord ? (
-                        <span className="text-info font-semibold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
-                        </span>
-                      ) : (
-                        getLocalizedExplanation(item.note, locale) || '--'
-                      )}
-                    </td>
-                    <td className="py-4 px-3 text-center whitespace-nowrap">
-                      {item.checkInPhoto || item.checkOutPhoto ? (
-                        <TableActionButton
-                          icon={<Eye />}
-                          onClick={() =>
-                            setPreviewImageModal({
-                              isOpen: true,
-                              title: `${item.workDate} (${getShiftName(item.shiftName)})`,
-                              imageUrl: (item.checkInPhoto || item.checkOutPhoto)!,
-                              watermark: item.checkInWatermark
-                                ? {
-                                    ...item.checkInWatermark,
-                                    place: getLocalizedPlace(item.checkInWatermark.place, locale),
-                                    staffName: getLocalizedStaffName(
-                                      item.checkInWatermark.staffName,
-                                      locale,
-                                    ),
-                                  }
-                                : undefined,
-                              note: getLocalizedExplanation(
-                                item.checkInExplanation || item.checkOutExplanation || item.note,
-                                locale,
-                              ),
-                            })
-                          }
-                          title={t('viewPhotoProof')}
-                        />
-                      ) : (
-                        <span className="text-zinc-300 font-mono text-xs">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : null}
-            </tbody>
-          </table>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        {renderStatusChip(item)}
+                      </td>
+                      <td className="py-4 px-3 font-black text-primary">
+                        <Text size="xs" weight="black" color="brand">
+                          {item.totalHours}h
+                        </Text>
+                      </td>
+                      <td className="py-4 px-3 text-[11px] text-muted max-w-xs">
+                        {item.checkInExplanation ? (
+                          <div
+                            className="text-warning font-medium truncate"
+                            title={getLocalizedExplanation(item.checkInExplanation, locale)}
+                          >
+                            <span className="font-bold">{t('tableLateShort')}</span> &quot;
+                            {getLocalizedExplanation(item.checkInExplanation, locale)}&quot;
+                          </div>
+                        ) : item.checkOutExplanation ? (
+                          <div
+                            className="text-warning font-medium truncate"
+                            title={getLocalizedExplanation(item.checkOutExplanation, locale)}
+                          >
+                            <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
+                            {getLocalizedExplanation(item.checkOutExplanation, locale)}&quot;
+                          </div>
+                        ) : item.editedByLandlord ? (
+                          <span className="text-info font-semibold flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
+                          </span>
+                        ) : (
+                          getLocalizedExplanation(item.note, locale) || '--'
+                        )}
+                      </td>
+                    </TableRow>
+                  ))
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Empty State */}
       {!isLoading && attendances.length === 0 && (
@@ -696,6 +796,7 @@ function StaffShiftHistoryContent() {
             hasAnyAppliedFilter ? (
               <Button
                 variant="secondary"
+                size="md"
                 onClick={handleClearAllFilters}
                 leftIcon={<RotateCcw className="text-muted" />}
               >
@@ -716,7 +817,7 @@ function StaffShiftHistoryContent() {
         pageSizeMax={100}
       />
 
-      {/* WATERMARK PHOTO MODAL */}
+      {/* WATERMARK PHOTO / RECORD DETAIL MODAL */}
       {previewImageModal && previewImageModal.isOpen && (
         <Modal
           isOpen={previewImageModal.isOpen}
@@ -725,13 +826,19 @@ function StaffShiftHistoryContent() {
           size="md"
         >
           <Modal.Body className="space-y-4 pt-1">
-            <div className="relative bg-zinc-950 rounded-2xl overflow-hidden aspect-video max-h-[380px] flex items-center justify-center border border-line">
-              <img
-                src={previewImageModal.imageUrl}
-                alt="Audit proof"
-                className="w-full h-full object-contain"
-              />
-            </div>
+            {previewImageModal.imageUrl ? (
+              <div className="relative bg-zinc-950 rounded-2xl overflow-hidden aspect-video max-h-[380px] flex items-center justify-center border border-line">
+                <img
+                  src={previewImageModal.imageUrl}
+                  alt="Audit proof"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="p-6 rounded-2xl bg-surface border border-line text-center text-xs text-muted font-medium">
+                {t('noPhotoProofAttached') || 'Không có ảnh chấm công đính kèm.'}
+              </div>
+            )}
 
             {previewImageModal.watermark && (
               <div className="p-4 rounded-xl bg-surface border border-line space-y-1.5 text-xs font-mono">

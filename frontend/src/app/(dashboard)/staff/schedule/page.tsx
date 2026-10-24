@@ -46,6 +46,7 @@ import {
   Modal,
   EmptyState,
 } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import {
   staffScheduleService,
   StaffBoardingHouse,
@@ -371,40 +372,22 @@ function StaffScheduleContent() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-16">
       {/* HEADER BAR */}
-      <div className="bg-card rounded-3xl border border-line shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/staff"
-              className="p-1.5 rounded-xl bg-card-hover hover:bg-line text-muted transition-colors"
-              title={t('btnBackToOverview')}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <Chip variant="primary" size="xs" preventHover>
-              {t('schedTag')}
-            </Chip>
-          </div>
-          <Text as="h1" size={{ base: '2xl', sm: '3xl' }} weight="black" color="default" className="tracking-tight">
-            {t('schedTitle')}
-          </Text>
-          <Text size={{ base: 'xs', sm: 'sm' }} color="secondary" weight="medium">
-            {t('schedSubtitle')}
-          </Text>
-        </div>
-
-        {/* Action Button to Attendance History */}
-        <div className="flex items-center gap-2 self-start md:self-center shrink-0">
-          <Link
+      <DashboardPageHeader
+        title={t('schedTitle')}
+        subtitle={t('schedSubtitle')}
+        badge={t('schedTag')}
+        actions={
+          <Button
+            variant="secondary"
+            size="md"
             href="/staff/shift-history"
-            className="px-4 py-2.5 rounded-2xl bg-card-hover hover:bg-line text-foreground text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-line cursor-pointer"
+            leftIcon={<Clock className="w-4 h-4 text-primary" />}
+            rightIcon={<ArrowRight className="w-3.5 h-3.5 text-muted" />}
           >
-            <Clock className="w-4 h-4 text-primary" />
-            <span>{t('btnViewAttendanceHistory')}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-muted" />
-          </Link>
-        </div>
-      </div>
+            {t('btnViewAttendanceHistory')}
+          </Button>
+        }
+      />
 
       {/* ========================================================================= */}
       {/* SECTION 1: WORK SCHEDULE ROSTER (LỊCH PHÂN CA TUẦN)                         */}

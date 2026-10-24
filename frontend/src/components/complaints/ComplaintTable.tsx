@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { AlertTriangle, Clock, Eye, User, DoorOpen } from 'lucide-react'
-import { Text, Chip, TableActionButton } from '@/components/ui'
+import { AlertTriangle, Clock, User, DoorOpen } from 'lucide-react'
+import { Text, Chip, TableRow } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { ComplaintTableProps } from './types'
 
@@ -109,22 +109,21 @@ export function ComplaintTable({ items, role, onSelect }: ComplaintTableProps) {
             <th className="px-6 py-4">{t('tenantColGrievancePriority')}</th>
             <th className="px-6 py-4">{t('tenantColGrievanceDate')}</th>
             <th className="px-6 py-4">{t('tenantColGrievanceStatus')}</th>
-            <th className="px-6 py-4 text-right">{t('tenantColGrievanceAction')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
           {items.length === 0 ? (
             <tr>
-              <td colSpan={role !== 'tenant' ? 8 : 6} className="px-6 py-12 text-center text-muted">
+              <td colSpan={role !== 'tenant' ? 7 : 5} className="px-6 py-12 text-center text-muted">
                 {t('tenantNoGrievances')}
               </td>
             </tr>
           ) : (
             items.map(item => (
-              <tr
+              <TableRow
                 key={item.id}
+                interactive
                 onClick={() => onSelect(item)}
-                className="hover:bg-card-hover transition-colors duration-150 cursor-pointer"
               >
                 <td className="px-6 py-4">
                   <Text size="xs" weight="bold" color="secondary" className="font-mono">
@@ -164,14 +163,7 @@ export function ComplaintTable({ items, role, onSelect }: ComplaintTableProps) {
                   </Text>
                 </td>
                 <td className="px-6 py-4">{getStatusBadge(item.status)}</td>
-                <td className="px-6 py-4 text-right">
-                  <TableActionButton
-                    icon={<Eye />}
-                    title={t('tenantViewDetailTooltip') || 'Xem chi tiết'}
-                    onClick={() => onSelect(item)}
-                  />
-                </td>
-              </tr>
+              </TableRow>
             ))
           )}
         </tbody>

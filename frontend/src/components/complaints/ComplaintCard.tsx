@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { AlertTriangle, CheckCircle2, Clock, User, DoorOpen, Building } from 'lucide-react'
-import { Text, Chip } from '@/components/ui'
+import { Text, Chip, Card } from '@/components/ui'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { ComplaintCardProps } from './types'
 
@@ -94,9 +94,10 @@ export function ComplaintCard({ item, role, onSelect }: ComplaintCardProps) {
   }
 
   return (
-    <div
+    <Card
+      interactive
       onClick={() => onSelect(item)}
-      className="rounded-2xl border border-line bg-card p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4 group"
+      className="p-5 flex flex-col justify-between space-y-4 group"
     >
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -176,6 +177,6 @@ export function ComplaintCard({ item, role, onSelect }: ComplaintCardProps) {
         </Text>
         {getStatusBadge(item.status)}
       </div>
-    </div>
+    </Card>
   )
 }
