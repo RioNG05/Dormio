@@ -216,6 +216,7 @@ export function AddTenantModal({
         footer={
           <div className="flex flex-col-reverse sm:flex-row items-center gap-3 w-full">
             <Button
+              size='md'
               type="button"
               variant="secondary"
               onClick={handleAttemptClose}
@@ -225,6 +226,7 @@ export function AddTenantModal({
               {t('landlordTenantCancelBtn')}
             </Button>
             <Button
+              size='md'
               type="submit"
               variant="primary"
               disabled={!canSubmit}
