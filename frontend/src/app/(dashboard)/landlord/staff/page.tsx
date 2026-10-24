@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  X,
   Briefcase,
   Copy,
   Check,
@@ -685,6 +684,7 @@ export default function StaffPage() {
           }
           action={
             <Button
+              size="md"
               onClick={() => {
                 resetOnboardForm()
                 setIsOnboardModalOpen(true)
@@ -950,43 +950,28 @@ export default function StaffPage() {
       {/* ========================================================================= */}
       {/* MODAL: ONBOARD STAFF */}
       {/* ========================================================================= */}
-      {isOnboardModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal('onboard')
-          }}
-        >
-          <div
-            className="bg-card rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[92vh]"
-            onInput={() => setFormDirty(true)}
-            onChange={() => setFormDirty(true)}
-          >
-            <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-primary/10 text-primary rounded-xl">
-                  <UserCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-foreground text-base">
-                    {t('landlordStaffOnboardTitle')}
-                  </h3>
-                  <p className="text-[11px] text-muted font-semibold">
-                    {t('landlordStaffOnboardSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => handleAttemptCloseModal('onboard')}
-              >
-                <X />
-              </Button>
+      <Modal
+        isOpen={isOnboardModalOpen}
+        onClose={() => handleAttemptCloseModal('onboard')}
+        size="xl"
+      >
+        <Modal.Header
+          title={t('landlordStaffOnboardTitle')}
+          description={t('landlordStaffOnboardSubtitle')}
+          icon={
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <UserCheck className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <form onSubmit={handleSubmitOnboard} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <form
+          onSubmit={handleSubmitOnboard}
+          className="flex flex-col flex-1 overflow-hidden"
+          onInput={() => setFormDirty(true)}
+          onChange={() => setFormDirty(true)}
+        >
+          <Modal.Body className="space-y-5">
                 {errorMessage && (
                   <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl flex items-start gap-2.5 text-xs text-danger font-semibold">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
@@ -1178,68 +1163,58 @@ export default function StaffPage() {
                     }}
                   />
                 </div>
-              </div>
+              </Modal.Body>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-3 bg-surface/60">
-                <Button
-                  variant="secondary"
-                  onClick={() => handleAttemptCloseModal('onboard')}
-                >
-                  {t('landlordStaffOnboardBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || (foundUser?.isAlreadyStaffAtThisHouse ?? false)}
-                  isLoading={isSubmitting}
-                >
-                  {t('landlordStaffOnboardBtnSave')}
-                </Button>
-              </div>
+              <Modal.Footer>
+                <div className="flex items-center justify-end gap-3 w-full">
+                  <Button
+                    size="md"
+                    variant="secondary"
+                    onClick={() => handleAttemptCloseModal('onboard')}
+                  >
+                    {t('landlordStaffOnboardBtnCancel')}
+                  </Button>
+                  <Button
+                    size="md"
+                    type="submit"
+                    disabled={isSubmitting || (foundUser?.isAlreadyStaffAtThisHouse ?? false)}
+                    isLoading={isSubmitting}
+                  >
+                    {t('landlordStaffOnboardBtnSave')}
+                  </Button>
+                </div>
+              </Modal.Footer>
             </form>
-          </div>
-        </div>
-      )}
+          </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: ASSIGN / RE-ASSIGN ROLE ( Step 3) */}
       {/* ========================================================================= */}
-      {isAssignRoleModalOpen && selectedStaff && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal('assignRole')
-          }}
-        >
-          <div
-            className="bg-card rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]"
-            onInput={() => setFormDirty(true)}
-            onChange={() => setFormDirty(true)}
-          >
-            <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
-              <div className="flex items-center gap-2.5">
+      <Modal
+        isOpen={isAssignRoleModalOpen && Boolean(selectedStaff)}
+        onClose={() => handleAttemptCloseModal('assignRole')}
+        size="lg"
+      >
+        {selectedStaff && (
+          <>
+            <Modal.Header
+              title={t('landlordStaffAssignTitle')}
+              description={t('landlordStaffAssignSubtitle')}
+              icon={
                 <div className="p-2 bg-primary/10 text-primary rounded-xl">
                   <Briefcase className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-foreground text-base">
-                    {t('landlordStaffAssignTitle')}
-                  </h3>
-                  <p className="text-[11px] text-muted font-semibold">
-                    {t('landlordStaffAssignSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => handleAttemptCloseModal('assignRole')}
-              >
-                <X />
-              </Button>
-            </div>
+              }
+            />
 
-            <form onSubmit={handleSaveAssignRole} className="p-6 space-y-4">
+            <form
+              onSubmit={handleSaveAssignRole}
+              className="flex flex-col flex-1 overflow-hidden"
+              onInput={() => setFormDirty(true)}
+              onChange={() => setFormDirty(true)}
+            >
+              <Modal.Body className="space-y-4">
               {assignError && (
                 <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
@@ -1336,69 +1311,53 @@ export default function StaffPage() {
                   </p>
                 </div>
               )}
+            </Modal.Body>
 
-              {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() => handleAttemptCloseModal('assignRole')}
-                >
-                  {t('landlordStaffAssignBtnCancel')}
-                </Button>
-                <Button
-                  size="xs"
-                  type="submit"
-                  disabled={isAssignSubmitting}
-                  isLoading={isAssignSubmitting}
-                >
-                  <span>{t('landlordStaffAssignBtnConfirm')}</span>
-                </Button>
-              </div>
+            {/* Modal Actions */}
+            <Modal.Footer>
+                <div className="flex items-center justify-end gap-2.5 w-full">
+                  <Button
+                    size="md"
+                    variant="outline"
+                    onClick={() => handleAttemptCloseModal('assignRole')}
+                  >
+                    {t('landlordStaffAssignBtnCancel')}
+                  </Button>
+                  <Button
+                    size="md"
+                    type="submit"
+                    disabled={isAssignSubmitting}
+                    isLoading={isAssignSubmitting}
+                  >
+                    <span>{t('landlordStaffAssignBtnConfirm')}</span>
+                  </Button>
+                </div>
+              </Modal.Footer>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: MANAGE JOB POSITIONS (CRUD) */}
       {/* ========================================================================= */}
-      {isPositionsModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal('positions')
-          }}
-        >
-          <div
-            className="bg-card rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-line flex flex-col max-h-[90vh]"
-            onInput={() => setFormDirty(true)}
-            onChange={() => setFormDirty(true)}
-          >
-            <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-surface/80">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-primary/10 text-primary rounded-xl">
-                  <Briefcase className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-foreground text-base">
-                    {t('landlordStaffPositionsTitle')}
-                  </h3>
-                  <p className="text-[11px] text-muted font-semibold">
-                    {t('landlordStaffPositionsSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => handleAttemptCloseModal('positions')}
-              >
-                <X />
-              </Button>
+      <Modal
+        isOpen={isPositionsModalOpen}
+        onClose={() => handleAttemptCloseModal('positions')}
+        size="2xl"
+      >
+        <Modal.Header
+          title={t('landlordStaffPositionsTitle')}
+          description={t('landlordStaffPositionsSubtitle')}
+          icon={
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Briefcase className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <Modal.Body className="space-y-5">
+          <div onInput={() => setFormDirty(true)} onChange={() => setFormDirty(true)} className="space-y-5">
               {posErrorMessage && (
                 <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
@@ -1454,6 +1413,7 @@ export default function StaffPage() {
 
                   <div className="flex justify-end gap-2 pt-1">
                     <Button
+                      size="md"
                       variant="outline"
                       onClick={() => {
                         setEditingPosition(null)
@@ -1463,6 +1423,7 @@ export default function StaffPage() {
                       {t('landlordStaffPositionsBtnCancel')}
                     </Button>
                     <Button
+                      size="md"
                       type="submit"
                       disabled={isPosSubmitting}
                       isLoading={isPosSubmitting}
@@ -1545,64 +1506,68 @@ export default function StaffPage() {
                 </div>
               </div>
             </div>
+          </Modal.Body>
 
-            <div className="px-6 py-4 border-t border-line flex items-center justify-end bg-surface/60">
+          <Modal.Footer>
+            <div className="flex items-center justify-end w-full">
               <Button
-                size="xs"
+                size="md"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('positions')}
               >
                 {t('landlordStaffPositionsBtnClose')}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </Modal.Footer>
+        </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: CREDENTIALS NOTIFICATION MODAL */}
       {/* ========================================================================= */}
-      {credentialModal.isOpen && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) {
-              setCredentialModal(prev => ({ ...prev, isOpen: false }))
-            }
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-line p-6 space-y-5 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-success-soft text-success border border-success-subtle flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
+      <Modal
+        isOpen={credentialModal.isOpen}
+        onClose={() => setCredentialModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        zIndex={60}
+      >
+        <Modal.Body className="p-6 space-y-5 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-success-soft text-success border border-success-subtle flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
 
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-foreground">
-                {t('landlordStaffCredSuccessTitle')}
-              </h3>
-              <p className="text-xs text-muted">
-                {t('landlordStaffCredSuccessDesc', { name: credentialModal.name })}
-              </p>
-            </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-black text-foreground">
+              {t('landlordStaffCredSuccessTitle')}
+            </h3>
+            <p className="text-xs text-muted">
+              {t('landlordStaffCredSuccessDesc', { name: credentialModal.name })}
+            </p>
+          </div>
 
-            <div className="p-4 bg-surface rounded-2xl border border-line text-left space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted font-semibold">
-                  {t('landlordStaffCredPhoneLabel')}
-                </span>
-                <span className="font-extrabold text-foreground">{credentialModal.phone}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted font-semibold">
-                  {t('landlordStaffCredPasswordLabel')}
-                </span>
-                <span className="font-mono font-black text-sm text-accent bg-accent-soft px-2 py-0.5 rounded-lg border border-accent-subtle">
-                  {credentialModal.password}
-                </span>
-              </div>
+          <div className="p-4 bg-surface rounded-2xl border border-line text-left space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted font-semibold">
+                {t('landlordStaffCredPhoneLabel')}
+              </span>
+              <span className="font-extrabold text-foreground">{credentialModal.phone}</span>
             </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted font-semibold">
+                {t('landlordStaffCredPasswordLabel')}
+              </span>
+              <span className="font-mono font-black text-sm text-accent bg-accent-soft px-2 py-0.5 rounded-lg border border-accent-subtle">
+                {credentialModal.password}
+              </span>
+            </div>
+          </div>
+        </Modal.Body>
 
-            <Button fullWidth size="xs" variant="dark"
+        <Modal.Footer>
+          <div className="flex flex-col gap-2 w-full">
+            <Button
+              fullWidth
+              size="md"
+              variant="dark"
               onClick={() =>
                 copyToClipboard(
                   t('landlordStaffCredShareMessage', {
@@ -1625,182 +1590,177 @@ export default function StaffPage() {
               )}
             </Button>
 
-            <Button size="xs"
+            <Button
+              size="md"
               variant="ghost"
               onClick={() => setCredentialModal(prev => ({ ...prev, isOpen: false }))}
             >
               {t('landlordStaffCredCloseBtn')}
             </Button>
           </div>
-        </div>
-      )}
+        </Modal.Footer>
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: STAFF DETAIL VIEW */}
       {/* ========================================================================= */}
-      {isDetailModalOpen && selectedStaff && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsDetailModalOpen(false)
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-line p-6 space-y-5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg">
+      <Modal
+        isOpen={isDetailModalOpen && Boolean(selectedStaff)}
+        onClose={() => setIsDetailModalOpen(false)}
+        size="md"
+      >
+        {selectedStaff && (
+          <>
+            <Modal.Header
+              title={selectedStaff.fullName}
+              description={selectedStaff.positionName}
+              icon={
+                <div className="w-10 h-10 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-base">
                   {selectedStaff.fullName.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-foreground text-base">
-                    {selectedStaff.fullName}
-                  </h3>
-                  <p className="text-xs font-bold text-primary">{selectedStaff.positionName}</p>
+              }
+            />
+
+            <Modal.Body className="space-y-4">
+              <div className="space-y-3 text-xs bg-surface p-4 rounded-2xl border border-line">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted font-semibold">
+                    {t('landlordStaffDetailStatusLabel')}
+                  </span>
+                  <Chip
+                    size="sm"
+                    preventHover
+                    variant={selectedStaff.status === 'active' ? 'primary' : 'neutral'}
+                  >
+                    {selectedStaff.status === 'active'
+                      ? t('landlordStaffTableStatusActive')
+                      : t('landlordStaffTableStatusInactive')}
+                  </Chip>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted font-semibold">
+                    {t('landlordStaffDetailPhoneLabel')}
+                  </span>
+                  <span className="font-bold text-foreground">{selectedStaff.phoneNumber}</span>
+                </div>
+                {selectedStaff.email && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted font-semibold">
+                      {t('landlordStaffDetailEmailLabel')}
+                    </span>
+                    <span className="font-medium text-foreground/90">{selectedStaff.email}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-muted font-semibold">
+                    {t('landlordStaffDetailJoinedLabel')}
+                  </span>
+                  <span className="font-medium text-foreground/90">
+                    {formatDate(selectedStaff.joinedAt)}
+                  </span>
+                </div>
+                {selectedStaff.leftAt && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted font-semibold">
+                      {t('landlordStaffDetailLeftLabel')}
+                    </span>
+                    <span className="font-medium text-danger">
+                      {formatDate(selectedStaff.leftAt)}
+                    </span>
+                  </div>
+                )}
+                {selectedStaff.positionDescription && (
+                  <div className="pt-2 border-t border-line">
+                    <span className="text-muted font-semibold block mb-1">
+                      {t('landlordStaffDetailDutiesLabel')}
+                    </span>
+                    <p className="text-foreground/90 italic">{selectedStaff.positionDescription}</p>
+                  </div>
+                )}
               </div>
+            </Modal.Body>
 
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setIsDetailModalOpen(false)}
-              >
-                <X />
-              </Button>
-            </div>
-
-            <div className="space-y-3 text-xs bg-surface p-4 rounded-2xl border border-line">
-              <div className="flex justify-between items-center">
-                <span className="text-muted font-semibold">
-                  {t('landlordStaffDetailStatusLabel')}
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${selectedStaff.status === 'active'
-                    ? 'bg-success-soft text-success'
-                    : 'bg-line text-muted'
-                    }`}
+            <Modal.Footer>
+              <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+                <Button
+                  size="md"
+                  onClick={() => {
+                    handleOpenAssignRoleModal(selectedStaff)
+                    setIsDetailModalOpen(false)
+                  }}
+                >
+                  {t('landlordStaffBtnAssignRole')}
+                </Button>
+                <Button
+                  size="md"
+                  variant="secondary"
+                  onClick={() => {
+                    handleToggleStatus(selectedStaff)
+                    setIsDetailModalOpen(false)
+                  }}
                 >
                   {selectedStaff.status === 'active'
-                    ? t('landlordStaffTableStatusActive')
-                    : t('landlordStaffTableStatusInactive')}
-                </span>
+                    ? t('landlordStaffBtnDeactivate')
+                    : t('landlordStaffBtnActivate')}
+                </Button>
+                <Button
+                  size="md"
+                  variant="dark"
+                  onClick={() => setIsDetailModalOpen(false)}
+                >
+                  {t('landlordStaffDetailBtnClose')}
+                </Button>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted font-semibold">
-                  {t('landlordStaffDetailPhoneLabel')}
-                </span>
-                <span className="font-bold text-foreground">{selectedStaff.phoneNumber}</span>
-              </div>
-              {selectedStaff.email && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted font-semibold">
-                    {t('landlordStaffDetailEmailLabel')}
-                  </span>
-                  <span className="font-medium text-foreground/90">{selectedStaff.email}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-muted font-semibold">
-                  {t('landlordStaffDetailJoinedLabel')}
-                </span>
-                <span className="font-medium text-foreground/90">
-                  {formatDate(selectedStaff.joinedAt)}
-                </span>
-              </div>
-              {selectedStaff.leftAt && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted font-semibold">
-                    {t('landlordStaffDetailLeftLabel')}
-                  </span>
-                  <span className="font-medium text-danger">
-                    {formatDate(selectedStaff.leftAt)}
-                  </span>
-                </div>
-              )}
-              {selectedStaff.positionDescription && (
-                <div className="pt-2 border-t border-line">
-                  <span className="text-muted font-semibold block mb-1">
-                    {t('landlordStaffDetailDutiesLabel')}
-                  </span>
-                  <p className="text-foreground/90 italic">{selectedStaff.positionDescription}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button size="xs"
-                onClick={() => {
-                  handleOpenAssignRoleModal(selectedStaff)
-                  setIsDetailModalOpen(false)
-                }}
-              >
-                {t('landlordStaffBtnAssignRole')}
-              </Button>
-              <Button size="xs"
-                variant="secondary"
-                onClick={() => {
-                  handleToggleStatus(selectedStaff)
-                  setIsDetailModalOpen(false)
-                }}
-              >
-                {selectedStaff.status === 'active'
-                  ? t('landlordStaffBtnDeactivate')
-                  : t('landlordStaffBtnActivate')}
-              </Button>
-              <Button size="xs" variant="dark"
-                onClick={() => setIsDetailModalOpen(false)}
-              >
-                {t('landlordStaffDetailBtnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: UNSAVED CHANGES CONFIRMATION (Rule #10) */}
       {/* ========================================================================= */}
-      {isConfirmCloseOpen && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
-          }}
-        >
-          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-1">
-              <h4 className="text-base font-black text-foreground">
-                {t('landlordStaffConfirmCloseTitle')}
-              </h4>
-              <p className="text-xs text-muted leading-relaxed">
-                {t('landlordStaffConfirmCloseMessage')}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 pt-2">
-              <Button
-                size="xs"
-                variant="outline"
-                onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1"
-              >
-                {t('landlordStaffConfirmCloseKeep')}
-              </Button>
-              <Button
-                size="xs"
-                variant="danger"
-                onClick={handleConfirmClose}
-                className="flex-1"
-              >
-                {t('landlordStaffConfirmCloseDiscard')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={isConfirmCloseOpen}
+        onClose={() => setIsConfirmCloseOpen(false)}
+        size="sm"
+        zIndex={70}
+      >
+        <Modal.Body className="p-6 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-foreground">
+              {t('landlordStaffConfirmCloseTitle')}
+            </h4>
+            <p className="text-xs text-muted leading-relaxed">
+              {t('landlordStaffConfirmCloseMessage')}
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="flex items-center gap-2.5 w-full">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              className="flex-1"
+            >
+              {t('landlordStaffConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={handleConfirmClose}
+              className="flex-1"
+            >
+              {t('landlordStaffConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
 
       {/* Action Confirmation Modal (Rule #10) */}
       {actionConfirm && (
@@ -1809,7 +1769,7 @@ export default function StaffPage() {
           onClose={() => setActionConfirm(null)}
           size="sm"
         >
-          <div className="space-y-4 pt-2 text-center">
+          <Modal.Body className="p-6 space-y-4 text-center">
             <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -1821,8 +1781,12 @@ export default function StaffPage() {
                 {actionConfirm.message}
               </p>
             </div>
-            <div className="flex items-center gap-3 pt-3 border-t border-line">
+          </Modal.Body>
+
+          <Modal.Footer>
+            <div className="flex items-center gap-3 w-full">
               <Button
+                size="md"
                 variant="secondary"
                 onClick={() => setActionConfirm(null)}
                 className="flex-1"
@@ -1830,6 +1794,7 @@ export default function StaffPage() {
                 {t('landlordStaffConfirmCloseKeep') || 'Hủy bỏ'}
               </Button>
               <Button
+                size="md"
                 onClick={() => {
                   const onConf = actionConfirm.onConfirm
                   setActionConfirm(null)
@@ -1840,7 +1805,7 @@ export default function StaffPage() {
                 {t('btnConfirm') || 'Xác nhận'}
               </Button>
             </div>
-          </div>
+          </Modal.Footer>
         </Modal>
       )}
     </div>

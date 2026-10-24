@@ -851,21 +851,21 @@ export default function ExpensesPage() {
           footerClassName="justify-between"
           footer={
             <>
-              <Button variant="secondary" onClick={() => setSelectedExpense(null)}>
+              <Button size='md' variant="secondary" onClick={() => setSelectedExpense(null)}>
                 {t('landlordExpensesCloseBtn')}
               </Button>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {selectedExpense.status === 'pending' && (
-                  <Button variant="dark" onClick={() => handleMarkAsPaid(selectedExpense.id)} leftIcon={<Check />}>
+                  <Button size='md' variant="dark" onClick={() => handleMarkAsPaid(selectedExpense.id)} leftIcon={<Check />}>
                     {t('landlordExpensesStatusPaid')}
                   </Button>
                 )}
                 {selectedExpense.status === 'paid' ? (
-                  <Button variant="secondary" onClick={() => openEditModal(selectedExpense)} leftIcon={<Lock />}>
+                  <Button size='md' variant="secondary" onClick={() => openEditModal(selectedExpense)} leftIcon={<Lock />}>
                     {t('landlordExpensesLockedBtn')}
                   </Button>
                 ) : (
-                  <Button variant="dark" onClick={() => {
+                  <Button size='md' variant="dark" onClick={() => {
                     const expToEdit = selectedExpense
                     setSelectedExpense(null)
                     openEditModal(expToEdit)
@@ -959,10 +959,10 @@ export default function ExpensesPage() {
           }}
           footer={
             <>
-              <Button variant="secondary" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
+              <Button size='md' variant="secondary" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
                 {t('landlordExpensesCancelBtn')}
               </Button>
-              <Button variant="dark" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
+              <Button size='md' variant="dark" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
                 {showCreateModal ? t('landlordExpensesSaveExpense') : t('landlordExpensesUpdateExpense')}
               </Button>
             </>
@@ -1131,10 +1131,10 @@ export default function ExpensesPage() {
           closeOnOverlayClick={false}
           footer={
             <>
-              <Button variant="secondary" onClick={() => setConfirmCloseTarget(null)} className="flex-1">
+              <Button size='md' variant="secondary" onClick={() => setConfirmCloseTarget(null)} className="flex-1">
                 {t('landlordExpensesContinueTyping')}
               </Button>
-              <Button variant="danger" onClick={handleConfirmCloseModal} className="flex-1">
+              <Button size='md' variant="danger" onClick={handleConfirmCloseModal} className="flex-1">
                 {t('landlordExpensesDiscardAndClose')}
               </Button>
             </>
@@ -1156,10 +1156,10 @@ export default function ExpensesPage() {
           size="sm"
           footer={
             <>
-              <Button variant="secondary" onClick={() => setDeletingExpenseTarget(null)} className="flex-1">
+              <Button size='md' variant="secondary" onClick={() => setDeletingExpenseTarget(null)} className="flex-1">
                 {t('landlordExpensesCancelBtn')}
               </Button>
-              <Button variant="danger" onClick={confirmDeleteExpense} className="flex-1">
+              <Button size='md' variant="danger" onClick={confirmDeleteExpense} className="flex-1">
                 {t('landlordExpensesDeleteBtn')}
               </Button>
             </>
@@ -1181,7 +1181,7 @@ export default function ExpensesPage() {
           size="sm"
           footer={
             <>
-              <Button fullWidth variant="dark" onClick={() => setLockedExpenseTarget(null)}>
+              <Button size='md' fullWidth variant="dark" onClick={() => setLockedExpenseTarget(null)}>
                 {t('landlordExpensesUnderstand')}
               </Button>
             </>
