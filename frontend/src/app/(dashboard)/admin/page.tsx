@@ -25,7 +25,7 @@ import {
 import { adminAnalyticsService, AdminOverviewResponse } from '@/services/admin-analytics.service'
 import { grievanceService, AdminGrievanceItem } from '@/services/grievance.service'
 import { postService, PublicPostListing } from '@/services/post.service'
-import { Button, Text } from '@/components/ui'
+import { Button, Text, Chip } from '@/components/ui'
 
 function formatDisplayDate(dateStr: string, locale: string) {
   try {
@@ -147,7 +147,7 @@ export default function AdminDashboardPage() {
         growth: `${overview.revenueGrowthRate >= 0 ? '+' : ''}${overview.revenueGrowthRate || 0}%`,
         isPositive: (overview.revenueGrowthRate || 0) >= 0,
         icon: Wallet,
-        color: 'text-orange-600 bg-accent-soft border-accent-subtle',
+        color: 'text-accent bg-accent-soft border-accent-subtle',
         link: '/admin/analytics',
       },
       {
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
         growth: t('adminStatActionNeeded'),
         isPositive: false,
         icon: AlertTriangle,
-        color: 'text-orange-600 bg-accent-soft border-accent-subtle',
+        color: 'text-danger bg-danger-soft border-danger-subtle',
         badge: t('adminStatUrgentBadge', { count: overview.urgentGrievancesCount || 0 }),
         link: '/admin/grievances',
       },
@@ -181,20 +181,30 @@ export default function AdminDashboardPage() {
     <div className="space-y-8 pb-12">
       {/* Top Hero Banner & Title */}
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800/90 text-white p-6 sm:p-8 shadow-xl">
-        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-orange-500/15 blur-3xl pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-80 h-80 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
           <div className="space-y-2.5 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-orange-500/25 text-orange-300 border border-orange-500/40 tracking-wider uppercase">
-                <ShieldAlert className="w-3.5 h-3.5 text-orange-400" />
+              <Chip
+                variant="warning"
+                size="sm"
+                preventHover
+                leftIcon={<ShieldAlert className="w-3.5 h-3.5" />}
+                className="font-black uppercase tracking-wider"
+              >
                 {t('adminHubBadge')}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </Chip>
+              <Chip
+                variant="success"
+                size="sm"
+                preventHover
+                leftIcon={<span className="w-2 h-2 rounded-full bg-success animate-pulse" />}
+                className="font-semibold"
+              >
                 {t('adminServicesOnline')}
-              </span>
+              </Chip>
             </div>
 
             <Text
@@ -206,7 +216,7 @@ export default function AdminDashboardPage() {
             >
               {t('adminPageTitle')}
             </Text>
-            <Text as="p" size="sm" className="text-zinc-300 leading-relaxed max-w-2xl">
+            <Text as="p" size="sm" className="text-white/80 leading-relaxed max-w-2xl">
               {t('adminPageSubtitle')}
             </Text>
           </div>
@@ -299,7 +309,7 @@ export default function AdminDashboardPage() {
             return (
               <div
                 key={item.id}
-                className="group relative bg-card rounded-2xl border border-line p-5 shadow-xs hover:shadow-md hover:border-orange-300/80 transition-all duration-200 flex flex-col justify-between"
+                className="group relative bg-card rounded-2xl border border-line p-5 shadow-xs hover:shadow-md hover:border-primary/50 transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3.5">
@@ -309,16 +319,21 @@ export default function AdminDashboardPage() {
                       <Icon className="w-4.5 h-4.5" />
                     </div>
                     {item.growth && (
-                      <span
-                        className={`inline-flex items-center gap-1 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${item.isPositive
-                            ? 'text-success bg-success-soft border-success-subtle'
-                            : 'text-accent bg-accent-soft border-accent-subtle'
-                          }`}
+                      <Chip
+                        variant={item.isPositive ? 'success' : 'accent'}
+                        size="xs"
+                        preventHover
+                        leftIcon={
+                          item.isPositive ? (
+                            <TrendingUp className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <AlertTriangle className="w-3 h-3 shrink-0" />
+                          )
+                        }
+                        className="font-extrabold whitespace-nowrap"
                       >
-                        {item.isPositive && <TrendingUp className="w-3 h-3 shrink-0" />}
-                        {!item.isPositive && <AlertTriangle className="w-3 h-3 shrink-0" />}
                         {item.growth}
-                      </span>
+                      </Chip>
                     )}
                   </div>
 
@@ -356,7 +371,7 @@ export default function AdminDashboardPage() {
                 {item.link ? (
                   <Link
                     href={item.link}
-                    className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors cursor-pointer"
+                    className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs font-bold text-primary hover:text-primary-hover transition-colors cursor-pointer"
                   >
                     <span>{t('adminStatHandleNow')}</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -364,7 +379,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-[11px] font-medium text-muted">
                     <span>{t('adminStatVerified')}</span>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   </div>
                 )}
               </div>
@@ -380,7 +395,7 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-line">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-danger-soft text-danger border border-danger-subtle flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
@@ -400,7 +415,7 @@ export default function AdminDashboardPage() {
               </div>
               <Link
                 href="/admin/grievances"
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-accent hover:text-orange-800 bg-accent-soft hover:bg-orange-100 border border-accent-subtle px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-accent hover:text-accent-hover bg-accent-soft hover:bg-card-hover border border-accent-subtle px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <span>
                   {isLoading
@@ -428,7 +443,7 @@ export default function AdminDashboardPage() {
               </div>
             ) : urgentGrievances.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center bg-surface/50 rounded-2xl border border-dashed border-line">
-                <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-2.5" />
+                <CheckCircle2 className="w-10 h-10 text-success mb-2.5" />
                 <Text as="h3" size="sm" weight="bold" className="text-foreground">
                   {t('adminUrgentGrievancesEmpty')}
                 </Text>
@@ -441,24 +456,28 @@ export default function AdminDashboardPage() {
                 {urgentGrievances.map(item => (
                   <div
                     key={item.id}
-                    className="p-4 rounded-2xl bg-surface/70 border border-line hover:bg-orange-50/30 hover:border-orange-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                    className="p-4 rounded-2xl bg-surface/70 border border-line hover:bg-card-hover hover:border-line-strong transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
                   >
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${item.priority === 'high'
-                              ? 'bg-orange-600 text-white'
+                        <Chip
+                          variant={
+                            item.priority === 'high' || (item as any).priority === 'urgent'
+                              ? 'danger'
                               : item.priority === 'medium'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-zinc-600 text-white'
-                            }`}
+                                ? 'warning'
+                                : 'secondary'
+                          }
+                          size="xs"
+                          preventHover
+                          className="font-black uppercase tracking-wider"
                         >
                           {item.priority === 'high'
                             ? t('adminPriorityHigh')
                             : item.priority === 'medium'
                               ? t('adminPriorityMedium')
                               : t('adminPriorityLow')}
-                        </span>
+                        </Chip>
                         <span className="text-xs font-mono font-bold text-muted">
                           {item.id.slice(0, 8).toUpperCase()}
                         </span>
@@ -522,7 +541,7 @@ export default function AdminDashboardPage() {
               </div>
               <Link
                 href="/admin/blogs"
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-warning hover:text-amber-900 bg-warning-soft hover:bg-amber-100 border border-warning-subtle px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-warning hover:text-warning bg-warning-soft hover:bg-card-hover border border-warning-subtle px-3 py-1.5 rounded-xl transition-colors cursor-pointer shrink-0 self-start sm:self-auto"
               >
                 <span>
                   {isLoading
@@ -550,7 +569,7 @@ export default function AdminDashboardPage() {
               </div>
             ) : flaggedListings.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center bg-surface/50 rounded-2xl border border-dashed border-line">
-                <ShieldCheck className="w-10 h-10 text-emerald-500 mb-2.5" />
+                <ShieldCheck className="w-10 h-10 text-success mb-2.5" />
                 <Text as="h3" size="sm" weight="bold" className="text-foreground">
                   {t('adminSuspiciousListingsEmpty')}
                 </Text>
@@ -563,13 +582,18 @@ export default function AdminDashboardPage() {
                 {flaggedListings.map(item => (
                   <div
                     key={item.id}
-                    className="p-4 rounded-2xl bg-surface/70 border border-line hover:bg-amber-50/30 hover:border-amber-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
+                    className="p-4 rounded-2xl bg-surface/70 border border-line hover:bg-card-hover hover:border-line-strong transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
                   >
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-warning-soft text-warning border border-warning-subtle uppercase">
+                        <Chip
+                          variant="warning"
+                          size="xs"
+                          preventHover
+                          className="font-black uppercase tracking-wider"
+                        >
                           {item.status}
-                        </span>
+                        </Chip>
                         <span className="text-xs font-mono font-bold text-muted">
                           {item.id.slice(0, 8).toUpperCase()}
                         </span>
@@ -588,8 +612,8 @@ export default function AdminDashboardPage() {
                             {item.room.roomNumber ? ` • P.${item.room.roomNumber}` : ''}
                           </span>
                         )}
-                        <span className="text-zinc-300">|</span>
-                        <span className="font-semibold text-orange-600">
+                        <span className="text-muted">•</span>
+                        <span className="font-semibold text-primary">
                           {t('adminDepositAmountLabel', {
                             amount: `${new Intl.NumberFormat(numberLocale).format(item.depositAmount)} ₫`,
                           })}
@@ -633,20 +657,20 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           <Link
             href="/admin/users"
-            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-info-soft text-info border border-info-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Users className="w-5 h-5" />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <Text
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-foreground group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-primary transition-colors"
               >
                 {t('adminModUsersTitle')}
               </Text>
@@ -658,20 +682,20 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/boarding-houses"
-            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-success-soft text-success border border-success-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Building2 className="w-5 h-5" />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <Text
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-foreground group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-primary transition-colors"
               >
                 {t('adminModHousesTitle')}
               </Text>
@@ -683,20 +707,20 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/grievances"
-            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-danger-soft text-danger border border-danger-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <Text
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-foreground group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-primary transition-colors"
               >
                 {t('adminModGrievancesTitle')}
               </Text>
@@ -708,20 +732,20 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/notifications"
-            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-accent-soft text-accent border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Megaphone className="w-5 h-5" />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <Text
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-foreground group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-primary transition-colors"
               >
                 {t('adminModBroadcastTitle')}
               </Text>
@@ -733,20 +757,20 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/blogs"
-            className="group p-5 rounded-2xl bg-card border border-line hover:border-orange-400 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+            className="group p-5 rounded-2xl bg-card border border-line hover:border-primary/50 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
           >
             <div>
               <div className="flex items-center justify-between mb-3.5">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft text-orange-600 border border-accent-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Newspaper className="w-5 h-5" />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-zinc-300 group-hover:text-orange-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </div>
               <Text
                 as="h3"
                 size="sm"
                 weight="bold"
-                className="text-foreground group-hover:text-orange-600 transition-colors"
+                className="text-foreground group-hover:text-primary transition-colors"
               >
                 {t('adminModBlogsTitle')}
               </Text>
