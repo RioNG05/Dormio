@@ -107,8 +107,8 @@ describe('BillingCronService', () => {
     it('should send to all co-tenants equally', async () => {
       const contract = buildContract({})
       contract.tenantContracts = [
-        { tenantId: 'tenant-a' },
-        { tenantId: 'tenant-b' },
+        { tenantId: 'tenant-a', isPrimary: false },
+        { tenantId: 'tenant-b', isPrimary: false },
       ]
       mockPrisma.contract.findMany.mockResolvedValue([contract])
 

@@ -63,6 +63,13 @@ export class AdminGrievanceQueryDto {
   priority?: GrievancePriorityFilter = GrievancePriorityFilter.ALL
 
   @ApiPropertyOptional({
+    description: 'Filter by boarding house ID',
+  })
+  @IsOptional()
+  @IsString()
+  boardingHouseId?: string
+
+  @ApiPropertyOptional({
     description:
       'Search by keyword (title, description, tenant name, phone, house name, room number)',
   })
