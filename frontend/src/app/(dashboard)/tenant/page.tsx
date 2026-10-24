@@ -14,24 +14,18 @@ import {
   Wifi,
   Speaker,
   FileSignature,
-  ChevronLeft,
-  ChevronRight,
   MessageCircle,
   ShieldCheck,
   CheckCircle2,
   Clock,
-  Printer,
-  X,
   AlertCircle,
   Bike,
   CreditCard,
   ArrowRight,
   Copy,
   Check,
-  FileText,
-  Download,
-  ExternalLink,
   Sparkles,
+  WrenchOff,
 } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/layout'
 import { Button, Pagination, Chip, Modal, EmptyState, Text } from '@/components/ui'
@@ -340,8 +334,8 @@ export default function TenantOverviewPage() {
                   </span>
                 )}
               </Button>
-
             </Link>
+
             {roomInfo && (
               <Link href="/tenant/contract">
                 <Button
@@ -584,7 +578,7 @@ export default function TenantOverviewPage() {
 
             {services.length === 0 ? (
               <div className="py-8 text-center text-xs text-muted space-y-1">
-                <Sparkles className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
+                <WrenchOff className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
                 <p className="font-semibold">{t('noServices')}</p>
               </div>
             ) : (
