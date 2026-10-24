@@ -137,7 +137,6 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
         { name: tNav('assets'), href: '/landlord/assets', icon: Package },
         { name: tNav('services'), href: '/landlord/services', icon: Wrench },
         { name: tNav('messages'), href: '/landlord/messages', icon: MessageCircle },
-        { name: tNav('complaints'), href: '/landlord/complaints', icon: AlertTriangle },
         { name: tNav('notification'), href: '/landlord/notifications', icon: Bell },
       ],
     },
@@ -175,6 +174,7 @@ export function DashboardNav({ persistScroll = false }: DashboardNavProps) {
       group: tNav('other'),
       key: 'khac',
       items: [
+        { name: tNav('complaints'), href: '/landlord/complaints', icon: AlertTriangle },
         { name: tNav('settings'), href: '/landlord/settings', icon: Settings },
         { name: tNav('guide'), href: '/landlord/guide', icon: HelpCircle },
       ],
