@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Building2, ChevronRight, Sparkles, Plus, Trash2 } from 'lucide-react'
+import { Building2, ChevronRight, Sparkles, Plus, Trash2, HouseWifi } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import {
   Button,
@@ -243,7 +243,7 @@ export function Step1GeneralInfo({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-line pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-info-soft text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-              <Sparkles className="w-5 h-5" />
+              <HouseWifi className="w-5 h-5" />
             </div>
             <div>
               <Text as="h2" variant="heading">

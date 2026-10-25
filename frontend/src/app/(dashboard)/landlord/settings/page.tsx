@@ -593,7 +593,7 @@ export default function LandlordSettingsPage() {
           >
             <div className="space-y-5">
               {/* Interactive Google / OSM Map Address Picker */}
-              <MapAddressPicker
+              {/* <MapAddressPicker
                 provinces={provinces}
                 onSelectAddress={handleMapAddressSelect}
                 initialAddress={[
@@ -604,7 +604,7 @@ export default function LandlordSettingsPage() {
                 ]
                   .filter(Boolean)
                   .join(', ')}
-              />
+              /> */}
 
               <Form.Grid cols={2} gap="lg">
                 {/* Country (Locked) */}

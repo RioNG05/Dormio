@@ -22,6 +22,7 @@ export default function AIChatBot() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize welcome message when component mounts or when messages are empty
@@ -44,11 +45,13 @@ export default function AIChatBot() {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom()
+      inputRef.current?.focus()
     }
   }, [messages, isOpen])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
+    inputRef.current?.focus()
     if (!input.trim() || isLoading) return
 
     const userMsg: Message = {
@@ -59,7 +62,6 @@ export default function AIChatBot() {
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setIsLoading(true)
-    messagesEndRef.current?.focus()
 
     try {
       const response = await api.post<{ reply: string }>(
@@ -225,6 +227,7 @@ export default function AIChatBot() {
           <div className="p-3.5 sm:p-4 bg-card border-t border-line shrink-0">
             <form onSubmit={handleSend} className="relative flex items-center w-full">
               <TextInput
+                ref={inputRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={t('aiChatInputPlaceholder')}
@@ -234,13 +237,13 @@ export default function AIChatBot() {
                 rightIcon={
                   <Button
                     type="submit"
-                    size="icon"
+                    size="icon-sm"
                     disabled={!input.trim() || isLoading}
                     isLoading={isLoading}
-                    className="!h-7 !w-7 rounded-lg shrink-0"
+                    className="shrink-0"
                     aria-label="Send"
                   >
-                    <Send className="ml-0.5" />
+                    <Send />
                   </Button>
                 }
               />
