@@ -488,6 +488,65 @@ export class BoardingHousesService {
       )
     }
 
+    if (dto.roomTypes !== undefined) {
+      const existingRoomTypes = await this.prisma.roomType.findMany({
+        where: { boardingHouseId },
+      })
+
+      for (const rt of dto.roomTypes) {
+        const trimmedName = rt.name.trim()
+        if (!trimmedName) continue
+
+        let matched = rt.id ? existingRoomTypes.find(e => e.id === rt.id) : null
+        if (!matched) {
+          matched = existingRoomTypes.find(
+            e => e.name.toLowerCase().trim() === trimmedName.toLowerCase(),
+          )
+        }
+
+        if (matched) {
+          await this.prisma.roomType.update({
+            where: { id: matched.id },
+            data: {
+              name: trimmedName,
+              description: rt.description?.trim() || null,
+            },
+          })
+        } else {
+          await this.prisma.roomType.create({
+            data: {
+              boardingHouseId,
+              name: trimmedName,
+              description: rt.description?.trim() || null,
+            },
+          })
+        }
+      }
+
+      const incomingIds = new Set(dto.roomTypes.map(r => r.id).filter(Boolean))
+      const incomingNames = new Set(dto.roomTypes.map(r => r.name.toLowerCase().trim()))
+
+      for (const existingRt of existingRoomTypes) {
+        const isRetained =
+          incomingIds.has(existingRt.id) ||
+          incomingNames.has(existingRt.name.toLowerCase().trim())
+        if (!isRetained) {
+          const inUseCount = await this.prisma.room.count({
+            where: { roomTypeId: existingRt.id },
+          })
+          if (inUseCount === 0) {
+            await this.prisma.roomType.delete({
+              where: { id: existingRt.id },
+            })
+          } else {
+            this.logger.warn(
+              `RoomType ${existingRt.name} is in use by ${inUseCount} rooms, skipping deletion`,
+            )
+          }
+        }
+      }
+    }
+
     const updated = await this.prisma.boardingHouse.update({
       where: { id: boardingHouseId },
       data: {

@@ -12,16 +12,20 @@ import {
   MapPin,
   Zap,
   Bed,
-  CheckCircle2,
   ExternalLink,
   Phone,
   Layers,
+  Sparkles,
+  Plus,
+  Trash2,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { useTranslations } from '@/context/LanguageContext'
 import {
   Button,
+  Checkbox,
+  Chip,
   Form,
   NumberInput,
   SelectInput,
@@ -46,6 +50,18 @@ import {
   type BoardingHouse,
   type UpdateBoardingHousePayload,
 } from '@/services/boarding-house.service'
+import {
+  createId,
+  DEFAULT_AMENITIES,
+  type AmenityItem,
+} from '../setup/types'
+
+export interface SettingRoomTypeItem {
+  id: string
+  name: string
+  description: string
+  isNew?: boolean
+}
 
 interface HouseFormData {
   name: string
@@ -60,6 +76,8 @@ interface HouseFormData {
   totalFloor: string
   builtAt: string
   thumbnail: string
+  roomTypes: SettingRoomTypeItem[]
+  amenities: AmenityItem[]
 }
 
 const INITIAL_FORM_DATA: HouseFormData = {
@@ -75,6 +93,8 @@ const INITIAL_FORM_DATA: HouseFormData = {
   totalFloor: '',
   builtAt: '',
   thumbnail: '',
+  roomTypes: [],
+  amenities: [],
 }
 
 export default function LandlordSettingsPage() {
@@ -107,6 +127,9 @@ export default function LandlordSettingsPage() {
   const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null)
   const [wards, setWards] = useState<Ward[]>([])
   const [isLoadingWards, setIsLoadingWards] = useState<boolean>(false)
+
+  // Quick add amenity input state
+  const [newAmenityName, setNewAmenityName] = useState('')
 
   // Initialize selected house from active building or first available
   useEffect(() => {
@@ -150,6 +173,30 @@ export default function LandlordSettingsPage() {
     // Helper to populate form state from a BoardingHouse object
     const populateHouseData = (house: BoardingHouse) => {
       const builtAtFormatted = house.builtAt ? house.builtAt.split('T')[0] : ''
+
+      // Load room types
+      const populatedRoomTypes: SettingRoomTypeItem[] = (house.roomTypes || []).map(rt => ({
+        id: rt.id,
+        name: rt.name,
+        description: rt.description || '',
+      }))
+
+      // Load amenities from localStorage (scoped by boarding house) or fallback to defaults
+      let loadedAmenities: AmenityItem[] = []
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem(`dormio_amenities_${house.id}`)
+          if (raw) {
+            loadedAmenities = JSON.parse(raw)
+          }
+        } catch (e) {
+          console.warn('Failed to parse saved amenities from localStorage:', e)
+        }
+      }
+      if (!loadedAmenities || loadedAmenities.length === 0) {
+        loadedAmenities = DEFAULT_AMENITIES.map(a => ({ ...a, id: createId() }))
+      }
+
       const populated: HouseFormData = {
         name: house.name || '',
         description: house.description || '',
@@ -163,6 +210,8 @@ export default function LandlordSettingsPage() {
         totalFloor: house.totalFloor ? String(house.totalFloor) : '',
         builtAt: builtAtFormatted,
         thumbnail: house.thumbnail || '',
+        roomTypes: populatedRoomTypes,
+        amenities: loadedAmenities,
       }
       setLoadedHouse(house)
       setFormData(populated)
@@ -280,9 +329,86 @@ export default function LandlordSettingsPage() {
     selectBuilding(houseId)
   }
 
+  // ─── ROOM TYPES HANDLERS ──────────────────────────────────────────────────
+  const handleAddRoomType = () => {
+    const newItem: SettingRoomTypeItem = {
+      id: createId(),
+      name: '',
+      description: '',
+      isNew: true,
+    }
+    setFormData(prev => ({
+      ...prev,
+      roomTypes: [...prev.roomTypes, newItem],
+    }))
+  }
+
+  const handleUpdateRoomType = (id: string, field: 'name' | 'description', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      roomTypes: prev.roomTypes.map(rt => (rt.id === id ? { ...rt, [field]: value } : rt)),
+    }))
+  }
+
+  const handleRemoveRoomType = (id: string) => {
+    if (formData.roomTypes.length <= 1) {
+      toast.warning(t('landlordSettingsRoomTypeMinWarning'))
+      return
+    }
+    setFormData(prev => ({
+      ...prev,
+      roomTypes: prev.roomTypes.filter(rt => rt.id !== id),
+    }))
+  }
+
+  // ─── AMENITIES HANDLERS ───────────────────────────────────────────────────
+  const handleToggleAmenity = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.map(a => (a.id === id ? { ...a, checked: !a.checked } : a)),
+    }))
+  }
+
+  const handleAddAmenity = () => {
+    const trimmed = newAmenityName.trim()
+    if (!trimmed) return
+    if (formData.amenities.some(a => a.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.warning(t('landlordSetupSection1bDuplicate'))
+      return
+    }
+    const newItem: AmenityItem = {
+      id: createId(),
+      name: trimmed,
+      checked: true,
+      isCustom: true,
+    }
+    setFormData(prev => ({
+      ...prev,
+      amenities: [...prev.amenities, newItem],
+    }))
+    setNewAmenityName('')
+  }
+
+  const handleRemoveAmenity = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.filter(a => a.id !== id),
+    }))
+  }
+
+  const getAmenityLabel = (item: AmenityItem): string => {
+    if (item.key) {
+      const i18nKey = `landlordRoomAmenity${item.key}`
+      const translated = t(i18nKey)
+      if (translated && translated !== i18nKey) return translated
+    }
+    return item.name
+  }
+
   const handleReset = () => {
     if (originalData) {
       setFormData(originalData)
+      setNewAmenityName('')
     }
   }
 
@@ -297,6 +423,13 @@ export default function LandlordSettingsPage() {
       !formData.houseNumber.trim()
     ) {
       toast.warning(t('landlordSettingsRequiredFieldError'))
+      return
+    }
+
+    // Validate room types
+    const validRoomTypes = formData.roomTypes.filter(rt => rt.name.trim().length > 0)
+    if (validRoomTypes.length === 0) {
+      toast.warning(t('landlordSettingsRoomTypeEmptyWarning'))
       return
     }
 
@@ -315,15 +448,47 @@ export default function LandlordSettingsPage() {
         totalFloor: formData.totalFloor ? parseInt(formData.totalFloor, 10) : undefined,
         builtAt: formData.builtAt ? new Date(formData.builtAt).toISOString() : undefined,
         thumbnail: formData.thumbnail || undefined,
+        roomTypes: validRoomTypes.map(rt => ({
+          id: rt.isNew ? undefined : rt.id,
+          name: rt.name.trim(),
+          description: rt.description.trim() || undefined,
+        })),
+        amenities: formData.amenities.filter(a => a.checked).map(a => a.name),
       }
 
       const updated = await updateBoardingHouse(selectedHouseId, payload)
+
+      // Persist amenities in localStorage for this boarding house
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(
+            `dormio_amenities_${selectedHouseId}`,
+            JSON.stringify(formData.amenities),
+          )
+        } catch (err) {
+          console.warn('Failed to persist amenities to localStorage:', err)
+        }
+      }
+
       await refreshBuildings()
 
       if (updated && updated.id) {
         setLoadedHouse(prev => (prev ? { ...prev, ...updated } : updated))
+        if (updated.roomTypes && updated.roomTypes.length > 0) {
+          const syncedRoomTypes: SettingRoomTypeItem[] = updated.roomTypes.map(rt => ({
+            id: rt.id,
+            name: rt.name,
+            description: rt.description || '',
+          }))
+          setFormData(prev => ({ ...prev, roomTypes: syncedRoomTypes }))
+          setOriginalData({ ...formData, roomTypes: syncedRoomTypes })
+        } else {
+          setOriginalData(formData)
+        }
+      } else {
+        setOriginalData(formData)
       }
-      setOriginalData(formData)
+
       toast.success(t('landlordSettingsSavedSuccess'))
     } catch (error) {
       console.error('Failed to update boarding house:', error)
@@ -358,8 +523,8 @@ export default function LandlordSettingsPage() {
 
   const roomCount = loadedHouse?.totalRooms ?? activeBuilding?.totalRooms ?? 0
   const servicesList = loadedHouse?.services ?? []
-  const roomTypesList = loadedHouse?.roomTypes ?? []
   const contactPhone = user?.phone || '0988777666'
+  const selectedAmenitiesCount = formData.amenities.filter(a => a.checked).length
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto pb-12">
@@ -478,7 +643,7 @@ export default function LandlordSettingsPage() {
           </div>
           <div className="flex items-baseline gap-1.5">
             <Text as="p" className="text-2xl font-black text-foreground">
-              {roomTypesList.length}
+              {formData.roomTypes.length}
             </Text>
             <Text as="span" size="xs" color="secondary">
               loại phòng
@@ -592,20 +757,6 @@ export default function LandlordSettingsPage() {
             divider
           >
             <div className="space-y-5">
-              {/* Interactive Google / OSM Map Address Picker */}
-              {/* <MapAddressPicker
-                provinces={provinces}
-                onSelectAddress={handleMapAddressSelect}
-                initialAddress={[
-                  formData.houseNumber,
-                  formData.street,
-                  formData.ward,
-                  formData.province,
-                ]
-                  .filter(Boolean)
-                  .join(', ')}
-              /> */}
-
               <Form.Grid cols={2} gap="lg">
                 {/* Country (Locked) */}
                 <TextInput
@@ -692,7 +843,7 @@ export default function LandlordSettingsPage() {
             title={t('landlordSettingsServicesSection')}
             description={t('landlordSettingsServicesDesc')}
             actions={
-              <Button href="/landlord/services" variant="outline">
+              <Button href="/landlord/services" variant="outline" size="sm">
                 {t('landlordSettingsManageServicesBtn')}
               </Button>
             }
@@ -739,39 +890,175 @@ export default function LandlordSettingsPage() {
             )}
           </Form.Section>
 
-          {/* Section 4: Existing Room Types */}
+          {/* Section 4: Room Types Configuration */}
           <Form.Section
             icon={<Layers className="w-4 h-4" />}
             title={t('landlordSettingsRoomTypesSection')}
             description={t('landlordSettingsRoomTypesDesc')}
+            actions={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={handleAddRoomType}
+                disabled={isSaving}
+              >
+                {t('landlordSetupAddRoomType')}
+              </Button>
+            }
             divider
           >
-            {roomTypesList.length === 0 ? (
+            {formData.roomTypes.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-line p-6 text-center">
                 <Text variant="caption" color="secondary">
                   {t('landlordSettingsNoRoomTypes')}
                 </Text>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {roomTypesList.map(rt => (
+              <div className="space-y-3">
+                {formData.roomTypes.map((rt, index) => (
                   <div
                     key={rt.id}
-                    className="p-3.5 rounded-2xl bg-surface/70 border border-line space-y-1"
+                    className="p-4 rounded-2xl border border-line bg-surface/50 space-y-3"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-purple-500" />
-                      <span className="font-bold text-sm text-foreground">{rt.name}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                      <div className="sm:col-span-5">
+                        <TextInput
+                          label={`${t('landlordSetupRoomTypeNameLabel').replace('{index}', String(index + 1))}`}
+                          required
+                          value={rt.name}
+                          onChange={e => handleUpdateRoomType(rt.id, 'name', e.target.value)}
+                          placeholder={t('landlordSetupRoomTypeNamePlaceholder')}
+                          disabled={isSaving}
+                        />
+                      </div>
+
+                      <div className="sm:col-span-6">
+                        <TextInput
+                          label={t('landlordSetupRoomTypeDescLabel')}
+                          value={rt.description}
+                          onChange={e => handleUpdateRoomType(rt.id, 'description', e.target.value)}
+                          placeholder={t('landlordSetupRoomTypeDescPlaceholder')}
+                          disabled={isSaving}
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1 flex justify-end pb-1">
+                        {formData.roomTypes.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveRoomType(rt.id)}
+                            title={t('landlordSetupDeleteRoomType')}
+                            disabled={isSaving}
+                          >
+                            <Trash2 className="w-4 h-4 text-danger" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    {rt.description && (
-                      <p className="text-xs text-muted line-clamp-2 leading-relaxed pl-4">
-                        {rt.description}
-                      </p>
-                    )}
                   </div>
                 ))}
               </div>
             )}
+          </Form.Section>
+
+          {/* Section 5: Boarding House Amenities Configuration */}
+          <Form.Section
+            icon={<Sparkles className="w-4 h-4" />}
+            title={t('landlordSettingsAmenitiesSection')}
+            description={t('landlordSettingsAmenitiesDesc')}
+            actions={
+              <Chip size="sm" variant="primary" preventHover>
+                {t('landlordSetupSection1bSelectedCount').replace('{count}', String(selectedAmenitiesCount))}
+              </Chip>
+            }
+            divider
+          >
+            <div className="space-y-4">
+              {/* Quick Add Amenity Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex-1">
+                  <TextInput
+                    value={newAmenityName}
+                    onChange={e => setNewAmenityName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddAmenity()
+                      }
+                    }}
+                    placeholder={t('landlordSetupSection1bAddPlaceholder')}
+                    disabled={isSaving}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="md"
+                  leftIcon={<Plus className="w-4 h-4" />}
+                  onClick={handleAddAmenity}
+                  disabled={!newAmenityName.trim() || isSaving}
+                  className="self-end sm:self-auto shrink-0"
+                >
+                  {t('landlordSetupSection1bAddBtn')}
+                </Button>
+              </div>
+
+              {/* Amenities Checkbox Grid */}
+              {formData.amenities.length === 0 ? (
+                <div className="p-8 rounded-2xl border border-dashed border-line text-center">
+                  <Text as="p" size="sm" color="subtle">
+                    {t('landlordSetupSection1bEmpty')}
+                  </Text>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {formData.amenities.map(amenity => {
+                    const label = getAmenityLabel(amenity)
+                    return (
+                      <Checkbox
+                        key={amenity.id}
+                        size="sm"
+                        variant="card"
+                        checked={amenity.checked}
+                        onChange={() => handleToggleAmenity(amenity.id)}
+                        disabled={isSaving}
+                        label={
+                          <div className="flex items-center justify-between w-full min-w-0 pr-1">
+                            <Text
+                              as="span"
+                              size="xs"
+                              weight={amenity.checked ? 'bold' : 'normal'}
+                              truncate
+                              className={amenity.checked ? 'text-foreground' : 'text-muted'}
+                            >
+                              {label}
+                            </Text>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={e => {
+                                e.stopPropagation()
+                                handleRemoveAmenity(amenity.id)
+                              }}
+                              title={t('landlordSetupSection1bDelete')}
+                              disabled={isSaving}
+                              className="opacity-60 sm:opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-danger-soft transition-opacity shrink-0 ml-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        }
+                      />
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </Form.Section>
 
           {/* Form Actions */}

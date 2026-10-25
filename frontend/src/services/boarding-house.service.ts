@@ -161,6 +161,12 @@ export async function getMyBoardingHouses(options?: {
   return response.data
 }
 
+export interface UpdateRoomTypePayload {
+  id?: string
+  name: string
+  description?: string
+}
+
 export interface UpdateBoardingHousePayload {
   name?: string
   description?: string
@@ -174,6 +180,8 @@ export interface UpdateBoardingHousePayload {
   totalFloor?: number
   builtAt?: string
   thumbnail?: string
+  roomTypes?: UpdateRoomTypePayload[]
+  amenities?: string[]
 }
 
 export async function getBoardingHouseById(id: string): Promise<BoardingHouse> {
