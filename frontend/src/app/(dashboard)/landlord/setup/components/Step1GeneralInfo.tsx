@@ -69,13 +69,13 @@ export function Step1GeneralInfo({
         </div>
 
         {/* Google Maps / Interactive Map Address Picker */}
-        <MapAddressPicker
+        {/*<MapAddressPicker
           provinces={provinces}
           onSelectAddress={onMapAddressSelect}
           initialAddress={[info.houseNumber, info.street, info.ward, info.province]
             .filter(Boolean)
             .join(', ')}
-        />
+        />*/}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
           {/* Country (Locked) */}

@@ -7,10 +7,16 @@ import { IdCardOcrResult } from './interfaces/id-card-ocr-result.interface'
 export class VisionService {
   private readonly logger = new Logger(VisionService.name)
   private readonly apiKey: string
+  private readonly baseUrl: string
   private readonly model: string
 
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>('ai.apiKey') || process.env.AI_API_KEY || ''
+    this.baseUrl = (
+      this.configService.get<string>('ai.baseUrl') ||
+      process.env.AI_BASE_URL ||
+      'https://gemini-proxy.ngquanghuy-work.workers.dev'
+    ).replace(/\/+$/, '')
     this.model =
       this.configService.get<string>('ai.modelImage') ||
       process.env.AI_MODEL_IMAGE ||
@@ -19,6 +25,41 @@ export class VisionService {
     if (!this.apiKey) {
       this.logger.warn('AI_API_KEY is not defined in environment or configuration!')
     }
+  }
+
+  private async postWithRetry(endpoint: string, body: any, maxRetries = 2): Promise<any> {
+    let lastError = ''
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (response.ok) {
+        return response.json()
+      }
+
+      const errText = await response.text()
+      lastError = errText
+
+      const isLocationError =
+        errText.includes('User location is not supported') ||
+        errText.includes('FAILED_PRECONDITION')
+
+      if (isLocationError && attempt < maxRetries) {
+        this.logger.warn(
+          `Gemini Vision attempt ${attempt} hit edge location restriction (${response.status}). Retrying...`,
+        )
+        await new Promise(resolve => setTimeout(resolve, 500))
+        continue
+      }
+
+      this.logger.error(`Gemini Vision API error (${response.status}): ${errText}`)
+      throw new Error(`Gemini Vision request failed with status ${response.status}`)
+    }
+
+    throw new Error(`Gemini Vision failed: ${lastError}`)
   }
 
   /**
@@ -149,7 +190,7 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
   "notes": "<string: ghi chú ngắn gọn về đặc điểm công tơ hoặc lý do không hợp lệ>"
 }`
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
+    const endpoint = `${this.baseUrl}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
 
     const payload = {
       contents: [
@@ -172,19 +213,7 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
       },
     }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      this.logger.error(`Gemini Vision API error (${response.status}): ${errText}`)
-      throw new Error(`Gemini Vision request failed with status ${response.status}`)
-    }
-
-    const data = await response.json()
+    const data = await this.postWithRetry(endpoint, payload)
     this.logger.debug(`Gemini Vision response received: ${JSON.stringify(data).slice(0, 300)}...`)
 
     const candidate = data.candidates?.[0]
@@ -308,7 +337,7 @@ BẮT BUỘC TRẢ VỀ JSON:
   "notes": "<string: ghi chú nếu ảnh mờ/lóa góc>"
 }`
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
+    const endpoint = `${this.baseUrl}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
 
     const payload = {
       contents: [
@@ -331,19 +360,7 @@ BẮT BUỘC TRẢ VỀ JSON:
       },
     }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      this.logger.error(`Gemini ID Card Vision error (${response.status}): ${errText}`)
-      throw new Error(`Gemini ID Card Vision request failed: ${response.status}`)
-    }
-
-    const data = await response.json()
+    const data = await this.postWithRetry(endpoint, payload)
     const candidate = data.candidates?.[0]
     const parts = candidate?.content?.parts || []
     let rawText = ''
@@ -417,7 +434,7 @@ Trả về JSON:
       return { features: [], description: '' }
     }
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
+    const endpoint = `${this.baseUrl}/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`
 
     const response = await fetch(endpoint, {
       method: 'POST',
