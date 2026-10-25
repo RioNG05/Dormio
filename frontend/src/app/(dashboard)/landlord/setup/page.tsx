@@ -580,6 +580,7 @@ export default function SetupWizardPage() {
           </div>
           <Button
             variant="outline"
+            size='md'
             onClick={handleCancel}
             className="self-start sm:self-auto"
           >

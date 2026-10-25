@@ -166,6 +166,7 @@ export function Step4BankAccount({
       {/* Step 4 Navigation / Final Submit */}
       <Form.Actions align="between" className="pt-2">
         <Button
+          size='md'
           variant="outline"
           disabled={isSubmitting}
           onClick={onBack}
@@ -174,6 +175,7 @@ export function Step4BankAccount({
           {t('landlordSetupBackToStep3')}
         </Button>
         <Button
+          size='md'
           disabled={isSubmitting || !isValid}
           isLoading={isSubmitting}
           onClick={onSubmit}

@@ -893,7 +893,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                   : `/landlord/contracts/HD-01012026-${room.building === 'b2' ? 2 : 1}-${room.roomNumber}`
               }
               size="md"
-              fullWidth
               variant="outline"
               leftIcon={<Eye className="w-4 h-4" />}
               className="flex-1 md:flex-initial"
@@ -903,7 +902,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           ) : (
             <Button
               href={`/landlord/contracts/create?roomId=${dashboardData?.room?.id || room?.id || resolvedParams.id}`}
-              fullWidth
               size="md"
               leftIcon={<FileSignature className="w-4 h-4" />}
               className="flex-1 md:flex-initial"

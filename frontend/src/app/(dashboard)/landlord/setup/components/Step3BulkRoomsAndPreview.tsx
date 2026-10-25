@@ -105,16 +105,16 @@ export function Step3BulkRoomsAndPreview({
     const initialData: CustomRoomData = existing
       ? { ...existing, serviceIndices: [...existing.serviceIndices] }
       : {
-          roomNumber: computeDefaultRoomCode(floor, index),
-          area: roomsConfig.area,
-          maxOccupants: roomsConfig.maxOccupants,
-          roomTypeIndex: Math.min(
-            Math.max(0, roomsConfig.roomTypeIndex),
-            Math.max(0, roomTypes.length - 1),
-          ),
-          serviceIndices: [...roomsConfig.serviceIndices],
-          isCustomized: false,
-        }
+        roomNumber: computeDefaultRoomCode(floor, index),
+        area: roomsConfig.area,
+        maxOccupants: roomsConfig.maxOccupants,
+        roomTypeIndex: Math.min(
+          Math.max(0, roomsConfig.roomTypeIndex),
+          Math.max(0, roomTypes.length - 1),
+        ),
+        serviceIndices: [...roomsConfig.serviceIndices],
+        isCustomized: false,
+      }
 
     setEditingRoomTarget({ floor, index })
     setRoomModalDraft(initialData)
@@ -308,7 +308,7 @@ export function Step3BulkRoomsAndPreview({
                         className={cn(
                           'h-8 text-xs font-semibold',
                           isSelected &&
-                            'bg-primary/10 border-primary text-[#13615e] hover:bg-primary/20',
+                          'bg-primary/10 border-primary text-[#13615e] hover:bg-primary/20',
                         )}
                         leftIcon={
                           <span
@@ -446,6 +446,7 @@ export function Step3BulkRoomsAndPreview({
       {/* Step 3 Navigation / Submit */}
       <Form.Actions align="between" className="pt-2">
         <Button
+          size='md'
           variant="outline"
           disabled={isSubmitting}
           onClick={onBack}
@@ -454,6 +455,7 @@ export function Step3BulkRoomsAndPreview({
           {t('landlordSetupBackToStep2')}
         </Button>
         <Button
+          size='md'
           disabled={isSubmitting || isQuotaExceeded || totalRoomsToCreate < 1}
           onClick={onNext}
           rightIcon={<ChevronRight />}

@@ -214,10 +214,10 @@ export function Step1GeneralInfo({
       </div>
 
       <Form.Actions align="between" className="pt-2">
-        <Button variant="outline" onClick={onCancel}>
+        <Button size='md' variant="outline" onClick={onCancel}>
           {t('landlordSetupCancel')}
         </Button>
-        <Button
+        <Button size='md'
           disabled={!isValid}
           onClick={onNext}
           rightIcon={<ChevronRight />}
