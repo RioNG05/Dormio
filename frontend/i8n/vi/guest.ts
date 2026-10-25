@@ -576,6 +576,10 @@ export const viGuest = {
     guestProfileEkycFaceMatched: "Đã khớp khuôn mặt",
     guestProfileEkycFingerprintValid: "Vân tay hợp lệ",
     guestProfileEkycFront: "Mặt trước CCCD",
+    guestProfileEkycNotUploaded: "Chưa cập nhật ảnh",
+    guestProfileGenderLabel: "Giới tính",
+    guestProfileGenderMale: "Nam",
+    guestProfileGenderFemale: "Nữ",
     guestProfileEkycNotice: "Lưu ý: Mọi chỉnh sửa số CCCD hoặc ảnh mặt trước/sau sẽ yêu cầu xác thực eKYC lại qua hệ thống AI.",
     guestProfileEkycPending: "⚠️ Chờ Xác Thực Lại",
     guestProfileEkycSectionTitle: "Xác Thực Căn Cước Công Dân (eKYC AI)",
@@ -1005,7 +1009,18 @@ export const viGuest = {
     guestPosterProfileCopy: "Sao chép",
     guestPosterProfileCopied: "Đã sao chép",
     guestPosterProfileChatLoading: "Đang mở đoạn chat...",
-    guestPosterProfileCannotMessageSelf: "Không thể tự nhắn tin cho chính mình"
+    guestPosterProfileCannotMessageSelf: "Không thể tự nhắn tin cho chính mình",
+
+  guestProfileAddressCountryLabel: "Quốc gia",
+  guestProfileAddressProvinceLabel: "Tỉnh / Thành phố",
+  guestProfileAddressProvinceSelect: "Chọn Tỉnh / Thành phố",
+  guestProfileAddressProvinceLoading: "Đang tải danh sách tỉnh thành...",
+  guestProfileAddressWardLabel: "Phường / Xã",
+  guestProfileAddressWardSelect: "Chọn Phường / Xã",
+  guestProfileAddressWardSelectProvinceFirst: "Vui lòng chọn Tỉnh/Thành trước",
+  guestProfileAddressWardLoading: "Đang tải danh sách phường xã...",
+  guestProfileAddressStreetLabel: "Địa chỉ chi tiết / Số nhà, tên đường",
+  guestProfileAddressStreetPlaceholder: "Số nhà, tên đường, thôn, xóm...",
 }
 
 export default viGuest
