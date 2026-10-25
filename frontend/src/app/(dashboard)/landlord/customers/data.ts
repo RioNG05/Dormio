@@ -17,6 +17,7 @@ export interface Customer {
   workplace?: string
   note?: string
   hasAccount?: boolean
+  mustChangePassword?: boolean
   accountEmail?: string
   contractId?: string
   userId?: string

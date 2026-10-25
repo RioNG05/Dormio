@@ -37,6 +37,9 @@ export class RoomOccupantTenantDto {
 
   @ApiProperty({ description: 'Whether tenant has a registered Dormio account' })
   hasAccount: boolean
+
+  @ApiProperty({ description: 'Whether the user must change password (true = not yet logged in / activated)' })
+  mustChangePassword: boolean
 }
 
 export class RoomOccupantResponseDto {
@@ -70,4 +73,3 @@ export class RoomOccupantResponseDto {
   @ApiProperty({ type: RoomOccupantTenantDto })
   tenant: RoomOccupantTenantDto
 }
-

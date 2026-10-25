@@ -880,21 +880,39 @@ export class NotificationsService implements OnModuleInit {
    * Maps a Prisma MassNotificationJob record to MassNotificationItemDto.
    */
   private mapMassNotificationItem(job: any): MassNotificationItemDto {
+    const targetIds = job.targetIds || []
+    let targetLabel = this.getTargetLabel(job.targetType)
+    if (job.targetType === 'specific_user') {
+      if (targetIds.length > 1) {
+        targetLabel = `${targetIds.length} người dùng cụ thể`
+      } else if (job.targetUser) {
+        targetLabel = job.targetUser.username || job.targetUser.email || '1 người dùng'
+      }
+    }
+
     return {
       id: job.id,
       createdBy: job.createdBy,
       creatorName: job.createdByUser?.username || job.createdByUser?.email || 'Admin',
       channel: job.channel as AdminNotifyChannel,
       targetType: job.targetType as AdminNotifyTarget,
-      targetLabel: this.getTargetLabel(job.targetType),
+      targetLabel,
       targetId: job.targetId || undefined,
+      targetIds: targetIds.length > 0 ? targetIds : (job.targetId ? [job.targetId] : []),
       targetUserName: job.targetUser?.username || job.targetUser?.email || undefined,
       title: job.title,
       content: job.content,
       status: job.status as AdminNotifyStatus,
       sentCount: job.sentCount,
       failedCount: job.failedCount,
-      totalRecipients: job.sentCount + job.failedCount,
+      totalRecipients:
+        job.sentCount + job.failedCount > 0
+          ? job.sentCount + job.failedCount
+          : targetIds.length > 0
+            ? targetIds.length
+            : job.targetId
+              ? 1
+              : 0,
       createdAt: job.createdAt.toISOString(),
     }
   }
@@ -907,76 +925,104 @@ export class NotificationsService implements OnModuleInit {
     dto: CreateMassNotificationDto,
   ): Promise<MassNotificationItemDto> {
     this.logger.log(
-      `Admin ${adminId} creating mass notification: channel=${dto.channel}, target=${dto.targetType}, title="${dto.title}"`,
+      `Admin ${adminId} creating mass notification: channel=${dto.channel}, channels=${dto.channels}, target=${dto.targetType}, title="${dto.title}"`,
     )
 
-    if (dto.targetType === AdminNotifyTarget.specific_user && !dto.targetId) {
-      throw new BadRequestException('Target user ID is required when target type is specific_user')
+    // Resolve delivery channels
+    const channels =
+      dto.channels && dto.channels.length > 0
+        ? dto.channels
+        : [dto.channel || AdminNotifyChannel.in_app]
+
+    // Resolve target IDs for specific users
+    let targetIds: string[] = []
+    if (dto.targetIds && dto.targetIds.length > 0) {
+      targetIds = Array.from(new Set(dto.targetIds.map(id => id.trim()).filter(Boolean)))
+    } else if (dto.targetId) {
+      targetIds = [dto.targetId.trim()]
     }
 
-    if (dto.targetId) {
-      const targetUser = await this.prisma.user.findUnique({
-        where: { id: dto.targetId },
-        select: { id: true, username: true, email: true },
-      })
-      if (!targetUser) {
-        throw new NotFoundException(`Target user with id "${dto.targetId}" not found`)
+    if (dto.targetType === AdminNotifyTarget.specific_user) {
+      if (targetIds.length === 0) {
+        throw new BadRequestException('Target user ID is required when target type is specific_user')
+      }
+
+      // Validate all target users exist
+      const foundUsers =
+        (await this.prisma.user.findMany({
+          where: { id: { in: targetIds } },
+          select: { id: true, username: true, email: true },
+        })) || []
+
+      if (foundUsers.length !== targetIds.length) {
+        const foundIds = new Set(foundUsers.map(u => u.id))
+        const missingIds = targetIds.filter(id => !foundIds.has(id))
+        throw new NotFoundException(`Target user with id "${missingIds[0]}" not found`)
       }
     }
 
-    // 1. Persist MassNotificationJob record in DB
-    const job = await this.prisma.massNotificationJob.create({
-      data: {
-        createdBy: adminId,
-        channel: dto.channel as any,
-        targetType: dto.targetType as any,
-        targetId: dto.targetId || null,
-        title: dto.title.trim(),
-        content: dto.content.trim(),
-        status: 'pending',
-        sentCount: 0,
-        failedCount: 0,
-      },
-      include: {
-        createdByUser: { select: { id: true, username: true, email: true } },
-        targetUser: { select: { id: true, username: true, email: true } },
-      },
-    })
+    const primaryTargetId = targetIds.length > 0 ? targetIds[0] : null
+    const createdJobs: any[] = []
 
-    // 2. AuditLog in database (Global convention for administrative mutations)
-    await this.prisma.auditLog.create({
-      data: {
-        userId: adminId,
-        action: 'create',
-        entityType: 'MASS_NOTIFICATION_JOB',
-        entityId: job.id,
-        newValue: {
-          channel: dto.channel,
-          targetType: dto.targetType,
-          targetId: dto.targetId || null,
-          title: dto.title,
+    // 1. Create a MassNotificationJob for each selected channel
+    for (const ch of channels) {
+      const job = await this.prisma.massNotificationJob.create({
+        data: {
+          createdBy: adminId,
+          channel: ch as any,
+          targetType: dto.targetType as any,
+          targetId: primaryTargetId,
+          targetIds: targetIds,
+          title: dto.title.trim(),
+          content: dto.content.trim(),
+          status: 'pending',
+          sentCount: 0,
+          failedCount: 0,
         },
-        ipAddress: '127.0.0.1',
-      },
-    })
-
-    // 3. Enqueue async dispatch job to BullMQ queue — never loop synchronously in HTTP handler
-    await this.notifQueue.add(
-      'dispatch-mass-notification',
-      {
-        massNotificationJobId: job.id,
-      },
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 5000,
+        include: {
+          createdByUser: { select: { id: true, username: true, email: true } },
+          targetUser: { select: { id: true, username: true, email: true } },
         },
-      },
-    )
+      })
 
-    this.logger.log(`Enqueued mass notification job ${job.id} to BullMQ queue`)
-    return this.mapMassNotificationItem(job)
+      // 2. AuditLog in database (Global convention for administrative mutations)
+      await this.prisma.auditLog.create({
+        data: {
+          userId: adminId,
+          action: 'create',
+          entityType: 'MASS_NOTIFICATION_JOB',
+          entityId: job.id,
+          newValue: {
+            channel: ch,
+            targetType: dto.targetType,
+            targetId: primaryTargetId,
+            targetIds: targetIds,
+            title: dto.title,
+          },
+          ipAddress: '127.0.0.1',
+        },
+      })
+
+      // 3. Enqueue async dispatch job to BullMQ queue
+      await this.notifQueue.add(
+        'dispatch-mass-notification',
+        {
+          massNotificationJobId: job.id,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000,
+          },
+        },
+      )
+
+      this.logger.log(`Enqueued mass notification job ${job.id} for channel ${ch} to BullMQ queue`)
+      createdJobs.push(job)
+    }
+
+    return this.mapMassNotificationItem(createdJobs[0])
   }
 
   /**
@@ -1120,14 +1166,25 @@ export class NotificationsService implements OnModuleInit {
           })
           break
 
-        case 'specific_user':
-          if (job.targetId) {
+        case 'specific_user': {
+          const specificIds =
+            job.targetIds && job.targetIds.length > 0
+              ? job.targetIds
+              : job.targetId
+                ? [job.targetId]
+                : []
+
+          if (specificIds.length > 0) {
             targetUsers = await this.prisma.user.findMany({
-              where: { id: job.targetId },
+              where: {
+                id: { in: specificIds },
+                status: 'active',
+              },
               select: { id: true, email: true, phoneNumber: true },
             })
           }
           break
+        }
 
         default:
           this.logger.warn(`Unknown targetType: ${job.targetType}`)

@@ -575,6 +575,10 @@ export const enGuest = {
     guestProfileEkycFaceMatched: "Face match confirmed",
     guestProfileEkycFingerprintValid: "Fingerprint valid",
     guestProfileEkycFront: "Front side of ID",
+    guestProfileEkycNotUploaded: "Photo not updated",
+    guestProfileGenderLabel: "Gender",
+    guestProfileGenderMale: "Male",
+    guestProfileGenderFemale: "Female",
     guestProfileEkycNotice: "Note: Any edits to ID number or front/back photos will require re-verification via AI eKYC.",
     guestProfileEkycPending: "⚠️ Pending Re-verification",
     guestProfileEkycSectionTitle: "National ID Verification (AI eKYC)",
@@ -1004,7 +1008,18 @@ export const enGuest = {
     guestPosterProfileCopy: "Copy",
     guestPosterProfileCopied: "Copied",
     guestPosterProfileChatLoading: "Opening conversation...",
-    guestPosterProfileCannotMessageSelf: "Cannot message yourself"
+    guestPosterProfileCannotMessageSelf: "Cannot message yourself",
+
+  guestProfileAddressCountryLabel: "Country",
+  guestProfileAddressProvinceLabel: "Province / City",
+  guestProfileAddressProvinceSelect: "Select Province / City",
+  guestProfileAddressProvinceLoading: "Loading provinces...",
+  guestProfileAddressWardLabel: "Ward / Commune",
+  guestProfileAddressWardSelect: "Select Ward / Commune",
+  guestProfileAddressWardSelectProvinceFirst: "Please select a Province first",
+  guestProfileAddressWardLoading: "Loading wards...",
+  guestProfileAddressStreetLabel: "Detailed Address / Street & House No.",
+  guestProfileAddressStreetPlaceholder: "House number, street name...",
 }
 
 export default enGuest

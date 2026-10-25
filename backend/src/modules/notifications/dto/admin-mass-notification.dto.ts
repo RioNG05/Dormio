@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -35,14 +36,24 @@ export enum AdminNotifyStatus {
 }
 
 export class CreateMassNotificationDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Target delivery channel',
     enum: AdminNotifyChannel,
     example: AdminNotifyChannel.email,
   })
+  @IsOptional()
   @IsEnum(AdminNotifyChannel)
-  @IsNotEmpty()
-  channel: AdminNotifyChannel
+  channel?: AdminNotifyChannel
+
+  @ApiPropertyOptional({
+    description: 'Target delivery channels (array). If provided, jobs are created for each selected channel.',
+    enum: AdminNotifyChannel,
+    isArray: true,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(AdminNotifyChannel, { each: true })
+  channels?: AdminNotifyChannel[]
 
   @ApiProperty({
     description: 'Target recipient audience type',
@@ -54,12 +65,22 @@ export class CreateMassNotificationDto {
   targetType: AdminNotifyTarget
 
   @ApiPropertyOptional({
-    description: 'Required if targetType is specific_user. Target user UUID.',
+    description: 'Target user UUID if targetType is specific_user (single)',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsOptional()
   @IsUUID('4')
   targetId?: string
+
+  @ApiPropertyOptional({
+    description: 'Target user UUIDs if targetType is specific_user (multiple)',
+    type: [String],
+    example: ['123e4567-e89b-12d3-a456-426614174000'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  targetIds?: string[]
 
   @ApiProperty({
     description: 'Title / Subject of the notification message',
@@ -141,6 +162,9 @@ export class MassNotificationItemDto {
 
   @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174002' })
   targetId?: string
+
+  @ApiPropertyOptional({ type: [String], example: ['123e4567-e89b-12d3-a456-426614174002'] })
+  targetIds?: string[]
 
   @ApiPropertyOptional({ example: 'Nguyễn Văn A' })
   targetUserName?: string

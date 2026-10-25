@@ -4,7 +4,6 @@ import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   Edit2,
   Trash2,
   User,
@@ -24,6 +23,10 @@ import {
 } from 'lucide-react'
 import { Customer } from '../data'
 import { getLandlordContracts, getContractById } from '@/services/contract.service'
+import { getLandlordTenants, updateLandlordTenant, LandlordTenantItem } from '@/services/tenant.service'
+import { useToast } from '@/context/ToastContext'
+import { resolveErrorMessage } from '@/utils/error-resolver'
+import { VietnamAddressFields, type VietnamAddressValue } from '@/components/common/VietnamAddressFields'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import {
@@ -42,6 +45,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const resolvedParams = use(params)
   const router = useRouter()
   const t = useTranslations('landlord')
+  const tErrors = useTranslations('errors')
+  const { toast } = useToast()
   const { activeBuilding } = useAuth()
 
   const getCustomerStatusLabel = (status: string) => {
@@ -99,6 +104,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [editJob, setEditJob] = useState('')
   const [editWorkplace, setEditWorkplace] = useState('')
   const [editNote, setEditNote] = useState('')
+  const [editAddressObj, setEditAddressObj] = useState<VietnamAddressValue>({
+    country: 'Việt Nam',
+    province: '',
+    ward: '',
+    street: '',
+    address: '',
+  })
+  const [isSavingCustomer, setIsSavingCustomer] = useState(false)
 
   const showAlert = (
     message: string,
@@ -118,126 +131,166 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         return
       }
 
-      // Strictly accept ONLY userId on param (cannot be a CCCD/CMND number)
-      const isCccd = /^\d{9,12}$/.test(rawId)
-      if (isCccd) {
-        setCustomer(null)
-        setIsLoading(false)
-        return
-      }
-
       setIsLoading(true)
       try {
-        const res = await getLandlordContracts(activeBuilding.id, { limit: 100 })
-        const contracts: any[] = res?.data || []
+        const cleanRawId = rawId.replace(/^cust_/, '').replace(/^contract_/, '')
 
-        let matchedContract: any = null
-        let matchedTenantUser: any = null
+        // 1. Fetch unified tenant list for this boarding house (covers both direct occupants and contract tenants)
+        const tenantRes = await getLandlordTenants(activeBuilding.id, { limit: 100 })
+        const raw = tenantRes?.data as any
+        const tenantList: LandlordTenantItem[] = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : []
 
-        const cleanRawId = rawId.replace(/^cust_/, '')
+        // Match tenant by occupant ID, user ID, contract ID, phone, or identity number
+        let matchedTenant = tenantList.find(
+          item =>
+            item.id === rawId ||
+            item.userId === rawId ||
+            item.id === cleanRawId ||
+            item.userId === cleanRawId ||
+            (item.contractId && (item.contractId === rawId || item.contractId === cleanRawId)) ||
+            item.phoneNumber === rawId ||
+            (item.identityNumber && item.identityNumber === rawId),
+        )
 
-        for (const c of contracts) {
-          // Check tenantContracts list - ONLY match by tenant's userId
-          const tContracts = c.tenantContracts || []
-          for (const tc of tContracts) {
-            const tu = tc.tenant
-            if (tu && (tu.id === rawId || tu.id === cleanRawId)) {
-              matchedContract = c
-              matchedTenantUser = tu
-              break
+        // 2. If matched tenant has an active contract, fetch complete contract details
+        let fullContract: any = null
+        if (matchedTenant?.contractId) {
+          try {
+            const detailRes = await getContractById(activeBuilding.id, matchedTenant.contractId)
+            if (detailRes?.data) {
+              fullContract = detailRes.data
             }
-          }
-          if (matchedContract) break
-
-          // Check primary tenant - ONLY match by tenant's userId
-          if (c.tenant && (c.tenant.id === rawId || c.tenant.id === cleanRawId)) {
-            matchedContract = c
-            matchedTenantUser = c.tenant
-            break
+          } catch (detailErr) {
+            console.warn('Could not load contract detail for tenant:', detailErr)
           }
         }
 
-        if (matchedContract) {
-          // Fetch complete contract detail to obtain room services, deposit, invoices, docs
-          let fullContract = matchedContract
+        // 3. Fallback: If not found in unified tenantList, try searching directly in contracts list
+        if (!matchedTenant) {
           try {
-            const detailRes = await getContractById(activeBuilding.id, matchedContract.id)
-            if (detailRes?.data) {
-              fullContract = detailRes.data
-              if (!matchedTenantUser && fullContract.tenant) {
-                matchedTenantUser = fullContract.tenant
+            const contractRes = await getLandlordContracts(activeBuilding.id, { limit: 100 })
+            const contracts: any[] = contractRes?.data || []
+            for (const c of contracts) {
+              const tContracts = c.tenantContracts || []
+              for (const tc of tContracts) {
+                const tu = tc.tenant
+                if (tu && (tu.id === rawId || tu.id === cleanRawId || tc.id === rawId)) {
+                  fullContract = c
+                  matchedTenant = {
+                    id: `contract_${tc.id}`,
+                    userId: tu.id,
+                    fullName: tu.userIdentification?.fullName || tu.fullName || tu.username,
+                    phoneNumber: tu.phoneNumber,
+                    roomId: c.roomId,
+                    roomNumber: c.room?.roomNumber || '—',
+                    boardingHouseId: activeBuilding.id,
+                    tenancyType: 'contract',
+                    contractId: c.id,
+                    status: c.status === 'active' ? 'Đang ở' : 'Đã rời',
+                    joinedAt: c.startDate ? new Date(c.startDate).toLocaleDateString('vi-VN') : '—',
+                    endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('vi-VN') : undefined,
+                    identityNumber: tu.userIdentification?.identityNumber,
+                    dateOfBirth: tu.userIdentification?.dateOfBirth,
+                    gender: tu.userIdentification?.gender,
+                    address: tu.userIdentification?.placeOfResidence || tu.userIdentification?.permanentAddress,
+                    cardFrontUrl: tu.userIdentification?.cardFrontUrl,
+                    cardBackUrl: tu.userIdentification?.cardBackUrl,
+                    hasAccount: true,
+                    mustChangePassword: tu.mustChangePassword,
+                  }
+                  break
+                }
+              }
+              if (matchedTenant) break
+
+              if (c.tenant && (c.tenant.id === rawId || c.tenant.id === cleanRawId)) {
+                fullContract = c
+                matchedTenant = {
+                  id: `contract_${c.id}`,
+                  userId: c.tenant.id,
+                  fullName: c.tenant.userIdentification?.fullName || c.tenant.fullName || c.tenant.username,
+                  phoneNumber: c.tenant.phoneNumber,
+                  roomId: c.roomId,
+                  roomNumber: c.room?.roomNumber || '—',
+                  boardingHouseId: activeBuilding.id,
+                  tenancyType: 'contract',
+                  contractId: c.id,
+                  status: c.status === 'active' ? 'Đang ở' : 'Đã rời',
+                  joinedAt: c.startDate ? new Date(c.startDate).toLocaleDateString('vi-VN') : '—',
+                  endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('vi-VN') : undefined,
+                  identityNumber: c.tenant.userIdentification?.identityNumber,
+                  dateOfBirth: c.tenant.userIdentification?.dateOfBirth,
+                  gender: c.tenant.userIdentification?.gender,
+                  address: c.tenant.userIdentification?.placeOfResidence || c.tenant.userIdentification?.permanentAddress,
+                  cardFrontUrl: c.tenant.userIdentification?.cardFrontUrl,
+                  cardBackUrl: c.tenant.userIdentification?.cardBackUrl,
+                  hasAccount: true,
+                  mustChangePassword: c.tenant.mustChangePassword,
+                }
+                break
               }
             }
-          } catch (detailErr) {
-            console.warn('Could not load full contract detail, using list aggregate:', detailErr)
+          } catch (contractErr) {
+            console.warn('Fallback contract search failed:', contractErr)
+          }
+        }
+
+        if (matchedTenant) {
+          // Format address from object or string
+          let formattedAddress = matchedTenant.address || ''
+          if (typeof formattedAddress === 'object' && formattedAddress !== null) {
+            formattedAddress = Object.values(formattedAddress).filter(Boolean).join(', ')
           }
 
-          const ident = matchedTenantUser?.userIdentification
-          const daysRemaining = fullContract.endDate
+          const daysRemaining = matchedTenant.daysRemaining || (fullContract?.endDate
             ? Math.max(
-              0,
-              Math.ceil(
-                (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-              ),
-            )
-            : undefined
-          const contractStatus =
-            fullContract.status === 'active'
-              ? daysRemaining !== undefined && daysRemaining <= 30
-                ? 'Sắp hết hợp đồng'
-                : 'Đang ở'
-              : fullContract.status === 'draft'
-                ? 'Sắp hết hợp đồng'
-                : 'Đã rời'
-
-          // Format address from Json or string
-          let formattedAddress = ''
-          if (ident?.placeOfResidence) {
-            if (typeof ident.placeOfResidence === 'string') {
-              formattedAddress = ident.placeOfResidence
-            } else if (typeof ident.placeOfResidence === 'object') {
-              formattedAddress = Object.values(ident.placeOfResidence).filter(Boolean).join(', ')
-            }
-          } else if (ident?.permanentAddress) {
-            formattedAddress = ident.permanentAddress
-          }
+                0,
+                Math.ceil(
+                  (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+                ),
+              )
+            : undefined)
 
           const mappedCustomer: Customer = {
-            id: matchedTenantUser?.id || `cust_${fullContract.id}`,
-            userId: matchedTenantUser?.id,
-            contractId: fullContract.id,
-            name:
-              ident?.fullName ||
-              matchedTenantUser?.fullName ||
-              matchedTenantUser?.username ||
-              t('landlordCustomersDefaultName'),
-            phone: matchedTenantUser?.phoneNumber || '—',
-            room: fullContract.room?.roomNumber || '—',
-            roomId: fullContract.room?.id,
-            floor: fullContract.room?.floor,
+            id: matchedTenant.id,
+            userId: matchedTenant.userId,
+            contractId: matchedTenant.contractId || fullContract?.id,
+            name: matchedTenant.fullName || t('landlordCustomersDefaultName'),
+            phone: matchedTenant.phoneNumber || '—',
+            room: matchedTenant.roomNumber || fullContract?.room?.roomNumber || '—',
+            roomId: matchedTenant.roomId || fullContract?.room?.id,
+            floor: fullContract?.room?.floor,
             building: activeBuilding.name || activeBuilding.id,
-            cccd: ident?.identityNumber || '—',
-            joinDate: fullContract.startDate
+            cccd: matchedTenant.identityNumber || '—',
+            joinDate: matchedTenant.joinedAt || (fullContract?.startDate
               ? new Date(fullContract.startDate).toLocaleDateString('vi-VN')
-              : '—',
-            endDate: fullContract.endDate
+              : '—'),
+            endDate: matchedTenant.endDate || (fullContract?.endDate
               ? new Date(fullContract.endDate).toLocaleDateString('vi-VN')
-              : undefined,
-            rentPrice: fullContract.rentPrice,
-            depositAmount: fullContract.deposit?.amount || fullContract.depositAmount || 0,
+              : undefined),
+            rentPrice: fullContract?.rentPrice,
+            depositAmount: fullContract?.deposit?.amount || fullContract?.depositAmount || 0,
             daysRemaining,
-            status: contractStatus,
-            email: matchedTenantUser?.email,
-            dob: ident?.dateOfBirth
-              ? new Date(ident.dateOfBirth).toLocaleDateString('vi-VN')
+            status: matchedTenant.status || (fullContract?.status === 'active' ? 'Đang ở' : 'Đã rời'),
+            email: matchedTenant.email || undefined,
+            dob: matchedTenant.dateOfBirth
+              ? (matchedTenant.dateOfBirth.includes('T')
+                  ? new Date(matchedTenant.dateOfBirth).toLocaleDateString('vi-VN')
+                  : matchedTenant.dateOfBirth)
               : undefined,
-            gender: ident?.gender === 'male' || ident?.gender === 'nam' ? 'nam' : 'nu',
+            gender: matchedTenant.gender === 'male' || matchedTenant.gender === 'nam' ? 'nam' : 'nu',
             address: formattedAddress || undefined,
-            cardFrontUrl: ident?.cardFrontUrl,
-            cardBackUrl: ident?.cardBackUrl,
-            note: fullContract.note || undefined,
-            hasAccount: !!matchedTenantUser?.id,
-            recentInvoices: fullContract.recentInvoices || [],
+            cardFrontUrl: matchedTenant.cardFrontUrl || undefined,
+            cardBackUrl: matchedTenant.cardBackUrl || undefined,
+            note: fullContract?.note || undefined,
+            hasAccount: matchedTenant.hasAccount ?? !!matchedTenant.userId,
+            mustChangePassword: matchedTenant.mustChangePassword,
+            tenancyType: matchedTenant.tenancyType,
+            recentInvoices: fullContract?.recentInvoices || [],
           }
 
           setCustomer(mappedCustomer)
@@ -251,6 +304,25 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           setEditJob('')
           setEditWorkplace('')
           setEditNote(mappedCustomer.note || '')
+
+          let initialAddr: VietnamAddressValue = {
+            country: 'Việt Nam',
+            province: '',
+            ward: '',
+            street: formattedAddress || '',
+            address: formattedAddress || '',
+          }
+          if (typeof matchedTenant.address === 'object' && matchedTenant.address !== null) {
+            const a = matchedTenant.address as any
+            initialAddr = {
+              country: 'Việt Nam',
+              province: a.province || '',
+              ward: a.ward || '',
+              street: a.street || a.address || '',
+              address: a.address || formattedAddress || '',
+            }
+          }
+          setEditAddressObj(initialAddr)
         } else {
           setCustomer(null)
         }
@@ -265,6 +337,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     loadCustomerDetail()
   }, [resolvedParams.id, activeBuilding?.id])
 
+  const isIdentificationLocked = customer?.mustChangePassword === false
+
   // Track initial values for dirty check (Rule 10)
   const initialEditValues = React.useMemo(() => {
     if (!customer) return null
@@ -274,7 +348,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       cccd: customer.cccd !== '—' ? customer.cccd : '',
       dob: customer.dob || '',
       gender: customer.gender || 'nam',
-      address: customer.address || '',
+      addressObj: editAddressObj,
       email: customer.email || '',
       job: customer.job || '',
       workplace: customer.workplace || '',
@@ -297,7 +371,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       setEditCccd(initialEditValues.cccd)
       setEditDob(initialEditValues.dob)
       setEditGender(initialEditValues.gender)
-      setEditAddress(initialEditValues.address)
+      setEditAddress(initialEditValues.addressObj.address || '')
+      setEditAddressObj(initialEditValues.addressObj)
       setEditEmail(initialEditValues.email)
       setEditJob(initialEditValues.job)
       setEditWorkplace(initialEditValues.workplace)
@@ -316,7 +391,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       editCccd !== initialEditValues.cccd ||
       editDob !== initialEditValues.dob ||
       editGender !== initialEditValues.gender ||
-      editAddress !== initialEditValues.address ||
+      (editAddressObj.province !== initialEditValues.addressObj.province || editAddressObj.ward !== initialEditValues.addressObj.ward || editAddressObj.street !== initialEditValues.addressObj.street) ||
       editEmail !== initialEditValues.email ||
       editJob !== initialEditValues.job ||
       editWorkplace !== initialEditValues.workplace ||
@@ -337,26 +412,62 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  const handleSaveCustomer = () => {
-    setCustomer(prev =>
-      prev
-        ? {
-          ...prev,
-          name: editName || prev.name,
-          phone: editPhone || prev.phone,
-          cccd: editCccd || prev.cccd,
-          dob: editDob || prev.dob,
-          gender: editGender || prev.gender,
-          address: editAddress || prev.address,
-          email: editEmail || prev.email,
-          job: editJob || prev.job,
-          workplace: editWorkplace || prev.workplace,
-          note: editNote || prev.note,
-          updatedAt: new Date().toLocaleDateString('vi-VN'),
-        }
-        : null,
-    )
-    setIsEditModalOpen(false)
+  const handleSaveCustomer = async () => {
+    if (!customer || !activeBuilding?.id) return
+    const targetUserId = customer.userId || customer.id
+    const fullAddress =
+      editAddressObj.address ||
+      [editAddressObj.street, editAddressObj.ward, editAddressObj.province].filter(Boolean).join(', ')
+
+    setIsSavingCustomer(true)
+    try {
+      await updateLandlordTenant(activeBuilding.id, targetUserId, {
+        fullName: !isIdentificationLocked ? editName.trim() : undefined,
+        identityNumber: !isIdentificationLocked ? (editCccd.trim() || undefined) : undefined,
+        dateOfBirth: !isIdentificationLocked ? (editDob ? new Date(editDob).toISOString() : undefined) : undefined,
+        gender: !isIdentificationLocked ? (editGender === 'nam' ? 'male' : 'female') : undefined,
+        placeOfResidence: !isIdentificationLocked
+          ? {
+              country: 'Việt Nam',
+              province: editAddressObj.province || '',
+              ward: editAddressObj.ward || '',
+              street: editAddressObj.street || '',
+              address: fullAddress,
+            }
+          : undefined,
+        email: editEmail ? editEmail.trim() : undefined,
+        job: editJob ? editJob.trim() : undefined,
+        workplace: editWorkplace ? editWorkplace.trim() : undefined,
+        note: editNote ? editNote.trim() : undefined,
+      })
+
+      setCustomer(prev =>
+        prev
+          ? {
+              ...prev,
+              name: (!isIdentificationLocked && editName) ? editName : prev.name,
+              phone: editPhone || prev.phone,
+              cccd: (!isIdentificationLocked && editCccd) ? editCccd : prev.cccd,
+              dob: (!isIdentificationLocked && editDob) ? editDob : prev.dob,
+              gender: (!isIdentificationLocked && editGender) ? editGender : prev.gender,
+              address: (!isIdentificationLocked && fullAddress) ? fullAddress : prev.address,
+              email: editEmail || prev.email,
+              job: editJob || prev.job,
+              workplace: editWorkplace || prev.workplace,
+              note: editNote || prev.note,
+              updatedAt: new Date().toLocaleDateString('vi-VN'),
+            }
+          : null,
+      )
+      toast.success(t('landlordCustomersSaveSuccess'))
+      setIsEditModalOpen(false)
+    } catch (err) {
+      console.error('Failed to update tenant:', err)
+      const errMsg = resolveErrorMessage(err, tErrors, t('landlordCustomersSaveError'))
+      toast.error(errMsg)
+    } finally {
+      setIsSavingCustomer(false)
+    }
   }
 
   const isStaying = customer ? (customer.status === 'Đang ở' || customer.status === 'Sắp hết hợp đồng') : false
@@ -704,7 +815,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
 
                 <div className="p-3 bg-surface rounded-xl border border-line space-y-1.5 text-xs">
-                  {customer.contractId && (
+                  {customer.contractId ? (
                     <div className="flex justify-between items-center font-bold text-foreground/90">
                       <span>{t('landlordCustomersContractCodeLabel')}</span>
                       <Link
@@ -715,6 +826,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                         {customer.contractId.slice(0, 8).toUpperCase()}{' '}
                         <ExternalLink className="w-3 h-3" />
                       </Link>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center font-bold text-foreground/90">
+                      <span>{t('landlordCustomersContractCodeLabel')}</span>
+                      <span className="text-warning font-semibold italic text-[11px]">
+                        Chưa lập hợp đồng
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-[11px] text-muted font-semibold">
@@ -749,6 +867,15 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     <Home className="w-4 h-4" />{' '}
                     {t('landlordCustomersViewRoomDetailBtn').replace('{room}', customer.room)}{' '}
                     &rarr;
+                  </Link>
+                )}
+
+                {!customer.contractId && customer.roomId && (
+                  <Link
+                    href={`/landlord/contracts/create?roomId=${customer.roomId}&tenantId=${customer.userId || ''}`}
+                    className="w-full py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black rounded-xl transition-all border border-primary/30 flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                  >
+                    <FileSignature className="w-4 h-4" /> Tạo hợp đồng thuê &rarr;
                   </Link>
                 )}
               </div>
@@ -832,10 +959,21 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         />
 
         <Modal.Body className="space-y-4">
+          {/* NOTICE IF TENANT IDENTIFICATION IS LOCKED */}
+          {isIdentificationLocked && (
+            <div className="p-3.5 bg-accent-soft/30 border border-accent-subtle rounded-2xl flex items-start gap-2.5 text-accent">
+              <Info className="w-5 h-5 shrink-0 mt-0.5" />
+              <Text size="xs" weight="medium" color="default">
+                {t('landlordCustomersIdentificationLockedNotice')}
+              </Text>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TextInput
               label={t('landlordCustomersFullNameLabel')}
               required
+              disabled={isIdentificationLocked}
               value={editName}
               onChange={e => setEditName(e.target.value)}
             />
@@ -843,12 +981,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <TextInput
               label={t('landlordCustomersPhoneLabel')}
               required
+              disabled
+              readOnly
               value={editPhone}
-              onChange={e => setEditPhone(e.target.value)}
             />
 
             <TextInput
               label={t('landlordCustomersCccdLabel')}
+              disabled={isIdentificationLocked}
               value={editCccd}
               onChange={e => setEditCccd(e.target.value)}
               className="font-bold text-primary"
@@ -856,12 +996,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
             <DateInput
               label={t('landlordCustomersDobLabel')}
+              disabled={isIdentificationLocked}
               value={editDob}
               onChange={e => setEditDob(e.target.value)}
             />
 
             <SelectInput
               label={t('landlordCustomersGenderLabel')}
+              disabled={isIdentificationLocked}
               value={editGender}
               onChange={e => setEditGender(e.target.value)}
               options={[
@@ -877,11 +1019,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               onChange={e => setEditEmail(e.target.value)}
             />
 
-            <div className="md:col-span-2">
-              <TextInput
-                label={t('landlordCustomersPermanentAddressLabel')}
-                value={editAddress}
-                onChange={e => setEditAddress(e.target.value)}
+            {/* Cư trú hành chính phân cấp (Việt Nam) */}
+            <div className="md:col-span-2 pt-2 border-t border-line/60">
+              <Text as="h4" variant="subtitle" size="xs" weight="bold" className="mb-2 text-muted">
+                {t('landlordCustomersPermanentAddressLabel')}
+              </Text>
+              <VietnamAddressFields
+                value={editAddressObj}
+                onChange={setEditAddressObj}
+                disabled={isIdentificationLocked}
+                namespace="landlord"
               />
             </div>
 
@@ -917,6 +1064,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </Button>
           <Button
             onClick={handleSaveCustomer}
+            disabled={isSavingCustomer}
+            leftIcon={isSavingCustomer ? <Loader2 className="animate-spin w-4 h-4" /> : undefined}
           >
             {t('landlordCustomersSaveChangesBtn')}
           </Button>

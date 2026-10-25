@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Phone,
   Mail,
-  ShieldCheck,
   Camera,
   Loader2,
   Lock,
@@ -277,19 +276,6 @@ function UniversalProfilePage() {
 
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                  <div className="px-3 py-1 bg-primary/20 rounded-full border border-primary/30 tracking-wider whitespace-nowrap flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <Text
-                      variant="badge"
-                      size="3xs"
-                      weight="black"
-                      color="brand"
-                      uppercase
-                    >
-                      {t('guestProfileEkycVerifiedBadge')}
-                    </Text>
-                  </div>
-
                   <Text
                     as="span"
                     variant="badge"

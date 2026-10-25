@@ -1019,6 +1019,7 @@ model MassNotificationJob {
   targetType    NofifyTarget
   targetId      String?       @db.Uuid
   targetUser    User?         @relation("TargetNotify", fields: [targetId], references: [id])
+  targetIds     String[]      @default([]) @map("target_ids") @db.Uuid
   title         String
   content       String
   status        NotifyStatus  @default(pending)

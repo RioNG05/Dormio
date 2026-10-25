@@ -139,11 +139,51 @@ describe('Admin Mass Notifications (UC-A-05)', () => {
         content: 'Your account requires verification.',
       }
 
-      mockPrisma.user.findUnique.mockResolvedValue(null)
+            mockPrisma.user.findMany.mockResolvedValue([])
 
       await expect(service.createMassNotification(adminId, specificDto)).rejects.toThrow(
         NotFoundException,
       )
+    })
+
+    it('should support multiple target users and multiple channels', async () => {
+      const multiDto: CreateMassNotificationDto = {
+        channels: [AdminNotifyChannel.in_app, AdminNotifyChannel.email],
+        targetType: AdminNotifyTarget.specific_user,
+        targetIds: ['user-1', 'user-2'],
+        title: 'Multi-User & Multi-Channel Notice',
+        content: 'System announcement for selected users.',
+      }
+
+      mockPrisma.user.findMany.mockResolvedValue([
+        { id: 'user-1', username: 'user1', email: 'u1@dormio.vn' },
+        { id: 'user-2', username: 'user2', email: 'u2@dormio.vn' },
+      ])
+      mockPrisma.massNotificationJob.create.mockResolvedValue({
+        id: 'job-multi-1',
+        createdBy: adminId,
+        channel: 'in_app',
+        targetType: 'specific_user',
+        targetId: 'user-1',
+        targetIds: ['user-1', 'user-2'],
+        title: multiDto.title,
+        content: multiDto.content,
+        status: 'pending',
+        sentCount: 0,
+        failedCount: 0,
+        createdAt: new Date(),
+        createdByUser: { id: adminId, username: 'Admin' },
+        targetUser: null,
+      })
+      mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-multi' })
+      mockQueue.add.mockResolvedValue({ id: 'bull-multi' })
+
+      const result = await service.createMassNotification(adminId, multiDto)
+
+      expect(mockPrisma.massNotificationJob.create).toHaveBeenCalledTimes(2)
+      expect(mockQueue.add).toHaveBeenCalledTimes(2)
+      expect(result.targetLabel).toBe('2 người dùng cụ thể')
+      expect(result.targetIds).toEqual(['user-1', 'user-2'])
     })
   })
 
@@ -310,7 +350,7 @@ describe('Admin Mass Notifications (UC-A-05)', () => {
       await service.processMassNotification('job-specific-1')
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-        where: { id: 'user-single' },
+        where: { id: { in: ['user-single'] }, status: 'active' },
         select: { id: true, email: true, phoneNumber: true },
       })
 

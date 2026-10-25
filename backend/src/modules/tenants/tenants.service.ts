@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
+import { randomUUID } from 'crypto'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { AuthService } from '../auth/auth.service'
 import {
@@ -12,7 +13,8 @@ import { QueryTenantsDto } from './dto/query-tenants.dto'
 import { SearchTenantResponseDto } from './dto/search-tenant-response.dto'
 import { RoomOccupantResponseDto } from './dto/room-occupant-response.dto'
 import { LandlordTenantItemDto, LandlordTenantListResponseDto } from './dto/tenant-list-response.dto'
-import { ContractStatus, OccupantStatus, RoomStatus, UserRole } from '@prisma'
+import { UpdateLandlordTenantDto } from './dto/update-landlord-tenant.dto'
+import { ContractStatus, Gender, OccupantStatus, RoomStatus, UserRole } from '@prisma'
 
 @Injectable()
 export class TenantsService {
@@ -359,6 +361,7 @@ export class TenantsService {
           cardFrontUrl: ident?.cardFrontUrl || null,
           cardBackUrl: ident?.cardBackUrl || null,
           hasAccount: true,
+          mustChangePassword: Boolean(tc.tenant.mustChangePassword),
         })
       }
     }
@@ -395,6 +398,7 @@ export class TenantsService {
         cardFrontUrl: ident?.cardFrontUrl || null,
         cardBackUrl: ident?.cardBackUrl || null,
         hasAccount: true,
+        mustChangePassword: Boolean(occ.tenant.mustChangePassword),
       })
     }
 
@@ -420,6 +424,179 @@ export class TenantsService {
       page,
       limit,
       totalPages,
+    }
+  }
+
+  /**
+   * Update tenant information by landlord (UC-L-04B & Customer Modal).
+   * If mustChangePassword === true (tenant hasn't activated/logged in yet),
+   * landlord is permitted to edit their UserIdentification.
+   * If mustChangePassword === false, landlord cannot modify official identification.
+   */
+  async updateTenant(
+    landlordId: string,
+    boardingHouseId: string,
+    tenantIdOrUserId: string,
+    dto: UpdateLandlordTenantDto,
+  ) {
+    this.logger.log(
+      `updateTenant landlordId="${landlordId}" boardingHouseId="${boardingHouseId}" target="${tenantIdOrUserId}"`,
+    )
+
+    // Resolve target userId (supports either occupantId, contractId, or direct userId)
+    let targetUserId = tenantIdOrUserId
+    if (targetUserId.startsWith('cust_')) {
+      targetUserId = targetUserId.replace(/^cust_/, '')
+    }
+    if (targetUserId.startsWith('contract_')) {
+      targetUserId = targetUserId.replace(/^contract_/, '')
+    }
+
+    // Check if target is an occupant ID
+    const foundOccupant = await this.prisma.roomOccupant.findFirst({
+      where: { id: targetUserId, boardingHouseId },
+      include: { tenant: true },
+    })
+
+    if (foundOccupant) {
+      targetUserId = foundOccupant.tenantId
+    }
+
+    // Check if target is a tenantContract ID
+    const foundTc = await this.prisma.tenantContract.findFirst({
+      where: {
+        id: targetUserId,
+        contract: { room: { boardingHouseId } },
+      },
+      include: { tenant: true },
+    })
+    if (foundTc) {
+      targetUserId = foundTc.tenantId
+    }
+
+    // Verify tenant belongs to this boarding house (occupant or contract)
+    const [activeOccupant, activeContract] = await Promise.all([
+      this.prisma.roomOccupant.findFirst({
+        where: {
+          boardingHouseId,
+          tenantId: targetUserId,
+        },
+      }),
+      this.prisma.contract.findFirst({
+        where: {
+          room: { boardingHouseId },
+          tenantContracts: {
+            some: { tenantId: targetUserId },
+          },
+        },
+      }),
+    ])
+
+    if (!activeOccupant && !activeContract) {
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.TENANT_NOT_FOUND,
+        'Tenant not found in this boarding house.',
+      )
+    }
+
+    const tenantUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { userIdentification: true },
+    })
+
+    if (!tenantUser) {
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.TENANT_NOT_FOUND,
+        'Tenant user account not found.',
+      )
+    }
+
+    const hasIdentificationUpdates =
+      dto.fullName !== undefined ||
+      dto.identityNumber !== undefined ||
+      dto.dateOfBirth !== undefined ||
+      dto.gender !== undefined ||
+      dto.placeOfResidence !== undefined
+
+    if (hasIdentificationUpdates) {
+      if (!tenantUser.mustChangePassword) {
+        throw new BusinessConflictException(
+          BusinessErrorCode.TENANT_PROFILE_LOCKED,
+          'Tenant has already activated their account and changed their password. Personal identification cannot be modified by the landlord.',
+        )
+      }
+
+      if (dto.identityNumber) {
+        const existingIdent = await this.prisma.userIdentification.findUnique({
+          where: { identityNumber: dto.identityNumber },
+        })
+        if (existingIdent && existingIdent.userId !== targetUserId) {
+          throw new BusinessConflictException(
+            BusinessErrorCode.COMMON_VALIDATION_ERROR,
+            'Citizen identification number (CCCD) is already registered by another account.',
+          )
+        }
+      }
+
+      const placeOfResidence =
+        typeof dto.placeOfResidence === 'string'
+          ? { address: dto.placeOfResidence }
+          : dto.placeOfResidence || tenantUser.userIdentification?.placeOfResidence || {}
+
+      const dateOfBirth = dto.dateOfBirth
+        ? new Date(dto.dateOfBirth)
+        : tenantUser.userIdentification?.dateOfBirth || new Date('2000-01-01')
+
+      await this.prisma.userIdentification.upsert({
+        where: { userId: targetUserId },
+        create: {
+          userId: targetUserId,
+          identityNumber: dto.identityNumber || `TMP_${Date.now()}`,
+          fullName: dto.fullName?.trim() || tenantUser.username || '',
+          dateOfBirth,
+          gender: dto.gender || Gender.male,
+          nationnality: 'Việt Nam',
+          placeOfOrigin: {},
+          placeOfResidence,
+          issueDate: new Date(),
+          expiryDate: new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000),
+          personalIdentification: randomUUID(),
+          note: dto.note || '',
+          cardFrontUrl: '',
+          cardBackUrl: '',
+        },
+        update: {
+          ...(dto.identityNumber ? { identityNumber: dto.identityNumber } : {}),
+          ...(dto.fullName ? { fullName: dto.fullName.trim() } : {}),
+          ...(dto.dateOfBirth ? { dateOfBirth } : {}),
+          ...(dto.gender ? { gender: dto.gender } : {}),
+          ...(dto.placeOfResidence !== undefined ? { placeOfResidence } : {}),
+        },
+      })
+    }
+
+    // Update email and username if applicable
+    if (dto.email !== undefined || (dto.fullName && tenantUser.mustChangePassword)) {
+      await this.prisma.user.update({
+        where: { id: targetUserId },
+        data: {
+          ...(dto.email !== undefined ? { email: dto.email?.trim() || null } : {}),
+          ...(dto.fullName && tenantUser.mustChangePassword ? { username: dto.fullName.trim() } : {}),
+        },
+      })
+    }
+
+    // Update note on active occupant if exists
+    if (dto.note !== undefined && activeOccupant) {
+      await this.prisma.roomOccupant.update({
+        where: { id: activeOccupant.id },
+        data: { note: dto.note.trim() },
+      })
+    }
+
+    return {
+      success: true,
+      message: 'Tenant updated successfully',
     }
   }
 
@@ -510,8 +687,8 @@ export class TenantsService {
         cardFrontUrl: ident?.cardFrontUrl || null,
         cardBackUrl: ident?.cardBackUrl || null,
         hasAccount: true,
+        mustChangePassword: Boolean(occupant.tenant?.mustChangePassword),
       },
     }
   }
 }
-

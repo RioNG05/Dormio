@@ -22,6 +22,7 @@ describe('TenantsController', () => {
       quickAddTenant: jest.fn(),
       getRoomOccupants: jest.fn(),
       getLandlordTenants: jest.fn(),
+      updateTenant: jest.fn(),
       checkoutOccupant: jest.fn(),
     }
 
@@ -94,6 +95,16 @@ describe('TenantsController', () => {
     expect(res).toEqual(mockList)
   })
 
+  it('updateTenant delegates to service.updateTenant', async () => {
+    const dto: any = { fullName: 'Updated Name', note: 'Updated note' }
+    const mockResult: any = { success: true, message: 'Tenant updated successfully' }
+    ;(service.updateTenant as jest.Mock).mockResolvedValue(mockResult)
+
+    const res = await controller.updateTenant('tenant-1', dto, mockUser, mockBoardingHouseId)
+    expect(service.updateTenant).toHaveBeenCalledWith(mockUser.id, mockBoardingHouseId, 'tenant-1', dto)
+    expect(res).toEqual(mockResult)
+  })
+
   it('checkoutOccupant delegates to service.checkoutOccupant', async () => {
     const mockResult: any = { success: true }
     ;(service.checkoutOccupant as jest.Mock).mockResolvedValue(mockResult)
@@ -103,4 +114,3 @@ describe('TenantsController', () => {
     expect(res).toEqual(mockResult)
   })
 })
-
