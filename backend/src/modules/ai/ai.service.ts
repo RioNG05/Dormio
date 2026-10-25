@@ -15,6 +15,7 @@ Nhiệm vụ của bạn:
 export class AiService {
   private readonly logger = new Logger(AiService.name)
   private readonly apiKey: string
+  private readonly baseUrl: string
   private readonly modelText: string
 
   constructor(
@@ -22,10 +23,50 @@ export class AiService {
     private readonly prisma: PrismaService,
   ) {
     this.apiKey = this.configService.get<string>('ai.apiKey') || process.env.AI_API_KEY || ''
+    this.baseUrl = (
+      this.configService.get<string>('ai.baseUrl') ||
+      process.env.AI_BASE_URL ||
+      'https://gemini-proxy.ngquanghuy-work.workers.dev'
+    ).replace(/\/+$/, '')
     this.modelText =
       this.configService.get<string>('ai.modelText') ||
       process.env.AI_MODEL_TEXT ||
       'gemini-3.5-flash-lite'
+  }
+
+  private async postWithRetry(endpoint: string, body: any, maxRetries = 2): Promise<any> {
+    let lastError = ''
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (response.ok) {
+        return response.json()
+      }
+
+      const errText = await response.text()
+      lastError = errText
+
+      const isLocationError =
+        errText.includes('User location is not supported') ||
+        errText.includes('FAILED_PRECONDITION')
+
+      if (isLocationError && attempt < maxRetries) {
+        this.logger.warn(
+          `Gemini request attempt ${attempt} hit edge location restriction (${response.status}). Retrying...`,
+        )
+        await new Promise(resolve => setTimeout(resolve, 500))
+        continue
+      }
+
+      this.logger.error(`Gemini request failed (${response.status}): ${errText}`)
+      throw new Error(`AI Chat communication error: ${response.status}`)
+    }
+
+    throw new Error(`AI request failed: ${lastError}`)
   }
 
   /**
@@ -34,7 +75,7 @@ export class AiService {
   async generateText(prompt: string, systemInstruction?: string): Promise<string> {
     this.logger.log(`Generating text using model: ${this.modelText}`)
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`
+    const endpoint = `${this.baseUrl}/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`
 
     const body: any = {
       contents: [
@@ -54,19 +95,7 @@ export class AiService {
       }
     }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      this.logger.error(`Gemini text generation failed (${response.status}): ${err}`)
-      throw new Error(`AI generation error: ${response.statusText}`)
-    }
-
-    const data = await response.json()
+    const data = await this.postWithRetry(endpoint, body)
     return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
   }
 
@@ -76,7 +105,7 @@ export class AiService {
   async chat(dto: AiChatDto, userId?: string): Promise<AiChatResponseDto> {
     this.logger.log(`Chat invoked with ${dto.messages.length} messages. User: ${userId || 'guest'}`)
 
-    const endpoint = `https://gemini-proxy.ngquanghuy-work.workers.dev/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`
+    const endpoint = `${this.baseUrl}/v1beta/models/${this.modelText}:generateContent?key=${this.apiKey}`
 
     // Format messages for Gemini API
     const rawContents = dto.messages.map(m => ({
@@ -177,19 +206,7 @@ Hãy sử dụng thông tin này để trả lời chủ trọ (Tuyệt đối k
       },
     }
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      this.logger.error(`Gemini chat failed (${response.status}): ${err}`)
-      throw new Error(`AI Chat communication error: ${response.status}`)
-    }
-
-    const data = await response.json()
+    const data = await this.postWithRetry(endpoint, body)
     const replyText =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
       'Sorry, I cannot process this question right now. Please try again later.'

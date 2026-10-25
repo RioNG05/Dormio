@@ -29,6 +29,7 @@ export default () => ({
 
   ai: {
     apiKey: process.env.AI_API_KEY,
+    baseUrl: process.env.AI_BASE_URL,
     modelImage: process.env.AI_MODEL_IMAGE ?? 'gemini-3.5-flash-lite',
     modelText: process.env.AI_MODEL_TEXT ?? 'gemini-3.5-flash-lite',
   },
