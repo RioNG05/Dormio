@@ -14,6 +14,8 @@ export interface StepperItemProps {
   desc: string
   icon: React.ReactNode
   onClick: () => void
+  disabled?: boolean
+  className?: string
 }
 
 export function StepperItem({
@@ -24,6 +26,8 @@ export function StepperItem({
   desc,
   icon,
   onClick,
+  disabled,
+  className,
 }: StepperItemProps) {
   const isCompleted = currentStep > stepNumber
   const isActive = currentStep === stepNumber
@@ -31,31 +35,38 @@ export function StepperItem({
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant={isActive ? 'outline' : isCompleted ? 'white' : 'ghost'}
       size="sm"
+      justify="start"
+      fullWidth
+      disabled={disabled}
       onClick={onClick}
+      aria-current={isActive ? 'step' : undefined}
+      leftIcon={
+        <div
+          className={cn(
+            'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
+            isCompleted
+              ? 'bg-success text-white'
+              : isActive
+                ? 'bg-primary text-white shadow-sm'
+                : 'bg-line text-muted',
+          )}
+        >
+          {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : icon}
+        </div>
+      }
       className={cn(
-        'flex items-center justify-start gap-3 p-3 rounded-2xl border text-left transition-all h-auto cursor-pointer',
+        'gap-3 p-3 rounded-2xl border text-left h-auto font-normal',
         isActive
-          ? 'border-primary bg-primary/5 hover:bg-primary/10 shadow-xs'
+          ? 'border-primary bg-primary-soft/50 hover:bg-primary-soft shadow-xs text-foreground'
           : isCompleted
-            ? 'border-line bg-card hover:bg-card-hover'
-            : 'border-line bg-surface/50 hover:bg-zinc-50/50 opacity-60',
+            ? 'border-line bg-card hover:bg-card-hover text-foreground'
+            : 'border-line bg-surface/50 hover:bg-card-hover opacity-60 text-muted',
+        className,
       )}
     >
-      <div
-        className={cn(
-          'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
-          isCompleted
-            ? 'bg-success text-white'
-            : isActive
-              ? 'bg-primary text-white shadow-sm'
-              : 'bg-line text-muted',
-        )}
-      >
-        {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : icon}
-      </div>
-      <div className="min-w-0 hidden sm:block">
+      <div className="min-w-0 hidden sm:block text-left">
         <div className="flex items-center gap-1.5">
           <Text as="span" variant="overline" size="3xs" color="subtle">
             {stepLabel} {stepNumber}

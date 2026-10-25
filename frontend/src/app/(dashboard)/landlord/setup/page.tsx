@@ -32,6 +32,8 @@ import {
 import {
   createId,
   MAX_FREE_TIER_ROOMS,
+  DEFAULT_AMENITIES,
+  type AmenityItem,
   type BankInfoState,
   type CustomRoomData,
   type GeneralInfoState,
@@ -73,6 +75,29 @@ export default function SetupWizardPage() {
   const [isLoadingProvinces, setIsLoadingProvinces] = useState(false)
   const [isLoadingWards, setIsLoadingWards] = useState(false)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+
+  // ─── STEP 1B STATE: BOARDING HOUSE AMENITIES ─────────────────────────────────
+  const [amenities, setAmenities] = useState<AmenityItem[]>(() =>
+    DEFAULT_AMENITIES.map(a => ({ ...a, id: createId() })),
+  )
+
+  const handleToggleAmenity = (id: string) => {
+    setAmenities(prev => prev.map(a => (a.id === id ? { ...a, checked: !a.checked } : a)))
+  }
+
+  const handleAddAmenity = (name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    if (amenities.some(a => a.name.toLowerCase() === trimmed.toLowerCase())) return
+    setAmenities(prev => [
+      ...prev,
+      { id: createId(), name: trimmed, checked: true, isCustom: true },
+    ])
+  }
+
+  const handleRemoveAmenity = (id: string) => {
+    setAmenities(prev => prev.filter(a => a.id !== id))
+  }
 
   // ─── STEP 2 STATE: SERVICES & ROOM TYPES ─────────────────────────────────────
   const [services, setServices] = useState<ServiceItem[]>(() => [
@@ -492,6 +517,7 @@ export default function SetupWizardPage() {
       totalFloor: info.totalFloor ? parseInt(info.totalFloor, 10) : undefined,
       builtAt: info.builtAt,
       thumbnail: info.thumbnail.trim() || undefined,
+      amenities: amenities.filter(a => a.checked).map(a => a.name),
       services: cleanedServices,
       roomTypes: cleanedRoomTypes,
       rooms: {
@@ -580,6 +606,7 @@ export default function SetupWizardPage() {
           </div>
           <Button
             variant="outline"
+            size='md'
             onClick={handleCancel}
             className="self-start sm:self-auto"
           >
@@ -658,6 +685,10 @@ export default function SetupWizardPage() {
           onProvinceSelect={handleProvinceSelect}
           onMapAddressSelect={handleMapAddressSelect}
           onThumbnailFileChange={file => setThumbnailFile(file)}
+          amenities={amenities}
+          onToggleAmenity={handleToggleAmenity}
+          onAddAmenity={handleAddAmenity}
+          onRemoveAmenity={handleRemoveAmenity}
           isValid={isStep1Valid}
           onNext={() => setStep(2)}
           onCancel={handleCancel}

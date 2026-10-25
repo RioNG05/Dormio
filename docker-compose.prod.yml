@@ -55,10 +55,7 @@ services:
     container_name: dormio_backend
     restart: unless-stopped
     env_file:
-      - path: .env.production
-        required: false
-      - path: backend/.env
-        required: false
+      - backend/.env.production
     environment:
       NODE_ENV: production
       PORT: 3001
@@ -66,21 +63,6 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
-      FRONTEND_URL: ${FRONTEND_URL:-https://dormio.site}
-      JWT_SECRET: ${JWT_SECRET:-}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
-      PLATFORM_DEPOSIT_HOLD_DAYS: ${PLATFORM_DEPOSIT_HOLD_DAYS:-7}
-      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:-}
-      PAYOS_API_KEY: ${PAYOS_API_KEY:-}
-      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:-}
-      AI_API_KEY: ${AI_API_KEY:-}
-      AI_BASE_URL: ${AI_BASE_URL:-}
-      AI_MODEL_IMAGE: ${AI_MODEL_IMAGE:-gemini-3.5-flash-lite}
-      AI_MODEL_TEXT: ${AI_MODEL_TEXT:-gemini-3.5-flash-lite}
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,17 +77,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.dormio.site}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
         NEXT_PUBLIC_API_PORT: ${NEXT_PUBLIC_API_PORT:-}
-        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-G-6XJ0C471QC}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
     image: dormio-frontend:prod
     container_name: dormio_frontend
     restart: unless-stopped
     env_file:
-      - path: .env.production
-        required: false
-      - path: frontend/.env.production
-        required: false
+      - frontend/.env.production
     environment:
       NODE_ENV: production
     depends_on:

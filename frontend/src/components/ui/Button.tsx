@@ -147,7 +147,21 @@ export const Button = React.forwardRef<any, ButtonProps>(
       if (!icon) return null
 
       if (React.isValidElement(icon)) {
-        const iconElement = icon as React.ReactElement<{ className?: string }>
+        const iconElement = icon as React.ReactElement<any>
+
+        // If it's a custom container element (e.g. badge wrapper with its own children)
+        if (
+          typeof iconElement.type === 'string' &&
+          iconElement.type !== 'svg' &&
+          Boolean(iconElement.props?.children)
+        ) {
+          return (
+            <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">
+              {iconElement}
+            </span>
+          )
+        }
+
         const baseClass = cleanIconClassName(iconElement.props?.className)
         const cloned = React.cloneElement(iconElement, {
           className: cn(baseClass, targetIconSize, 'shrink-0'),
@@ -158,13 +172,13 @@ export const Button = React.forwardRef<any, ButtonProps>(
         }
 
         return (
-          <span className="shrink-0 inline-flex items-center justify-center">
+          <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">
             {cloned}
           </span>
         )
       }
 
-      return <span className="shrink-0 inline-flex items-center justify-center">{icon}</span>
+      return <span className="shrink-0 inline-flex items-center justify-center pointer-events-none">{icon}</span>
     }
 
     const loaderIcon = <Loader2 className={cn('animate-spin shrink-0', targetIconSize)} />

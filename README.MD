@@ -32,10 +32,9 @@
 - [Step-by-Step Installation & Quickstart](#-step-by-step-installation--quickstart)
   - [1. Clone Repository & Install Dependencies](#1-clone-repository--install-dependencies)
   - [2. Environment Configuration (.env)](#2-environment-configuration-env)
-  - [3. Start Infrastructure via Docker](#3-start-infrastructure-via-docker)
-  - [4. Synchronize Prisma Schema](#4-synchronize-prisma-schema)
-  - [5. Seed Sample Database](#5-seed-sample-database)
-  - [6. Launch Development Servers](#6-launch-development-servers)
+  - [3. Running in Development Environment](#3-running-in-development-environment)
+    - [Option A: Hybrid Development (Recommended)](#-option-a-hybrid-development-recommended-for-daily-dev)
+    - [Option B: Full Docker Development Stack](#-option-b-full-docker-development-stack-all-in-docker)
 - [Default Test Accounts & Credentials](#-default-test-accounts--credentials)
 - [Port Mappings & Service Endpoints](#-port-mappings--service-endpoints)
 - [NPM / PNPM Script Reference](#-npm--pnpm-script-reference)
@@ -153,6 +152,14 @@ pnpm run install:all
 
 Set up the environment configuration files in the root, backend, and frontend directories:
 
+```bash
+# 1. Backend environment
+cp backend/.env.example backend/.env
+
+# 2. Frontend environment
+cp frontend/.env.example frontend/.env.development
+```
+
 #### Root Environment (`Dormio/.env`)
 Used by `docker-compose.yml` to provision PostgreSQL, Redis, and pgAdmin:
 ```env
@@ -170,7 +177,6 @@ PGADMIN_PORT=5050
 ```
 
 #### Backend Environment (`Dormio/backend/.env`)
-Copy from `backend/.env.example`:
 ```env
 # ─── Frontend & Application ──────────────────────────────────────────────────
 FRONTEND_URL=http://localhost:3000
@@ -200,81 +206,93 @@ PAYOS_CLIENT_ID=
 PAYOS_API_KEY=
 PAYOS_CHECKSUM_KEY=
 
-# ─── AI & Maps ───────────────────────────────────────────────────────────────
+# ─── AI (Google Gemini) ──────────────────────────────────────────────────────
 AI_API_KEY=
-AI_MODEL_IMAGE=gemini-1.5-flash
-AI_MODEL_TEXT=gemini-1.5-flash
+AI_BASE_URL=
+AI_MODEL_IMAGE=gemini-3.5-flash-lite
+AI_MODEL_TEXT=gemini-3.5-flash-lite
+
+# ─── Google Maps ─────────────────────────────────────────────────────────────
 GOOGLE_MAPS_API_KEY=
 ```
 
-#### Frontend Environment (`Dormio/frontend/.env` or `.env.development`)
+#### Frontend Environment (`Dormio/frontend/.env.development`)
 ```env
+# Public backend API host & port
 NEXT_PUBLIC_API_URL=http://localhost
 NEXT_PUBLIC_API_PORT=3001
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-maps-api-key
+
+# Google Analytics Measurement ID
+NEXT_PUBLIC_GA_ID=
 ```
 
 ---
 
-### 3. Start Infrastructure via Docker
+### 3. Running in Development Environment
 
-Spin up PostgreSQL 16, Redis 7, and pgAdmin 4 in detached mode:
+Dormio supports two development workflows depending on your preference and system setup:
 
-```bash
-# Start infrastructure containers
-pnpm run docker:up
+#### ⚡ Option A: Hybrid Development (Recommended for Daily Dev)
+> **Fastest hot-reload with minimal RAM footprint.** Runs only the database and caching infrastructure (PostgreSQL 16, Redis 7, pgAdmin 4) in lightweight Docker containers, while running NestJS and Next.js natively on your host machine.
 
-# Verify running status
-pnpm run docker:ps
-```
+1. **Start database and caching services in Docker:**
+   ```bash
+   pnpm run docker:db    # or: pnpm run docker:up
+   ```
 
-> **Diagnostic Log Inspection**:
-> - PostgreSQL logs: `pnpm run docker:logs:db`
-> - Redis logs: `pnpm run docker:logs:redis`
+2. **Synchronize database schema and generate Prisma client:**
+   ```bash
+   pnpm run db:push      # Push schema models directly to PostgreSQL
+   pnpm run db:generate  # Generate typed Prisma Client
+   ```
+   *(For migration-based workflow, use `pnpm run db:migrate` instead of `db:push`)*
 
----
+3. **Seed comprehensive mock database:**
+   Populates administrators, landlords, properties, rooms, tenants, contracts, invoices, meter readings, grievances, and staff shifts:
+   ```bash
+   pnpm run seed
+   ```
 
-### 4. Synchronize Prisma Schema
-
-Push the latest database models into PostgreSQL and generate the typed Prisma Client:
-
-```bash
-# Push schema structure to PostgreSQL
-pnpm run db:push
-
-# Generate Prisma Client library
-pnpm run db:generate
-```
-
----
-
-### 5. Seed Sample Database
-
-Populate your database with comprehensive mock data (administrators, landlords, rooms, contracts, unpaid invoices, meter readings, grievances, shifts):
-
-```bash
-pnpm run seed
-```
+4. **Launch development servers:**
+   Run both Backend (Port 3001) and Frontend (Port 3000) concurrently with a single command:
+   ```bash
+   pnpm run dev
+   ```
+   *(Alternatively, run them in separate terminal sessions: `pnpm run dev:be` for NestJS in watch mode, and `pnpm run dev:fe` for Next.js App Router)*
 
 ---
 
-### 6. Launch Development Servers
+#### 🐳 Option B: Full Docker Development Stack (All-in-Docker)
+> **Zero host setup required.** Runs the entire application stack (PostgreSQL, Redis, pgAdmin, Backend NestJS, and Frontend Next.js) inside Docker containers with source code bind-mounts for real-time live reloading.
 
-Run both the NestJS Backend and Next.js Frontend concurrently with a single command:
+1. **Launch the entire development stack:**
+   ```bash
+   # Build & run in foreground (streams live container logs)
+   pnpm run docker:dev     # or: docker compose up --build
 
-```bash
-pnpm run dev
-```
+   # Or run in background (detached mode)
+   pnpm run docker:dev:d   # or: docker compose up -d --build
+   ```
 
-Or start each service in separate terminal sessions:
+2. **Database synchronization inside Docker:**
+   When running the Docker dev stack for the first time, synchronize schema and seed data via:
+   ```bash
+   # Push schema to the Docker PostgreSQL container
+   pnpm run db:push
 
-```bash
-# Terminal 1: NestJS API server (Watch mode, Port 3001)
-pnpm run dev:be
+   # Seed mock data
+   pnpm run seed
+   ```
 
-# Terminal 2: Next.js Web application (Port 3000)
-pnpm run dev:fe
-```
+3. **Helpful Docker management commands:**
+   ```bash
+   pnpm run docker:logs     # View aggregate logs from all services
+   pnpm run docker:logs:be  # Stream Backend logs only
+   pnpm run docker:logs:fe  # Stream Frontend logs only
+   pnpm run docker:ps       # View status of running containers
+   pnpm run docker:down     # Gracefully stop all containers
+   pnpm run docker:clean    # Stop and delete containers + volume data (Factory Reset)
+   ```
 
 ---
 
@@ -290,6 +308,44 @@ pnpm run dev:fe
 | **pgAdmin 4** | [http://localhost:5050](http://localhost:5050) | Credentials: `admin@gmail.com` / `admin123` |
 | **PostgreSQL Database** | `localhost:5432` | User: `dormio`, Database: `dormio_db`, Password: `dormio123` |
 | **Redis Cache / BullMQ** | `localhost:6379` | Password: `redis123` |
+
+---
+
+## 🛠 NPM / PNPM Script Reference
+
+| Command | Description |
+| :--- | :--- |
+| **Development** | |
+| `pnpm run dev` | Runs both NestJS Backend and Next.js Frontend concurrently with hot-reload |
+| `pnpm run dev:be` | Runs NestJS Backend in watch mode on port 3001 |
+| `pnpm run dev:fe` | Runs Next.js Frontend development server on port 3000 |
+| **Database & Prisma** | |
+| `pnpm run db:push` | Fast-sync Prisma schema directly to PostgreSQL (no migration files generated) |
+| `pnpm run db:migrate` | Runs Prisma schema migrations for developmental incremental changes |
+| `pnpm run db:generate` | Regenerates typed Prisma Client library after schema modifications |
+| `pnpm run seed` | Seeds complete development mock dataset (41 tables, contracts, invoices, users) |
+| `pnpm run seed:prod` | Safe idempotent seed for production (subscription tiers, admin accounts) |
+| `pnpm run db:studio` | Launches web-based Prisma Studio GUI at `http://localhost:5555` |
+| `pnpm run db:reset` | Drops database, executes migrations from scratch, and runs seeder |
+| **Docker Development** | |
+| `pnpm run docker:db` | Starts PostgreSQL, Redis, and pgAdmin containers in background |
+| `pnpm run docker:up` | Starts local infrastructure services |
+| `pnpm run docker:dev` | Builds and runs entire application stack in Docker with volume hot-reloading |
+| `pnpm run docker:dev:d` | Runs entire Docker dev stack in detached background mode |
+| `pnpm run docker:down` | Gracefully stops all local Docker containers |
+| `pnpm run docker:logs` | Streams real-time Docker compose log output |
+| `pnpm run docker:logs:be` | Streams real-time Backend container logs |
+| `pnpm run docker:logs:fe` | Streams real-time Frontend container logs |
+| `pnpm run docker:clean` | Stops containers and purges volumes (resets local database) |
+| **Production Deployment (Low-RAM VPS Workflow)** | |
+| `pnpm run deploy:be` | Builds production Backend image (`linux/amd64`) and exports `dormio-backend.tar` |
+| `pnpm run deploy:fe` | Builds production Frontend image (`linux/amd64`) and exports `dormio-frontend.tar` |
+| `pnpm run deploy:all` | Builds both Backend & Frontend and exports both `.tar` archives |
+| **Testing & Quality** | |
+| `pnpm run test:be` | Executes all Jest unit tests in the backend |
+| `pnpm run test:be:cov` | Runs backend unit tests and generates coverage report |
+| `pnpm run lint` | Runs ESLint across both frontend and backend |
+| `pnpm run format` | Runs Prettier code formatting on all TypeScript and TSX files |
 
 ---
 

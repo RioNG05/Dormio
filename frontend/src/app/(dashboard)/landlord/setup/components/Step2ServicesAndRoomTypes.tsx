@@ -225,6 +225,7 @@ export function Step2ServicesAndRoomTypes({
 
       <Form.Actions align="between" className="pt-2">
         <Button
+          size='md'
           variant="outline"
           onClick={onBack}
           leftIcon={<ChevronLeft />}
@@ -232,6 +233,7 @@ export function Step2ServicesAndRoomTypes({
           {t('landlordSetupBackToStep1')}
         </Button>
         <Button
+          size='md'
           disabled={!isValid}
           onClick={onNext}
           rightIcon={<ChevronRight />}
