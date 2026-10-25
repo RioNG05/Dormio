@@ -54,6 +54,33 @@ export interface BankInfoState {
   accountName: string
 }
 
+export interface AmenityItem {
+  id: string
+  name: string
+  checked: boolean
+  key?: string
+  isCustom?: boolean
+}
+
+export const DEFAULT_AMENITIES: Omit<AmenityItem, 'id'>[] = [
+  { name: 'WiFi', checked: true, key: 'WiFi' },
+  { name: 'Điều hòa', checked: true, key: 'AirConditioner' },
+  { name: 'Nóng lạnh', checked: true, key: 'WaterHeater' },
+  { name: 'Tủ lạnh', checked: true, key: 'Refrigerator' },
+  { name: 'Máy giặt', checked: true, key: 'WashingMachine' },
+  { name: 'Giường', checked: true, key: 'Bed' },
+  { name: 'Tủ quần áo', checked: true, key: 'Wardrobe' },
+  { name: 'Kệ bếp', checked: true, key: 'KitchenShelf' },
+  { name: 'WC riêng', checked: true, key: 'PrivateBathroom' },
+  { name: 'Ban công', checked: false, key: 'Balcony' },
+  { name: 'Tivi', checked: false, key: 'Tv' },
+  { name: 'Bảo vệ', checked: true, key: 'SecurityGuard' },
+  { name: 'Khóa vân tay', checked: true },
+  { name: 'Chỗ để xe', checked: true },
+  { name: 'Camera an ninh', checked: true },
+  { name: 'Thang máy', checked: false },
+]
+
 export const MAX_FREE_TIER_ROOMS = 10
 
 export const POPULAR_BANKS = [

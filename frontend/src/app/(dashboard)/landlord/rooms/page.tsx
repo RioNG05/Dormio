@@ -920,8 +920,10 @@ export default function RoomsPage() {
               description={t('landlordRoomsEmptyDesc')}
               action={
                 <Button
+                  variant='accent'
+                  size='md'
                   onClick={() => setIsBulkModalOpen(true)}
-                  leftIcon={<Sparkles />}
+                  leftIcon={<ListFilterPlus />}
                 >
                   {t('landlordRoomsBulkGenerateBtn')}
                 </Button>

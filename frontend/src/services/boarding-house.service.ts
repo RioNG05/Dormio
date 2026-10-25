@@ -113,6 +113,7 @@ export interface SetupBoardingHousePayload {
   totalFloor?: number
   builtAt: string
   thumbnail?: string
+  amenities?: string[]
   services?: SetupServicePayload[]
   roomTypes: SetupRoomTypePayload[]
   rooms: SetupRoomsPayload

@@ -317,6 +317,16 @@ export class SetupBoardingHouseDto {
   @IsUrl({}, { message: 'thumbnail must be a valid URL' })
   thumbnail?: string
 
+  @ApiPropertyOptional({
+    example: ['WiFi', 'Air Conditioner', 'Water Heater'],
+    description: 'Boarding house amenities list',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  amenities?: string[]
+
   // ── Step 2: Services + Room Types ────────────────────────────────────────
 
   @ApiPropertyOptional({
