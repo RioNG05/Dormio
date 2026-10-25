@@ -5,10 +5,10 @@ export class JobPositionDto {
   @ApiProperty({ example: 'c6f9e8a0-2f3b-4e1a-9f5e-7a8b9c0d1e2f' })
   id: string
 
-  @ApiProperty({ example: 'Quản lý tòa nhà' })
+  @ApiProperty({ example: 'Building Manager' })
   name: string
 
-  @ApiPropertyOptional({ example: 'Quản lý vận hành và khách thuê', nullable: true })
+  @ApiPropertyOptional({ example: 'Operations management and tenant support', nullable: true })
   description?: string | null
 
   @ApiPropertyOptional({ example: 3 })
@@ -28,7 +28,7 @@ export class StaffItemDto {
   @ApiProperty({ example: 'u1u2u3u4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
   userId: string
 
-  @ApiProperty({ example: 'Nguyễn Văn Bảo' })
+  @ApiProperty({ example: 'Nguyen Van Bao' })
   fullName: string
 
   @ApiProperty({ example: '0901234567' })
@@ -43,10 +43,10 @@ export class StaffItemDto {
   @ApiProperty({ example: 'c6f9e8a0-2f3b-4e1a-9f5e-7a8b9c0d1e2f' })
   positionId: string
 
-  @ApiProperty({ example: 'Quản lý tòa nhà' })
+  @ApiProperty({ example: 'Building Manager' })
   positionName: string
 
-  @ApiPropertyOptional({ example: 'Quản lý và giám sát cơ sở vật chất', nullable: true })
+  @ApiPropertyOptional({ example: 'Facility management and supervision', nullable: true })
   positionDescription?: string | null
 
   @ApiProperty({ enum: AssignmentStatus, example: AssignmentStatus.active })
@@ -114,7 +114,7 @@ export class SearchUserItemDto {
   @ApiProperty({ example: 'u1u2u3u4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
   id: string
 
-  @ApiProperty({ example: 'Nguyễn Văn Bảo' })
+  @ApiProperty({ example: 'Nguyen Van Bao' })
   fullName: string
 
   @ApiProperty({ example: '0901234567' })
@@ -160,6 +160,6 @@ export class OnboardStaffResponseDto {
   })
   generatedPassword?: string
 
-  @ApiProperty({ example: 'Thêm nhân viên thành công' })
+  @ApiProperty({ example: 'Employee added successfully' })
   message: string
 }

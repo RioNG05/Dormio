@@ -405,7 +405,7 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
     it('should throw NotFoundException if employee profile does not exist', async () => {
       prisma.employee.findUnique.mockResolvedValue(null)
       await expect(service.getStaffMonthlySummary('unknown-user', '2026-09')).rejects.toThrow(
-        'Không tìm thấy hồ sơ nhân viên',
+        'Staff profile not found',
       )
     })
   })
@@ -414,7 +414,7 @@ describe('Staff Attendance (UC-S-01 & UC-S-02)', () => {
     it('should throw NotFoundException if employee profile does not exist', async () => {
       prisma.employee.findUnique.mockResolvedValue(null)
       await expect(service.getStaffAttendanceHistory('unknown-user', {})).rejects.toThrow(
-        'Không tìm thấy hồ sơ nhân viên',
+        'Staff profile not found',
       )
     })
 

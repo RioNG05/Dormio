@@ -29,9 +29,9 @@ export function Step4BankAccount({
     <section className="space-y-6 animate-in fade-in duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Bank Account Input Form */}
-        <div className="lg:col-span-7 rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold">
+        <div className="lg:col-span-7 rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex items-center gap-3 border-b border-line pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
@@ -61,11 +61,8 @@ export function Step4BankAccount({
                   {POPULAR_BANKS.map(bName => (
                     <Button
                       key={bName}
-                      type="button"
-                      size="sm"
                       variant={bankInfo.bankName === bName ? 'primary' : 'outline'}
                       onClick={() => onChangeBankInfo(prev => ({ ...prev, bankName: bName }))}
-                      className="h-7 px-2.5 text-[11px]"
                     >
                       {bName}
                     </Button>
@@ -102,9 +99,9 @@ export function Step4BankAccount({
               className="uppercase font-bold"
             />
 
-            <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-xs text-zinc-600 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-zinc-800">
-                <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-surface border border-line text-xs text-muted space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-foreground">
+                <Info className="w-4 h-4 text-primary shrink-0" />
                 <Text as="span" size="xs" weight="bold" color="default">
                   {t('landlordSetupBankStepNote')}
                 </Text>
@@ -118,17 +115,17 @@ export function Step4BankAccount({
 
         {/* Right Column: Live VietQR Card Preview */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <CreditCard className="w-4 h-4 text-[#2AC1BC]" />
+          <div className="rounded-3xl border border-line bg-card p-6 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 border-b border-line pb-3">
+              <CreditCard className="w-4 h-4 text-primary" />
               <Text as="h3" size="sm" weight="black" color="default">
                 {t('landlordSetupBankCardPreviewTitle')}
               </Text>
             </div>
 
             <div className="p-6 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 text-white rounded-3xl border border-zinc-800 space-y-4 text-center shadow-xl relative overflow-hidden w-full">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#2AC1BC]/10 rounded-full blur-xl pointer-events-none" />
-              <QrCode className="w-16 h-16 text-[#2AC1BC] mx-auto relative z-10 animate-pulse" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-xl pointer-events-none" />
+              <QrCode className="w-16 h-16 text-primary mx-auto relative z-10 animate-pulse" />
               <div className="relative z-10 space-y-1">
                 <Text as="h4" size="sm" weight="black" color="white">
                   {bankInfo.bankName || 'MB Bank / Vietcombank'}
@@ -169,21 +166,18 @@ export function Step4BankAccount({
       {/* Step 4 Navigation / Final Submit */}
       <Form.Actions align="between" className="pt-2">
         <Button
-          type="button"
           variant="outline"
           disabled={isSubmitting}
           onClick={onBack}
-          leftIcon={<ChevronLeft className="w-4 h-4" />}
+          leftIcon={<ChevronLeft />}
         >
           {t('landlordSetupBackToStep3')}
         </Button>
         <Button
-          type="button"
-          variant="primary"
           disabled={isSubmitting || !isValid}
           isLoading={isSubmitting}
           onClick={onSubmit}
-          leftIcon={<Check className="w-4 h-4" />}
+          leftIcon={<Check />}
         >
           {t('landlordSetupSubmit')}
         </Button>

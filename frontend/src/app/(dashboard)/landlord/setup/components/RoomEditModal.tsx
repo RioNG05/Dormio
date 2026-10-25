@@ -44,13 +44,13 @@ export function RoomEditModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-zinc-100 space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-3xl bg-card p-6 shadow-2xl border border-line space-y-5 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-start justify-between border-b border-zinc-100 pb-4">
+        <div className="flex items-start justify-between border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-bold shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
               <Layers className="w-5 h-5" />
             </div>
             <div>
@@ -66,7 +66,7 @@ export function RoomEditModal({
                     as="span"
                     variant="badge"
                     color="brand-dark"
-                    className="bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/20"
+                    className="bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20"
                   >
                     {t('landlordSetupPreviewCustomBadge')}
                   </Text>
@@ -80,13 +80,11 @@ export function RoomEditModal({
             </div>
           </div>
           <Button
-            type="button"
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 w-8 h-8 rounded-lg"
           >
-            <X className="w-4 h-4" />
+            <X />
           </Button>
         </div>
 
@@ -193,15 +191,12 @@ export function RoomEditModal({
         </div>
 
         {/* Modal Actions */}
-        <Form.Actions align="between" className="border-t border-zinc-100 pt-4">
+        <Form.Actions align="between" className="border-t border-line pt-4">
           <div>
             {isCustomized && (
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
                 onClick={onResetToDefault}
-                className="text-xs font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-8 px-2.5"
               >
                 {t('landlordSetupRoomModalResetToDefault')}
               </Button>
@@ -209,15 +204,12 @@ export function RoomEditModal({
           </div>
           <div className="flex items-center gap-2.5">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
               onClick={onClose}
-              className="h-9 px-4"
             >
               {t('landlordSetupRoomModalCancel')}
             </Button>
-            <Button type="button" variant="primary" size="sm" onClick={onSave} className="h-9 px-5">
+            <Button onClick={onSave} >
               {t('landlordSetupRoomModalSave')}
             </Button>
           </div>

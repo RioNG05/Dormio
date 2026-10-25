@@ -35,6 +35,13 @@ const mockPrisma = {
     count: jest.fn(),
     findMany: jest.fn(),
     findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+  roomOccupant: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
   },
   tenantContract: {
     create: jest.fn(),
@@ -104,6 +111,7 @@ describe('ContractsService', () => {
     it('should return null when no pending platform deposit exists', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({ id: roomId, roomNumber: '101' })
       mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
 
       const result = await service.getPendingPlatformDeposit(boardingHouseId, roomId)
       expect(result).toBeNull()
@@ -203,6 +211,7 @@ describe('ContractsService', () => {
     it('should throw BadRequestException if no platform deposit exists', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1' })
       mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
 
       await expect(
         service.createPlatformContract(landlordId, boardingHouseId, dto),
@@ -253,7 +262,6 @@ describe('ContractsService', () => {
         data: expect.objectContaining({
           contractId: 'contract-new-1',
           tenantId: 'tenant-1',
-          isPrimary: true,
         }),
       })
       // Verify deposit was UPDATED with contractId (Rule 8)
@@ -327,6 +335,7 @@ describe('ContractsService', () => {
     it('should create active contract, manual deposit, contract doc, and audit logs (Flow B)', async () => {
       mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1' })
       mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
 
       mockAuthService.findOrCreateByPhone.mockResolvedValue({
         id: 'tenant-user-2',
@@ -415,8 +424,7 @@ describe('ContractsService', () => {
           room: { id: 'r-1', roomNumber: '101', floor: 1, roomType: { name: 'Studio' } },
           tenantContracts: [
             {
-              isPrimary: true,
-              tenant: {
+                  tenant: {
                 id: 'u-1',
                 username: 'Khách A',
                 phoneNumber: '0901234567',
@@ -619,7 +627,6 @@ describe('ContractsService', () => {
       tenantContracts: [
         {
           id: 'tc-1',
-          isPrimary: true,
           tenant: {
             id: 'tenant-1',
             username: 'nguyenvana',
@@ -713,6 +720,123 @@ describe('ContractsService', () => {
 
       expect(result.filename).toContain('Hop-dong-phong-101')
       expect(result.html).toContain('HỢP ĐỒNG THUÊ PHÒNG TRỌ')
+    })
+  })
+
+  // ─── updateContract ────────────────────────────────────────────────────────
+
+  describe('updateContract', () => {
+    const existingContract = {
+      id: 'c-1',
+      roomId: 'room-1',
+      startDate: new Date('2026-01-01'),
+      endDate: new Date('2026-12-31'),
+      rentPrice: new Prisma.Decimal(3000000),
+      monthlyPaymentDate: 5,
+      status: 'active',
+      note: 'Hợp đồng ban đầu',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      deposit: {
+        id: 'dep-1',
+        amount: new Prisma.Decimal(3000000),
+        status: 'paid',
+        type: 'contract',
+        recordedManually: true,
+      },
+      room: {
+        id: 'room-1',
+        roomNumber: '101',
+        floor: 1,
+        roomType: { name: 'VIP' },
+        roomServices: [],
+      },
+      tenantContracts: [],
+      contractDocuments: [],
+      invoices: [],
+    }
+
+    it('should throw BusinessNotFoundException if contract does not exist', async () => {
+      mockPrisma.contract.findFirst.mockResolvedValue(null)
+
+      await expect(
+        service.updateContract('landlord-1', 'bh-1', 'c-999', {
+          reason: 'Lý do cập nhật',
+        }),
+      ).rejects.toThrow('Contract does not exist or does not belong to this property.')
+    })
+
+    it('should throw BusinessBadRequestException if contract is canceled', async () => {
+      mockPrisma.contract.findFirst.mockResolvedValue({
+        ...existingContract,
+        status: 'canceled',
+      })
+
+      await expect(
+        service.updateContract('landlord-1', 'bh-1', 'c-1', {
+          reason: 'Lý do cập nhật',
+        }),
+      ).rejects.toThrow('Cannot modify a canceled contract.')
+    })
+
+    it('should update contract fields and deposit with AuditLog in same transaction', async () => {
+      mockPrisma.contract.findFirst
+        .mockResolvedValueOnce(existingContract)
+        .mockResolvedValueOnce({
+          ...existingContract,
+          rentPrice: new Prisma.Decimal(3500000),
+          deposit: {
+            ...existingContract.deposit,
+            amount: new Prisma.Decimal(3500000),
+          },
+        })
+      mockPrisma.contract.update.mockResolvedValue({
+        ...existingContract,
+        rentPrice: new Prisma.Decimal(3500000),
+      })
+      mockPrisma.deposit.update.mockResolvedValue({
+        ...existingContract.deposit,
+        amount: new Prisma.Decimal(3500000),
+      })
+
+      const result = await service.updateContract(
+        'landlord-1',
+        'bh-1',
+        'c-1',
+        {
+          rentPrice: 3500000,
+          depositAmount: 3500000,
+          monthlyPaymentDate: 10,
+          reason: 'Điều chỉnh giá phòng và tiền cọc',
+        },
+        '192.168.1.1',
+      )
+
+      expect(mockPrisma.$transaction).toHaveBeenCalled()
+      expect(mockPrisma.contract.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'c-1' },
+          data: expect.objectContaining({
+            monthlyPaymentDate: 10,
+          }),
+        }),
+      )
+      expect(mockPrisma.deposit.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'dep-1' },
+        }),
+      )
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            action: 'update',
+            entityType: 'CONTRACT',
+            entityId: 'c-1',
+            userId: 'landlord-1',
+          }),
+        }),
+      )
+      expect(result.id).toBe('c-1')
+      expect(result.rentPrice).toBe(3500000)
     })
   })
 })

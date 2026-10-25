@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { CreateGrievanceDto } from './dto/create-grievance.dto'
 import {
@@ -29,16 +29,29 @@ export class GrievancesService {
   ) {}
 
   /**
-   * Helper to resolve active tenant contract (optional)
+   * Helper to resolve active tenant contract (supports multi-room scoping via contractId or roomId)
    */
-  async findActiveTenantContract(tenantId: string) {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId,
-        contract: {
-          status: 'active',
-        },
+  async findActiveTenantContract(tenantId: string, contractId?: string, roomId?: string) {
+    const whereClause: any = {
+      tenantId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    if (roomId) {
+      whereClause.contract = {
+        status: 'active',
+        roomId,
+      }
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -50,6 +63,7 @@ export class GrievancesService {
           },
         },
       },
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     return tenantContract?.contract || null
@@ -91,7 +105,7 @@ export class GrievancesService {
     dto: CreateGrievanceDto,
   ): Promise<GrievanceDetailResponseDto> {
     this.logger.log(`User ${tenantId} creating grievance (${dto.type}): "${dto.title}"`)
-    const contract = await this.findActiveTenantContract(tenantId)
+    const contract = await this.findActiveTenantContract(tenantId, dto.contractId, dto.roomId)
 
     const boardingHouseId = contract?.room?.boardingHouseId || null
     const roomId = contract?.roomId || null
@@ -228,7 +242,7 @@ export class GrievancesService {
     })
 
     if (!grievance) {
-      throw new NotFoundException('Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.')
+      throw new NotFoundException('Grievance not found or you do not have permission to access it.')
     }
 
     return {
@@ -247,7 +261,7 @@ export class GrievancesService {
       createdAt: img.createdAt.toISOString(),
     }))
 
-    const tenantName = g.tenant?.userIdentification?.fullName || g.tenant?.username || 'Khách thuê'
+    const tenantName = g.tenant?.userIdentification?.fullName || g.tenant?.username || 'Tenant'
 
     const landlordName =
       g.boardingHouse?.owner?.userIdentification?.fullName ||
@@ -537,7 +551,7 @@ export class GrievancesService {
           senderId: adminId,
           type: 'grievance_resolved',
           isRead: false,
-          content: `Đơn khiếu nại "${existing.title}" của bạn đã được giải quyết: ${resolutionNote}`,
+          content: `Your grievance "${existing.title}" has been resolved: ${resolutionNote}`,
         },
       })
 
@@ -607,7 +621,7 @@ export class GrievancesService {
           senderId: adminId,
           type: 'grievance_rejected',
           isRead: false,
-          content: `Đơn khiếu nại "${existing.title}" của bạn đã bị từ chối: ${resolutionNote}`,
+          content: `Your grievance "${existing.title}" has been rejected: ${resolutionNote}`,
         },
       })
 
@@ -616,4 +630,322 @@ export class GrievancesService {
 
     return this.mapToAdminGrievanceDto(updated)
   }
+
+  // ─── LANDLORD & STAFF SUPPORT ──────────────────────────────────────────
+
+  private async getLandlordBoardingHouseIds(landlordId: string): Promise<string[]> {
+    const houses = await this.prisma.boardingHouse.findMany({
+      where: { ownerId: landlordId },
+      select: { id: true },
+    });
+    return houses.map(h => h.id);
+  }
+
+  private async getStaffBoardingHouseIds(staffUserId: string): Promise<string[]> {
+    const employee = await this.prisma.employee.findUnique({
+      where: { userId: staffUserId },
+      select: { id: true },
+    });
+    if (!employee) return [];
+
+    const assignments = await this.prisma.employeeAssignment.findMany({
+      where: { employeeId: employee.id, status: 'active' },
+      select: { boardingHouseId: true },
+    });
+    return Array.from(new Set(assignments.map(a => a.boardingHouseId)));
+  }
+
+  private async queryScopedGrievances(
+    allowedHouseIds: string[],
+    query: AdminGrievanceQueryDto,
+  ): Promise<AdminGrievanceListResponseDto> {
+    const emptyResponse: AdminGrievanceListResponseDto = {
+      success: true,
+      items: [],
+      total: 0,
+      page: query.page || 1,
+      limit: query.limit || 10,
+      totalPages: 1,
+      counts: {
+        pending: 0,
+        inProgress: 0,
+        resolved: 0,
+        rejected: 0,
+        urgent: 0,
+      },
+    };
+
+    if (allowedHouseIds.length === 0) {
+      return emptyResponse;
+    }
+
+    let targetHouseIds = allowedHouseIds;
+    if (query.boardingHouseId) {
+      if (!allowedHouseIds.includes(query.boardingHouseId)) {
+        return emptyResponse;
+      }
+      targetHouseIds = [query.boardingHouseId];
+    }
+
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      boardingHouseId: { in: targetHouseIds },
+    };
+
+    if (query.type && query.type !== ('all' as any)) {
+      where.type = query.type;
+    }
+
+    if (query.status && query.status !== GrievanceStatusFilter.ALL) {
+      where.status = query.status as GrievenceStatus;
+    }
+
+    if (query.priority && query.priority !== GrievancePriorityFilter.ALL) {
+      where.priority = query.priority as GrievencePriority;
+    }
+
+    if (query.search && query.search.trim()) {
+      const s = query.search.trim();
+      where.AND = [
+        {
+          OR: [
+            { title: { contains: s, mode: 'insensitive' } },
+            { description: { contains: s, mode: 'insensitive' } },
+            { tenant: { username: { contains: s, mode: 'insensitive' } } },
+            { tenant: { phoneNumber: { contains: s } } },
+            { boardingHouse: { name: { contains: s, mode: 'insensitive' } } },
+            { room: { roomNumber: { contains: s } } },
+          ],
+        },
+      ];
+    }
+
+    let orderBy: any = [{ updatedAt: 'desc' }, { createdAt: 'desc' }];
+    if (query.status === GrievanceStatusFilter.PENDING || (!query.status && !where.status)) {
+      orderBy = [{ priority: 'desc' }, { createdAt: 'asc' }];
+    }
+
+    const [items, total, pendingCount, inProgressCount, resolvedCount, rejectedCount, urgentCount] =
+      await Promise.all([
+        this.prisma.grievance.findMany({
+          where,
+          include: {
+            tenant: {
+              include: { userIdentification: true },
+            },
+            boardingHouse: {
+              include: {
+                owner: {
+                  include: { userIdentification: true },
+                },
+              },
+            },
+            room: true,
+            images: true,
+            resolvedByUser: true,
+          },
+          orderBy,
+          skip,
+          take: limit,
+        }),
+        this.prisma.grievance.count({ where }),
+        this.prisma.grievance.count({
+          where: { boardingHouseId: { in: targetHouseIds }, status: 'pending' },
+        }),
+        this.prisma.grievance.count({
+          where: { boardingHouseId: { in: targetHouseIds }, status: 'in_progress' },
+        }),
+        this.prisma.grievance.count({
+          where: { boardingHouseId: { in: targetHouseIds }, status: 'resolved' },
+        }),
+        this.prisma.grievance.count({
+          where: { boardingHouseId: { in: targetHouseIds }, status: 'rejected' },
+        }),
+        this.prisma.grievance.count({
+          where: {
+            boardingHouseId: { in: targetHouseIds },
+            priority: 'high',
+            status: { in: ['pending', 'in_progress'] },
+          },
+        }),
+      ]);
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    return {
+      success: true,
+      items: items.map(g => this.mapToAdminGrievanceDto(g)),
+      total,
+      page,
+      limit,
+      totalPages,
+      counts: {
+        pending: pendingCount,
+        inProgress: inProgressCount,
+        resolved: resolvedCount,
+        rejected: rejectedCount,
+        urgent: urgentCount,
+      },
+    };
+  }
+
+  // ─── LANDLORD METHODS ──────────────────────────────────────────────────
+
+  async getLandlordGrievanceQueue(
+    landlordId: string,
+    query: AdminGrievanceQueryDto,
+  ): Promise<AdminGrievanceListResponseDto> {
+    this.logger.log(`Landlord ${landlordId} fetching grievances queue`);
+    const houseIds = await this.getLandlordBoardingHouseIds(landlordId);
+    return this.queryScopedGrievances(houseIds, query);
+  }
+
+  async getLandlordGrievanceById(
+    landlordId: string,
+    id: string,
+  ): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`Landlord ${landlordId} fetching grievance ${id}`);
+    const grievance = await this.prisma.grievance.findUnique({
+      where: { id },
+      include: {
+        tenant: { include: { userIdentification: true } },
+        boardingHouse: {
+          include: { owner: { include: { userIdentification: true } } },
+        },
+        room: true,
+        images: true,
+        resolvedByUser: true,
+      },
+    });
+
+    if (!grievance) {
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+    }
+
+    const houseIds = await this.getLandlordBoardingHouseIds(landlordId);
+    if (!grievance.boardingHouseId || !houseIds.includes(grievance.boardingHouseId)) {
+      throw new ForbiddenException('You do not have permission to view this grievance.');
+    }
+
+    return this.mapToAdminGrievanceDto(grievance);
+  }
+
+  async updateLandlordGrievanceStatusInProgress(
+    landlordId: string,
+    id: string,
+  ): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`Landlord ${landlordId} moving grievance ${id} to in_progress`);
+    const houseIds = await this.getLandlordBoardingHouseIds(landlordId);
+
+    const existing = await this.prisma.grievance.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+    }
+    if (!existing.boardingHouseId || !houseIds.includes(existing.boardingHouseId)) {
+      throw new ForbiddenException('You do not have permission to modify this grievance.');
+    }
+
+    return this.updateGrievanceStatusInProgress(landlordId, id);
+  }
+
+  async resolveLandlordGrievance(
+    landlordId: string,
+    id: string,
+    dto: ResolveGrievanceDto,
+  ): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`Landlord ${landlordId} resolving grievance ${id}`);
+    const houseIds = await this.getLandlordBoardingHouseIds(landlordId);
+
+    const existing = await this.prisma.grievance.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+    }
+    if (!existing.boardingHouseId || !houseIds.includes(existing.boardingHouseId)) {
+      throw new ForbiddenException('You do not have permission to resolve this grievance.');
+    }
+
+    return this.resolveGrievance(landlordId, id, dto);
+  }
+
+  // ─── STAFF METHODS ─────────────────────────────────────────────────────
+
+  async getStaffGrievanceQueue(
+    staffUserId: string,
+    query: AdminGrievanceQueryDto,
+  ): Promise<AdminGrievanceListResponseDto> {
+    this.logger.log(`Staff ${staffUserId} fetching grievances queue`);
+    const houseIds = await this.getStaffBoardingHouseIds(staffUserId);
+    return this.queryScopedGrievances(houseIds, query);
+  }
+
+  async getStaffGrievanceById(
+    staffUserId: string,
+    id: string,
+  ): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`Staff ${staffUserId} fetching grievance ${id}`);
+    const grievance = await this.prisma.grievance.findUnique({
+      where: { id },
+      include: {
+        tenant: { include: { userIdentification: true } },
+        boardingHouse: {
+          include: { owner: { include: { userIdentification: true } } },
+        },
+        room: true,
+        images: true,
+        resolvedByUser: true,
+      },
+    });
+
+    if (!grievance) {
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+    }
+
+    const houseIds = await this.getStaffBoardingHouseIds(staffUserId);
+    if (!grievance.boardingHouseId || !houseIds.includes(grievance.boardingHouseId)) {
+      throw new ForbiddenException('You do not have permission to view this grievance.');
+    }
+
+    return this.mapToAdminGrievanceDto(grievance);
+  }
+
+  async updateStaffGrievanceStatusInProgress(
+    staffUserId: string,
+    id: string,
+  ): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`Staff ${staffUserId} moving grievance ${id} to in_progress`);
+    const houseIds = await this.getStaffBoardingHouseIds(staffUserId);
+
+    const existing = await this.prisma.grievance.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+    }
+    if (!existing.boardingHouseId || !houseIds.includes(existing.boardingHouseId)) {
+      throw new ForbiddenException('You do not have permission to modify this grievance.');
+    }
+
+    return this.updateGrievanceStatusInProgress(staffUserId, id);
+  }
+
+  async resolveStaffGrievance(
+    staffUserId: string,
+    id: string,
+    dto: ResolveGrievanceDto,
+  ): Promise<AdminGrievanceItemDto> {
+    this.logger.log(`Staff ${staffUserId} resolving grievance ${id}`);
+    const houseIds = await this.getStaffBoardingHouseIds(staffUserId);
+
+    const existing = await this.prisma.grievance.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Grievance with ID "${id}" not found.`);
+    }
+    if (!existing.boardingHouseId || !houseIds.includes(existing.boardingHouseId)) {
+      throw new ForbiddenException('You do not have permission to resolve this grievance.');
+    }
+
+    return this.resolveGrievance(staffUserId, id, dto);
+  }
+
 }

@@ -7,11 +7,12 @@ import { Phone, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
-import { getHighestRoleRedirect } from '@/utils'
+import { getHighestRoleRedirect, resolveErrorMessage } from '@/utils'
 import { TextInput, Button, Checkbox, Form, Text } from '@/components/ui'
 
 export default function LoginPage() {
   const t = useTranslations('auth')
+  const tErrors = useTranslations('errors')
   const router = useRouter()
   const { loginWithToken } = useAuth()
 
@@ -54,6 +55,7 @@ export default function LoginPage() {
         email: user.email || '',
         phone: user.phoneNumber,
         role: displayRole,
+        avatar: user.avatarUrl,
         mustChangePassword: !!mustChangePassword,
       })
 
@@ -70,12 +72,8 @@ export default function LoginPage() {
         router.push(targetUrl)
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : t('authLoginErrGeneric')
-      if (message.includes('invalid_credentials') || message.includes('401')) {
-        setError(t('authLoginErrInvalidCredentials'))
-      } else {
-        setError(message)
-      }
+      const message = resolveErrorMessage(err, tErrors, t('authLoginErrGeneric'))
+      setError(message)
     } finally {
       setIsLoading(false)
     }
@@ -85,7 +83,7 @@ export default function LoginPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Header */}
       <div className="space-y-2">
-        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-foreground tracking-tight">
           {t('authLoginWelcomeTitle')}
         </Text>
         <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
@@ -94,40 +92,28 @@ export default function LoginPage() {
       </div>
 
       {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
-      <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60 gap-1">
+      <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
         <Button
-          type="button"
-          variant={method === 'phone' ? 'primary' : 'ghost'}
-          size="sm"
+          variant={method === 'phone' ? undefined : 'ghost'}
           onClick={() => {
             setMethod('phone')
             setAccountIdentifier('')
             setError(null)
           }}
-          leftIcon={<Phone className="w-3.5 h-3.5" />}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${
-            method === 'phone'
-              ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-800'
-          }`}
+          leftIcon={<Phone />}
+          className="flex-1"
         >
           {t('authLoginMethodPhone')}
         </Button>
         <Button
-          type="button"
-          variant={method === 'email' ? 'primary' : 'ghost'}
-          size="sm"
+          variant={method === 'email' ? undefined : 'ghost'}
           onClick={() => {
             setMethod('email')
             setAccountIdentifier('')
             setError(null)
           }}
-          leftIcon={<Mail className="w-3.5 h-3.5" />}
-          className={`flex-1 rounded-xl text-xs font-extrabold ${
-            method === 'email'
-              ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-              : 'text-zinc-500 hover:text-zinc-800'
-          }`}
+          leftIcon={<Mail />}
+          className="flex-1"
         >
           {t('authLoginMethodEmail')}
         </Button>
@@ -138,7 +124,7 @@ export default function LoginPage() {
         {/* Phone or Email input */}
         <TextInput
           label={method === 'phone' ? t('authLoginPhoneLabel') : t('authLoginEmailLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           type={method === 'phone' ? 'tel' : 'email'}
           required
           placeholder={
@@ -148,18 +134,18 @@ export default function LoginPage() {
           onChange={e => setAccountIdentifier(e.target.value)}
           leftIcon={
             method === 'phone' ? (
-              <Phone className="w-4 h-4 text-zinc-400" />
+              <Phone className="w-4 h-4 text-muted" />
             ) : (
-              <Mail className="w-4 h-4 text-zinc-400" />
+              <Mail className="w-4 h-4 text-muted" />
             )
           }
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* Password Field & Forgot Link */}
         <TextInput
           label={t('authLoginPasswordLabel')}
-          labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+          labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
           labelRight={
             <Link href="/forgot-password">
               <Text
@@ -167,7 +153,7 @@ export default function LoginPage() {
                 variant="body"
                 size="xs"
                 weight="extrabold"
-                className="text-[#2AC1BC] hover:underline cursor-pointer"
+                className="text-primary hover:underline cursor-pointer"
               >
                 {t('authForgotPassword')}
               </Text>
@@ -178,19 +164,19 @@ export default function LoginPage() {
           placeholder={t('authLoginPassPlaceholder')}
           value={password}
           onChange={e => setPassword(e.target.value)}
-          leftIcon={<Lock className="w-4 h-4 text-zinc-400" />}
+          leftIcon={<Lock className="w-4 h-4 text-muted" />}
           rightIcon={
             <Button
-              type="button"
+              size="icon-xs"
               variant="ghost"
               onClick={() => setShowPassword(!showPassword)}
-              className="h-7 w-7 p-0 text-zinc-400 hover:text-zinc-700 hover:bg-transparent"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
+              title={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
-          className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+          className="rounded-2xl py-3 border-line focus:border-primary"
         />
 
         {/* Remember me Checkbox */}
@@ -213,13 +199,12 @@ export default function LoginPage() {
 
         {/* Submit Button reusing Base Form.Actions & Button */}
         <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
-          <Button
+          <Button fullWidth
             type="submit"
-            variant="primary"
             size="lg"
             isLoading={isLoading}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+            rightIcon={<ArrowRight />}
+            className="sm:text-sm"
           >
             {t('authLoginSubmitBtn')}
           </Button>
@@ -236,7 +221,7 @@ export default function LoginPage() {
               variant="body"
               size="xs"
               weight="extrabold"
-              className="text-[#2AC1BC] hover:underline"
+              className="text-primary hover:underline"
             >
               {t('authRegisterNow')}
             </Text>

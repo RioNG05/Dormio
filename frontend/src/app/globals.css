@@ -1,114 +1,162 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-/* Tắt chế độ dark mode tự động của Tailwind v4, bắt buộc dùng nền trắng */
+/* Enable class-based dark mode via .dark on html element (managed by next-themes) */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
+
   --background: #ffffff;
   --foreground: #18181b;
+  --surface: #f8fafb;
+  --card: #ffffff;
+  --card-hover: #f1f5f9;
+  --input-bg: #ffffff;
 
-  /* Brand */
+  /* Brand — Primary Teal (#2AC1BC) & Secondary Orange (#FF6B35) */
   --primary: #2AC1BC;
-  --primary-hover: #72b3a3;
-  --accent: #FF6B35;
-  --accent-hover: #d55e23;
+  --primary-hover: #22a8a3;
+  --primary-soft: rgba(42, 193, 188, 0.1);
+  --primary-border: rgba(42, 193, 188, 0.3);
 
-  /* Semantic — dùng thống nhất toàn trang */
-  --danger: #ea580c;
-  /* orange-600: nút xóa / hủy / chấm dứt */
-  --danger-hover: #c2410c;
-  /* orange-700 */
-  --danger-bg: #fff7ed;
-  /* orange-50 */
-  --danger-border: #fed7aa;
-  /* orange-200 */
+  --accent: #FF6B35;
+  --accent-hover: #e55a25;
+  --accent-soft: rgba(255, 107, 53, 0.1);
+  --accent-border: rgba(255, 107, 53, 0.3);
+
+  /* Semantic tokens */
+  --danger: #e11d48;
+  --danger-hover: #be123c;
+  --danger-soft: #fff1f2;
+  --danger-subtle: #fecdd3;
 
   --deposit: #9333ea;
-  /* purple-600: đặt cọc */
   --deposit-hover: #7e22ce;
-  /* purple-700 */
-  --deposit-bg: #faf5ff;
-  /* purple-50 */
-  --deposit-border: #e9d5ff;
-  /* purple-200 */
+  --deposit-soft: #faf5ff;
+  --deposit-subtle: #e9d5ff;
 
-  --success: var(--primary);
-  /* dùng màu primary cho trạng thái tốt */
-  --success-bg: #f0fcfa;
-  /* primary/10 tương đương */
-  --success-border: #b3e0d8;
-  /* primary/30 tương đương */
+  --success: #059669;
+  --success-soft: #ecfdf5;
+  --success-subtle: #a7f3d0;
 
   --vacant: #0ea5e9;
-  /* sky-500: phòng trống */
   --vacant-hover: #0284c7;
-  /* sky-600 */
-  --vacant-bg: #f0f9ff;
-  /* sky-50 */
-  --vacant-border: #bae6fd;
-  /* sky-200 */
+  --vacant-soft: #f0f9ff;
+  --vacant-subtle: #bae6fd;
 
   --warning: #d97706;
-  /* amber-600: sắp hết hạn / cảnh báo */
-  --warning-bg: #fffbeb;
-  /* amber-50 */
-  --warning-border: #fde68a;
-  /* amber-200 */
+  --warning-soft: #fffbeb;
+  --warning-subtle: #fde68a;
 
   --info: #2563eb;
-  /* blue-600: thông tin */
-  --info-bg: #eff6ff;
-  /* blue-50 */
-  --info-border: #bfdbfe;
-  /* blue-200 */
+  --info-soft: #eff6ff;
+  --info-subtle: #bfdbfe;
 
-  --muted: #71717a;
-  /* zinc-500: chữ phụ */
-  --border: #e4e4e7;
-  /* zinc-200: border mặc định */
-  --surface: #fafafa;
-  /* zinc-50: nền card phụ */
+  --muted: #64748b;
+  --line: #e2e8f0;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Deep Teal-Slate dark surfaces harmonized with #2AC1BC and #FF6B35 */
+  --background: #0b1116;
+  --foreground: #f1f5f9;
+  --surface: #101920;
+  --card: #152028;
+  --card-hover: #1c2b36;
+  --input-bg: #0e161c;
+
+  /* Brand — Luminous Teal & Warm Coral Orange for dark surfaces */
+  --primary: #2AC1BC;
+  --primary-hover: #38d6d0;
+  --primary-soft: rgba(42, 193, 188, 0.16);
+  --primary-border: rgba(42, 193, 188, 0.38);
+
+  --accent: #FF6B35;
+  --accent-hover: #ff8252;
+  --accent-soft: rgba(255, 107, 53, 0.16);
+  --accent-border: rgba(255, 107, 53, 0.38);
+
+  /* Semantic tokens adapted for dark mode */
+  --danger: #fb7185;
+  --danger-hover: #f43f5e;
+  --danger-soft: rgba(244, 63, 94, 0.14);
+  --danger-subtle: rgba(251, 113, 133, 0.3);
+
+  --deposit: #c084fc;
+  --deposit-hover: #a855f7;
+  --deposit-soft: rgba(147, 51, 234, 0.15);
+  --deposit-subtle: rgba(192, 132, 252, 0.32);
+
+  --success: #34d399;
+  --success-soft: rgba(16, 185, 129, 0.14);
+  --success-subtle: rgba(52, 211, 153, 0.3);
+
+  --vacant: #38bdf8;
+  --vacant-hover: #0ea5e9;
+  --vacant-soft: rgba(14, 165, 233, 0.15);
+  --vacant-subtle: rgba(56, 189, 248, 0.32);
+
+  --warning: #fbbf24;
+  --warning-soft: rgba(217, 119, 6, 0.15);
+  --warning-subtle: rgba(251, 191, 36, 0.32);
+
+  --info: #60a5fa;
+  --info-soft: rgba(37, 99, 235, 0.15);
+  --info-subtle: rgba(96, 165, 250, 0.32);
+
+  --muted: #94a3b8;
+  --line: #22323f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-input: var(--input-bg);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-subtle: var(--primary-border);
+
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-subtle: var(--accent-border);
 
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
-  --color-danger-bg: var(--danger-bg);
-  --color-danger-border: var(--danger-border);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-subtle: var(--danger-subtle);
 
   --color-deposit: var(--deposit);
   --color-deposit-hover: var(--deposit-hover);
-  --color-deposit-bg: var(--deposit-bg);
-  --color-deposit-border: var(--deposit-border);
+  --color-deposit-soft: var(--deposit-soft);
+  --color-deposit-subtle: var(--deposit-subtle);
 
   --color-success: var(--success);
-  --color-success-bg: var(--success-bg);
-  --color-success-border: var(--success-border);
+  --color-success-soft: var(--success-soft);
+  --color-success-subtle: var(--success-subtle);
 
   --color-vacant: var(--vacant);
   --color-vacant-hover: var(--vacant-hover);
-  --color-vacant-bg: var(--vacant-bg);
-  --color-vacant-border: var(--vacant-border);
+  --color-vacant-soft: var(--vacant-soft);
+  --color-vacant-subtle: var(--vacant-subtle);
 
   --color-warning: var(--warning);
-  --color-warning-bg: var(--warning-bg);
-  --color-warning-border: var(--warning-border);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-subtle: var(--warning-subtle);
 
   --color-info: var(--info);
-  --color-info-bg: var(--info-bg);
-  --color-info-border: var(--info-border);
-
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-surface: var(--surface);
+  --color-info-soft: var(--info-soft);
+  --color-info-subtle: var(--info-subtle);
 
   --font-sans: var(--font-be-vietnam-pro);
 }
@@ -119,7 +167,20 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Utility: hide scrollbar nhưng vẫn scroll được */
+/* Smooth gradual transition when toggling between Light and Dark mode */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transitioning,
+  html.theme-transitioning *:not(.theme-switcher-icon),
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+    transition-duration: 500ms !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Utility: hide scrollbar while keeping scroll functionality */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -140,20 +201,20 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(161, 161, 170, 0.35);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(161, 161, 170, 0.65);
+  background: rgba(42, 193, 188, 0.65);
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(161, 161, 170, 0.35) transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
 }
 
-/* Utility: table chuẩn */
+/* Utility: standard data table */
 .data-table {
   width: 100%;
   text-align: left;
@@ -163,7 +224,7 @@ body {
 
 .data-table thead {
   background: var(--surface);
-  border-bottom: 2px solid var(--border);
+  border-bottom: 2px solid var(--line);
 }
 
 .data-table thead th {
@@ -176,7 +237,7 @@ body {
 }
 
 .data-table tbody tr {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   transition: background 0.15s;
 }
 
@@ -185,7 +246,7 @@ body {
 }
 
 .data-table tbody tr:hover {
-  background: var(--surface);
+  background: var(--card-hover);
 }
 
 .data-table tbody td {

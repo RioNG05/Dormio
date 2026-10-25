@@ -28,6 +28,7 @@ import {
   Text,
   TextInput,
   TextareaInput,
+  EmptyState,
 } from '@/components/ui'
 import { MapAddressPicker, type SelectedMapAddress } from '@/components/landlord/MapAddressPicker'
 import { CoverPhotoUpload } from '@/components/landlord/CoverPhotoUpload'
@@ -341,24 +342,16 @@ export default function LandlordSettingsPage() {
   if (!isBuildingsLoading && buildings.length === 0) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4">
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-8 sm:p-12 text-center shadow-xs space-y-5">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
-            <Building2 className="w-8 h-8" />
-          </div>
-          <div className="space-y-1">
-            <Text as="h2" variant="heading" size="xl">
-              {t('landlordSettingsNoProperty')}
-            </Text>
-            <Text as="p" variant="subtitle" color="secondary">
-              {t('landlordSettingsPageSubtitle')}
-            </Text>
-          </div>
-          <div className="pt-2">
-            <Button variant="primary" onClick={() => router.push('/landlord/setup')}>
-              + {t('landlordSetupTitle')}
-            </Button>
-          </div>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title={t('landlordSettingsNoProperty')}
+          description={t('landlordSettingsPageSubtitle')}
+          action={{
+            label: `+ ${t('landlordSetupTitle')}`,
+            onClick: () => router.push('/landlord/setup'),
+          }}
+          bordered
+        />
       </div>
     )
   }
@@ -373,7 +366,7 @@ export default function LandlordSettingsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <Text as="h1" className="text-2xl font-black text-zinc-900 tracking-tight">
+          <Text as="h1" className="text-2xl font-black text-foreground tracking-tight">
             {t('landlordSettingsTitle')}
           </Text>
           <Text as="p" variant="subtitle" color="secondary">
@@ -403,17 +396,17 @@ export default function LandlordSettingsPage() {
       {/* Quick Overview of Existing Property System Information */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Status Card */}
-        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+        <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordSettingsTabBuildingInfo')}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-soft text-success border border-success-subtle">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {t('landlordSettingsStatusActive')}
             </span>
           </div>
-          <Text as="p" className="text-base font-black text-zinc-900 truncate">
+          <Text as="p" className="text-base font-black text-foreground truncate">
             {formData.name || activeBuilding?.name || t('landlordSettingsTabBuildingInfo')}
           </Text>
           <Text as="p" size="xs" color="secondary" className="truncate">
@@ -422,17 +415,17 @@ export default function LandlordSettingsPage() {
         </div>
 
         {/* Total Rooms Card */}
-        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+        <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordSettingsTotalRoomsLabel')}
             </span>
-            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+            <div className="p-1.5 rounded-lg bg-info-soft text-info">
               <Bed className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <Text as="p" className="text-2xl font-black text-zinc-900">
+            <Text as="p" className="text-2xl font-black text-foreground">
               {roomCount}
             </Text>
             <Text as="span" size="xs" color="secondary">
@@ -441,24 +434,24 @@ export default function LandlordSettingsPage() {
           </div>
           <Link
             href="/landlord/rooms"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#2AC1BC] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
           >
             {t('landlordSettingsManageRoomsBtn')} <ExternalLink className="w-3 h-3" />
           </Link>
         </div>
 
         {/* Services Card */}
-        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+        <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordServicesTitle')}
             </span>
-            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+            <div className="p-1.5 rounded-lg bg-warning-soft text-warning">
               <Zap className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <Text as="p" className="text-2xl font-black text-zinc-900">
+            <Text as="p" className="text-2xl font-black text-foreground">
               {servicesList.length}
             </Text>
             <Text as="span" size="xs" color="secondary">
@@ -467,24 +460,24 @@ export default function LandlordSettingsPage() {
           </div>
           <Link
             href="/landlord/services"
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#2AC1BC] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
           >
             {t('landlordSettingsManageServicesBtn')} <ExternalLink className="w-3 h-3" />
           </Link>
         </div>
 
         {/* Room Types Card */}
-        <div className="bg-white rounded-2xl p-4 border border-zinc-200/80 shadow-xs space-y-2">
+        <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-muted uppercase tracking-wider">
               {t('landlordSettingsRoomTypesSection')}
             </span>
-            <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600">
+            <div className="p-1.5 rounded-lg bg-deposit-soft text-deposit">
               <Layers className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <Text as="p" className="text-2xl font-black text-zinc-900">
+            <Text as="p" className="text-2xl font-black text-foreground">
               {roomTypesList.length}
             </Text>
             <Text as="span" size="xs" color="secondary">
@@ -498,8 +491,8 @@ export default function LandlordSettingsPage() {
       </div>
 
       {isLoadingHouse ? (
-        <div className="rounded-3xl border border-zinc-200/80 bg-white p-12 text-center shadow-xs flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
+        <div className="rounded-3xl border border-line bg-card p-12 text-center shadow-xs flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <Text variant="body" color="secondary">
             {t('landlordSettingsLoadingProperty')}
           </Text>
@@ -541,7 +534,7 @@ export default function LandlordSettingsPage() {
                 value={contactPhone}
                 readOnly
                 disabled
-                leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
+                leftIcon={<Phone className="w-4 h-4 text-muted" />}
               />
 
               {/* Total Floors */}
@@ -699,16 +692,14 @@ export default function LandlordSettingsPage() {
             title={t('landlordSettingsServicesSection')}
             description={t('landlordSettingsServicesDesc')}
             actions={
-              <Link href="/landlord/services">
-                <Button type="button" variant="outline" size="sm">
-                  {t('landlordSettingsManageServicesBtn')}
-                </Button>
-              </Link>
+              <Button href="/landlord/services" variant="outline">
+                {t('landlordSettingsManageServicesBtn')}
+              </Button>
             }
             divider
           >
             {servicesList.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center">
+              <div className="rounded-2xl border border-dashed border-line p-6 text-center">
                 <Text variant="caption" color="secondary">
                   {t('landlordSettingsNoServices')}
                 </Text>
@@ -718,17 +709,17 @@ export default function LandlordSettingsPage() {
                 {servicesList.map(service => (
                   <div
                     key={service.id}
-                    className="p-3.5 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 space-y-1.5"
+                    className="p-3.5 rounded-2xl bg-surface/70 border border-line space-y-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-sm text-zinc-900 truncate">
+                      <span className="font-bold text-sm text-foreground truncate">
                         {service.name}
                       </span>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           service.isMetered
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-warning-soft text-warning'
+                            : 'bg-info-soft text-info'
                         }`}
                       >
                         {service.isMetered
@@ -737,8 +728,8 @@ export default function LandlordSettingsPage() {
                       </span>
                     </div>
                     <div className="flex items-baseline justify-between text-xs">
-                      <span className="text-zinc-500 font-medium">Đơn giá:</span>
-                      <span className="font-extrabold text-[#2AC1BC]">
+                      <span className="text-muted font-medium">Đơn giá:</span>
+                      <span className="font-extrabold text-primary">
                         {Number(service.price).toLocaleString('vi-VN')} đ / {service.unit}
                       </span>
                     </div>
@@ -756,7 +747,7 @@ export default function LandlordSettingsPage() {
             divider
           >
             {roomTypesList.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-zinc-200 p-6 text-center">
+              <div className="rounded-2xl border border-dashed border-line p-6 text-center">
                 <Text variant="caption" color="secondary">
                   {t('landlordSettingsNoRoomTypes')}
                 </Text>
@@ -766,14 +757,14 @@ export default function LandlordSettingsPage() {
                 {roomTypesList.map(rt => (
                   <div
                     key={rt.id}
-                    className="p-3.5 rounded-2xl bg-zinc-50/70 border border-zinc-200/80 space-y-1"
+                    className="p-3.5 rounded-2xl bg-surface/70 border border-line space-y-1"
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-purple-500" />
-                      <span className="font-bold text-sm text-zinc-900">{rt.name}</span>
+                      <span className="font-bold text-sm text-foreground">{rt.name}</span>
                     </div>
                     {rt.description && (
-                      <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed pl-4">
+                      <p className="text-xs text-muted line-clamp-2 leading-relaxed pl-4">
                         {rt.description}
                       </p>
                     )}
@@ -784,23 +775,21 @@ export default function LandlordSettingsPage() {
           </Form.Section>
 
           {/* Form Actions */}
-          <Form.Actions align="between" className="pt-4 border-t border-zinc-100">
+          <Form.Actions align="between" className="pt-4 border-t border-line">
             <Button
-              type="button"
               variant="outline"
               onClick={handleReset}
               disabled={!hasChanges || isSaving}
-              leftIcon={<RotateCcw className="w-4 h-4" />}
+              leftIcon={<RotateCcw />}
             >
               {t('landlordSettingsResetBtn')}
             </Button>
 
             <Button
               type="submit"
-              variant="primary"
               disabled={!hasChanges || isSaving}
               isLoading={isSaving}
-              leftIcon={<Save className="w-4 h-4" />}
+              leftIcon={<Save />}
             >
               {isSaving ? t('landlordSettingsSaving') : t('landlordSettingsBtnSaveSettings')}
             </Button>

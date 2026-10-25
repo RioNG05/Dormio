@@ -84,6 +84,14 @@ export const userService = {
   },
 
   /**
+   * Update profile avatar for authenticated user
+   */
+  async updateAvatar(avatarUrl: string): Promise<{ avatarUrl: string }> {
+    const res = await api.patch<any>('/v1/users/me/avatar', { avatarUrl })
+    return res?.data ?? res
+  },
+
+  /**
    * Change account password for authenticated user
    */
   async changePassword(data: ChangePasswordPayload): Promise<ChangePasswordResponse> {

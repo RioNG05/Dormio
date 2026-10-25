@@ -579,11 +579,9 @@ export default function SetupWizardPage() {
             </Text>
           </div>
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={handleCancel}
-            className="self-start sm:self-auto text-xs font-bold text-zinc-500 hover:text-zinc-800"
+            className="self-start sm:self-auto"
           >
             {t('landlordSetupCancel')}
           </Button>

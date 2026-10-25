@@ -1,12 +1,19 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common'
 import {
+  BusinessBadRequestException,
+  BusinessNotFoundException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
+import {
   ContractStatus,
+  OccupantStatus,
   Prisma,
   RoomStatus,
   SubscriptionPackage,
@@ -17,6 +24,7 @@ import { BulkGenerateRoomsDto } from './dto/bulk-generate-rooms.dto'
 import { CreateRoomDto } from './dto/create-room.dto'
 import {
   RoomDashboardContractDto,
+  RoomDashboardOccupantDto,
   RoomDashboardResponseDto,
 } from './dto/room-dashboard-response.dto'
 import { RoomQueryDto } from './dto/room-query.dto'
@@ -83,8 +91,14 @@ export class RoomsService {
 
     const totalToGenerate = dto.floorCount * dto.roomsPerFloor
     if (currentRoomCount + totalToGenerate > maxRoom) {
-      throw new BadRequestException(
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.TIER_ROOM_LIMIT_REACHED,
         `Cannot generate ${totalToGenerate} rooms. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
+        {
+          maxAllowed: maxRoom,
+          currentCount: currentRoomCount,
+          requiredCount: totalToGenerate,
+        },
       )
     }
 
@@ -250,6 +264,17 @@ export class RoomsService {
               service: true,
             },
           },
+          occupants: {
+            where: { status: OccupantStatus.active },
+            include: {
+              tenant: {
+                include: {
+                  userIdentification: true,
+                },
+              },
+            },
+            orderBy: { joinedAt: 'asc' },
+          },
         },
       }),
     ])
@@ -284,8 +309,13 @@ export class RoomsService {
     })
 
     if (currentRoomCount + 1 > maxRoom) {
-      throw new BadRequestException(
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.TIER_ROOM_LIMIT_REACHED,
         `Cannot create room. Your active subscription allows a maximum of ${maxRoom} rooms for this property (currently ${currentRoomCount}/${maxRoom}). Please upgrade your plan.`,
+        {
+          maxAllowed: maxRoom,
+          currentCount: currentRoomCount,
+        },
       )
     }
 
@@ -294,7 +324,8 @@ export class RoomsService {
       where: { id: dto.roomTypeId, boardingHouseId },
     })
     if (!roomType) {
-      throw new NotFoundException(
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_TYPE_NOT_FOUND,
         `RoomType with ID ${dto.roomTypeId} was not found for this property`,
       )
     }
@@ -416,6 +447,17 @@ export class RoomsService {
             service: true,
           },
         },
+        occupants: {
+          where: { status: OccupantStatus.active },
+          include: {
+            tenant: {
+              include: {
+                userIdentification: true,
+              },
+            },
+          },
+          orderBy: { joinedAt: 'asc' },
+        },
         contracts: {
           orderBy: { startDate: 'desc' },
           include: {
@@ -469,7 +511,7 @@ export class RoomsService {
           phoneNumber: tenant.phoneNumber,
           email: tenant.email,
           avatarUrl: tenant.avatarUrl,
-          isPrimary: tc.isPrimary,
+          isPrimary: true,
           hasIdentification: Boolean(ident),
           identityNumber: ident?.identityNumber ?? null,
           dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
@@ -502,10 +544,84 @@ export class RoomsService {
       }
     }
 
+    // Map active room occupants
+    const activeContractTenantIds = new Set(
+      activeContract?.tenantContracts.map(tc => tc.tenant?.id).filter(Boolean) || [],
+    )
+
+    let occupants: RoomDashboardOccupantDto[] = (room.occupants || []).map(occ => {
+      const tenant = occ.tenant
+      const ident = tenant?.userIdentification
+      const isContracted = Boolean(tenant?.id && activeContractTenantIds.has(tenant.id))
+      return {
+        id: occ.id,
+        tenantId: tenant?.id || occ.tenantId,
+        fullName: ident?.fullName || tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+        phoneNumber: tenant?.phoneNumber || '',
+        email: tenant?.email ?? null,
+        avatarUrl: tenant?.avatarUrl ?? null,
+        hasAccount: Boolean(tenant?.id),
+        hasIdentification: Boolean(ident),
+        identityNumber: ident?.identityNumber ?? null,
+        dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
+        gender: ident?.gender ?? null,
+        status: occ.status,
+        joinedAt: occ.joinedAt ? occ.joinedAt.toISOString() : new Date().toISOString(),
+        note: occ.note ?? null,
+        hasContract: isContracted,
+        contractId: isContracted ? activeContract?.id : null,
+      }
+    })
+
+    // Auto-heal & fallback: If room has active contract with tenants but no room_occupants rows exist yet
+    if (occupants.length === 0 && activeContract && activeContract.tenantContracts.length > 0) {
+      occupants = activeContract.tenantContracts.map(tc => {
+        const tenant = tc.tenant
+        const ident = tenant?.userIdentification
+        return {
+          id: tc.id,
+          tenantId: tenant?.id || tc.tenantId,
+          fullName: ident?.fullName || tenant?.username || tenant?.phoneNumber || 'Khách thuê',
+          phoneNumber: tenant?.phoneNumber || '',
+          email: tenant?.email ?? null,
+          avatarUrl: tenant?.avatarUrl ?? null,
+          hasAccount: Boolean(tenant?.id),
+          hasIdentification: Boolean(ident),
+          identityNumber: ident?.identityNumber ?? null,
+          dateOfBirth: ident?.dateOfBirth ? ident.dateOfBirth.toISOString() : null,
+          gender: ident?.gender ?? null,
+          status: OccupantStatus.active,
+          joinedAt: activeContract.startDate ? activeContract.startDate.toISOString() : new Date().toISOString(),
+          note: 'Khách thuê theo hợp đồng',
+          hasContract: true,
+          contractId: activeContract.id,
+        }
+      })
+
+      // Asynchronously heal database so subsequent queries find room_occupants
+      if (this.prisma.roomOccupant?.createMany) {
+        this.prisma.roomOccupant
+          .createMany({
+            data: activeContract.tenantContracts.map(tc => ({
+              boardingHouseId,
+              roomId,
+              tenantId: tc.tenantId,
+              status: OccupantStatus.active,
+              joinedAt: activeContract.startDate,
+              note: 'Khách thuê theo hợp đồng',
+            })),
+            skipDuplicates: true,
+          })
+          .catch(syncErr => {
+            this.logger.warn(`Could not auto-sync room occupants for room ${roomId}: ${syncErr}`)
+          })
+      }
+    }
+
     // Map rental history from all contracts
     const rentalHistory = room.contracts.map(c => {
       const primaryTenantContract =
-        c.tenantContracts.find(tc => tc.isPrimary) ?? c.tenantContracts[0]
+        c.tenantContracts[0]
       const primaryTenant = primaryTenantContract?.tenant
       const primaryTenantName =
         primaryTenant?.userIdentification?.fullName ||
@@ -575,6 +691,7 @@ export class RoomsService {
         updatedAt: room.updatedAt?.toISOString() ?? null,
       },
       services,
+      occupants,
       currentContract: currentContractDto,
       rentalHistory,
       invoices,

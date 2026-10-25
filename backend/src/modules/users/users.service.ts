@@ -242,4 +242,32 @@ export class UsersService {
       bankAccount: saved,
     }
   }
+
+  /**
+   * Updates user profile avatar URL.
+   */
+  async updateAvatar(userId: string, avatarUrl: string) {
+    this.logger.log(`Updating avatar for user ${userId}`)
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    })
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`)
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+      select: { id: true, avatarUrl: true },
+    })
+
+    this.logger.log(`Successfully updated avatar for user ${userId}`)
+
+    return {
+      avatarUrl: updatedUser.avatarUrl,
+    }
+  }
 }
+

@@ -4,32 +4,16 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Plus,
   Search,
-  MoreHorizontal,
-  X,
   Home,
   Building2,
   Target,
   FileSignature,
   Receipt,
-  ChevronDown,
-  Eye,
-  Trash2,
   Edit,
   AlertTriangle,
   Sparkles,
-  MapPin,
-  UploadCloud,
-  FileSpreadsheet,
-  Grid,
-  List,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Loader2,
-  CheckCircle2,
-  ShieldAlert,
-  AlertCircle,
+  ListFilterPlus,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
@@ -37,6 +21,7 @@ import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
@@ -44,7 +29,16 @@ import {
   Checkbox,
   Form,
   SearchInput,
+  Text,
+  Modal,
+  ViewModeToggle,
+  Card,
+  TableRow,
+  EmptyState,
+  type TextColor,
 } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
+import { ImageUpload } from '@/components/ImageUpload'
 import { formatCurrency } from '@/utils'
 import {
   bulkGenerateRooms,
@@ -53,21 +47,106 @@ import {
   getRoomMetadata,
   getRooms,
   updateRoom,
-  type RoomItem,
   type RoomMetadata,
-  type RoomServiceItem,
-  type RoomTypeItem,
 } from '@/services/room.service'
 
-const AMENITY_LABELS: Record<string, { vi: string; en: string }> = {
-  WiFi: { vi: 'WiFi', en: 'WiFi' },
-  'Điều hòa': { vi: 'Điều hòa', en: 'Air Conditioner' },
-  'Nóng lạnh': { vi: 'Nóng lạnh', en: 'Water Heater' },
-  'Tủ quần áo': { vi: 'Tủ quần áo', en: 'Wardrobe' },
-  Giường: { vi: 'Giường', en: 'Bed' },
-  'Kệ bếp': { vi: 'Kệ bếp', en: 'Kitchen Shelf' },
-  'Ban công': { vi: 'Ban công', en: 'Balcony' },
-  'WC riêng': { vi: 'WC riêng', en: 'Private Bathroom' },
+interface StatChipItem {
+  key: string
+  label: string
+  value: React.ReactNode
+  icon: React.ReactNode
+  containerClassName: string
+  labelColor?: TextColor
+  labelClassName?: string
+  valueColor?: TextColor
+  valueClassName?: string
+}
+
+const BACKEND_TO_DISPLAY_STATUS: Record<string, string> = {
+  available: 'Trống',
+  occupied: 'Đang thuê',
+  maintainace: 'Bảo trì',
+  maintenance: 'Bảo trì',
+  deposited: 'Đặt cọc',
+}
+
+const DISPLAY_TO_BACKEND_STATUS: Record<string, string> = {
+  'Trống': 'available',
+  'Đang thuê': 'occupied',
+  'Bảo trì': 'maintainace',
+  'Đặt cọc': 'deposited',
+}
+
+function formatDisplayStatus(backendStatus?: string): string {
+  if (!backendStatus) return 'Trống'
+  return BACKEND_TO_DISPLAY_STATUS[backendStatus] || backendStatus
+}
+
+function formatBackendStatus(displayStatus?: string): string {
+  if (!displayStatus) return 'available'
+  return DISPLAY_TO_BACKEND_STATUS[displayStatus] || displayStatus
+}
+
+function parseRoomsResponse(res: any): any[] {
+  if (Array.isArray(res?.data)) return res.data
+  if (Array.isArray(res?.data?.data)) return res.data.data
+  if (Array.isArray(res)) return res
+  return []
+}
+
+interface RoomStatusVisual {
+  translationKey: string
+  gridContainer: string
+  gridText: string
+  gridBadge: string
+  tableBadge: string
+}
+
+const ROOM_STATUS_CONFIG: Record<string, RoomStatusVisual> = {
+  'Đang thuê': {
+    translationKey: 'landlordRoomsStatusOccupied',
+    gridContainer: 'bg-primary/10 border-primary/30 hover:border-primary',
+    gridText: 'text-primary',
+    gridBadge: 'text-primary bg-primary/15',
+    tableBadge: 'bg-primary/15 text-primary',
+  },
+  'Bảo trì': {
+    translationKey: 'landlordRoomsStatusMaintenance',
+    gridContainer: 'bg-accent/10 border-accent/30 hover:border-accent',
+    gridText: 'text-accent',
+    gridBadge: 'text-accent bg-accent/15',
+    tableBadge: 'bg-accent/15 text-accent',
+  },
+  'Đặt cọc': {
+    translationKey: 'landlordRoomsStatusReserved',
+    gridContainer: 'bg-deposit/10 border-deposit/30 hover:border-deposit',
+    gridText: 'text-deposit',
+    gridBadge: 'text-deposit bg-deposit/15',
+    tableBadge: 'bg-deposit-soft text-deposit',
+  },
+  'Trống': {
+    translationKey: 'landlordRoomsStatusVacant',
+    gridContainer: 'bg-vacant/10 border-vacant/30 hover:border-vacant',
+    gridText: 'text-info',
+    gridBadge: 'text-info bg-vacant/15',
+    tableBadge: 'bg-info-soft text-info',
+  },
+}
+
+const DEFAULT_ROOM_STATUS_VISUAL = {
+  gridContainer: 'bg-card border-line hover:border-line',
+  gridText: 'text-foreground',
+  gridBadge: 'text-muted bg-card-hover text-center',
+  tableBadge: 'bg-card-hover text-muted',
+}
+
+const SERVICE_NAME_TO_KEY: Record<string, string> = {
+  'Điện': 'landlordRoomsServiceElectricity',
+  'Nước': 'landlordRoomsServiceWater',
+  'WiFi': 'landlordRoomsServiceWifi',
+  'Vệ sinh': 'landlordRoomsServiceCleaning',
+  'Rác': 'landlordRoomsServiceTrash',
+  'Bảo vệ': 'landlordRoomsServiceSecurity',
 }
 
 export default function RoomsPage() {
@@ -77,12 +156,38 @@ export default function RoomsPage() {
   const { currentLocale } = useLanguage()
   const [isMounted, setIsMounted] = useState(false)
 
-  // View mode & pagination according to Rule 9
+  // Status visual metadata and localized label helper
+  const getRoomStatusMeta = useCallback(
+    (status: string) => {
+      const config = ROOM_STATUS_CONFIG[status]
+      if (!config) {
+        return {
+          label: status,
+          ...DEFAULT_ROOM_STATUS_VISUAL,
+        }
+      }
+      return {
+        label: t(config.translationKey as any),
+        gridContainer: config.gridContainer,
+        gridText: config.gridText,
+        gridBadge: config.gridBadge,
+        tableBadge: config.tableBadge,
+      }
+    },
+    [t],
+  )
+
+  // Localized service name helper
+  const getServiceLabel = useCallback(
+    (serviceName: string) => {
+      const translationKey = SERVICE_NAME_TO_KEY[serviceName]
+      return translationKey ? t(translationKey as any) : serviceName
+    },
+    [t],
+  )
+
+  // View mode (Grid view by default)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(6) // Default 6 for grid, 10 for table
-  const [windowStart, setWindowStart] = useState(1)
-  const [selectedRoomIds, setSelectedRoomIds] = useState<string[]>([])
 
   // Metadata from backend
   const [metadata, setMetadata] = useState<RoomMetadata | null>(null)
@@ -129,6 +234,7 @@ export default function RoomsPage() {
   const [formMaxOccupants, setFormMaxOccupants] = useState('2')
   const [formStatus, setFormStatus] = useState('available')
   const [formImageUrl, setFormImageUrl] = useState('')
+  const [isImageUploading, setIsImageUploading] = useState(false)
   const [formPrice, setFormPrice] = useState('3.500.000')
   const [formNotes, setFormNotes] = useState('')
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
@@ -136,6 +242,12 @@ export default function RoomsPage() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
   const [isSingleSubmitting, setIsSingleSubmitting] = useState(false)
   const [singleError, setSingleError] = useState<string | null>(null)
+
+  const getSingleSubmitLabel = useCallback(() => {
+    if (isSingleSubmitting) return t('landlordRoomsSingleBtnSaving')
+    if (selectedRoomId) return t('landlordRoomsSingleBtnSaveEdit')
+    return t('landlordRoomsSingleBtnSaveCreate')
+  }, [isSingleSubmitting, selectedRoomId, t])
 
   // Bulk Generate form states
   const [bulkFloorCount, setBulkFloorCount] = useState<number>(3)
@@ -152,13 +264,8 @@ export default function RoomsPage() {
     setIsMounted(true)
   }, [])
 
-  // Sync default pageSize when viewMode changes (Rule 9: default Grid=6, Table=10)
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    setPageSize(mode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
-    setWindowStart(1)
-    setSelectedRoomIds([])
   }
 
   // Ensure buildings are loaded from backend on mount
@@ -190,28 +297,13 @@ export default function RoomsPage() {
       }
 
       // Map real rooms from backend safely
-      const rawRooms: any[] = Array.isArray(realRoomsRes?.data)
-        ? realRoomsRes.data
-        : Array.isArray((realRoomsRes as any)?.data?.data)
-          ? (realRoomsRes as any).data.data
-          : Array.isArray(realRoomsRes)
-            ? (realRoomsRes as any)
-            : []
+      const rawRooms = parseRoomsResponse(realRoomsRes)
 
       const mapped = rawRooms.map((r: any) => ({
         id: r.roomNumber,
         fullRoomId: r.id,
         floor: (r.floor !== undefined && r.floor !== null ? r.floor : 1).toString(),
-        status:
-          r.status === 'available'
-            ? 'Trống'
-            : r.status === 'occupied'
-              ? 'Đang thuê'
-              : r.status === 'maintainace'
-                ? 'Bảo trì'
-                : r.status === 'deposited'
-                  ? 'Đặt cọc'
-                  : r.status || 'Trống',
+        status: formatDisplayStatus(r.status),
         building: buildingId,
         buildingSeq: 1,
         contract: r.status === 'occupied' ? 'active' : 'none',
@@ -247,6 +339,7 @@ export default function RoomsPage() {
     setFormMaxOccupants('2')
     setFormStatus('available')
     setFormImageUrl('')
+    setIsImageUploading(false)
     setFormPrice('3.500.000')
     setFormNotes('')
     setSingleError(null)
@@ -287,17 +380,7 @@ export default function RoomsPage() {
     setFormFloor(room.floor || '1')
     setFormArea(room.area ? String(room.area).replace(/[^\d.]/g, '') : '25')
     setFormMaxOccupants(room.maxOccupants ? String(room.maxOccupants) : '2')
-    setFormStatus(
-      room.status === 'Trống'
-        ? 'available'
-        : room.status === 'Đang thuê'
-          ? 'occupied'
-          : room.status === 'Bảo trì'
-            ? 'maintainace'
-            : room.status === 'Đặt cọc'
-              ? 'deposited'
-              : room.status || 'available',
-    )
+    setFormStatus(formatBackendStatus(room.status))
     setFormImageUrl(room.imageUrl || '')
     setFormPrice(room.price || '3.500.000')
     setFormNotes(room.notes || '')
@@ -371,6 +454,7 @@ export default function RoomsPage() {
   // Handle single room submit
   const handleSingleRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isImageUploading) return
     setSingleError(null)
 
     if (!formRoomNumber.trim()) {
@@ -566,10 +650,6 @@ export default function RoomsPage() {
     }
   }
 
-  if (!isMounted) {
-    return null
-  }
-
   // Filter rooms
   const filteredRooms = rooms.filter(room => {
     const matchSearch = room.id.toLowerCase().includes(searchQuery.toLowerCase())
@@ -581,66 +661,21 @@ export default function RoomsPage() {
     return matchSearch && matchBuilding && matchStatus && matchContract && matchInvoice
   })
 
-  // Standardized Pagination calculations (Rule 9)
-  const totalItems = filteredRooms.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-  const safeCurrentPage = Math.min(currentPage, totalPages)
-  const startIndex = (safeCurrentPage - 1) * pageSize
-  const endIndex = Math.min(startIndex + pageSize, totalItems)
-  const paginatedRooms = filteredRooms.slice(startIndex, endIndex)
-
-  // Group paginated rooms by floor for Grid View
-  const groupedRooms = paginatedRooms.reduce(
-    (acc, room) => {
-      if (!acc[room.floor]) acc[room.floor] = []
-      acc[room.floor].push(room)
-      return acc
-    },
-    {} as Record<string, typeof rooms>,
-  )
-
-  const floors = Object.keys(groupedRooms).sort((a, b) => Number(b) - Number(a))
-
-  // 5-page window jumping according to Rule 9
-  const pageNumbers = Array.from(
-    { length: Math.min(5, totalPages - windowStart + 1) },
-    (_, i) => windowStart + i,
-  )
-
-  const handlePrevWindow = () => {
-    const newStart = Math.max(1, windowStart - 5)
-    setWindowStart(newStart)
-    setCurrentPage(newStart)
-  }
-
-  const handleNextWindow = () => {
-    if (windowStart + 5 <= totalPages) {
-      const newStart = windowStart + 5
-      setWindowStart(newStart)
-      setCurrentPage(newStart)
-    }
-  }
-
-  // Select-All applies to current page only (Rule 9)
-  const currentPageRoomIds = paginatedRooms.map(r => r.fullRoomId || r.id)
-  const isAllCurrentPageSelected =
-    currentPageRoomIds.length > 0 && currentPageRoomIds.every(id => selectedRoomIds.includes(id))
-  const isIndeterminate =
-    currentPageRoomIds.some(id => selectedRoomIds.includes(id)) && !isAllCurrentPageSelected
-
-  const toggleSelectAllCurrentPage = () => {
-    if (isAllCurrentPageSelected) {
-      setSelectedRoomIds(prev => prev.filter(id => !currentPageRoomIds.includes(id)))
-    } else {
-      setSelectedRoomIds(prev => Array.from(new Set([...prev, ...currentPageRoomIds])))
-    }
-  }
-
-  const toggleSelectRoom = (id: string) => {
-    setSelectedRoomIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
+  // Group all filtered rooms by floor for Grid View (defaults to displaying all rooms)
+  const groupedRooms = useMemo(() => {
+    return filteredRooms.reduce(
+      (acc, room) => {
+        if (!acc[room.floor]) acc[room.floor] = []
+        acc[room.floor].push(room)
+        return acc
+      },
+      {} as Record<string, typeof rooms>,
     )
-  }
+  }, [filteredRooms])
+
+  const floors = useMemo(() => {
+    return Object.keys(groupedRooms).sort((a, b) => Number(b) - Number(a))
+  }, [groupedRooms])
 
   const totalRoomsCount = rooms.length
   const occupiedCount = rooms.filter(r => r.status === 'Đang thuê').length
@@ -650,44 +685,132 @@ export default function RoomsPage() {
   const occupancyRate =
     totalRoomsCount > 0 ? ((occupiedCount / totalRoomsCount) * 100).toFixed(1) : '0.0'
 
+  const statChips: StatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordRoomsStatTotal'),
+        value: totalRoomsCount,
+        icon: <Home className="w-5 h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 transition-colors border-white/10 backdrop-blur-md w-full lg:w-[150px]',
+        labelColor: 'subtle',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'occupancy',
+        label: t('landlordRoomsOccupancy'),
+        value: `${occupancyRate}%`,
+        icon: <Target className="w-5 h-5 text-danger shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 transition-colors border-danger/30 backdrop-blur-md w-full lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'occupied',
+        label: t('landlordRoomsStatusOccupied'),
+        value: occupiedCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-primary/10 hover:bg-primary/20 transition-colors border-primary/30 backdrop-blur-md w-full lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'vacant',
+        label: t('landlordRoomsStatusVacant'),
+        value: vacantCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-vacant/10 hover:bg-vacant/20 transition-colors border-vacant/30 backdrop-blur-md w-full lg:w-[130px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'maintenance',
+        label: t('landlordRoomsStatusMaintenance'),
+        value: maintenanceCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-accent/10 hover:bg-accent/20 transition-colors border-accent/30 backdrop-blur-md w-full lg:w-[130px]',
+        labelClassName: 'text-accent',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+      {
+        key: 'reserved',
+        label: t('landlordRoomsStatusReserved'),
+        value: reservedCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-deposit shadow-[0_0_8px_rgba(139,92,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3 py-2 bg-deposit/10 hover:bg-deposit/20 transition-colors border-deposit/30 backdrop-blur-md w-full lg:w-[130px]',
+        labelClassName: 'text-purple-400',
+        valueColor: 'white',
+        valueClassName: 'text-sm sm:text-base leading-none mt-0.5',
+      },
+    ],
+    [
+      t,
+      totalRoomsCount,
+      occupancyRate,
+      occupiedCount,
+      vacantCount,
+      maintenanceCount,
+      reservedCount,
+    ],
+  )
+
+  if (!isMounted) {
+    return null
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
-            {t('landlordRoomsPageTitle')}
-          </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">{t('landlordRoomsPageSubtitle')}</p>
-        </div>
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
-          {/* Bulk Generate Trigger Button */}
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              resetBulkForm()
-              setIsBulkModalOpen(true)
-            }}
-            leftIcon={<Sparkles className="w-4 h-4 text-amber-700" />}
-            className="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-zinc-800"
-            title={t('landlordRoomsBulkGenerateTooltip')}
-          >
-            <span>{t('landlordRoomsBulkGenerateBtn')}</span>
-          </Button>
+      <DashboardPageHeader
+        title={t('landlordRoomsPageTitle')}
+        subtitle={t('landlordRoomsPageSubtitle')}
+        actions={
+          <>
+            {/* Bulk Generate Trigger Button */}
+            <Button
+              variant="accent"
+              size='md'
+              onClick={() => {
+                resetBulkForm()
+                setIsBulkModalOpen(true)
+              }}
+              leftIcon={<ListFilterPlus />}
+              title={t('landlordRoomsBulkGenerateTooltip')}
+            >
+              {t('landlordRoomsBulkGenerateBtn')}
+            </Button>
 
-          {/* Single Room Add Button */}
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleOpenCreateModal}
-            leftIcon={<Plus className="w-4 h-4" />}
-            className="w-full sm:w-auto"
-          >
-            {t('landlordRoomsAddRoomBtn')}
-          </Button>
-        </div>
-      </div>
+            {/* Single Room Add Button */}
+            <Button
+              size='md'
+              onClick={handleOpenCreateModal}
+              leftIcon={<Plus />}
+              className="sm:w-auto"
+            >
+              {t('landlordRoomsAddRoomBtn')}
+            </Button>
+          </>
+        }
+      />
 
       {/* Building Overview Banner */}
       <div className="bg-zinc-900 rounded-3xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden">
@@ -696,179 +819,58 @@ export default function RoomsPage() {
         </div>
 
         <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6">
-          <div className="space-y-3 max-w-xl w-full">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-                {activeBuilding.name}
-              </h2>
-              <span className="px-2.5 py-0.5 bg-[#2AC1BC]/20 text-[#2AC1BC] border border-[#2AC1BC]/30 text-[10px] font-black rounded-full uppercase tracking-wider shrink-0">
-                {t('landlordRoomsInOperation')}
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2.5 sm:px-3 sm:py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all w-full sm:w-auto">
-              <div className="flex items-center gap-2 min-w-0">
-                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate sm:whitespace-normal">
-                  {activeBuilding.address}
-                </span>
-              </div>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="self-end sm:self-auto px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-              >
-                <span>{t('landlordRoomsViewMap')}</span> &rarr;
-              </a>
-            </div>
-
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              {t('landlordRoomsBannerDesc')}
-            </p>
-          </div>
-
           {/* Stat Chips */}
-          <div className="flex flex-col items-end gap-2.5 sm:gap-3 w-full lg:w-auto mt-4 lg:mt-0">
-            <div className="grid grid-cols-2 lg:flex lg:flex-row lg:justify-end gap-2.5 sm:gap-3 w-full">
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md w-full lg:w-[140px]">
-                <Home className="w-5 h-5 text-zinc-400 shrink-0" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end items-center gap-2.5 sm:gap-3 w-full lg:w-auto mt-4 lg:mt-0">
+            {statChips.map(chip => (
+              <div
+                key={chip.key}
+                className={`flex items-center gap-2.5 sm:gap-3 rounded-2xl border ${chip.containerClassName}`}
+              >
+                {chip.icon}
                 <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-zinc-400 tracking-wider">
-                    {t('landlordRoomsStatTotal')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1">
-                    {totalRoomsCount}
-                  </span>
+                  <Text
+                    variant="overline"
+                    size="3xs"
+                    weight="bold"
+                    color={chip.labelColor}
+                    className={chip.labelClassName}
+                  >
+                    {chip.label}
+                  </Text>
+                  <Text
+                    weight="black"
+                    color={chip.valueColor}
+                    className={chip.valueClassName}
+                  >
+                    {chip.value}
+                  </Text>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md w-full lg:w-[140px]">
-                <Target className="w-5 h-5 text-rose-500 shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">
-                    {t('landlordRoomsOccupancy')}
-                  </span>
-                  <span className="font-black text-rose-500 text-base sm:text-lg leading-none mt-1">
-                    {occupancyRate}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-row lg:justify-end gap-2.5 sm:gap-3 w-full">
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 w-full lg:w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                    {t('landlordRoomsStatusOccupied')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
-                    {occupiedCount}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-blue-500/10 rounded-2xl border border-blue-500/30 w-full lg:w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-blue-400 tracking-wider">
-                    {t('landlordRoomsStatusVacant')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
-                    {vacantCount}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/30 w-full lg:w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B35] shadow-[0_0_8px_rgba(255,107,53,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-[#FF6B35] tracking-wider">
-                    {t('landlordRoomsStatusMaintenance')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
-                    {maintenanceCount}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3 py-2 bg-purple-500/10 rounded-2xl border border-purple-500/30 w-full lg:w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(139,92,246,0.8)] shrink-0" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">
-                    {t('landlordRoomsStatusReserved')}
-                  </span>
-                  <span className="font-black text-white text-sm sm:text-base leading-none mt-0.5">
-                    {reservedCount}
-                  </span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Main Card with Toolbar & View Switcher (Rule 9) */}
-      <div className="bg-white border border-zinc-200/80 rounded-3xl shadow-sm overflow-hidden">
+      {/* Main Card with Toolbar & View Switcher */}
+      <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
         {/* Toolbar Header */}
-        <div className="p-4 border-b border-zinc-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-zinc-50/40">
-          <div className="flex items-center gap-3">
-            {/* Search Input */}
+        <div className="p-4 border-b border-line flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Left: Fixed-width Search */}
+          <div className="w-full sm:w-64 lg:w-72 shrink-0">
             <SearchInput
               placeholder={t('landlordRoomsSearchInputPlaceholder')}
               value={searchQuery}
-              onChange={val => {
-                setSearchQuery(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-full sm:w-72"
+              onChange={val => setSearchQuery(val)}
+              containerClassName="w-full space-y-0"
             />
-
-            {/* View Switcher: Grid vs Table (Rule 9: Grid default) */}
-            <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <Button
-                type="button"
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => handleViewModeChange('grid')}
-                leftIcon={<Grid className="w-3.5 h-3.5" />}
-                className={
-                  viewMode === 'grid'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }
-                title={t('landlordRoomsViewGridTooltip')}
-              >
-                <span className="hidden sm:inline">{t('landlordRoomsViewGrid')}</span>
-              </Button>
-              <Button
-                type="button"
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => handleViewModeChange('table')}
-                leftIcon={<List className="w-3.5 h-3.5" />}
-                className={
-                  viewMode === 'table'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }
-                title={t('landlordRoomsViewTableTooltip')}
-              >
-                <span className="hidden sm:inline">{t('landlordRoomsViewTable')}</span>
-              </Button>
-            </div>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Right: Filters & View Switcher */}
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
             <SelectInput
               value={statusFilter}
-              onChange={e => {
-                setStatusFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-auto min-w-[140px]"
+              onChange={e => setStatusFilter(e.target.value)}
+              containerClassName="w-auto min-w-[140px] space-y-0"
               options={[
                 { value: '', label: t('landlordRoomsAllStatuses') },
                 { value: 'Trống', label: t('landlordRoomsStatusVacant') },
@@ -880,11 +882,8 @@ export default function RoomsPage() {
 
             <SelectInput
               value={contractFilter}
-              onChange={e => {
-                setContractFilter(e.target.value)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-auto min-w-[150px]"
+              onChange={e => setContractFilter(e.target.value)}
+              containerClassName="w-auto min-w-[150px] space-y-0"
               options={[
                 { value: '', label: t('landlordRoomsAllContracts') },
                 { value: 'active', label: t('landlordRoomsContractActive') },
@@ -892,6 +891,13 @@ export default function RoomsPage() {
                 { value: 'none', label: t('landlordRoomsContractNone') },
               ]}
             />
+
+            <div className="shrink-0 ml-auto lg:ml-0">
+              <ViewModeToggle
+                value={viewMode}
+                onChange={handleViewModeChange}
+              />
+            </div>
           </div>
         </div>
 
@@ -899,273 +905,207 @@ export default function RoomsPage() {
         <div className="p-5">
           {isLoadingMetadata ? (
             <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-              <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-              <p className="text-sm font-bold text-zinc-700">{t('landlordRoomsLoadingData')}</p>
-              <p className="text-xs text-zinc-400 mt-1">{t('landlordRoomsSyncingInfo')}</p>
+              <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+              <Text weight="bold" size="sm" className="text-foreground/90">
+                {t('landlordRoomsLoadingData')}
+              </Text>
+              <Text variant="caption" color="subtle" className="mt-1">
+                {t('landlordRoomsSyncingInfo')}
+              </Text>
             </div>
-          ) : paginatedRooms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 bg-zinc-50/50 rounded-2xl border border-zinc-200 border-dashed text-center">
-              <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-zinc-100 flex items-center justify-center mb-4 text-zinc-400">
-                <Search className="w-8 h-8" />
-              </div>
-              <h3 className="text-base font-bold text-zinc-900 mb-1">
-                {t('landlordRoomsEmptyTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 max-w-sm">{t('landlordRoomsEmptyDesc')}</p>
-              <div className="flex items-center gap-3 mt-5">
+          ) : filteredRooms.length === 0 ? (
+            <EmptyState
+              icon={<Search className="w-8 h-8" />}
+              title={t('landlordRoomsEmptyTitle')}
+              description={t('landlordRoomsEmptyDesc')}
+              action={
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSearchQuery('')
-                    setStatusFilter('')
-                    setContractFilter('')
-                    setInvoiceFilter('')
-                  }}
-                >
-                  {t('landlordRoomsClearFilter')}
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
                   onClick={() => setIsBulkModalOpen(true)}
-                  leftIcon={<Sparkles className="w-4 h-4" />}
+                  leftIcon={<Sparkles />}
                 >
                   {t('landlordRoomsBulkGenerateBtn')}
                 </Button>
-              </div>
-            </div>
+              }
+              secondaryAction={
+                (searchQuery || statusFilter || contractFilter || invoiceFilter) ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setStatusFilter('')
+                      setContractFilter('')
+                      setInvoiceFilter('')
+                    }}
+                  >
+                    {t('landlordRoomsClearFilter')}
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : viewMode === 'grid' ? (
-            /* GRID VIEW (Grouped by floor or cards) */
+            /* GRID VIEW (Grouped by floor - all rooms displayed) */
             <div className="space-y-4">
               {floors.map(floor => (
-                <div
+                <Card
                   key={floor}
-                  className="flex flex-col md:flex-row gap-4 bg-white p-3.5 rounded-2xl border border-zinc-200 shadow-2xs hover:border-zinc-300 transition-all"
+                  className="flex flex-col md:flex-row gap-4 p-3.5"
                 >
-                  <div className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white">
-                    <span className="text-sm font-black tracking-wider text-white flex items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-bold text-zinc-400">
+                  <Card.Header className="flex-shrink-0 w-full md:w-24 bg-zinc-900 rounded-xl flex items-center justify-center px-3 py-3 text-white border-0 p-0">
+                    <div className="flex items-center gap-1.5">
+                      <Text variant="overline" size="3xs" weight="bold" color="subtle">
                         {t('landlordRoomsColFloor')}
-                      </span>
-                      <span className="text-lg font-black">{floor}</span>
-                    </span>
-                  </div>
+                      </Text>
+                      <Text size="lg" weight="black" color="white">
+                        {floor}
+                      </Text>
+                    </div>
+                  </Card.Header>
 
-                  <div className="flex-1 flex flex-wrap gap-3 items-center">
+                  <Card.Body className="flex-1 flex flex-wrap gap-3 items-center p-0">
                     {(groupedRooms[floor] || []).map((room: any) => {
-                      const isOccupied = room.status === 'Đang thuê'
-                      const isMaintenance = room.status === 'Bảo trì'
-                      const isReserved = room.status === 'Đặt cọc'
-                      const isVacant = room.status === 'Trống'
-                      const isSelected = selectedRoomIds.includes(room.fullRoomId || room.id)
+                      const statusMeta = getRoomStatusMeta(room.status)
 
                       return (
-                        <div
+                        <Card
                           key={`${room.building}-${room.id}`}
                           onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all cursor-pointer hover:-translate-y-1 hover:shadow-md ${isSelected ? 'ring-2 ring-[#2AC1BC] ' : ''
-                            }${isOccupied
-                              ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:border-[#2AC1BC]'
-                              : isMaintenance
-                                ? 'bg-[#FF6B35]/10 border-[#FF6B35]/30 hover:border-[#FF6B35]'
-                                : isReserved
-                                  ? 'bg-purple-500/10 border-purple-500/30 hover:border-purple-500'
-                                  : isVacant
-                                    ? 'bg-blue-500/10 border-blue-500/30 hover:border-blue-500'
-                                    : 'bg-white border-zinc-200 hover:border-zinc-300'
-                            }`}
+                          className={`relative flex flex-col items-center justify-center p-3 rounded-xl border w-[100px] h-[100px] transition-all duration-200 ${statusMeta.gridContainer}`}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={e => {
-                              e.stopPropagation()
-                              toggleSelectRoom(room.fullRoomId || room.id)
-                            }}
-                            className="absolute top-2 left-2 cursor-pointer z-10"
-                          />
-
                           <Button
-                            type="button"
                             variant="ghost"
-                            size="sm"
+                            rounded='full'
+                            size="icon-xs"
                             onClick={e => {
                               e.stopPropagation()
                               handleOpenEditModal(room)
                             }}
-                            className="absolute top-2 right-2 p-1 text-zinc-400 hover:text-zinc-800 hover:bg-white/80 rounded-md transition-all cursor-pointer opacity-80 hover:opacity-100 h-auto w-auto z-10"
+                            className="absolute top-1 right-1 opacity-80 hover:opacity-100 z-10"
                             title={t('landlordRoomsEditRoomTooltip')}
                           >
-                            <Edit className="w-3.5 h-3.5" />
+                            <Edit />
                           </Button>
 
-                          <span
-                            className={`text-lg font-black mt-1 ${isOccupied
-                                ? 'text-[#2AC1BC]'
-                                : isMaintenance
-                                  ? 'text-[#FF6B35]'
-                                  : isReserved
-                                    ? 'text-purple-600'
-                                    : isVacant
-                                      ? 'text-blue-600'
-                                      : 'text-zinc-800'
-                              }`}
+                          <Text
+                            as="span"
+                            weight="black"
+                            size="lg"
+                            className={`mt-1 ${statusMeta.gridText}`}
                           >
                             {room.id}
-                          </span>
+                          </Text>
 
-                          <span
-                            className={`text-[9px] font-black uppercase tracking-wider mt-1 px-2 py-0.5 rounded-md ${isOccupied
-                                ? 'text-[#2AC1BC] bg-[#2AC1BC]/15'
-                                : isMaintenance
-                                  ? 'text-[#FF6B35] bg-[#FF6B35]/15'
-                                  : isReserved
-                                    ? 'text-purple-600 bg-purple-500/15'
-                                    : isVacant
-                                      ? 'text-blue-600 bg-blue-500/15'
-                                      : 'text-zinc-500 bg-zinc-100'
-                              }`}
-                          >
-                            {room.status === 'Đang thuê'
-                              ? t('landlordRoomsStatusOccupied')
-                              : room.status === 'Trống'
-                                ? t('landlordRoomsStatusVacant')
-                                : room.status === 'Bảo trì'
-                                  ? t('landlordRoomsStatusMaintenance')
-                                  : room.status === 'Đặt cọc'
-                                    ? t('landlordRoomsStatusReserved')
-                                    : room.status}
-                          </span>
-                        </div>
+                          <Text.Badge className={`mt-1 px-2 py-0.5 rounded-md text-center ${statusMeta.gridBadge}`}>
+                            {statusMeta.label}
+                          </Text.Badge>
+                        </Card>
                       )
                     })}
-                  </div>
-                </div>
+                  </Card.Body>
+                </Card>
               ))}
             </div>
           ) : (
-            /* TABLE VIEW (Rule 9) */
-            <div className="overflow-x-auto rounded-2xl border border-zinc-200">
+            /* TABLE VIEW (All rooms displayed) */
+            <div className="overflow-x-auto rounded-2xl border border-line">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-zinc-100 text-zinc-700 font-bold border-b border-zinc-200 uppercase tracking-wider text-[10px]">
-                    <th className="p-3 w-10 text-center">
-                      <Checkbox
-                        checked={isAllCurrentPageSelected}
-                        indeterminate={isIndeterminate}
-                        onChange={toggleSelectAllCurrentPage}
-                        title={t('landlordRoomsSelectAllTooltip')}
-                        containerClassName="items-center justify-center"
-                      />
+                  <tr className="bg-card-hover text-foreground/90 font-bold border-b border-line uppercase tracking-wider text-[10px]">
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColRoomNumber')}
+                      </Text>
                     </th>
-                    <th className="p-3">{t('landlordRoomsColRoomNumber')}</th>
-                    <th className="p-3">{t('landlordRoomsColFloor')}</th>
-                    <th className="p-3">{t('landlordRoomsColRoomType')}</th>
-                    <th className="p-3">{t('landlordRoomsColArea')}</th>
-                    <th className="p-3">{t('landlordRoomsColStatus')}</th>
-                    <th className="p-3">{t('landlordRoomsColServices')}</th>
-                    <th className="p-3 text-right">{t('landlordRoomsColActions')}</th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColFloor')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColRoomType')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColArea')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColStatus')}
+                      </Text>
+                    </th>
+                    <th className="p-3">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColServices')}
+                      </Text>
+                    </th>
+                    <th className="p-3 text-right">
+                      <Text variant="overline" weight="bold" color="secondary">
+                        {t('landlordRoomsColActions')}
+                      </Text>
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200/70">
-                  {paginatedRooms.map(room => {
-                    const isSelected = selectedRoomIds.includes(room.fullRoomId || room.id)
+                <tbody className="divide-y divide-line">
+                  {filteredRooms.map(room => {
+                    const statusMeta = getRoomStatusMeta(room.status)
+
                     return (
-                      <tr
+                      <TableRow
                         key={`${room.building}-${room.id}`}
-                        className={`hover:bg-zinc-50/80 transition-colors ${
-                          isSelected ? 'bg-cyan-50/50' : ''
-                        }`}
+                        onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
+                        className="hover:bg-card-hover transition-colors duration-150 group cursor-pointer"
                       >
-                        <td className="p-3 text-center">
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => toggleSelectRoom(room.fullRoomId || room.id)}
-                            containerClassName="items-center justify-center"
-                          />
+                        <td className="p-3 font-black text-foreground text-sm">
+                          <Text as="span" weight="black" size="sm" className="text-foreground">
+                            {room.id}
+                          </Text>
                         </td>
-                        <td className="p-3 font-black text-zinc-900 text-sm">{room.id}</td>
-                        <td className="p-3 font-semibold text-zinc-600">
-                          {t('landlordRoomsFloorText', { floor: room.floor })}
+                        <td className="p-3 font-semibold text-muted">
+                          <Text as="span" weight="semibold" size="xs" color="secondary">
+                            {t('landlordRoomsFloorText', { floor: room.floor })}
+                          </Text>
                         </td>
-                        <td className="p-3 font-medium text-zinc-700">
-                          {room.roomType || 'Studio'}
+                        <td className="p-3 font-medium text-foreground/90">
+                          <Text as="span" weight="medium" size="xs" className="text-foreground/90">
+                            {room.roomType || 'Studio'}
+                          </Text>
                         </td>
-                        <td className="p-3 text-zinc-600">
-                          {room.area ? `${room.area} m²` : '25 m²'}
+                        <td className="p-3 text-muted">
+                          <Text as="span" size="xs" color="secondary">
+                            {room.area ? `${room.area} m²` : '25 m²'}
+                          </Text>
                         </td>
                         <td className="p-3">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              room.status === 'Đang thuê'
-                                ? 'bg-[#2AC1BC]/15 text-[#2AC1BC]'
-                                : room.status === 'Trống'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : room.status === 'Bảo trì'
-                                    ? 'bg-[#FF6B35]/15 text-[#FF6B35]'
-                                    : 'bg-purple-100 text-purple-700'
-                            }`}
-                          >
-                            {room.status === 'Đang thuê'
-                              ? t('landlordRoomsStatusOccupied')
-                              : room.status === 'Trống'
-                                ? t('landlordRoomsStatusVacant')
-                                : room.status === 'Bảo trì'
-                                  ? t('landlordRoomsStatusMaintenance')
-                                  : room.status === 'Đặt cọc'
-                                    ? t('landlordRoomsStatusReserved')
-                                    : room.status}
-                          </span>
+                          <Text.Badge className={`px-2.5 py-0.5 rounded-full ${statusMeta.tableBadge}`}>
+                            {statusMeta.label}
+                          </Text.Badge>
                         </td>
                         <td className="p-3">
                           <div className="flex flex-wrap gap-1 max-w-xs">
-                            {(room.services || ['Điện', 'Nước']).map((s: string, idx: number) => {
-                              const sLabel =
-                                s === 'Điện'
-                                  ? t('landlordRoomsServiceElectricity')
-                                  : s === 'Nước'
-                                    ? t('landlordRoomsServiceWater')
-                                    : s === 'WiFi'
-                                      ? t('landlordRoomsServiceWifi')
-                                      : s === 'Vệ sinh'
-                                        ? t('landlordRoomsServiceCleaning')
-                                        : s === 'Rác'
-                                          ? t('landlordRoomsServiceTrash')
-                                          : s === 'Bảo vệ'
-                                            ? t('landlordRoomsServiceSecurity')
-                                            : s
-                              return (
-                                <span
-                                  key={idx}
-                                  className="px-1.5 py-0.5 bg-zinc-100 text-zinc-600 text-[10px] rounded font-medium"
-                                >
-                                  {sLabel}
-                                </span>
-                              )
-                            })}
+                            {(room.services || ['Điện', 'Nước']).map((s: string, idx: number) => (
+                              <Text
+                                key={idx}
+                                as="span"
+                                size="3xs"
+                                weight="medium"
+                                className="px-1.5 py-0.5 bg-card-hover text-muted rounded"
+                              >
+                                {getServiceLabel(s)}
+                              </Text>
+                            ))}
                           </div>
                         </td>
                         <td className="p-3 text-right space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
+                          <TableActionButton
+                            icon={<Edit />}
+                            variant="secondary"
                             onClick={() => handleOpenEditModal(room)}
-                            className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
                             title={t('landlordRoomsEditRoomTooltip')}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.push(`/landlord/rooms/${room.fullRoomId}`)}
-                            className="h-8 w-8 text-zinc-500 hover:text-[#2AC1BC]"
-                            title={t('landlordRoomsViewDetailTooltip')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                          />
                         </td>
-                      </tr>
+                      </TableRow>
                     )
                   })}
                 </tbody>
@@ -1174,92 +1114,18 @@ export default function RoomsPage() {
           )}
         </div>
 
-        {/* Standardized Pagination Bar (Rule 9) */}
-        <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600 font-medium">
-          {/* Left section: Pagination controls */}
+        {/* Rooms Summary Bar (Default displays all rooms) */}
+        <div className="p-4 border-t border-line bg-surface/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted font-medium">
           <div className="flex items-center gap-2">
-            <span>{t('landlordRoomsPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                if (!isNaN(val) && val > 0) {
-                  setPageSize(val)
-                  setCurrentPage(1)
-                  setWindowStart(1)
-                }
-              }}
-              className="w-14 px-2 py-1 text-center font-bold bg-white border border-zinc-300 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
-            />
-            <span>/ trang</span>
-            <span className="text-zinc-300 mx-1">|</span>
-            <span>
-              {totalItems === 0 ? '0 - 0' : `${startIndex + 1} - ${endIndex}`}{' '}
-              {t('landlordRoomsPaginationOf', { total: totalItems })}
-            </span>
-          </div>
-
-          {/* Right section: 5-page window jumping controls */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrevWindow}
-              disabled={windowStart === 1}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationPrev5')}
-            >
-              <ChevronsLeft className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={safeCurrentPage === 1}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            {pageNumbers.map(num => (
-              <Button
-                key={num}
-                variant={safeCurrentPage === num ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(num)}
-                className={`min-w-8 h-8 px-2 font-bold ${
-                  safeCurrentPage === num ? 'bg-[#2AC1BC] text-white shadow-xs' : ''
-                }`}
-              >
-                {num}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={safeCurrentPage >= totalPages}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleNextWindow}
-              disabled={windowStart + 5 > totalPages}
-              className="p-1.5 h-8 w-8"
-              title={t('landlordRoomsPaginationNext5')}
-            >
-              <ChevronsRight className="w-4 h-4 text-zinc-600" />
-            </Button>
+            <Text as="span" size="xs" color="secondary">
+              {t('landlordRoomsPaginationShowing')}:
+            </Text>
+            <Text as="span" size="xs" weight="black" className="text-foreground">
+              {filteredRooms.length}
+            </Text>
+            <Text as="span" size="xs" color="secondary">
+              {t('landlordRoomsPaginationOf', { total: totalRoomsCount })}
+            </Text>
           </div>
         </div>
       </div>
@@ -1267,681 +1133,637 @@ export default function RoomsPage() {
       {/* ========================================================================= */}
       {/* BULK GENERATE ROOMS MODAL */}
       {/* ========================================================================= */}
-      {isBulkModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseBulkModal()
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 border border-zinc-100">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-zinc-100 bg-white z-10">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-amber-100 text-amber-700 rounded-2xl">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-zinc-900 tracking-tight">
-                    {t('landlordRoomsBulkModalTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    {t('landlordRoomsBulkModalSubtitle')}
-                  </p>
-                </div>
-              </div>
+      <Modal
+        isOpen={isBulkModalOpen}
+        onClose={handleCloseBulkModal}
+        size="3xl"
+        asForm
+        onSubmit={handleBulkGenerateSubmit}
+        header={
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-warning-soft text-warning rounded-2xl">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <Text as="h2" variant="heading" size="xl" weight="black" className="tracking-tight text-foreground">
+                {t('landlordRoomsBulkModalTitle')}
+              </Text>
+              <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
+                {t('landlordRoomsBulkModalSubtitle')}
+              </Text>
+            </div>
+          </div>
+        }
+        bodyClassName="p-6 space-y-6 custom-scrollbar"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              variant="outline"
+              onClick={handleCloseBulkModal}
+            >
+              {t('landlordRoomsBulkBtnCancel')}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isBulkSubmitting || isOverQuota}
+              isLoading={isBulkSubmitting}
+              leftIcon={<Sparkles />}
+            >
+              {isBulkSubmitting
+                ? t('landlordRoomsBulkBtnSubmitting')
+                : t('landlordRoomsBulkBtnConfirm', { count: totalGeneratedCount })}
+            </Button>
+          </div>
+        }
+      >
+        {bulkError && (
+          <Form.Alert
+            variant="error"
+            title={t('landlordRoomsBulkErrorHeader')}
+            message={bulkError}
+            onClose={() => setBulkError(null)}
+          />
+        )}
+
+        {/* Quota Info Banner */}
+        <div className="p-4 rounded-2xl bg-card border border-line shadow-2xs space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-foreground/90">
+            <Text as="span" size="xs" weight="bold" className="flex items-center gap-1.5 text-foreground/90">
+              <Building2 className="w-4 h-4 text-primary" />
+              {t('landlordRoomsBulkQuotaLabel')}
+            </Text>
+            <Text as="span" size="xs" weight="black" className="text-foreground">
+              {t('landlordRoomsBulkQuotaValue', {
+                current: currentTotalRooms,
+                max: maxPlanRoom,
+              })}
+            </Text>
+          </div>
+          <div className="w-full h-2 bg-card-hover rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all ${isOverQuota ? 'bg-red-500' : 'bg-primary'
+                }`}
+              style={{
+                width: `${Math.min(100, ((currentTotalRooms + totalGeneratedCount) / maxPlanRoom) * 100)}%`,
+              }}
+            />
+          </div>
+          {isOverQuota && (
+            <Form.Alert
+              variant="warning"
+              message={t('landlordRoomsBulkQuotaWarning', {
+                count: totalGeneratedCount,
+                max: maxPlanRoom,
+              })}
+            />
+          )}
+        </div>
+
+        {/* Form Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-card p-5 rounded-2xl border border-line shadow-2xs">
+          <NumberInput
+            label={t('landlordRoomsBulkFloorCountLabel')}
+            required
+            min={1}
+            max={50}
+            value={bulkFloorCount}
+            onChange={e => {
+              setBulkFloorCount(parseInt(e.target.value, 10) || 1)
+              setIsBulkDirty(true)
+            }}
+          />
+
+          <NumberInput
+            label={t('landlordRoomsBulkRoomsPerFloorLabel')}
+            required
+            min={1}
+            max={50}
+            value={bulkRoomsPerFloor}
+            onChange={e => {
+              setBulkRoomsPerFloor(parseInt(e.target.value, 10) || 1)
+              setIsBulkDirty(true)
+            }}
+          />
+
+          <div className="sm:col-span-2 space-y-1.5">
+            <TextInput
+              label={t('landlordRoomsBulkNameFormatLabel')}
+              required
+              value={bulkNameFormat}
+              onChange={e => {
+                setBulkNameFormat(e.target.value)
+                setIsBulkDirty(true)
+              }}
+              placeholder={t('landlordRoomsBulkNameFormatPlaceholder')}
+              labelRight={
+                <Text as="span" size="2xs" color="subtle">
+                  Placeholder:{' '}
+                  <Text.Code className="bg-card-hover text-primary">
+                    &#123;floor&#125;
+                  </Text.Code>
+                  ,{' '}
+                  <Text.Code className="bg-card-hover text-primary">
+                    &#123;index&#125;
+                  </Text.Code>
+                </Text>
+              }
+            />
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-muted">
+              <Text as="span" size="3xs" weight="bold" color="secondary">
+                {t('landlordRoomsBulkSuggestedPatterns')}
+              </Text>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
-                onClick={handleCloseBulkModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer h-auto w-auto"
+                onClick={() => {
+                  setBulkNameFormat('P{floor}0{index}')
+                  setIsBulkDirty(true)
+                }}
+                className="rounded"
               >
-                <X className="w-5 h-5" />
+                P&#123;floor&#125;0&#123;index&#125;
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setBulkNameFormat('{floor}0{index}')
+                  setIsBulkDirty(true)
+                }}
+                className="rounded"
+              >
+                &#123;floor&#125;0&#123;index&#125;
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setBulkNameFormat('P{floor}{index:02}')
+                  setIsBulkDirty(true)
+                }}
+                className="rounded"
+              >
+                P&#123;floor&#125;&#123;index:02&#125;
               </Button>
             </div>
+          </div>
 
-            {/* Modal Body Form */}
-            <form
-              onSubmit={handleBulkGenerateSubmit}
-              className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-zinc-50/40"
-            >
-              {bulkError && (
-                <Form.Alert
-                  variant="error"
-                  title={t('landlordRoomsBulkErrorHeader')}
-                  message={bulkError}
-                  onClose={() => setBulkError(null)}
-                />
-              )}
+          <SelectInput
+            label={t('landlordRoomsBulkRoomTypeLabel')}
+            value={bulkRoomTypeId}
+            onChange={e => {
+              setBulkRoomTypeId(e.target.value)
+              setIsBulkDirty(true)
+            }}
+            options={
+              metadata?.roomTypes && metadata.roomTypes.length > 0
+                ? metadata.roomTypes.map(rt => ({
+                  value: rt.id,
+                  label: rt.name,
+                }))
+                : [
+                  { value: 'studio', label: t('landlordRoomsTypeStudio') },
+                  { value: '1pn', label: t('landlordRoomsType1Bed') },
+                  { value: '2pn', label: t('landlordRoomsType2Bed') },
+                ]
+            }
+          />
 
-              {/* Quota Info Banner */}
-              <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
-                  <span className="flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4 text-[#2AC1BC]" />
-                    {t('landlordRoomsBulkQuotaLabel')}
-                  </span>
-                  <span className="text-zinc-900 font-black">
-                    {t('landlordRoomsBulkQuotaValue', {
-                      current: currentTotalRooms,
-                      max: maxPlanRoom,
-                    })}
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${
-                      isOverQuota ? 'bg-red-500' : 'bg-[#2AC1BC]'
-                    }`}
-                    style={{
-                      width: `${Math.min(100, ((currentTotalRooms + totalGeneratedCount) / maxPlanRoom) * 100)}%`,
-                    }}
-                  />
-                </div>
-                {isOverQuota && (
-                  <Form.Alert
-                    variant="warning"
-                    message={t('landlordRoomsBulkQuotaWarning', {
-                      count: totalGeneratedCount,
-                      max: maxPlanRoom,
-                    })}
-                  />
-                )}
-              </div>
+          <NumberInput
+            label={t('landlordRoomsBulkAreaLabel')}
+            min={1}
+            value={bulkArea}
+            onChange={e => {
+              setBulkArea(e.target.value)
+              setIsBulkDirty(true)
+            }}
+            suffixText="m²"
+          />
+        </div>
 
-              {/* Form Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs">
-                <NumberInput
-                  label={t('landlordRoomsBulkFloorCountLabel')}
-                  required
-                  min={1}
-                  max={50}
-                  value={bulkFloorCount}
-                  onChange={e => {
-                    setBulkFloorCount(parseInt(e.target.value, 10) || 1)
-                    setIsBulkDirty(true)
-                  }}
-                />
+        {/* Service Associations Checkboxes */}
+        <div className="bg-card p-5 rounded-2xl border border-line shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <Text as="label" size="xs" weight="bold" className="text-foreground flex items-center gap-1.5">
+              <Receipt className="w-4 h-4 text-primary" />
+              {t('landlordRoomsBulkServicesSection')}
+            </Text>
+            <Text as="span" size="2xs" color="subtle">
+              {t('landlordRoomsBulkServicesSelected', { count: bulkServiceIds.length })}
+            </Text>
+          </div>
 
-                <NumberInput
-                  label={t('landlordRoomsBulkRoomsPerFloorLabel')}
-                  required
-                  min={1}
-                  max={50}
-                  value={bulkRoomsPerFloor}
-                  onChange={e => {
-                    setBulkRoomsPerFloor(parseInt(e.target.value, 10) || 1)
-                    setIsBulkDirty(true)
-                  }}
-                />
-
-                <div className="sm:col-span-2 space-y-1.5">
-                  <TextInput
-                    label={t('landlordRoomsBulkNameFormatLabel')}
-                    required
-                    value={bulkNameFormat}
-                    onChange={e => {
-                      setBulkNameFormat(e.target.value)
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+            {metadata?.services && metadata.services.length > 0
+              ? metadata.services.map(srv => {
+                const checked = bulkServiceIds.includes(srv.id)
+                return (
+                  <Checkbox
+                    key={srv.id}
+                    variant="card"
+                    checked={checked}
+                    onChange={() => {
+                      setBulkServiceIds(prev =>
+                        prev.includes(srv.id)
+                          ? prev.filter(id => id !== srv.id)
+                          : [...prev, srv.id],
+                      )
                       setIsBulkDirty(true)
                     }}
-                    placeholder={t('landlordRoomsBulkNameFormatPlaceholder')}
-                    labelRight={
-                      <span className="text-[11px] text-zinc-400">
-                        Placeholder:{' '}
-                        <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
-                          &#123;floor&#125;
-                        </code>
-                        ,{' '}
-                        <code className="bg-zinc-100 px-1 py-0.5 rounded text-[#2AC1BC] font-mono">
-                          &#123;index&#125;
-                        </code>
-                      </span>
-                    }
+                    label={srv.name}
                   />
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-zinc-500">
-                    <span className="font-bold">{t('landlordRoomsBulkSuggestedPatterns')}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setBulkNameFormat('P{floor}0{index}')
-                        setIsBulkDirty(true)
-                      }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
-                    >
-                      P&#123;floor&#125;0&#123;index&#125;
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setBulkNameFormat('{floor}0{index}')
-                        setIsBulkDirty(true)
-                      }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
-                    >
-                      &#123;floor&#125;0&#123;index&#125;
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setBulkNameFormat('P{floor}{index:02}')
-                        setIsBulkDirty(true)
-                      }}
-                      className="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 rounded font-mono cursor-pointer h-auto text-[10px]"
-                    >
-                      P&#123;floor&#125;&#123;index:02&#125;
-                    </Button>
-                  </div>
-                </div>
-
-                <SelectInput
-                  label={t('landlordRoomsBulkRoomTypeLabel')}
-                  value={bulkRoomTypeId}
-                  onChange={e => {
-                    setBulkRoomTypeId(e.target.value)
-                    setIsBulkDirty(true)
-                  }}
-                  options={
-                    metadata?.roomTypes && metadata.roomTypes.length > 0
-                      ? metadata.roomTypes.map(rt => ({
-                          value: rt.id,
-                          label: rt.name,
-                        }))
-                      : [
-                          { value: 'studio', label: t('landlordRoomsTypeStudio') },
-                          { value: '1pn', label: t('landlordRoomsType1Bed') },
-                          { value: '2pn', label: t('landlordRoomsType2Bed') },
-                        ]
-                  }
+                )
+              })
+              : ['Điện', 'Nước', 'WiFi', 'Vệ sinh'].map((item, idx) => (
+                <Checkbox
+                  key={idx}
+                  variant="card"
+                  defaultChecked
+                  label={getServiceLabel(item)}
                 />
-
-                <NumberInput
-                  label={t('landlordRoomsBulkAreaLabel')}
-                  min={1}
-                  value={bulkArea}
-                  onChange={e => {
-                    setBulkArea(e.target.value)
-                    setIsBulkDirty(true)
-                  }}
-                  suffixText="m²"
-                />
-              </div>
-
-              {/* Service Associations Checkboxes */}
-              <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
-                    <Receipt className="w-4 h-4 text-[#2AC1BC]" />
-                    {t('landlordRoomsBulkServicesSection')}
-                  </label>
-                  <span className="text-[11px] text-zinc-400">
-                    {t('landlordRoomsBulkServicesSelected', { count: bulkServiceIds.length })}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-                  {metadata?.services && metadata.services.length > 0
-                    ? metadata.services.map(srv => {
-                        const checked = bulkServiceIds.includes(srv.id)
-                        return (
-                          <Checkbox
-                            key={srv.id}
-                            variant="card"
-                            checked={checked}
-                            onChange={() => {
-                              setBulkServiceIds(prev =>
-                                prev.includes(srv.id)
-                                  ? prev.filter(id => id !== srv.id)
-                                  : [...prev, srv.id],
-                              )
-                              setIsBulkDirty(true)
-                            }}
-                            label={srv.name}
-                          />
-                        )
-                      })
-                    : ['Điện', 'Nước', 'WiFi', 'Vệ sinh'].map((item, idx) => {
-                        const itemLabel =
-                          item === 'Điện'
-                            ? t('landlordRoomsServiceElectricity')
-                            : item === 'Nước'
-                              ? t('landlordRoomsServiceWater')
-                              : item === 'WiFi'
-                                ? t('landlordRoomsServiceWifi')
-                                : item === 'Vệ sinh'
-                                  ? t('landlordRoomsServiceCleaning')
-                                  : item
-                        return (
-                          <Checkbox
-                            key={idx}
-                            variant="card"
-                            defaultChecked
-                            label={itemLabel}
-                          />
-                        )
-                      })}
-                </div>
-              </div>
-
-              {/* Live Preview Card */}
-              <div className="bg-zinc-900 rounded-2xl p-4 sm:p-5 text-white shadow-md space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    {t('landlordRoomsBulkPreviewTitle', { count: previewRoomNumbers.length })}
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-400">
-                    {t('landlordRoomsBulkPreviewSummary', {
-                      floors: bulkFloorCount,
-                      roomsPerFloor: bulkRoomsPerFloor,
-                    })}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-2 bg-white/5 rounded-xl border border-white/10">
-                  {previewRoomNumbers.map((code, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white font-mono text-xs rounded-lg border border-white/10 font-bold"
-                    >
-                      {code}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Modal Action Buttons */}
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseBulkModal}
-                >
-                  {t('landlordRoomsBulkBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isBulkSubmitting || isOverQuota}
-                  isLoading={isBulkSubmitting}
-                  leftIcon={<Sparkles className="w-4 h-4" />}
-                >
-                  {isBulkSubmitting
-                    ? t('landlordRoomsBulkBtnSubmitting')
-                    : t('landlordRoomsBulkBtnConfirm', { count: totalGeneratedCount })}
-                </Button>
-              </div>
-            </form>
+              ))}
           </div>
         </div>
-      )}
+
+        {/* Live Preview Card */}
+        <div className="bg-zinc-900 rounded-2xl p-4 sm:p-5 text-white shadow-md space-y-3">
+          <div className="flex items-center justify-between">
+            <Text as="span" size="xs" weight="bold" className="text-zinc-300 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              {t('landlordRoomsBulkPreviewTitle', { count: previewRoomNumbers.length })}
+            </Text>
+            <Text as="span" size="3xs" mono color="subtle">
+              {t('landlordRoomsBulkPreviewSummary', {
+                floors: bulkFloorCount,
+                roomsPerFloor: bulkRoomsPerFloor,
+              })}
+            </Text>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-2 bg-white/5 rounded-xl border border-white/10">
+            {previewRoomNumbers.map((code, idx) => (
+              <Text
+                key={idx}
+                as="span"
+                size="xs"
+                mono
+                weight="bold"
+                className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg border border-white/10"
+              >
+                {code}
+              </Text>
+            ))}
+          </div>
+        </div>
+
+      </Modal>
 
       {/* ========================================================================= */}
       {/* SINGLE ROOM ADD/EDIT MODAL */}
       {/* ========================================================================= */}
-      {isSingleModalOpen && (
+      <Modal
+        isOpen={isSingleModalOpen}
+        onClose={handleCloseSingleModal}
+        size="4xl"
+        asForm
+        onSubmit={handleSingleRoomSubmit}
+        header={
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+              {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+            </div>
+            <div>
+              <Text as="h2" variant="heading" size="xl" weight="black" className="text-foreground">
+                {selectedRoomId
+                  ? t('landlordRoomsSingleTitleEdit')
+                  : t('landlordRoomsSingleTitleCreate')}
+              </Text>
+              <Text variant="caption" size="xs" color="subtle" className="mt-0.5">
+                {selectedRoomId
+                  ? t('landlordRoomsSingleDescEdit')
+                  : t('landlordRoomsSingleDescCreate')}
+              </Text>
+            </div>
+          </div>
+        }
+        bodyClassName="p-6 bg-surface/50 space-y-6 custom-scrollbar"
+        footer={
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Button
+              variant="outline"
+              onClick={handleCloseSingleModal}
+              disabled={isSingleSubmitting || isImageUploading}
+            >
+              {t('landlordRoomsSingleBtnCancel')}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSingleSubmitting || isImageUploading}
+              isLoading={isSingleSubmitting}
+              leftIcon={
+                selectedRoomId ? <Edit /> : <Plus />
+              }
+            >
+              {getSingleSubmitLabel()}
+            </Button>
+          </div>
+        }
+      >
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleCloseSingleModal()
-          }}
+          onInput={() => setIsSingleDirty(true)}
+          onChange={() => setIsSingleDirty(true)}
+          className="space-y-6"
         >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
-            onInput={() => setIsSingleDirty(true)}
-            onChange={() => setIsSingleDirty(true)}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white z-10">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
-                  {selectedRoomId ? <Edit className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+          {/* Error Banner */}
+          {singleError && (
+            <Form.Alert
+              variant="error"
+              message={singleError}
+              onClose={() => setSingleError(null)}
+            />
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Left Column: Basic Details */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-4">
+                <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
+                  <Home className="w-4 h-4 text-primary" />{' '}
+                  {t('landlordRoomsSingleSectionInfo')}
+                </Text>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Text as="label" size="xs" weight="bold" className="text-foreground/90">
+                      {t('landlordRoomsSingleBuildingLabel')}
+                    </Text>
+                    <Text
+                      as="div" size="xs" color='subtle' weight="medium"
+                      className="w-full px-3.5 py-2.5 border border-line bg-surface rounded-xl truncate"
+                    >
+                      {activeBuilding?.name || 'Dormio Boarding House'}
+                    </Text>
+                  </div>
+
+                  <TextInput
+                    label={t('landlordRoomsSingleRoomNumberLabel')}
+                    required
+                    value={formRoomNumber}
+                    onChange={e => {
+                      setFormRoomNumber(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    placeholder="VD: 101, A01"
+                  />
+
+                  <SelectInput
+                    label={t('landlordRoomsSingleRoomTypeLabel')}
+                    required
+                    value={formRoomTypeId}
+                    onChange={e => {
+                      setFormRoomTypeId(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    options={
+                      metadata?.roomTypes && metadata.roomTypes.length > 0
+                        ? metadata.roomTypes.map(rt => ({
+                          value: rt.id,
+                          label: rt.name,
+                        }))
+                        : [
+                          { value: 'studio', label: t('landlordRoomsTypeStudio') },
+                          { value: '1pn', label: t('landlordRoomsType1Bed') },
+                          { value: '2pn', label: t('landlordRoomsType2Bed') },
+                        ]
+                    }
+                  />
+
+                  <NumberInput
+                    label={t('landlordRoomsSingleFloorLabel')}
+                    required
+                    min={1}
+                    value={formFloor}
+                    onChange={e => {
+                      setFormFloor(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    placeholder="VD: 1, 2..."
+                  />
+
+                  <NumberInput
+                    label={t('landlordRoomsBulkAreaLabel')}
+                    min={1}
+                    step="0.1"
+                    value={formArea}
+                    onChange={e => {
+                      setFormArea(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    placeholder="25"
+                    suffixText="m²"
+                  />
+
+                  <NumberInput
+                    label={t('landlordRoomsSingleMaxOccupantsLabel')}
+                    min={1}
+                    value={formMaxOccupants}
+                    onChange={e => {
+                      setFormMaxOccupants(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    placeholder="2"
+                  />
+
+                  <SelectInput
+                    label={t('landlordRoomsSingleStatusLabel')}
+                    value={formStatus}
+                    onChange={e => {
+                      setFormStatus(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    options={[
+                      { value: 'available', label: t('landlordRoomsSingleStatusAvailable') },
+                      { value: 'occupied', label: t('landlordRoomsSingleStatusOccupied') },
+                      {
+                        value: 'maintainace',
+                        label: t('landlordRoomsSingleStatusMaintenance'),
+                      },
+                      { value: 'deposited', label: t('landlordRoomsSingleStatusDeposited') },
+                    ]}
+                  />
+
+                  <TextInput
+                    label={t('landlordRoomsSinglePriceLabel')}
+                    value={formPrice}
+                    onChange={e => {
+                      setFormPrice(e.target.value)
+                      setIsSingleDirty(true)
+                    }}
+                    placeholder="3.500.000"
+                    rightIcon={<Text as="span" size="xs" weight="bold" color="brand">đ</Text>}
+                  />
                 </div>
-                <div>
-                  <h2 className="text-xl font-black text-zinc-900">
-                    {selectedRoomId
-                      ? t('landlordRoomsSingleTitleEdit')
-                      : t('landlordRoomsSingleTitleCreate')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    {selectedRoomId
-                      ? t('landlordRoomsSingleDescEdit')
-                      : t('landlordRoomsSingleDescCreate')}
-                  </p>
+
+                <div className="pt-1">
+                  <ImageUpload
+                    label={t('landlordRoomsSingleImageLabel')}
+                    helperText={t('landlordRoomsSingleImageHelper')}
+                    loadingText={t('landlordRoomsSingleImageUploading')}
+                    value={formImageUrl}
+                    onChange={url => {
+                      setFormImageUrl(url)
+                      setIsSingleDirty(true)
+                    }}
+                    onRemove={() => {
+                      setFormImageUrl('')
+                      setIsSingleDirty(true)
+                    }}
+                    onUploadingChange={setIsImageUploading}
+                    folder="dormio/rooms"
+                    aspectRatio="video"
+                    className="max-h-[220px]"
+                    disabled={isSingleSubmitting}
+                    showInspectButton={Boolean(formImageUrl)}
+                    onInspect={url => {
+                      if (typeof window !== 'undefined' && url) {
+                        window.open(url, '_blank')
+                      }
+                    }}
+                  />
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleCloseSingleModal}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer h-auto w-auto"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
 
-            {/* Modal Content */}
-            <form
-              onSubmit={handleSingleRoomSubmit}
-              className="flex-1 flex flex-col min-h-0 overflow-hidden"
-            >
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-zinc-50/50 space-y-6">
-                {/* Error Banner */}
-                {singleError && (
-                  <Form.Alert
-                    variant="error"
-                    message={singleError}
-                    onClose={() => setSingleError(null)}
-                  />
-                )}
+              {/* Room Services Association */}
+              <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between">
+                  <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-primary" />{' '}
+                    {t('landlordRoomsSingleSectionServices')}
+                  </Text>
+                  <Text as="span" size="2xs" weight="semibold" color="secondary">
+                    {t('landlordRoomsSingleServicesSelected', {
+                      count: selectedServiceIds.length,
+                    })}
+                  </Text>
+                </div>
+                <Text variant="body" size="xs" color="secondary" className="leading-relaxed">
+                  {t('landlordRoomsSingleServicesHint')}
+                </Text>
 
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                  {/* Left Column: Basic Details */}
-                  <div className="lg:col-span-3 space-y-6">
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                        {t('landlordRoomsSingleSectionInfo')}
-                      </h3>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-700">
-                            {t('landlordRoomsSingleBuildingLabel')}
-                          </label>
-                          <div className="w-full px-3.5 py-2.5 text-xs border border-zinc-200 bg-zinc-50 rounded-xl font-medium text-zinc-700 truncate">
-                            {activeBuilding?.name || 'Dormio Boarding House'}
-                          </div>
-                        </div>
-
-                        <TextInput
-                          label={t('landlordRoomsSingleRoomNumberLabel')}
-                          required
-                          value={formRoomNumber}
-                          onChange={e => {
-                            setFormRoomNumber(e.target.value)
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {metadata?.services && metadata.services.length > 0
+                    ? metadata.services.map(srv => {
+                      const isChecked = selectedServiceIds.includes(srv.id)
+                      return (
+                        <Checkbox
+                          key={srv.id}
+                          variant="card"
+                          checked={isChecked}
+                          onChange={() => {
+                            setSelectedServiceIds(prev =>
+                              prev.includes(srv.id)
+                                ? prev.filter(id => id !== srv.id)
+                                : [...prev, srv.id],
+                            )
                             setIsSingleDirty(true)
                           }}
-                          placeholder="VD: 101, A01"
-                        />
-
-                        <SelectInput
-                          label={t('landlordRoomsSingleRoomTypeLabel')}
-                          required
-                          value={formRoomTypeId}
-                          onChange={e => {
-                            setFormRoomTypeId(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          options={
-                            metadata?.roomTypes && metadata.roomTypes.length > 0
-                              ? metadata.roomTypes.map(rt => ({
-                                  value: rt.id,
-                                  label: rt.name,
-                                }))
-                              : [
-                                  { value: 'studio', label: t('landlordRoomsTypeStudio') },
-                                  { value: '1pn', label: t('landlordRoomsType1Bed') },
-                                  { value: '2pn', label: t('landlordRoomsType2Bed') },
-                                ]
+                          label={srv.name}
+                          description={
+                            srv.price !== undefined
+                              ? `${formatCurrency(Number(srv.price) || srv.price, currentLocale)} / ${srv.unit}`
+                              : undefined
                           }
                         />
-
-                        <NumberInput
-                          label={t('landlordRoomsSingleFloorLabel')}
-                          required
-                          min={1}
-                          value={formFloor}
-                          onChange={e => {
-                            setFormFloor(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          placeholder="VD: 1, 2..."
-                        />
-
-                        <NumberInput
-                          label={t('landlordRoomsBulkAreaLabel')}
-                          min={1}
-                          step="0.1"
-                          value={formArea}
-                          onChange={e => {
-                            setFormArea(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          placeholder="25"
-                          suffixText="m²"
-                        />
-
-                        <NumberInput
-                          label={t('landlordRoomsSingleMaxOccupantsLabel')}
-                          min={1}
-                          value={formMaxOccupants}
-                          onChange={e => {
-                            setFormMaxOccupants(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          placeholder="2"
-                        />
-
-                        <SelectInput
-                          label={t('landlordRoomsSingleStatusLabel')}
-                          value={formStatus}
-                          onChange={e => {
-                            setFormStatus(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          options={[
-                            { value: 'available', label: t('landlordRoomsSingleStatusAvailable') },
-                            { value: 'occupied', label: t('landlordRoomsSingleStatusOccupied') },
-                            {
-                              value: 'maintainace',
-                              label: t('landlordRoomsSingleStatusMaintenance'),
-                            },
-                            { value: 'deposited', label: t('landlordRoomsSingleStatusDeposited') },
-                          ]}
-                        />
-
-                        <TextInput
-                          label={t('landlordRoomsSinglePriceLabel')}
-                          value={formPrice}
-                          onChange={e => {
-                            setFormPrice(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          placeholder="3.500.000"
-                          rightIcon={<span className="text-xs font-bold text-[#2AC1BC]">đ</span>}
-                        />
-                      </div>
-
-                      <div className="pt-1">
-                        <TextInput
-                          label={t('landlordRoomsSingleImageLabel')}
-                          value={formImageUrl}
-                          onChange={e => {
-                            setFormImageUrl(e.target.value)
-                            setIsSingleDirty(true)
-                          }}
-                          placeholder="https://images.unsplash.com/photo-..."
-                        />
-                      </div>
-                    </div>
-
-                    {/* Room Services Association */}
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                          <Receipt className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                          {t('landlordRoomsSingleSectionServices')}
-                        </h3>
-                        <span className="text-[11px] font-semibold text-zinc-500">
-                          {t('landlordRoomsSingleServicesSelected', {
-                            count: selectedServiceIds.length,
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-xs text-zinc-500 leading-relaxed">
-                        {t('landlordRoomsSingleServicesHint')}
-                      </p>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                        {metadata?.services && metadata.services.length > 0
-                          ? metadata.services.map(srv => {
-                              const isChecked = selectedServiceIds.includes(srv.id)
-                              return (
-                                <Checkbox
-                                  key={srv.id}
-                                  variant="card"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    setSelectedServiceIds(prev =>
-                                      prev.includes(srv.id)
-                                        ? prev.filter(id => id !== srv.id)
-                                        : [...prev, srv.id],
-                                    )
-                                    setIsSingleDirty(true)
-                                  }}
-                                  label={srv.name}
-                                  description={
-                                    srv.price !== undefined
-                                      ? `${formatCurrency(Number(srv.price) || srv.price, currentLocale)} / ${srv.unit}`
-                                      : undefined
-                                  }
-                                />
-                              )
-                            })
-                          : [
-                              {
-                                id: 'dien',
-                                name: t('landlordRoomsServiceElectricity'),
-                                rate: '3.500 đ/kWh',
-                              },
-                              {
-                                id: 'nuoc',
-                                name: t('landlordRoomsServiceWater'),
-                                rate: '25.000 đ/m³',
-                              },
-                              {
-                                id: 'wifi',
-                                name: t('landlordRoomsServiceWifi'),
-                                rate: '100.000 đ/tháng',
-                              },
-                              {
-                                id: 'rac',
-                                name: t('landlordRoomsServiceTrash'),
-                                rate: '20.000 đ/phòng',
-                              },
-                            ].map((srv, idx) => (
-                              <Checkbox
-                                key={idx}
-                                variant="card"
-                                defaultChecked
-                                label={srv.name}
-                                description={srv.rate}
-                              />
-                            ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Amenities & Notes */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-3">
-                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <Target className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                        {t('landlordRoomsSingleSectionAmenities')}
-                      </h3>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          'WiFi',
-                          'Điều hòa',
-                          'Nóng lạnh',
-                          'Tủ quần áo',
-                          'Giường',
-                          'Kệ bếp',
-                          'Ban công',
-                          'WC riêng',
-                        ].map(item => (
-                          <Button
-                            key={item}
-                            type="button"
-                            variant={selectedAmenities.includes(item) ? 'primary' : 'outline'}
-                            size="sm"
-                            onClick={() => {
-                              setSelectedAmenities(prev =>
-                                prev.includes(item)
-                                  ? prev.filter(a => a !== item)
-                                  : [...prev, item],
-                              )
-                              setIsSingleDirty(true)
-                            }}
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer h-auto ${
-                              selectedAmenities.includes(item)
-                                ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20'
-                                : 'text-zinc-600 bg-white border-zinc-200 hover:bg-zinc-50'
-                            }`}
-                          >
-                            {item}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-5 shadow-2xs space-y-2">
-                      <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
-                        <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
-                        {t('landlordRoomsSingleSectionNotes')}
-                      </h3>
-                      <TextareaInput
-                        rows={4}
-                        value={formNotes}
-                        onChange={e => {
-                          setFormNotes(e.target.value)
-                          setIsSingleDirty(true)
-                        }}
-                        placeholder={t('landlordRoomsSingleNotesPlaceholder')}
+                      )
+                    })
+                    : [
+                      {
+                        id: 'dien',
+                        name: t('landlordRoomsServiceElectricity'),
+                        rate: '3.500 đ/kWh',
+                      },
+                      {
+                        id: 'nuoc',
+                        name: t('landlordRoomsServiceWater'),
+                        rate: '25.000 đ/m³',
+                      },
+                      {
+                        id: 'wifi',
+                        name: t('landlordRoomsServiceWifi'),
+                        rate: '100.000 đ/tháng',
+                      },
+                      {
+                        id: 'rac',
+                        name: t('landlordRoomsServiceTrash'),
+                        rate: '20.000 đ/phòng',
+                      },
+                    ].map((srv, idx) => (
+                      <Checkbox
+                        key={idx}
+                        variant="card"
+                        defaultChecked
+                        label={srv.name}
+                        description={srv.rate}
                       />
-                    </div>
-                  </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Amenities & Notes */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-3">
+                <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary" />{' '}
+                  {t('landlordRoomsSingleSectionAmenities')}
+                </Text>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    'WiFi',
+                    'Điều hòa',
+                    'Nóng lạnh',
+                    'Tủ quần áo',
+                    'Giường',
+                    'Kệ bếp',
+                    'Ban công',
+                    'WC riêng',
+                  ].map(item => (
+                    <Button
+                      key={item}
+                      variant={selectedAmenities.includes(item) ? 'primary' : 'outline'}
+                      onClick={() => {
+                        setSelectedAmenities(prev =>
+                          prev.includes(item)
+                            ? prev.filter(a => a !== item)
+                            : [...prev, item],
+                        )
+                        setIsSingleDirty(true)
+                      }}
+                    >
+                      <Text as="span" size="xs" weight="semibold">
+                        {item}
+                      </Text>
+                    </Button>
+                  ))}
                 </div>
               </div>
 
-              {/* Modal Actions */}
-              <div className="p-5 border-t border-zinc-100 flex items-center justify-end gap-3 bg-white z-10">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseSingleModal}
-                  disabled={isSingleSubmitting}
-                >
-                  {t('landlordRoomsSingleBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isSingleSubmitting}
-                  isLoading={isSingleSubmitting}
-                  leftIcon={
-                    selectedRoomId ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />
-                  }
-                >
-                  {isSingleSubmitting
-                    ? t('landlordRoomsSingleBtnSaving')
-                    : selectedRoomId
-                      ? t('landlordRoomsSingleBtnSaveEdit')
-                      : t('landlordRoomsSingleBtnSaveCreate')}
-                </Button>
+              <div className="bg-card border border-line rounded-2xl p-5 shadow-2xs space-y-2">
+                <Text as="h3" weight="bold" size="sm" className="font-bold text-foreground flex items-center gap-2">
+                  <FileSignature className="w-4 h-4 text-primary" />{' '}
+                  {t('landlordRoomsSingleSectionNotes')}
+                </Text>
+                <TextareaInput
+                  rows={4}
+                  value={formNotes}
+                  onChange={e => {
+                    setFormNotes(e.target.value)
+                    setIsSingleDirty(true)
+                  }}
+                  placeholder={t('landlordRoomsSingleNotesPlaceholder')}
+                />
               </div>
-            </form>
+            </div>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Confirmation Modal (Rule 10) */}
       <ConfirmModal
@@ -1969,29 +1791,16 @@ function ConfirmModal({
   onCancel: () => void
 }) {
   const t = useTranslations('landlord')
-  if (!isOpen) return null
   return (
-    <div
-      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onCancel()
-      }}
-    >
-      <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full text-center space-y-5 animate-in zoom-in-95 duration-200 border border-zinc-100">
-        <div className="w-14 h-14 bg-amber-50 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="text-lg font-black text-zinc-900 tracking-tight">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-xs mx-auto">
-            {message}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-center gap-3 pt-2">
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      size="sm"
+      zIndex={60}
+      showCloseButton={false}
+      footer={
+        <div className="flex items-center justify-center gap-3 w-full">
           <Button
-            type="button"
             variant="outline"
             onClick={onCancel}
             className="flex-1"
@@ -1999,15 +1808,29 @@ function ConfirmModal({
             {t('landlordRoomsContinueEditing')}
           </Button>
           <Button
-            type="button"
             variant="danger"
             onClick={onConfirm}
-            className="flex-1 bg-amber-500 hover:bg-amber-600 border-amber-500 text-white"
+            className="flex-1"
           >
             {t('landlordRoomsDiscardAndClose')}
           </Button>
         </div>
+      }
+    >
+      <div className="space-y-5 text-center">
+        <div className="w-14 h-14 bg-warning-soft border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto text-amber-500 shadow-2xs">
+          <AlertTriangle className="w-7 h-7" />
+        </div>
+
+        <div className="space-y-2">
+          <Text as="h3" variant="heading" size="lg" weight="black" className="tracking-tight text-foreground">
+            {title}
+          </Text>
+          <Text variant="body" size="xs" weight="medium" color="secondary" className="leading-relaxed max-w-xs mx-auto">
+            {message}
+          </Text>
+        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

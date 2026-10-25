@@ -61,7 +61,7 @@ export class OverviewDepositItemDto {
   @ApiProperty({ example: '2026-08-25T10:00:00.000Z' })
   date: string
 
-  @ApiProperty({ example: 'Cọc giữ phòng' })
+  @ApiProperty({ example: 'Room Holding Deposit' })
   type: string
 
   @ApiProperty({ example: 'held' })
@@ -75,7 +75,7 @@ export class OverviewMaintenanceItemDto {
   @ApiProperty({ example: 'P201' })
   room: string
 
-  @ApiProperty({ example: 'Hỏng vòi nước' })
+  @ApiProperty({ example: 'Broken faucet' })
   issue: string
 
   @ApiProperty({ example: 'high' })
@@ -112,28 +112,28 @@ export class OverviewExpiringContractDto {
 }
 
 export class OverviewCollectionStatusDto {
-  @ApiProperty({ example: 8, description: 'Số hóa đơn đã thu' })
+  @ApiProperty({ example: 8, description: 'Number of collected invoices' })
   paidCount: number
 
-  @ApiProperty({ example: '35000000.00', description: 'Tổng tiền đã thu' })
+  @ApiProperty({ example: '35000000.00', description: 'Total collected amount' })
   paidAmount: string
 
-  @ApiProperty({ example: 2, description: 'Số hóa đơn chưa thu' })
+  @ApiProperty({ example: 2, description: 'Number of uncollected invoices' })
   unpaidCount: number
 
-  @ApiProperty({ example: '7000000.00', description: 'Tổng tiền chưa thu' })
+  @ApiProperty({ example: '7000000.00', description: 'Total uncollected amount' })
   unpaidAmount: string
 
-  @ApiProperty({ example: 1, description: 'Số hóa đơn quá hạn' })
+  @ApiProperty({ example: 1, description: 'Number of overdue invoices' })
   overdueCount: number
 
-  @ApiProperty({ example: '3500000.00', description: 'Tổng tiền quá hạn' })
+  @ApiProperty({ example: '3500000.00', description: 'Total overdue amount' })
   overdueAmount: string
 
-  @ApiProperty({ example: '45500000.00', description: 'Tổng giá trị hóa đơn trong kỳ' })
+  @ApiProperty({ example: '45500000.00', description: 'Total invoice value in period' })
   totalBilledAmount: string
 
-  @ApiProperty({ example: '76.9%', description: 'Tỷ lệ thu tiền' })
+  @ApiProperty({ example: '76.9%', description: 'Collection rate' })
   collectionRate: string
 }
 
@@ -141,13 +141,13 @@ export class OverviewOccupancyMonthDto {
   @ApiProperty({ example: '08/26' })
   month: string
 
-  @ApiProperty({ example: 85, description: 'Tỷ lệ lấp đầy (%)' })
+  @ApiProperty({ example: 85, description: 'Occupancy rate (%)' })
   occupied: number
 
-  @ApiProperty({ example: 10, description: 'Tổng số phòng' })
+  @ApiProperty({ example: 10, description: 'Total rooms' })
   total: number
 
-  @ApiProperty({ example: 8, description: 'Số phòng đang có khách thuê' })
+  @ApiProperty({ example: 8, description: 'Number of occupied rooms' })
   count: number
 }
 

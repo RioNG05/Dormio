@@ -67,7 +67,7 @@ export class MessagesService {
     initialMessage?: string,
   ): Promise<ConversationResponseDto> {
     if (currentUserId === otherUserId) {
-      throw new BadRequestException('Không thể tạo cuộc trò chuyện với chính mình.')
+      throw new BadRequestException('Cannot create a conversation with yourself.')
     }
 
     // 1. Fetch both users to enforce admin gate (Rule 4 of UC-L-11)
@@ -90,13 +90,13 @@ export class MessagesService {
     ])
 
     if (!user1 || !user2) {
-      throw new NotFoundException('Người dùng không tồn tại.')
+      throw new NotFoundException('User not found.')
     }
 
     // Gate: Neither participant may have role='admin'
     if (user1.role === UserRole.admin || user2.role === UserRole.admin) {
       throw new ForbiddenException(
-        'Không hỗ trợ nhắn tin trực tiếp với quản trị viên qua kênh này.',
+        'Direct messaging with administrators is not supported via this channel.',
       )
     }
 
@@ -162,8 +162,8 @@ export class MessagesService {
 
     const participant: ParticipantDto = {
       id: user2.id,
-      username: user2.username || 'Người dùng',
-      fullName: user2.userIdentification?.fullName || user2.username || 'Người dùng',
+      username: user2.username || 'User',
+      fullName: user2.userIdentification?.fullName || user2.username || 'User',
       phoneNumber: user2.phoneNumber || '',
       avatarUrl: user2.avatarUrl,
       role: user2.role,
@@ -234,8 +234,8 @@ export class MessagesService {
 
       const participant: ParticipantDto = {
         id: otherUser.id,
-        username: otherUser.username || 'Người dùng',
-        fullName: otherUser.userIdentification?.fullName || otherUser.username || 'Người dùng',
+        username: otherUser.username || 'User',
+        fullName: otherUser.userIdentification?.fullName || otherUser.username || 'User',
         phoneNumber: otherUser.phoneNumber || '',
         avatarUrl: otherUser.avatarUrl,
         role: otherUser.role,
@@ -274,12 +274,12 @@ export class MessagesService {
     })
 
     if (!conv || conv.deletedAt) {
-      throw new NotFoundException('Cuộc trò chuyện không tồn tại.')
+      throw new NotFoundException('Conversation not found.')
     }
 
     // Access check: User must be user1 or user2
     if (conv.user1Id !== userId && conv.user2Id !== userId) {
-      throw new ForbiddenException('Bạn không có quyền xem cuộc trò chuyện này.')
+      throw new ForbiddenException('You do not have permission to view this conversation.')
     }
 
     const limit = Math.min(100, Math.max(1, Number(query?.limit) || 50))
@@ -318,12 +318,12 @@ export class MessagesService {
     })
 
     if (!conv || conv.deletedAt) {
-      throw new NotFoundException('Cuộc trò chuyện không tồn tại.')
+      throw new NotFoundException('Conversation not found.')
     }
 
     // Membership verification
     if (conv.user1Id !== senderId && conv.user2Id !== senderId) {
-      throw new ForbiddenException('Bạn không phải thành viên của cuộc trò chuyện này.')
+      throw new ForbiddenException('You are not a participant in this conversation.')
     }
 
     const now = new Date()
@@ -379,11 +379,11 @@ export class MessagesService {
     })
 
     if (!conv || conv.deletedAt) {
-      throw new NotFoundException('Cuộc trò chuyện không tồn tại.')
+      throw new NotFoundException('Conversation not found.')
     }
 
     if (conv.user1Id !== userId && conv.user2Id !== userId) {
-      throw new ForbiddenException('Bạn không có quyền thao tác trên cuộc trò chuyện này.')
+      throw new ForbiddenException('You do not have permission to perform operations on this conversation.')
     }
 
     const result = await this.prisma.message.updateMany({
@@ -465,7 +465,7 @@ export class MessagesService {
 
     if (tenantContract?.contract?.room) {
       return {
-        roomName: `Phòng ${tenantContract.contract.room.roomNumber}`,
+        roomName: `Room ${tenantContract.contract.room.roomNumber}`,
         boardingHouseName: tenantContract.contract.room.boardingHouse.name,
       }
     }
@@ -485,7 +485,7 @@ export class MessagesService {
     })
 
     if (!user) {
-      throw new NotFoundException('Người dùng không tồn tại.')
+      throw new NotFoundException('User not found.')
     }
 
     if (user.role === UserRole.landlord) {
@@ -530,11 +530,11 @@ export class MessagesService {
         if (!contactsMap.has(tc.tenant.id)) {
           contactsMap.set(tc.tenant.id, {
             id: tc.tenant.id,
-            fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
+            fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
             phoneNumber: tc.tenant.phoneNumber || '',
             avatarUrl: tc.tenant.avatarUrl,
             role: tc.tenant.role,
-            roomName: `Phòng ${tc.contract.room.roomNumber}`,
+            roomName: `Room ${tc.contract.room.roomNumber}`,
             boardingHouseName: tc.contract.room.boardingHouse.name,
           })
         }
@@ -582,11 +582,11 @@ export class MessagesService {
         if (!contactsMap.has(owner.id)) {
           contactsMap.set(owner.id, {
             id: owner.id,
-            fullName: owner.userIdentification?.fullName || owner.username || 'Chủ trọ',
+            fullName: owner.userIdentification?.fullName || owner.username || 'Landlord',
             phoneNumber: owner.phoneNumber || '',
             avatarUrl: owner.avatarUrl,
             role: owner.role,
-            roomName: `Phòng ${tc.contract.room.roomNumber}`,
+            roomName: `Room ${tc.contract.room.roomNumber}`,
             boardingHouseName: tc.contract.room.boardingHouse.name,
           })
         }

@@ -55,16 +55,22 @@ export class InvoicesService {
   ) {}
 
   /**
-   * Helper to resolve active contract for tenant
+   * Helper to resolve active contract for tenant (supports optional contractId for multi-room scoping)
    */
-  async resolveActiveTenantContract(tenantId: string) {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId,
-        contract: {
-          status: 'active',
-        },
+  async resolveActiveTenantContract(tenantId: string, contractId?: string) {
+    const whereClause: any = {
+      tenantId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -76,10 +82,11 @@ export class InvoicesService {
           },
         },
       },
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
-      throw new NotFoundException('Không tìm thấy hợp đồng thuê phòng đang có hiệu lực của bạn.')
+      throw new NotFoundException('No active lease contract found for your account.')
     }
 
     return tenantContract.contract
@@ -88,9 +95,12 @@ export class InvoicesService {
   /**
    * UC-T-05: Query all invoices and item details for the tenant's active room
    */
-  async getTenantInvoices(userId: string): Promise<TenantInvoicesListResponseDto> {
-    this.logger.log(`Fetching invoices for tenant user ${userId}`)
-    const contract = await this.resolveActiveTenantContract(userId)
+  async getTenantInvoices(
+    userId: string,
+    contractId?: string,
+  ): Promise<TenantInvoicesListResponseDto> {
+    this.logger.log(`Fetching invoices for tenant user ${userId} (contractId=${contractId})`)
+    const contract = await this.resolveActiveTenantContract(userId, contractId)
 
     const invoices = await this.prisma.invoice.findMany({
       where: {
@@ -116,7 +126,7 @@ export class InvoicesService {
 
     const data: TenantInvoiceDto[] = invoices.map(inv => {
       const dueDate = new Date(inv.dueDate)
-      const period = `Tháng ${String(dueDate.getMonth() + 1).padStart(2, '0')}/${dueDate.getFullYear()}`
+      const period = `Month ${String(dueDate.getMonth() + 1).padStart(2, '0')}/${dueDate.getFullYear()}`
 
       let displayStatus: 'paid' | 'unpaid' | 'overdue' = 'unpaid'
       if (inv.status === 'paid') {
@@ -129,18 +139,18 @@ export class InvoicesService {
 
       // Map line item details
       const details: InvoiceItemDetailDto[] = inv.invoiceItems.map(item => {
-        let name = item.service?.name || 'Tiền phòng'
+        let name = item.service?.name || 'Room rent'
         const isMetered = item.service?.isMetered ?? false
-        let unit = item.service?.unit || 'tháng'
+        let unit = item.service?.unit || 'month'
 
         if (!item.serviceId) {
-          name = 'Tiền phòng'
-          unit = 'tháng'
-        } else if (name.toLowerCase().includes('điện')) {
-          name = 'Tiền điện'
+          name = 'Room rent'
+          unit = 'month'
+        } else if (/electr|\u0111i\u1EC7n/i.test(name)) {
+          name = 'Electricity'
           unit = 'kWh'
-        } else if (name.toLowerCase().includes('nước')) {
-          name = 'Tiền nước'
+        } else if (/water|n\u01B0\u1EDBc/i.test(name)) {
+          name = 'Water'
           unit = 'm³'
         }
 
@@ -191,7 +201,7 @@ export class InvoicesService {
     const invoicesList = await this.getTenantInvoices(userId)
     const invoice = invoicesList.data.find(i => i.id === invoiceId)
     if (!invoice) {
-      throw new NotFoundException('Không tìm thấy thông tin hóa đơn.')
+      throw new NotFoundException('Invoice information not found.')
     }
     return invoice
   }
@@ -249,12 +259,12 @@ export class InvoicesService {
         const sName = item.service?.name?.toLowerCase() || ''
         const amt = Number(item.amount)
 
-        if (!item.serviceId || sName.includes('phòng')) {
+        if (!item.serviceId || /room|rent|ph\u00F2ng/i.test(sName)) {
           roomRent += amt
-        } else if (sName.includes('điện')) {
+        } else if (/electr|\u0111i\u1EC7n/i.test(sName)) {
           electricityKwh += item.quantity
           electricityAmount += amt
-        } else if (sName.includes('nước')) {
+        } else if (/water|n\u01B0\u1EDBc/i.test(sName)) {
           waterM3 += item.quantity
           waterAmount += amt
         } else {
@@ -405,7 +415,7 @@ export class InvoicesService {
       const period = `T${month}/${year}`
 
       const breakdown: PaymentBreakdownItemDto[] = inv.invoiceItems.map(item => ({
-        label: item.service?.name || 'Tiền thuê phòng',
+        label: item.service?.name || 'Room rent',
         amount: Number(item.amount),
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
@@ -416,7 +426,7 @@ export class InvoicesService {
         id: inv.id,
         source: 'monthly_invoice',
         contractId: inv.contractId,
-        boardingHouseName: inv.contract?.room?.boardingHouse?.name || 'Nhà trọ Dormio',
+        boardingHouseName: inv.contract?.room?.boardingHouse?.name || 'Dormio Boarding House',
         roomNumber: inv.contract?.room?.roomNumber || '-',
         totalAmount: Number(inv.totalAmount),
         paidAt: inv.payment?.paidAt ? inv.payment.paidAt.toISOString() : null,
@@ -442,7 +452,7 @@ export class InvoicesService {
 
       const breakdown: PaymentBreakdownItemDto[] = [
         {
-          label: p.depositId ? 'Tiền cọc giữ phòng' : 'Tiền trọ trọn gói',
+          label: p.depositId ? 'Holding Deposit' : 'Package Rent',
           amount: Number(p.amount),
           quantity: 1,
           unitPrice: Number(p.amount),
@@ -458,7 +468,7 @@ export class InvoicesService {
         roomNumber: '-',
         totalAmount: Number(p.amount),
         paidAt: p.paidAt ? p.paidAt.toISOString() : null,
-        dueDate: (p.paidAt || p.createdAt).toISOString(),
+        dueDate: (p.paidAt || p.createdAt || new Date()).toISOString(),
         period,
         status: p.status === 'success' ? 'paid' : p.status,
         paymentMethod: p.method || null,
@@ -466,7 +476,7 @@ export class InvoicesService {
         receiptNumber: p.receiptNumber || null,
         qrCodeUrl: p.qrCodeUrl || null,
         breakdown,
-        createdAt: p.createdAt.toISOString(),
+        createdAt: (p.createdAt || p.paidAt || new Date()).toISOString(),
       }
     })
 
@@ -675,8 +685,7 @@ export class InvoicesService {
           contract: {
             include: {
               tenantContracts: {
-                where: { isPrimary: true },
-                include: {
+                                include: {
                   tenant: {
                     include: {
                       userIdentification: true,
@@ -711,24 +720,24 @@ export class InvoicesService {
       const tenantName =
         primaryTenant?.userIdentification?.fullName ||
         primaryTenant?.username ||
-        'Chưa có người thuê'
+        'Vacant'
       const tenantPhone = primaryTenant?.phoneNumber || ''
 
       const dueDateObj = new Date(inv.dueDate)
-      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
+      const period = `Month ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
       const periodShort = `${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
 
-      let displayStatus: 'Đã thu' | 'Chưa thu' | 'Quá hạn' = 'Chưa thu'
+      let displayStatus: 'Paid' | 'Unpaid' | 'Overdue' = 'Unpaid'
       let rawStatus: 'paid' | 'unpaid' | 'overdue' | 'cancelled' = inv.status
 
       if (inv.status === 'paid') {
-        displayStatus = 'Đã thu'
+        displayStatus = 'Paid'
         rawStatus = 'paid'
       } else if (dueDateObj < now || inv.status === 'overdue') {
-        displayStatus = 'Quá hạn'
+        displayStatus = 'Overdue'
         rawStatus = 'overdue'
       } else {
-        displayStatus = 'Chưa thu'
+        displayStatus = 'Unpaid'
         rawStatus = 'unpaid'
       }
 
@@ -746,17 +755,17 @@ export class InvoicesService {
         const sName = (item.service?.name || '').toLowerCase()
         const amt = Number(item.amount)
 
-        if (!item.serviceId || sName.includes('phòng')) {
+        if (!item.serviceId || /room|rent|ph\u00F2ng/i.test(sName)) {
           rentAmount += amt
-        } else if (sName.includes('điện')) {
+        } else if (/electr|\u0111i\u1EC7n/i.test(sName)) {
           elecRate = Number(item.unitPrice) || elecRate
           elecNew = item.quantity
-        } else if (sName.includes('nước')) {
+        } else if (/water|n\u01B0\u1EDBc/i.test(sName)) {
           waterRate = Number(item.unitPrice) || waterRate
           waterNew = item.quantity
         } else {
           serviceFees.push({
-            name: item.service?.name || 'Phí dịch vụ',
+            name: item.service?.name || 'Service fee',
             amount: amt,
           })
         }
@@ -807,9 +816,9 @@ export class InvoicesService {
         paidAt: inv.payment?.paidAt ? inv.payment.paidAt.toISOString() : undefined,
         paymentMethod:
           inv.payment?.method === 'banking'
-            ? 'Chuyển khoản VietQR'
+            ? 'VietQR Bank Transfer'
             : inv.payment?.method === 'cash'
-              ? 'Tiền mặt'
+              ? 'Cash'
               : undefined,
         vietQrUrl,
         ocrMeterImage,
@@ -852,8 +861,7 @@ export class InvoicesService {
         contract: {
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -879,29 +887,29 @@ export class InvoicesService {
     })
 
     if (!inv || inv.room.boardingHouseId !== boardingHouseId) {
-      throw new NotFoundException('Không tìm thấy hóa đơn cần xem chi tiết')
+      throw new NotFoundException('Invoice not found.')
     }
 
     const now = new Date()
     const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null
     const tenantName =
-      primaryTenant?.userIdentification?.fullName || primaryTenant?.username || 'Chưa có người thuê'
+      primaryTenant?.userIdentification?.fullName || primaryTenant?.username || 'Vacant'
     const tenantPhone = primaryTenant?.phoneNumber || ''
 
     const dueDateObj = new Date(inv.dueDate)
     const periodShort = `${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
 
-    let displayStatus: 'Đã thu' | 'Chưa thu' | 'Quá hạn' = 'Chưa thu'
+    let displayStatus: 'Paid' | 'Unpaid' | 'Overdue' = 'Unpaid'
     let rawStatus: 'paid' | 'unpaid' | 'overdue' | 'cancelled' = inv.status
 
     if (inv.status === 'paid') {
-      displayStatus = 'Đã thu'
+      displayStatus = 'Paid'
       rawStatus = 'paid'
     } else if (dueDateObj < now || inv.status === 'overdue') {
-      displayStatus = 'Quá hạn'
+      displayStatus = 'Overdue'
       rawStatus = 'overdue'
     } else {
-      displayStatus = 'Chưa thu'
+      displayStatus = 'Unpaid'
       rawStatus = 'unpaid'
     }
 
@@ -918,17 +926,17 @@ export class InvoicesService {
       const sName = (item.service?.name || '').toLowerCase()
       const amt = Number(item.amount)
 
-      if (!item.serviceId || sName.includes('phòng')) {
+      if (!item.serviceId || /room|rent|ph\u00F2ng/i.test(sName)) {
         rentAmount += amt
-      } else if (sName.includes('điện')) {
+      } else if (/electr|\u0111i\u1EC7n/i.test(sName)) {
         elecRate = Number(item.unitPrice) || elecRate
         elecNew = item.quantity
-      } else if (sName.includes('nước')) {
+      } else if (/water|n\u01B0\u1EDBc/i.test(sName)) {
         waterRate = Number(item.unitPrice) || waterRate
         waterNew = item.quantity
       } else {
         serviceFees.push({
-          name: item.service?.name || 'Phí dịch vụ',
+          name: item.service?.name || 'Service fee',
           amount: amt,
         })
       }
@@ -978,9 +986,9 @@ export class InvoicesService {
       paidAt: inv.payment?.paidAt ? inv.payment.paidAt.toISOString() : undefined,
       paymentMethod:
         inv.payment?.method === 'banking'
-          ? 'Chuyển khoản VietQR'
+          ? 'VietQR Bank Transfer'
           : inv.payment?.method === 'cash'
-            ? 'Tiền mặt'
+            ? 'Cash'
             : undefined,
       vietQrUrl,
       ocrMeterImage,
@@ -1012,8 +1020,7 @@ export class InvoicesService {
           where: { status: 'active' },
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -1032,7 +1039,7 @@ export class InvoicesService {
     })
 
     if (!room) {
-      throw new NotFoundException('Không tìm thấy phòng tương ứng trong khu trọ này')
+      throw new NotFoundException('Corresponding room not found in this boarding house')
     }
 
     const activeContract = room.contracts[0] || null
@@ -1040,12 +1047,12 @@ export class InvoicesService {
     // 2. Resolve electricity & water metered services for this room if available
     const elecService =
       room.roomServices.find(
-        rs => rs.service.isMetered && rs.service.name.toLowerCase().includes('điện'),
+        rs => rs.service.isMetered && /electr|\u0111i\u1EC7n/i.test(rs.service.name),
       )?.service || null
 
     const waterService =
       room.roomServices.find(
-        rs => rs.service.isMetered && rs.service.name.toLowerCase().includes('nước'),
+        rs => rs.service.isMetered && /water|n\u01B0\u1EDBc/i.test(rs.service.name),
       )?.service || null
 
     // 3. Compute cost breakdown
@@ -1225,8 +1232,7 @@ export class InvoicesService {
         contract: {
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-            },
+                          },
           },
         },
         payment: true,
@@ -1234,7 +1240,7 @@ export class InvoicesService {
     })
 
     if (!invoice || invoice.room.boardingHouseId !== boardingHouseId) {
-      throw new NotFoundException('Không tìm thấy hóa đơn cần xác nhận thanh toán')
+      throw new NotFoundException('Invoice to confirm payment not found')
     }
 
     // Idempotency: If invoice is already paid and payment exists, return successfully
@@ -1242,7 +1248,7 @@ export class InvoicesService {
       this.logger.log(`Invoice ${invoice.id} already paid (Payment ID: ${invoice.payment.id})`)
       return {
         success: true,
-        message: 'Hóa đơn đã được ghi nhận thanh toán trước đó.',
+        message: 'Invoice was already recorded as paid.',
         paymentId: invoice.payment.id,
       }
     }
@@ -1301,7 +1307,7 @@ export class InvoicesService {
             method: dto.method || 'cash',
             transactionRef,
             receiptNumber,
-            note: dto.note || 'Thanh toán trực tiếp ghi nhận bởi chủ trọ',
+            note: dto.note || 'Direct payment recorded by landlord',
           },
         },
       })
@@ -1325,7 +1331,7 @@ export class InvoicesService {
 
     return {
       success: true,
-      message: 'Ghi nhận thanh toán thành công.',
+      message: 'Payment recorded successfully.',
       paymentId: payment.id,
     }
   }
@@ -1713,8 +1719,7 @@ export class InvoicesService {
         contract: {
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -1757,7 +1762,7 @@ export class InvoicesService {
         const tenantName =
           primaryTenant?.userIdentification?.fullName ||
           primaryTenant?.username ||
-          'Chưa có thông tin'
+          'No information'
         const tenantPhone = primaryTenant?.phoneNumber || ''
         const tenantEmail = primaryTenant?.email || undefined
 
@@ -1782,7 +1787,7 @@ export class InvoicesService {
       const dueDateObj = new Date(inv.dueDate)
       const diffMs = now.getTime() - dueDateObj.getTime()
       const agingDays = diffMs > 0 ? Math.floor(diffMs / (1000 * 60 * 60 * 24)) : 0
-      const period = `Tháng ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
+      const period = `Month ${String(dueDateObj.getMonth() + 1).padStart(2, '0')}/${dueDateObj.getFullYear()}`
 
       roomMap.get(roomId)!.invoices.push({
         id: inv.id,
@@ -1983,8 +1988,7 @@ export class InvoicesService {
           where: { status: 'active' },
           include: {
             tenantContracts: {
-              where: { isPrimary: true },
-              include: {
+                            include: {
                 tenant: {
                   include: {
                     userIdentification: true,
@@ -1998,12 +2002,12 @@ export class InvoicesService {
     })
 
     if (!room) {
-      throw new NotFoundException('Không tìm thấy phòng trong nhà trọ này.')
+      throw new NotFoundException('Room not found in this boarding house.')
     }
 
     const primaryTenant = room.contracts[0]?.tenantContracts[0]?.tenant
     if (!primaryTenant) {
-      throw new BadRequestException('Phòng này hiện chưa có hợp đồng thuê hoặc người thuê chính.')
+      throw new BadRequestException('This room currently has no lease contract or primary tenant.')
     }
 
     const invoices = await this.prisma.invoice.findMany({
@@ -2015,12 +2019,12 @@ export class InvoicesService {
     })
 
     if (invoices.length === 0) {
-      throw new BadRequestException('Phòng này hiện không có khoản nợ nào cần thanh toán.')
+      throw new BadRequestException('This room currently has no unpaid debt.')
     }
 
     const totalDebt = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount), 0)
     const tenantName =
-      primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê'
+      primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Tenant'
     const tenantPhone = primaryTenant.phoneNumber
 
     // Dispatch in-app notification & BullMQ job
@@ -2035,11 +2039,11 @@ export class InvoicesService {
     })
 
     // Formatted copy text for Zalo / SMS
-    const reminderText = `[Dormio - ${room.boardingHouse.name}]\nKính gửi anh/chị ${tenantName} (Phòng ${room.roomNumber}),\nHệ thống xin thông báo hiện tại phòng còn khoản nợ tiền trọ/dịch vụ chưa thanh toán: ${totalDebt.toLocaleString('vi-VN')} ₫ (${invoices.length} kỳ hóa đơn).\n${note ? `Ghi chú từ chủ trọ: "${note}"\n` : ''}Kính mong anh/chị thu xếp thanh toán sớm qua ứng dụng Dormio hoặc liên hệ chủ trọ. Trân trọng!`
+    const reminderText = `[Dormio - ${room.boardingHouse.name}]\nDear ${tenantName} (Room ${room.roomNumber}),\nThe system informs you that the room currently has unpaid rent/services: ${totalDebt.toLocaleString('vi-VN')} VND (${invoices.length} billing cycle(s)).\n${note ? `Landlord note: "${note}"\n` : ''}Please arrange payment via the Dormio app or contact the landlord. Best regards!`
 
     return {
       success: true,
-      message: `Đã gửi thông báo nhắc nợ tới ${tenantName} thành công`,
+      message: `Debt reminder notification sent to ${tenantName} successfully`,
       tenantName,
       tenantPhone,
       roomNumber: room.roomNumber,

@@ -3,18 +3,28 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common'
+import {
+  BusinessNotFoundException,
+  BusinessBadRequestException,
+  BusinessConflictException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { NotificationsService } from '../notifications/notifications.service'
 import { AuthService } from '../auth/auth.service'
 import { UploadService } from '../upload/upload.service'
 import { TenancyDetailsDto } from './dto/tenancy-details.dto'
+import { TenantTenancyItemDto } from './dto/tenant-tenancy-item.dto'
 import { CreateContractPlatformDto } from './dto/create-contract-platform.dto'
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto'
 import { QueryContractsDto } from './dto/query-contracts.dto'
 import { ExportContractResponseDto } from './dto/export-contract-response.dto'
+import { UpdateContractDto } from './dto/update-contract.dto'
 import { ContractTemplateRenderer, ContractTemplateData } from './contract-template.renderer'
-import { Prisma } from '@prisma'
+import { Prisma, OccupantStatus } from '@prisma'
 import { randomUUID } from 'crypto'
 
 /**
@@ -27,6 +37,8 @@ import { randomUUID } from 'crypto'
  */
 @Injectable()
 export class ContractsService {
+  private readonly logger = new Logger(ContractsService.name)
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
@@ -50,7 +62,10 @@ export class ContractsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc nhà trọ này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_NOT_FOUND,
+        'Room does not exist or does not belong to this boarding house.',
+      )
     }
 
     const deposit = await this.prisma.deposit.findFirst({
@@ -127,7 +142,7 @@ export class ContractsService {
       tenant: tenant
         ? {
             id: tenant.id,
-            fullName: tenant.username || 'Khách đặt cọc',
+            fullName: tenant.username || 'Deposit Tenant',
             phoneNumber: tenant.phoneNumber,
             email: tenant.email,
             userIdentification: (tenant as any).userIdentification || null,
@@ -191,7 +206,10 @@ export class ContractsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_NOT_FOUND,
+        'Room does not exist or does not belong to this property.',
+      )
     }
 
     // Guard: deposit must exist, type=platform, contractId=null, status=paid
@@ -209,14 +227,16 @@ export class ContractsService {
     })
 
     if (!deposit) {
-      throw new BadRequestException(
-        'Phòng không có tiền đặt cọc giữ chỗ nền tảng nào đang chờ lập hợp đồng.',
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_INVALID_STATUS,
+        'The room does not have any pending platform reservation deposit for contract creation.',
       )
     }
 
     if (deposit.status !== 'paid') {
-      throw new BadRequestException(
-        `Không thể lập hợp đồng từ khoản cọc có trạng thái: ${deposit.status}. Khoản cọc phải có trạng thái 'paid'.`,
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_INVALID_STATUS,
+        `Cannot create contract from deposit with status: ${deposit.status}. Deposit status must be 'paid'.`,
       )
     }
 
@@ -224,7 +244,10 @@ export class ContractsService {
     const tenantId = deposit.payment?.payerId || deposit.post?.postedBy || deposit.recordedBy
 
     if (!tenantId) {
-      throw new BadRequestException('Không xác định được danh tính khách thuê đã đặt cọc.')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_MISSING_TENANT,
+        'Cannot identify the prospective tenant who placed the deposit.',
+      )
     }
 
     // Execute in atomic transaction
@@ -247,9 +270,23 @@ export class ContractsService {
         data: {
           contractId: newContract.id,
           tenantId,
-          isPrimary: true,
         },
       })
+
+      // Ensure platform tenant is registered as active RoomOccupant
+      const existingPlatformOcc = await tx.roomOccupant.findFirst({
+        where: { roomId: deposit.roomId, tenantId, status: OccupantStatus.active },
+      })
+      if (!existingPlatformOcc) {
+        await tx.roomOccupant.create({
+          data: {
+            boardingHouseId,
+            roomId: deposit.roomId,
+            tenantId,
+            status: OccupantStatus.active,
+          },
+        })
+      }
 
       // 3. Update existing Deposit (Rule 8: never insert a new one)
       await tx.deposit.update({
@@ -355,7 +392,10 @@ export class ContractsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ROOM_NOT_FOUND,
+        'Room does not exist or does not belong to this property.',
+      )
     }
 
     // Routing check: if room has unconverted platform deposit, landlord should use Flow A
@@ -369,8 +409,9 @@ export class ContractsService {
     })
 
     if (pendingPlatformDeposit) {
-      throw new ConflictException(
-        'Phòng này đang có khoản đặt cọc nền tảng chưa lập hợp đồng. Vui lòng sử dụng tính năng lập hợp đồng từ cọc nền tảng (Flow A).',
+      throw new BusinessConflictException(
+        BusinessErrorCode.ROOM_HAS_ACTIVE_CONTRACT,
+        'This room currently has an unassigned platform deposit. Please create the contract from the platform deposit (Flow A).',
       )
     }
 
@@ -410,7 +451,7 @@ export class ContractsService {
           fullName: dto.identification.fullName || dto.tenantFullName,
           dateOfBirth: new Date(dto.identification.dateOfBirth),
           gender: dto.identification.gender,
-          nationnality: dto.identification.nationality || 'Việt Nam',
+          nationnality: dto.identification.nationality || 'Vietnam',
           placeOfOrigin: dto.identification.placeOfOrigin || {},
           placeOfResidence: dto.identification.placeOfResidence || {},
           issueDate: dto.identification.issueDate
@@ -425,6 +466,27 @@ export class ContractsService {
           cardBackUrl: cardBackUrl || '',
         },
       })
+    }
+
+    // Validate room occupancy (Room-First Contract Creation Rule)
+    const targetUserId = dto.tenantId || tenantUser.id
+    const activeOccupants = await this.prisma.roomOccupant.findMany({
+      where: { roomId: dto.roomId, status: OccupantStatus.active },
+    })
+
+    if (activeOccupants.length === 0) {
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.ROOM_HAS_NO_OCCUPANTS,
+        'Room has no active occupants. Please add tenants to the room before creating a contract.',
+      )
+    }
+
+    const isTargetUserInRoom = activeOccupants.some(o => o.tenantId === targetUserId)
+    if (!isTargetUserInRoom) {
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.TENANT_NOT_IN_ROOM,
+        'The selected tenant does not reside in this room.',
+      )
     }
 
     // 3. Execute in atomic transaction
@@ -442,14 +504,18 @@ export class ContractsService {
         },
       })
 
-      // Create TenantContract
-      await tx.tenantContract.create({
-        data: {
-          contractId: newContract.id,
-          tenantId: tenantUser.id,
-          isPrimary: true,
-        },
-      })
+      // Link all active occupants to this contract (Equal co-tenancy)
+      const tenantIdsToLink = Array.from(
+        new Set([targetUserId, ...activeOccupants.map(o => o.tenantId)]),
+      )
+      for (const tId of tenantIdsToLink) {
+        await tx.tenantContract.create({
+          data: {
+            contractId: newContract.id,
+            tenantId: tId,
+          },
+        })
+      }
 
       // Create manual Deposit record (type: 'contract')
       const deposit = await tx.deposit.create({
@@ -615,7 +681,7 @@ export class ContractsService {
       totalPages: Math.ceil(total / limit),
       data: contracts.map(c => {
         const primaryTenant =
-          c.tenantContracts.find(tc => tc.isPrimary)?.tenant || c.tenantContracts[0]?.tenant
+          c.tenantContracts[0]?.tenant
 
         return {
           id: c.id,
@@ -638,7 +704,7 @@ export class ContractsService {
                 fullName:
                   primaryTenant.userIdentification?.fullName ||
                   primaryTenant.username ||
-                  'Khách thuê',
+                  'Tenant',
                 phoneNumber: primaryTenant.phoneNumber,
                 email: primaryTenant.email,
                 userIdentification: primaryTenant.userIdentification,
@@ -646,11 +712,10 @@ export class ContractsService {
             : null,
           tenantContracts: c.tenantContracts.map(tc => ({
             id: tc.id,
-            isPrimary: tc.isPrimary,
-            tenant: {
+              tenant: {
               id: tc.tenant.id,
               fullName:
-                tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
+                tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
               phoneNumber: tc.tenant.phoneNumber,
               email: tc.tenant.email,
               userIdentification: tc.tenant.userIdentification,
@@ -710,12 +775,14 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
     }
 
     const primaryTenant =
-      contract.tenantContracts.find(tc => tc.isPrimary)?.tenant ||
-      contract.tenantContracts[0]?.tenant
+contract.tenantContracts[0]?.tenant
 
     return {
       id: contract.id,
@@ -741,7 +808,7 @@ export class ContractsService {
         ? {
             id: primaryTenant.id,
             fullName:
-              primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê',
+              primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Tenant',
             phoneNumber: primaryTenant.phoneNumber,
             email: primaryTenant.email,
             userIdentification: primaryTenant.userIdentification,
@@ -749,10 +816,10 @@ export class ContractsService {
         : null,
       tenantContracts: contract.tenantContracts.map(tc => ({
         id: tc.id,
-        isPrimary: tc.isPrimary,
+        isPrimary: true,
         tenant: {
           id: tc.tenant.id,
-          fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Khách thuê',
+          fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Tenant',
           phoneNumber: tc.tenant.phoneNumber,
           email: tc.tenant.email,
           userIdentification: tc.tenant.userIdentification,
@@ -782,7 +849,225 @@ export class ContractsService {
     }
   }
 
+  /**
+   * Updates contract details (rent price, deposit, payment date, end date, note/reason).
+   * Validates contract exists and belongs to the specified boarding house.
+   * Updates contract and linked deposit within a single transaction.
+   * Records AuditLog mutations in the same transaction (Rule 4).
+   *
+   * @param landlordId Authenticated landlord ID
+   * @param boardingHouseId Active Boarding House context
+   * @param contractId Contract UUID
+   * @param dto UpdateContractDto payload
+   * @param ipAddress Client IP address for audit logging
+   * @returns Updated contract aggregate
+   */
+  async updateContract(
+    landlordId: string,
+    boardingHouseId: string,
+    contractId: string,
+    dto: UpdateContractDto,
+    ipAddress?: string,
+  ) {
+    const existingContract = await this.prisma.contract.findFirst({
+      where: {
+        id: contractId,
+        room: { boardingHouseId },
+      },
+      include: {
+        deposit: true,
+      },
+    })
+
+    if (!existingContract) {
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
+    }
+
+    if (existingContract.status === 'canceled') {
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.CONTRACT_INVALID_STATUS,
+        'Cannot modify a canceled contract.',
+      )
+    }
+
+    await this.prisma.$transaction(async tx => {
+      // 1. Prepare contract update payload
+      const contractUpdateData: Prisma.ContractUpdateInput = {}
+      if (dto.rentPrice !== undefined) {
+        contractUpdateData.rentPrice = new Prisma.Decimal(dto.rentPrice)
+      }
+      if (dto.monthlyPaymentDate !== undefined) {
+        contractUpdateData.monthlyPaymentDate = dto.monthlyPaymentDate
+      }
+      if (dto.endDate !== undefined) {
+        contractUpdateData.endDate = new Date(dto.endDate)
+      }
+      if (dto.note !== undefined) {
+        contractUpdateData.note = dto.note
+      }
+
+      await tx.contract.update({
+        where: { id: contractId },
+        data: contractUpdateData,
+      })
+
+      // 2. AuditLog for Contract update (Rule 4)
+      await tx.auditLog.create({
+        data: {
+          action: 'update',
+          entityType: 'CONTRACT',
+          entityId: contractId,
+          boardingHouseId,
+          userId: landlordId,
+          ipAddress: ipAddress || '127.0.0.1',
+          oldValue: {
+            rentPrice: Number(existingContract.rentPrice),
+            monthlyPaymentDate: existingContract.monthlyPaymentDate,
+            endDate: existingContract.endDate,
+            note: existingContract.note,
+          },
+          newValue: {
+            rentPrice: dto.rentPrice !== undefined ? dto.rentPrice : Number(existingContract.rentPrice),
+            monthlyPaymentDate:
+              dto.monthlyPaymentDate !== undefined
+                ? dto.monthlyPaymentDate
+                : existingContract.monthlyPaymentDate,
+            endDate: dto.endDate !== undefined ? dto.endDate : existingContract.endDate,
+            note: dto.note !== undefined ? dto.note : existingContract.note,
+            reason: dto.reason,
+          },
+        },
+      })
+
+      // 3. Deposit update / creation if depositAmount is provided
+      if (dto.depositAmount !== undefined) {
+        if (existingContract.deposit) {
+          if (Number(existingContract.deposit.amount) !== dto.depositAmount) {
+            await tx.deposit.update({
+              where: { id: existingContract.deposit.id },
+              data: {
+                amount: new Prisma.Decimal(dto.depositAmount),
+              },
+            })
+
+            await tx.auditLog.create({
+              data: {
+                action: 'update',
+                entityType: 'DEPOSIT',
+                entityId: existingContract.deposit.id,
+                boardingHouseId,
+                userId: landlordId,
+                ipAddress: ipAddress || '127.0.0.1',
+                oldValue: {
+                  amount: Number(existingContract.deposit.amount),
+                },
+                newValue: {
+                  amount: dto.depositAmount,
+                  reason: dto.reason,
+                },
+              },
+            })
+          }
+        } else if (dto.depositAmount > 0) {
+          const newDeposit = await tx.deposit.create({
+            data: {
+              contractId: existingContract.id,
+              roomId: existingContract.roomId,
+              boardingHouseId,
+              type: 'contract',
+              amount: new Prisma.Decimal(dto.depositAmount),
+              status: 'paid',
+              recordedManually: true,
+              recordedBy: landlordId,
+              note: `Deposit created during contract update: ${dto.reason}`,
+            },
+          })
+
+          await tx.auditLog.create({
+            data: {
+              action: 'create',
+              entityType: 'DEPOSIT',
+              entityId: newDeposit.id,
+              boardingHouseId,
+              userId: landlordId,
+              ipAddress: ipAddress || '127.0.0.1',
+              newValue: {
+                amount: Number(newDeposit.amount),
+                type: newDeposit.type,
+                status: newDeposit.status,
+                reason: dto.reason,
+              },
+            },
+          })
+        }
+      }
+    })
+
+    return this.getContractById(boardingHouseId, contractId)
+  }
+
   // ─── UC-T-06: View Tenancy Details ──────────────────────────────────────────
+
+  /**
+   * Returns list of all active room tenancies for the authenticated tenant.
+   * Enables tenants to occupy and switch between multiple rooms simultaneously.
+   *
+   * @param userId Authenticated tenant's User ID
+   * @returns Array of TenantTenancyItemDto
+   */
+  async getMyTenancies(userId: string): Promise<TenantTenancyItemDto[]> {
+    this.logger.log(`Fetching all active room tenancies for user: ${userId}`)
+
+    const tenantContracts = await this.prisma.tenantContract.findMany({
+      where: {
+        tenantId: userId,
+        contract: {
+          status: 'active',
+        },
+      },
+      include: {
+        contract: {
+          include: {
+            room: {
+              include: {
+                roomType: true,
+                boardingHouse: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ createdAt: 'desc' }],
+    })
+
+    return tenantContracts
+      .filter(tc => tc.contract && tc.contract.room && tc.contract.room.boardingHouse)
+      .map(tc => {
+        const { contract } = tc
+        const { room } = contract
+        const { boardingHouse } = room
+
+        const formattedAddress = this.formatAddress(boardingHouse)
+
+        return {
+          contractId: contract.id,
+          roomId: room.id,
+          roomNumber: room.roomNumber,
+          floor: room.floor,
+          roomTypeName: room.roomType?.name || undefined,
+          boardingHouseId: boardingHouse.id,
+          boardingHouseName: boardingHouse.name,
+          boardingHouseAddress: formattedAddress,
+          rentPrice: Number(contract.rentPrice),
+          startDate: contract.startDate.toISOString(),
+          endDate: contract.endDate.toISOString(),
+          coverPhotoUrl: boardingHouse.thumbnail || undefined,
+        }
+      })
+  }
 
   /**
    * Retrieves the full tenancy aggregate for the authenticated tenant:
@@ -790,16 +1075,26 @@ export class ContractsService {
    * + active RoomServices (fee structure) + BoardingHouse broadcast Announcements.
    *
    * @param userId Authenticated tenant's User ID
+   * @param contractId Optional Contract UUID for multi-room selection
    * @returns TenancyDetailsDto or null if no active contract found
    */
-  async getMyTenancyDetails(userId: string): Promise<TenancyDetailsDto | null> {
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: {
-        tenantId: userId,
-        contract: {
-          status: 'active',
-        },
+  async getMyTenancyDetails(
+    userId: string,
+    contractId?: string,
+  ): Promise<TenancyDetailsDto | null> {
+    const whereClause: any = {
+      tenantId: userId,
+      contract: {
+        status: 'active',
       },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
       include: {
         contract: {
           include: {
@@ -840,9 +1135,7 @@ export class ContractsService {
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [{ createdAt: 'desc' }],
     })
 
     if (!tenantContract || !tenantContract.contract) {
@@ -869,7 +1162,7 @@ export class ContractsService {
 
     const formattedAddress = this.formatAddress(boardingHouse)
     const landlordName =
-      boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Chủ nhà'
+      boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Landlord'
 
     return {
       contract: {
@@ -1012,14 +1305,17 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
     }
 
     const primaryTenantContract =
-      contract.tenantContracts.find(tc => tc.isPrimary) || contract.tenantContracts[0]
+      contract.tenantContracts[0]
 
     if (!primaryTenantContract) {
-      throw new BadRequestException('Hợp đồng chưa có thông tin đại diện người thuê.')
+      throw new BadRequestException('Contract lacks primary tenant representation information.')
     }
 
     const primaryTenant = primaryTenantContract.tenant
@@ -1027,7 +1323,7 @@ export class ContractsService {
       .filter(tc => tc.id !== primaryTenantContract.id)
       .map(tc => ({
         id: tc.tenant.id,
-        fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Người ở cùng',
+        fullName: tc.tenant.userIdentification?.fullName || tc.tenant.username || 'Co-tenant',
         phoneNumber: tc.tenant.phoneNumber,
       }))
 
@@ -1052,7 +1348,7 @@ export class ContractsService {
         address: formattedAddress,
         owner: {
           id: bh.owner.id,
-          fullName: bh.owner.username || 'Chủ nhà trọ',
+          fullName: bh.owner.username || 'Landlord',
           phoneNumber: bh.owner.phoneNumber || '',
           email: bh.owner.email,
         },
@@ -1074,7 +1370,7 @@ export class ContractsService {
       primaryTenant: {
         id: primaryTenant.id,
         fullName:
-          primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Khách thuê',
+          primaryTenant.userIdentification?.fullName || primaryTenant.username || 'Tenant',
         phoneNumber: primaryTenant.phoneNumber,
         email: primaryTenant.email,
         identification: primaryTenant.userIdentification
@@ -1219,7 +1515,10 @@ export class ContractsService {
     })
 
     if (!contract) {
-      throw new NotFoundException('Hợp đồng không tồn tại hoặc không thuộc cơ sở này.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'Contract does not exist or does not belong to this property.',
+      )
     }
 
     const docs = await this.prisma.contractDocument.findMany({
@@ -1259,7 +1558,7 @@ export class ContractsService {
     })
 
     if (!doc) {
-      throw new NotFoundException('Tài liệu hợp đồng không tồn tại.')
+      throw new NotFoundException('Contract document does not exist.')
     }
 
     const renderedHtml = ContractTemplateRenderer.render({
@@ -1277,6 +1576,103 @@ export class ContractsService {
       filename,
       html: renderedHtml,
     }
+  }
+
+  // ─── UC-T-06 Extension: Tenant Contract Export & Print ──────────────────────
+
+  /**
+   * Resolves the active contract and boarding house context for a tenant.
+   *
+   * @param userId Tenant user UUID
+   * @param contractId Optional Contract UUID for multi-room scoping
+   */
+  async getTenantActiveContract(
+    userId: string,
+    contractId?: string,
+  ): Promise<{ boardingHouseId: string; contractId: string }> {
+    const whereClause: any = {
+      tenantId: userId,
+      contract: {
+        status: 'active',
+      },
+    }
+
+    if (contractId) {
+      whereClause.contractId = contractId
+    }
+
+    const tenantContract = await this.prisma.tenantContract.findFirst({
+      where: whereClause,
+      include: {
+        contract: {
+          include: {
+            room: true,
+          },
+        },
+      },
+      orderBy: [{ createdAt: 'desc' }],
+    })
+
+    if (!tenantContract || !tenantContract.contract) {
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.CONTRACT_NOT_FOUND,
+        'No active contract found for this tenant.',
+      )
+    }
+
+    return {
+      contractId: tenantContract.contract.id,
+      boardingHouseId: tenantContract.contract.room.boardingHouseId,
+    }
+  }
+
+  /**
+   * Generates printable HTML for the tenant's active contract.
+   *
+   * @param userId Tenant user UUID
+   * @param autoPrint If true, triggers print dialog on load
+   * @param contractId Optional Contract UUID
+   */
+  async printMyContract(
+    userId: string,
+    autoPrint: boolean = false,
+    contractId?: string,
+  ): Promise<string> {
+    const { boardingHouseId, contractId: resolvedContractId } =
+      await this.getTenantActiveContract(userId, contractId)
+    return this.getContractPrintHtml(boardingHouseId, resolvedContractId, autoPrint, true)
+  }
+
+  /**
+   * Exports the tenant's active contract document and registers audit trail.
+   *
+   * @param userId Tenant user UUID
+   * @param contractId Optional Contract UUID
+   */
+  async exportMyContract(
+    userId: string,
+    contractId?: string,
+  ): Promise<ExportContractResponseDto> {
+    const { boardingHouseId, contractId: resolvedContractId } =
+      await this.getTenantActiveContract(userId, contractId)
+    return this.exportContract(boardingHouseId, resolvedContractId, userId)
+  }
+
+  /**
+   * Retrieves downloadable HTML file for a tenant's contract document.
+   *
+   * @param userId Tenant user UUID
+   * @param documentId Contract document UUID
+   * @param contractId Optional Contract UUID
+   */
+  async getMyContractDocumentDownload(
+    userId: string,
+    documentId: string,
+    contractId?: string,
+  ): Promise<{ filename: string; html: string }> {
+    const { boardingHouseId, contractId: resolvedContractId } =
+      await this.getTenantActiveContract(userId, contractId)
+    return this.getContractDocumentDownload(boardingHouseId, resolvedContractId, documentId)
   }
 
   // ─── Helper methods ─────────────────────────────────────────────────────────

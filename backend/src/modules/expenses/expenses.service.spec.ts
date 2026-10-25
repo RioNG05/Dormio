@@ -74,7 +74,7 @@ describe('ExpensesService', () => {
 
       expect(result.id).toBe('exp-uuid-1')
       expect(result.name).toBe('Bảo trì thang máy định kỳ')
-      expect(result.roomName).toBe('Toàn tòa nhà')
+      expect(result.roomName).toBe('Whole Building')
       expect(result.amount).toBe(1500000)
       expect(mockPrisma.room.findFirst).not.toHaveBeenCalled()
       expect(mockPrisma.expense.create).toHaveBeenCalled()
@@ -100,7 +100,7 @@ describe('ExpensesService', () => {
       })
 
       expect(result.roomId).toBe(mockRoomId)
-      expect(result.roomName).toBe('Phòng 101')
+      expect(result.roomName).toBe('Room 101')
       expect(mockPrisma.room.findFirst).toHaveBeenCalledWith({
         where: { id: mockRoomId, boardingHouseId: mockBoardingHouseId },
       })

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false)
@@ -29,12 +30,14 @@ export function ScrollToTop() {
   if (!isVisible) return null
 
   return (
-    <button
+    <Button
+      size="icon"
+      rounded="full"
       onClick={scrollToTop}
-      className="fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="fixed bottom-8 right-8 z-50 !h-12 !w-12 shadow-lg shadow-primary/30 hover:-translate-y-1"
       aria-label="Cuộn lên đầu trang"
     >
-      <ArrowUp className="h-6 w-6" />
-    </button>
+      <ArrowUp />
+    </Button>
   )
 }

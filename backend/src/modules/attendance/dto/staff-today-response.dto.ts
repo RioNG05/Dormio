@@ -5,7 +5,7 @@ export class StaffDutyDto {
   @ApiProperty({ example: 'sec-1' })
   id: string
 
-  @ApiProperty({ example: 'Kiểm soát an ninh cổng chính' })
+  @ApiProperty({ example: 'Main gate security control' })
   title: string
 
   @ApiProperty({ example: true })
@@ -23,7 +23,7 @@ export class StaffDutyDto {
   @ApiPropertyOptional({ example: '07:15', nullable: true })
   completedAt?: string
 
-  @ApiPropertyOptional({ example: 'Đã kiểm tra 45 xe máy', nullable: true })
+  @ApiPropertyOptional({ example: 'Checked 45 motorbikes', nullable: true })
   note?: string
 }
 
@@ -31,7 +31,7 @@ export class StaffShiftDto {
   @ApiProperty({ example: 'shift-morning-uuid' })
   id: string
 
-  @ApiProperty({ example: 'Ca Sáng' })
+  @ApiProperty({ example: 'Morning Shift' })
   name: string
 
   @ApiProperty({ example: '07:00' })
@@ -48,10 +48,10 @@ export class StaffPositionDto {
   @ApiProperty({ example: 'pos-1-uuid' })
   id: string
 
-  @ApiProperty({ example: 'Quản lý toà nhà & Bảo vệ' })
+  @ApiProperty({ example: 'Building Management & Security' })
   name: string
 
-  @ApiPropertyOptional({ example: 'Chịu trách nhiệm an ninh', nullable: true })
+  @ApiPropertyOptional({ example: 'Responsible for security', nullable: true })
   description?: string | null
 }
 
@@ -59,13 +59,13 @@ export class StaffCoWorkerDto {
   @ApiProperty({ example: 'cw-1-uuid' })
   id: string
 
-  @ApiProperty({ example: 'Nguyễn Thị Mai' })
+  @ApiProperty({ example: 'Nguyen Thi Mai' })
   name: string
 
   @ApiProperty({ example: '0905566778' })
   phone: string
 
-  @ApiProperty({ example: 'Nhân viên tạp vụ' })
+  @ApiProperty({ example: 'Cleaning Staff' })
   positionName: string
 
   @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg', nullable: true })
@@ -82,10 +82,10 @@ export class StaffWorkScheduleDto {
   @ApiProperty({ example: 'house-uuid' })
   boardingHouseId: string
 
-  @ApiProperty({ example: 'Dormio Premier Quận 1' })
+  @ApiProperty({ example: 'Dormio Premier District 1' })
   boardingHouseName: string
 
-  @ApiProperty({ example: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP.HCM' })
+  @ApiProperty({ example: '123 Nguyen Hue, Ben Nghe Ward, District 1, HCMC' })
   boardingHouseAddress: string
 
   @ApiProperty({ type: StaffShiftDto })
@@ -117,10 +117,10 @@ export class StaffAttendanceRecordDto {
   @ApiProperty({ example: '2026-09-17' })
   workDate: string
 
-  @ApiProperty({ example: 'Dormio Premier Quận 1' })
+  @ApiProperty({ example: 'Dormio Premier District 1' })
   boardingHouseName: string
 
-  @ApiProperty({ example: 'Ca Sáng' })
+  @ApiProperty({ example: 'Morning Shift' })
   shiftName: string
 
   @ApiProperty({ example: '07:00 - 15:00' })
@@ -141,7 +141,7 @@ export class StaffAttendanceRecordDto {
   @ApiProperty({ example: false })
   editedByLandlord: boolean
 
-  @ApiPropertyOptional({ example: 'Check-in đúng giờ', nullable: true })
+  @ApiPropertyOptional({ example: 'On-time check-in', nullable: true })
   note?: string
 
   @ApiPropertyOptional({ example: 'data:image/jpeg;base64,...', nullable: true })
@@ -150,7 +150,7 @@ export class StaffAttendanceRecordDto {
   @ApiPropertyOptional({ nullable: true })
   checkInWatermark?: any
 
-  @ApiPropertyOptional({ example: 'Kẹt xe', nullable: true })
+  @ApiPropertyOptional({ example: 'Traffic jam', nullable: true })
   checkInExplanation?: string
 
   @ApiPropertyOptional({ example: 'data:image/jpeg;base64,...', nullable: true })
@@ -159,7 +159,7 @@ export class StaffAttendanceRecordDto {
   @ApiPropertyOptional({ nullable: true })
   checkOutWatermark?: any
 
-  @ApiPropertyOptional({ example: 'Về sớm 15 phút', nullable: true })
+  @ApiPropertyOptional({ example: 'Left 15 minutes early', nullable: true })
   checkOutExplanation?: string
 
   @ApiPropertyOptional({ example: false })
@@ -170,7 +170,7 @@ export class StaffTodayOverviewResponseDto {
   @ApiProperty({ example: 'emp-uuid' })
   employeeId: string
 
-  @ApiProperty({ example: 'Phạm Văn Bảo' })
+  @ApiProperty({ example: 'Pham Van Bao' })
   staffName: string
 
   @ApiProperty({ example: '0901122334' })

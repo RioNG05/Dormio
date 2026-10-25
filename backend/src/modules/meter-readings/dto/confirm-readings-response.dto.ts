@@ -4,7 +4,7 @@ export class InvoiceItemResponseDto {
   @ApiProperty({ example: 'item-uuid' })
   id: string
 
-  @ApiProperty({ example: 'Tiền phòng', nullable: true })
+  @ApiProperty({ example: 'Room rent', nullable: true })
   title: string
 
   @ApiProperty({ example: 1 })

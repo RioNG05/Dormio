@@ -2,6 +2,17 @@ import { api } from './api'
 
 export type AssetCondition = 'new' | 'good' | 'damaged' | 'under_repair' | 'lost' | 'disposed'
 
+export interface AssetTenantInfo {
+  id: string
+  name: string
+  phone?: string | null
+  email?: string | null
+  avatarUrl?: string | null
+  contractId?: string | null
+  startDate?: string | null
+  endDate?: string | null
+}
+
 export interface AssetItem {
   id: string
   code: string
@@ -15,8 +26,14 @@ export interface AssetItem {
   condition: AssetCondition
   purchasePrice?: number | null
   purchaseDate?: string | null
-  imageUrl?: string | null
+  imageUrl?: string | null | null
   note?: string | null
+  depreciationYears?: number | null
+  modelCode?: string | null
+  serialNumber?: string | null
+  warrantyPeriod?: string | null
+  supplier?: string | null
+  tenant?: AssetTenantInfo | null
   createdAt: string
   updatedAt: string
   boardingHouseId: string
@@ -44,6 +61,24 @@ export interface AssetsListResponse {
   summary: AssetsSummary
 }
 
+export interface AssetMaintenanceLog {
+  id: string
+  assetId: string
+  boardingHouseId: string
+  type: string
+  description: string
+  cost: number
+  performer?: string | null
+  performedAt: string
+  createdAt: string
+}
+
+export interface MaintenanceLogsListResponse {
+  success: boolean
+  data: AssetMaintenanceLog[]
+  totalCost: number
+}
+
 export interface CreateAssetPayload {
   name: string
   category?: string
@@ -53,11 +88,25 @@ export interface CreateAssetPayload {
   condition?: AssetCondition
   purchasePrice?: number
   purchaseDate?: string
-  imageUrl?: string
+  imageUrl?: string | null
   note?: string
+  depreciationYears?: number
+  modelCode?: string
+  serialNumber?: string
+  warrantyPeriod?: string
+  supplier?: string
 }
 
 export interface UpdateAssetPayload extends Partial<CreateAssetPayload> {}
+
+export interface CreateMaintenanceLogPayload {
+  type: string
+  description: string
+  cost?: number
+  performer?: string
+  performedAt?: string
+  setCondition?: AssetCondition
+}
 
 export const assetService = {
   /**
@@ -149,5 +198,56 @@ export const assetService = {
         'X-Boarding-House-Id': buildingId,
       },
     })
+  },
+
+  /**
+   * Get maintenance logs for an asset
+   */
+  async getMaintenanceLogs(
+    buildingId: string,
+    assetId: string,
+  ): Promise<MaintenanceLogsListResponse> {
+    return api.get<MaintenanceLogsListResponse>(`/v1/landlord/assets/${assetId}/maintenance-logs`, {
+      headers: {
+        'X-Boarding-House-Id': buildingId,
+      },
+    })
+  },
+
+  /**
+   * Create a maintenance log for an asset
+   */
+  async createMaintenanceLog(
+    buildingId: string,
+    assetId: string,
+    payload: CreateMaintenanceLogPayload,
+  ): Promise<{ success: boolean; data: AssetMaintenanceLog }> {
+    return api.post<{ success: boolean; data: AssetMaintenanceLog }>(
+      `/v1/landlord/assets/${assetId}/maintenance-logs`,
+      payload,
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    )
+  },
+
+  /**
+   * Delete a maintenance log
+   */
+  async deleteMaintenanceLog(
+    buildingId: string,
+    assetId: string,
+    logId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    return api.delete<{ success: boolean; message: string }>(
+      `/v1/landlord/assets/${assetId}/maintenance-logs/${logId}`,
+      {
+        headers: {
+          'X-Boarding-House-Id': buildingId,
+        },
+      },
+    )
   },
 }

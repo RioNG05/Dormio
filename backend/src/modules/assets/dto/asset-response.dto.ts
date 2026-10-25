@@ -15,6 +15,32 @@ export class PaginationMetaDto {
   totalPages: number
 }
 
+export class AssetTenantDto {
+  @ApiProperty({ description: 'Tenant user ID' })
+  id: string
+
+  @ApiProperty({ description: 'Display name of tenant' })
+  name: string
+
+  @ApiPropertyOptional({ description: 'Phone number', nullable: true })
+  phone: string | null
+
+  @ApiPropertyOptional({ description: 'Email address', nullable: true })
+  email: string | null
+
+  @ApiPropertyOptional({ description: 'Avatar URL', nullable: true })
+  avatarUrl: string | null
+
+  @ApiPropertyOptional({ description: 'Contract ID', nullable: true })
+  contractId: string | null
+
+  @ApiPropertyOptional({ description: 'Contract start date (ISO)', nullable: true })
+  startDate: string | null
+
+  @ApiPropertyOptional({ description: 'Contract end date (ISO)', nullable: true })
+  endDate: string | null
+}
+
 export class AssetItemDto {
   @ApiProperty({ description: 'Asset UUID' })
   id: string
@@ -84,6 +110,48 @@ export class AssetItemDto {
   })
   note: string | null
 
+  @ApiPropertyOptional({
+    description: 'Lifespan / depreciation years',
+    nullable: true,
+    example: 5,
+  })
+  depreciationYears: number | null
+
+  @ApiPropertyOptional({
+    description: 'Model code',
+    nullable: true,
+    example: 'CU/CS-PU12XKH-8M',
+  })
+  modelCode: string | null
+
+  @ApiPropertyOptional({
+    description: 'Serial number',
+    nullable: true,
+    example: 'SN-2024-AC-00192',
+  })
+  serialNumber: string | null
+
+  @ApiPropertyOptional({
+    description: 'Warranty period / details',
+    nullable: true,
+    example: '24 tháng chính hãng',
+  })
+  warrantyPeriod: string | null
+
+  @ApiPropertyOptional({
+    description: 'Supplier or vendor name',
+    nullable: true,
+    example: 'Điện Máy Xanh Q.1',
+  })
+  supplier: string | null
+
+  @ApiPropertyOptional({
+    description: 'Current occupying tenant info if room is rented',
+    type: AssetTenantDto,
+    nullable: true,
+  })
+  tenant?: AssetTenantDto | null
+
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string
 
@@ -123,4 +191,44 @@ export class AssetsListResponseDto {
 
   @ApiProperty({ type: AssetsSummaryDto })
   summary: AssetsSummaryDto
+}
+
+export class MaintenanceLogItemDto {
+  @ApiProperty({ description: 'Log UUID' })
+  id: string
+
+  @ApiProperty({ description: 'Asset UUID' })
+  assetId: string
+
+  @ApiProperty({ description: 'Boarding House UUID' })
+  boardingHouseId: string
+
+  @ApiProperty({ description: 'Maintenance type', example: 'repair' })
+  type: string
+
+  @ApiProperty({ description: 'Detailed description of the maintenance activity' })
+  description: string
+
+  @ApiProperty({ description: 'Maintenance cost in VND', example: 350000 })
+  cost: number
+
+  @ApiPropertyOptional({ description: 'Performer or technician name', nullable: true })
+  performer: string | null
+
+  @ApiProperty({ description: 'Execution timestamp (ISO)' })
+  performedAt: string
+
+  @ApiProperty({ description: 'Creation timestamp (ISO)' })
+  createdAt: string
+}
+
+export class MaintenanceLogsListResponseDto {
+  @ApiProperty({ example: true })
+  success: boolean
+
+  @ApiProperty({ type: [MaintenanceLogItemDto] })
+  data: MaintenanceLogItemDto[]
+
+  @ApiProperty({ description: 'Total cost incurred across all maintenance logs in VND', example: 1200000 })
+  totalCost: number
 }

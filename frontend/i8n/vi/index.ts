@@ -8,6 +8,7 @@ import tenant from './tenant'
 import employee from './employee'
 import admin from './admin'
 import sendApplication from './send-application'
+import errors from './errors'
 
 const vi = {
   common: common,
@@ -20,6 +21,7 @@ const vi = {
   employee: employee,
   admin: admin,
   sendApplication: sendApplication,
+  errors: errors,
 }
 
 export default vi

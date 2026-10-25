@@ -1,22 +1,17 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Plus,
-  Search,
   Receipt,
   Wallet,
-  LayoutGrid,
-  List,
   Check,
   X,
   AlertTriangle,
   Trash2,
   Edit3,
   Clock,
-  MapPin,
-  ChevronLeft,
-  ChevronRight,
   Lock,
   Loader2,
   RefreshCw,
@@ -28,13 +23,22 @@ import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
   TextareaInput,
   SearchInput,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  Card,
+  TableRow,
+  Text,
+  Modal,
+  Chip,
+  EmptyState,
 } from '@/components/ui'
-import { cn } from '@/lib/utils'
 import {
   expenseService,
   ExpenseItem,
@@ -69,7 +73,9 @@ export default function ExpensesPage() {
 
   // Filters
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>('all')
-  const [activeStatusTab, setActiveStatusTab] = useState<string>('all')
+  const [activeStatusTab, setActiveStatusTab] = useState<
+    'all' | 'paid' | 'pending' | 'canceled'
+  >('all')
   const [searchTerm, setSearchTerm] = useState<string>('')
 
   // Loading states
@@ -145,13 +151,6 @@ export default function ExpensesPage() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
-
-  // Update pageSize on viewMode change per Rule #9
-  useEffect(() => {
-    const defaultSize = viewMode === 'grid' ? 6 : 10
-    setPageSize(defaultSize)
-    setCurrentPage(1)
-  }, [viewMode])
 
   // Load Rooms list for dropdown
   useEffect(() => {
@@ -411,399 +410,264 @@ export default function ExpensesPage() {
     document.body.removeChild(link)
   }
 
-  // Rule #9 Pagination Calculation with 5-page window jumping
-  const totalPages = Math.ceil(totalRecords / pageSize) || 1
-  const windowSize = 5
-  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-  const visiblePages = Array.from(
-    { length: windowEnd - windowStart + 1 },
-    (_, i) => windowStart + i,
-  )
-  const startIndex = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endIndex = Math.min(currentPage * pageSize, totalRecords)
-
   // Status Badge Helper
   const renderStatusBadge = (status: ExpenseItem['status']) => {
     if (status === 'paid') {
       return (
-        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#2AC1BC]/15 text-[#0d6e6b] border border-[#2AC1BC]/30 flex items-center gap-1 shrink-0">
-          <Check className="w-3 h-3" /> {t('landlordExpensesStatusPaid')}
-        </span>
+        <Chip preventHover variant='primary' className='w-full' leftIcon={<Check className='text-primary' />}>
+          {t('landlordExpensesStatusPaid')}
+        </Chip>
       )
     }
     if (status === 'pending') {
       return (
-        <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 shrink-0">
-          <Clock className="w-3 h-3 text-amber-500" /> {t('landlordExpensesStatusPending')}
-        </span>
+        <Chip preventHover variant='accent' className='w-full' leftIcon={<Check className='text-accent' />}>
+          {t('landlordExpensesStatusPaid')}
+        </Chip>
       )
     }
     return (
-      <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-zinc-100 text-zinc-500 border border-zinc-200 flex items-center gap-1 shrink-0">
-        <X className="w-3 h-3" /> {t('landlordExpensesStatusCanceled')}
-      </span>
+      <Chip preventHover variant='default' className='w-full' leftIcon={<X />}>
+        {t('landlordExpensesStatusCanceled')}
+      </Chip>
     )
   }
+
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordExpensesTotalExpenses'),
+        value: formatLargeMoney(summary.totalAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[160px]',
+        labelClassName: 'text-rose-400',
+        valueClassName: 'text-rose-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'paid',
+        label: t('landlordExpensesPaidExpenses'),
+        value: formatLargeMoney(summary.paidAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[160px]',
+        labelColor: 'brand',
+        valueClassName: 'text-primary text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'pending',
+        label: t('landlordExpensesPendingExpenses'),
+        value: formatLargeMoney(summary.pendingAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[160px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+    ],
+    [t, summary],
+  )
 
   if (!isMounted) return null
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* ─── Top Header & Actions Bar ────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <Wallet className="w-6 h-6 text-[#2AC1BC]" /> {t('landlordExpensesTitle')}
-          </h1>
-          <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            {t('landlordExpensesSubtitle')}
-          </p>
-        </div>
+      <DashboardPageHeader
+        title={t('landlordExpensesTitle')}
+        subtitle={t('landlordExpensesSubtitle')}
+        actions={
+          <>
+            <Button
+              variant="success"
+              size="md"
+              onClick={handleExportCSV}
+              leftIcon={<FileSpreadsheet />}
+            >
+              {t('landlordExpensesExportExcel')}
+            </Button>
 
-        <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={fetchExpenses}
-            disabled={isLoading}
-            isLoading={isLoading}
-            leftIcon={<RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-[#2AC1BC]')} />}
-          >
-            {t('landlordExpensesReload')}
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleExportCSV}
-            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
-          >
-            {t('landlordExpensesExportExcel')}
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => {
-              resetForm()
-              setShowCreateModal(true)
-            }}
-            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
-            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
-          >
-            {t('landlordExpensesAddNew')}
-          </Button>
-        </div>
-      </div>
+            <Button
+              size="md"
+              onClick={() => {
+                resetForm()
+                setShowCreateModal(true)
+              }}
+              leftIcon={<Plus className="shrink-0" />}
+            >
+              {t('landlordExpensesAddNew')}
+            </Button>
+          </>
+        }
+      />
 
       {/* ─── Dark Hero Summary Banner ────────────────────────────────────────── */}
-      <div className="bg-zinc-900 rounded-3xl p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Wallet className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          {/* Left Title, Address Pill */}
-          <div className="space-y-3 max-w-xl">
-            <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding?.name || t('landlordExpensesBuildingFallback')}
-            </h2>
-
-            {activeBuilding?.address && (
-              <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all max-w-full">
-                <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                <span className="text-xs font-bold text-zinc-200 truncate max-w-[200px] sm:max-w-none">
-                  {activeBuilding.address}
-                </span>
-              </div>
-            )}
-
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              {t('landlordExpensesHeroSubtitle')}
-            </p>
-          </div>
-
-          {/* Right Stat Cards */}
-          <div className="w-full lg:w-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 w-full">
-              {/* Card 1: Tổng Chi Phí */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">
-                    {t('landlordExpensesTotalExpenses')}
-                  </span>
-                  <span className="font-black text-rose-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(summary.totalAmount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 2: Đã Thanh Toán */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 transition-colors rounded-2xl border border-[#2AC1BC]/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#2AC1BC] shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-[#2AC1BC] tracking-wider whitespace-nowrap">
-                    {t('landlordExpensesPaidExpenses')}
-                  </span>
-                  <span className="font-black text-[#2AC1BC] text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(summary.paidAmount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Chờ Thanh Toán */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">
-                    {t('landlordExpensesPendingExpenses')}
-                  </span>
-                  <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(summary.pendingAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Wallet className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Main Filter & Control Bar ───────────────────────────────────────── */}
-      <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-sm space-y-3.5">
-        {/* Category Switcher Horizontal Scroll */}
-        <div className="overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 flex items-center gap-1.5 border-b border-zinc-100 pb-3">
-          <span className="text-zinc-400 text-[11px] font-extrabold uppercase mr-1 hidden sm:inline shrink-0">
-            {t('landlordExpensesCategoryColon')}
-          </span>
-          {categoriesList.map(cat => (
-            <Button
-              key={cat}
-              variant={activeCategoryTab === cat ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                setActiveCategoryTab(cat)
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordExpensesSearchPlaceholder')}
+            value={searchTerm}
+            onChange={val => {
+              setSearchTerm(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={activeStatusTab}
+              onChange={e => {
+                setActiveStatusTab(e.target.value as 'all' | 'paid' | 'pending' | 'canceled')
                 setCurrentPage(1)
               }}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 whitespace-nowrap h-auto',
-                activeCategoryTab === cat
-                  ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-sm'
-                  : 'bg-zinc-100 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70',
-              )}
-            >
-              {cat === 'all'
-                ? t('landlordExpensesAllCategoriesWithCount', { count: summary.totalCount })
-                : getCategoryLabel(cat)}
-            </Button>
-          ))}
-        </div>
-
-        {/* Search Box & View Switcher Bar */}
-        <div className="flex items-center gap-2">
-          {/* Search Input */}
-          <div className="flex-1 min-w-0">
-            <SearchInput
-              placeholder={t('landlordExpensesSearchPlaceholder')}
-              value={searchTerm}
-              onChange={val => {
-                setSearchTerm(val)
-                setCurrentPage(1)
-              }}
+              containerClassName="w-full sm:w-auto min-w-[150px] space-y-0"
+              options={[
+                {
+                  value: 'all',
+                  label: t('landlordExpensesAllStatuses'),
+                },
+                {
+                  value: 'paid',
+                  label: t('landlordExpensesStatusPaid'),
+                },
+                {
+                  value: 'pending',
+                  label: t('landlordExpensesStatusPending'),
+                },
+                {
+                  value: 'canceled',
+                  label: t('landlordExpensesStatusCanceled'),
+                },
+              ]}
             />
-          </div>
-
-          {/* View Switcher (Grid vs Table) per Rule #9 */}
-          <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'p-1.5 h-auto rounded-lg text-xs font-bold transition-all',
-                viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900',
-              )}
-              title={t('landlordExpensesViewGrid')}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className={cn(
-                'p-1.5 h-auto rounded-lg text-xs font-bold transition-all',
-                viewMode === 'table'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900',
-              )}
-              title={t('landlordExpensesViewTable')}
-            >
-              <List className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Status Filter Pills Row */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'all' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('all')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'all'
-                ? 'bg-zinc-900 hover:bg-zinc-800 text-white'
-                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200',
-            )}
-          >
-            {t('landlordExpensesAllStatuses')}
-          </Button>
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'paid' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('paid')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'paid'
-                ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white'
-                : 'bg-[#2AC1BC]/10 text-[#0d6e6b] hover:bg-[#2AC1BC]/20',
-            )}
-          >
-            {t('landlordExpensesStatusPaid')}
-          </Button>
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'pending' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('pending')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'pending'
-                ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                : 'bg-amber-50 text-amber-700 hover:bg-amber-100',
-            )}
-          >
-            {t('landlordExpensesStatusPending')}
-          </Button>
-          <Button
-            size="sm"
-            variant={activeStatusTab === 'canceled' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveStatusTab('canceled')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap h-auto',
-              activeStatusTab === 'canceled'
-                ? 'bg-rose-500 hover:bg-rose-600 text-white'
-                : 'bg-rose-50 text-rose-700 hover:bg-rose-100',
-            )}
-          >
-            {t('landlordExpensesStatusCanceled')}
-          </Button>
-        </div>
-      </div>
+            <SelectInput
+              value={activeCategoryTab}
+              onChange={e => {
+                setActiveCategoryTab(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-full sm:w-auto min-w-[170px] space-y-0"
+              options={categoriesList.map(cat => ({
+                value: cat,
+                label:
+                  cat === 'all'
+                    ? summary.totalCount
+                      ? `${t('landlordExpensesAllCategories')} (${summary.totalCount})`
+                      : t('landlordExpensesAllCategories')
+                    : getCategoryLabel(cat),
+              }))}
+            />
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
       {/* ─── Main Content Display (Grid or Table View) ───────────────────────── */}
       {isLoading ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-          <p className="text-sm font-bold text-zinc-700">{t('landlordExpensesLoading')}</p>
+        <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+          <Text size="sm" weight="bold" color="default">{t('landlordExpensesLoading')}</Text>
         </div>
       ) : expensesList.length === 0 ? (
-        <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
-          <Wallet className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-zinc-800">{t('landlordExpensesNotFound')}</h3>
-          <p className="text-xs text-zinc-400">{t('landlordExpensesNotFoundDesc')}</p>
-          <Button
-            size="sm"
-            onClick={() => {
-              resetForm()
-              setShowCreateModal(true)
-            }}
-            leftIcon={<Plus className="w-4 h-4" />}
-            className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black"
-          >
-            {t('landlordExpensesAddNew')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Wallet className="w-8 h-8" />}
+          title={t('landlordExpensesNotFound')}
+          description={t('landlordExpensesNotFoundDesc')}
+          action={
+            <Button
+              onClick={() => {
+                resetForm()
+                setShowCreateModal(true)
+              }}
+              leftIcon={<Plus />}
+            >
+              {t('landlordExpensesAddNew')}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {expensesList.map(exp => (
-            <div
+            <Card
               key={exp.id}
-              className="bg-white border border-zinc-200/80 hover:border-[#2AC1BC]/40 rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between"
+              className="space-y-4 flex flex-col justify-between"
+              onClick={event => {
+                event.stopPropagation()
+                setSelectedExpense(exp)
+              }}
             >
               {/* Header Info */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
-                  <div className="flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-                    <span className="font-black text-xs text-zinc-900">{exp.code}</span>
-                  </div>
-                  {renderStatusBadge(exp.status)}
+              <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-primary shrink-0" />
+                  <Text as="span" size="xs" weight="black" color="default">{exp.code}</Text>
                 </div>
+                <Chip preventHover size='sm'>
+                  {getCategoryLabel(exp.category)}
+                </Chip>
+              </Card.Header>
 
+              <Card.Body className="px-4 sm:px-5 py-0 space-y-3">
                 <div>
-                  <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-zinc-100 text-zinc-700 border border-zinc-200 inline-block mb-1.5">
-                    {getCategoryLabel(exp.category)}
-                  </span>
-                  <h4 className="font-black text-sm text-zinc-900 leading-snug line-clamp-2">
+                  <Text as="h4" size="sm" weight="black" color="default" clamp={2} className="leading-snug">
                     {exp.name}
-                  </h4>
+                  </Text>
                 </div>
 
                 {/* Amount Highlight */}
-                <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-xl flex items-center justify-between">
-                  <span className="text-[11px] font-extrabold text-rose-800 uppercase">
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-xl flex items-center justify-between">
+                  <Text as="span" size="2xs" weight="extrabold" color="danger" uppercase>
                     {t('landlordExpensesExpenseAmount')}
-                  </span>
-                  <span className="text-base font-black text-rose-600 whitespace-nowrap">
+                  </Text>
+                  <Text as="span" size="base" weight="black" color="danger" className="whitespace-nowrap">
                     -{formatCurrency(exp.amount)}
-                  </span>
+                  </Text>
                 </div>
 
                 {/* Scope & Date Meta */}
-                <div className="space-y-1.5 text-xs text-zinc-600 font-medium">
+                <div className="space-y-1.5 my-4 text-xs text-muted font-medium">
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">{t('landlordExpensesScopeColon')}</span>
-                    <span className="font-extrabold text-zinc-800">{getScopeLabel(exp)}</span>
+                    <Text as="span" size="xs" color="secondary">{t('landlordExpensesScopeColon')}</Text>
+                    <Text as="span" size="xs" weight="extrabold" color="default">{getScopeLabel(exp)}</Text>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">{t('landlordExpensesDateColon')}</span>
-                    <span className="font-semibold text-zinc-700">{formatDate(exp.paidAt)}</span>
+                    <Text as="span" size="xs" color="secondary">{t('landlordExpensesDateColon')}</Text>
+                    <Text as="span" size="xs" weight="semibold" color="default">{formatDate(exp.paidAt)}</Text>
                   </div>
                 </div>
-              </div>
+                {renderStatusBadge(exp.status)}
+              </Card.Body>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setSelectedExpense(exp)}
-                  className="flex-1 text-center"
-                >
-                  {t('landlordExpensesViewDetail')}
-                </Button>
-
+              <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-end gap-2">
                 {exp.status === 'pending' && (
                   <Button
-                    size="sm"
-                    onClick={() => handleMarkAsPaid(exp.id)}
-                    className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black whitespace-nowrap shadow-sm"
+                    variant="dark"
+                    onClick={event => {
+                      event.stopPropagation()
+                      handleMarkAsPaid(exp.id)
+                    }}
                     title={t('landlordExpensesMarkPaid')}
                   >
                     {t('landlordExpensesMarkPaid')}
@@ -813,46 +677,49 @@ export default function ExpensesPage() {
                 <div className="flex items-center gap-1">
                   {exp.status === 'paid' ? (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditModal(exp)}
-                      className="p-1.5 h-auto text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
-                      title={t('landlordExpensesLockedTooltip')}
+                      variant="secondary"
+                      onClick={event => {
+                        event.stopPropagation()
+                        openEditModal(exp)
+                      }}
+                      leftIcon={<Lock className="text-amber-500" />}
                     >
-                      <Lock className="w-4 h-4 text-amber-500" />
+                      {t('landlordExpensesLockedTooltip')}
                     </Button>
                   ) : (
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => openEditModal(exp)}
-                      className="p-1.5 h-auto text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100"
+                      onClick={event => {
+                        event.stopPropagation()
+                        openEditModal(exp)
+                      }}
                       title={t('landlordExpensesEditTooltip')}
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 />
                     </Button>
                   )}
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteExpense(exp)}
-                    className="p-1.5 h-auto text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
-                    title={t('landlordExpensesDeleteTooltip')}
+                    variant="danger"
+                    onClick={event => {
+                      event.stopPropagation()
+                      handleDeleteExpense(exp)
+                    }}
+                    leftIcon={<Trash2 />}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {t('landlordExpensesDeleteTooltip')}
                   </Button>
                 </div>
-              </div>
-            </div>
+              </Card.Footer>
+            </Card>
           ))}
         </div>
       ) : (
         /* TABLE VIEW */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse text-xs min-w-[720px]">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-extrabold uppercase tracking-wider text-[10px] whitespace-nowrap">
+                <tr className="bg-surface border-b border-line text-muted font-extrabold uppercase tracking-wider text-[10px] whitespace-nowrap">
                   <th className="py-3 px-3.5 sm:px-4 min-w-[130px]">{t('landlordExpensesCode')}</th>
                   <th className="py-3 px-3.5 sm:px-4 min-w-[220px]">
                     {t('landlordExpensesNameAndCategory')}
@@ -872,37 +739,41 @@ export default function ExpensesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-semibold text-zinc-700">
+              <tbody className="divide-y divide-line font-semibold text-foreground/90">
                 {expensesList.map(exp => (
-                  <tr key={exp.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-3 px-3.5 sm:px-4 font-black text-zinc-900 whitespace-nowrap">
+                  <TableRow
+                    key={exp.id}
+                    className="group"
+                    onClick={() => setSelectedExpense(exp)}
+                  >
+                    <td className="py-3 px-3.5 sm:px-4 font-black text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <Receipt className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
-                        <span>{exp.code}</span>
+                        <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <Text as="span" size="xs" weight="black" color="default">{exp.code}</Text>
                       </div>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4">
                       <div className="min-w-[180px] max-w-[260px]">
-                        <div className="font-extrabold text-zinc-900 text-xs leading-snug line-clamp-2">
+                        <Text as="div" size="xs" weight="extrabold" color="default" clamp={2} className="leading-snug">
                           {exp.name}
-                        </div>
-                        <span className="text-[10px] text-zinc-400 font-medium block mt-0.5">
+                        </Text>
+                        <Text as="span" size="3xs" color="secondary" weight="medium" className="block mt-0.5">
                           {getCategoryLabel(exp.category)}
-                        </span>
+                        </Text>
                       </div>
                     </td>
 
-                    <td className="py-3 px-3.5 sm:px-4 font-bold text-zinc-800 whitespace-nowrap">
-                      {getScopeLabel(exp)}
+                    <td className="py-3 px-3.5 sm:px-4 font-bold text-foreground whitespace-nowrap">
+                      <Text as="span" size="xs" weight="bold" color="default">{getScopeLabel(exp)}</Text>
                     </td>
 
-                    <td className="py-3 px-3.5 sm:px-4 text-zinc-600 whitespace-nowrap">
-                      {formatDate(exp.paidAt)}
+                    <td className="py-3 px-3.5 sm:px-4 text-muted whitespace-nowrap">
+                      <Text as="span" size="xs" color="secondary">{formatDate(exp.paidAt)}</Text>
                     </td>
 
-                    <td className="py-3 px-3.5 sm:px-4 font-black text-rose-600 whitespace-nowrap">
-                      -{formatCurrency(exp.amount)}
+                    <td className="py-3 px-3.5 sm:px-4 font-black text-danger whitespace-nowrap">
+                      <Text as="span" size="xs" weight="black" color="danger">-{formatCurrency(exp.amount)}</Text>
                     </td>
 
                     <td className="py-3 px-3.5 sm:px-4 whitespace-nowrap">
@@ -911,59 +782,40 @@ export default function ExpensesPage() {
 
                     <td className="py-3 px-3.5 sm:px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setSelectedExpense(exp)}
-                          className="px-2.5 py-1 h-auto text-[11px] font-bold rounded-lg"
-                        >
-                          {t('landlordExpensesDetailBtn')}
-                        </Button>
                         {exp.status === 'paid' ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <TableActionButton
+                            variant="secondary"
+                            icon={<Lock className="text-amber-500" />}
                             onClick={() => openEditModal(exp)}
-                            className="p-1 h-auto text-zinc-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
                             title={t('landlordExpensesLockedTooltip')}
-                          >
-                            <Lock className="w-3.5 h-3.5 text-amber-500" />
-                          </Button>
+                          />
                         ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <TableActionButton
+                            variant="secondary"
+                            icon={<Edit3 />}
                             onClick={() => openEditModal(exp)}
-                            className="p-1 h-auto text-zinc-400 hover:text-zinc-800 rounded-lg hover:bg-zinc-100"
                             title={t('landlordExpensesEditTooltip')}
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                         )}
-                        {exp.status === 'paid' ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditModal(exp)}
-                            className="p-1 h-auto text-zinc-300 hover:text-amber-600 rounded-lg hover:bg-amber-50"
-                            title={t('landlordExpensesLockedDeleteTooltip')}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-zinc-300 hover:text-amber-500" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteExpense(exp)}
-                            className="p-1 h-auto text-zinc-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
-                            title={t('landlordExpensesDeleteTooltip')}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
+                        <TableActionButton
+                          variant="ghost-danger"
+                          icon={<Trash2 />}
+                          onClick={() => {
+                            if (exp.status === 'paid') {
+                              openEditModal(exp)
+                            } else {
+                              handleDeleteExpense(exp)
+                            }
+                          }}
+                          title={
+                            exp.status === 'paid'
+                              ? t('landlordExpensesLockedDeleteTooltip')
+                              : t('landlordExpensesDeleteTooltip')
+                          }
+                        />
                       </div>
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>
@@ -973,372 +825,239 @@ export default function ExpensesPage() {
 
       {/* ─── Rule #9 Pagination Bar ───────────────────────────────────────────── */}
       {expensesList.length > 0 && (
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold shadow-sm">
-          <div className="flex items-center gap-2 text-zinc-500 font-medium">
-            <span>{t('landlordExpensesPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize}
-              onChange={e => {
-                const val = Number(e.target.value)
-                if (val >= 1 && val <= 100) {
-                  setPageSize(val)
-                  setCurrentPage(1)
-                }
-              }}
-              className="w-16 text-center font-bold"
-            />
-            <span>{t('landlordExpensesPaginationPerPage')}</span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              {startIndex} - {endIndex} {t('landlordExpensesPaginationOf')}{' '}
-              <span className="font-bold text-zinc-800">{totalRecords}</span>{' '}
-              {t('landlordExpensesPaginationItems')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage <= 1}
-              className="p-2 h-auto rounded-xl"
-              title={t('landlordExpensesPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {visiblePages.map(pageNum => (
-              <Button
-                key={pageNum}
-                variant={pageNum === currentPage ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                className={cn(
-                  'min-w-[36px] h-9 px-3 rounded-xl text-xs font-bold transition-all',
-                  pageNum === currentPage
-                    ? 'bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-sm shadow-[#2AC1BC]/30'
-                    : 'bg-zinc-50 text-zinc-700 hover:bg-zinc-100 border border-zinc-200',
-                )}
-              >
-                {pageNum}
-              </Button>
-            ))}
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage >= totalPages}
-              className="p-2 h-auto rounded-xl"
-              title={t('landlordExpensesPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalRecords}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+          unitLabel={t('landlordExpensesPaginationItems')}
+        />
       )}
 
       {/* ─── Modal 1: View Detail Lightbox ───────────────────────────────────── */}
       {selectedExpense && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setSelectedExpense(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-[#2AC1BC]/5 shrink-0">
-              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
-                <div className="p-2 sm:p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shadow-xs shrink-0">
-                  <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-black text-sm sm:text-base text-zinc-900 truncate">
-                    {t('landlordExpensesDetailTitle', { code: selectedExpense.code })}
-                  </h3>
-                  <p className="text-[11px] sm:text-xs text-zinc-500 font-semibold truncate">
-                    {getCategoryLabel(selectedExpense.category)}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedExpense(null)}
-                className="p-1.5 sm:p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50 shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 custom-scrollbar text-xs">
-              {/* Financial Highlight Box */}
-              <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400 whitespace-nowrap">
-                    {t('landlordExpensesPaymentAmountLabel')}
-                  </span>
-                  <span className="text-xs text-zinc-300 font-semibold whitespace-nowrap">
-                    {t('landlordExpensesPaymentDateLabel')}{' '}
-                    <strong className="text-white font-black whitespace-nowrap">
-                      {formatDate(selectedExpense.paidAt)}
-                    </strong>
-                  </span>
-                </div>
-
-                <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-[#2AC1BC] tracking-tight whitespace-nowrap">
-                  <span>-{formatCurrency(selectedExpense.amount)}</span>
-                </div>
-
-                <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center justify-between gap-2">
-                  <span className="shrink-0">{t('landlordExpensesNameColon')}</span>
-                  <strong className="text-white font-black text-right line-clamp-1">
-                    {selectedExpense.name}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Expense Details Breakdown Card */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-zinc-600 gap-2">
-                  <span className="font-semibold text-zinc-500 shrink-0">
-                    {t('landlordExpensesScopeColon')}
-                  </span>
-                  <span className="font-black text-zinc-900 truncate">
-                    {getScopeLabel(selectedExpense)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center text-zinc-600 border-t border-zinc-200/60 pt-2 gap-2">
-                  <span className="font-semibold text-zinc-500 shrink-0">
-                    {t('landlordExpensesStatusColon')}
-                  </span>
-                  <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
-                </div>
-
-                {selectedExpense.description && (
-                  <div className="border-t border-zinc-200/60 pt-2.5 space-y-1">
-                    <span className="font-extrabold text-zinc-700 block">
-                      {t('landlordExpensesDescriptionLabel')}
-                    </span>
-                    <p className="text-zinc-600 leading-relaxed bg-white p-3 rounded-xl border border-zinc-200/80">
-                      {selectedExpense.description}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div className="p-3.5 sm:p-4 border-t border-zinc-100 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setSelectedExpense(null)}
-                className="w-full sm:w-auto"
-              >
+        <Modal
+          isOpen
+          onClose={() => setSelectedExpense(null)}
+          title={t('landlordExpensesDetailTitle', { code: selectedExpense.code })}
+          description={getCategoryLabel(selectedExpense.category)}
+          icon={<Receipt className="w-5 h-5 text-primary" />}
+          size="lg"
+          closeOnOverlayClick
+          closeOnEsc
+          bodyClassName="text-xs"
+          footerClassName="justify-between"
+          footer={
+            <>
+              <Button size='md' variant="secondary" onClick={() => setSelectedExpense(null)}>
                 {t('landlordExpensesCloseBtn')}
               </Button>
-
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 {selectedExpense.status === 'pending' && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleMarkAsPaid(selectedExpense.id)}
-                    className="w-full sm:w-auto bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black whitespace-nowrap shadow-md"
-                    leftIcon={<Check className="w-4 h-4 shrink-0" />}
-                  >
+                  <Button size='md' variant="dark" onClick={() => handleMarkAsPaid(selectedExpense.id)} leftIcon={<Check />}>
                     {t('landlordExpensesStatusPaid')}
                   </Button>
                 )}
-
                 {selectedExpense.status === 'paid' ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openEditModal(selectedExpense)}
-                    className="w-full sm:w-auto bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 border-amber-200 font-bold whitespace-nowrap"
-                    title={t('landlordExpensesLockedTooltip')}
-                    leftIcon={<Lock className="w-4 h-4 text-amber-600 shrink-0" />}
-                  >
+                  <Button size='md' variant="secondary" onClick={() => openEditModal(selectedExpense)} leftIcon={<Lock />}>
                     {t('landlordExpensesLockedBtn')}
                   </Button>
                 ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const expToEdit = selectedExpense
-                      setSelectedExpense(null)
-                      openEditModal(expToEdit)
-                    }}
-                    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white font-black whitespace-nowrap shadow-md"
-                    leftIcon={<Edit3 className="w-4 h-4 shrink-0" />}
-                  >
+                  <Button size='md' variant="dark" onClick={() => {
+                    const expToEdit = selectedExpense
+                    setSelectedExpense(null)
+                    openEditModal(expToEdit)
+                  }} leftIcon={<Edit3 />}>
                     {t('landlordExpensesEditBtn')}
                   </Button>
                 )}
               </div>
+            </>
+          }
+        >
+          <div className="space-y-4 sm:space-y-5">
+            {/* Financial Highlight Box */}
+            <div className="p-4 sm:p-5 bg-gradient-to-br from-zinc-900 via-zinc-900 to-[#0f5351] text-white rounded-2xl sm:rounded-3xl space-y-3 shadow-xl">
+              <div className="flex items-center justify-between gap-2">
+                <Text as="span" size="3xs" weight="extrabold" color="secondary" uppercase className="whitespace-nowrap">
+                  {t('landlordExpensesPaymentAmountLabel')}
+                </Text>
+                <Text as="span" size="xs" weight="semibold" color="subtle" className="whitespace-nowrap">
+                  {t('landlordExpensesPaymentDateLabel')}{' '}
+                  <Text as="strong" color="white" weight="black" className="whitespace-nowrap">
+                    {formatDate(selectedExpense.paidAt)}
+                  </Text>
+                </Text>
+              </div>
+
+              <div className="flex items-baseline gap-1 text-2xl sm:text-3xl font-black text-primary tracking-tight whitespace-nowrap">
+                <Text as="span" size={{ base: '2xl', sm: '3xl' }} weight="black" color="brand">
+                  -{formatCurrency(selectedExpense.amount)}
+                </Text>
+              </div>
+
+              <div className="pt-2.5 border-t border-zinc-800/80 text-[11px] text-zinc-300 font-medium flex items-center justify-between gap-2">
+                <Text as="span" color="subtle" className="shrink-0">{t('landlordExpensesNameColon')}</Text>
+                <Text as="strong" color="white" weight="black" align="right" clamp={1}>
+                  {selectedExpense.name}
+                </Text>
+              </div>
+            </div>
+
+            {/* Expense Details Breakdown Card */}
+            <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+              <div className="flex justify-between items-center text-muted gap-2">
+                <Text as="span" weight="semibold" color="secondary" className="shrink-0">
+                  {t('landlordExpensesScopeColon')}
+                </Text>
+                <Text as="span" weight="black" color="default" truncate>
+                  {getScopeLabel(selectedExpense)}
+                </Text>
+              </div>
+
+              <div className="flex justify-between items-center text-muted border-t border-line pt-2 gap-2">
+                <Text as="span" weight="semibold" color="secondary" className="shrink-0">
+                  {t('landlordExpensesStatusColon')}
+                </Text>
+                <div className="shrink-0">{renderStatusBadge(selectedExpense.status)}</div>
+              </div>
+
+              {selectedExpense.description && (
+                <div className="border-t border-line pt-2.5 space-y-1">
+                  <Text as="span" weight="extrabold" color="default" className="block">
+                    {t('landlordExpensesDescriptionLabel')}
+                  </Text>
+                  <Text as="p" color="secondary" className="leading-relaxed bg-card p-3 rounded-xl border border-line">
+                    {selectedExpense.description}
+                  </Text>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* ─── Modal 2: Create / Edit Expense Modal ────────────────────────────── */}
       {(showCreateModal || editingExpense) && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) requestCloseModal(showCreateModal ? 'create' : 'edit')
+        <Modal
+          isOpen
+          onClose={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
+          title={showCreateModal
+            ? t('landlordExpensesCreateTitle')
+            : t('landlordExpensesEditTitleWithCode', { code: editingExpense?.code || '' })}
+          description={t('landlordExpensesFormSubtitle')}
+          icon={<Wallet className="w-5 h-5 text-primary" />}
+          size="xl"
+          asForm
+          onSubmit={event => {
+            event.preventDefault()
+            if (!isSubmitting) {
+              void (showCreateModal ? handleCreateExpense() : handleUpdateExpense())
+            }
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
-        >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-gradient-to-r from-teal-50/50 via-white to-teal-50/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shadow-xs">
-                  <Wallet className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-zinc-900">
-                    {showCreateModal
-                      ? t('landlordExpensesCreateTitle')
-                      : t('landlordExpensesEditTitleWithCode', {
-                          code: editingExpense?.code || '',
-                        })}
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">
-                    {t('landlordExpensesFormSubtitle')}
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-                className="p-2 text-zinc-400 hover:text-zinc-700 rounded-full hover:bg-zinc-200/50"
-              >
-                <X className="w-5 h-5" />
+          footer={
+            <>
+              <Button size='md' variant="secondary" onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}>
+                {t('landlordExpensesCancelBtn')}
               </Button>
-            </div>
+              <Button size='md' variant="dark" type="submit" disabled={isSubmitting} isLoading={isSubmitting} leftIcon={!isSubmitting ? <Check /> : undefined}>
+                {showCreateModal ? t('landlordExpensesSaveExpense') : t('landlordExpensesUpdateExpense')}
+              </Button>
+            </>
+          }
+        >
+          <div className="text-xs space-y-4">
+            <TextInput
+              label={t('landlordExpensesNameLabel')}
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+              value={expenseForm.name}
+              onChange={e => {
+                setExpenseForm({ ...expenseForm, name: e.target.value })
+                setIsFormDirty(true)
+              }}
+              placeholder={t('landlordExpensesExpenseNamePlaceholder')}
+            />
 
-            {/* Modal Body Form */}
-            <div className="p-6 overflow-y-auto space-y-4 custom-scrollbar text-xs">
-              <TextInput
-                label={t('landlordExpensesNameLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                value={expenseForm.name}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectInput
+                label={t('landlordExpensesCategoryLabel')}
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                value={expenseForm.category}
                 onChange={e => {
-                  setExpenseForm({ ...expenseForm, name: e.target.value })
+                  setExpenseForm({ ...expenseForm, category: e.target.value })
                   setIsFormDirty(true)
                 }}
-                placeholder={t('landlordExpensesExpenseNamePlaceholder')}
+                options={[
+                  { value: 'Bảo trì & Sửa chữa', label: t('landlordExpensesCatMaintenance') },
+                  { value: 'Điện nước & Dịch vụ', label: t('landlordExpensesCatUtilities') },
+                  { value: 'Vệ sinh & An ninh', label: t('landlordExpensesCatCleaning') },
+                  { value: 'Trang thiết bị', label: t('landlordExpensesCatEquipment') },
+                  { value: 'Chi phí khác', label: t('landlordExpensesCatOther') },
+                ]}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <NumberInput
+                label={t('landlordExpensesAmountLabel')}
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                min={0}
+                value={expenseForm.amount}
+                onChange={e => {
+                  setExpenseForm({ ...expenseForm, amount: e.target.value })
+                  setIsFormDirty(true)
+                }}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectInput
+                label={t('landlordExpensesScopeLabel')}
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                value={expenseForm.roomScope}
+                onChange={e => {
+                  const newScope = e.target.value as 'property' | 'room'
+                  setExpenseForm({
+                    ...expenseForm,
+                    roomScope: newScope,
+                    roomId:
+                      newScope === 'room' && availableRooms.length > 0
+                        ? availableRooms[0].id
+                        : '',
+                  })
+                  setIsFormDirty(true)
+                }}
+                options={[
+                  { value: 'property', label: t('landlordExpensesEntirePropertyOption') },
+                  { value: 'room', label: t('landlordExpensesSpecificRoom') },
+                ]}
+              />
+
+              {expenseForm.roomScope === 'room' ? (
                 <SelectInput
-                  label={t('landlordExpensesCategoryLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                  value={expenseForm.category}
+                  label={t('landlordExpensesSelectRoomLabel')}
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                  value={expenseForm.roomId}
                   onChange={e => {
-                    setExpenseForm({ ...expenseForm, category: e.target.value })
+                    setExpenseForm({ ...expenseForm, roomId: e.target.value })
                     setIsFormDirty(true)
                   }}
                   options={[
-                    { value: 'Bảo trì & Sửa chữa', label: t('landlordExpensesCatMaintenance') },
-                    { value: 'Điện nước & Dịch vụ', label: t('landlordExpensesCatUtilities') },
-                    { value: 'Vệ sinh & An ninh', label: t('landlordExpensesCatCleaning') },
-                    { value: 'Trang thiết bị', label: t('landlordExpensesCatEquipment') },
-                    { value: 'Chi phí khác', label: t('landlordExpensesCatOther') },
+                    { value: '', label: t('landlordExpensesSelectRoomPlaceholder') },
+                    ...availableRooms.map(r => ({
+                      value: r.id,
+                      label: t('landlordExpensesRoomFloorOption', {
+                        room: r.roomNumber,
+                        floor: r.floor,
+                      }),
+                    })),
                   ]}
                 />
-
-                <NumberInput
-                  label={t('landlordExpensesAmountLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                  min={0}
-                  value={expenseForm.amount}
-                  onChange={e => {
-                    setExpenseForm({ ...expenseForm, amount: e.target.value })
-                    setIsFormDirty(true)
-                  }}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <SelectInput
-                  label={t('landlordExpensesScopeLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                  value={expenseForm.roomScope}
-                  onChange={e => {
-                    const newScope = e.target.value as 'property' | 'room'
-                    setExpenseForm({
-                      ...expenseForm,
-                      roomScope: newScope,
-                      roomId:
-                        newScope === 'room' && availableRooms.length > 0
-                          ? availableRooms[0].id
-                          : '',
-                    })
-                    setIsFormDirty(true)
-                  }}
-                  options={[
-                    { value: 'property', label: t('landlordExpensesEntirePropertyOption') },
-                    { value: 'room', label: t('landlordExpensesSpecificRoom') },
-                  ]}
-                />
-
-                {expenseForm.roomScope === 'room' ? (
-                  <SelectInput
-                    label={t('landlordExpensesSelectRoomLabel')}
-                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                    value={expenseForm.roomId}
-                    onChange={e => {
-                      setExpenseForm({ ...expenseForm, roomId: e.target.value })
-                      setIsFormDirty(true)
-                    }}
-                    options={[
-                      { value: '', label: t('landlordExpensesSelectRoomPlaceholder') },
-                      ...availableRooms.map(r => ({
-                        value: r.id,
-                        label: t('landlordExpensesRoomFloorOption', {
-                          room: r.roomNumber,
-                          floor: r.floor,
-                        }),
-                      })),
-                    ]}
-                  />
-                ) : (
-                  <SelectInput
-                    label={t('landlordExpensesPaymentStatusLabel')}
-                    labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                    value={expenseForm.status}
-                    onChange={e => {
-                      setExpenseForm({
-                        ...expenseForm,
-                        status: e.target.value as 'paid' | 'pending',
-                      })
-                      setIsFormDirty(true)
-                    }}
-                    options={[
-                      { value: 'paid', label: t('landlordExpensesOptionPaid') },
-                      { value: 'pending', label: t('landlordExpensesOptionPending') },
-                    ]}
-                  />
-                )}
-              </div>
-
-              {expenseForm.roomScope === 'room' && (
+              ) : (
                 <SelectInput
                   label={t('landlordExpensesPaymentStatusLabel')}
-                  labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
+                  labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
                   value={expenseForm.status}
                   onChange={e => {
                     setExpenseForm({
@@ -1353,170 +1072,121 @@ export default function ExpensesPage() {
                   ]}
                 />
               )}
-
-              <TextInput
-                type="date"
-                label={t('landlordExpensesDateLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                value={expenseForm.paidAt}
-                onChange={e => {
-                  setExpenseForm({ ...expenseForm, paidAt: e.target.value })
-                  setIsFormDirty(true)
-                }}
-              />
-
-              <TextareaInput
-                label={t('landlordExpensesNoteLabel')}
-                labelClassName="text-[11px] font-extrabold text-zinc-700 mb-1"
-                rows={2}
-                value={expenseForm.description}
-                onChange={e => {
-                  setExpenseForm({ ...expenseForm, description: e.target.value })
-                  setIsFormDirty(true)
-                }}
-                placeholder={t('landlordExpensesDescriptionPlaceholder')}
-              />
             </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => requestCloseModal(showCreateModal ? 'create' : 'edit')}
-              >
-                {t('landlordExpensesCancelBtn')}
-              </Button>
-              <Button
-                size="sm"
-                disabled={isSubmitting}
-                isLoading={isSubmitting}
-                onClick={showCreateModal ? handleCreateExpense : handleUpdateExpense}
-                leftIcon={!isSubmitting ? <Check className="w-4 h-4" /> : undefined}
-                className="bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black shadow-md"
-              >
-                {showCreateModal
-                  ? t('landlordExpensesSaveExpense')
-                  : t('landlordExpensesUpdateExpense')}
-              </Button>
-            </div>
+            {expenseForm.roomScope === 'room' && (
+              <SelectInput
+                label={t('landlordExpensesPaymentStatusLabel')}
+                labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+                value={expenseForm.status}
+                onChange={e => {
+                  setExpenseForm({
+                    ...expenseForm,
+                    status: e.target.value as 'paid' | 'pending',
+                  })
+                  setIsFormDirty(true)
+                }}
+                options={[
+                  { value: 'paid', label: t('landlordExpensesOptionPaid') },
+                  { value: 'pending', label: t('landlordExpensesOptionPending') },
+                ]}
+              />
+            )}
+
+            <TextInput
+              type="date"
+              label={t('landlordExpensesDateLabel')}
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+              value={expenseForm.paidAt}
+              onChange={e => {
+                setExpenseForm({ ...expenseForm, paidAt: e.target.value })
+                setIsFormDirty(true)
+              }}
+            />
+
+            <TextareaInput
+              label={t('landlordExpensesNoteLabel')}
+              labelClassName="text-[11px] font-extrabold text-foreground/90 mb-1"
+              rows={2}
+              value={expenseForm.description}
+              onChange={e => {
+                setExpenseForm({ ...expenseForm, description: e.target.value })
+                setIsFormDirty(true)
+              }}
+              placeholder={t('landlordExpensesDescriptionPlaceholder')}
+            />
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* ─── Modal 3: Rule #10 Unsaved Changes Confirmation Modal ────────────── */}
       {confirmCloseTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-black text-base text-zinc-900">
-                {t('landlordExpensesFormCloseTitle')}
-              </h4>
-              <p className="text-xs text-zinc-500 font-medium mt-1">
-                {t('landlordExpensesFormCloseDesc')}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1"
-              >
+        <Modal
+          isOpen
+          onClose={() => setConfirmCloseTarget(null)}
+          title={t('landlordExpensesFormCloseTitle')}
+          description={t('landlordExpensesFormCloseDesc')}
+          icon={<AlertTriangle className="w-5 h-5 text-warning" />}
+          size="sm"
+          closeOnOverlayClick={false}
+          footer={
+            <>
+              <Button size='md' variant="secondary" onClick={() => setConfirmCloseTarget(null)} className="flex-1">
                 {t('landlordExpensesContinueTyping')}
               </Button>
-
-              <Button
-                variant="danger"
-                onClick={handleConfirmCloseModal}
-                className="flex-1 font-black shadow-md"
-              >
+              <Button size='md' variant="danger" onClick={handleConfirmCloseModal} className="flex-1">
                 {t('landlordExpensesDiscardAndClose')}
               </Button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
       )}
 
       {/* ─── Modal 4: Delete Confirmation Pop-up Modal ────────────────────────── */}
       {deletingExpenseTarget && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setDeletingExpenseTarget(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
-            <div className="w-12 h-12 bg-rose-500/10 text-rose-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
-              <Trash2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-black text-base text-zinc-900">
-                {t('landlordExpensesDeleteConfirmTitle')}
-              </h4>
-              <p className="text-xs text-zinc-500 font-medium mt-1.5 leading-relaxed">
-                {t('landlordExpensesDeleteConfirmDesc', {
-                  name: deletingExpenseTarget.name,
-                  code: deletingExpenseTarget.code,
-                })}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => setDeletingExpenseTarget(null)}
-                className="flex-1"
-              >
+        <Modal
+          isOpen
+          onClose={() => setDeletingExpenseTarget(null)}
+          title={t('landlordExpensesDeleteConfirmTitle')}
+          description={t('landlordExpensesDeleteConfirmDesc', {
+            name: deletingExpenseTarget.name,
+            code: deletingExpenseTarget.code,
+          })}
+          icon={<Trash2 className="w-5 h-5 text-danger" />}
+          size="sm"
+          footer={
+            <>
+              <Button size='md' variant="secondary" onClick={() => setDeletingExpenseTarget(null)} className="flex-1">
                 {t('landlordExpensesCancelBtn')}
               </Button>
-
-              <Button
-                variant="danger"
-                onClick={confirmDeleteExpense}
-                className="flex-1 font-black shadow-md"
-              >
+              <Button size='md' variant="danger" onClick={confirmDeleteExpense} className="flex-1">
                 {t('landlordExpensesDeleteBtn')}
               </Button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
       )}
 
       {/* ─── Modal 5: Locked Paid Expense Pop-up Modal ────────────────────────── */}
       {lockedExpenseTarget && (
-        <div
-          onClick={e => {
-            if (e.target === e.currentTarget) setLockedExpenseTarget(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div className="bg-white border border-zinc-200 rounded-3xl max-w-sm w-full p-6 space-y-4 text-center shadow-2xl animate-in zoom-in-95 duration-150 cursor-default">
-            <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
-              <Lock className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-black text-base text-zinc-900">
-                {t('landlordExpensesLockedTitle')}
-              </h4>
-              <p className="text-xs text-zinc-500 font-medium mt-1.5 leading-relaxed">
-                {t('landlordExpensesLockedDesc', {
-                  name: lockedExpenseTarget.name,
-                  code: lockedExpenseTarget.code,
-                })}
-              </p>
-            </div>
-            <div className="pt-2">
-              <Button
-                onClick={() => setLockedExpenseTarget(null)}
-                className="w-full bg-[#2AC1BC] hover:bg-[#25ad87] text-white font-black shadow-md"
-              >
+        <Modal
+          isOpen
+          onClose={() => setLockedExpenseTarget(null)}
+          title={t('landlordExpensesLockedTitle')}
+          description={t('landlordExpensesLockedDesc', {
+            name: lockedExpenseTarget.name,
+            code: lockedExpenseTarget.code,
+          })}
+          icon={<Lock className="w-5 h-5 text-warning" />}
+          size="sm"
+          footer={
+            <>
+              <Button size='md' fullWidth variant="dark" onClick={() => setLockedExpenseTarget(null)}>
                 {t('landlordExpensesUnderstand')}
               </Button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
       )}
     </div>
   )

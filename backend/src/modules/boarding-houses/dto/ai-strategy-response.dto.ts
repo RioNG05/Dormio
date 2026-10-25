@@ -2,47 +2,47 @@ import { ApiProperty } from '@nestjs/swagger'
 
 export class StrategyActionStepDto {
   @ApiProperty({ example: 1 })
-  dayRange: string // e.g., "Ngày 1 - 7"
+  dayRange: string // e.g., "Days 1 - 7"
 
-  @ApiProperty({ example: 'Khảo sát và điều chỉnh giá' })
+  @ApiProperty({ example: 'Survey and adjust pricing' })
   title: string
 
   @ApiProperty({
-    example: 'Giảm 5% giá thuê cho các phòng trống trên 30 ngày tại cơ sở Cầu Giấy.',
+    example: 'Reduce rent by 5% for rooms vacant over 30 days at Cau Giay property.',
   })
   description: string
 }
 
 export class AiStrategyResponseDto {
-  @ApiProperty({ example: 'Chiến lược tối ưu hóa lợi nhuận và lấp đầy phòng Q3/2026' })
+  @ApiProperty({ example: 'Profit optimization and room occupancy strategy Q3/2026' })
   title: string
 
   @ApiProperty({
     example:
-      'Hệ thống đang vận hành 3 cơ sở với tỷ lệ lấp đầy 84.4%. Điểm nghẽn lớn nhất nằm ở cơ sở Nam Từ Liêm với 4 phòng trống kéo dài.',
+      'System operates 3 properties with 84.4% occupancy. Largest bottleneck is Nam Tu Liem with 4 persistent vacancies.',
   })
   executiveSummary: string
 
   @ApiProperty({
     example: [
-      'Áp dụng chiến lược giá linh hoạt theo tầng tại cơ sở Cầu Giấy để tăng 8% doanh thu.',
-      'Đưa ra gói ưu đãi cọc 0.5 tháng cho khách ký hợp đồng 12 tháng tại các phòng trống.',
+      'Apply tier-based flexible pricing at Cau Giay to increase revenue by 8%.',
+      'Offer 0.5 month deposit discount for tenants signing 12-month contracts on vacant rooms.',
     ],
   })
   pricingRecommendations: string[]
 
   @ApiProperty({
     example: [
-      'Đăng tin nổi bật trên nền tảng Dormio kèm huy hiệu "Phòng sạch mới nâng cấp".',
-      'Liên kết với hội sinh viên các trường ĐH Quốc Gia và ĐH Sư Phạm trong bán kính 2km.',
+      'Promote featured listings on Dormio with "Newly Renovated" badge.',
+      'Partner with student associations within 2km radius.',
     ],
   })
   marketingCampaigns: string[]
 
   @ApiProperty({
     example: [
-      'Kiểm tra định mức tiêu thụ điện nước khu vực chung để giảm 15% chi phí vận hành.',
-      'Áp dụng quy trình thu nợ tự động qua tin nhắn Zalo trước hạn 3 ngày.',
+      'Audit shared utility usage to reduce operating expenses by 15%.',
+      'Apply automated debt collection notices 3 days before due date.',
     ],
   })
   operationalOptimizations: string[]

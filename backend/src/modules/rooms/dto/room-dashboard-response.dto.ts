@@ -203,12 +203,65 @@ export class RoomDashboardDetailsDto {
   updatedAt?: string | null
 }
 
+export class RoomDashboardOccupantDto {
+  @ApiProperty({ example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' })
+  id: string
+
+  @ApiProperty({ example: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22' })
+  tenantId: string
+
+  @ApiProperty({ example: 'Nguyen Van A' })
+  fullName: string
+
+  @ApiProperty({ example: '0912345678' })
+  phoneNumber: string
+
+  @ApiPropertyOptional({ example: 'tenant@example.com' })
+  email?: string | null
+
+  @ApiPropertyOptional({ example: 'https://res.cloudinary.com/.../avatar.jpg' })
+  avatarUrl?: string | null
+
+  @ApiProperty({ example: true })
+  hasAccount: boolean
+
+  @ApiProperty({ example: true })
+  hasIdentification: boolean
+
+  @ApiPropertyOptional({ example: '079201012345' })
+  identityNumber?: string | null
+
+  @ApiPropertyOptional({ example: '1998-05-12T00:00:00.000Z' })
+  dateOfBirth?: string | null
+
+  @ApiPropertyOptional({ example: 'male' })
+  gender?: string | null
+
+  @ApiProperty({ example: 'active' })
+  status: string
+
+  @ApiProperty({ example: '2026-09-01T00:00:00.000Z' })
+  joinedAt: string
+
+  @ApiPropertyOptional({ example: 'Khach o ghep' })
+  note?: string | null
+
+  @ApiProperty({ example: true })
+  hasContract: boolean
+
+  @ApiPropertyOptional({ example: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33' })
+  contractId?: string | null
+}
+
 export class RoomDashboardResponseDto {
   @ApiProperty({ type: RoomDashboardDetailsDto })
   room: RoomDashboardDetailsDto
 
   @ApiProperty({ type: [RoomServiceItemDto] })
   services: RoomServiceItemDto[]
+
+  @ApiProperty({ type: [RoomDashboardOccupantDto] })
+  occupants: RoomDashboardOccupantDto[]
 
   @ApiPropertyOptional({ type: RoomDashboardContractDto })
   currentContract?: RoomDashboardContractDto | null

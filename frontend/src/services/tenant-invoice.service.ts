@@ -119,13 +119,16 @@ export const tenantInvoiceService = {
     }
   },
   /**
-   * Fetch all invoices for current tenant's active room
+   * Fetch all invoices for current tenant's active room or scoped contractId
    */
-  async getTenantInvoices(): Promise<TenantInvoice[]> {
+  async getTenantInvoices(contractId?: string): Promise<TenantInvoice[]> {
     try {
       const res = await api.get<{ success: boolean; data: TenantInvoice[] }>(
         '/v1/tenant/invoices',
-        { silent: true },
+        {
+          silent: true,
+          params: contractId ? { contractId } : undefined,
+        },
       )
       return res.data || []
     } catch {

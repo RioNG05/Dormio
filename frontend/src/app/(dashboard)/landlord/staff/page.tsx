@@ -1,22 +1,16 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Users,
   Plus,
-  Search,
   UserCheck,
-  Building2,
   Phone,
   Mail,
   Calendar,
   CheckCircle2,
   AlertCircle,
-  LayoutGrid,
-  List,
-  ChevronDown,
   Loader2,
-  X,
   Briefcase,
   Copy,
   Check,
@@ -32,13 +26,23 @@ import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
-  NumberInput,
   SelectInput,
-  TextareaInput,
   SearchInput,
+  Avatar,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  TableRow,
+  Card,
+  Text,
+  Chip,
+  Modal,
+  EmptyState,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 import { staffService, StaffItem, JobPosition, StaffSummary } from '@/services/staff.service'
 
 export default function StaffPage() {
@@ -84,6 +88,11 @@ export default function StaffPage() {
   const [pendingCloseTarget, setPendingCloseTarget] = useState<
     'onboard' | 'assignRole' | 'positions' | null
   >(null)
+  const [actionConfirm, setActionConfirm] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
 
   const [credentialModal, setCredentialModal] = useState<{
     isOpen: boolean
@@ -397,28 +406,32 @@ export default function StaffPage() {
   }
 
   // Toggle Staff Status ( Step 2 & 4)
-  const handleToggleStatus = async (staff: StaffItem) => {
+  const handleToggleStatus = (staff: StaffItem) => {
     const nextStatus = staff.status === 'active' ? 'inactive' : 'active'
     const confirmMsg =
       nextStatus === 'inactive'
         ? t('landlordStaffConfirmDeactivate', { name: staff.fullName })
         : t('landlordStaffConfirmActivate', { name: staff.fullName })
 
-    if (!window.confirm(confirmMsg)) return
-
-    try {
-      await staffService.updateStaffStatus(buildingId, staff.assignmentId, {
-        status: nextStatus,
-      })
-      toast.success(
-        nextStatus === 'active'
-          ? t('landlordStaffConfirmActivate', { name: staff.fullName })
-          : t('landlordStaffConfirmDeactivate', { name: staff.fullName }),
-      )
-      await fetchStaffData()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t('landlordStaffAlertUpdateStatusError'))
-    }
+    setActionConfirm({
+      title: t('btnConfirm') || 'Xác nhận thay đổi trạng thái',
+      message: confirmMsg,
+      onConfirm: async () => {
+        try {
+          await staffService.updateStaffStatus(buildingId, staff.assignmentId, {
+            status: nextStatus,
+          })
+          toast.success(
+            nextStatus === 'active'
+              ? t('landlordStaffConfirmActivate', { name: staff.fullName })
+              : t('landlordStaffConfirmDeactivate', { name: staff.fullName }),
+          )
+          await fetchStaffData()
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || t('landlordStaffAlertUpdateStatusError'))
+        }
+      },
+    })
   }
 
   // Manage Positions Actions (CRUD)
@@ -461,16 +474,20 @@ export default function StaffPage() {
     }
   }
 
-  const handleDeletePosition = async (pos: JobPosition) => {
-    if (!window.confirm(t('landlordStaffConfirmDeletePos', { name: pos.name }))) return
-
-    try {
-      await staffService.deletePosition(buildingId, pos.id)
-      toast.success(t('landlordStaffPositionsDeleteTooltip'))
-      await fetchStaffData()
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t('landlordStaffAlertDeletePosError'))
-    }
+  const handleDeletePosition = (pos: JobPosition) => {
+    setActionConfirm({
+      title: t('btnConfirm') || 'Xác nhận xóa vị trí',
+      message: t('landlordStaffConfirmDeletePos', { name: pos.name }),
+      onConfirm: async () => {
+        try {
+          await staffService.deletePosition(buildingId, pos.id)
+          toast.success(t('landlordStaffPositionsDeleteTooltip'))
+          await fetchStaffData()
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || t('landlordStaffAlertDeletePosError'))
+        }
+      },
+    })
   }
 
   const copyToClipboard = (text: string) => {
@@ -478,6 +495,61 @@ export default function StaffPage() {
     setCopiedPassword(true)
     setTimeout(() => setCopiedPassword(false), 2500)
   }
+
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordStaffStatTotal'),
+        value: summary.totalStaff,
+        icon: <Users className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[135px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'active',
+        label: t('landlordStaffStatActive'),
+        value: summary.activeStaff,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[135px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'inactive',
+        label: t('landlordStaffStatInactive'),
+        value: summary.inactiveStaff,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-zinc-500 shadow-[0_0_8px_rgba(113,113,122,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-zinc-800/80 hover:bg-zinc-800 border-zinc-700 lg:w-[135px]',
+        labelColor: 'secondary',
+        valueColor: 'secondary',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'positions',
+        label: t('landlordStaffStatPositions'),
+        value: summary.positionsCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[135px]',
+        labelClassName: 'text-blue-400',
+        valueClassName: 'text-blue-400 text-base sm:text-lg leading-none mt-1',
+      },
+    ],
+    [t, summary],
+  )
 
   // Pagination calculations (Rule #9)
   const totalPages = Math.ceil(totalItems / pageSize) || 1
@@ -492,379 +564,278 @@ export default function StaffPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-16">
       {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
-            {t('landlordStaffTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">{t('landlordStaffSubtitle')}</p>
-        </div>
+      <DashboardPageHeader
+        title={t('landlordStaffTitle')}
+        subtitle={t('landlordStaffSubtitle')}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={event => {
+                setEditingPosition(null)
+                setIsAddingPositionInline(false)
+                setPosFormName('')
+                setPosFormDesc('')
+                setPosErrorMessage('')
+                setIsPositionsModalOpen(true)
+              }}
+              leftIcon={<Briefcase className="text-primary" />}
+            >
+              {t('landlordStaffManagePositions', { count: positions.length })}
+            </Button>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setEditingPosition(null)
-              setIsAddingPositionInline(false)
-              setPosFormName('')
-              setPosFormDesc('')
-              setPosErrorMessage('')
-              setIsPositionsModalOpen(true)
-            }}
-            leftIcon={<Briefcase className="w-4 h-4 text-[#2AC1BC]" />}
-          >
-            {t('landlordStaffManagePositions', { count: positions.length })}
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => {
-              resetOnboardForm()
-              setIsOnboardModalOpen(true)
-            }}
-            leftIcon={<Plus className="w-4 h-4" />}
-            className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold"
-          >
-            {t('landlordStaffAddNew')}
-          </Button>
-        </div>
-      </div>
+            <Button
+              size="md"
+              onClick={() => {
+                resetOnboardForm()
+                setIsOnboardModalOpen(true)
+              }}
+              leftIcon={<Plus />}
+            >
+              {t('landlordStaffAddNew')}
+            </Button>
+          </>
+        }
+      />
 
       {/* Dark Hero Stats Banner */}
-      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Users className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-[#2AC1BC] border border-[#2AC1BC]/30">
-              <Building2 className="w-3.5 h-3.5" />
-              <span>{activeBuilding?.name || t('landlordStaffNoBuilding')}</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              {t('landlordStaffHeroTitle')}
-            </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              {t('landlordStaffHeroSubtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
-            <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                {t('landlordStaffStatTotal')}
-              </span>
-              <span className="font-black text-white text-xl sm:text-2xl mt-1">
-                {summary.totalStaff}
-              </span>
-            </div>
-
-            <div className="flex flex-col p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-[#2AC1BC] tracking-wider">
-                {t('landlordStaffStatActive')}
-              </span>
-              <span className="font-black text-[#2AC1BC] text-xl sm:text-2xl mt-1">
-                {summary.activeStaff}
-              </span>
-            </div>
-
-            <div className="flex flex-col p-3.5 bg-zinc-800/80 rounded-2xl border border-zinc-700 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-                {t('landlordStaffStatInactive')}
-              </span>
-              <span className="font-black text-zinc-300 text-xl sm:text-2xl mt-1">
-                {summary.inactiveStaff}
-              </span>
-            </div>
-
-            <div className="flex flex-col p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/30 min-w-[125px]">
-              <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
-                {t('landlordStaffStatPositions')}
-              </span>
-              <span className="font-black text-blue-400 text-xl sm:text-2xl mt-1">
-                {summary.positionsCount}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Users className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* Filter & Toolbar Bar */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-3">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search Bar */}
-          <div className="w-full md:max-w-xs">
-            <SearchInput
-              placeholder={t('landlordStaffSearchPlaceholder')}
-              value={searchQuery}
-              onChange={val => {
-                setSearchQuery(val)
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordStaffSearchPlaceholder')}
+            value={searchQuery}
+            onChange={val => {
+              setSearchQuery(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={statusFilter}
+              onChange={e => {
+                setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')
                 setCurrentPage(1)
               }}
+              containerClassName="w-full sm:w-auto min-w-[150px] space-y-0"
+              options={[
+                {
+                  value: 'all',
+                  label: `${t('landlordStaffTabAll')} (${summary.totalStaff})`,
+                },
+                {
+                  value: 'active',
+                  label: `${t('landlordStaffTabActive')} (${summary.activeStaff})`,
+                },
+                {
+                  value: 'inactive',
+                  label: `${t('landlordStaffTabInactive')} (${summary.inactiveStaff})`,
+                },
+              ]}
             />
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between md:justify-end gap-2.5">
-            {/* Position filter */}
-            <div className="min-w-[170px]">
-              <SelectInput
-                value={positionFilter}
-                onChange={e => {
-                  setPositionFilter(e.target.value)
-                  setCurrentPage(1)
-                }}
-                options={[
-                  { value: 'all', label: t('landlordStaffAllPositions', { count: positions.length }) },
-                  ...positions.map(pos => ({
-                    value: pos.id,
-                    label: `${pos.name} ${pos.staffCount ? `(${pos.staffCount})` : ''}`,
-                  })),
-                ]}
-              />
-            </div>
-
-            {/* View Mode Toggle (Rule #9) */}
-            <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setViewMode('grid')
-                  setPageSize(6)
-                  setCurrentPage(1)
-                }}
-                className={cn(
-                  'p-1.5 h-auto rounded-lg',
-                  viewMode === 'grid'
-                    ? 'bg-white text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-zinc-500 hover:text-zinc-900',
-                )}
-                title={t('landlordStaffViewGrid')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  setViewMode('table')
-                  setPageSize(10)
-                  setCurrentPage(1)
-                }}
-                className={cn(
-                  'p-1.5 h-auto rounded-lg',
-                  viewMode === 'table'
-                    ? 'bg-white text-[#2AC1BC] shadow-xs font-bold'
-                    : 'text-zinc-500 hover:text-zinc-900',
-                )}
-                title={t('landlordStaffViewTable')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Category Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-zinc-100">
-          {[
-            { label: t('landlordStaffTabAll'), val: 'all', count: summary.totalStaff },
-            { label: t('landlordStaffTabActive'), val: 'active', count: summary.activeStaff },
-            { label: t('landlordStaffTabInactive'), val: 'inactive', count: summary.inactiveStaff },
-          ].map(tab => (
-            <Button
-              key={tab.val}
-              variant={statusFilter === tab.val ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                setStatusFilter(tab.val as any)
+            <SelectInput
+              value={positionFilter}
+              onChange={e => {
+                setPositionFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-xs font-bold h-auto',
-                statusFilter === tab.val
-                  ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/20'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200/70',
-              )}
-            >
-              <span>{tab.label}</span>
-              <span
-                className={cn(
-                  'px-1.5 py-0.2 text-[10px] rounded-full font-extrabold ml-1.5',
-                  statusFilter === tab.val ? 'bg-white/20 text-white' : 'bg-zinc-200 text-zinc-700',
-                )}
-              >
-                {tab.count}
-              </span>
-            </Button>
-          ))}
-        </div>
-      </div>
+              containerClassName="w-full sm:w-auto min-w-[170px] space-y-0"
+              options={[
+                { value: 'all', label: t('landlordStaffAllPositions', { count: positions.length }) },
+                ...positions.map(pos => ({
+                  value: pos.id,
+                  label: `${pos.name} ${pos.staffCount ? `(${pos.staffCount})` : ''}`,
+                })),
+              ]}
+            />
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
       {/* Main Content Area */}
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-white rounded-3xl border border-zinc-200">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">{t('landlordStaffLoading')}</p>
+        <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-card rounded-3xl border border-line">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <p className="text-xs text-muted font-medium">{t('landlordStaffLoading')}</p>
         </div>
       ) : staffList.length === 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
-            <Users className="w-8 h-8" />
-          </div>
-          <div className="max-w-sm space-y-1">
-            <h3 className="text-base font-extrabold text-zinc-900">
-              {t('landlordStaffEmptyTitle')}
-            </h3>
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              {searchQuery || statusFilter !== 'all' || positionFilter !== 'all'
-                ? t('landlordStaffEmptyFiltered')
-                : t('landlordStaffEmptyDesc')}
-            </p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              resetOnboardForm()
-              setIsOnboardModalOpen(true)
-            }}
-            className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold"
-          >
-            {t('landlordStaffAddNow')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Users className="w-8 h-8" />}
+          title={t('landlordStaffEmptyTitle')}
+          description={
+            searchQuery || statusFilter !== 'all' || positionFilter !== 'all'
+              ? t('landlordStaffEmptyFiltered')
+              : t('landlordStaffEmptyDesc')
+          }
+          action={
+            <Button
+              size="md"
+              onClick={() => {
+                resetOnboardForm()
+                setIsOnboardModalOpen(true)
+              }}
+              leftIcon={<Plus />}
+            >
+              {t('landlordStaffAddNow')}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 default) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {staffList.map(staff => {
             const isActive = staff.status === 'active'
             return (
-              <div
+              <Card
                 key={staff.assignmentId}
-                className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                className="flex flex-col justify-between space-y-4 group"
+                onClick={() => {
+                  setSelectedStaff(staff)
+                  setIsDetailModalOpen(true)
+                }}
               >
-                <div className="space-y-4">
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 border-0">
                   {/* Card Header: Avatar, Name & Status */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg shrink-0 shadow-xs">
-                        {staff.fullName.charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar
+                        src={staff.avatarUrl}
+                        name={staff.fullName}
+                        size="lg"
+                        shape="rounded"
+                        zoomOnHover
+                      />
                       <div>
-                        <h3 className="font-extrabold text-zinc-900 text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                        <Text
+                          as="h3"
+                          size="base"
+                          weight="extrabold"
+                          color="default"
+                          clamp={1}
+                          className="group-hover:text-primary transition-colors"
+                        >
                           {staff.fullName}
-                        </h3>
+                        </Text>
                         <div className="inline-flex items-center gap-1 mt-0.5">
-                          <Briefcase className="w-3 h-3 text-[#2AC1BC]" />
-                          <span className="text-xs font-bold text-[#2AC1BC]">
+                          <Briefcase className="w-3 h-3 text-primary" />
+                          <Text as="span" size="xs" weight="bold" color="brand">
                             {staff.positionName}
-                          </span>
+                          </Text>
                         </div>
                       </div>
                     </div>
 
-                    <span
-                      className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border shrink-0 ${
-                        isActive
-                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                          : 'bg-zinc-100 text-zinc-500 border-zinc-200'
-                      }`}
+                    <Chip
+                      size="sm"
+                      preventHover
+                      variant={isActive ? 'primary' : 'neutral'}
                     >
                       {isActive
                         ? t('landlordStaffStatusActiveBadge')
                         : t('landlordStaffStatusInactiveBadge')}
-                    </span>
+                    </Chip>
                   </div>
+                </Card.Header>
 
+                <Card.Body className="px-4 sm:px-5 py-0 space-y-4">
                   {/* Details List */}
-                  <div className="space-y-2 pt-1 text-xs text-zinc-600 border-t border-zinc-100">
+                  <div className="space-y-2 pt-1 text-xs text-muted border-t border-line">
                     <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span className="font-bold text-zinc-900">{staff.phoneNumber}</span>
+                      <Phone className="w-3.5 h-3.5 text-muted shrink-0" />
+                      <Text as="span" size="xs" weight="bold" color="default">
+                        {staff.phoneNumber}
+                      </Text>
                     </div>
                     {staff.email && (
                       <div className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span className="text-zinc-600 truncate">{staff.email}</span>
+                        <Mail className="w-3.5 h-3.5 text-muted shrink-0" />
+                        <Text as="span" size="xs" color="secondary" clamp={1}>
+                          {staff.email}
+                        </Text>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>
+                      <Calendar className="w-3.5 h-3.5 text-muted shrink-0" />
+                      <Text as="span" size="xs" color="secondary">
                         {t('landlordStaffJoinedLabel')}{' '}
-                        <strong className="text-zinc-700">
+                        <Text as="strong" size="xs" weight="bold" color="default">
                           {formatDate(staff.joinedAt)}
-                        </strong>
-                      </span>
+                        </Text>
+                      </Text>
                     </div>
                     {staff.positionDescription && (
-                      <div className="flex items-start gap-2 text-[11px] text-zinc-500 bg-zinc-50 p-2 rounded-xl">
-                        <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-2 text-[11px] text-muted bg-surface p-2 rounded-xl">
+                        <FileText className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
                         <span className="line-clamp-2 italic">{staff.positionDescription}</span>
                       </div>
                     )}
                     {staff.mustChangePassword && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-amber-600 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200 font-semibold">
+                      <div className="flex items-center gap-1.5 text-[11px] text-warning bg-warning-soft px-2 py-1 rounded-lg border border-warning-subtle font-semibold">
                         <AlertCircle className="w-3 h-3 shrink-0" />
                         <span>{t('landlordStaffMustChangePassword')}</span>
                       </div>
                     )}
                   </div>
-                </div>
+                </Card.Body>
 
                 {/* Card Footer Actions: Assign Role & Toggle Status */}
-                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-1.5">
+                <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 flex items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedStaff(staff)
-                        setIsDetailModalOpen(true)
+                      onClick={event => {
+                        event.stopPropagation()
+                        handleOpenAssignRoleModal(staff)
                       }}
-                      className="text-xs font-bold text-zinc-600 hover:text-zinc-900"
-                    >
-                      {t('landlordStaffBtnDetail')}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleOpenAssignRoleModal(staff)}
-                      className="text-xs font-bold text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
                       title={t('landlordStaffBtnAssignRoleTooltip')}
-                      leftIcon={<Edit3 className="w-3 h-3" />}
+                      leftIcon={<Edit3 />}
                     >
                       {t('landlordStaffBtnAssignRole')}
                     </Button>
                   </div>
 
                   <Button
-                    size="sm"
                     variant={isActive ? 'danger' : 'secondary'}
-                    onClick={() => handleToggleStatus(staff)}
+                    onClick={event => {
+                      event.stopPropagation()
+                      handleToggleStatus(staff)
+                    }}
                     className={cn(
                       'text-xs font-bold',
                       isActive
-                        ? 'text-rose-600 bg-rose-50 hover:bg-rose-100/80 border border-rose-200/60'
-                        : 'text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 border border-[#2AC1BC]/30',
+                        ? 'text-danger bg-danger-soft hover:bg-rose-100/80 border border-danger-subtle'
+                        : 'text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30',
                     )}
-                    leftIcon={<Power className="w-3 h-3" />}
+                    leftIcon={<Power />}
                   >
                     {isActive ? t('landlordStaffBtnDeactivate') : t('landlordStaffBtnActivate')}
                   </Button>
-                </div>
-              </div>
+                </Card.Footer>
+              </Card>
             )
           })}
         </div>
       ) : (
         /* TABLE VIEW (Rule #9 parallel table) */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-zinc-50/80 text-zinc-500 uppercase font-bold border-b border-zinc-200">
+              <thead className="bg-surface/80 text-muted uppercase font-bold border-b border-line">
                 <tr>
                   <th className="px-6 py-3.5">{t('landlordStaffThStaff')}</th>
                   <th className="px-6 py-3.5">{t('landlordStaffThRole')}</th>
@@ -874,96 +845,89 @@ export default function StaffPage() {
                   <th className="px-6 py-3.5 text-right">{t('landlordStaffThActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium">
+              <tbody className="divide-y divide-line font-medium">
                 {staffList.map(staff => {
                   const isActive = staff.status === 'active'
                   return (
-                    <tr key={staff.assignmentId} className="hover:bg-zinc-50/80 transition-colors">
+                    <TableRow
+                      key={staff.assignmentId}
+                      className="group"
+                      onClick={() => {
+                        setSelectedStaff(staff)
+                        setIsDetailModalOpen(true)
+                      }}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                            {staff.fullName.charAt(0).toUpperCase()}
-                          </div>
+                          <Avatar
+                            src={staff.avatarUrl}
+                            name={staff.fullName}
+                            size="sm"
+                            shape="rounded"
+                          />
                           <div>
-                            <div className="font-extrabold text-zinc-900 text-sm">
+                            <Text as="div" size="sm" weight="extrabold" color="default">
                               {staff.fullName}
-                            </div>
-                            <div className="text-[11px] text-zinc-400">
+                            </Text>
+                            <Text as="div" size="2xs" color="secondary">
                               {staff.email || t('landlordStaffNoEmail')}
-                            </div>
+                            </Text>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <span className="font-bold text-zinc-900">{staff.positionName}</span>
+                          <Text as="span" size="xs" weight="bold" color="default">
+                            {staff.positionName}
+                          </Text>
                           {staff.positionDescription && (
-                            <p className="text-[11px] text-zinc-400 line-clamp-1 italic">
+                            <Text as="p" size="2xs" color="secondary" clamp={1} className="italic">
                               {staff.positionDescription}
-                            </p>
+                            </Text>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-zinc-900">{staff.phoneNumber}</td>
-                      <td className="px-6 py-4 text-zinc-600">
-                        {formatDate(staff.joinedAt)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {staff.phoneNumber}
+                        </Text>
                       </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-1 text-[10px] font-extrabold rounded-full border ${
-                            isActive
-                              ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                              : 'bg-zinc-100 text-zinc-500 border-zinc-200'
-                          }`}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Text as="span" size="xs" color="secondary">
+                          {formatDate(staff.joinedAt)}
+                        </Text>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          preventHover
+                          variant={isActive ? 'primary' : 'neutral'}
                         >
                           {isActive
                             ? t('landlordStaffTableStatusActive')
                             : t('landlordStaffTableStatusInactive')}
-                        </span>
+                        </Chip>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="secondary"
+                          <TableActionButton
+                            icon={<Edit3 />}
                             onClick={() => handleOpenAssignRoleModal(staff)}
-                            className="px-2.5 py-1 h-auto text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-lg"
                             title={t('landlordStaffBtnAssignRoleTooltip')}
-                          >
-                            {t('landlordStaffBtnAssignRole')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => {
-                              setSelectedStaff(staff)
-                              setIsDetailModalOpen(true)
-                            }}
-                            className="px-2.5 py-1 h-auto text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-lg"
-                          >
-                            {t('landlordStaffBtnDetail')}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
+                          />
+                          <TableActionButton
+                            icon={<Power />}
+                            variant={isActive ? 'ghost-danger' : 'ghost'}
                             onClick={() => handleToggleStatus(staff)}
-                            className={cn(
-                              'p-1.5 h-auto rounded-lg border',
-                              isActive
-                                ? 'text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100'
-                                : 'text-[#2AC1BC] bg-[#2AC1BC]/10 border-[#2AC1BC]/30 hover:bg-[#2AC1BC]/20',
-                            )}
                             title={
                               isActive
                                 ? t('landlordStaffTooltipDeactivate')
                                 : t('landlordStaffTooltipActivate')
                             }
-                          >
-                            <Power className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   )
                 })}
               </tbody>
@@ -973,129 +937,53 @@ export default function StaffPage() {
       )}
 
       {/* Standardized Dormio Pagination Footer (Rule #9) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white border border-zinc-200 rounded-2xl shadow-xs">
-        <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-zinc-500">
-          <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1 rounded-xl border border-zinc-200">
-            <span>{t('landlordStaffPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                setPageSize(isNaN(val) || val <= 0 ? 1 : Math.min(val, 100))
-                setCurrentPage(1)
-              }}
-              className="w-14 text-center font-extrabold text-zinc-900 bg-white"
-            />
-            <span>{t('landlordStaffPaginationPerPage')}</span>
-          </div>
-
-          <span className="hidden sm:inline text-zinc-300">|</span>
-
-          <div>
-            <span className="font-extrabold text-zinc-800">
-              {totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1}
-            </span>{' '}
-            -{' '}
-            <span className="font-extrabold text-zinc-800">
-              {Math.min(currentPage * pageSize, totalItems)}
-            </span>{' '}
-            {t('landlordStaffPaginationTotal', { total: totalItems })}
-          </div>
-        </div>
-
-        {/* 5-Page Window Jumping Pagination */}
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-          >
-            &larr; {t('landlordStaffPaginationPrev')}
-          </Button>
-          {visiblePages.map(page => (
-            <Button
-              key={page}
-              variant={currentPage === page ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setCurrentPage(page)}
-              className={cn(
-                'w-8 h-8 p-0 text-xs font-extrabold rounded-xl',
-                currentPage === page
-                  ? 'bg-[#2AC1BC] hover:bg-[#25aba6] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50',
-              )}
-            >
-              {page}
-            </Button>
-          ))}
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={currentPage === totalPages || windowStart + windowSize > totalPages}
-            onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-          >
-            {t('landlordStaffPaginationNext')} &rarr;
-          </Button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeMax={100}
+        unitLabel={t('landlordStaffPaginationTotal', { total: '' }).trim()}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL: ONBOARD STAFF */}
       {/* ========================================================================= */}
-      {isOnboardModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal('onboard')
-          }}
-        >
-          <div
-            className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[92vh]"
-            onInput={() => setFormDirty(true)}
-            onChange={() => setFormDirty(true)}
-          >
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <UserCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
-                    {t('landlordStaffOnboardTitle')}
-                  </h3>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
-                    {t('landlordStaffOnboardSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => handleAttemptCloseModal('onboard')}
-                className="p-1.5 rounded-xl hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-600"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isOnboardModalOpen}
+        onClose={() => handleAttemptCloseModal('onboard')}
+        size="xl"
+      >
+        <Modal.Header
+          title={t('landlordStaffOnboardTitle')}
+          description={t('landlordStaffOnboardSubtitle')}
+          icon={
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <UserCheck className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <form onSubmit={handleSubmitOnboard} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <form
+          onSubmit={handleSubmitOnboard}
+          className="flex flex-col flex-1 overflow-hidden"
+          onInput={() => setFormDirty(true)}
+          onChange={() => setFormDirty(true)}
+        >
+          <Modal.Body className="space-y-5">
                 {errorMessage && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-xs text-rose-700 font-semibold">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+                  <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl flex items-start gap-2.5 text-xs text-danger font-semibold">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-danger" />
                     <span>{errorMessage}</span>
                   </div>
                 )}
 
                 {/* Phone lookup */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordStaffOnboardPhoneLabel')}</span>
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
@@ -1116,50 +1004,50 @@ export default function StaffPage() {
                             handleSearchPhone(lookupPhone)
                           }
                         }}
-                        leftIcon={<Phone className="w-4 h-4 text-zinc-400" />}
+                        leftIcon={<Phone className="w-4 h-4 text-muted" />}
                       />
                     </div>
                     <Button
-                      type="button"
+                      variant="dark"
                       onClick={() => handleSearchPhone(lookupPhone)}
                       disabled={isSearchingUser || !lookupPhone.trim()}
                       isLoading={isSearchingUser}
-                      className="bg-zinc-900 hover:bg-zinc-800 text-white shrink-0"
+                      className="shrink-0"
                     >
                       {t('landlordStaffOnboardBtnCheck')}
                     </Button>
                   </div>
-                  <p className="text-[11px] text-zinc-400">{t('landlordStaffOnboardPhoneHelp')}</p>
+                  <p className="text-[11px] text-muted">{t('landlordStaffOnboardPhoneHelp')}</p>
                 </div>
 
                 {/* Found user */}
                 {hasSearched && foundUser && (
-                  <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-2.5">
-                    <div className="flex items-center gap-2 text-emerald-800 text-xs font-extrabold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div className="p-4 rounded-2xl bg-success-soft border border-success-subtle space-y-2.5">
+                    <div className="flex items-center gap-2 text-success text-xs font-extrabold">
+                      <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
                       <span>{t('landlordStaffOnboardAccountFound')}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-emerald-100">
+                    <div className="flex items-center gap-3 bg-card p-3 rounded-xl border border-success-subtle">
                       <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-black text-sm">
                         {foundUser.fullName.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-zinc-900 text-xs truncate">
+                        <div className="font-extrabold text-foreground text-xs truncate">
                           {foundUser.fullName}
                         </div>
-                        <div className="text-[11px] text-zinc-500">
+                        <div className="text-[11px] text-muted">
                           {foundUser.phoneNumber} {foundUser.email ? `• ${foundUser.email}` : ''}
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-zinc-100 text-zinc-600 uppercase">
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-card-hover text-muted uppercase">
                         {foundUser.role}
                       </span>
                     </div>
 
                     {foundUser.isAlreadyStaffAtThisHouse && (
-                      <div className="p-2 bg-amber-100/70 border border-amber-300 rounded-xl text-[11px] text-amber-800 font-bold flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <div className="p-2 bg-warning-soft border border-amber-300 rounded-xl text-[11px] text-warning font-bold flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
                         <span>{t('landlordStaffOnboardAlreadyAssigned')}</span>
                       </div>
                     )}
@@ -1168,9 +1056,9 @@ export default function StaffPage() {
 
                 {/* New user prompt */}
                 {hasSearched && !foundUser && (
-                  <div className="p-4 rounded-2xl bg-orange-50/80 border border-orange-200/80 space-y-3">
-                    <div className="flex items-center gap-2 text-orange-800 text-xs font-extrabold">
-                      <Info className="w-4 h-4 text-[#FF6B35] shrink-0" />
+                  <div className="p-4 rounded-2xl bg-accent-soft border border-accent-subtle space-y-3">
+                    <div className="flex items-center gap-2 text-accent text-xs font-extrabold">
+                      <Info className="w-4 h-4 text-accent shrink-0" />
                       <span>{t('landlordStaffOnboardNewAccountTitle')}</span>
                     </div>
 
@@ -1185,8 +1073,8 @@ export default function StaffPage() {
                       }}
                     />
 
-                    <div className="p-2.5 bg-white/80 rounded-xl border border-orange-100 text-[11px] text-zinc-600 leading-relaxed space-y-1">
-                      <p className="font-bold text-orange-700">
+                    <div className="p-2.5 bg-card/80 rounded-xl border border-accent-subtle text-[11px] text-muted leading-relaxed space-y-1">
+                      <p className="font-bold text-accent">
                         {t('landlordStaffOnboardSecurityPolicyTitle')}
                       </p>
                       <p>{t('landlordStaffOnboardSecurityPolicyDesc')}</p>
@@ -1197,16 +1085,14 @@ export default function StaffPage() {
                 {/* Job Position selection */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                    <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                       <span>{t('landlordStaffOnboardPositionLabel')}</span>
-                      <span className="text-rose-500">*</span>
+                      <span className="text-danger">*</span>
                     </label>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      type="button"
                       onClick={() => setIsCreatingNewPosition(!isCreatingNewPosition)}
-                      className="text-[11px] font-bold text-[#2AC1BC] hover:underline h-auto p-0"
+                      className="hover:underline"
                     >
                       {isCreatingNewPosition
                         ? t('landlordStaffOnboardSelectExistingPos')
@@ -1227,10 +1113,10 @@ export default function StaffPage() {
                       }))}
                     />
                   ) : (
-                    <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                    <div className="space-y-2 p-3 bg-surface rounded-2xl border border-line">
                       <TextInput
                         label={t('landlordStaffOnboardNewPosNameLabel')}
-                        labelClassName="text-[11px] font-bold text-zinc-600"
+                        labelClassName="text-[11px] font-bold text-muted"
                         required={isCreatingNewPosition}
                         placeholder={t('landlordStaffOnboardNewPosNamePlaceholder')}
                         value={newPositionName}
@@ -1241,7 +1127,7 @@ export default function StaffPage() {
                       />
                       <TextInput
                         label={t('landlordStaffOnboardNewPosDescLabel')}
-                        labelClassName="text-[11px] font-bold text-zinc-600"
+                        labelClassName="text-[11px] font-bold text-muted"
                         placeholder={t('landlordStaffOnboardNewPosDescPlaceholder')}
                         value={newPositionDesc}
                         onChange={e => {
@@ -1258,7 +1144,7 @@ export default function StaffPage() {
                   <TextInput
                     type="date"
                     label={t('landlordStaffOnboardStartDateLabel')}
-                    labelClassName="text-xs font-bold text-zinc-700"
+                    labelClassName="text-xs font-bold text-foreground/90"
                     value={joinedAtInput}
                     onChange={e => {
                       setJoinedAtInput(e.target.value)
@@ -1268,7 +1154,7 @@ export default function StaffPage() {
 
                   <TextInput
                     label={t('landlordStaffOnboardNoteLabel')}
-                    labelClassName="text-xs font-bold text-zinc-700"
+                    labelClassName="text-xs font-bold text-foreground/90"
                     placeholder={t('landlordStaffOnboardNotePlaceholder')}
                     value={noteInput}
                     onChange={e => {
@@ -1277,89 +1163,78 @@ export default function StaffPage() {
                     }}
                   />
                 </div>
-              </div>
+              </Modal.Body>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50/60">
-                <Button
-                  variant="secondary"
-                  type="button"
-                  onClick={() => handleAttemptCloseModal('onboard')}
-                >
-                  {t('landlordStaffOnboardBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || (foundUser?.isAlreadyStaffAtThisHouse ?? false)}
-                  isLoading={isSubmitting}
-                  className="bg-[#2AC1BC] hover:bg-[#25aba6] text-white font-bold shadow-md shadow-[#2AC1BC]/20"
-                >
-                  {t('landlordStaffOnboardBtnSave')}
-                </Button>
-              </div>
+              <Modal.Footer>
+                <div className="flex items-center justify-end gap-3 w-full">
+                  <Button
+                    size="md"
+                    variant="secondary"
+                    onClick={() => handleAttemptCloseModal('onboard')}
+                  >
+                    {t('landlordStaffOnboardBtnCancel')}
+                  </Button>
+                  <Button
+                    size="md"
+                    type="submit"
+                    disabled={isSubmitting || (foundUser?.isAlreadyStaffAtThisHouse ?? false)}
+                    isLoading={isSubmitting}
+                  >
+                    {t('landlordStaffOnboardBtnSave')}
+                  </Button>
+                </div>
+              </Modal.Footer>
             </form>
-          </div>
-        </div>
-      )}
+          </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: ASSIGN / RE-ASSIGN ROLE ( Step 3) */}
       {/* ========================================================================= */}
-      {isAssignRoleModalOpen && selectedStaff && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal('assignRole')
-          }}
-        >
-          <div
-            className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]"
-            onInput={() => setFormDirty(true)}
-            onChange={() => setFormDirty(true)}
-          >
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
+      <Modal
+        isOpen={isAssignRoleModalOpen && Boolean(selectedStaff)}
+        onClose={() => handleAttemptCloseModal('assignRole')}
+        size="lg"
+      >
+        {selectedStaff && (
+          <>
+            <Modal.Header
+              title={t('landlordStaffAssignTitle')}
+              description={t('landlordStaffAssignSubtitle')}
+              icon={
+                <div className="p-2 bg-primary/10 text-primary rounded-xl">
                   <Briefcase className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
-                    {t('landlordStaffAssignTitle')}
-                  </h3>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
-                    {t('landlordStaffAssignSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleAttemptCloseModal('assignRole')}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer h-auto w-auto"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+              }
+            />
 
-            <form onSubmit={handleSaveAssignRole} className="p-6 space-y-4">
+            <form
+              onSubmit={handleSaveAssignRole}
+              className="flex flex-col flex-1 overflow-hidden"
+              onInput={() => setFormDirty(true)}
+              onChange={() => setFormDirty(true)}
+            >
+              <Modal.Body className="space-y-4">
               {assignError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
                   <span>{assignError}</span>
                 </div>
               )}
 
               {/* Staff Member Card Header */}
-              <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
-                  {selectedStaff.fullName.charAt(0).toUpperCase()}
-                </div>
+              <div className="flex items-center gap-3 p-3 bg-surface rounded-2xl border border-line">
+                <Avatar
+                  src={selectedStaff.avatarUrl}
+                  name={selectedStaff.fullName}
+                  size="md"
+                  shape="rounded"
+                />
                 <div className="flex-1">
-                  <h4 className="text-xs font-extrabold text-zinc-900">{selectedStaff.fullName}</h4>
-                  <p className="text-[11px] text-zinc-500">
+                  <h4 className="text-xs font-extrabold text-foreground">{selectedStaff.fullName}</h4>
+                  <p className="text-[11px] text-muted">
                     {t('landlordStaffAssignCurrentLabel', { phone: selectedStaff.phoneNumber })}{' '}
-                    <strong className="text-[#2AC1BC]">{selectedStaff.positionName}</strong>
+                    <strong className="text-primary">{selectedStaff.positionName}</strong>
                   </p>
                 </div>
               </div>
@@ -1367,15 +1242,15 @@ export default function StaffPage() {
               {/* Role Selection */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700">
+                  <label className="text-xs font-bold text-foreground/90">
                     {t('landlordStaffAssignSelectRoleLabel')}{' '}
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <Button
-                    type="button"
+                    size="xs"
                     variant="ghost"
                     onClick={() => setIsAssignCreatingNew(!isAssignCreatingNew)}
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer p-0 h-auto"
+                    className="hover:underline"
                   >
                     {isAssignCreatingNew
                       ? t('landlordStaffOnboardSelectExistingPos')
@@ -1396,7 +1271,7 @@ export default function StaffPage() {
                     }))}
                   />
                 ) : (
-                  <div className="space-y-2 p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                  <div className="space-y-2 p-3 bg-surface rounded-2xl border border-line">
                     <div>
                       <TextInput
                         label={t('landlordStaffOnboardNewPosNameLabel')}
@@ -1426,91 +1301,66 @@ export default function StaffPage() {
 
               {/* Selected Position Duty Description Preview */}
               {!isAssignCreatingNew && (
-                <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-xs text-blue-900 space-y-1">
-                  <span className="font-bold block text-[11px] uppercase tracking-wider text-blue-700">
+                <div className="p-3 bg-info-soft rounded-xl border border-info-subtle text-xs text-info space-y-1">
+                  <span className="font-bold block text-[11px] uppercase tracking-wider text-info">
                     {t('landlordStaffAssignDutiesTitle')}
                   </span>
-                  <p className="italic text-zinc-700">
+                  <p className="italic text-foreground/90">
                     {positions.find(p => p.id === assignTargetPositionId)?.description ||
                       t('landlordStaffAssignNoDuties')}
                   </p>
                 </div>
               )}
+            </Modal.Body>
 
-              {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-zinc-100">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleAttemptCloseModal('assignRole')}
-                  className="px-4 py-2.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-                >
-                  {t('landlordStaffAssignBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isAssignSubmitting}
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-50 rounded-xl transition-all shadow-md shadow-[#2AC1BC]/20 cursor-pointer flex items-center gap-2"
-                >
-                  {isAssignSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{t('landlordStaffAssignBtnUpdating')}</span>
-                    </>
-                  ) : (
+            {/* Modal Actions */}
+            <Modal.Footer>
+                <div className="flex items-center justify-end gap-2.5 w-full">
+                  <Button
+                    size="md"
+                    variant="outline"
+                    onClick={() => handleAttemptCloseModal('assignRole')}
+                  >
+                    {t('landlordStaffAssignBtnCancel')}
+                  </Button>
+                  <Button
+                    size="md"
+                    type="submit"
+                    disabled={isAssignSubmitting}
+                    isLoading={isAssignSubmitting}
+                  >
                     <span>{t('landlordStaffAssignBtnConfirm')}</span>
-                  )}
-                </Button>
-              </div>
+                  </Button>
+                </div>
+              </Modal.Footer>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: MANAGE JOB POSITIONS (CRUD) */}
       {/* ========================================================================= */}
-      {isPositionsModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseModal('positions')
-          }}
-        >
-          <div
-            className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]"
-            onInput={() => setFormDirty(true)}
-            onChange={() => setFormDirty(true)}
-          >
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Briefcase className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
-                    {t('landlordStaffPositionsTitle')}
-                  </h3>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
-                    {t('landlordStaffPositionsSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleAttemptCloseModal('positions')}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer h-auto w-auto"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isPositionsModalOpen}
+        onClose={() => handleAttemptCloseModal('positions')}
+        size="2xl"
+      >
+        <Modal.Header
+          title={t('landlordStaffPositionsTitle')}
+          description={t('landlordStaffPositionsSubtitle')}
+          icon={
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Briefcase className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <div className="p-6 overflow-y-auto space-y-5 flex-1 custom-scrollbar">
+        <Modal.Body className="space-y-5">
+          <div onInput={() => setFormDirty(true)} onChange={() => setFormDirty(true)} className="space-y-5">
               {posErrorMessage && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                <div className="p-3 bg-danger-soft border border-danger-subtle rounded-2xl text-xs text-danger font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
                   <span>{posErrorMessage}</span>
                 </div>
               )}
@@ -1519,22 +1369,21 @@ export default function StaffPage() {
               {(isAddingPositionInline || editingPosition) && (
                 <form
                   onSubmit={handleSavePosition}
-                  className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3"
+                  className="p-4 bg-surface border border-line rounded-2xl space-y-3"
                 >
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-zinc-900">
+                    <h4 className="text-xs font-black text-foreground">
                       {editingPosition
                         ? t('landlordStaffPositionsEditTitle')
                         : t('landlordStaffPositionsAddTitle')}
                     </h4>
                     <Button
-                      type="button"
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
                       }}
-                      className="text-[11px] text-zinc-400 hover:text-zinc-700 font-bold p-0 h-auto"
                     >
                       {t('landlordStaffPositionsBtnCloseForm')}
                     </Button>
@@ -1564,26 +1413,22 @@ export default function StaffPage() {
 
                   <div className="flex justify-end gap-2 pt-1">
                     <Button
-                      type="button"
+                      size="md"
                       variant="outline"
-                      size="sm"
                       onClick={() => {
                         setEditingPosition(null)
                         setIsAddingPositionInline(false)
                       }}
-                      className="px-3 py-1.5 text-xs font-bold text-zinc-600 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
                     >
                       {t('landlordStaffPositionsBtnCancel')}
                     </Button>
                     <Button
+                      size="md"
                       type="submit"
                       disabled={isPosSubmitting}
-                      size="sm"
-                      className="px-4 py-1.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-xs"
+                      isLoading={isPosSubmitting}
                     >
-                      {isPosSubmitting
-                        ? t('landlordStaffPositionsBtnSaving')
-                        : t('landlordStaffPositionsBtnSave')}
+                      {t('landlordStaffPositionsBtnSave')}
                     </Button>
                   </div>
                 </form>
@@ -1592,12 +1437,12 @@ export default function StaffPage() {
               {/* Positions List */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider">
+                  <span className="text-xs font-extrabold text-foreground/90 uppercase tracking-wider">
                     {t('landlordStaffPositionsListTitle', { count: positions.length })}
                   </span>
                   {!isAddingPositionInline && !editingPosition && (
                     <Button
-                      type="button"
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setIsAddingPositionInline(true)
@@ -1605,14 +1450,15 @@ export default function StaffPage() {
                         setPosFormName('')
                         setPosFormDesc('')
                       }}
-                      className="text-xs font-bold text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer p-0 h-auto"
+                      leftIcon={<Plus />}
+                      className="hover:underline"
                     >
-                      <Plus className="w-3.5 h-3.5" /> {t('landlordStaffPositionsBtnAddNew')}
+                      {t('landlordStaffPositionsBtnAddNew')}
                     </Button>
                   )}
                 </div>
 
-                <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
+                <div className="divide-y divide-line border border-line rounded-2xl overflow-hidden bg-card">
                   {positions.map(pos => (
                     <div
                       key={pos.id}
@@ -1620,114 +1466,108 @@ export default function StaffPage() {
                     >
                       <div className="space-y-0.5 max-w-md">
                         <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-zinc-900 text-xs sm:text-sm">
+                          <span className="font-extrabold text-foreground text-xs sm:text-sm">
                             {pos.name}
                           </span>
-                          <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full text-[10px] font-bold">
+                          <span className="px-2 py-0.5 bg-card-hover text-muted rounded-full text-[10px] font-bold">
                             {t('landlordStaffPositionsStaffCount', { count: pos.staffCount || 0 })}
                           </span>
                         </div>
-                        <p className="text-xs text-zinc-500 italic">
+                        <p className="text-xs text-muted italic">
                           {pos.description || t('landlordStaffPositionsNoDesc')}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
+                      <div className="flex items-center gap-1 self-end sm:self-center">
+                        <TableActionButton
+                          icon={<Edit3 />}
                           onClick={() => {
                             setEditingPosition(pos)
                             setIsAddingPositionInline(false)
                             setPosFormName(pos.name)
                             setPosFormDesc(pos.description || '')
                           }}
-                          className="p-1.5 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                           title={t('landlordStaffPositionsEditTooltip')}
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
+                        />
+                        <TableActionButton
+                          icon={<Trash2 />}
+                          variant="ghost-danger"
                           onClick={() => handleDeletePosition(pos)}
                           disabled={(pos.staffCount || 0) > 0}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer h-auto w-auto"
                           title={
                             (pos.staffCount || 0) > 0
                               ? t('landlordStaffPositionsCannotDeleteTooltip')
                               : t('landlordStaffPositionsDeleteTooltip')
                           }
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+          </Modal.Body>
 
-            <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
+          <Modal.Footer>
+            <div className="flex items-center justify-end w-full">
               <Button
-                type="button"
+                size="md"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('positions')}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
               >
                 {t('landlordStaffPositionsBtnClose')}
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </Modal.Footer>
+        </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: CREDENTIALS NOTIFICATION MODAL */}
       {/* ========================================================================= */}
-      {credentialModal.isOpen && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) {
-              setCredentialModal(prev => ({ ...prev, isOpen: false }))
-            }
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-5 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
+      <Modal
+        isOpen={credentialModal.isOpen}
+        onClose={() => setCredentialModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        zIndex={60}
+      >
+        <Modal.Body className="p-6 space-y-5 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-success-soft text-success border border-success-subtle flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
 
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-zinc-900">
-                {t('landlordStaffCredSuccessTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500">
-                {t('landlordStaffCredSuccessDesc', { name: credentialModal.name })}
-              </p>
-            </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-black text-foreground">
+              {t('landlordStaffCredSuccessTitle')}
+            </h3>
+            <p className="text-xs text-muted">
+              {t('landlordStaffCredSuccessDesc', { name: credentialModal.name })}
+            </p>
+          </div>
 
-            <div className="p-4 bg-zinc-50 rounded-2xl border border-zinc-200 text-left space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-500 font-semibold">
-                  {t('landlordStaffCredPhoneLabel')}
-                </span>
-                <span className="font-extrabold text-zinc-900">{credentialModal.phone}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-500 font-semibold">
-                  {t('landlordStaffCredPasswordLabel')}
-                </span>
-                <span className="font-mono font-black text-sm text-[#FF6B35] bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-200">
-                  {credentialModal.password}
-                </span>
-              </div>
+          <div className="p-4 bg-surface rounded-2xl border border-line text-left space-y-3">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted font-semibold">
+                {t('landlordStaffCredPhoneLabel')}
+              </span>
+              <span className="font-extrabold text-foreground">{credentialModal.phone}</span>
             </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted font-semibold">
+                {t('landlordStaffCredPasswordLabel')}
+              </span>
+              <span className="font-mono font-black text-sm text-accent bg-accent-soft px-2 py-0.5 rounded-lg border border-accent-subtle">
+                {credentialModal.password}
+              </span>
+            </div>
+          </div>
+        </Modal.Body>
 
+        <Modal.Footer>
+          <div className="flex flex-col gap-2 w-full">
             <Button
+              fullWidth
+              size="md"
+              variant="dark"
               onClick={() =>
                 copyToClipboard(
                   t('landlordStaffCredShareMessage', {
@@ -1736,7 +1576,6 @@ export default function StaffPage() {
                   }),
                 )
               }
-              className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {copiedPassword ? (
                 <>
@@ -1752,186 +1591,222 @@ export default function StaffPage() {
             </Button>
 
             <Button
+              size="md"
               variant="ghost"
               onClick={() => setCredentialModal(prev => ({ ...prev, isOpen: false }))}
-              className="text-xs font-bold text-zinc-500 hover:text-zinc-800 transition-colors p-0 h-auto"
             >
               {t('landlordStaffCredCloseBtn')}
             </Button>
           </div>
-        </div>
-      )}
+        </Modal.Footer>
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: STAFF DETAIL VIEW */}
       {/* ========================================================================= */}
-      {isDetailModalOpen && selectedStaff && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsDetailModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-lg">
+      <Modal
+        isOpen={isDetailModalOpen && Boolean(selectedStaff)}
+        onClose={() => setIsDetailModalOpen(false)}
+        size="md"
+      >
+        {selectedStaff && (
+          <>
+            <Modal.Header
+              title={selectedStaff.fullName}
+              description={selectedStaff.positionName}
+              icon={
+                <div className="w-10 h-10 rounded-2xl bg-zinc-900 text-white flex items-center justify-center font-black text-base">
                   {selectedStaff.fullName.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-zinc-900 text-base">
-                    {selectedStaff.fullName}
-                  </h3>
-                  <p className="text-xs font-bold text-[#2AC1BC]">{selectedStaff.positionName}</p>
+              }
+            />
+
+            <Modal.Body className="space-y-4">
+              <div className="space-y-3 text-xs bg-surface p-4 rounded-2xl border border-line">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted font-semibold">
+                    {t('landlordStaffDetailStatusLabel')}
+                  </span>
+                  <Chip
+                    size="sm"
+                    preventHover
+                    variant={selectedStaff.status === 'active' ? 'primary' : 'neutral'}
+                  >
+                    {selectedStaff.status === 'active'
+                      ? t('landlordStaffTableStatusActive')
+                      : t('landlordStaffTableStatusInactive')}
+                  </Chip>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted font-semibold">
+                    {t('landlordStaffDetailPhoneLabel')}
+                  </span>
+                  <span className="font-bold text-foreground">{selectedStaff.phoneNumber}</span>
+                </div>
+                {selectedStaff.email && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted font-semibold">
+                      {t('landlordStaffDetailEmailLabel')}
+                    </span>
+                    <span className="font-medium text-foreground/90">{selectedStaff.email}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-muted font-semibold">
+                    {t('landlordStaffDetailJoinedLabel')}
+                  </span>
+                  <span className="font-medium text-foreground/90">
+                    {formatDate(selectedStaff.joinedAt)}
+                  </span>
+                </div>
+                {selectedStaff.leftAt && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted font-semibold">
+                      {t('landlordStaffDetailLeftLabel')}
+                    </span>
+                    <span className="font-medium text-danger">
+                      {formatDate(selectedStaff.leftAt)}
+                    </span>
+                  </div>
+                )}
+                {selectedStaff.positionDescription && (
+                  <div className="pt-2 border-t border-line">
+                    <span className="text-muted font-semibold block mb-1">
+                      {t('landlordStaffDetailDutiesLabel')}
+                    </span>
+                    <p className="text-foreground/90 italic">{selectedStaff.positionDescription}</p>
+                  </div>
+                )}
               </div>
+            </Modal.Body>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsDetailModalOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors h-auto w-auto"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="space-y-3 text-xs bg-zinc-50 p-4 rounded-2xl border border-zinc-200">
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">
-                  {t('landlordStaffDetailStatusLabel')}
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${
-                    selectedStaff.status === 'active'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-zinc-200 text-zinc-600'
-                  }`}
+            <Modal.Footer>
+              <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+                <Button
+                  size="md"
+                  onClick={() => {
+                    handleOpenAssignRoleModal(selectedStaff)
+                    setIsDetailModalOpen(false)
+                  }}
+                >
+                  {t('landlordStaffBtnAssignRole')}
+                </Button>
+                <Button
+                  size="md"
+                  variant="secondary"
+                  onClick={() => {
+                    handleToggleStatus(selectedStaff)
+                    setIsDetailModalOpen(false)
+                  }}
                 >
                   {selectedStaff.status === 'active'
-                    ? t('landlordStaffTableStatusActive')
-                    : t('landlordStaffTableStatusInactive')}
-                </span>
+                    ? t('landlordStaffBtnDeactivate')
+                    : t('landlordStaffBtnActivate')}
+                </Button>
+                <Button
+                  size="md"
+                  variant="dark"
+                  onClick={() => setIsDetailModalOpen(false)}
+                >
+                  {t('landlordStaffDetailBtnClose')}
+                </Button>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">
-                  {t('landlordStaffDetailPhoneLabel')}
-                </span>
-                <span className="font-bold text-zinc-900">{selectedStaff.phoneNumber}</span>
-              </div>
-              {selectedStaff.email && (
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-semibold">
-                    {t('landlordStaffDetailEmailLabel')}
-                  </span>
-                  <span className="font-medium text-zinc-700">{selectedStaff.email}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500 font-semibold">
-                  {t('landlordStaffDetailJoinedLabel')}
-                </span>
-                <span className="font-medium text-zinc-700">
-                  {formatDate(selectedStaff.joinedAt)}
-                </span>
-              </div>
-              {selectedStaff.leftAt && (
-                <div className="flex justify-between items-center">
-                  <span className="text-zinc-500 font-semibold">
-                    {t('landlordStaffDetailLeftLabel')}
-                  </span>
-                  <span className="font-medium text-rose-600">
-                    {formatDate(selectedStaff.leftAt)}
-                  </span>
-                </div>
-              )}
-              {selectedStaff.positionDescription && (
-                <div className="pt-2 border-t border-zinc-200/80">
-                  <span className="text-zinc-500 font-semibold block mb-1">
-                    {t('landlordStaffDetailDutiesLabel')}
-                  </span>
-                  <p className="text-zinc-700 italic">{selectedStaff.positionDescription}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                onClick={() => {
-                  handleOpenAssignRoleModal(selectedStaff)
-                  setIsDetailModalOpen(false)
-                }}
-                className="px-3.5 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 rounded-xl transition-colors cursor-pointer"
-              >
-                {t('landlordStaffBtnAssignRole')}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  handleToggleStatus(selectedStaff)
-                  setIsDetailModalOpen(false)
-                }}
-                className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
-              >
-                {selectedStaff.status === 'active'
-                  ? t('landlordStaffBtnDeactivate')
-                  : t('landlordStaffBtnActivate')}
-              </Button>
-              <Button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
-              >
-                {t('landlordStaffDetailBtnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* ========================================================================= */}
       {/* MODAL: UNSAVED CHANGES CONFIRMATION (Rule #10) */}
       {/* ========================================================================= */}
-      {isConfirmCloseOpen && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
+      <Modal
+        isOpen={isConfirmCloseOpen}
+        onClose={() => setIsConfirmCloseOpen(false)}
+        size="sm"
+        zIndex={70}
+      >
+        <Modal.Body className="p-6 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
+          </div>
 
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-foreground">
+              {t('landlordStaffConfirmCloseTitle')}
+            </h4>
+            <p className="text-xs text-muted leading-relaxed">
+              {t('landlordStaffConfirmCloseMessage')}
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="flex items-center gap-2.5 w-full">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              className="flex-1"
+            >
+              {t('landlordStaffConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={handleConfirmClose}
+              className="flex-1"
+            >
+              {t('landlordStaffConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Action Confirmation Modal (Rule #10) */}
+      {actionConfirm && (
+        <Modal
+          isOpen={!!actionConfirm}
+          onClose={() => setActionConfirm(null)}
+          size="sm"
+        >
+          <Modal.Body className="p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
             <div className="space-y-1">
-              <h4 className="text-base font-black text-zinc-900">
-                {t('landlordStaffConfirmCloseTitle')}
-              </h4>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                {t('landlordStaffConfirmCloseMessage')}
+              <h3 className="text-base font-bold text-foreground">
+                {actionConfirm.title}
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                {actionConfirm.message}
               </p>
             </div>
+          </Modal.Body>
 
-            <div className="flex items-center gap-2.5 pt-2">
+          <Modal.Footer>
+            <div className="flex items-center gap-3 w-full">
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                size="md"
+                variant="secondary"
+                onClick={() => setActionConfirm(null)}
+                className="flex-1"
               >
                 {t('landlordStaffConfirmCloseKeep')}
               </Button>
               <Button
-                type="button"
-                variant="danger"
-                onClick={handleConfirmClose}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
+                size="md"
+                onClick={() => {
+                  const onConf = actionConfirm.onConfirm
+                  setActionConfirm(null)
+                  onConf()
+                }}
+                className="flex-1"
               >
-                {t('landlordStaffConfirmCloseDiscard')}
+                {t('btnConfirm')}
               </Button>
             </div>
-          </div>
-        </div>
+          </Modal.Footer>
+        </Modal>
       )}
     </div>
   )

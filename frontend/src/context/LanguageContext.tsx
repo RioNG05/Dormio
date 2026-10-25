@@ -26,7 +26,16 @@ const messagesMap: Record<SupportedLocale, any> = {
 }
 
 export type ValidNamespace =
-  'common' | 'nav' | 'footer' | 'auth' | 'guest' | 'landlord' | 'tenant' | 'employee' | 'admin'
+  | 'common'
+  | 'nav'
+  | 'footer'
+  | 'auth'
+  | 'guest'
+  | 'landlord'
+  | 'tenant'
+  | 'employee'
+  | 'admin'
+  | 'errors'
 
 const legacyNamespaceMap: Record<string, ValidNamespace> = {
   languageSwitcher: 'common',

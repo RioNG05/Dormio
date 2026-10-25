@@ -34,7 +34,8 @@ import {
   Eye,
   Sparkles,
 } from 'lucide-react'
-import { Button, TextInput } from '@/components/ui'
+import { Button, TextInput, Pagination, ViewModeToggle, FilterToolbar, SearchInput, Modal, EmptyState, TableActionButton } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import {
   LineChart,
   Line,
@@ -48,6 +49,7 @@ import {
   Legend,
 } from 'recharts'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatCurrency } from '@/utils'
 import {
   tenantInvoiceService,
@@ -59,6 +61,7 @@ export default function TenantInvoicesPage() {
   const router = useRouter()
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
+  const { activeTenancyId } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [allInvoices, setAllInvoices] = useState<TenantInvoice[]>([])
@@ -75,7 +78,7 @@ export default function TenantInvoicesPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'unpaid' | 'paid'>('all')
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = viewMode === 'grid' ? 6 : 10
+  const [pageSize, setPageSize] = useState<number>(6)
 
   // Chart line toggles
   const [visibleLines, setVisibleLines] = useState({
@@ -94,8 +97,9 @@ export default function TenantInvoicesPage() {
 
     async function loadData() {
       try {
+        setLoading(true)
         const [invoicesData, analyticsData] = await Promise.all([
-          tenantInvoiceService.getTenantInvoices().catch(() => []),
+          tenantInvoiceService.getTenantInvoices(activeTenancyId || undefined).catch(() => []),
           tenantInvoiceService.getUsageAnalytics().catch(() => null),
         ])
 
@@ -116,7 +120,7 @@ export default function TenantInvoicesPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [activeTenancyId])
 
   const activeInvoices = allInvoices
 
@@ -206,10 +210,9 @@ export default function TenantInvoicesPage() {
     })
   }, [activeInvoices, filterText, statusFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / itemsPerPage))
   const paginatedInvoices = filteredInvoices.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   )
 
   const toggleRow = (id: string) => {
@@ -219,98 +222,82 @@ export default function TenantInvoicesPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t('invoicesTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1">{t('invoicesSubtitle')}</p>
-        </div>
-      </div>
+      <DashboardPageHeader
+        title={t('invoicesTitle')}
+        description={t('invoicesSubtitle')}
+      />
 
       {/* Quick Summary Banner: Current Unpaid Bill */}
       {currentUnpaid && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-orange-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-accent/15 via-accent/5 to-card border border-accent-subtle shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#FF6B35]/30">
+            <div className="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <Receipt className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-orange-900">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent">
                   {t('currentBillingCycle')}: {currentUnpaid.period}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
+                <span className="px-2 py-0.5 rounded-md bg-warning-soft text-warning text-[10px] font-extrabold uppercase">
                   {t('unpaid')}
                 </span>
               </div>
               <div className="flex flex-wrap items-baseline gap-2 sm:gap-3 mt-1">
-                <div className="text-xl sm:text-2xl font-black text-zinc-900">
+                <div className="text-xl sm:text-2xl font-black text-foreground">
                   {formatCurrency(currentUnpaid.amount, locale)}
                 </div>
                 {isUp ? (
-                  <span className="inline-flex items-center text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md">
+                  <span className="inline-flex items-center text-xs font-bold text-danger bg-danger-soft px-1.5 py-0.5 rounded-md">
                     <TrendingUp className="w-3.5 h-3.5 mr-0.5" />+{percentDiff}%
                   </span>
                 ) : (
-                  <span className="inline-flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                  <span className="inline-flex items-center text-xs font-bold text-success bg-success-soft px-1.5 py-0.5 rounded-md">
                     <TrendingDown className="w-3.5 h-3.5 mr-0.5" />-{percentDiff}%
                   </span>
                 )}
               </div>
-              <div className="text-[11px] sm:text-xs text-zinc-500 font-medium mt-1">
+              <div className="text-[11px] sm:text-xs text-muted font-medium mt-1">
                 {t('dueDate')}:{' '}
-                <span className="font-bold text-zinc-700">{currentUnpaid.dueDate}</span>
+                <span className="font-bold text-foreground/90">{currentUnpaid.dueDate}</span>
               </div>
             </div>
           </div>
 
           <Button
+            size="xs"
+            variant="orange"
+            rightIcon={<ArrowRight />}
             onClick={() => router.push(`/tenant/invoices/${currentUnpaid.id}`)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs shadow-[#FF6B35]/20 cursor-pointer transition-all"
+            className="sm:w-auto"
           >
-            <span>{t('payNow')}</span>
-            <ArrowRight className="w-4 h-4" />
+            {t('payNow')}
           </Button>
         </div>
       )}
 
       {/* Analytics Chart Section: Cost vs Consumption */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-zinc-200/80 shadow-xs">
+      <div className="p-6 sm:p-8 rounded-3xl bg-card border border-line shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
               {t('chartTitle')}
             </h2>
-            <p className="text-xs text-zinc-400 mt-0.5">{t('chartSubtitle')}</p>
+            <p className="text-xs text-muted mt-0.5">{t('chartSubtitle')}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Toggle Tabs: Cost vs Consumption */}
-            <div className="flex items-center gap-1 p-1 bg-zinc-100 rounded-xl">
+            <div className="flex items-center gap-1 p-1 bg-card-hover rounded-xl">
               <Button
-                variant="ghost"
-                size="sm"
-                type="button"
+                variant={activeChartTab === 'cost' ? 'primary' : 'ghost'}
                 onClick={() => setActiveChartTab('cost')}
-                className={`px-3 py-1 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeChartTab === 'cost'
-                    ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
               >
                 {t('chartTabCost')}
               </Button>
               <Button
-                variant="ghost"
-                size="sm"
-                type="button"
+                variant={activeChartTab === 'consumption' ? 'primary' : 'ghost'}
                 onClick={() => setActiveChartTab('consumption')}
-                className={`px-3 py-1 h-auto rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeChartTab === 'consumption'
-                    ? 'bg-white text-zinc-900 shadow-xs hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
               >
                 {t('chartTabConsumption')}
               </Button>
@@ -321,56 +308,28 @@ export default function TenantInvoicesPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, electricity: !p.electricity }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.electricity
-                      ? 'bg-amber-50 border-amber-300 text-amber-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                   {t('electricityFee')}
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, water: !p.water }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.water
-                      ? 'bg-sky-50 border-sky-300 text-sky-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
                   {t('waterFee')}
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, services: !p.services }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.services
-                      ? 'bg-purple-50 border-purple-300 text-purple-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
                   {t('otherServices')}
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
-                  type="button"
                   onClick={() => setVisibleLines(p => ({ ...p, roomRent: !p.roomRent }))}
-                  className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                    visibleLines.roomRent
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                      : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                  }`}
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   {t('roomRent')}
@@ -383,7 +342,7 @@ export default function TenantInvoicesPage() {
         <div className="w-full h-64 sm:h-72">
           {(activeChartTab === 'cost' && costChartData.length === 0) ||
           (activeChartTab === 'consumption' && consumptionChartData.length === 0) ? (
-            <div className="w-full h-full rounded-2xl bg-zinc-50 border border-zinc-100 flex flex-col items-center justify-center text-zinc-400 text-xs gap-2">
+            <div className="w-full h-full rounded-2xl bg-surface border border-line flex flex-col items-center justify-center text-muted text-xs gap-2">
               <Receipt className="w-8 h-8 text-zinc-300" />
               <span className="font-semibold">{t('noBillingHistory')}</span>
             </div>
@@ -412,9 +371,10 @@ export default function TenantInvoicesPage() {
                   <Tooltip
                     formatter={(val: any) => formatCurrency(Number(val) || 0, locale)}
                     contentStyle={{
-                      backgroundColor: '#ffffff',
+                      backgroundColor: 'var(--color-card, #ffffff)',
+                      borderColor: 'var(--color-line, #e2e8f0)',
+                      color: 'var(--color-foreground, #0f172a)',
                       borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
                       fontSize: '12px',
                       boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                     }}
@@ -475,9 +435,10 @@ export default function TenantInvoicesPage() {
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#ffffff',
+                      backgroundColor: 'var(--color-card, #ffffff)',
+                      borderColor: 'var(--color-line, #e2e8f0)',
+                      color: 'var(--color-foreground, #0f172a)',
                       borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
                       fontSize: '12px',
                     }}
                   />
@@ -491,137 +452,86 @@ export default function TenantInvoicesPage() {
         </div>
       </div>
 
-      {/* Main Billing Table & Grid Card Section */}
-      <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-xs overflow-hidden">
-        {/* Controls Bar */}
-        <div className="p-4 sm:p-6 border-b border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-zinc-50/50">
-          {/* Status filter tabs */}
+      {/* Standardized Filter Toolbar */}
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('filterByYearMonth')}
+            value={filterText}
+            onChange={val => {
+              setFilterText(val)
+              setCurrentPage(1)
+            }}
+          />
+        }
+        filters={
           <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
             <Button
-              variant="ghost"
-              size="sm"
-              type="button"
+              variant={statusFilter === 'all' ? 'primary' : 'ghost'}
               onClick={() => {
                 setStatusFilter('all')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                statusFilter === 'all'
-                  ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {t('allInvoices')}
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              type="button"
+              variant={statusFilter === 'unpaid' ? 'primary' : 'ghost'}
               onClick={() => {
                 setStatusFilter('unpaid')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                statusFilter === 'unpaid'
-                  ? 'bg-[#FF6B35] text-white shadow-xs hover:bg-[#FF6B35] hover:text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {t('unpaid')}
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              type="button"
+              variant={statusFilter === 'paid' ? 'primary' : 'ghost'}
               onClick={() => {
                 setStatusFilter('paid')
                 setCurrentPage(1)
               }}
-              className={`px-3 py-1.5 h-auto rounded-xl text-xs font-bold cursor-pointer transition-all ${
-                statusFilter === 'paid'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC] hover:text-white'
-                  : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
             >
               {t('paid')}
             </Button>
           </div>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            {/* View Mode Toggle: Grid vs Table (Rule #9) */}
-            <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-xl shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
-                title={t('gridView')}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 h-auto rounded-lg transition-all cursor-pointer ${
-                  viewMode === 'table'
-                    ? 'bg-zinc-900 text-white shadow-xs hover:bg-zinc-900 hover:text-white'
-                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-transparent'
-                }`}
-                title={t('tableView')}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <TextInput
-              type="text"
-              value={filterText}
-              onChange={e => {
-                setFilterText(e.target.value)
-                setCurrentPage(1)
-              }}
-              placeholder={t('filterByYearMonth')}
-              leftIcon={<Search className="w-4 h-4 text-zinc-400" />}
-              className="py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium focus:outline-none focus:border-[#2AC1BC] transition-colors"
-              containerClassName="w-full sm:w-64 space-y-0"
-            />
-          </div>
-        </div>
+      {/* Main Billing Table & Grid Card Section */}
+      <div className="rounded-2xl border border-line bg-card shadow-2xs overflow-hidden">
 
         {/* Content: Grid or Table */}
         {filteredInvoices.length === 0 ? (
-          <div className="py-16 px-4 text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
-              <Receipt className="w-7 h-7" />
-            </div>
-            <h3 className="text-sm font-bold text-zinc-800">{t('noInvoicesTitle')}</h3>
-            <p className="text-xs text-zinc-400 max-w-sm mx-auto">{t('noInvoicesDesc')}</p>
-          </div>
+          <EmptyState
+            icon={<Receipt className="w-8 h-8" />}
+            title={t('noInvoicesTitle')}
+            description={t('noInvoicesDesc')}
+            bordered={false}
+          />
         ) : viewMode === 'grid' ? (
           /* Invoices Grid View */
           <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {paginatedInvoices.map(inv => (
               <div
                 key={inv.id}
-                className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group space-y-4"
+                className="rounded-2xl border border-line bg-card p-5 shadow-2xs hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between group space-y-4"
               >
                 {/* Card Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-base font-black text-zinc-900">{inv.period}</span>
-                      <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md">
+                      <span className="text-base font-black text-foreground">{inv.period}</span>
+                      <span className="text-[10px] font-bold text-muted bg-card-hover px-2 py-0.5 rounded-md">
                         {inv.id}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-zinc-400 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-muted mt-1">
                       <Calendar className="w-3.5 h-3.5" />
                       <span>
                         {t('dueDate')}: {inv.dueDate}
@@ -630,51 +540,46 @@ export default function TenantInvoicesPage() {
                   </div>
 
                   {inv.status === 'paid' ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-[10px] font-bold uppercase">
+                      <CheckCircle2 className="w-3 h-3 text-success" />
                       {t('paid')}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase">
-                      <Clock className="w-3 h-3 text-amber-600" />
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle text-[10px] font-bold uppercase">
+                      <Clock className="w-3 h-3 text-warning" />
                       {t('unpaid')}
                     </span>
                   )}
                 </div>
 
                 {/* Amount */}
-                <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                <div className="p-3.5 rounded-xl bg-surface border border-line">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                     {t('totalAmount')}
                   </span>
-                  <span className="text-xl font-black text-zinc-900 mt-0.5 block">
+                  <span className="text-xl font-black text-foreground mt-0.5 block">
                     {formatCurrency(inv.amount, locale)}
                   </span>
                 </div>
 
                 {/* Line Items Accordion */}
-                <div className="space-y-1.5 border-t border-zinc-100 pt-3">
+                <div className="space-y-1.5 border-t border-line pt-3">
                   <Button
+                    fullWidth
                     variant="ghost"
-                    size="sm"
-                    type="button"
                     onClick={() => toggleRow(inv.id)}
-                    className="w-full h-auto p-0 flex items-center justify-between text-xs font-bold text-zinc-500 hover:text-zinc-900 hover:bg-transparent cursor-pointer"
+                    justify="between"
+                    rightIcon={expandedRows[inv.id] ? <ChevronUp /> : <ChevronDown />}
                   >
-                    <span>{t('viewDetails')}</span>
-                    {expandedRows[inv.id] ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                    {t('viewDetails')}
                   </Button>
 
                   {expandedRows[inv.id] && (
-                    <div className="space-y-2 pt-2 border-t border-dashed border-zinc-200">
+                    <div className="space-y-2 pt-2 border-t border-dashed border-line">
                       {inv.details.map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between text-xs">
-                          <span className="text-zinc-500">{item.name}</span>
-                          <span className="font-bold text-zinc-800">
+                          <span className="text-muted">{item.name}</span>
+                          <span className="font-bold text-foreground">
                             {formatCurrency(item.value, locale)}
                           </span>
                         </div>
@@ -682,8 +587,8 @@ export default function TenantInvoicesPage() {
 
                       {/* Meter Photos (if present) */}
                       {inv.meterReadings && inv.meterReadings.length > 0 && (
-                        <div className="pt-2 border-t border-zinc-100 flex items-center gap-2">
-                          <span className="text-[11px] font-semibold text-zinc-400">
+                        <div className="pt-2 border-t border-line flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-muted">
                             {t('meterPhotosLabel')}
                           </span>
                           {inv.meterReadings.map(
@@ -692,13 +597,11 @@ export default function TenantInvoicesPage() {
                                 <Button
                                   key={mIdx}
                                   variant="secondary"
-                                  size="sm"
-                                  type="button"
                                   onClick={() => setPreviewImage(mr.imageUrl)}
-                                  className="px-2 py-0.5 h-auto bg-zinc-100 hover:bg-zinc-200 rounded text-[10px] font-bold text-zinc-600 flex items-center gap-1 cursor-pointer"
+                                  leftIcon={<Eye />}
+                                  className="rounded"
                                 >
-                                  <Eye className="w-3 h-3" />
-                                  <span>{mr.serviceName}</span>
+                                  {mr.serviceName}
                                 </Button>
                               ),
                           )}
@@ -709,17 +612,18 @@ export default function TenantInvoicesPage() {
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="border-t border-zinc-100 pt-3 flex items-center justify-end">
+                <div className="border-t border-line pt-3 flex items-center justify-end">
                   {inv.status !== 'paid' ? (
                     <Button
+                      fullWidth
+                      variant="orange"
+                      leftIcon={<CreditCard />}
                       onClick={() => router.push(`/tenant/invoices/${inv.id}`)}
-                      className="w-full py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs shadow-[#FF6B35]/20 cursor-pointer transition-all flex items-center justify-center gap-2"
                     >
-                      <CreditCard className="w-4 h-4" />
-                      <span>{t('payNow')}</span>
+                      {t('payNow')}
                     </Button>
                   ) : (
-                    <div className="text-[11px] text-zinc-400 font-medium w-full text-center">
+                    <div className="text-[11px] text-muted font-medium w-full text-center">
                       {inv.paidDate ? t('paidOnDate', { date: inv.paidDate }) : t('paid')}
                     </div>
                   )}
@@ -731,7 +635,7 @@ export default function TenantInvoicesPage() {
           /* Table View */
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 uppercase font-black text-[10px] tracking-wider">
+              <thead className="bg-surface border-b border-line text-muted uppercase font-black text-[10px] tracking-wider">
                 <tr>
                   <th className="px-6 py-4">{t('tablePeriod')}</th>
                   <th className="px-6 py-4">{t('tableCode')}</th>
@@ -741,54 +645,43 @@ export default function TenantInvoicesPage() {
                   <th className="px-6 py-4 text-right">{t('tableAction')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200">
+              <tbody className="divide-y divide-line">
                 {paginatedInvoices.map(inv => (
                   <React.Fragment key={inv.id}>
-                    <tr className="hover:bg-zinc-50/80 transition-colors">
-                      <td className="px-6 py-4 font-black text-zinc-900">{inv.period}</td>
-                      <td className="px-6 py-4 font-mono text-zinc-500">{inv.id}</td>
-                      <td className="px-6 py-4 font-black text-zinc-900">
+                    <tr className="hover:bg-card-hover transition-colors duration-150">
+                      <td className="px-6 py-4 font-black text-foreground">{inv.period}</td>
+                      <td className="px-6 py-4 font-mono text-muted">{inv.id}</td>
+                      <td className="px-6 py-4 font-black text-foreground">
                         {formatCurrency(inv.amount, locale)}
                       </td>
-                      <td className="px-6 py-4 text-zinc-600 font-medium">{inv.dueDate}</td>
+                      <td className="px-6 py-4 text-muted font-medium">{inv.dueDate}</td>
                       <td className="px-6 py-4">
                         {inv.status === 'paid' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-[10px] font-bold uppercase">
+                            <CheckCircle2 className="w-3 h-3 text-success" />
                             {t('paid')}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase">
-                            <Clock className="w-3 h-3 text-amber-600" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-soft text-warning border border-warning-subtle text-[10px] font-bold uppercase">
+                            <Clock className="w-3 h-3 text-warning" />
                             {t('unpaid')}
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            type="button"
-                            onClick={() => toggleRow(inv.id)}
-                            className="p-1.5 h-auto text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg cursor-pointer transition-colors"
+                          <TableActionButton
+                            icon={expandedRows[inv.id] ? <ChevronUp /> : <ChevronDown />}
                             title={t('viewDetails')}
-                          >
-                            {expandedRows[inv.id] ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </Button>
+                            onClick={() => toggleRow(inv.id)}
+                          />
 
                           {inv.status !== 'paid' && (
-                            <Button
+                            <TableActionButton
+                              icon={<CreditCard />}
+                              title={t('payNow')}
                               onClick={() => router.push(`/tenant/invoices/${inv.id}`)}
-                              size="sm"
-                              className="px-3 py-1.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold cursor-pointer transition-all"
-                            >
-                              {t('payNow')}
-                            </Button>
+                            />
                           )}
                         </div>
                       </td>
@@ -796,22 +689,22 @@ export default function TenantInvoicesPage() {
 
                     {/* Table Row Expanded Details */}
                     {expandedRows[inv.id] && (
-                      <tr className="bg-zinc-50/60">
+                      <tr className="bg-surface/60">
                         <td colSpan={6} className="px-6 py-4">
-                          <div className="p-4 rounded-2xl bg-white border border-zinc-200/80 space-y-3">
-                            <h4 className="text-xs font-black uppercase tracking-wider text-zinc-700">
+                          <div className="p-4 rounded-2xl bg-card border border-line space-y-3">
+                            <h4 className="text-xs font-black uppercase tracking-wider text-foreground/90">
                               {t('serviceBreakdownForPeriod', { period: inv.period })}
                             </h4>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                               {inv.details.map((item, idx) => (
                                 <div
                                   key={idx}
-                                  className="p-3 bg-zinc-50 rounded-xl border border-zinc-100"
+                                  className="p-3 bg-surface rounded-xl border border-line"
                                 >
-                                  <span className="text-[10px] font-bold text-zinc-400 block">
+                                  <span className="text-[10px] font-bold text-muted block">
                                     {item.name}
                                   </span>
-                                  <span className="text-xs font-black text-zinc-900 mt-0.5 block">
+                                  <span className="text-xs font-black text-foreground mt-0.5 block">
                                     {formatCurrency(item.value, locale)}
                                   </span>
                                 </div>
@@ -820,12 +713,12 @@ export default function TenantInvoicesPage() {
 
                             {inv.meterReadings && inv.meterReadings.length > 0 && (
                               <div className="pt-2 flex items-center gap-3">
-                                <span className="text-xs font-bold text-zinc-500">
+                                <span className="text-xs font-bold text-muted">
                                   {t('meterReadingsLabel')}
                                 </span>
                                 {inv.meterReadings.map((mr, mIdx) => (
                                   <div key={mIdx} className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-zinc-700">
+                                    <span className="text-xs font-medium text-foreground/90">
                                       {mr.serviceName}:{' '}
                                       <strong>
                                         {mr.readingValue} {mr.unit}
@@ -834,12 +727,11 @@ export default function TenantInvoicesPage() {
                                     {mr.imageUrl && (
                                       <Button
                                         variant="ghost"
-                                        size="sm"
-                                        type="button"
                                         onClick={() => setPreviewImage(mr.imageUrl)}
-                                        className="text-[#2AC1BC] hover:underline font-bold text-xs flex items-center gap-1 p-0 h-auto hover:bg-transparent"
+                                        leftIcon={<Eye />}
+                                        className="hover:underline"
                                       >
-                                        <Eye className="w-3 h-3" /> {t('viewPhoto')}
+                                        {t('viewPhoto')}
                                       </Button>
                                     )}
                                   </div>
@@ -859,96 +751,40 @@ export default function TenantInvoicesPage() {
 
         {/* Standard Pagination Bar (Rule #9) */}
         {filteredInvoices.length > 0 && (
-          <div className="p-4 sm:p-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-zinc-50/50">
-            <div className="text-xs font-medium text-zinc-500">
-              {t('showingInvoicesRange', {
-                from: (currentPage - 1) * itemsPerPage + 1,
-                to: Math.min(currentPage * itemsPerPage, filteredInvoices.length),
-                total: filteredInvoices.length,
-              })}
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <Button
-                  key={i}
-                  variant={currentPage === i + 1 ? 'primary' : 'ghost'}
-                  size="sm"
-                  type="button"
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    currentPage === i + 1
-                      ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
-                      : 'text-zinc-600 hover:bg-zinc-100'
-                  }`}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredInvoices.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeMax={100}
+          />
         )}
       </div>
 
       {/* Modal 3: Meter Image Preview */}
       {previewImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setPreviewImage(null)}
+        <Modal
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+          title={t('meterReadingPhotoTitle')}
+          size="lg"
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-4 overflow-hidden border border-zinc-200 space-y-4"
-          >
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="text-sm font-black text-zinc-900">{t('meterReadingPhotoTitle')}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setPreviewImage(null)}
-                className="p-1.5 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="h-80 w-full rounded-2xl overflow-hidden bg-zinc-100">
+          <div className="space-y-4 pt-1">
+            <div className="h-80 w-full rounded-2xl overflow-hidden bg-card-hover flex items-center justify-center border border-line">
               <img
                 src={previewImage}
                 alt="Meter reading"
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={() => setPreviewImage(null)}
-                className="px-4 py-2 text-xs font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl"
-              >
+            <div className="flex justify-end pt-2 border-t border-line">
+              <Button onClick={() => setPreviewImage(null)}>
                 {t('btnClose')}
               </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

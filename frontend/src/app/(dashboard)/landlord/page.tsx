@@ -25,7 +25,9 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
 import { formatCurrency, formatVND } from '@/utils'
-import { Button } from '@/components/ui'
+import { Button, Text } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/landlord'
+import { cn } from '@/lib/utils'
 import {
   getBoardingHouseOverview,
   type BoardingHouseOverview,
@@ -102,13 +104,13 @@ export default function LandlordDashboardPage() {
   // Gating check: if no buildings yet, show loading spinner while redirecting to /landlord/setup
   if (isBuildingsLoading || buildings.length === 0 || !activeBuilding?.id) {
     return (
-      <div className="py-24 text-center text-zinc-400 space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
-        <p className="text-xs font-semibold">
+      <div className="py-24 text-center text-muted space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+        <Text size="xs" weight="semibold" color="subtle">
           {buildings.length === 0
             ? t('landlordOverviewRedirectingSetup')
             : t('landlordOverviewLoadingOverview')}
-        </p>
+        </Text>
       </div>
     )
   }
@@ -148,124 +150,111 @@ export default function LandlordDashboardPage() {
   return (
     <div className="flex flex-col gap-6 pb-16 animate-in fade-in duration-500">
       {/* Top Header Title & Create Building Button */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-zinc-200/80 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-            {t('landlordOverviewHeaderTitle', { name: activeBuilding.name })}
-          </h1>
-          <p className="text-xs text-zinc-500 font-medium mt-0.5">
-            {activeBuilding.address || t('landlordOverviewNoAddress')}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
+      <DashboardPageHeader
+        title={t('landlordOverviewHeaderTitle', { name: activeBuilding.name })}
+        subtitle={activeBuilding.address || t('landlordOverviewNoAddress')}
+        actions={
           <Button
-            variant="outline"
-            size="sm"
+            size="md"
             onClick={() => router.push('/landlord/setup')}
-            leftIcon={<Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-            className="text-xs font-bold"
+            leftIcon={<Plus />}
           >
             {t('landlordOverviewBtnCreateHouse')}
           </Button>
-          <span className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[11px] font-black rounded-full flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            {t('landlordOverviewVietqrActive')}
-          </span>
-        </div>
-      </div>
+        }
+      />
 
       {isLoading && !overview ? (
-        <div className="py-16 text-center text-zinc-400 space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
-          <p className="text-xs font-semibold">{t('landlordOverviewLoadingOverview')}</p>
+        <div className="py-16 text-center text-muted space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <Text size="xs" weight="semibold" color="subtle">{t('landlordOverviewLoadingOverview')}</Text>
         </div>
       ) : (
         <>
           {/* 5 COLOR-CODED ROOM METRIC CARDS */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {/* 1. TỔNG SỐ PHÒNG */}
-            <div className="px-3.5 py-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-danger/10 border border-danger/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <span className="text-[10px] font-black text-rose-600 uppercase tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-danger tracking-wider block">
                   {t('landlordOverviewStatTotalRooms')}
-                </span>
-                <div className="text-lg font-black text-rose-600 leading-tight mt-0.5">
+                </Text>
+                <Text as="div" size="lg" weight="black" className="text-danger leading-tight mt-0.5">
                   {rooms.totalRooms} {t('landlordOverviewRoomUnitCapital')}
-                </div>
-                <span className="text-[10px] font-bold text-rose-500/80 block">
+                </Text>
+                <Text as="span" size="3xs" weight="bold" className="text-danger/80 block">
                   {t('landlordOverviewStatOccupancy', { rate: rooms.occupancyRate })}
-                </span>
+                </Text>
               </div>
-              <Building className="w-5 h-5 text-rose-500 shrink-0 opacity-80" />
+              <Building className="w-5 h-5 text-danger shrink-0 opacity-80" />
             </div>
 
             {/* 2. OCCUPIED ROOMS */}
-            <div className="px-3.5 py-3 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <span className="text-[10px] font-black text-[#2AC1BC] uppercase tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" color="brand" className="tracking-wider block">
                   {t('landlordOverviewStatOccupied')}
-                </span>
-                <div className="text-lg font-black text-[#2AC1BC] leading-tight mt-0.5">
+                </Text>
+                <Text as="div" size="lg" weight="black" color="brand" className="leading-tight mt-0.5">
                   {rooms.occupiedRooms} {t('landlordOverviewRoomUnitCapital')}
-                </div>
-                <span className="text-[10px] font-bold text-[#2AC1BC]/80 block">
+                </Text>
+                <Text as="span" size="3xs" weight="bold" className="text-primary/80 block">
                   {rooms.occupiedRooms > 0
                     ? t('landlordOverviewStatActiveContract')
                     : t('landlordOverviewNoTenant')}
-                </span>
+                </Text>
               </div>
-              <Users className="w-5 h-5 text-[#2AC1BC] shrink-0 opacity-80" />
+              <Users className="w-5 h-5 text-primary shrink-0 opacity-80" />
             </div>
 
             {/* 3. PHÒNG TRỐNG */}
-            <div className="px-3.5 py-3 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-vacant/10 border border-vacant/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-info tracking-wider block">
                   {t('landlordOverviewStatVacant')}
-                </span>
-                <div className="text-lg font-black text-blue-600 leading-tight mt-0.5">
+                </Text>
+                <Text as="div" size="lg" weight="black" className="text-info leading-tight mt-0.5">
                   {rooms.vacantRooms} {t('landlordOverviewRoomUnitCapital')}
-                </div>
-                <span className="text-[10px] font-bold text-blue-500/80 block">
+                </Text>
+                <Text as="span" size="3xs" weight="bold" className="text-vacant/80 block">
                   {t('landlordOverviewStatReady')}
-                </span>
+                </Text>
               </div>
-              <Home className="w-5 h-5 text-blue-500 shrink-0 opacity-80" />
+              <Home className="w-5 h-5 text-vacant shrink-0 opacity-80" />
             </div>
 
             {/* 4. BẢO TRÌ */}
-            <div className="px-3.5 py-3 bg-[#FF6B35]/10 border border-[#FF6B35]/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
+            <div className="px-3.5 py-3 bg-accent/10 border border-accent/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs">
               <div>
-                <span className="text-[10px] font-black text-[#FF6B35] uppercase tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-accent tracking-wider block">
                   {t('landlordOverviewStatMaintenance')}
-                </span>
-                <div className="text-lg font-black text-[#FF6B35] leading-tight mt-0.5">
+                </Text>
+                <Text as="div" size="lg" weight="black" className="text-accent leading-tight mt-0.5">
                   {rooms.maintenanceRooms} {t('landlordOverviewRoomUnitCapital')}
-                </div>
-                <span className="text-[10px] font-bold text-[#FF6B35]/80 block">
+                </Text>
+                <Text as="span" size="3xs" weight="bold" className="text-accent/80 block">
                   {rooms.maintenanceRooms > 0
                     ? t('landlordOverviewHandlingIssues')
                     : t('landlordOverviewNoIssues')}
-                </span>
+                </Text>
               </div>
-              <Wrench className="w-5 h-5 text-[#FF6B35] shrink-0 opacity-80" />
+              <Wrench className="w-5 h-5 text-accent shrink-0 opacity-80" />
             </div>
 
             {/* 5. RESERVED DEPOSITS */}
             <div className="px-3.5 py-3 bg-purple-500/10 border border-purple-500/30 rounded-2xl flex items-center justify-between transition-all hover:shadow-xs col-span-2 sm:col-span-1">
               <div>
-                <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block">
+                <Text as="span" variant="overline" size="3xs" weight="black" className="text-deposit tracking-wider block">
                   {t('landlordOverviewStatDeposit')}
-                </span>
-                <div className="text-lg font-black text-purple-600 leading-tight mt-0.5">
+                </Text>
+                <Text as="div" size="lg" weight="black" className="text-deposit leading-tight mt-0.5">
                   {rooms.depositRooms} {t('landlordOverviewRoomUnitCapital')}
-                </div>
-                <span className="text-[10px] font-bold text-purple-500/80 block">
+                </Text>
+                <Text as="span" size="3xs" weight="bold" className="text-purple-500/80 block">
                   {rooms.depositRooms > 0
                     ? t('landlordOverviewHoldingDeposit')
                     : t('landlordOverviewNoDeposit')}
-                </span>
+                </Text>
               </div>
               <Shield className="w-5 h-5 text-purple-500 shrink-0 opacity-80" />
             </div>
@@ -274,70 +263,56 @@ export default function LandlordDashboardPage() {
           {/* 2-COLUMN LAYOUT: REVENUE CHART & CASHFLOW KPI */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* REVENUE LINE CHART (2/3 WIDTH) */}
-            <div className="lg:col-span-2 bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 pb-2.5">
+            <div className="lg:col-span-2 bg-card rounded-3xl p-5 border border-line shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-2.5">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-[#2AC1BC]" />
-                    <h2 className="text-sm sm:text-base font-black text-zinc-900">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <Text as="h2" variant="heading" size="sm" weight="black" className="sm:text-base">
                       {t('landlordOverviewMonthlyRevenueTitle')}
-                    </h2>
-                    <div className="flex items-center bg-zinc-100 p-0.5 rounded-lg border border-zinc-200/80 ml-1">
+                    </Text>
+                    <div className="flex items-center bg-card-hover p-0.5 rounded-lg border border-line ml-1">
                       <Button
-                        type="button"
                         variant={rangeMode === '6m' ? 'primary' : 'ghost'}
-                        size="sm"
                         onClick={() => setRangeMode('6m')}
-                        className={`h-6 px-2 text-[9px] font-black rounded-md ${
-                          rangeMode === '6m'
-                            ? 'bg-[#2AC1BC] text-white shadow-xs'
-                            : 'text-zinc-500 hover:text-zinc-900'
-                        }`}
                       >
                         {t('landlordOverviewRange6m')}
                       </Button>
                       <Button
-                        type="button"
                         variant={rangeMode === '12m' ? 'primary' : 'ghost'}
-                        size="sm"
                         onClick={() => setRangeMode('12m')}
-                        className={`h-6 px-2 text-[9px] font-black rounded-md ${
-                          rangeMode === '12m'
-                            ? 'bg-[#2AC1BC] text-white shadow-xs'
-                            : 'text-zinc-500 hover:text-zinc-900'
-                        }`}
                       >
                         {t('landlordOverviewRange12m')}
                       </Button>
                     </div>
                   </div>
-                  <p className="text-[11px] text-zinc-500 font-medium">
+                  <Text size="xs" color="secondary" weight="medium">
                     {t('landlordOverviewCashflowFluctuation', { name: activeBuilding.name })}
-                  </p>
+                  </Text>
                 </div>
 
                 <div className="text-left sm:text-right">
-                  <span className="text-[9px] font-extrabold text-zinc-400 uppercase block">
+                  <Text as="span" variant="overline" size="3xs" weight="extrabold" color="subtle" className="block">
                     {t('landlordOverviewThisMonth')}
-                  </span>
-                  <span className="text-base font-black text-[#2AC1BC] tracking-tight">
+                  </Text>
+                  <Text as="span" size="base" weight="black" color="brand" className="tracking-tight">
                     {formatCurrency(Number(financial.currentMonthRevenue) || 0, currentLocale)}
-                  </span>
+                  </Text>
                 </div>
               </div>
 
               {/* Chart Content or Empty State */}
               {chartData.length === 0 ? (
                 <div className="py-14 flex flex-col items-center justify-center text-center space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-400">
+                  <div className="w-12 h-12 rounded-2xl bg-card-hover flex items-center justify-center text-muted">
                     <BarChart2 className="w-6 h-6" />
                   </div>
-                  <p className="text-xs font-bold text-zinc-700">
+                  <Text size="xs" weight="bold" color="default">
                     {t('landlordOverviewNoRevenueData')}
-                  </p>
-                  <p className="text-[11px] text-zinc-400 max-w-xs">
+                  </Text>
+                  <Text size="2xs" color="subtle" className="max-w-xs">
                     {t('landlordOverviewNoRevenueDataDesc')}
-                  </p>
+                  </Text>
                 </div>
               ) : (
                 <div className="pt-1">
@@ -346,23 +321,23 @@ export default function LandlordDashboardPage() {
                     <div className="flex-1 space-y-1.5 relative">
                       {hoveredIndex !== null && chartData[hoveredIndex] && (
                         <div
-                          className="absolute z-20 -top-8 bg-zinc-900/95 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs shadow-xl border border-white/20 transition-all duration-150 animate-in fade-in zoom-in-95 pointer-events-none"
+                          className="absolute z-20 -top-8 bg-card/95 backdrop-blur-md text-foreground px-3 py-1.5 rounded-xl text-xs shadow-xl border border-line transition-all duration-150 animate-in fade-in zoom-in-95 pointer-events-none"
                           style={{
                             left: `${Math.max(12, Math.min(88, (chartData[hoveredIndex].x / 600) * 100))}%`,
                             transform: 'translateX(-50%)',
                           }}
                         >
-                          <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">
+                          <Text size="3xs" weight="bold" color="subtle" uppercase className="tracking-wider">
                             {t('landlordOverviewTooltipMonth', {
                               month: chartData[hoveredIndex].month,
                             })}
-                          </div>
-                          <div className="text-xs font-black text-[#2AC1BC]">
+                          </Text>
+                          <Text size="xs" weight="black" color="brand">
                             {formatCurrency(
                               Number(chartData[hoveredIndex].fullAmount) || 0,
                               currentLocale,
                             )}
-                          </div>
+                          </Text>
                         </div>
                       )}
 
@@ -377,7 +352,8 @@ export default function LandlordDashboardPage() {
                             y1="15"
                             x2="600"
                             y2="15"
-                            stroke="#f1f5f9"
+                            stroke="currentColor"
+                            className="text-line"
                             strokeDasharray="3 3"
                             strokeWidth="1"
                           />
@@ -386,7 +362,8 @@ export default function LandlordDashboardPage() {
                             y1="50"
                             x2="600"
                             y2="50"
-                            stroke="#f1f5f9"
+                            stroke="currentColor"
+                            className="text-line"
                             strokeDasharray="3 3"
                             strokeWidth="1"
                           />
@@ -425,15 +402,15 @@ export default function LandlordDashboardPage() {
                       </div>
 
                       {/* Month Labels */}
-                      <div className="flex justify-between items-center text-xs font-bold text-zinc-500 pt-1.5 border-t border-zinc-100">
+                      <div className="flex justify-between items-center text-xs font-bold text-muted pt-1.5 border-t border-line">
                         {chartData.map((d, i) => (
                           <div key={i} className="text-center">
-                            <span className="block text-[9px] font-bold text-zinc-600">
+                            <Text as="span" size="3xs" weight="bold" className="block text-muted">
                               {d.month}
-                            </span>
-                            <span className="block text-[8px] text-[#2AC1BC] font-bold">
+                            </Text>
+                            <Text as="span" size="3xs" weight="bold" color="brand" className="block text-[8px]">
                               {d.val}M
-                            </span>
+                            </Text>
                           </div>
                         ))}
                       </div>
@@ -444,57 +421,57 @@ export default function LandlordDashboardPage() {
             </div>
 
             {/* FINANCIAL SUMMARY KPI CARD (1/3 WIDTH) */}
-            <div className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="bg-card rounded-3xl p-5 border border-line shadow-xs flex flex-col justify-between space-y-4">
               <div>
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
-                  <span className="text-xs font-black text-zinc-900 flex items-center gap-1.5">
-                    <BarChart2 className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <div className="flex items-center justify-between border-b border-line pb-2.5">
+                  <Text as="span" size="xs" weight="black" color="default" className="flex items-center gap-1.5">
+                    <BarChart2 className="w-4 h-4 text-primary" />{' '}
                     {t('landlordOverviewCashflowOverview')}
-                  </span>
-                  <span className="px-2 py-0.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full text-[10px] font-black">
+                  </Text>
+                  <Text as="span" variant="badge" size="3xs" weight="black" color="brand" className="px-2 py-0.5 bg-primary/10 rounded-full">
                     {t('landlordOverviewCollectionRate', { rate: collection.collectionRate })}
-                  </span>
+                  </Text>
                 </div>
 
                 <div className="space-y-3 mt-3">
-                  <div className="p-3.5 bg-[#2AC1BC]/5 rounded-2xl border border-[#2AC1BC]/15 space-y-1">
-                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">
+                  <div className="p-3.5 bg-primary/5 rounded-2xl border border-primary/15 space-y-1">
+                    <Text as="span" variant="overline" size="3xs" weight="extrabold" color="subtle" className="block">
                       {t('landlordOverviewCurrentMonthRevenue')}
-                    </span>
-                    <div className="text-xl font-black text-[#2AC1BC]">
+                    </Text>
+                    <Text as="div" size="xl" weight="black" color="brand">
                       {formatCurrency(Number(financial.currentMonthRevenue) || 0, currentLocale)}
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-600 block">
+                    </Text>
+                    <Text as="span" size="3xs" weight="bold" color="success" className="block">
                       {financial.paidInvoicesCount > 0
                         ? t('landlordOverviewPaidInvoicesCount', {
-                            count: financial.paidInvoicesCount,
-                          })
+                          count: financial.paidInvoicesCount,
+                        })
                         : t('landlordOverviewNoPaidInvoicesThisMonth')}
-                    </span>
+                    </Text>
                   </div>
 
-                  <div className="p-3.5 bg-rose-500/5 rounded-2xl border border-rose-500/15 space-y-1">
-                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase block">
+                  <div className="p-3.5 bg-danger/5 rounded-2xl border border-danger/15 space-y-1">
+                    <Text as="span" variant="overline" size="3xs" weight="extrabold" color="subtle" className="block">
                       {t('landlordOverviewUnpaidDebt')}
-                    </span>
-                    <div className="text-xl font-black text-rose-500">
+                    </Text>
+                    <Text as="div" size="xl" weight="black" color="danger">
                       {formatCurrency(Number(financial.unpaidDebt) || 0, currentLocale)}
-                    </div>
-                    <span className="text-[10px] font-bold text-zinc-500 block">
+                    </Text>
+                    <Text as="span" size="3xs" weight="bold" color="secondary" className="block">
                       {financial.unpaidInvoicesCount > 0
                         ? t('landlordOverviewUnpaidInvoicesCount', {
-                            count: financial.unpaidInvoicesCount,
-                          })
+                          count: financial.unpaidInvoicesCount,
+                        })
                         : t('landlordOverviewNoOverdueDebt')}
-                    </span>
+                    </Text>
                   </div>
                 </div>
               </div>
 
-              <Link href="/landlord/invoices" className="block pt-2 border-t border-zinc-100">
-                <span className="text-[11px] font-bold text-[#2AC1BC] hover:underline flex items-center justify-between">
+              <Link href="/landlord/invoices" className="block pt-2 border-t border-line">
+                <Text as="span" size="xs" weight="bold" color="brand" className="hover:underline flex items-center justify-between">
                   {t('landlordOverviewViewInvoicesList')}
-                </span>
+                </Text>
               </Link>
             </div>
           </div>
@@ -504,29 +481,31 @@ export default function LandlordDashboardPage() {
             {/* 1. DEPOSIT NOTIFICATIONS */}
             <div
               onClick={() => router.push('/landlord/deposits')}
-              className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-purple-500/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-purple-500/40 transition-all cursor-pointer group space-y-3"
             >
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-purple-600 shrink-0" />
-                  <h3 className="text-sm font-black text-zinc-900 group-hover:text-purple-600 transition-colors">
+                  <Shield className="w-4 h-4 text-deposit shrink-0" />
+                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-deposit transition-colors">
                     {t('landlordOverviewDepositNotifTitle')}
-                  </h3>
+                  </Text>
                 </div>
-                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 rounded-full text-[10px] font-black">
+                <Text as="span" variant="badge" size="3xs" weight="black" className="px-2 py-0.5 bg-purple-500/10 text-deposit rounded-full">
                   {t('landlordOverviewNewCount', { count: depositNotifications.length })}
-                </span>
+                </Text>
               </div>
 
               {depositNotifications.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-400 flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-deposit-soft text-purple-400 flex items-center justify-center mx-auto">
                     <Inbox className="w-5 h-5" />
                   </div>
-                  <p className="text-xs font-bold text-zinc-700">
+                  <Text size="xs" weight="bold" color="default">
                     {t('landlordOverviewNoDeposits')}
-                  </p>
-                  <p className="text-[11px] text-zinc-400">{t('landlordOverviewNoDepositsDesc')}</p>
+                  </Text>
+                  <Text size="2xs" color="subtle">
+                    {t('landlordOverviewNoDepositsDesc')}
+                  </Text>
                 </div>
               ) : (
                 <div className="max-h-[260px] overflow-y-auto space-y-2 pr-1">
@@ -537,122 +516,130 @@ export default function LandlordDashboardPage() {
                     >
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-black text-zinc-900">
+                          <Text as="span" weight="black" color="default">
                             {item.room} — {item.tenant}
-                          </span>
+                          </Text>
                         </div>
-                        <span className="text-[10px] text-purple-600 font-bold block">
+                        <Text as="span" size="3xs" weight="bold" className="text-deposit block">
                           {item.type}: {formatCurrency(item.amount, currentLocale)}
-                        </span>
+                        </Text>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-purple-600 group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-deposit group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="text-[11px] font-bold text-purple-600 flex items-center justify-between pt-1 border-t border-zinc-100">
-                <span>{t('landlordOverviewViewAllDepositsSimple')}</span>
+              <div className="flex items-center justify-between pt-1 border-t border-line">
+                <Text as="span" size="xs" weight="bold" className="text-deposit">
+                  {t('landlordOverviewViewAllDepositsSimple')}
+                </Text>
               </div>
             </div>
 
             {/* 2. YÊU CẦU BẢO TRÌ */}
             <div
               onClick={() => router.push('/landlord/complaints')}
-              className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-[#FF6B35]/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-accent/40 transition-all cursor-pointer group space-y-3"
             >
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
-                  <Wrench className="w-4 h-4 text-[#FF6B35] shrink-0" />
-                  <h3 className="text-sm font-black text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
+                  <Wrench className="w-4 h-4 text-accent shrink-0" />
+                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-accent transition-colors">
                     {t('landlordOverviewMaintRequestTitle')}
-                  </h3>
+                  </Text>
                 </div>
-                <span className="px-2 py-0.5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-full text-[10px] font-black">
+                <Text as="span" variant="badge" size="3xs" weight="black" color="orange" className="px-2 py-0.5 bg-accent/10 rounded-full">
                   {t('landlordOverviewIssuesCount', { count: maintenanceRequests.length })}
-                </span>
+                </Text>
               </div>
 
               {maintenanceRequests.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-500 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
-                  <p className="text-xs font-bold text-zinc-700">
+                  <Text size="xs" weight="bold" color="default">
                     {t('landlordOverviewNoMaintenance')}
-                  </p>
-                  <p className="text-[11px] text-zinc-400">
+                  </Text>
+                  <Text size="2xs" color="subtle">
                     {t('landlordOverviewNoMaintenanceDesc')}
-                  </p>
+                  </Text>
                 </div>
               ) : (
                 <div className="max-h-[260px] overflow-y-auto space-y-2 pr-1">
                   {maintenanceRequests.map(item => (
                     <div
                       key={item.id}
-                      className="p-3 bg-[#FF6B35]/5 hover:bg-[#FF6B35]/10 rounded-2xl border border-[#FF6B35]/15 flex items-center justify-between text-xs transition-colors"
+                      className="p-3 bg-accent/5 hover:bg-accent/10 rounded-2xl border border-accent/15 flex items-center justify-between text-xs transition-colors"
                     >
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-black text-zinc-900">
+                          <Text as="span" weight="black" color="default">
                             {item.room} — {item.issue}
-                          </span>
+                          </Text>
                         </div>
-                        <span
-                          className={`text-[10px] font-extrabold block ${
+                        <Text
+                          as="span"
+                          size="3xs"
+                          weight="extrabold"
+                          color={
                             item.priority === 'high'
-                              ? 'text-rose-500'
+                              ? 'danger'
                               : item.priority === 'medium'
-                                ? 'text-amber-600'
-                                : 'text-emerald-600'
-                          }`}
+                                ? 'warning'
+                                : 'success'
+                          }
+                          className="block"
                         >
                           {item.priority === 'high'
                             ? t('landlordOverviewPrioHigh')
                             : item.priority === 'medium'
                               ? t('landlordOverviewPrioMedium')
                               : t('landlordOverviewPrioLow')}
-                        </span>
+                        </Text>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-[#FF6B35] group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-accent group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="text-[11px] font-bold text-[#FF6B35] flex items-center justify-between pt-1 border-t border-zinc-100">
-                <span>{t('landlordOverviewViewAllMaintSimple')}</span>
+              <div className="flex items-center justify-between pt-1 border-t border-line">
+                <Text as="span" size="xs" weight="bold" color="orange">
+                  {t('landlordOverviewViewAllMaintSimple')}
+                </Text>
               </div>
             </div>
 
             {/* 3. CONTRACT RENEWALS */}
             <div
               onClick={() => router.push('/landlord/contracts')}
-              className="bg-white rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-amber-500/40 transition-all cursor-pointer group space-y-3"
+              className="bg-card rounded-3xl p-5 border border-line shadow-xs hover:border-amber-500/40 transition-all cursor-pointer group space-y-3"
             >
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-2.5">
+              <div className="flex items-center justify-between border-b border-line pb-2.5">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-                  <h3 className="text-sm font-black text-zinc-900 group-hover:text-amber-600 transition-colors">
+                  <Text as="h3" variant="heading" size="sm" weight="black" className="group-hover:text-warning transition-colors">
                     {t('landlordOverviewContractExtensionTitle')}
-                  </h3>
+                  </Text>
                 </div>
-                <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 rounded-full text-[10px] font-black">
+                <Text as="span" variant="badge" size="3xs" weight="black" color="warning" className="px-2 py-0.5 bg-amber-500/10 rounded-full">
                   {t('landlordOverviewWarningsCount', { count: expiringContracts.length })}
-                </span>
+                </Text>
               </div>
 
               {expiringContracts.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
+                  <div className="w-10 h-10 rounded-2xl bg-warning-soft text-amber-500 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
-                  <p className="text-xs font-bold text-zinc-700">
+                  <Text size="xs" weight="bold" color="default">
                     {t('landlordOverviewNoExpiringContracts')}
-                  </p>
-                  <p className="text-[11px] text-zinc-400">
+                  </Text>
+                  <Text size="2xs" color="subtle">
                     {t('landlordOverviewNoExpiringContractsDesc')}
-                  </p>
+                  </Text>
                 </div>
               ) : (
                 <div className="max-h-[260px] overflow-y-auto space-y-2 pr-1">
@@ -663,25 +650,27 @@ export default function LandlordDashboardPage() {
                     >
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-black text-zinc-900">
+                          <Text as="span" weight="black" color="default">
                             {item.room} — {item.tenant}
-                          </span>
+                          </Text>
                         </div>
-                        <span className="text-[10px] text-amber-600 font-bold block">
+                        <Text as="span" size="3xs" weight="bold" color="warning" className="block">
                           {t('landlordOverviewDaysLeftText', {
                             days: item.daysLeft,
                             date: item.endDate,
                           })}
-                        </span>
+                        </Text>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-amber-600 group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-warning group-hover:translate-x-1 transition-transform shrink-0" />
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="text-[11px] font-bold text-amber-600 flex items-center justify-between pt-1 border-t border-zinc-100">
-                <span>{t('landlordOverviewViewAllContractsSimple')}</span>
+              <div className="flex items-center justify-between pt-1 border-t border-line">
+                <Text as="span" size="xs" weight="bold" color="warning">
+                  {t('landlordOverviewViewAllContractsSimple')}
+                </Text>
               </div>
             </div>
           </div>
@@ -692,41 +681,41 @@ export default function LandlordDashboardPage() {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {speedDialOpen && (
           <div className="flex flex-col items-end gap-2 animate-in fade-in slide-in-from-bottom-5 duration-200">
-            <Button
-              type="button"
+            <Button rounded="full"
               variant="ghost"
-              size="sm"
               onClick={() => router.push('/landlord/rooms')}
-              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="group"
             >
-              <span>{t('landlordOverviewAddRoomBtn')}</span>
-              <span className="p-1 bg-[#2AC1BC]/10 text-[#2AC1BC] group-hover:bg-white/20 group-hover:text-white rounded-full">
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordOverviewAddRoomBtn')}
+              </Text>
+              <span className="p-1 bg-primary/10 text-primary group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <Plus className="w-3.5 h-3.5" />
               </span>
             </Button>
 
-            <Button
-              type="button"
+            <Button rounded="full"
               variant="ghost"
-              size="sm"
               onClick={() => router.push('/landlord/contracts')}
-              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="group"
             >
-              <span>{t('landlordOverviewCreatePdfContractBtn')}</span>
-              <span className="p-1 bg-amber-500/10 text-amber-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordOverviewCreatePdfContractBtn')}
+              </Text>
+              <span className="p-1 bg-amber-500/10 text-warning group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <FileText className="w-3.5 h-3.5" />
               </span>
             </Button>
 
-            <Button
-              type="button"
+            <Button rounded="full"
               variant="ghost"
-              size="sm"
               onClick={() => router.push('/landlord/invoices')}
-              className="h-auto flex items-center gap-2.5 px-4 py-2 bg-white text-zinc-900 font-bold text-xs rounded-full shadow-lg border border-zinc-200/80 hover:bg-[#2AC1BC] hover:text-white transition-all cursor-pointer group"
+              className="group"
             >
-              <span>{t('landlordOverviewCreateVietqrInvoiceBtn')}</span>
-              <span className="p-1 bg-emerald-500/10 text-emerald-600 group-hover:bg-white/20 group-hover:text-white rounded-full">
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('landlordOverviewCreateVietqrInvoiceBtn')}
+              </Text>
+              <span className="p-1 bg-emerald-500/10 text-success group-hover:bg-white/20 group-hover:text-white rounded-full">
                 <QrCode className="w-3.5 h-3.5" />
               </span>
             </Button>
@@ -734,18 +723,14 @@ export default function LandlordDashboardPage() {
         )}
 
         <Button
-          type="button"
-          variant="ghost"
-          size="sm"
+          variant={speedDialOpen ? 'dark' : 'primary'}
+          size="icon-lg"
+          rounded="full"
           onClick={() => setSpeedDialOpen(!speedDialOpen)}
-          className={`h-auto p-3.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer flex items-center justify-center border ${
-            speedDialOpen
-              ? 'bg-zinc-900 text-white border-zinc-800 rotate-45 hover:bg-zinc-900 hover:text-white'
-              : 'bg-[#2AC1BC] text-white border-[#2AC1BC] hover:scale-105 hover:bg-[#2AC1BC] hover:text-white'
-          }`}
+          className={speedDialOpen ? 'rotate-45' : ''}
           title={t('landlordOverviewQuickActions')}
         >
-          <Plus className="w-6 h-6" />
+          <Plus />
         </Button>
       </div>
     </div>

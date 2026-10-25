@@ -1,14 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Clock,
   Plus,
   Edit3,
   Trash2,
-  Search,
   Loader2,
-  X,
   Check,
   AlertTriangle,
   CheckCircle2,
@@ -20,7 +18,8 @@ import {
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, SearchInput } from '@/components/ui'
+import { Button, TextInput, SearchInput, Card, Modal, EmptyState } from '@/components/ui'
+import { DashboardPageHeader, LandlordStatBanner, LandlordStatChipItem } from '@/components/landlord'
 
 export default function ShiftsPage() {
   const { activeBuilding } = useAuth()
@@ -35,6 +34,7 @@ export default function ShiftsPage() {
   const [editingShift, setEditingShift] = useState<ShiftItem | null>(null)
   const [isDirty, setIsDirty] = useState(false)
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
+  const [deleteConfirmShift, setDeleteConfirmShift] = useState<ShiftItem | null>(null)
 
   const [formName, setFormName] = useState('')
   const [formStart, setFormStart] = useState('08:00')
@@ -140,19 +140,24 @@ export default function ShiftsPage() {
     } catch (err: any) {
       setFormError(
         err?.response?.data?.message ||
-          err?.message ||
-          t('landlordShiftsDeleteError'),
+        err?.message ||
+        t('landlordShiftsDeleteError'),
       )
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleDelete = async (shift: ShiftItem) => {
-    if (!confirm(t('landlordShiftsDeleteConfirm', { name: shift.name }))) return
+  const handleDelete = (shift: ShiftItem) => {
+    setDeleteConfirmShift(shift)
+  }
+
+  const handleConfirmDeleteShift = async () => {
+    if (!deleteConfirmShift) return
     try {
-      await scheduleService.deleteShift(buildingId, shift.id)
+      await scheduleService.deleteShift(buildingId, deleteConfirmShift.id)
       showToast('success', t('landlordShiftsToastDeleteSuccess'))
+      setDeleteConfirmShift(null)
       fetchShifts()
     } catch (err: any) {
       showToast('error', err?.response?.data?.message || t('landlordShiftsDeleteError'))
@@ -165,18 +170,18 @@ export default function ShiftsPage() {
       return {
         label: t('landlordShiftsMorningShift'),
         icon: Sunrise,
-        color: 'text-amber-600 bg-amber-50 border-amber-200',
+        color: 'text-warning bg-warning-soft border-warning-subtle',
       }
     if (hour >= 12 && hour < 18)
       return {
         label: t('landlordShiftsAfternoonShift'),
         icon: Sun,
-        color: 'text-blue-600 bg-blue-50 border-blue-200',
+        color: 'text-info bg-info-soft border-info-subtle',
       }
     return {
       label: t('landlordShiftsNightShift'),
       icon: Moon,
-      color: 'text-purple-600 bg-purple-50 border-purple-200',
+      color: 'text-deposit bg-deposit-soft border-deposit-subtle',
     }
   }
 
@@ -194,102 +199,103 @@ export default function ShiftsPage() {
     s.name.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
+  const statChips: LandlordStatChipItem[] = useMemo(() => {
+    const morningCount = shifts.filter(s => {
+      const h = parseInt(s.startTime.split(':')[0])
+      return h >= 5 && h < 12
+    }).length
+    const afternoonCount = shifts.filter(s => {
+      const h = parseInt(s.startTime.split(':')[0])
+      return h >= 12 && h < 18
+    }).length
+    const nightCount = shifts.filter(s => {
+      const h = parseInt(s.startTime.split(':')[0])
+      return h < 5 || h >= 18
+    }).length
+
+    return [
+      {
+        key: 'total',
+        label: t('landlordShiftsTotalShiftsCount'),
+        value: shifts.length,
+        icon: <Clock className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[135px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'morning',
+        label: t('landlordShiftsMorningShift'),
+        value: morningCount,
+        icon: <Sunrise className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-amber-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[135px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'afternoon',
+        label: t('landlordShiftsAfternoonShift'),
+        value: afternoonCount,
+        icon: <Sun className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-blue-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[135px]',
+        labelClassName: 'text-blue-400',
+        valueClassName: 'text-blue-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'night',
+        label: t('landlordShiftsNightShift'),
+        value: nightCount,
+        icon: <Moon className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-purple-400 shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 lg:w-[135px]',
+        labelClassName: 'text-purple-400',
+        valueColor: 'white',
+        valueClassName: 'text-purple-400 text-base sm:text-lg leading-none mt-1',
+      },
+    ]
+  }, [shifts, t])
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
-            toast.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border-rose-200'
-          }`}
+          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${toast.type === 'success'
+              ? 'bg-success-soft text-success border-success-subtle'
+              : 'bg-danger-soft text-danger border-danger-subtle'
+            }`}
         >
           {toast.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           ) : (
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
           )}
           <span>{toast.text}</span>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
-            <Clock className="w-4 h-4" />
-            <span> · {t('landlordScheduleStaffManagement')}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900">
-            {t('landlordShiftsTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            {t('landlordShiftsSubtitle')}:{' '}
-            <strong className="text-zinc-800">
-              {activeBuilding?.name || t('landlordRoomsBuildingDefault')}
-            </strong>
-          </p>
-        </div>
+      <DashboardPageHeader
+        title={t('landlordShiftsTitle')}
+        subtitle={`${t('landlordShiftsSubtitle')}: ${activeBuilding?.name || t('landlordRoomsBuildingDefault')}`}
+        actions={
+          <Button
+            size="md"
+            onClick={openCreateModal}
+            className="shrink-0"
+            leftIcon={<Plus />}
+          >
+            {t('landlordShiftsAddNewBtn')}
+          </Button>
+        }
+      />
 
-        <Button
-          onClick={openCreateModal}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" /> {t('landlordShiftsAddNewBtn')}
-        </Button>
-      </div>
-
-      <div className="bg-zinc-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Layers className="w-64 h-64" />
-        </div>
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="flex flex-col p-3.5 bg-white/5 rounded-2xl border border-white/10">
-            <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
-              {t('landlordShiftsTotalShiftsCount')}
-            </span>
-            <span className="font-black text-white text-xl sm:text-2xl mt-1">{shifts.length}</span>
-          </div>
-          <div className="flex flex-col p-3.5 bg-amber-500/10 rounded-2xl border border-amber-500/30">
-            <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-              {t('landlordShiftsMorningShift')}
-            </span>
-            <span className="font-black text-amber-400 text-xl sm:text-2xl mt-1">
-              {
-                shifts.filter(s => {
-                  const h = parseInt(s.startTime.split(':')[0])
-                  return h >= 5 && h < 12
-                }).length
-              }
-            </span>
-          </div>
-          <div className="flex flex-col p-3.5 bg-blue-500/10 rounded-2xl border border-blue-500/30">
-            <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">
-              {t('landlordShiftsAfternoonShift')}
-            </span>
-            <span className="font-black text-blue-400 text-xl sm:text-2xl mt-1">
-              {
-                shifts.filter(s => {
-                  const h = parseInt(s.startTime.split(':')[0])
-                  return h >= 12 && h < 18
-                }).length
-              }
-            </span>
-          </div>
-          <div className="flex flex-col p-3.5 bg-purple-500/10 rounded-2xl border border-purple-500/30">
-            <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">
-              {t('landlordShiftsNightShift')}
-            </span>
-            <span className="font-black text-purple-400 text-xl sm:text-2xl mt-1">
-              {
-                shifts.filter(s => {
-                  const h = parseInt(s.startTime.split(':')[0])
-                  return h < 5 || h >= 18
-                }).length
-              }
-            </span>
-          </div>
-        </div>
-      </div>
+      <LandlordStatBanner
+        watermarkIcon={<Layers className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       <div className="relative max-w-sm">
         <SearchInput
@@ -297,37 +303,30 @@ export default function ShiftsPage() {
           value={searchQuery}
           onChange={setSearchQuery}
           containerClassName="w-full space-y-0"
-          className="w-full py-2 text-xs font-semibold bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
+          className="w-full py-2 text-xs font-semibold bg-card border border-line rounded-xl focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
         />
       </div>
 
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-white rounded-3xl border border-zinc-200">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
-          <p className="text-xs text-zinc-500 font-medium">{t('landlordShiftsLoading')}</p>
+        <div className="py-20 flex flex-col items-center justify-center space-y-2 bg-card rounded-3xl border border-line">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <p className="text-xs text-muted font-medium">{t('landlordShiftsLoading')}</p>
         </div>
       ) : filteredShifts.length === 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center">
-            <Clock className="w-8 h-8" />
-          </div>
-          <div className="max-w-sm space-y-1">
-            <h3 className="text-base font-extrabold text-zinc-900">
-              {searchQuery ? t('landlordShiftsSearchNotFound') : t('landlordShiftsEmptyTitle')}
-            </h3>
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              {searchQuery ? t('landlordShiftsSearchNotFoundDesc') : t('landlordShiftsEmptyDesc')}
-            </p>
-          </div>
-          {!searchQuery && (
-            <Button
-              onClick={openCreateModal}
-              className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl transition-all shadow-sm cursor-pointer"
-            >
-              {t('landlordShiftsAddNow')}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title={searchQuery ? t('landlordShiftsSearchNotFound') : t('landlordShiftsEmptyTitle')}
+          description={
+            searchQuery ? t('landlordShiftsSearchNotFoundDesc') : t('landlordShiftsEmptyDesc')
+          }
+          action={
+            !searchQuery ? (
+              <Button size="md" onClick={openCreateModal} leftIcon={<Plus />}>
+                {t('landlordShiftsAddNow')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredShifts.map(shift => {
@@ -335,11 +334,11 @@ export default function ShiftsPage() {
             const CategoryIcon = cat.icon
             const duration = getDurationHours(shift.startTime, shift.endTime)
             return (
-              <div
+              <Card
                 key={shift.id}
-                className="bg-white border border-zinc-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group flex flex-col justify-between"
+                className="group flex flex-col justify-between"
               >
-                <div className="space-y-4">
+                <Card.Header className="mx-6 mt-6 p-0 border-0">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div
@@ -348,7 +347,7 @@ export default function ShiftsPage() {
                         <CategoryIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-extrabold text-zinc-900 text-base group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                        <h3 className="font-extrabold text-foreground text-base group-hover:text-primary transition-colors line-clamp-1">
                           {shift.name}
                         </h3>
                         <span
@@ -360,194 +359,249 @@ export default function ShiftsPage() {
                       </div>
                     </div>
                   </div>
+                  </Card.Header>
 
-                  <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-2.5">
+                  <Card.Body className="mx-6 p-0">
+                  <div className="bg-surface rounded-2xl p-4 border border-line space-y-2.5">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-0.5">
+                        <p className="text-[10px] uppercase font-bold text-muted tracking-wider mb-0.5">
                           {t('landlordShiftsStart')}
                         </p>
-                        <p className="text-lg font-black text-zinc-900">{shift.startTime}</p>
+                        <p className="text-lg font-black text-foreground">{shift.startTime}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider mb-0.5">
+                        <p className="text-[10px] uppercase font-bold text-muted tracking-wider mb-0.5">
                           {t('landlordShiftsEnd')}
                         </p>
-                        <p className="text-lg font-black text-zinc-900">{shift.endTime}</p>
+                        <p className="text-lg font-black text-foreground">{shift.endTime}</p>
                       </div>
                     </div>
-                    <div className="pt-2 border-t border-zinc-200 flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-medium">
+                    <div className="pt-2 border-t border-line flex items-center justify-between text-xs">
+                      <span className="text-muted font-medium">
                         {t('landlordShiftsDuration')}
                       </span>
-                      <span className="font-extrabold text-zinc-800">{duration}</span>
+                      <span className="font-extrabold text-foreground">{duration}</span>
                     </div>
                   </div>
-                </div>
+                </Card.Body>
 
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-zinc-100">
+                <Card.Footer className="mx-6 mb-6 p-0 pt-4 flex items-center gap-2">
                   <Button
                     variant="ghost"
-                    size="sm"
                     onClick={() => openEditModal(shift)}
-                    className="h-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer flex-1 justify-center"
+                    className="flex-1"
+                    leftIcon={<Edit3 />}
                   >
-                    <Edit3 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnEdit')}
+                    {t('landlordShiftsBtnEdit')}
                   </Button>
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="ghost-danger"
                     onClick={() => handleDelete(shift)}
-                    className="h-auto flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-700 rounded-xl transition-colors cursor-pointer flex-1 justify-center border border-rose-200"
+                    className="flex-1"
+                    leftIcon={<Trash2 />}
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> {t('landlordShiftsBtnDelete')}
+                    {t('landlordShiftsBtnDelete')}
                   </Button>
-                </div>
-              </div>
+                </Card.Footer>
+              </Card>
             )
           })}
         </div>
       )}
 
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={handleAttemptClose}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in zoom-in-95 duration-200"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-black text-zinc-900">
-                  {editingShift
-                    ? t('landlordShiftsModalEditTitle')
-                    : t('landlordShiftsModalAddTitle')}
-                </h2>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  {editingShift
-                    ? t('landlordShiftsEditSubtitle')
-                    : t('landlordShiftsCreateSubtitle')}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleAttemptClose}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      {/* 1. Add / Edit Shift Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleAttemptClose}
+        size="md"
+      >
+        <Modal.Header
+          title={
+            editingShift
+              ? t('landlordShiftsModalEditTitle')
+              : t('landlordShiftsModalAddTitle')
+          }
+          description={
+            editingShift
+              ? t('landlordShiftsEditSubtitle')
+              : t('landlordShiftsCreateSubtitle')
+          }
+          icon={
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+              <Clock className="w-5 h-5" />
             </div>
+          }
+        />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <Modal.Body className="space-y-4">
+            <TextInput
+              label={t('landlordShiftsFieldName')}
+              required
+              value={formName}
+              onChange={e => {
+                setFormName(e.target.value)
+                setIsDirty(true)
+              }}
+              placeholder={t('landlordShiftsFieldNamePh')}
+              autoFocus
+            />
+
+            <div className="grid grid-cols-2 gap-3">
               <TextInput
-                label={t('landlordShiftsFieldName')}
+                type="time"
+                label={t('landlordShiftsFieldStartTime')}
                 required
-                value={formName}
+                value={formStart}
                 onChange={e => {
-                  setFormName(e.target.value)
+                  setFormStart(e.target.value)
                   setIsDirty(true)
                 }}
-                placeholder={t('landlordShiftsFieldNamePh')}
-                autoFocus
               />
+              <TextInput
+                type="time"
+                label={t('landlordShiftsFieldEndTime')}
+                required
+                value={formEnd}
+                onChange={e => {
+                  setFormEnd(e.target.value)
+                  setIsDirty(true)
+                }}
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <TextInput
-                  type="time"
-                  label={t('landlordShiftsFieldStartTime')}
-                  required
-                  value={formStart}
-                  onChange={e => {
-                    setFormStart(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
-                <TextInput
-                  type="time"
-                  label={t('landlordShiftsFieldEndTime')}
-                  required
-                  value={formEnd}
-                  onChange={e => {
-                    setFormEnd(e.target.value)
-                    setIsDirty(true)
-                  }}
-                />
+            {formStart && formEnd && (
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-xl text-xs font-semibold text-primary">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  {t('landlordShiftsDuration')}:{' '}
+                  <strong>{getDurationHours(formStart, formEnd)}</strong>
+                </span>
               </div>
+            )}
 
-              {formStart && formEnd && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#2AC1BC]/5 border border-[#2AC1BC]/20 rounded-xl text-xs font-semibold text-[#2AC1BC]">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />
-                  <span>
-                    {t('landlordShiftsDuration')}:{' '}
-                    <strong>{getDurationHours(formStart, formEnd)}</strong>
-                  </span>
-                </div>
-              )}
-
-              {formError && (
-                <div className="flex items-center gap-2 px-3 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-700">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              <div className="flex gap-2.5 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAttemptClose}
-                  className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
-                >
-                  {t('landlordShiftsModalBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] disabled:opacity-60 rounded-xl transition-all shadow-sm shadow-[#2AC1BC]/20 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  {editingShift
-                    ? t('landlordShiftsSaveShiftBtn')
-                    : t('landlordShiftsCreateShiftBtn')}
-                </Button>
+            {formError && (
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-danger-soft border border-danger-subtle rounded-xl text-xs font-bold text-danger">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{formError}</span>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            )}
+          </Modal.Body>
 
-      {isConfirmCloseOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-150">
-            <h3 className="text-base font-black text-zinc-900 mb-1">
-              {t('landlordShiftsConfirmCloseTitle')}
-            </h3>
-            <p className="text-xs text-zinc-500 mb-5">{t('landlordShiftsConfirmCloseDesc')}</p>
-            <div className="flex gap-2.5">
+          <Modal.Footer>
+            <div className="flex items-center gap-2.5 w-full">
               <Button
+                size="md"
                 variant="outline"
-                onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-colors cursor-pointer"
+                onClick={handleAttemptClose}
+                className="flex-1"
               >
-                {t('landlordShiftsConfirmCloseKeep')}
+                {t('landlordShiftsModalBtnCancel')}
               </Button>
               <Button
-                variant="ghost"
-                onClick={handleConfirmClose}
-                className="flex-1 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                size="md"
+                type="submit"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                leftIcon={!isSubmitting ? <Check className="w-4 h-4" /> : undefined}
+                className="flex-1"
               >
-                {t('landlordShiftsConfirmCloseDiscard')}
+                {editingShift
+                  ? t('landlordShiftsSaveShiftBtn')
+                  : t('landlordShiftsCreateShiftBtn')}
               </Button>
             </div>
+          </Modal.Footer>
+        </form>
+      </Modal>
+
+      {/* 2. Unsaved Changes Confirmation Modal (Rule #10) */}
+      <Modal
+        isOpen={isConfirmCloseOpen}
+        onClose={() => setIsConfirmCloseOpen(false)}
+        size="sm"
+        zIndex={60}
+      >
+        <Modal.Body className="p-6 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
           </div>
-        </div>
+
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-foreground">
+              {t('landlordShiftsConfirmCloseTitle')}
+            </h4>
+            <p className="text-xs text-muted leading-relaxed">
+              {t('landlordShiftsConfirmCloseDesc')}
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="flex items-center gap-2.5 w-full">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={handleConfirmClose}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      {/* 3. Delete Confirmation Modal (Rule #10) */}
+      {deleteConfirmShift && (
+        <Modal
+          isOpen={!!deleteConfirmShift}
+          onClose={() => setDeleteConfirmShift(null)}
+          size="sm"
+        >
+          <Modal.Body className="p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-danger-soft text-danger flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">
+                {t('landlordShiftsDeleteModalTitle')}
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                {t('landlordShiftsDeleteConfirm', { name: deleteConfirmShift.name })}
+              </p>
+            </div>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <div className="flex items-center gap-3 w-full">
+              <Button
+                size="md"
+                variant="secondary"
+                onClick={() => setDeleteConfirmShift(null)}
+                className="flex-1"
+              >
+                {t('landlordShiftsModalBtnCancel')}
+              </Button>
+              <Button
+                size="md"
+                variant="danger"
+                onClick={handleConfirmDeleteShift}
+                className="flex-1"
+              >
+                {t('landlordShiftsDeleteBtn')}
+              </Button>
+            </div>
+          </Modal.Footer>
+        </Modal>
       )}
     </div>
   )

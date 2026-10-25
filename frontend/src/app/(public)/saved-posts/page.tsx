@@ -114,13 +114,13 @@ export default function SavedPostsPage() {
   // IF USER IS NOT LOGGED IN, SHOW LOGIN PROMPT LOCK SCREEN
   if (!isLoggedIn) {
     return (
-      <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+      <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20">
         {/* Full-Width Hero Header */}
         <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
           <div className="relative z-10 max-w-4xl mx-auto space-y-4">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />{' '}
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-danger/20 text-rose-400 text-xs font-black rounded-full border border-danger/30 shadow-lg">
+              <Heart className="w-4 h-4 fill-danger text-danger" />{' '}
               {t('guestSavedPostsMemberBadge')}
             </span>
 
@@ -136,20 +136,20 @@ export default function SavedPostsPage() {
 
         {/* Lock Screen Body */}
         <div className="mx-auto max-w-xl px-4 py-16 text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto shadow-inner border border-[#2AC1BC]/20">
-            <Lock className="w-10 h-10 text-[#2AC1BC]" />
+          <div className="w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-inner border border-primary/20">
+            <Lock className="w-10 h-10 text-primary" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-zinc-900">{t('guestSavedPostsLockTitle')}</h2>
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed max-w-md mx-auto">
+            <h2 className="text-2xl font-black text-foreground">{t('guestSavedPostsLockTitle')}</h2>
+            <p className="text-xs text-muted font-medium leading-relaxed max-w-md mx-auto">
               {t('guestSavedPostsLockDesc')}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link href="/login" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25 transition-all cursor-pointer hover:scale-105">
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-primary hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-primary/25 transition-all cursor-pointer hover:scale-105">
                 {t('guestSavedPostsLoginBtn')} &rarr;
               </button>
             </Link>
@@ -165,19 +165,19 @@ export default function SavedPostsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20">
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-rose-500/20 text-rose-400 text-xs font-black rounded-full border border-rose-500/30 shadow-lg">
-            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> {t('guestSavedPostsBadge')}
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-danger/20 text-rose-400 text-xs font-black rounded-full border border-danger/30 shadow-lg">
+            <Heart className="w-4 h-4 fill-danger text-danger" /> {t('guestSavedPostsBadge')}
           </span>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
             <span className="inline-block whitespace-nowrap">{t('guestSavedPostsTitle1')}</span>{' '}
             <br />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+            <span className="bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent inline-block whitespace-nowrap">
               {t('guestSavedPostsTitle2')}
             </span>
           </h1>
@@ -195,33 +195,33 @@ export default function SavedPostsPage() {
             {[1, 2, 3].map(i => (
               <div
                 key={i}
-                className="bg-white rounded-3xl border border-zinc-200/80 overflow-hidden shadow-sm animate-pulse flex flex-col justify-between"
+                className="bg-card rounded-3xl border border-line overflow-hidden shadow-sm animate-pulse flex flex-col justify-between"
               >
-                <div className="aspect-[16/9] bg-zinc-200" />
+                <div className="aspect-[16/9] bg-line" />
                 <div className="p-6 space-y-4">
-                  <div className="h-5 bg-zinc-200 rounded w-3/4" />
-                  <div className="h-4 bg-zinc-100 rounded w-1/2" />
-                  <div className="pt-3 border-t border-zinc-100 flex justify-between">
-                    <div className="h-6 bg-zinc-200 rounded w-1/3" />
-                    <div className="h-4 bg-zinc-100 rounded w-1/4" />
+                  <div className="h-5 bg-line rounded w-3/4" />
+                  <div className="h-4 bg-card-hover rounded w-1/2" />
+                  <div className="pt-3 border-t border-line flex justify-between">
+                    <div className="h-6 bg-line rounded w-1/3" />
+                    <div className="h-4 bg-card-hover rounded w-1/4" />
                   </div>
                   <div className="grid grid-cols-2 gap-2 pt-2">
-                    <div className="h-9 bg-zinc-100 rounded-xl" />
-                    <div className="h-9 bg-zinc-200 rounded-xl" />
+                    <div className="h-9 bg-card-hover rounded-xl" />
+                    <div className="h-9 bg-line rounded-xl" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : savedRooms.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-50 rounded-3xl border border-zinc-200/80 space-y-4 max-w-xl mx-auto">
-            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
+          <div className="text-center py-20 bg-surface rounded-3xl border border-line space-y-4 max-w-xl mx-auto">
+            <div className="w-16 h-16 rounded-full bg-danger-soft text-danger flex items-center justify-center mx-auto">
               <Heart className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black text-zinc-900">{t('guestSavedPostsEmptyTitle')}</h3>
-            <p className="text-xs text-zinc-500 font-medium">{t('guestSavedPostsEmptySub')}</p>
+            <h3 className="text-xl font-black text-foreground">{t('guestSavedPostsEmptyTitle')}</h3>
+            <p className="text-xs text-muted font-medium">{t('guestSavedPostsEmptySub')}</p>
             <Link href="/rooms">
-              <button className="px-6 py-3 bg-[#2AC1BC] text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-[#72b3a3] transition-all cursor-pointer">
+              <button className="px-6 py-3 bg-primary text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-[#72b3a3] transition-all cursor-pointer">
                 {t('guestSavedPostsExploreRooms')} &rarr;
               </button>
             </Link>
@@ -231,7 +231,7 @@ export default function SavedPostsPage() {
             {/* Fixed Floating Bottom Compare Action Bar */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-4xl w-[calc(100%-2rem)] bg-zinc-950/90 backdrop-blur-xl border border-zinc-800 text-white p-4 sm:px-6 rounded-full shadow-[0_10px_35px_rgba(0,0,0,0.5)] flex items-center justify-between gap-4 animate-in slide-in-from-bottom-5 duration-300">
               <div className="flex items-center gap-3 text-xs font-bold text-zinc-300">
-                <span className="w-8 h-8 rounded-full bg-[#2AC1BC]/20 text-[#2AC1BC] flex items-center justify-center font-black">
+                <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-black">
                   {selectedForCompare.length}
                 </span>
                 <span className="hidden sm:inline">
@@ -251,7 +251,7 @@ export default function SavedPostsPage() {
               <button
                 onClick={() => setIsCompareModalOpen(true)}
                 disabled={selectedForCompare.length === 0}
-                className="px-6 py-3 bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] to-[#FF6B35] disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#2AC1BC]/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
+                className="px-6 py-3 bg-gradient-to-r from-primary via-[#3BDAC8] to-accent disabled:opacity-40 hover:from-[#23B3AE] hover:to-[#ff5518] text-white font-extrabold text-xs rounded-full shadow-lg shadow-primary/20 flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shrink-0"
               >
                 <Scale className="w-4 h-4" />{' '}
                 {t('guestSavedPostsCompareBtn', { count: selectedForCompare.length })} &rarr;
@@ -269,10 +269,10 @@ export default function SavedPostsPage() {
                 return (
                   <div
                     key={room.id}
-                    className={`bg-white rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col justify-between group relative ${
+                    className={`bg-card rounded-3xl border transition-all duration-300 overflow-hidden flex flex-col justify-between group relative ${
                       isSelected
-                        ? 'border-[#2AC1BC] shadow-lg ring-2 ring-[#2AC1BC]/20'
-                        : 'border-zinc-200/80 shadow-sm hover:shadow-md'
+                        ? 'border-primary shadow-lg ring-2 ring-primary/20'
+                        : 'border-line shadow-sm hover:shadow-md'
                     }`}
                   >
                     {/* Checkbox Selector for Compare */}
@@ -284,7 +284,7 @@ export default function SavedPostsPage() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => {}} // handled by div click
-                        className="w-4 h-4 accent-[#2AC1BC] cursor-pointer"
+                        className="w-4 h-4 accent-primary cursor-pointer"
                       />
                       <span>
                         {isSelected
@@ -294,7 +294,7 @@ export default function SavedPostsPage() {
                     </div>
 
                     {/* Image */}
-                    <div className="relative aspect-[16/9] overflow-hidden bg-zinc-100">
+                    <div className="relative aspect-[16/9] overflow-hidden bg-card-hover">
                       <img
                         src={roomImg}
                         alt={roomTitle}
@@ -305,7 +305,7 @@ export default function SavedPostsPage() {
                       />
                       <button
                         onClick={() => removeSaved(room.id)}
-                        className="absolute top-3 right-3 p-2 bg-zinc-900/80 hover:bg-rose-600 text-white rounded-full transition-colors cursor-pointer"
+                        className="absolute top-3 right-3 p-2 bg-zinc-900/80 hover:bg-danger text-white rounded-full transition-colors cursor-pointer"
                         title={t('guestSavedPostsRemoveTitle')}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -315,7 +315,7 @@ export default function SavedPostsPage() {
                     <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
                       <div className="space-y-2">
                         <Link href={`/rooms/${room.id}`}>
-                          <h3 className="font-extrabold text-zinc-900 text-base leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-2">
+                          <h3 className="font-extrabold text-foreground text-base leading-snug group-hover:text-primary transition-colors line-clamp-2">
                             {roomTitle}
                           </h3>
                         </Link>
@@ -326,28 +326,28 @@ export default function SavedPostsPage() {
                             )}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors"
+                            className="flex items-center text-xs text-muted font-semibold gap-1 hover:text-primary hover:underline cursor-pointer transition-colors"
                             title={t('guestSavedPostsMapTitle')}
                           >
-                            <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                             <span className="truncate">{roomAddress}</span>
                           </a>
                         )}
                       </div>
 
-                      <div className="pt-3 border-t border-zinc-100 space-y-2">
+                      <div className="pt-3 border-t border-line space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xl font-black text-rose-500">
+                          <span className="text-xl font-black text-danger">
                             {formatCurrency(room.depositAmount, currentLocale)}
                           </span>
                           {room.room?.area && (
-                            <span className="text-xs text-zinc-700 font-bold">
+                            <span className="text-xs text-foreground/90 font-bold">
                               {room.room.area} m²
                             </span>
                           )}
                         </div>
 
-                        <span className="text-[11px] font-bold text-zinc-500 block">
+                        <span className="text-[11px] font-bold text-muted block">
                           {t('guestSavedPostsDepositLabel')}{' '}
                           {room.depositAmount > 0
                             ? formatCurrency(room.depositAmount, currentLocale)
@@ -356,12 +356,12 @@ export default function SavedPostsPage() {
 
                         <div className="grid grid-cols-2 gap-2 pt-2">
                           <Link href={`/rooms/${room.id}`}>
-                            <button className="w-full py-2.5 bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 text-[#2AC1BC] font-extrabold text-xs rounded-xl transition-all cursor-pointer text-center">
+                            <button className="w-full py-2.5 bg-primary/10 hover:bg-primary/20 text-primary font-extrabold text-xs rounded-xl transition-all cursor-pointer text-center">
                               {t('guestSavedPostsViewDetails')}
                             </button>
                           </Link>
                           <Link href={`/rooms/${room.id}`}>
-                            <button className="w-full py-2.5 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center">
+                            <button className="w-full py-2.5 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer text-center">
                               {t('guestSavedPostsDepositNow')}
                             </button>
                           </Link>
@@ -384,22 +384,22 @@ export default function SavedPostsPage() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-2xl space-y-6 border border-zinc-100 relative max-h-[90vh] overflow-y-auto cursor-default">
-            <div className="flex justify-between items-center pb-4 border-b border-zinc-100">
+          <div className="bg-card rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-2xl space-y-6 border border-line relative max-h-[90vh] overflow-y-auto cursor-default">
+            <div className="flex justify-between items-center pb-4 border-b border-line">
               <div>
-                <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-[#2AC1BC]" />{' '}
+                <h3 className="text-xl font-black text-foreground flex items-center gap-2">
+                  <Scale className="w-5 h-5 text-primary" />{' '}
                   {t('guestSavedPostsModalTitle', {
                     count: selectedRoomsData.length,
                   })}
                 </h3>
-                <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                <p className="text-xs text-muted font-medium mt-0.5">
                   {t('guestSavedPostsModalSub')}
                 </p>
               </div>
               <button
                 onClick={() => setIsCompareModalOpen(false)}
-                className="p-2 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                className="p-2 hover:bg-card-hover rounded-full text-muted hover:text-foreground cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -409,8 +409,8 @@ export default function SavedPostsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-200">
-                    <th className="p-3 text-xs font-black text-zinc-400 uppercase w-44">
+                  <tr className="border-b border-line">
+                    <th className="p-3 text-xs font-black text-muted uppercase w-44">
                       {t('guestSavedPostsColCriteria')}
                     </th>
                     {selectedRoomsData.map(room => {
@@ -425,9 +425,9 @@ export default function SavedPostsPage() {
                               onError={e => {
                                 ;(e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE
                               }}
-                              className="w-full h-28 object-cover rounded-xl border border-zinc-200"
+                              className="w-full h-28 object-cover rounded-xl border border-line"
                             />
-                            <h4 className="font-extrabold text-xs text-zinc-900 line-clamp-2">
+                            <h4 className="font-extrabold text-xs text-foreground line-clamp-2">
                               {title}
                             </h4>
                           </div>
@@ -436,25 +436,25 @@ export default function SavedPostsPage() {
                     })}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 text-xs font-semibold">
+                <tbody className="divide-y divide-line text-xs font-semibold">
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t('guestSavedPostsRowPrice')}</td>
+                    <td className="p-3 font-bold text-muted">{t('guestSavedPostsRowPrice')}</td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 font-black text-rose-500 text-sm">
+                      <td key={room.id} className="p-3 font-black text-danger text-sm">
                         {formatCurrency(room.depositAmount, currentLocale)}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">
+                    <td className="p-3 font-bold text-muted">
                       {t('guestSavedPostsRowDeposit')}
                     </td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 font-bold text-zinc-900">
+                      <td key={room.id} className="p-3 font-bold text-foreground">
                         {room.depositAmount > 0 ? (
                           formatCurrency(room.depositAmount, currentLocale)
                         ) : (
-                          <span className="text-emerald-600 font-black">
+                          <span className="text-success font-black">
                             {t('guestSavedPostsFreeDeposit')}
                           </span>
                         )}
@@ -462,29 +462,29 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t('guestSavedPostsRowArea')}</td>
+                    <td className="p-3 font-bold text-muted">{t('guestSavedPostsRowArea')}</td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 text-zinc-800 font-extrabold">
+                      <td key={room.id} className="p-3 text-foreground font-extrabold">
                         {room.room?.area ? `${room.room.area} m²` : '—'}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">
+                    <td className="p-3 font-bold text-muted">
                       {t('guestSavedPostsRowAddress')}
                     </td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 text-zinc-600">
+                      <td key={room.id} className="p-3 text-muted">
                         {formatAddress(room.address, room.room?.boardingHouseName) || '—'}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">
+                    <td className="p-3 font-bold text-muted">
                       {t('guestSavedPostsRoomTypePlaceholder')}
                     </td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 text-zinc-700 font-bold">
+                      <td key={room.id} className="p-3 text-foreground/90 font-bold">
                         {room.room?.boardingHouseName
                           ? `${room.room.boardingHouseName} - P.${room.room.roomNumber}`
                           : room.room?.roomTypeName || t('guestSavedPostsRoomTypePlaceholder')}
@@ -492,21 +492,21 @@ export default function SavedPostsPage() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">
+                    <td className="p-3 font-bold text-muted">
                       {t('guestSavedPostsRowLandlord')}
                     </td>
                     {selectedRoomsData.map(room => (
-                      <td key={room.id} className="p-3 text-zinc-700 font-bold">
+                      <td key={room.id} className="p-3 text-foreground/90 font-bold">
                         {room.poster?.username || t('guestSavedPostsLandlordPlaceholder')}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="p-3 font-bold text-zinc-500">{t('guestSavedPostsRowAction')}</td>
+                    <td className="p-3 font-bold text-muted">{t('guestSavedPostsRowAction')}</td>
                     {selectedRoomsData.map(room => (
                       <td key={room.id} className="p-3">
                         <Link href={`/rooms/${room.id}`}>
-                          <button className="w-full py-2 bg-[#FF6B35] hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all">
+                          <button className="w-full py-2 bg-accent hover:bg-[#ff5518] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer transition-all">
                             {t('guestSavedPostsViewAndDeposit')} &rarr;
                           </button>
                         </Link>

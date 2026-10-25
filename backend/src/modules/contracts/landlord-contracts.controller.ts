@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Ip,
   Body,
   Param,
   Query,
@@ -29,6 +31,7 @@ import { CreateContractPlatformDto } from './dto/create-contract-platform.dto'
 import { CreateContractDirectDto } from './dto/create-contract-direct.dto'
 import { QueryContractsDto } from './dto/query-contracts.dto'
 import { ExportContractResponseDto } from './dto/export-contract-response.dto'
+import { UpdateContractDto } from './dto/update-contract.dto'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { PropertyOwnershipGuard } from '../../common/guards/property-ownership.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
@@ -223,6 +226,52 @@ export class LandlordContractsController {
       `GET /landlord/contracts/${id} called by landlord ${user?.id} for house ${boardingHouseId}`,
     )
     const data = await this.contractsService.getContractById(boardingHouseId, id)
+    return { success: true, data }
+  }
+
+  // ─── PATCH /api/v1/landlord/contracts/:id ──────────────────────────────────
+
+  @Patch(':id')
+  @UseGuards(PropertyOwnershipGuard)
+  @ApiHeader({
+    name: 'X-Boarding-House-Id',
+    required: true,
+    description: 'Active Boarding House UUID context',
+  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update Contract Details',
+    description:
+      'Updates contract rent price, deposit amount, payment date, end date, or note with audit log tracking.',
+  })
+  @ApiOkResponse({
+    description: 'Contract updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Contract not found or does not belong to active boarding house',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid input or contract cannot be modified',
+  })
+  async updateContract(
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() dto: UpdateContractDto,
+    @CurrentUser() user: JwtPayload,
+    @Ip() ipAddress: string,
+  ) {
+    this.logger.log(
+      `PATCH /landlord/contracts/${id} called by landlord ${user?.id} for house ${boardingHouseId}`,
+    )
+    const data = await this.contractsService.updateContract(
+      user.id,
+      boardingHouseId,
+      id,
+      dto,
+      ipAddress,
+    )
     return { success: true, data }
   }
 

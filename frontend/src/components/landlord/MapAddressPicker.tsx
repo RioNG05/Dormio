@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Province, matchProvince } from '@/services/vietnam-address.service'
 import { mapService, type MapsConfig } from '@/services/map.service'
-import { Button, TextInput } from '@/components/ui'
+import { Button, TextInput, Text } from '@/components/ui'
 
 export interface SelectedMapAddress {
   province: string
@@ -362,50 +362,49 @@ export function MapAddressPicker({
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs transition-all">
+    <div className="rounded-2xl border border-line bg-card p-5 shadow-xs transition-all">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <MapPin className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+            <Text as="h4" size="sm" weight="bold" color="default" className="flex items-center gap-2">
               Chọn địa chỉ từ bản đồ
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2AC1BC]/10 text-[#2AC1BC]">
+              <Text.Badge className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
                 {!isConfigLoaded
                   ? 'Đang tải bản đồ...'
                   : mapConfig.isGoogleAvailable && mapConfig.apiKey
                     ? 'Google Maps'
                     : 'Interactive Map'}
-              </span>
-            </h4>
-            <p className="text-xs text-zinc-500">
+              </Text.Badge>
+            </Text>
+            <Text size="xs" color="subtle">
               Tìm kiếm hoặc bấm ghim trực tiếp trên bản đồ để tự động điền form
-            </p>
+            </Text>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={() => setIsExpanded(prev => !prev)}
-            leftIcon={isExpanded ? <Minimize2 className="h-3.5 w-3.5 text-zinc-500" /> : <Maximize2 className="h-3.5 w-3.5 text-zinc-500" />}
+            leftIcon={isExpanded ? <Minimize2 className="text-muted" /> : <Maximize2 className="text-muted" />}
           >
-            {isExpanded ? 'Thu nhỏ' : 'Phóng to bản đồ'}
+            <Text as="span" size="xs" weight="medium" color="inherit">
+              {isExpanded ? 'Thu nhỏ' : 'Phóng to bản đồ'}
+            </Text>
           </Button>
 
           <Button
-            type="button"
             variant="outline"
-            size="sm"
             onClick={openGoogleMapsDirectly}
-            rightIcon={<ExternalLink className="h-3.5 w-3.5" />}
-            className="border-[#2AC1BC]/30 bg-[#2AC1BC]/5 text-[#2AC1BC] hover:bg-[#2AC1BC]/10"
+            rightIcon={<ExternalLink />}
           >
-            Mở trên Google Maps
+            <Text as="span" size="xs" weight="medium" color="inherit">
+              Mở trên Google Maps
+            </Text>
           </Button>
         </div>
       </div>
@@ -423,93 +422,95 @@ export function MapAddressPicker({
               }
             }}
             placeholder="Nhập địa chỉ, tên đường hoặc địa danh để tìm kiếm..."
-            leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
+            leftIcon={<Search className="h-4 w-4 text-muted" />}
           />
         </div>
 
         <Button
-          type="button"
-          variant="primary"
           onClick={handleSearchOSM}
           disabled={isSearching || !searchQuery.trim()}
           isLoading={isSearching}
-          leftIcon={!isSearching ? <Navigation className="h-3.5 w-3.5" /> : undefined}
+          leftIcon={!isSearching ? <Navigation /> : undefined}
           className="shrink-0"
         >
-          {isSearching ? 'Đang tìm...' : 'Tìm vị trí'}
+          <Text as="span" size="xs" weight="semibold" color="inherit">
+            {isSearching ? 'Đang tìm...' : 'Tìm vị trí'}
+          </Text>
         </Button>
       </div>
 
       {/* Map Container */}
       <div
-        className={`relative mt-3 w-full rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 z-0 transition-all duration-300 ${
+        className={`relative mt-3 w-full rounded-2xl overflow-hidden border border-line bg-card-hover z-0 transition-all duration-300 ${
           isExpanded ? 'h-[620px]' : 'h-[460px]'
         }`}
       >
         <div ref={mapContainerRef} className="h-full w-full" />
 
         {isReverseGeocoding && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 shadow-md border border-zinc-200 text-xs font-semibold text-zinc-700 backdrop-blur-xs">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2AC1BC]" />
-            <span>Đang nhận diện địa chỉ từ tọa độ...</span>
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 shadow-md border border-line backdrop-blur-xs">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+            <Text as="span" size="xs" weight="semibold" color="default">
+              Đang nhận diện địa chỉ từ tọa độ...
+            </Text>
           </div>
         )}
 
-        <div className="absolute bottom-2 left-2 z-1000 pointer-events-none rounded-lg bg-zinc-900/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-xs">
-          💡 Bấm vào bản đồ hoặc kéo ghim để chọn vị trí
+        <div className="absolute bottom-2 left-2 z-1000 pointer-events-none rounded-lg bg-zinc-900/70 px-2.5 py-1 backdrop-blur-xs">
+          <Text size="2xs" weight="medium" color="white">
+            💡 Bấm vào bản đồ hoặc kéo ghim để chọn vị trí
+          </Text>
         </div>
       </div>
 
       {/* Resolved Address Banner & Apply Button */}
       {resolvedAddress && (
-        <div className="mt-4 rounded-xl border border-[#2AC1BC]/25 bg-[#2AC1BC]/5 p-3.5 transition-all">
+        <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-3.5 transition-all">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#2AC1BC]">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>Địa chỉ đã chọn từ bản đồ:</span>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+                <Text as="span" size="xs" weight="bold" color="brand">
+                  Địa chỉ đã chọn từ bản đồ:
+                </Text>
               </div>
-              <p className="text-sm font-semibold text-zinc-900">
+              <Text size="sm" weight="semibold" color="default">
                 {resolvedAddress.fullAddress || 'Vị trí đã chọn'}
-              </p>
+              </Text>
 
               {/* Breakdown tags */}
-              <div className="flex flex-wrap gap-1.5 pt-1 text-[11px] font-medium text-zinc-600">
+              <div className="flex flex-wrap gap-1.5 pt-1">
                 {resolvedAddress.houseNumber && (
-                  <span className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
-                    Số nhà: <b>{resolvedAddress.houseNumber}</b>
-                  </span>
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
+                    Số nhà: <Text as="strong" weight="bold" color="default">{resolvedAddress.houseNumber}</Text>
+                  </Text>
                 )}
                 {resolvedAddress.street && (
-                  <span className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
-                    Đường: <b>{resolvedAddress.street}</b>
-                  </span>
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
+                    Đường: <Text as="strong" weight="bold" color="default">{resolvedAddress.street}</Text>
+                  </Text>
                 )}
                 {resolvedAddress.ward && (
-                  <span className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
-                    Phường/Xã: <b>{resolvedAddress.ward}</b>
-                  </span>
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
+                    Phường/Xã: <Text as="strong" weight="bold" color="default">{resolvedAddress.ward}</Text>
+                  </Text>
                 )}
                 {resolvedAddress.province && (
-                  <span className="rounded-md bg-white px-2 py-0.5 border border-zinc-200">
-                    Tỉnh/TP: <b>{resolvedAddress.province}</b>
-                  </span>
+                  <Text as="span" size="2xs" color="secondary" className="rounded-md bg-card px-2 py-0.5 border border-line">
+                    Tỉnh/TP: <Text as="strong" weight="bold" color="default">{resolvedAddress.province}</Text>
+                  </Text>
                 )}
               </div>
             </div>
 
             <Button
-              type="button"
-              variant="primary"
               onClick={handleApply}
-              leftIcon={<Check className="h-4 w-4" />}
-              className={`shrink-0 shadow-xs ${
-                isApplied
-                  ? '!bg-emerald-600 hover:!bg-emerald-700 text-white'
-                  : 'bg-[#2AC1BC] hover:bg-[#25aca7] text-white'
-              }`}
+              leftIcon={<Check />}
+              className="shrink-0"
             >
-              {isApplied ? 'Đã áp dụng vào form!' : 'Áp dụng vào form'}
+              <Text as="span" size="xs" weight="semibold" color="inherit">
+                {isApplied ? 'Đã áp dụng vào form!' : 'Áp dụng vào form'}
+              </Text>
             </Button>
           </div>
         </div>

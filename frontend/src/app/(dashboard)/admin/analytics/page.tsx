@@ -24,9 +24,9 @@ import {
   Bookmark,
   FileText,
   Layers,
-  Sparkles,
   AlertTriangle,
   Inbox,
+  CalendarMinus2,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -45,6 +45,7 @@ import {
 } from 'recharts'
 import { Button } from '@/components/ui/Button'
 import { SelectInput } from '@/components/ui/SelectInput'
+import { DashboardPageHeader } from '@/components/layout'
 
 type ActiveTab = 'revenue' | 'users' | 'properties' | 'listings'
 
@@ -166,131 +167,103 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      {/* Header & Controls using DashboardPageHeader with size='md' action buttons */}
+      <DashboardPageHeader
+        badge={
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-700 tracking-wide uppercase">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-accent-soft text-accent tracking-wide uppercase">
               <TrendingUp className="w-3.5 h-3.5" />
               {t('adminAnalyticsBadge')}
             </span>
-            <span className="text-xs font-semibold text-zinc-400">
+            <span className="text-xs font-semibold text-muted">
               • {t('adminAnalyticsRealtime')}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight mt-1">
-            {t('adminAnalyticsTitle')}
-          </h1>
-          <p className="text-xs text-zinc-500 mt-0.5 max-w-3xl">
-            {t('adminAnalyticsSubtitle')}
-          </p>
-        </div>
+        }
+        title={t('adminAnalyticsTitle')}
+        subtitle={t('adminAnalyticsSubtitle')}
+        actions={
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            {/* Year selector */}
+            <div className="w-32">
+              <SelectInput
+                value={selectedYear}
+                onChange={e => setSelectedYear(Number(e.target.value))}
+                options={[2024, 2025, 2026, 2027].map(y => ({
+                  value: y,
+                  label: t('adminAnalyticsYear', { year: y }),
+                }))}
+              />
+            </div>
 
-        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
-          {/* Year selector */}
-          <div className="w-32">
-            <SelectInput
-              value={selectedYear}
-              onChange={e => setSelectedYear(Number(e.target.value))}
-              options={[2024, 2025, 2026, 2027].map(y => ({
-                value: y,
-                label: t('adminAnalyticsYear', { year: y }),
-              }))}
-            />
+            {/* Refresh button */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => fetchAnalytics(true)}
+              isLoading={refreshing}
+              leftIcon={<RefreshCw />}
+              title={t('adminAnalyticsRefreshTooltip')}
+            >
+              <span className="hidden sm:inline">{t('adminAnalyticsRefresh')}</span>
+            </Button>
+
+            {/* Export button */}
+            <Button
+              size="md"
+              onClick={handleExportReport}
+              leftIcon={<Download />}
+            >
+              <span>{t('adminAnalyticsExport')}</span>
+            </Button>
           </div>
-
-          {/* Refresh button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchAnalytics(true)}
-            isLoading={refreshing}
-            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
-            title={t('adminAnalyticsRefreshTooltip')}
-          >
-            <span className="hidden sm:inline">{t('adminAnalyticsRefresh')}</span>
-          </Button>
-
-          {/* Export button */}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleExportReport}
-            leftIcon={<Download className="w-3.5 h-3.5" />}
-          >
-            <span>{t('adminAnalyticsExport')}</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Error Banner */}
       {error && (
-        <div className="flex items-center justify-between p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-sm">
+        <div className="flex items-center justify-between p-4 bg-danger-soft border border-danger-subtle rounded-2xl text-danger text-sm">
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-danger shrink-0" />
             <span>{error}</span>
           </div>
-          <Button variant="danger" size="sm" onClick={() => fetchAnalytics()}>
+          <Button variant="danger" onClick={() => fetchAnalytics()}>
             {t('adminRetry')}
           </Button>
         </div>
       )}
 
       {/* Main Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-zinc-200 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto">
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'revenue' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('revenue')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'revenue'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
+          leftIcon={<Wallet />}
         >
-          <Wallet className="w-4 h-4" />
           <span>{t('adminAnalyticsTabRevenue')}</span>
         </Button>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'users' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('users')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'users'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
+          leftIcon={<Users />}
         >
-          <Users className="w-4 h-4" />
           <span>{t('adminAnalyticsTabUsers')}</span>
         </Button>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'properties' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('properties')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'properties'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
+          leftIcon={<Building2 />}
         >
-          <Building2 className="w-4 h-4" />
           <span>{t('adminAnalyticsTabProperties')}</span>
         </Button>
 
         <Button
-          variant="ghost"
-          size="sm"
+          variant={activeTab === 'listings' ? 'secondary' : 'ghost'}
           onClick={() => setActiveTab('listings')}
-          className={`flex items-center gap-2 px-4 py-2.5 h-auto rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'listings'
-              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20 hover:bg-orange-500 hover:text-white'
-              : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-          }`}
+          leftIcon={<Layers />}
         >
-          <Layers className="w-4 h-4" />
           <span>{t('adminAnalyticsTabListings')}</span>
         </Button>
       </div>
@@ -303,15 +276,15 @@ export default function AdminAnalyticsPage() {
       {activeTab === 'revenue' && (
         <div className="space-y-6">
           {/* Sub-controls: Granularity Period Toggle */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-zinc-200/80 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-3.5 rounded-2xl border border-line shadow-xs">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-orange-500" />
-              <span className="text-xs font-bold text-zinc-800">
+              <CalendarMinus2 className="w-4 h-4 text-orange-500" />
+              <span className="text-xs font-bold text-foreground">
                 {t('adminAnalyticsRevModeLabel')}
               </span>
             </div>
 
-            <div className="flex items-center p-1 bg-zinc-100 rounded-xl">
+            <div className="flex items-center p-1 bg-card-hover rounded-xl">
               {(
                 [
                   { id: 'month' as const, label: t('adminAnalyticsRevModeMonth') },
@@ -321,14 +294,8 @@ export default function AdminAnalyticsPage() {
               ).map(p => (
                 <Button
                   key={p.id}
-                  variant="ghost"
-                  size="sm"
+                  variant={revenuePeriod === p.id ? 'secondary' : 'ghost'}
                   onClick={() => setRevenuePeriod(p.id)}
-                  className={`px-3 py-1 h-auto text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    revenuePeriod === p.id
-                      ? 'bg-white text-orange-600 shadow-xs hover:bg-white hover:text-orange-600'
-                      : 'text-zinc-600 hover:text-zinc-900'
-                  }`}
                 >
                   {p.label}
                 </Button>
@@ -342,17 +309,17 @@ export default function AdminAnalyticsPage() {
                 {[1, 2, 3].map(i => (
                   <div
                     key={i}
-                    className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse space-y-3"
+                    className="bg-card p-6 rounded-2xl border border-line shadow-xs animate-pulse space-y-3"
                   >
-                    <div className="h-4 bg-zinc-100 rounded-md w-1/2" />
-                    <div className="h-8 bg-zinc-100 rounded-md w-3/4" />
-                    <div className="h-4 bg-zinc-100 rounded-md w-2/3" />
+                    <div className="h-4 bg-card-hover rounded-md w-1/2" />
+                    <div className="h-8 bg-card-hover rounded-md w-3/4" />
+                    <div className="h-4 bg-card-hover rounded-md w-2/3" />
                   </div>
                 ))}
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse h-80" />
-                <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse h-80" />
+                <div className="lg:col-span-2 bg-card p-6 rounded-2xl border border-line shadow-xs animate-pulse h-80" />
+                <div className="bg-card p-6 rounded-2xl border border-line shadow-xs animate-pulse h-80" />
               </div>
             </div>
           ) : (
@@ -360,27 +327,26 @@ export default function AdminAnalyticsPage() {
               {/* Revenue KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* Card 1: Total Platform Revenue */}
-                <div className="relative overflow-hidden bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs hover:border-orange-200 transition-all">
+                <div className="relative overflow-hidden bg-card p-6 rounded-2xl border border-line shadow-xs hover:border-orange-200 transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-muted uppercase tracking-wider">
                       {t('adminAnalyticsNetRevTitle')}
                     </span>
-                    <div className="p-2.5 bg-orange-50 text-orange-600 rounded-xl">
+                    <div className="p-2.5 bg-accent-soft text-orange-600 rounded-xl">
                       <Wallet className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-2xl lg:text-3xl font-black text-zinc-900 tracking-tight">
+                    <span className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
                       {formatCurrency(revenueData?.summary.totalRevenue)}
                     </span>
                   </div>
                   <div className="mt-3 flex items-center gap-2">
                     <span
-                      className={`inline-flex items-center gap-0.5 text-xs font-black px-2 py-0.5 rounded-full ${
-                        (revenueData?.summary.revenueGrowthRate || 0) >= 0
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-rose-50 text-rose-700'
-                      }`}
+                      className={`inline-flex items-center gap-0.5 text-xs font-black px-2 py-0.5 rounded-full ${(revenueData?.summary.revenueGrowthRate || 0) >= 0
+                          ? 'bg-success-soft text-success'
+                          : 'bg-danger-soft text-danger'
+                        }`}
                     >
                       {(revenueData?.summary.revenueGrowthRate || 0) >= 0 ? (
                         <ArrowUpRight className="w-3.5 h-3.5" />
@@ -389,7 +355,7 @@ export default function AdminAnalyticsPage() {
                       )}
                       {revenueData?.summary.revenueGrowthRate || 0}%
                     </span>
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-muted">
                       {t('adminAnalyticsVsPrevPeriod')} (
                       {formatCurrency(revenueData?.summary.previousPeriodRevenue)})
                     </span>
@@ -397,62 +363,62 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 {/* Card 2: Subscription Revenue */}
-                <div className="relative overflow-hidden bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs hover:border-blue-200 transition-all">
+                <div className="relative overflow-hidden bg-card p-6 rounded-2xl border border-line shadow-xs hover:border-blue-200 transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-muted uppercase tracking-wider">
                       {t('adminAnalyticsSubscriptionTitle')}
                     </span>
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                    <div className="p-2.5 bg-info-soft text-info rounded-xl">
                       <Building2 className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-2xl lg:text-3xl font-black text-zinc-900 tracking-tight">
+                    <span className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
                       {formatCurrency(revenueData?.summary.subscriptionRevenue.total)}
                     </span>
-                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-info bg-info-soft px-2 py-0.5 rounded-full">
                       {revenueData?.summary.subscriptionRevenue.percentage || 0}%
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-700 font-semibold">
+                    <span className="px-2 py-0.5 rounded-md bg-card-hover text-foreground/90 font-semibold">
                       Plus: {formatCurrency(revenueData?.summary.subscriptionRevenue.byPlan.plus)}
                     </span>
-                    <span className="px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-700 font-semibold">
+                    <span className="px-2 py-0.5 rounded-md bg-card-hover text-foreground/90 font-semibold">
                       Pro: {formatCurrency(revenueData?.summary.subscriptionRevenue.byPlan.pro)}
                     </span>
                   </div>
                 </div>
 
                 {/* Card 3: Post Credit Purchases */}
-                <div className="relative overflow-hidden bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs hover:border-emerald-200 transition-all">
+                <div className="relative overflow-hidden bg-card p-6 rounded-2xl border border-line shadow-xs hover:border-emerald-200 transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-muted uppercase tracking-wider">
                       {t('adminAnalyticsPostPurchaseTitle')}
                     </span>
-                    <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <div className="p-2.5 bg-success-soft text-success rounded-xl">
                       <FileText className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3 flex items-baseline gap-2">
-                    <span className="text-2xl lg:text-3xl font-black text-zinc-900 tracking-tight">
+                    <span className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
                       {formatCurrency(revenueData?.summary.postPurchaseRevenue.total)}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                       {revenueData?.summary.postPurchaseRevenue.percentage || 0}%
                     </span>
                   </div>
-                  <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted">
                     <span>
                       {t('adminAnalyticsSoldLabel')}:{' '}
-                      <strong className="text-zinc-800">
+                      <strong className="text-foreground">
                         {formatNumber(revenueData?.summary.postPurchaseRevenue.totalCreditsSold)}
                       </strong>{' '}
                       {t('adminAnalyticsCreditsUnit')}
                     </span>
                     <span>
                       {t('adminAnalyticsAovLabel')}{' '}
-                      <strong className="text-zinc-800">
+                      <strong className="text-foreground">
                         {formatCurrency(revenueData?.summary.postPurchaseRevenue.averageOrderValue)}
                       </strong>
                     </span>
@@ -463,13 +429,13 @@ export default function AdminAnalyticsPage() {
               {/* Revenue Charts Row */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Stacked Bar Chart: Revenue Timeline */}
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs">
+                <div className="lg:col-span-2 bg-card p-6 rounded-2xl border border-line shadow-xs">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-sm font-black text-zinc-900">
+                      <h2 className="text-sm font-black text-foreground">
                         {t('adminAnalyticsRevTimelineTitle')}
                       </h2>
-                      <p className="text-xs text-zinc-400 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         {t('adminAnalyticsRevTimelineSubtitle')}
                       </p>
                     </div>
@@ -530,7 +496,7 @@ export default function AdminAnalyticsPage() {
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="flex flex-col h-full items-center justify-center text-xs text-zinc-400 gap-2">
+                      <div className="flex flex-col h-full items-center justify-center text-xs text-muted gap-2">
                         <Inbox className="w-8 h-8 text-zinc-300" />
                         <span>{t('adminAnalyticsNoTimeline')}</span>
                       </div>
@@ -539,12 +505,12 @@ export default function AdminAnalyticsPage() {
                 </div>
 
                 {/* Donut Chart: Revenue Streams Breakdown */}
-                <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+                <div className="bg-card p-6 rounded-2xl border border-line shadow-xs flex flex-col justify-between">
                   <div>
-                    <h2 className="text-sm font-black text-zinc-900">
+                    <h2 className="text-sm font-black text-foreground">
                       {t('adminAnalyticsMonetizationTitle')}
                     </h2>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {t('adminAnalyticsMonetizationSubtitle')}
                     </p>
                   </div>
@@ -588,13 +554,13 @@ export default function AdminAnalyticsPage() {
                     </ResponsiveContainer>
                   </div>
 
-                  <div className="space-y-2 border-t border-zinc-100 pt-3 text-xs">
+                  <div className="space-y-2 border-t border-line pt-3 text-xs">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6]" />
-                        <span className="text-zinc-600">{t('adminAnalyticsPlusSubs')}</span>
+                        <span className="text-muted">{t('adminAnalyticsPlusSubs')}</span>
                       </div>
-                      <span className="font-bold text-zinc-900">
+                      <span className="font-bold text-foreground">
                         {formatCurrency(revenueData?.summary.subscriptionRevenue.byPlan.plus)}
                       </span>
                     </div>
@@ -602,9 +568,9 @@ export default function AdminAnalyticsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#f97316]" />
-                        <span className="text-zinc-600">{t('adminAnalyticsProSubs')}</span>
+                        <span className="text-muted">{t('adminAnalyticsProSubs')}</span>
                       </div>
-                      <span className="font-bold text-zinc-900">
+                      <span className="font-bold text-foreground">
                         {formatCurrency(revenueData?.summary.subscriptionRevenue.byPlan.pro)}
                       </span>
                     </div>
@@ -612,9 +578,9 @@ export default function AdminAnalyticsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
-                        <span className="text-zinc-600">{t('adminAnalyticsPiePostCredits')}</span>
+                        <span className="text-muted">{t('adminAnalyticsPiePostCredits')}</span>
                       </div>
-                      <span className="font-bold text-zinc-900">
+                      <span className="font-bold text-foreground">
                         {formatCurrency(revenueData?.summary.postPurchaseRevenue.total)}
                       </span>
                     </div>
@@ -637,53 +603,52 @@ export default function AdminAnalyticsPage() {
                 {[1, 2, 3, 4].map(i => (
                   <div
                     key={i}
-                    className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse space-y-3"
+                    className="bg-card p-5 rounded-2xl border border-line shadow-xs animate-pulse space-y-3"
                   >
-                    <div className="h-4 bg-zinc-100 rounded-md w-1/2" />
-                    <div className="h-8 bg-zinc-100 rounded-md w-3/4" />
-                    <div className="h-3 bg-zinc-100 rounded-md w-1/3" />
+                    <div className="h-4 bg-card-hover rounded-md w-1/2" />
+                    <div className="h-8 bg-card-hover rounded-md w-3/4" />
+                    <div className="h-3 bg-card-hover rounded-md w-1/3" />
                   </div>
                 ))}
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse h-80" />
+              <div className="bg-card p-6 rounded-2xl border border-line shadow-xs animate-pulse h-80" />
             </div>
           ) : (
             <>
               {/* User Metrics Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTotalUsers')}
                   </span>
                   <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-2xl font-black text-zinc-900">
+                    <span className="text-2xl font-black text-foreground">
                       {formatNumber(userData?.summary.totalUsers)}
                     </span>
                     <span
-                      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${
-                        (userData?.summary.growthRate || 0) >= 0
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-rose-50 text-rose-700'
-                      }`}
+                      className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${(userData?.summary.growthRate || 0) >= 0
+                          ? 'bg-success-soft text-success'
+                          : 'bg-danger-soft text-danger'
+                        }`}
                     >
                       {(userData?.summary.growthRate || 0) >= 0 ? '+' : ''}
                       {userData?.summary.growthRate || 0}%
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     +{formatNumber(userData?.summary.newUsersCurrentPeriod)}{' '}
                     {t('adminAnalyticsNewInPeriod')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTenants')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-blue-600">
+                  <div className="mt-2 text-2xl font-black text-info">
                     {formatNumber(userData?.summary.byRole.tenant)}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {userData?.summary.totalUsers
                       ? `${Math.round(((userData.summary.byRole.tenant || 0) / userData.summary.totalUsers) * 100)}%`
                       : '0%'}{' '}
@@ -691,14 +656,14 @@ export default function AdminAnalyticsPage() {
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsLandlords')}
                   </span>
                   <div className="mt-2 text-2xl font-black text-orange-600">
                     {formatNumber(userData?.summary.byRole.landlord)}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {userData?.summary.totalUsers
                       ? `${Math.round(((userData.summary.byRole.landlord || 0) / userData.summary.totalUsers) * 100)}%`
                       : '0%'}{' '}
@@ -706,17 +671,17 @@ export default function AdminAnalyticsPage() {
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsStaffAndAgents')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-emerald-600">
+                  <div className="mt-2 text-2xl font-black text-success">
                     {formatNumber(
                       (userData?.summary.byRole.employee || 0) +
-                        (userData?.summary.byRole.leasing_agent || 0),
+                      (userData?.summary.byRole.leasing_agent || 0),
                     )}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {userData?.summary.byRole.employee || 0} {t('adminAnalyticsStaffUnit')} •{' '}
                     {userData?.summary.byRole.leasing_agent || 0} {t('adminAnalyticsAgentsUnit')}
                   </p>
@@ -724,13 +689,13 @@ export default function AdminAnalyticsPage() {
               </div>
 
               {/* User Registration Timeline Chart */}
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs">
+              <div className="bg-card p-6 rounded-2xl border border-line shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-sm font-black text-zinc-900">
+                    <h2 className="text-sm font-black text-foreground">
                       {t('adminAnalyticsUserTrendTitle')}
                     </h2>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {t('adminAnalyticsUserTrendSubtitle')}
                     </p>
                   </div>
@@ -771,7 +736,7 @@ export default function AdminAnalyticsPage() {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex flex-col h-full items-center justify-center text-xs text-zinc-400 gap-2">
+                    <div className="flex flex-col h-full items-center justify-center text-xs text-muted gap-2">
                       <Inbox className="w-8 h-8 text-zinc-300" />
                       <span>{t('adminAnalyticsNoUserData')}</span>
                     </div>
@@ -794,85 +759,85 @@ export default function AdminAnalyticsPage() {
                 {[1, 2, 3, 4].map(i => (
                   <div
                     key={i}
-                    className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse space-y-3"
+                    className="bg-card p-5 rounded-2xl border border-line shadow-xs animate-pulse space-y-3"
                   >
-                    <div className="h-4 bg-zinc-100 rounded-md w-1/2" />
-                    <div className="h-8 bg-zinc-100 rounded-md w-3/4" />
-                    <div className="h-3 bg-zinc-100 rounded-md w-1/3" />
+                    <div className="h-4 bg-card-hover rounded-md w-1/2" />
+                    <div className="h-8 bg-card-hover rounded-md w-3/4" />
+                    <div className="h-3 bg-card-hover rounded-md w-1/3" />
                   </div>
                 ))}
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse h-64" />
+              <div className="bg-card p-6 rounded-2xl border border-line shadow-xs animate-pulse h-64" />
             </div>
           ) : (
             <>
               {/* Properties KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsBoardingHouses')}
                   </span>
                   <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-2xl font-black text-zinc-900">
+                    <span className="text-2xl font-black text-foreground">
                       {formatNumber(propertyData?.summary.totalHouses)}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                       +{formatNumber(propertyData?.summary.newHousesCurrentPeriod)}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {propertyData?.summary.housesByStatus.active} {t('adminAnalyticsHousesActive')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTotalRooms')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-blue-600">
+                  <div className="mt-2 text-2xl font-black text-info">
                     {formatNumber(propertyData?.summary.totalRooms)}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {propertyData?.summary.roomsByStatus.available}{' '}
                     {t('adminAnalyticsRoomsAvailable')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsOccupancyRate')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-emerald-600">
+                  <div className="mt-2 text-2xl font-black text-success">
                     {propertyData?.summary.occupancyRate || 0}%
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {propertyData?.summary.roomsByStatus.occupied} {t('adminAnalyticsRoomsOccupied')}{' '}
                     • {propertyData?.summary.roomsByStatus.deposited}{' '}
                     {t('adminAnalyticsRoomsDeposited')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsMaintenanceRooms')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-amber-600">
+                  <div className="mt-2 text-2xl font-black text-warning">
                     {propertyData?.summary.roomsByStatus.maintainace || 0}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {t('adminAnalyticsRequiresAttention')}
                   </p>
                 </div>
               </div>
 
               {/* Regional Breakdown Table */}
-              <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xs overflow-hidden">
-                <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+              <div className="bg-card rounded-2xl border border-line shadow-xs overflow-hidden">
+                <div className="p-5 border-b border-line flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-black text-zinc-900">
+                    <h2 className="text-sm font-black text-foreground">
                       {t('adminAnalyticsRegionalTitle')}
                     </h2>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {t('adminAnalyticsRegionalSubtitle')}
                     </p>
                   </div>
@@ -881,7 +846,7 @@ export default function AdminAnalyticsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-zinc-50 border-b border-zinc-100 text-[11px] font-black text-zinc-400 uppercase tracking-wider">
+                      <tr className="bg-surface border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
                         <th className="py-3 px-4">{t('adminAnalyticsThRegion')}</th>
                         <th className="py-3 px-4">{t('adminAnalyticsThHouses')}</th>
                         <th className="py-3 px-4">{t('adminAnalyticsThRooms')}</th>
@@ -889,24 +854,24 @@ export default function AdminAnalyticsPage() {
                         <th className="py-3 px-4">{t('adminAnalyticsThShare')}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 text-xs text-zinc-700">
+                    <tbody className="divide-y divide-line text-xs text-foreground/90">
                       {propertyData?.summary.regions && propertyData.summary.regions.length > 0 ? (
                         propertyData.summary.regions.map((reg, idx) => (
-                          <tr key={idx} className="hover:bg-zinc-50/80 transition-colors">
-                            <td className="py-3 px-4 font-bold text-zinc-900">{reg.name}</td>
+                          <tr key={idx} className="transition-colors">
+                            <td className="py-3 px-4 font-bold text-foreground">{reg.name}</td>
                             <td className="py-3 px-4">{formatNumber(reg.houses)}</td>
                             <td className="py-3 px-4 font-semibold">{formatNumber(reg.rooms)}</td>
                             <td className="py-3 px-4">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-success-soft text-success">
                                 {reg.occupancyRate}%
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-zinc-500">{reg.share}</td>
+                            <td className="py-3 px-4 text-muted">{reg.share}</td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="py-8 text-center text-xs text-zinc-400">
+                          <td colSpan={5} className="py-8 text-center text-xs text-muted">
                             <div className="flex flex-col items-center justify-center gap-1.5">
                               <Inbox className="w-6 h-6 text-zinc-300" />
                               <span>{t('adminAnalyticsNoRegionalData')}</span>
@@ -934,79 +899,79 @@ export default function AdminAnalyticsPage() {
                 {[1, 2, 3, 4].map(i => (
                   <div
                     key={i}
-                    className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse space-y-3"
+                    className="bg-card p-5 rounded-2xl border border-line shadow-xs animate-pulse space-y-3"
                   >
-                    <div className="h-4 bg-zinc-100 rounded-md w-1/2" />
-                    <div className="h-8 bg-zinc-100 rounded-md w-3/4" />
-                    <div className="h-3 bg-zinc-100 rounded-md w-1/3" />
+                    <div className="h-4 bg-card-hover rounded-md w-1/2" />
+                    <div className="h-8 bg-card-hover rounded-md w-3/4" />
+                    <div className="h-3 bg-card-hover rounded-md w-1/3" />
                   </div>
                 ))}
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs animate-pulse h-80" />
+              <div className="bg-card p-6 rounded-2xl border border-line shadow-xs animate-pulse h-80" />
             </div>
           ) : (
             <>
               {/* Listings KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTotalListings')}
                   </span>
                   <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-2xl font-black text-zinc-900">
+                    <span className="text-2xl font-black text-foreground">
                       {formatNumber(listingData?.summary.totalPosts)}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-success bg-success-soft px-2 py-0.5 rounded-full">
                       +{formatNumber(listingData?.summary.newPostsCurrentPeriod)}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {listingData?.summary.byStatus.posted} {t('adminAnalyticsActiveOnBhrp')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsTotalViews')}
                   </span>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-blue-600">
+                    <span className="text-2xl font-black text-info">
                       {formatNumber(listingData?.summary.totalViews)}
                     </span>
                     <Eye className="w-4 h-4 text-blue-400" />
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {t('adminAnalyticsAverageLabel')}:{' '}
-                    <strong className="text-zinc-800">
+                    <strong className="text-foreground">
                       {listingData?.summary.averageViewsPerPost || 0}
                     </strong>{' '}
                     {t('adminAnalyticsViewsPerPost')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsBookmarks')}
                   </span>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-rose-600">
+                    <span className="text-2xl font-black text-danger">
                       {formatNumber(listingData?.summary.totalSaved)}
                     </span>
                     <Bookmark className="w-4 h-4 text-rose-400" />
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {t('adminAnalyticsTenantInterest')}
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <div className="bg-card p-5 rounded-2xl border border-line shadow-xs">
+                  <span className="text-xs font-bold text-muted uppercase tracking-wider">
                     {t('adminAnalyticsSourceQuota')}
                   </span>
-                  <div className="mt-2 text-2xl font-black text-emerald-600">
+                  <div className="mt-2 text-2xl font-black text-success">
                     {formatNumber(listingData?.summary.bySourceType.purchased)}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-2">
+                  <p className="text-xs text-muted mt-2">
                     {t('adminAnalyticsPurchasedCredits')} •{' '}
                     {formatNumber(listingData?.summary.bySourceType.free_quote)}{' '}
                     {t('adminAnalyticsFree')}
@@ -1015,13 +980,13 @@ export default function AdminAnalyticsPage() {
               </div>
 
               {/* Listings Volume Timeline Chart */}
-              <div className="bg-white p-6 rounded-2xl border border-zinc-200/80 shadow-xs">
+              <div className="bg-card p-6 rounded-2xl border border-line shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-sm font-black text-zinc-900">
+                    <h2 className="text-sm font-black text-foreground">
                       {t('adminAnalyticsListingTrendTitle')}
                     </h2>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {t('adminAnalyticsListingTrendSubtitle')}
                     </p>
                   </div>
@@ -1070,7 +1035,7 @@ export default function AdminAnalyticsPage() {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex flex-col h-full items-center justify-center text-xs text-zinc-400 gap-2">
+                    <div className="flex flex-col h-full items-center justify-center text-xs text-muted gap-2">
                       <Inbox className="w-8 h-8 text-zinc-300" />
                       <span>{t('adminAnalyticsNoListingData')}</span>
                     </div>

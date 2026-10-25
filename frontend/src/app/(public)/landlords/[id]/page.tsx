@@ -27,12 +27,14 @@ import {
 import { formatVND } from '@/utils'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import {
   postService,
   type PosterProfileResponse,
   type PublicPostListing,
 } from '@/services/post.service'
 import { api } from '@/services/api'
+import { Avatar } from '@/components/ui'
 
 const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
@@ -63,17 +65,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
   const [copiedPhone, setCopiedPhone] = useState(false)
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [isChatLoading, setIsChatLoading] = useState(false)
-  const [toastMessage, setToastMessage] = useState<{
-    type: 'success' | 'error' | 'info'
-    text: string
-  } | null>(null)
-
-  // Auto-dismiss toast notification
-  useEffect(() => {
-    if (!toastMessage) return
-    const timer = setTimeout(() => setToastMessage(null), 3000)
-    return () => clearTimeout(timer)
-  }, [toastMessage])
+  const { toast } = useToast()
 
   useEffect(() => {
     let isMounted = true
@@ -125,10 +117,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
 
     // Check if current user and poster are the same
     if (currentUser?.id === profile.id || currentUser?.id === posterId) {
-      setToastMessage({
-        type: 'error',
-        text: t('guestPosterProfileCannotMessageSelf'),
-      })
+      toast.error(t('guestPosterProfileCannotMessageSelf'))
       return
     }
 
@@ -146,10 +135,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
       }
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || err?.message || 'Không thể tạo cuộc trò chuyện'
-      setToastMessage({
-        type: 'error',
-        text: errMsg,
-      })
+      toast.error(errMsg)
     } finally {
       setIsChatLoading(false)
     }
@@ -167,27 +153,27 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
     : ''
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-50/60 pb-24 animate-in fade-in duration-300">
+    <div className="flex flex-col min-h-screen bg-surface/60 pb-24 animate-in fade-in duration-300">
       {/* Top Banner / Breadcrumbs */}
-      <div className="bg-white border-b border-zinc-200/80 sticky top-0 z-20 backdrop-blur-md bg-white/90">
+      <div className="bg-card border-b border-line sticky top-0 z-20 backdrop-blur-md bg-card/90">
         <div className="mx-auto max-w-7xl px-4 py-3.5 sm:px-6 lg:px-8 flex items-center justify-between">
           <Link
             href="/rooms"
-            className="inline-flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 text-[#2AC1BC]" />
+            <ArrowLeft className="w-4 h-4 text-primary" />
             <span>{t('guestPosterProfileBackToRooms')}</span>
           </Link>
-          <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-400">
-            <Link href="/" className="hover:text-zinc-700">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-muted">
+            <Link href="/" className="hover:text-foreground">
               Trang chủ
             </Link>
             <span>/</span>
-            <Link href="/rooms" className="hover:text-zinc-700">
+            <Link href="/rooms" className="hover:text-foreground">
               Phòng trọ
             </Link>
             <span>/</span>
-            <span className="text-zinc-700">
+            <span className="text-foreground/90">
               {profile?.username ?? t('guestPosterProfileTitle')}
             </span>
           </div>
@@ -199,19 +185,19 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
         {/* Loading State */}
         {isLoading && (
           <div className="space-y-6">
-            <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-xs animate-pulse flex flex-col md:flex-row gap-6 items-center">
-              <div className="w-28 h-28 rounded-full bg-zinc-200 shrink-0" />
+            <div className="bg-card rounded-3xl p-8 border border-line shadow-xs animate-pulse flex flex-col md:flex-row gap-6 items-center">
+              <div className="w-28 h-28 rounded-full bg-line shrink-0" />
               <div className="flex-1 space-y-3 w-full">
-                <div className="h-6 bg-zinc-200 rounded w-1/3" />
-                <div className="h-4 bg-zinc-200 rounded w-1/4" />
-                <div className="h-4 bg-zinc-200 rounded w-2/3" />
+                <div className="h-6 bg-line rounded w-1/3" />
+                <div className="h-4 bg-line rounded w-1/4" />
+                <div className="h-4 bg-line rounded w-2/3" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map(i => (
                 <div
                   key={i}
-                  className="bg-white rounded-3xl p-4 border border-zinc-200/80 h-72 animate-pulse"
+                  className="bg-card rounded-3xl p-4 border border-line h-72 animate-pulse"
                 />
               ))}
             </div>
@@ -220,9 +206,9 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
 
         {/* Error State */}
         {!isLoading && error && (
-          <div className="bg-white rounded-3xl p-12 border border-zinc-200/80 text-center space-y-4 max-w-lg mx-auto shadow-xs">
-            <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
-            <h3 className="font-extrabold text-lg text-zinc-900">{error}</h3>
+          <div className="bg-card rounded-3xl p-12 border border-line text-center space-y-4 max-w-lg mx-auto shadow-xs">
+            <AlertCircle className="w-12 h-12 text-danger mx-auto" />
+            <h3 className="font-extrabold text-lg text-foreground">{error}</h3>
             <button
               onClick={() => window.location.reload()}
               className="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer"
@@ -236,22 +222,18 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
         {!isLoading && !error && profile && (
           <>
             {/* Poster Header Hero Card */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/80 shadow-xs overflow-hidden relative">
+            <div className="bg-card rounded-3xl p-6 sm:p-8 border border-line shadow-xs overflow-hidden relative">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10">
                 {/* Avatar */}
                 <div className="relative shrink-0">
-                  {profile.avatarUrl ? (
-                    <img
-                      src={profile.avatarUrl}
-                      alt={profile.username ?? 'Poster Avatar'}
-                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-4 border-white shadow-xl shadow-zinc-950/10"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-[#2AC1BC] to-[#20928e] text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-[#2AC1BC]/20">
-                      {profile.username?.charAt(0)?.toUpperCase() ?? 'P'}
-                    </div>
-                  )}
-                  <span className="absolute -bottom-1.5 -right-1.5 p-1.5 bg-emerald-500 text-white rounded-full shadow-md">
+                  <Avatar
+                    src={profile.avatarUrl}
+                    name={profile.username}
+                    size="3xl"
+                    shape="rounded"
+                    className="border-4 border-card shadow-xl shadow-zinc-950/10"
+                  />
+                  <span className="absolute -bottom-1.5 -right-1.5 p-1.5 bg-emerald-500 text-white rounded-full shadow-md z-10">
                     <ShieldCheck className="w-4 h-4" />
                   </span>
                 </div>
@@ -259,25 +241,25 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                 {/* Info Column */}
                 <div className="flex-1 text-center md:text-left space-y-3">
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-                    <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                       {profile.username ?? t('guestRoomsDefaultLandlord')}
                     </h1>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-xs font-extrabold rounded-full">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary text-xs font-extrabold rounded-full">
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{t('guestPosterProfileVerified')}</span>
                     </span>
                   </div>
 
                   {/* Metadata Chips */}
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-semibold text-zinc-500">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-semibold text-muted">
                     <span className="flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+                      <Calendar className="w-4 h-4 text-primary" />
                       {t('guestPosterProfileMemberSince', {
                         date: formattedJoinedDate,
                       })}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Building className="w-4 h-4 text-[#2AC1BC]" />
+                      <Building className="w-4 h-4 text-primary" />
                       {t('guestPosterProfileTotalListings', {
                         count: profile.postCount,
                       })}
@@ -286,15 +268,15 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
 
                   {/* Bio Description */}
                   <div className="pt-2">
-                    <p className="text-xs sm:text-sm text-zinc-600 font-medium leading-relaxed max-w-2xl bg-zinc-50 p-3.5 rounded-2xl border border-zinc-100">
+                    <p className="text-xs sm:text-sm text-muted font-medium leading-relaxed max-w-2xl bg-surface p-3.5 rounded-2xl border border-line">
                       {profile.bio || t('guestPosterProfileDefaultBio')}
                     </p>
                   </div>
                 </div>
 
                 {/* Actions / Contact Status Card */}
-                <div className="w-full md:w-80 shrink-0 bg-zinc-50/80 rounded-2xl p-5 border border-zinc-200/70 space-y-3.5">
-                  <span className="text-xs font-extrabold text-zinc-900 block border-b border-zinc-200/60 pb-2">
+                <div className="w-full md:w-80 shrink-0 bg-surface/80 rounded-2xl p-5 border border-line space-y-3.5">
+                  <span className="text-xs font-extrabold text-foreground block border-b border-line pb-2">
                     {t('guestPosterProfileContactTitle')}
                   </span>
 
@@ -302,21 +284,21 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                   {canSeeContact ? (
                     <div className="space-y-3">
                       {profile.phoneNumber && (
-                        <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-zinc-200/80">
-                          <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 truncate">
-                            <Phone className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                        <div className="flex items-center justify-between p-2.5 bg-card rounded-xl border border-line">
+                          <div className="flex items-center gap-2 text-xs font-bold text-foreground truncate">
+                            <Phone className="w-4 h-4 text-primary shrink-0" />
                             <span className="truncate">{profile.phoneNumber}</span>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <a
                               href={`tel:${profile.phoneNumber}`}
-                              className="px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                              className="px-2.5 py-1 bg-primary hover:bg-[#22a9a4] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
                             >
                               {t('guestPosterProfileCall')}
                             </a>
                             <button
                               onClick={() => handleCopy(profile.phoneNumber!, 'phone')}
-                              className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                              className="p-1.5 text-muted hover:text-foreground rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
                               title={t('guestPosterProfileCopy')}
                             >
                               {copiedPhone ? (
@@ -330,14 +312,14 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                       )}
 
                       {profile.email && (
-                        <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-zinc-200/80">
-                          <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 truncate">
-                            <Mail className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+                        <div className="flex items-center justify-between p-2.5 bg-card rounded-xl border border-line">
+                          <div className="flex items-center gap-2 text-xs font-bold text-foreground truncate">
+                            <Mail className="w-4 h-4 text-primary shrink-0" />
                             <span className="truncate">{profile.email}</span>
                           </div>
                           <button
                             onClick={() => handleCopy(profile.email!, 'email')}
-                            className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
+                            className="p-1.5 text-muted hover:text-foreground rounded-lg hover:bg-card-hover transition-colors cursor-pointer shrink-0"
                             title={t('guestPosterProfileCopy')}
                           >
                             {copiedEmail ? (
@@ -355,7 +337,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                           disabled={isChatLoading}
                           className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                          <MessageSquare className="w-3.5 h-3.5 text-primary" />
                           <span>
                             {isChatLoading
                               ? t('guestPosterProfileChatLoading')
@@ -368,8 +350,8 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                     /* Contact IS PROTECTED (No active conversation yet or anonymous) */
                     <div className="space-y-3">
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-1.5">
-                        <div className="flex items-center gap-1.5 text-amber-700 font-extrabold text-[11px]">
-                          <Lock className="w-3.5 h-3.5 text-amber-600" />
+                        <div className="flex items-center gap-1.5 text-warning font-extrabold text-[11px]">
+                          <Lock className="w-3.5 h-3.5 text-warning" />
                           <span>{t('guestPosterProfileContactProtectedTitle')}</span>
                         </div>
                         <p className="text-[11px] text-amber-800/80 font-medium leading-relaxed">
@@ -381,7 +363,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                         <button
                           onClick={handleStartChat}
                           disabled={isChatLoading}
-                          className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-md shadow-[#2AC1BC]/20 flex items-center justify-center gap-2"
+                          className="w-full py-3 bg-primary hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-all cursor-pointer shadow-md shadow-primary/20 flex items-center justify-center gap-2"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>
@@ -395,7 +377,7 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                           href={`/login?redirect=/landlords/${posterId}`}
                           className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
                         >
-                          <Lock className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                          <Lock className="w-3.5 h-3.5 text-primary" />
                           <span>{t('guestPosterProfileLoginToContact')}</span>
                         </Link>
                       )}
@@ -407,11 +389,11 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
 
             {/* Active Rental Listings Section */}
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3.5">
-                <h2 className="text-lg sm:text-xl font-black text-zinc-900 flex items-center gap-2.5">
-                  <Home className="w-5 h-5 text-[#2AC1BC]" />
+              <div className="flex items-center justify-between border-b border-line pb-3.5">
+                <h2 className="text-lg sm:text-xl font-black text-foreground flex items-center gap-2.5">
+                  <Home className="w-5 h-5 text-primary" />
                   <span>{t('guestPosterProfileActiveListingsTitle')}</span>
-                  <span className="text-xs font-extrabold px-2.5 py-0.5 bg-zinc-200 text-zinc-700 rounded-full">
+                  <span className="text-xs font-extrabold px-2.5 py-0.5 bg-line text-foreground/90 rounded-full">
                     {profile.activeListings.length}
                   </span>
                 </h2>
@@ -419,9 +401,9 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
 
               {/* Listings Grid */}
               {profile.activeListings.length === 0 ? (
-                <div className="bg-white rounded-3xl p-12 border border-zinc-200/80 text-center space-y-3">
+                <div className="bg-card rounded-3xl p-12 border border-line text-center space-y-3">
                   <Home className="w-10 h-10 text-zinc-300 mx-auto" />
-                  <p className="text-xs sm:text-sm font-semibold text-zinc-500">
+                  <p className="text-xs sm:text-sm font-semibold text-muted">
                     {t('guestPosterProfileNoListings')}
                   </p>
                 </div>
@@ -441,10 +423,10 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                             router.push(`/rooms/${listing.id}`)
                           }
                         }}
-                        className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group cursor-pointer"
+                        className="bg-card rounded-3xl border border-line shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group cursor-pointer"
                       >
                         {/* Image banner */}
-                        <div className="relative aspect-[16/10] overflow-hidden bg-zinc-100">
+                        <div className="relative aspect-[16/10] overflow-hidden bg-card-hover">
                           <img
                             src={imageUrl}
                             alt={listing.title}
@@ -461,43 +443,43 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
                         {/* Details */}
                         <div className="p-5 flex-1 flex flex-col justify-between space-y-3.5">
                           <div className="space-y-1.5">
-                            <h3 className="font-extrabold text-zinc-900 text-sm leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                            <h3 className="font-extrabold text-foreground text-sm leading-snug group-hover:text-primary transition-colors line-clamp-1">
                               <Link
                                 href={`/rooms/${listing.id}`}
                                 onClick={e => e.stopPropagation()}
-                                className="hover:text-[#2AC1BC] transition-colors"
+                                className="hover:text-primary transition-colors"
                               >
                                 {listing.title}
                               </Link>
                             </h3>
 
                             {address && (
-                              <p className="flex items-center text-xs text-zinc-400 font-semibold gap-1 truncate">
-                                <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                              <p className="flex items-center text-xs text-muted font-semibold gap-1 truncate">
+                                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                                 <span className="truncate">{address}</span>
                               </p>
                             )}
 
                             {listing.room?.area && (
-                              <span className="text-[11px] text-zinc-400 font-medium flex items-center gap-1">
-                                <Maximize2 className="w-3 h-3 text-[#2AC1BC] shrink-0" />
+                              <span className="text-[11px] text-muted font-medium flex items-center gap-1">
+                                <Maximize2 className="w-3 h-3 text-primary shrink-0" />
                                 {listing.room.area} m²
                               </span>
                             )}
                           </div>
 
                           {/* Price and button */}
-                          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                          <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                             <div>
-                              <span className="text-lg font-black text-rose-500">
+                              <span className="text-lg font-black text-danger">
                                 {formatVND(listing.depositAmount)}
                               </span>
-                              <span className="text-[11px] text-zinc-400 font-normal">
+                              <span className="text-[11px] text-muted font-normal">
                                 {' '}
                                 {t('guestRoomsMonth')}
                               </span>
                             </div>
-                            <span className="px-3 py-1.5 bg-zinc-900 group-hover:bg-[#2AC1BC] text-white text-[11px] font-bold rounded-xl transition-all shrink-0">
+                            <span className="px-3 py-1.5 bg-zinc-900 group-hover:bg-primary text-white text-[11px] font-bold rounded-xl transition-all shrink-0">
                               {t('guestRoomsDetailBtn')}
                             </span>
                           </div>
@@ -511,36 +493,6 @@ export default function LandlordProfilePage({ params }: { params: Promise<{ id: 
           </>
         )}
       </div>
-
-      {/* ─── Toast Feedback Notification ──────────────────────────────────── */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
-          <div
-            className={`px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2.5 text-xs font-bold border backdrop-blur-md ${
-              toastMessage.type === 'success'
-                ? 'bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25'
-                : toastMessage.type === 'error'
-                  ? 'bg-rose-500 text-white border-rose-400 shadow-rose-950/25'
-                  : 'bg-zinc-900/95 text-white border-zinc-700 shadow-zinc-950/25'
-            }`}
-          >
-            {toastMessage.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-            ) : toastMessage.type === 'error' ? (
-              <AlertCircle className="w-4 h-4 text-white shrink-0" />
-            ) : (
-              <Info className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-            )}
-            <span>{toastMessage.text}</span>
-            <button
-              onClick={() => setToastMessage(null)}
-              className="ml-2 p-1 hover:bg-white/20 rounded-lg text-zinc-300 hover:text-white cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

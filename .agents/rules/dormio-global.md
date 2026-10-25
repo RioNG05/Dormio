@@ -196,6 +196,17 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 4. **Namespaces**: Place strings in their appropriate namespace: `common`, `nav`, `footer`, `auth`, `guest`, `landlord`, `tenant`, `employee`, `admin`. Keep `vi.ts` and `en.ts` strictly synchronized with matching key names.
 5. **No hardcoded user-facing strings**: Every user-visible string (labels, buttons, placeholders, headings, toast/error messages, aria-labels) **MUST** use the translation function `t(...)`.
 
+### Standardized Business Error Codes & Client i18n Mapping (MANDATORY)
+
+1. **Backend Error Codes**: All domain/business logic rejections MUST throw `BusinessException` with a defined code from `BusinessErrorCode` enum (`src/common/enums/business-error-code.enum.ts`):
+   - Prefixes by domain: `AUTH_*`, `TIER_*`, `HOUSE_*`, `ROOM_*`, `CONTRACT_*`, `INVOICE_*`, `PAYMENT_*`, `METER_*`, `ATTEND_*`, `COMMON_*`.
+   - Never throw plain ad-hoc error strings without a typed error code.
+   - All codes and exception messages must be strictly in English.
+2. **Frontend Translation**:
+   - Every `BusinessErrorCode` MUST have matching localization strings in `frontend/i8n/vi/errors.ts` and `frontend/i8n/en/errors.ts`.
+   - Never inspect error messages on the client using `message.includes(...)` or regex matching.
+   - Always use `resolveErrorMessage(err, tErrors, fallbackMessage)` from `@/utils` to guarantee fully localized display strings.
+
 ---
 
 ## Language Rules
@@ -204,6 +215,40 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 - **Frontend (Next.js)**: All source code (variables, functions, components, hooks, types) MUST be in **English**. User-visible strings MUST be served via `useTranslations` from `frontend/i8n/` (`vi.ts`, `en.ts`) — **never inline ternary operators or hardcoded in source files**.
 - **Spec documents** (`docs/spec/*.md`): Vietnamese is acceptable since they target internal stakeholders.
 - **This rules file and AGENTS.md files**: English.
+
+---
+
+
+### Mandatory Frontend Standards (MANDATORY)
+
+Every frontend page, layout, modal, and component MUST strictly satisfy the following 5 requirements:
+
+1. **Responsive Design (Top Priority)**:
+   - Mobile-first approach: interfaces must render seamlessly across mobile (< 640px), tablet (640px - 1024px), and desktop (> 1024px).
+   - Dialogs/Modals must use responsive sizes with internal scrolling (`max-h-[85vh] overflow-y-auto`) to prevent overflow on mobile.
+   - Tables must be enclosed in horizontally scrollable containers (`overflow-x-auto`) without breaking parent layouts.
+   - Action headers, button groups, and filter toolbars must flex-wrap or switch to `flex-col sm:flex-row` on smaller viewports.
+   - Grids must fluidly scale: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
+
+2. **UI Component Reuse (Highest Priority)**:
+   - Strictly reuse shared components from `@/components/ui/`:
+     - Modals & Dialogs: Use `<Modal>` (`size`, `title`, `description`, `icon`, `footer`) instead of raw `fixed inset-0` divs.
+     - Empty states: Use `<EmptyState>` (`icon`, `title`, `description`, `action`) instead of custom blank divs.
+     - Controls: Use `<Button>`, `<TextInput>`, `<SelectInput>`, `<DateInput>`, `<NumberInput>`, `<TextareaInput>`, `<SearchInput>`, `<Switch>`, `<Checkbox>`.
+     - Data display: Use `<Card>`, `<TableRow>`, `<Chip>`, `<Text>`, `<Avatar>`, `<Breadcrumb>`, `<Pagination>`, `<ViewModeToggle>`, `<FilterToolbar>`.
+   - Never write redundant custom HTML elements or inline modal backdrops when a standardized UI component exists.
+
+3. **Dark Mode Fidelity**:
+   - Strictly use semantic design tokens: `bg-background`, `bg-card`, `bg-surface`, `bg-card-hover`, `text-foreground`, `text-muted`, `border-line`, `bg-primary-soft`, `text-primary`, `bg-success-soft`, `text-success`, `bg-warning-soft`, `text-warning`, `bg-danger-soft`, `text-danger`.
+   - Never use hardcoded light-only colors (`#fff`, `bg-white`, `text-gray-900`, `border-gray-200`, `bg-gray-50`) without corresponding dark mode classes or tokens.
+
+4. **100% Centralized i18n (Rule #14)**:
+   - Strictly NO inline ternaries (`isEn ? "..." : "..."`) and NO hardcoded user-visible strings in JSX.
+   - Every single user-facing label, button, placeholder, error, toast, tooltip, empty state title/desc must be declared in both `frontend/i8n/vi/` and `frontend/i8n/en/` and accessed via `useTranslations(namespace)`.
+
+5. **Explicit Loading & Empty States**:
+   - Every asynchronous page, tab, list, table, and modal MUST render polished loading states (skeletons or spinners with status text) while fetching data.
+   - Every list, table, and query result MUST render an informative empty state using `<EmptyState>` with an icon, title, description, and primary action button when zero records are returned.
 
 ---
 
@@ -220,4 +265,10 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 - Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.
 - Do NOT handle i18n messages directly on pages/components using inline ternary operators (e.g., `isEn ? ... : ...`) or hardcoded strings — all translations MUST be defined in `frontend/i8n/` (`vi.ts`, `en.ts`) and accessed via `useTranslations`.
 - Do NOT bypass the platform's central payOS gateway for financial transactions — all monetary payments (invoices, platform deposits, subscriptions, post purchases) MUST go through payOS.
-
+- Do NOT throw ad-hoc domain errors without a typed `BusinessErrorCode` in backend, and do NOT parse client error strings with `.includes(...)` in frontend — always use `BusinessException` and `resolveErrorMessage()`.
+- Do NOT use `isPrimary` on tenant contracts — all co-tenants share equal rights and permissions.
+- Do NOT allow contract creation for rooms without active occupants or with unassociated phone numbers — enforce Room-First Contract Creation.
+- Do NOT build custom modal overlays with raw `fixed inset-0` HTML divs — always use `<Modal>` from `@/components/ui/Modal`.
+- Do NOT build custom empty states with raw divs — always use `<EmptyState>` from `@/components/ui/EmptyState`.
+- Do NOT hardcode colors or ignore dark mode — always use semantic design tokens (`bg-card`, `bg-surface`, `text-foreground`, `border-line`, etc.).
+- Do NOT create non-responsive layouts, fixed desktop-only pixel widths, or modals that overflow mobile viewports.

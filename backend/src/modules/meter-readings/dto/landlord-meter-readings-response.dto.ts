@@ -18,7 +18,7 @@ export class LandlordActiveMeteredServiceItemDto {
   @ApiProperty({ description: 'Service UUID' })
   serviceId: string
 
-  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)', example: 'Điện' })
+  @ApiProperty({ description: 'Service name (e.g. Electricity, Water)', example: 'Electricity' })
   serviceName: string
 
   @ApiProperty({ description: 'Unit price per unit', example: 3500 })
@@ -63,7 +63,7 @@ export class LandlordMeterReadingServiceItemDto {
   @ApiProperty({ description: 'Service UUID' })
   serviceId: string
 
-  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)' })
+  @ApiProperty({ description: 'Service name (e.g. Electricity, Water)' })
   serviceName: string
 
   @ApiProperty({ description: 'Unit', example: 'kWh' })
@@ -95,7 +95,7 @@ export class LandlordMeterReadingHistoryItemDto {
   @ApiProperty({ description: 'History record UUID' })
   id: string
 
-  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)' })
+  @ApiProperty({ description: 'Service name (e.g. Electricity, Water)' })
   serviceName: string
 
   @ApiPropertyOptional({ description: 'Old reading value', nullable: true })
@@ -112,7 +112,7 @@ export class LandlordMeterReadingHistoryItemDto {
 }
 
 export class LandlordMeterEditActionChangeDto {
-  @ApiProperty({ description: 'Service name (e.g. Điện, Nước)' })
+  @ApiProperty({ description: 'Service name (e.g. Electricity, Water)' })
   serviceName: string
 
   @ApiPropertyOptional({ description: 'Old reading value', nullable: true })
@@ -149,7 +149,7 @@ export class LandlordMeterPeriodHistoryDto {
   })
   id: string
 
-  @ApiProperty({ description: 'Period label (e.g. Tháng 09/2026)', example: 'Tháng 09/2026' })
+  @ApiProperty({ description: 'Period label (e.g. Month 09/2026)', example: 'Month 09/2026' })
   period: string
 
   @ApiProperty({ description: 'Formatted date string', example: '01/09/2026 08:00' })

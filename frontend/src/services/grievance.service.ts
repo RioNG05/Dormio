@@ -33,9 +33,11 @@ export interface CreateGrievancePayload {
   description: string
   priority?: GrievancePriority
   imageUrls?: string[]
+  contractId?: string
+  roomId?: string
 }
 
-// ─── ADMIN INTERFACES ──────────────────────────────────────────────
+// ─── ADMIN, LANDLORD & STAFF INTERFACES ───────────────────────────
 
 export interface AdminGrievanceItem {
   id: string
@@ -85,6 +87,7 @@ export interface AdminGrievanceQuery {
   status?: string
   priority?: string
   search?: string
+  boardingHouseId?: string
   page?: number
   limit?: number
 }
@@ -96,6 +99,18 @@ export interface ResolveGrievancePayload {
 
 export interface RejectGrievancePayload {
   resolutionNote: string
+}
+
+function buildParams(query?: AdminGrievanceQuery): Record<string, string> {
+  const params: Record<string, string> = {}
+  if (query?.type) params.type = query.type
+  if (query?.status) params.status = query.status
+  if (query?.priority) params.priority = query.priority
+  if (query?.search) params.search = query.search
+  if (query?.boardingHouseId) params.boardingHouseId = query.boardingHouseId
+  if (query?.page) params.page = query.page.toString()
+  if (query?.limit) params.limit = query.limit.toString()
+  return params
 }
 
 export const grievanceService = {
@@ -134,22 +149,110 @@ export const grievanceService = {
     return res.data
   },
 
+  // ─── LANDLORD METHODS ────────────────────────────────────────────
+
+  /**
+   * Retrieve grievances queue for landlord's boarding houses
+   */
+  async getLandlordGrievances(query?: AdminGrievanceQuery): Promise<AdminGrievanceListResponse> {
+    try {
+      return await api.get<AdminGrievanceListResponse>('/v1/landlord/grievances', {
+        params: buildParams(query),
+        silent: true,
+      })
+    } catch {
+      return {
+        success: false,
+        items: [],
+        total: 0,
+        page: query?.page || 1,
+        limit: query?.limit || 10,
+        totalPages: 1,
+        counts: { pending: 0, inProgress: 0, resolved: 0, rejected: 0, urgent: 0 },
+      }
+    }
+  },
+
+  /**
+   * Get single grievance detail for landlord
+   */
+  async getLandlordGrievanceById(id: string): Promise<AdminGrievanceItem> {
+    return api.get<AdminGrievanceItem>(`/v1/landlord/grievances/${id}`)
+  },
+
+  /**
+   * Mark grievance as in-progress by landlord
+   */
+  async updateLandlordGrievanceInProgress(id: string): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/landlord/grievances/${id}/in-progress`, {})
+  },
+
+  /**
+   * Resolve grievance with written resolution note by landlord
+   */
+  async resolveLandlordGrievance(
+    id: string,
+    payload: ResolveGrievancePayload,
+  ): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/landlord/grievances/${id}/resolve`, payload)
+  },
+
+  // ─── STAFF METHODS ───────────────────────────────────────────────
+
+  /**
+   * Retrieve grievances queue for staff assigned boarding houses
+   */
+  async getStaffGrievances(query?: AdminGrievanceQuery): Promise<AdminGrievanceListResponse> {
+    try {
+      return await api.get<AdminGrievanceListResponse>('/v1/staff/grievances', {
+        params: buildParams(query),
+        silent: true,
+      })
+    } catch {
+      return {
+        success: false,
+        items: [],
+        total: 0,
+        page: query?.page || 1,
+        limit: query?.limit || 10,
+        totalPages: 1,
+        counts: { pending: 0, inProgress: 0, resolved: 0, rejected: 0, urgent: 0 },
+      }
+    }
+  },
+
+  /**
+   * Get single grievance detail for staff
+   */
+  async getStaffGrievanceById(id: string): Promise<AdminGrievanceItem> {
+    return api.get<AdminGrievanceItem>(`/v1/staff/grievances/${id}`)
+  },
+
+  /**
+   * Mark grievance as in-progress by staff
+   */
+  async updateStaffGrievanceInProgress(id: string): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/staff/grievances/${id}/in-progress`, {})
+  },
+
+  /**
+   * Resolve grievance with written resolution note by staff
+   */
+  async resolveStaffGrievance(
+    id: string,
+    payload: ResolveGrievancePayload,
+  ): Promise<AdminGrievanceItem> {
+    return api.patch<AdminGrievanceItem>(`/v1/staff/grievances/${id}/resolve`, payload)
+  },
+
   // ─── ADMIN METHODS ───────────────────────────────────────────────
 
   /**
    * Retrieve admin grievances queue with priority ordering and counts
    */
   async getAdminGrievanceQueue(query?: AdminGrievanceQuery): Promise<AdminGrievanceListResponse> {
-    const params: Record<string, string> = {}
-    if (query?.type) params.type = query.type
-    if (query?.status) params.status = query.status
-    if (query?.priority) params.priority = query.priority
-    if (query?.search) params.search = query.search
-    if (query?.page) params.page = query.page.toString()
-    if (query?.limit) params.limit = query.limit.toString()
-
     return api.get<AdminGrievanceListResponse>('/v1/admin/grievances', {
-      params,
+      params: buildParams(query),
     })
   },
 

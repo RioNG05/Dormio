@@ -35,15 +35,15 @@ export class IdCardOcrResponseDto {
   })
   dateOfBirth?: string
 
-  @ApiProperty({ description: 'Gender', example: 'Nam', required: false })
+  @ApiProperty({ description: 'Gender', example: 'Male', required: false })
   gender?: string
 
-  @ApiProperty({ description: 'Place of origin / hometown', example: 'Hà Nội', required: false })
+  @ApiProperty({ description: 'Place of origin / hometown', example: 'Hanoi', required: false })
   hometown?: string
 
   @ApiProperty({
     description: 'Permanent address',
-    example: 'Số 10 Tràng Thi, Hoàn Kiếm, Hà Nội',
+    example: '10 Trang Thi, Hoan Kiem, Hanoi',
     required: false,
   })
   permanentAddress?: string

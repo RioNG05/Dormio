@@ -1,38 +1,30 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import {
   Calendar as CalendarIcon,
   Clock,
   Plus,
-  Filter,
   ChevronLeft,
   ChevronRight,
-  RotateCcw,
   Repeat,
-  Sparkles,
-  User,
-  Shield,
-  Briefcase,
   AlertTriangle,
   CheckCircle2,
   X,
   Edit3,
   Trash2,
+  Calendar,
   CalendarDays,
-  LayoutGrid,
   List,
   Layers,
   Settings,
-  Search,
   Loader2,
   Info,
-  Check,
-  Building2,
-  UserCheck,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { staffService, StaffItem } from '@/services/staff.service'
 import {
   scheduleService,
@@ -42,12 +34,17 @@ import {
 } from '@/services/schedule.service'
 import {
   Button,
+  TableActionButton,
   TextInput,
-  NumberInput,
   SelectInput,
   TextareaInput,
   Checkbox,
   SearchInput,
+  Pagination,
+  ViewModeToggle,
+  TableRow,
+  Modal,
+  EmptyState,
 } from '@/components/ui'
 
 // Days of week helper (Mon to Sun)
@@ -97,7 +94,6 @@ export default function WorkforceSchedulePage() {
   const [listPage, setListPage] = useState<number>(1)
   const [listPageSize, setListPageSize] = useState<number>(10)
   const [totalListItems, setTotalListItems] = useState<number>(0)
-  const [windowStart, setWindowStart] = useState<number>(1)
 
   // ─── Filter States ─────────────────────────────────────────────────────
   const [filterEmployeeId, setFilterEmployeeId] = useState<string>('')
@@ -118,11 +114,8 @@ export default function WorkforceSchedulePage() {
     adhocCount: 0,
   })
 
-  // Feedback banner
-  const [toastMessage, setToastMessage] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
+  // Feedback toast
+  const { toast } = useToast()
 
   // ─── Modal States ──────────────────────────────────────────────────────
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false)
@@ -139,6 +132,11 @@ export default function WorkforceSchedulePage() {
   const [pendingModalToClose, setPendingModalToClose] = useState<
     'recurring' | 'adhoc' | 'shifts' | 'edit' | null
   >(null)
+  const [actionConfirm, setActionConfirm] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+  } | null>(null)
 
   // ─── Modal Form Drafts ─────────────────────────────────────────────────
   // Recurring form
@@ -205,6 +203,12 @@ export default function WorkforceSchedulePage() {
     return `${startStr} – ${endStr}`
   }, [weekDays])
 
+  // Client-side pagination for list view to avoid refetching on viewMode or page changes
+  const paginatedSchedules = useMemo(() => {
+    const start = (listPage - 1) * listPageSize
+    return schedules.slice(start, start + listPageSize)
+  }, [schedules, listPage, listPageSize])
+
   // ─── Load Shifts & Staff ───────────────────────────────────────────────
   const loadInitialDependencies = useCallback(async () => {
     if (!buildingId) return
@@ -226,24 +230,11 @@ export default function WorkforceSchedulePage() {
 
   // ─── Fetch Schedules ───────────────────────────────────────────────────
   const fetchSchedules = useCallback(async () => {
-    if (!buildingId) return
+    if (!buildingId || weekDays.length === 0) return
     setIsLoading(true)
     try {
-      // If calendar mode, query week range; if list mode, query active month or params
-      let startDate: string
-      let endDate: string
-
-      if (viewMode === 'calendar') {
-        startDate = formatDateString(weekDays[0].date)
-        endDate = formatDateString(weekDays[6].date)
-      } else {
-        // Query broader month range for list view
-        const cur = new Date(selectedWeekStart)
-        const monthStart = new Date(cur.getFullYear(), cur.getMonth(), 1)
-        const monthEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0)
-        startDate = formatDateString(monthStart)
-        endDate = formatDateString(monthEnd)
-      }
+      const startDate = formatDateString(weekDays[0].date)
+      const endDate = formatDateString(weekDays[6].date)
 
       const res = await scheduleService.getSchedules(buildingId, {
         startDate,
@@ -252,8 +243,8 @@ export default function WorkforceSchedulePage() {
         shiftId: filterShiftId || undefined,
         status: filterStatus !== 'all' ? (filterStatus as 'scheduled' | 'canceled') : undefined,
         search: searchQuery || undefined,
-        page: viewMode === 'list' ? listPage : 1,
-        limit: viewMode === 'list' ? listPageSize : 1000,
+        page: 1,
+        limit: 1000,
       })
 
       if (res?.data) {
@@ -272,15 +263,12 @@ export default function WorkforceSchedulePage() {
     }
   }, [
     buildingId,
-    viewMode,
     weekDays,
-    selectedWeekStart,
     filterEmployeeId,
     filterShiftId,
     filterStatus,
     searchQuery,
-    listPage,
-    listPageSize,
+    t,
   ])
 
   useEffect(() => {
@@ -293,8 +281,11 @@ export default function WorkforceSchedulePage() {
 
   // ─── Toast helper ──────────────────────────────────────────────────────
   const showToast = (type: 'success' | 'error', text: string) => {
-    setToastMessage({ type, text })
-    setTimeout(() => setToastMessage(null), 4000)
+    if (type === 'success') {
+      toast.success(text)
+    } else {
+      toast.error(text)
+    }
   }
 
   // ─── Week navigation ───────────────────────────────────────────────────
@@ -302,16 +293,19 @@ export default function WorkforceSchedulePage() {
     const prev = new Date(selectedWeekStart)
     prev.setDate(selectedWeekStart.getDate() - 7)
     setSelectedWeekStart(prev)
+    setListPage(1)
   }
 
   const handleNextWeek = () => {
     const next = new Date(selectedWeekStart)
     next.setDate(selectedWeekStart.getDate() + 7)
     setSelectedWeekStart(next)
+    setListPage(1)
   }
 
   const handleCurrentWeek = () => {
     setSelectedWeekStart(getMondayOfCurrentWeek())
+    setListPage(1)
   }
 
   // ─── Rule #10: Modal Reset and Confirmation ───────────────────────────
@@ -458,15 +452,20 @@ export default function WorkforceSchedulePage() {
   }
 
   // ─── Delete Shift Template ─────────────────────────────────────────────
-  const handleDeleteShift = async (shiftId: string, shiftName: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa ca mẫu "${shiftName}"?`)) return
-    try {
-      await scheduleService.deleteShift(buildingId, shiftId)
-      showToast('success', t('landlordShiftsToastDeleteSuccess'))
-      setShifts(prev => prev.filter(s => s.id !== shiftId))
-    } catch (err: any) {
-      showToast('error', err?.response?.data?.message || 'Không thể xóa ca đang có lịch làm việc')
-    }
+  const handleDeleteShift = (shiftId: string, shiftName: string) => {
+    setActionConfirm({
+      title: t('landlordShiftsDeleteModalTitle') || 'Xóa ca mẫu',
+      message: `Bạn có chắc chắn muốn xóa ca mẫu "${shiftName}"?`,
+      onConfirm: async () => {
+        try {
+          await scheduleService.deleteShift(buildingId, shiftId)
+          showToast('success', t('landlordShiftsToastDeleteSuccess'))
+          setShifts(prev => prev.filter(s => s.id !== shiftId))
+        } catch (err: any) {
+          showToast('error', err?.response?.data?.message || 'Không thể xóa ca đang có lịch làm việc')
+        }
+      },
+    })
   }
 
   // ─── Open Edit Modal ───────────────────────────────────────────────────
@@ -524,331 +523,275 @@ export default function WorkforceSchedulePage() {
   }
 
   // ─── Cancel / Delete Single Schedule ───────────────────────────────────
-  const handleDeleteSchedule = async (item: WorkScheduleItem) => {
+  const handleDeleteSchedule = (item: WorkScheduleItem) => {
     const isRecurring = item.isRecurring && item.recurrenceId
-    let mode: 'single' | 'future' = 'single'
-
-    if (isRecurring) {
-      const confirmAction = confirm(
-        t('landlordScheduleConfirmRecurringDelete', {
+    const message = isRecurring
+      ? t('landlordScheduleConfirmRecurringDelete', {
           date: formatDisplayDate(item.workDate),
-        }),
-      )
-      if (!confirmAction) return
-    } else {
-      if (
-        !confirm(
-          t('landlordScheduleDeleteConfirm', {
-            name: item.employeeName,
-            date: formatDisplayDate(item.workDate),
-          }),
-        )
-      )
-        return
-    }
+        })
+      : t('landlordScheduleDeleteConfirm', {
+          name: item.employeeName,
+          date: formatDisplayDate(item.workDate),
+        })
 
-    try {
-      await scheduleService.deleteSchedule(buildingId, item.id, mode)
-      showToast('success', t('landlordScheduleToastSuccessCancel'))
-      fetchSchedules()
-    } catch (err: any) {
-      showToast('error', err?.response?.data?.message || t('landlordScheduleToastFailedCancel'))
-    }
+    setActionConfirm({
+      title: t('landlordScheduleConfirmCancelTitle') || 'Xóa lịch làm việc',
+      message,
+      onConfirm: async () => {
+        try {
+          await scheduleService.deleteSchedule(buildingId, item.id, isRecurring ? 'future' : 'single')
+          showToast('success', t('landlordScheduleToastSuccessCancel'))
+          fetchSchedules()
+        } catch (err: any) {
+          showToast('error', err?.response?.data?.message || t('landlordScheduleToastFailedCancel'))
+        }
+      },
+    })
   }
 
   // ─── Shift Badge Styler ────────────────────────────────────────────────
   const getShiftBadgeStyle = (shiftName: string) => {
     const lower = (shiftName || '').toLowerCase()
     if (lower.includes('sáng')) {
-      return 'bg-amber-50 text-amber-700 border-amber-200'
+      return 'bg-warning-soft text-warning border-warning-subtle'
     }
     if (lower.includes('chiều')) {
-      return 'bg-blue-50 text-blue-700 border-blue-200'
+      return 'bg-info-soft text-info border-info-subtle'
     }
     if (lower.includes('đêm')) {
-      return 'bg-purple-50 text-purple-700 border-purple-200'
+      return 'bg-deposit-soft text-deposit border-deposit-subtle'
     }
-    return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    return 'bg-success-soft text-success border-success-subtle'
   }
 
-  // ─── Rule #9: List View Pagination Calculation ─────────────────────────
-  const totalListPages = Math.ceil(totalListItems / listPageSize) || 1
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = []
-    for (let i = windowStart; i < windowStart + 5 && i <= totalListPages; i++) {
-      pages.push(i)
-    }
-    return pages
-  }, [windowStart, totalListPages])
-
-  const handlePageJump = (delta: number) => {
-    const nextWindow = windowStart + delta
-    if (nextWindow >= 1 && nextWindow <= totalListPages) {
-      setWindowStart(nextWindow)
-      setListPage(nextWindow)
-    }
-  }
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordScheduleStatTotalShifts'),
+        value: summary.totalSchedules,
+        icon: <Layers className="w-5 h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[150px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'assigned',
+        label: t('landlordScheduleStatusAssigned'),
+        value: summary.scheduledCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[150px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'recurring',
+        label: t('landlordScheduleStatRecurringShifts'),
+        value: summary.recurringCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-vacant shadow-[0_0_8px_rgba(59,130,246,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-vacant/10 hover:bg-vacant/20 border-vacant/30 lg:w-[150px]',
+        labelClassName: 'text-blue-400',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'adhoc',
+        label: t('landlordScheduleStatAdhocShifts'),
+        value: summary.adhocCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[150px]',
+        labelClassName: 'text-amber-400',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+    ],
+    [t, summary],
+  )
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-      {/* Toast notification */}
-      {toastMessage && (
-        <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
-            toastMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-emerald-500/10'
-              : 'bg-rose-50 text-rose-800 border-rose-200 shadow-rose-500/10'
-          }`}
-        >
-          {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          ) : (
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-          )}
-          <span>{toastMessage.text}</span>
-        </div>
-      )}
-
       {/* ─── Top Header & Primary Actions ───────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
-            <CalendarDays className="w-4 h-4" />
-            <span> · {t('landlordScheduleStaffManagementTag')}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t('landlordScheduleTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            {t('landlordScheduleSubtitleFull')} ({' '}
-            <strong className="text-zinc-800">
-              {activeBuilding?.name || t('landlordScheduleCurrentProperty')}
-            </strong>
-            )
-          </p>
-        </div>
+      <DashboardPageHeader
+        title={t('landlordScheduleTitle')}
+        subtitle={t('landlordScheduleSubtitleFull')}
+        actions={
+          <>
+            <Button
+              size="md"
+              variant="secondary"
+              onClick={() => {
+                setIsDirty(false)
+                setIsAdhocModalOpen(true)
+              }}
+              leftIcon={<Plus />}
+            >
+              {t('landlordScheduleBtnAssign')}
+            </Button>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsDirty(false)
-              setIsShiftsModalOpen(true)
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer"
-          >
-            <Settings className="w-3.5 h-3.5 text-zinc-500" />
-            <span>{t('landlordScheduleBtnShiftTemplates')}</span>
-          </Button>
+            <Button
+              size="md"
+              variant="accent"
+              onClick={() => {
+                setIsDirty(false)
+                setIsShiftsModalOpen(true)
+              }}
+              leftIcon={<Settings />}
+            >
+              {t('landlordScheduleBtnShiftTemplates')}
+            </Button>
 
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setIsDirty(false)
-              setIsAdhocModalOpen(true)
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-zinc-800 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-all cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('landlordScheduleBtnAssign')}</span>
-          </Button>
+            <Button
+              size="md"
+              onClick={() => {
+                setIsDirty(false)
+                setIsRecurringModalOpen(true)
+              }}
+              leftIcon={<Repeat />}
+            >
+              {t('landlordScheduleBtnRecurring')}
+            </Button>
+          </>
+        }
+      />
 
-          <Button
-            onClick={() => {
-              setIsDirty(false)
-              setIsRecurringModalOpen(true)
-            }}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25aba6] rounded-xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer"
-          >
-            <Repeat className="w-3.5 h-3.5" />
-            <span>{t('landlordScheduleBtnRecurring')}</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* ─── Metric Summary Cards ───────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatTotalShifts')}
-            </span>
-            <Layers className="w-4 h-4 text-[#2AC1BC]" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-zinc-900">
-            {summary.totalSchedules}
-          </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {t('landlordScheduleStatWithinTimeframe')}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatusAssigned')}
-            </span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600">
-            {summary.scheduledCount}
-          </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {t('landlordScheduleStatReadyForDuty')}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatRecurringShifts')}
-            </span>
-            <Repeat className="w-4 h-4 text-blue-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-blue-600">
-            {summary.recurringCount}
-          </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {t('landlordScheduleStatWeeklyRecurring')}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between text-zinc-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">
-              {t('landlordScheduleStatAdhocShifts')}
-            </span>
-            <Clock className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-amber-600">{summary.adhocCount}</div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {t('landlordScheduleStatOnDemand')}
-          </p>
-        </div>
-      </div>
+      {/* ─── Stat Banner ────────────────────────────────────────────────────── */}
+      <LandlordStatBanner
+        watermarkIcon={<CalendarDays className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Control Bar: Date Navigator, Filters & View Mode Switcher ───── */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Week Date Navigator */}
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon-sm"
               onClick={handlePrevWeek}
-              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto w-auto"
               title={t('landlordScheduleBtnPrevWeek')}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft />
             </Button>
 
             <Button
               variant="outline"
-              size="sm"
               onClick={handleCurrentWeek}
-              className="px-3 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto"
             >
               {t('landlordScheduleBtnToday')}
             </Button>
 
             <Button
               variant="outline"
-              size="sm"
+              size="icon-sm"
               onClick={handleNextWeek}
-              className="p-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer border border-zinc-200 h-auto w-auto"
               title={t('landlordScheduleBtnNextWeek')}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight />
             </Button>
 
-            <div className="flex items-center gap-2 pl-2 text-sm font-bold text-zinc-800">
-              <CalendarIcon className="w-4 h-4 text-[#2AC1BC]" />
+            <div className="flex items-center gap-2 pl-2 text-sm font-bold text-foreground">
+              <CalendarIcon className="w-4 h-4 text-primary" />
               <span>{weekRangeLabel}</span>
-            </div>
-          </div>
-
-          {/* View Mode Switcher (Rule #9) */}
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('calendar')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto ${
-                  viewMode === 'calendar'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>{t('landlordScheduleViewCalendar')}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto ${
-                  viewMode === 'list'
-                    ? 'bg-white text-zinc-900 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-800'
-                }`}
-              >
-                <List className="w-3.5 h-3.5" />
-                <span>{t('landlordScheduleViewList')}</span>
-              </Button>
             </div>
           </div>
         </div>
 
         {/* Filter row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
-          <SearchInput
-            placeholder={t('landlordScheduleFilterSearchPh')}
-            value={searchQuery}
-            onChange={setSearchQuery}
-          />
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-line">
+          {/* Left: Fixed-width Search */}
+          <div className="w-full sm:w-64 lg:w-72 shrink-0">
+            <SearchInput
+              placeholder={t('landlordScheduleFilterSearchPh')}
+              value={searchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setListPage(1)
+              }}
+              containerClassName="w-full space-y-0"
+            />
+          </div>
 
-          <SelectInput
-            value={filterEmployeeId}
-            onChange={e => setFilterEmployeeId(e.target.value)}
-            options={[
-              { value: '', label: `${t('landlordScheduleFilterStaffPh')} (${staffList.length})` },
-              ...staffList.map(s => ({
-                value: s.employeeId,
-                label: `${s.fullName} (${s.positionName})`,
-              })),
-            ]}
-          />
+          {/* Right: Selects & View Mode Switcher */}
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
+            <SelectInput
+              value={filterEmployeeId}
+              onChange={e => {
+                setFilterEmployeeId(e.target.value)
+                setListPage(1)
+              }}
+              containerClassName="w-auto min-w-[150px] space-y-0"
+              options={[
+                { value: '', label: `${t('landlordScheduleFilterStaffPh')} (${staffList.length})` },
+                ...staffList.map(s => ({
+                  value: s.employeeId,
+                  label: `${s.fullName} (${s.positionName})`,
+                })),
+              ]}
+            />
 
-          <SelectInput
-            value={filterShiftId}
-            onChange={e => setFilterShiftId(e.target.value)}
-            options={[
-              { value: '', label: `${t('landlordScheduleFilterShiftPh')} (${shifts.length})` },
-              ...shifts.map(s => ({
-                value: s.id,
-                label: `${s.name} (${s.startTime} - ${s.endTime})`,
-              })),
-            ]}
-          />
+            <SelectInput
+              value={filterShiftId}
+              onChange={e => {
+                setFilterShiftId(e.target.value)
+                setListPage(1)
+              }}
+              containerClassName="w-auto min-w-[140px] space-y-0"
+              options={[
+                { value: '', label: `${t('landlordScheduleFilterShiftPh')} (${shifts.length})` },
+                ...shifts.map(s => ({
+                  value: s.id,
+                  label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                })),
+              ]}
+            />
 
-          <SelectInput
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            options={[
-              { value: 'all', label: t('landlordScheduleFilterStatusPh') },
-              { value: 'scheduled', label: t('landlordScheduleStatusAssigned') },
-              { value: 'canceled', label: t('landlordScheduleStatusCanceled') },
-            ]}
-          />
+            <SelectInput
+              value={filterStatus}
+              onChange={e => {
+                setFilterStatus(e.target.value)
+                setListPage(1)
+              }}
+              containerClassName="w-auto min-w-[130px] space-y-0"
+              options={[
+                { value: 'all', label: t('landlordScheduleFilterStatusPh') },
+                { value: 'scheduled', label: t('landlordScheduleStatusAssigned') },
+                { value: 'canceled', label: t('landlordScheduleStatusCanceled') },
+              ]}
+            />
+
+            <div className="shrink-0 ml-auto lg:ml-0">
+              <ViewModeToggle
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'calendar', label: t('landlordScheduleViewCalendar'), title: t('landlordScheduleViewCalendar'), icon: <Calendar className="w-3.5 h-3.5" /> },
+                  { value: 'list', label: t('landlordScheduleViewList'), title: t('landlordScheduleViewList'), icon: <List className="w-3.5 h-3.5" /> }
+                ]}
+                showLabels
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ─── Main Content Views ─────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-          <p className="text-xs font-bold text-zinc-500">
+        <div className="bg-card border border-line rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[350px]">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+          <p className="text-xs font-bold text-muted">
             {t('landlordScheduleLoading')}
           </p>
         </div>
@@ -863,34 +806,32 @@ export default function WorkforceSchedulePage() {
             return (
               <div
                 key={day.dateString}
-                className={`flex flex-col bg-white border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${
-                  day.isToday
-                    ? 'border-[#2AC1BC] ring-2 ring-[#2AC1BC]/20 bg-[#2AC1BC]/[0.01]'
-                    : 'border-zinc-200/90'
-                }`}
+                className={`flex flex-col bg-card border rounded-2xl shadow-sm overflow-hidden transition-all min-h-[380px] ${day.isToday
+                  ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.01]'
+                  : 'border-line'
+                  }`}
               >
                 {/* Column Day Header */}
                 <div
-                  className={`p-3 text-center border-b transition-colors ${
-                    day.isToday
-                      ? 'bg-[#2AC1BC]/10 border-[#2AC1BC]/30 text-[#1fa8a3]'
-                      : 'bg-zinc-50/80 border-zinc-100 text-zinc-700'
-                  }`}
+                  className={`p-3 text-center border-b transition-colors ${day.isToday
+                    ? 'bg-primary/10 border-primary/30 text-[#1fa8a3]'
+                    : 'bg-surface/80 border-line text-foreground/90'
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-1">
                     <span className="text-xs font-extrabold">
                       {day.label}
                     </span>
                     {day.isToday && (
-                      <span className="px-1.5 py-0.2 text-[9px] font-black uppercase bg-[#2AC1BC] text-white rounded-full">
+                      <span className="px-1.5 py-0.2 text-[9px] font-black uppercase bg-primary text-white rounded-full">
                         {t('landlordScheduleBtnToday')}
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] font-semibold text-zinc-400 mt-0.5">
+                  <div className="text-[11px] font-semibold text-muted mt-0.5">
                     {formatDisplayDate(day.dateString)}
                   </div>
-                  <div className="text-[10px] font-bold text-zinc-400 mt-1">
+                  <div className="text-[10px] font-bold text-muted mt-1">
                     {daySchedules.length} {t('landlordScheduleShiftsCount')}
                   </div>
                 </div>
@@ -899,10 +840,10 @@ export default function WorkforceSchedulePage() {
                 <div className="p-2.5 flex-1 space-y-2 overflow-y-auto max-h-[520px] custom-scrollbar">
                   {daySchedules.length === 0 ? (
                     <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-center p-4">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-300 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-card-hover flex items-center justify-center text-zinc-300 mb-2">
                         <CalendarDays className="w-4 h-4" />
                       </div>
-                      <span className="text-[11px] font-semibold text-zinc-400">
+                      <span className="text-[11px] font-semibold text-muted">
                         {t('landlordScheduleEmptyDay')}
                       </span>
                     </div>
@@ -910,11 +851,10 @@ export default function WorkforceSchedulePage() {
                     daySchedules.map(schedule => (
                       <div
                         key={schedule.id}
-                        className={`p-3 rounded-xl border text-left transition-all relative group ${
-                          schedule.status === 'canceled'
-                            ? 'bg-zinc-50/60 border-zinc-200 opacity-60 line-through'
-                            : 'bg-white border-zinc-200 hover:border-[#2AC1BC]/60 hover:shadow-md'
-                        }`}
+                        className={`p-3 rounded-xl border text-left transition-all relative group ${schedule.status === 'canceled'
+                          ? 'bg-surface/60 border-line opacity-60 line-through'
+                          : 'bg-card border-line hover:border-primary/60 hover:shadow-md'
+                          }`}
                       >
                         {/* Status & Recurring Badge */}
                         <div className="flex items-center justify-between gap-1 mb-1.5">
@@ -928,56 +868,49 @@ export default function WorkforceSchedulePage() {
 
                           {schedule.isRecurring ? (
                             <span
-                              className="flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100"
+                              className="flex items-center gap-0.5 text-[10px] font-bold text-info bg-info-soft px-1.5 py-0.5 rounded-md border border-info-subtle"
                               title={t('landlordScheduleWeeklyRecurringTitle')}
                             >
                               <Repeat className="w-2.5 h-2.5" />
                               <span>{t('landlordScheduleRepeat')}</span>
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-md">
+                            <span className="text-[10px] font-bold text-muted bg-card-hover px-1.5 py-0.5 rounded-md">
                               {t('landlordScheduleAdhoc')}
                             </span>
                           )}
                         </div>
 
                         {/* Employee info */}
-                        <div className="font-extrabold text-xs text-zinc-900 truncate">
+                        <div className="font-extrabold text-xs text-foreground truncate">
                           {schedule.employeeName}
                         </div>
-                        <div className="text-[10px] text-zinc-400 font-semibold truncate mb-2">
+                        <div className="text-[10px] text-muted font-semibold truncate mb-2">
                           {schedule.positionName || t('landlordScheduleStaffFallback')}
                         </div>
 
                         {/* Working hours */}
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-600 mb-2">
-                          <Clock className="w-3 h-3 text-zinc-400" />
+                        <div className="flex items-center gap-1 text-[11px] font-bold text-muted mb-2">
+                          <Clock className="w-3 h-3 text-muted" />
                           <span>
                             {schedule.startTime} - {schedule.endTime}
                           </span>
                         </div>
 
                         {/* Action Buttons (visible on hover or focus) */}
-                        <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-zinc-100">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                        <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-line">
+                          <TableActionButton
+                            icon={<Edit3 />}
                             onClick={() => handleOpenEditModal(schedule)}
-                            className="p-1 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                             title={t('landlordScheduleEditShiftTitle')}
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                           {schedule.status !== 'canceled' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <TableActionButton
+                              icon={<Trash2 />}
+                              variant="ghost-danger"
                               onClick={() => handleDeleteSchedule(schedule)}
-                              className="p-1 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                               title={t('landlordScheduleCancelShiftTitle')}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            />
                           )}
                         </div>
                       </div>
@@ -992,24 +925,24 @@ export default function WorkforceSchedulePage() {
         /* ═══════════════════════════════════════════════════════════════════
  VIEW 2: STANDARDIZED LIST / TABLE VIEW (Rule #9)
  ═══════════════════════════════════════════════════════════════════ */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           {schedules.length === 0 ? (
             <div className="py-20 text-center flex flex-col items-center justify-center">
-              <div className="w-14 h-14 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-center text-[#2AC1BC] mb-3">
+              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-3">
                 <CalendarIcon className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-extrabold text-zinc-900 mb-1">
+              <h3 className="text-base font-extrabold text-foreground mb-1">
                 {t('landlordScheduleEmptyTitle')}
               </h3>
-              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+              <p className="text-xs text-muted max-w-sm mx-auto">
                 {t('landlordScheduleEmptyDesc')}
               </p>
-              <Button
+              <Button size="xs"
                 onClick={() => {
                   setIsDirty(false)
                   setIsRecurringModalOpen(true)
                 }}
-                className="mt-4 px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer"
+                className="mt-4"
               >
                 {t('landlordScheduleBtnRecurring')}
               </Button>
@@ -1018,7 +951,7 @@ export default function WorkforceSchedulePage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-400 font-extrabold uppercase text-[10px] tracking-wider">
+                  <tr className="border-b border-line bg-surface/70 text-muted font-extrabold uppercase text-[10px] tracking-wider">
                     <th className="py-3.5 px-4">{t('landlordScheduleColDate')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColStaff')}</th>
                     <th className="py-3.5 px-4">{t('landlordScheduleColPosition')}</th>
@@ -1029,17 +962,21 @@ export default function WorkforceSchedulePage() {
                     <th className="py-3.5 px-4 text-right">{t('landlordScheduleColActions')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100 font-medium text-zinc-700">
-                  {schedules.map(item => (
-                    <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                      <td className="py-3 px-4 font-bold text-zinc-900">
+                <tbody className="divide-y divide-line font-medium text-foreground/90">
+                  {paginatedSchedules.map(item => (
+                    <TableRow
+                      key={item.id}
+                      className="group"
+                      onClick={() => handleOpenEditModal(item)}
+                    >
+                      <td className="py-3 px-4 font-bold text-foreground">
                         {formatDisplayDate(item.workDate)}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-extrabold text-zinc-900">{item.employeeName}</div>
-                        <div className="text-[10px] text-zinc-400">{item.employeePhone}</div>
+                        <div className="font-extrabold text-foreground">{item.employeeName}</div>
+                        <div className="text-[10px] text-muted">{item.employeePhone}</div>
                       </td>
-                      <td className="py-3 px-4 text-zinc-500 font-semibold">
+                      <td className="py-3 px-4 text-muted font-semibold">
                         {item.positionName || t('landlordScheduleStaffFallback')}
                       </td>
                       <td className="py-3 px-4">
@@ -1051,143 +988,63 @@ export default function WorkforceSchedulePage() {
                           {item.shiftName}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-bold text-zinc-700">
+                      <td className="py-3 px-4 font-bold text-foreground/90">
                         {item.startTime} – {item.endTime}
                       </td>
                       <td className="py-3 px-4">
                         {item.isRecurring ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-info bg-info-soft px-2 py-0.5 rounded-md border border-info-subtle">
                             <Repeat className="w-2.5 h-2.5" />
                             <span>{t('landlordScheduleWeeklyRecurringBadge')}</span>
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md">
+                          <span className="text-[10px] font-bold text-muted bg-card-hover px-2 py-0.5 rounded-md">
                             {t('landlordScheduleAdhocShiftBadge')}
                           </span>
                         )}
                       </td>
                       <td className="py-3 px-4">
                         {item.status === 'scheduled' ? (
-                          <span className="px-2 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded-md border border-emerald-100">
+                          <span className="px-2 py-0.5 text-[10px] font-bold text-success bg-success-soft rounded-md border border-success-subtle">
                             {t('landlordScheduleStatusAssigned')}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 text-[10px] font-bold text-zinc-400 bg-zinc-100 rounded-md">
+                          <span className="px-2 py-0.5 text-[10px] font-bold text-muted bg-card-hover rounded-md">
                             {t('landlordScheduleStatusCanceled')}
                           </span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="inline-flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <TableActionButton
+                            icon={<Edit3 />}
                             onClick={() => handleOpenEditModal(item)}
-                            className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                             title={t('landlordShiftsBtnEdit')}
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </Button>
+                          />
                           {item.status !== 'canceled' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <TableActionButton
+                              icon={<Trash2 />}
+                              variant="ghost-danger"
                               onClick={() => handleDeleteSchedule(item)}
-                              className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                               title={t('landlordScheduleCancelShiftAction')}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            />
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   ))}
                 </tbody>
               </table>
 
               {/* Rule #9: Standardized Pagination Bar */}
-              <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-                  <span>{t('landlordSchedulePaginationShowing')}</span>
-                  <NumberInput
-                    min={1}
-                    max={100}
-                    value={listPageSize}
-                    onChange={e => {
-                      const val = Number(e.target.value)
-                      if (val > 0) setListPageSize(val)
-                    }}
-                    className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white"
-                  />
-                  <span>{t('landlordSchedulePaginationPerPage')}</span>
-                  <span className="text-zinc-300">|</span>
-                  <span>
-                    {(listPage - 1) * listPageSize + 1}-
-                    {Math.min(listPage * listPageSize, totalListItems)} {t('landlordSchedulePaginationOf')}{' '}
-                    {totalListItems} {t('landlordSchedulePaginationItems')}
-                  </span>
-                </div>
-
-                {/* 5-page window jumping */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={windowStart <= 1}
-                    onClick={() => handlePageJump(-5)}
-                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto"
-                    title={t('landlordScheduleBack5Pages')}
-                  >
-                    «
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={listPage <= 1}
-                    onClick={() => setListPage(p => Math.max(p - 1, 1))}
-                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-
-                  {pageNumbers.map(p => (
-                    <Button
-                      key={p}
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setListPage(p)}
-                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 ${
-                        listPage === p
-                          ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6] hover:text-white'
-                          : 'text-zinc-600 hover:bg-zinc-200'
-                      }`}
-                    >
-                      {p}
-                    </Button>
-                  ))}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={listPage >= totalListPages}
-                    onClick={() => setListPage(p => Math.min(p + 1, totalListPages))}
-                    className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={windowStart + 5 > totalListPages}
-                    onClick={() => handlePageJump(5)}
-                    className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto"
-                    title={t('landlordScheduleForward5Pages')}
-                  >
-                    »
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                currentPage={listPage}
+                totalItems={schedules.length}
+                pageSize={listPageSize}
+                onPageChange={setListPage}
+                onPageSizeChange={setListPageSize}
+                pageSizeMax={100}
+              />
             </div>
           )}
         </div>
@@ -1204,32 +1061,31 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
                   <Repeat className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalRecurringTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordScheduleModalRecurringSubtitle')}
                   </p>
                 </div>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('recurring')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1241,12 +1097,12 @@ export default function WorkforceSchedulePage() {
               {/* Select Employees */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordScheduleModalStaffLabel')}</span>
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <Button
-                    type="button"
+                    size="xs"
                     variant="ghost"
                     onClick={() => {
                       if (recurringEmployeeIds.length === staffList.length) {
@@ -1256,7 +1112,7 @@ export default function WorkforceSchedulePage() {
                       }
                       setIsDirty(true)
                     }}
-                    className="text-[11px] font-bold text-[#2AC1BC] hover:underline cursor-pointer p-0 h-auto"
+                    className="hover:underline"
                   >
                     {recurringEmployeeIds.length === staffList.length
                       ? t('landlordScheduleDeselectAll')
@@ -1265,24 +1121,23 @@ export default function WorkforceSchedulePage() {
                 </div>
 
                 {staffList.length === 0 ? (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700 font-semibold flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <div className="p-3 bg-warning-soft border border-warning-subtle rounded-xl text-xs text-warning font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                     <span>
                       {t('landlordScheduleNoStaffWarning')}
                     </span>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 border border-zinc-200 rounded-xl bg-zinc-50/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 border border-line rounded-xl bg-surface/50">
                     {staffList.map(s => {
                       const isChecked = recurringEmployeeIds.includes(s.employeeId)
                       return (
                         <div
                           key={s.employeeId}
-                          className={`p-2 rounded-lg border text-xs transition-all ${
-                            isChecked
-                              ? 'bg-white border-[#2AC1BC] text-zinc-900 shadow-sm'
-                              : 'bg-transparent border-transparent hover:bg-zinc-100 text-zinc-600'
-                          }`}
+                          className={`p-2 rounded-lg border text-xs transition-all ${isChecked
+                            ? 'bg-card border-primary text-foreground shadow-sm'
+                            : 'bg-transparent border-transparent hover:bg-card-hover text-muted'
+                            }`}
                         >
                           <Checkbox
                             checked={isChecked}
@@ -1291,7 +1146,7 @@ export default function WorkforceSchedulePage() {
                                 setRecurringEmployeeIds(prev => [...prev, s.employeeId])
                               } else {
                                 setRecurringEmployeeIds(prev =>
-                                   prev.filter(id => id !== s.employeeId),
+                                  prev.filter(id => id !== s.employeeId),
                                 )
                               }
                               setIsDirty(true)
@@ -1299,7 +1154,7 @@ export default function WorkforceSchedulePage() {
                             label={
                               <div className="truncate">
                                 <span className="font-bold">{s.fullName}</span>
-                                <span className="text-[10px] text-zinc-400 ml-1">
+                                <span className="text-[10px] text-muted ml-1">
                                   ({s.positionName || t('landlordScheduleStaffFallback')})
                                 </span>
                               </div>
@@ -1335,43 +1190,40 @@ export default function WorkforceSchedulePage() {
               {/* Select Days of Week */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
+                  <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
                     <span>{t('landlordScheduleModalRepeatLabel')}</span>
-                    <span className="text-rose-500">*</span>
+                    <span className="text-danger">*</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <Button
-                      type="button"
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '3', '4', '5', '6'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T2 - T6
                     </Button>
                     <span className="text-zinc-300">·</span>
                     <Button
-                      type="button"
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['2', '4', '6'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T2, 4, 6
                     </Button>
                     <span className="text-zinc-300">·</span>
                     <Button
-                      type="button"
+                      size="xs"
                       variant="ghost"
                       onClick={() => {
                         setRecurringDays(['3', '5', '7'])
                         setIsDirty(true)
                       }}
-                      className="text-[11px] font-bold text-zinc-500 hover:text-zinc-800 p-0 h-auto"
                     >
                       T3, 5, 7
                     </Button>
@@ -1384,9 +1236,7 @@ export default function WorkforceSchedulePage() {
                     return (
                       <Button
                         key={d.key}
-                        type="button"
                         variant={isSelected ? 'primary' : 'outline'}
-                        size="sm"
                         onClick={() => {
                           if (isSelected) {
                             setRecurringDays(prev => prev.filter(k => k !== d.key))
@@ -1395,11 +1245,6 @@ export default function WorkforceSchedulePage() {
                           }
                           setIsDirty(true)
                         }}
-                        className={`py-2 px-1 text-center rounded-xl border text-xs font-extrabold transition-all cursor-pointer h-auto ${
-                          isSelected
-                            ? 'bg-[#2AC1BC] text-white border-[#2AC1BC] shadow-sm shadow-[#2AC1BC]/20'
-                            : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                        }`}
                       >
                         {t(d.shortKey as any)}
                       </Button>
@@ -1446,36 +1291,29 @@ export default function WorkforceSchedulePage() {
               />
 
               {/* Pre-calculation Alert */}
-              <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
-                <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="p-3 bg-info-soft border border-info-subtle rounded-xl text-xs text-info flex items-start gap-2">
+                <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
                   {t('landlordScheduleRecurringInfo')}
                 </span>
               </div>
 
               {/* Modal Footer */}
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button
-                  type="button"
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('recurring')}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
                 <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmittingRecurring}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
+                  isLoading={isSubmittingRecurring}
                 >
-                  {isSubmittingRecurring ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{t('landlordScheduleMaterializing')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordScheduleModalSubmitRecurring')}</span>
-                  )}
+                  <span>{t('landlordScheduleModalSubmitRecurring')}</span>
                 </Button>
               </div>
             </form>
@@ -1494,31 +1332,30 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100">
+                <div className="p-2.5 bg-warning-soft text-warning rounded-2xl border border-warning-subtle">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalAssignTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordScheduleModalAdhocSubtitle')}
                   </p>
                 </div>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('adhoc')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1592,28 +1429,21 @@ export default function WorkforceSchedulePage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button
-                  type="button"
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('adhoc')}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
                 <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmittingAdhoc}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
+                  isLoading={isSubmittingAdhoc}
                 >
-                  {isSubmittingAdhoc ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{t('landlordScheduleSaving')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordScheduleModalSubmitAssign')}</span>
-                  )}
+                  <span>{t('landlordScheduleModalSubmitAssign')}</span>
                 </Button>
               </div>
             </form>
@@ -1632,31 +1462,30 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-zinc-100 text-zinc-800 rounded-2xl">
+                <div className="p-2.5 bg-card-hover text-foreground rounded-2xl">
                   <Settings className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalTemplatesTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {t('landlordScheduleModalTemplatesSubtitle')}
                   </p>
                 </div>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('shifts')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1664,10 +1493,10 @@ export default function WorkforceSchedulePage() {
               {/* Add New Shift */}
               <form
                 onSubmit={handleCreateShift}
-                className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-3"
+                className="p-4 bg-surface border border-line rounded-2xl space-y-3"
               >
-                <div className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
-                  <Plus className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5 text-primary" />
                   <span>{t('landlordShiftsAddNewBtn')}</span>
                 </div>
 
@@ -1699,10 +1528,9 @@ export default function WorkforceSchedulePage() {
                 </div>
 
                 <div className="flex justify-end pt-1">
-                  <Button
+                  <Button size="xs"
                     type="submit"
                     disabled={isCreatingShift}
-                    className="px-4 py-2 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] transition-all cursor-pointer disabled:opacity-50"
                   >
                     {isCreatingShift
                       ? t('landlordScheduleCreating')
@@ -1713,10 +1541,10 @@ export default function WorkforceSchedulePage() {
 
               {/* Current Shifts List */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700">
+                <label className="text-xs font-bold text-foreground/90">
                   {t('landlordScheduleActiveTemplates', { count: shifts.length })}
                 </label>
-                <div className="divide-y divide-zinc-100 border border-zinc-200 rounded-2xl overflow-hidden bg-white">
+                <div className="divide-y divide-line border border-line rounded-2xl overflow-hidden bg-card">
                   {shifts.map(s => (
                     <div
                       key={s.id}
@@ -1730,35 +1558,31 @@ export default function WorkforceSchedulePage() {
                         >
                           {s.name}
                         </span>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700">
-                          <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground/90">
+                          <Clock className="w-3.5 h-3.5 text-muted" />
                           <span>
                             {s.startTime} – {s.endTime}
                           </span>
                         </div>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <TableActionButton
+                        icon={<Trash2 />}
+                        variant="ghost-danger"
                         onClick={() => handleDeleteShift(s.id, s.name)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer h-auto w-auto"
                         title={t('landlordShiftsBtnDelete')}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      />
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-100 flex items-center justify-end bg-zinc-50/60">
+            <div className="p-4 border-t border-line flex items-center justify-end bg-surface/60">
               <Button
-                type="button"
+                size="xs"
                 variant="outline"
                 onClick={() => handleAttemptCloseModal('shifts')}
-                className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 {t('landlordScheduleClose')}
               </Button>
@@ -1778,20 +1602,20 @@ export default function WorkforceSchedulePage() {
           }}
         >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
+            className="bg-card rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] border border-line animate-in zoom-in-95 duration-200"
             onInput={() => setIsDirty(true)}
             onChange={() => setIsDirty(true)}
           >
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
+            <div className="flex items-center justify-between p-6 border-b border-line bg-surface/80">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-2xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
+                  <h2 className="text-base font-extrabold text-foreground">
                     {t('landlordScheduleModalEditTitle')}
                   </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
+                  <p className="text-[11px] text-muted font-semibold">
                     {selectedScheduleForEdit.employeeName} ·{' '}
                     {formatDisplayDate(selectedScheduleForEdit.workDate)}
                   </p>
@@ -1799,11 +1623,10 @@ export default function WorkforceSchedulePage() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => handleAttemptCloseModal('edit')}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
@@ -1848,8 +1671,8 @@ export default function WorkforceSchedulePage() {
 
               {/* Scope Choice if Recurring ( Rule) */}
               {selectedScheduleForEdit.isRecurring && selectedScheduleForEdit.recurrenceId && (
-                <div className="space-y-2.5 p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl">
-                  <label className="text-xs font-extrabold text-zinc-800 block">
+                <div className="space-y-2.5 p-3.5 bg-surface border border-line rounded-2xl">
+                  <label className="text-xs font-extrabold text-foreground block">
                     {t('landlordScheduleEditScope')}
                   </label>
 
@@ -1858,28 +1681,26 @@ export default function WorkforceSchedulePage() {
                       setEditScope('single')
                       setIsDirty(true)
                     }}
-                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                      editScope === 'single'
-                        ? 'bg-white border-[#2AC1BC] shadow-xs'
-                        : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'
-                    }`}
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${editScope === 'single'
+                      ? 'bg-card border-primary shadow-xs'
+                      : 'bg-surface border-line hover:bg-card-hover'
+                      }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                        editScope === 'single'
-                          ? 'border-[#2AC1BC] bg-[#2AC1BC]'
-                          : 'border-zinc-300 bg-white'
-                      }`}
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${editScope === 'single'
+                        ? 'border-primary bg-primary'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {editScope === 'single' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <div>
-                      <span className="font-bold text-zinc-800">
+                      <span className="font-bold text-foreground">
                         {t('landlordScheduleEditScopeSingleTitle')}
                       </span>
-                      <p className="text-[11px] text-zinc-400">
+                      <p className="text-[11px] text-muted">
                         {t('landlordScheduleEditScopeSingleDesc')}
                       </p>
                     </div>
@@ -1890,28 +1711,26 @@ export default function WorkforceSchedulePage() {
                       setEditScope('future')
                       setIsDirty(true)
                     }}
-                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                      editScope === 'future'
-                        ? 'bg-white border-amber-500 shadow-xs'
-                        : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100'
-                    }`}
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${editScope === 'future'
+                      ? 'bg-card border-amber-500 shadow-xs'
+                      : 'bg-surface border-line hover:bg-card-hover'
+                      }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
-                        editScope === 'future'
-                          ? 'border-amber-500 bg-amber-500'
-                          : 'border-zinc-300 bg-white'
-                      }`}
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${editScope === 'future'
+                        ? 'border-amber-500 bg-amber-500'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {editScope === 'future' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <div>
-                      <span className="font-bold text-amber-700">
+                      <span className="font-bold text-warning">
                         {t('landlordScheduleEditScopeFutureTitle')}
                       </span>
-                      <p className="text-[11px] text-amber-600/80 leading-relaxed">
+                      <p className="text-[11px] text-warning/80 leading-relaxed">
                         {t('landlordScheduleEditScopeFutureDesc')}
                       </p>
                     </div>
@@ -1919,28 +1738,21 @@ export default function WorkforceSchedulePage() {
                 </div>
               )}
 
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
                 <Button
-                  type="button"
+                  size="xs"
                   variant="outline"
                   onClick={() => handleAttemptCloseModal('edit')}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
                   {t('landlordShiftsModalBtnCancel')}
                 </Button>
                 <Button
+                  size="xs"
                   type="submit"
                   disabled={isSubmittingEdit}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50"
+                  isLoading={isSubmittingEdit}
                 >
-                  {isSubmittingEdit ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{t('landlordScheduleSaving')}</span>
-                    </>
-                  ) : (
-                    <span>{t('landlordShiftsSaveShiftBtn')}</span>
-                  )}
+                  <span>{t('landlordShiftsSaveShiftBtn')}</span>
                 </Button>
               </div>
             </form>
@@ -1958,43 +1770,86 @@ export default function WorkforceSchedulePage() {
             if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
           }}
         >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-line p-6 space-y-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-black text-zinc-900">
+              <h4 className="text-base font-black text-foreground">
                 {t('landlordShiftsConfirmCloseTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 leading-relaxed">
+              <p className="text-xs text-muted leading-relaxed">
                 {t('landlordShiftsConfirmCloseDesc')}
               </p>
             </div>
 
             <div className="flex items-center gap-2.5 pt-2">
               <Button
-                type="button"
+                size="xs"
                 variant="outline"
                 onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseKeep')}
               </Button>
               <Button
-                type="button"
+                size="xs"
                 variant="danger"
                 onClick={() => {
                   setIsConfirmCloseOpen(false)
                   performCloseModal(pendingModalToClose)
                 }}
-                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20"
+                className="flex-1"
               >
                 {t('landlordShiftsConfirmCloseDiscard')}
               </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Action Confirmation Modal (Rule #10) */}
+      {actionConfirm && (
+        <Modal
+          isOpen={!!actionConfirm}
+          onClose={() => setActionConfirm(null)}
+          size="sm"
+        >
+          <div className="space-y-4 pt-2 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-danger-soft text-danger flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-foreground">
+                {actionConfirm.title}
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                {actionConfirm.message}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-line">
+              <Button
+                variant="secondary"
+                onClick={() => setActionConfirm(null)}
+                className="flex-1"
+              >
+                {t('landlordShiftsModalBtnCancel') || 'Hủy bỏ'}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  const onConf = actionConfirm.onConfirm
+                  setActionConfirm(null)
+                  onConf()
+                }}
+                className="flex-1"
+              >
+                {t('btnConfirm') || 'Xác nhận'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   )

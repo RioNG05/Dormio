@@ -147,7 +147,7 @@ export class BoardingHouseStatusBreakdownDto {
 }
 
 export class RegionalPropertyBreakdownDto {
-  @ApiProperty({ example: 'TP. Hồ Chí Minh' })
+  @ApiProperty({ example: 'Ho Chi Minh City' })
   name: string
 
   @ApiProperty({ example: 920 })

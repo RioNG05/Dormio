@@ -5,10 +5,38 @@ import { cn } from '@/lib/utils'
 /*                                Types                                       */
 /* -------------------------------------------------------------------------- */
 
-export type TextVariant =
-  'body' | 'lead' | 'heading' | 'subtitle' | 'caption' | 'overline' | 'badge' | 'code' | 'quote'
+export type Breakpoint = 'base' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 
-export type TextSize = '3xs' | '2xs' | 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl'
+export type ResponsiveValue<T> = {
+  [K in Breakpoint]?: T
+}
+
+export type ResponsiveProp<T> = T | ResponsiveValue<T>
+
+export type TextVariant =
+  | 'body'
+  | 'lead'
+  | 'heading'
+  | 'subtitle'
+  | 'caption'
+  | 'overline'
+  | 'badge'
+  | 'code'
+  | 'quote'
+
+export type TextSize =
+  | '3xs'
+  | '2xs'
+  | 'xs'
+  | 'sm'
+  | 'base'
+  | 'lg'
+  | 'xl'
+  | '2xl'
+  | '3xl'
+  | '4xl'
+  | '5xl'
+  | '6xl'
 
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold' | 'black'
 
@@ -30,10 +58,10 @@ export type TextClamp = 1 | 2 | 3 | 4 | 5 | 6
 
 export interface TextCustomProps {
   variant?: TextVariant
-  size?: TextSize
-  weight?: TextWeight
+  size?: ResponsiveProp<TextSize>
+  weight?: ResponsiveProp<TextWeight>
   color?: TextColor
-  align?: TextAlign
+  align?: ResponsiveProp<TextAlign>
   truncate?: boolean
   clamp?: TextClamp
   uppercase?: boolean
@@ -55,15 +83,15 @@ export type TextProps<E extends React.ElementType = 'p'> = TextCustomProps & {
 /* -------------------------------------------------------------------------- */
 
 const variantStyles: Record<TextVariant, string> = {
-  body: 'text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed',
-  lead: 'text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal',
-  heading: 'text-lg font-black text-zinc-900 dark:text-zinc-100 tracking-tight',
-  subtitle: 'text-xs font-medium text-zinc-500 dark:text-zinc-400 leading-normal',
-  caption: 'text-[11px] text-zinc-400 dark:text-zinc-500 leading-tight',
-  overline: 'text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500',
+  body: 'text-sm text-foreground/90 leading-relaxed',
+  lead: 'text-base sm:text-lg text-muted leading-relaxed font-normal',
+  heading: 'text-lg sm:text-xl font-black text-foreground tracking-tight',
+  subtitle: 'text-xs sm:text-sm font-medium text-muted leading-normal',
+  caption: 'text-[11px] text-muted/80 leading-tight',
+  overline: 'text-[10px] font-black uppercase tracking-widest text-muted/80',
   badge: 'text-[10px] font-extrabold uppercase tracking-wide',
-  code: 'font-mono text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded-md',
-  quote: 'text-sm italic border-l-2 border-[#2AC1BC] pl-3 py-1 text-zinc-600 dark:text-zinc-300',
+  code: 'font-mono text-xs bg-card-hover text-foreground px-1.5 py-0.5 rounded-md',
+  quote: 'text-sm italic border-l-2 border-primary pl-3 py-1 text-muted',
 }
 
 const sizeStyles: Record<TextSize, string> = {
@@ -76,6 +104,9 @@ const sizeStyles: Record<TextSize, string> = {
   xl: 'text-xl',
   '2xl': 'text-2xl',
   '3xl': 'text-3xl',
+  '4xl': 'text-4xl',
+  '5xl': 'text-5xl',
+  '6xl': 'text-6xl',
 }
 
 const weightStyles: Record<TextWeight, string> = {
@@ -88,15 +119,15 @@ const weightStyles: Record<TextWeight, string> = {
 }
 
 const colorStyles: Record<TextColor, string> = {
-  default: 'text-zinc-900 dark:text-zinc-100',
-  secondary: 'text-zinc-600 dark:text-zinc-400',
-  subtle: 'text-zinc-400 dark:text-zinc-500',
-  brand: 'text-[#2AC1BC]',
+  default: 'text-foreground',
+  secondary: 'text-muted',
+  subtle: 'text-muted/80',
+  brand: 'text-primary',
   'brand-dark': 'text-[#138e89]',
-  success: 'text-emerald-600 dark:text-emerald-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-  danger: 'text-rose-600 dark:text-rose-400',
-  orange: 'text-orange-600 dark:text-orange-400',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger',
+  orange: 'text-accent',
   white: 'text-white',
   inherit: 'text-inherit',
 }
@@ -115,6 +146,36 @@ const clampStyles: Record<TextClamp, string> = {
   4: 'line-clamp-4',
   5: 'line-clamp-5',
   6: 'line-clamp-6',
+}
+
+function resolveResponsiveClasses<T extends string>(
+  prop: ResponsiveProp<T> | undefined,
+  mapping: Record<T, string>,
+): string[] {
+  if (!prop) return []
+  if (typeof prop === 'string') {
+    const cls = mapping[prop as T]
+    return cls ? [cls] : []
+  }
+
+  const result: string[] = []
+  const breakpoints: Breakpoint[] = ['base', 'sm', 'md', 'lg', 'xl', '2xl']
+
+  for (const bp of breakpoints) {
+    const val = (prop as ResponsiveValue<T>)[bp]
+    if (val && mapping[val]) {
+      const baseClass = mapping[val]
+      if (bp === 'base') {
+        result.push(baseClass)
+      } else {
+        baseClass.split(' ').forEach(c => {
+          if (c.trim()) result.push(`${bp}:${c.trim()}`)
+        })
+      }
+    }
+  }
+
+  return result
 }
 
 /* -------------------------------------------------------------------------- */
@@ -153,11 +214,11 @@ function TextComponent<E extends React.ElementType = 'p'>(
       className={cn(
         // Base variant styling
         variant && variantStyles[variant],
-        // Overrides
-        size && sizeStyles[size],
-        weight && weightStyles[weight],
+        // Responsive overrides
+        resolveResponsiveClasses(size, sizeStyles),
+        resolveResponsiveClasses(weight, weightStyles),
+        resolveResponsiveClasses(align, alignStyles),
         color && colorStyles[color],
-        align && alignStyles[align],
         clamp && clampStyles[clamp],
         truncate && !clamp && 'truncate',
         uppercase && 'uppercase tracking-wider',

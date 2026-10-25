@@ -37,20 +37,20 @@ export function StepperItem({
       className={cn(
         'flex items-center justify-start gap-3 p-3 rounded-2xl border text-left transition-all h-auto cursor-pointer',
         isActive
-          ? 'border-[#2AC1BC] bg-[#2AC1BC]/5 hover:bg-[#2AC1BC]/10 shadow-xs'
+          ? 'border-primary bg-primary/5 hover:bg-primary/10 shadow-xs'
           : isCompleted
-            ? 'border-zinc-200 bg-white hover:bg-zinc-50'
-            : 'border-zinc-100 bg-zinc-50/50 hover:bg-zinc-50/50 opacity-60',
+            ? 'border-line bg-card hover:bg-card-hover'
+            : 'border-line bg-surface/50 hover:bg-zinc-50/50 opacity-60',
       )}
     >
       <div
         className={cn(
           'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
           isCompleted
-            ? 'bg-emerald-600 text-white'
+            ? 'bg-success text-white'
             : isActive
-              ? 'bg-[#2AC1BC] text-white shadow-sm'
-              : 'bg-zinc-200 text-zinc-600',
+              ? 'bg-primary text-white shadow-sm'
+              : 'bg-line text-muted',
         )}
       >
         {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : icon}

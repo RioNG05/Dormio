@@ -9,7 +9,7 @@ export class QueryAttendanceDto {
     example: '2026-09-01',
   })
   @IsOptional()
-  @IsDateString({}, { message: 'startDate phải có định dạng YYYY-MM-DD' })
+  @IsDateString({}, { message: 'startDate must be in format YYYY-MM-DD' })
   startDate?: string
 
   @ApiPropertyOptional({
@@ -17,7 +17,7 @@ export class QueryAttendanceDto {
     example: '2026-09-30',
   })
   @IsOptional()
-  @IsDateString({}, { message: 'endDate phải có định dạng YYYY-MM-DD' })
+  @IsDateString({}, { message: 'endDate must be in format YYYY-MM-DD' })
   endDate?: string
 
   @ApiPropertyOptional({
@@ -25,7 +25,7 @@ export class QueryAttendanceDto {
     example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   })
   @IsOptional()
-  @IsUUID('4', { message: 'ID nhân viên không hợp lệ' })
+  @IsUUID('4', { message: 'Invalid employee ID' })
   employeeId?: string
 
   @ApiPropertyOptional({
@@ -33,7 +33,7 @@ export class QueryAttendanceDto {
     example: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
   })
   @IsOptional()
-  @IsUUID('4', { message: 'ID ca làm việc không hợp lệ' })
+  @IsUUID('4', { message: 'Invalid shift ID' })
   shiftId?: string
 
   @ApiPropertyOptional({
@@ -42,12 +42,12 @@ export class QueryAttendanceDto {
     example: AttendanceStatus.on_time,
   })
   @IsOptional()
-  @IsEnum(AttendanceStatus, { message: 'Trạng thái chấm công không hợp lệ' })
+  @IsEnum(AttendanceStatus, { message: 'Invalid attendance status' })
   status?: AttendanceStatus
 
   @ApiPropertyOptional({
     description: 'Filter search query (employee name or phone)',
-    example: 'Nguyễn Văn',
+    example: 'Nguyen Van',
   })
   @IsOptional()
   @IsString()

@@ -48,10 +48,10 @@ export class PropertyBreakdownDto {
   @ApiProperty({ example: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d' })
   id: string
 
-  @ApiProperty({ example: 'Nhà trọ Cầu Giấy' })
+  @ApiProperty({ example: 'Cau Giay Boarding House' })
   name: string
 
-  @ApiProperty({ example: '123 Cầu Giấy, Dịch Vọng, Hà Nội' })
+  @ApiProperty({ example: '123 Cau Giay, Dich Vong, Hanoi' })
   address: string
 
   @ApiProperty({ example: 20 })
@@ -114,13 +114,13 @@ export class MultiPropertyExpiringContractDto {
   @ApiProperty({ example: 'c1' })
   id: string
 
-  @ApiProperty({ example: 'Nhà trọ Cầu Giấy' })
+  @ApiProperty({ example: 'Cau Giay Boarding House' })
   propertyName: string
 
   @ApiProperty({ example: 'P.201' })
   room: string
 
-  @ApiProperty({ example: 'Nguyễn Văn A' })
+  @ApiProperty({ example: 'Nguyen Van A' })
   tenant: string
 
   @ApiProperty({ example: '0901234567' })

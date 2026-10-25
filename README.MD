@@ -1,11 +1,11 @@
-# 🏠 Dormio — Nền Tảng Quản Lý & Cho Thuê Nhà Trọ Thông Minh
+# 🏠 Dormio — Smart Boarding House Management & Rental Platform
 
 <p align="center">
   <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=80" alt="Dormio Banner" width="100%" style="border-radius: 12px; max-height: 360px; object-fit: cover;" />
 </p>
 
 <p align="center">
-  <strong>Giải pháp SaaS toàn diện cho mô hình quản lý phòng trọ  và sàn kết nối người thuê trọ (BHRP) tại Việt Nam.</strong>
+  <strong>An enterprise-grade SaaS platform tailored for the Vietnamese boarding house and serviced apartment ecosystem.</strong>
 </p>
 
 <p align="center">
@@ -16,91 +16,145 @@
   <img src="https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis" />
   <img src="https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
+  <img src="https://img.shields.io/badge/PayOS-Integrated-0052CC?style=flat-square" alt="PayOS" />
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
 </p>
 
 ---
 
-## 📌 Mục lục
+## 📌 Table of Contents
 
-- [Giới thiệu tổng quan](#-giới-thiệu-tổng-quan)
-- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
-- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
-- [Hướng dẫn cài đặt & Khởi chạy từng bước](#-hướng-dẫn-cài-đặt--khởi-chạy-từng-bước)
-  - [1. Clone dự án và cài đặt dependencies](#1-clone-dự-án-và-cài-đặt-dependencies)
-  - [2. Cấu hình biến môi trường (.env)](#2-cấu-hình-biến-môi-trường-env)
-  - [3. Khởi động cơ sở dữ liệu trên Docker](#3-khởi-động-cơ-sở-dữ-liệu-trên-docker)
-  - [4. Đồng bộ Schema Prisma](#4-đồng-bộ-schema-prisma)
-  - [5. Nạp dữ liệu mẫu (Database Seeding)](#5-nạp-dữ-liệu-mẫu-database-seeding)
-  - [6. Khởi chạy ứng dụng (Backend & Frontend)](#6-khởi-chạy-ứng-dụng-backend--frontend)
-- [Tài khoản thử nghiệm mặc định](#-tài-khoản-thử-nghiệm-mặc-định)
-- [Danh mục cổng & Đường dẫn dịch vụ](#-danh-mục-cổng--đường-dẫn-dịch-vụ)
-- [Bảng lệnh tắt (NPM / PNPM Scripts)](#-bảng-lệnh-tắt-npm--pnpm-scripts)
-- [Cấu trúc thư mục dự án](#-cấu-trúc-thư-mục-dự-án)
-- [Kiểm thử & Đảm bảo chất lượng](#-kiểm-thử--đảm-bảo-chất-lượng)
-
----
-
-## 🌟 Giới thiệu tổng quan
-
-**Dormio** là nền tảng quản lý nhà trọ và căn hộ dịch vụ bao gồm hai phân hệ chính:
-
-1. **BHMS (Boarding House Management System)**:
-   - Dành cho **Chủ trọ (Landlord)**: Quản lý nhiều cơ sở nhà trọ, danh sách phòng, hợp đồng điện tử, chu kỳ thanh toán, bảng giá dịch vụ, nhân sự/lịch làm việc, khiếu nại và báo cáo doanh thu tài chính.
-   - Dành cho **Người thuê (Tenant)**: Đọc chỉ số điện nước tự động qua ảnh chụp (AI OCR), theo dõi biểu đồ tiêu thụ & phân tích chi phí MoM, thanh toán trực tiếp qua mã VietQR khóa số tiền, gửi phản ánh/khiếu nại, và tra cứu biên lai điện tử.
-   - Dành cho **Nhân viên (Staff / Employee)**: Xem lịch phân ca, ca trực, và chấm công tại điểm làm việc.
-2. **BHRP (Boarding House Rental Platform)**:
-   - Cổng thông tin tìm kiếm phòng trọ công khai, xem tiện ích phòng, đăng tin cho thuê trọ, đặt cọc giữ chỗ trực tuyến, và nhắn tin trao đổi thời gian thực.
+- [Overview](#-overview)
+- [Core Platform Modules](#-core-platform-modules)
+- [Key Architectural Invariants](#-key-architectural-invariants)
+- [Tech Stack](#-tech-stack)
+- [System Requirements](#-system-requirements)
+- [Step-by-Step Installation & Quickstart](#-step-by-step-installation--quickstart)
+  - [1. Clone Repository & Install Dependencies](#1-clone-repository--install-dependencies)
+  - [2. Environment Configuration (.env)](#2-environment-configuration-env)
+  - [3. Start Infrastructure via Docker](#3-start-infrastructure-via-docker)
+  - [4. Synchronize Prisma Schema](#4-synchronize-prisma-schema)
+  - [5. Seed Sample Database](#5-seed-sample-database)
+  - [6. Launch Development Servers](#6-launch-development-servers)
+- [Default Test Accounts & Credentials](#-default-test-accounts--credentials)
+- [Port Mappings & Service Endpoints](#-port-mappings--service-endpoints)
+- [NPM / PNPM Script Reference](#-npm--pnpm-script-reference)
+- [Project Directory Structure](#-project-directory-structure)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
+- [Engineering Guidelines & Conventions](#-engineering-guidelines--conventions)
+- [License & Contributions](#-license--contributions)
 
 ---
 
-## 🛠 Công nghệ sử dụng
+## 🌟 Overview
 
-| Tầng | Công nghệ / Thư viện |
+**Dormio** is an all-in-one SaaS platform engineered specifically for the Vietnamese rental housing sector. It solves the fragmentation between property management operations and public room rental acquisition by unifying two primary subsystems into a cohesive ecosystem:
+
+1. **BHMS (Boarding House Management System)**: An operational management suite for landlords, property managers, tenants, and staff members across multiple boarding houses.
+2. **BHRP (Boarding House Rental Platform)**: A high-reach public marketplace where prospective tenants discover verified rooms, make online holding deposits, and communicate directly with property owners.
+
+---
+
+## 🏢 Core Platform Modules
+
+### 1. BHMS (Boarding House Management System)
+
+- **Multi-Property Context (Landlords)**: Switch effortlessly between multiple boarding houses. Manage room categories, pricing tiers, amenities, and floor plans.
+- **Bulk Room Generator**: Batch generate dozens of rooms with custom numbering patterns, surface areas, base prices, and attached default utility services.
+- **Tenancy Contracts**:
+  - **Flow A (Platform Flow)**: Seamlessly promotes an existing online holding deposit into a formalized tenancy contract without duplicate financial entries.
+  - **Flow B (Direct / Offline Flow)**: Creates walk-in contracts with identity card (CCCD) uploads, co-tenant tracking, and deposit recording.
+- **Automated Billing & AI OCR**:
+  - Monthly automated invoice generation powered by background cron jobs.
+  - Camera-based utility meter capture with **Gemini AI OCR** for automated electricity and water reading extraction.
+  - Month-over-Month (MoM) consumption analytics and anomaly alerts.
+- **Centralized PayOS Payment Gateway**:
+  - Dynamic VietQR generation locking the exact amount and reference code.
+  - Real-time webhook reconciliation updating invoice states to `paid` instantly.
+- **Staff Shifts & Geofenced Timekeeping**:
+  - Recurring shift generation with designated position titles (cleaning, security, technician).
+  - Geofenced check-in and check-out validation with GPS coordinate distance calculation and time-window enforcement.
+- **Grievance Resolution & Asset Tracking**:
+  - Tenant complaint ticketing with image attachments and severity levels.
+  - Fixed-asset lifecycle logging per room (air conditioners, water heaters, furniture).
+
+### 2. BHRP (Boarding House Rental Platform)
+
+- **Public Room Discovery**: Map-based and attribute-based search (price range, district, radius, room amenities, pet policies).
+- **Listing Posts & Quotas**: Tier-based listing quotas for landlords with AI-assisted post description drafting.
+- **Online Holding Deposits**: Prospective tenants can place financial deposits via PayOS with an automated 7-day holding release / forfeiture policy.
+- **Real-time Communication**: Direct WebSocket chat messaging between prospective tenants, landlords, and leasing agents with file/image attachments.
+
+---
+
+## 🛡 Key Architectural Invariants
+
+The Dormio codebase enforces several strict architectural rules to guarantee financial accuracy, regulatory compliance, and multi-tenant security:
+
+| Rule | Implementation & Guarantee |
 | :--- | :--- |
-| **Backend** | [NestJS v11](https://nestjs.com/), [TypeScript 5](https://www.typescriptlang.org/), [Swagger / OpenAPI](https://swagger.io/), [JWT & Passport](http://www.passportjs.org/) |
-| **Database & ORM** | [PostgreSQL 16](https://www.postgresql.org/), [Prisma ORM v7](https://www.prisma.io/) với `@prisma/adapter-pg` |
-| **Frontend** | [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [TailwindCSS v4](https://tailwindcss.com/), [Lucide Icons](https://lucide.dev/), [Recharts](https://recharts.org/) |
-| **Hàng đợi & Tác vụ nền** | [BullMQ](https://docs.bullmq.io/) + [Redis 7](https://redis.io/) |
-| **Containerization** | [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) |
-| **Giao tiếp Realtime** | WebSocket (NestJS WebSockets Gateway / Socket.io) |
+| **Monetary Precision** | All monetary values are strictly defined as `DECIMAL(12,2)` in PostgreSQL and `Decimal` in Prisma. Floating-point numbers are strictly forbidden. |
+| **No Hard Deletes** | Legal and financial entities (`PAYMENT`, `INVOICE`, `CONTRACT`, `DEPOSIT`) are **never** hard-deleted. State transitions (`active`, `terminated`, `expired`, `cancelled`) preserve auditability. |
+| **Server-Side Ownership Guard** | Every BHMS endpoint requires an `X-Boarding-House-Id` header validated via `PropertyOwnershipGuard` to verify user authority over the target property. |
+| **Atomic Audit Logging** | Mutations affecting contracts, deposits, payments, invoices, employee assignments, and user subscriptions write an `AuditLog` within the **same database transaction**. |
+| **Split Media Storage** | **Cloudinary** handles public optimized assets (`f_auto, q_auto`); **AWS S3** / private storage manages sensitive PII documents (CCCD identity photos, paper contracts, grievance evidence) via presigned URLs. |
+| **Standardized Business Error Codes** | Backend business errors throw `BusinessException` with typed `BusinessErrorCode` enums, automatically mapped to client-side translations in both Vietnamese and English (`vi` / `en`). |
+| **Standardized Views & Modals** | Landlord list views support parallel **Grid & Table** view modes with Grid default (`viewMode = "grid"`), 5-page window jumping (`windowStart ± 5`), and unsaved changes confirmation dialogs on modal dismissal. |
 
 ---
 
-## 📋 Yêu cầu hệ thống
+## 🛠 Tech Stack
 
-Trước khi bắt đầu, đảm bảo máy của bạn đã cài đặt các công cụ sau:
-- **Node.js**: Phiên bản `>= 20.x` (khuyến nghị Node LTS)
-- **pnpm**: Phiên bản `>= 9.x` (`npm install -g pnpm`)
-- **Docker** và **Docker Compose** (ví dụ Docker Desktop trên Windows/macOS hoặc Docker Engine trên Linux)
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend Framework** | [NestJS v11](https://nestjs.com/) (Modular Monolith, Fastify/Express engine), [TypeScript 5](https://www.typescriptlang.org/) |
+| **Database & ORM** | [PostgreSQL 16](https://www.postgresql.org/), [Prisma ORM v7](https://www.prisma.io/) with `@prisma/adapter-pg` driver adapter |
+| **Frontend Framework** | [Next.js 16.2](https://nextjs.org/) (App Router, Server & Client Components), [React 19](https://react.dev/) |
+| **Styling & Icons** | [TailwindCSS v4](https://tailwindcss.com/), [Lucide React](https://lucide.dev/), [Recharts](https://recharts.org/) |
+| **State & Localization** | [Zustand](https://github.com/pmndrs/zustand), Custom Centralized `LanguageContext` (Vietnamese & English) |
+| **Background Queues** | [BullMQ](https://docs.bullmq.io/) + [Redis 7](https://redis.io/) (for asynchronous emails, webhooks, billing cron) |
+| **Payment Gateway** | [PayOS](https://payos.vn/) (VietQR centralized automated payment reconciliation) |
+| **AI & Vision OCR** | Google Gemini API (meter reading digit recognition, rental post generation) |
+| **Realtime WebSockets** | NestJS WebSocket Gateway (Socket.io) |
+| **Containerization** | Docker, Docker Compose (Alpine-based development and production stacks) |
+| **API Documentation** | Swagger / OpenAPI 3.0 via `@nestjs/swagger` |
+
+---
+
+## 📋 System Requirements
+
+Ensure the following tools are installed on your workstation:
+
+- **Node.js**: `>= 20.x` (LTS recommended)
+- **pnpm**: `>= 9.x` (`npm install -g pnpm`)
+- **Docker & Docker Compose**: Docker Desktop (Windows/macOS) or Docker Engine (Linux)
 - **Git**
 
 ---
 
-## 🚀 Hướng dẫn cài đặt & Khởi chạy từng bước
+## 🚀 Step-by-Step Installation & Quickstart
 
-### 1. Clone dự án và cài đặt dependencies
-
-Mở Terminal và thực thi lệnh:
+### 1. Clone Repository & Install Dependencies
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/RioNG05/Dormio.git
 cd Dormio
 
-# Cài đặt toàn bộ dependencies cho Root, Backend và Frontend
+# Install all workspace dependencies (Root, Backend, and Frontend)
 pnpm run install:all
 ```
 
-*(Hoặc cài đặt độc lập từng phần bằng `pnpm install`, `pnpm run install:be`, `pnpm run install:fe`)*
+*(Alternatively, install packages individually via `pnpm install`, `pnpm run install:be`, and `pnpm run install:fe`)*
 
 ---
 
-### 2. Cấu hình biến môi trường (.env)
+### 2. Environment Configuration (.env)
 
-Tạo file `.env` ở thư mục gốc (Root) và thư mục `backend/.env` từ file mẫu `.env.example`:
+Set up the environment configuration files in the root, backend, and frontend directories:
 
-#### Tại thư mục gốc `Dormio/.env`:
+#### Root Environment (`Dormio/.env`)
+Used by `docker-compose.yml` to provision PostgreSQL, Redis, and pgAdmin:
 ```env
 POSTGRES_USER=dormio
 POSTGRES_PASSWORD=dormio123
@@ -115,257 +169,242 @@ PGADMIN_PASSWORD=admin123
 PGADMIN_PORT=5050
 ```
 
-#### Tại thư mục `backend/.env`:
+#### Backend Environment (`Dormio/backend/.env`)
+Copy from `backend/.env.example`:
 ```env
-# ─── Frontend ────────────────────────────────────────────────────────────────
-FRONTEND_URL=
+# ─── Frontend & Application ──────────────────────────────────────────────────
+FRONTEND_URL=http://localhost:3000
+PORT=3001
+NODE_ENV=development
 
-# ─── Database ────────────────────────────────────────────────────────────────
+# ─── Database & Cache ────────────────────────────────────────────────────────
 DATABASE_URL="postgresql://dormio:dormio123@localhost:5432/dormio_db"
-
-# ─── Redis (BullMQ) ──────────────────────────────────────────────────────────
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=redis123
 
-# ─── App ─────────────────────────────────────────────────────────────────────
-PORT=3001
-NODE_ENV=development
-
-# ─── Auth ────────────────────────────────────────────────────────────────────
+# ─── Authentication ──────────────────────────────────────────────────────────
 JWT_SECRET=change_this_secret_before_production
 JWT_EXPIRES_IN=7d
 
-# ─── Storage ─────────────────────────────────────────────────────────────────
+# ─── Storage (Cloudinary & S3) ────────────────────────────────────────────────
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
-# ─── Platform ────────────────────────────────────────────────────────────────
+# ─── Platform & Business Rules ───────────────────────────────────────────────
 PLATFORM_DEPOSIT_HOLD_DAYS=7
 
-# ─── PayOS ───────────────────────────────────────────────────────────────────
+# ─── Payment Gateway (PayOS) ─────────────────────────────────────────────────
 PAYOS_CLIENT_ID=
 PAYOS_API_KEY=
 PAYOS_CHECKSUM_KEY=
 
-# ─── AI ──────────────────────────────────────────────────────────────────────
+# ─── AI & Maps ───────────────────────────────────────────────────────────────
 AI_API_KEY=
-AI_MODEL_IMAGE=
-AI_MODEL_TEXT=
+AI_MODEL_IMAGE=gemini-1.5-flash
+AI_MODEL_TEXT=gemini-1.5-flash
+GOOGLE_MAPS_API_KEY=
 ```
 
-#### Tại thư mục `frontend/.env`:
+#### Frontend Environment (`Dormio/frontend/.env` or `.env.development`)
 ```env
 NEXT_PUBLIC_API_URL=http://localhost
-
 NEXT_PUBLIC_API_PORT=3001
-
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=google-maps-api-key
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-maps-api-key
 ```
-
-### 3. Khởi động cơ sở dữ liệu trên Docker
-
-Khởi chạy các container PostgreSQL 16, Redis 7 và PgAdmin 4 bằng Docker Compose:
-
-```bash
-# Khởi động các container dưới nền (-d)
-pnpm run docker:up
-```
-
-Kiểm tra trạng thái hoạt động của các container:
-```bash
-pnpm run docker:ps
-```
-
-> **Gợi ý kiểm tra logs khi cần thiết**:
-> - Xem log PostgreSQL: `pnpm run docker:logs:db`
-> - Xem log Redis: `pnpm run docker:logs:redis`
 
 ---
 
-### 4. Đồng bộ Schema Prisma
+### 3. Start Infrastructure via Docker
 
-Đẩy cấu trúc bảng từ `schema.prisma` vào database PostgreSQL và sinh Prisma Client:
+Spin up PostgreSQL 16, Redis 7, and pgAdmin 4 in detached mode:
 
 ```bash
-# Đẩy schema lên database
+# Start infrastructure containers
+pnpm run docker:up
+
+# Verify running status
+pnpm run docker:ps
+```
+
+> **Diagnostic Log Inspection**:
+> - PostgreSQL logs: `pnpm run docker:logs:db`
+> - Redis logs: `pnpm run docker:logs:redis`
+
+---
+
+### 4. Synchronize Prisma Schema
+
+Push the latest database models into PostgreSQL and generate the typed Prisma Client:
+
+```bash
+# Push schema structure to PostgreSQL
 pnpm run db:push
 
-# Tạo Prisma Client type-safe
+# Generate Prisma Client library
 pnpm run db:generate
 ```
 
 ---
 
-### 5. Nạp dữ liệu mẫu (Database Seeding)
+### 5. Seed Sample Database
 
-Dormio cung cấp bộ dữ liệu mẫu phong phú (tài khoản Admin/Chủ trọ, Khách thuê, Nhân viên, Nhà trọ, Phòng, Chỉ số công tơ, Hóa đơn chưa thanh toán, Khiếu nại, Ca làm việc):
+Populate your database with comprehensive mock data (administrators, landlords, rooms, contracts, unpaid invoices, meter readings, grievances, shifts):
 
 ```bash
-# Chạy script seeding dữ liệu
 pnpm run seed
 ```
 
 ---
 
-### 6. Khởi chạy ứng dụng (Backend & Frontend)
+### 6. Launch Development Servers
 
-Bạn có thể chạy đồng thời cả Backend và Frontend chỉ với **1 câu lệnh duy nhất**:
+Run both the NestJS Backend and Next.js Frontend concurrently with a single command:
 
 ```bash
 pnpm run dev
 ```
 
-Hoặc chạy riêng biệt ở 2 cửa sổ terminal:
+Or start each service in separate terminal sessions:
 
 ```bash
-# Terminal 1 — Khởi chạy NestJS Backend (Cổng 8080)
+# Terminal 1: NestJS API server (Watch mode, Port 3001)
 pnpm run dev:be
 
-# Terminal 2 — Khởi chạy Next.js Frontend (Cổng 3000)
+# Terminal 2: Next.js Web application (Port 3000)
 pnpm run dev:fe
 ```
 
 ---
 
-## 👥 Tài khoản thử nghiệm mặc định
+## 🌐 Port Mappings & Service Endpoints
 
-Dữ liệu seed sẵn sàng với các vai trò người dùng sau:
-
-| Vai trò | Số điện thoại | Mật khẩu | Mô tả / Mục đích kiểm thử |
-| :--- | :--- | :--- | :--- |
-| **Admin / Master Landlord** | `0344265925` | `88888888` | Quản trị viên hệ thống & Chủ chuỗi nhà trọ Dormio |
-| **Khách thuê 1 (Tenant)** | `0912345678` | `Secret@123` | Trần Thị Thuỳ Dung — Có hóa đơn tháng cần thanh toán & chỉ số điện nước |
-| **Khách thuê 2 (Tenant)** | `0987654321` | `Secret@123` | Lê Hoàng Nam — Khách thuê phòng trọ |
-| **Nhân viên (Staff / Employee)** | `0901122334` | `Secret@123` | Phạm Văn Bảo — Nhân viên kỹ thuật & vận hành |
-| **Chủ trọ 2 (Landlord)** | `0933445566` | `Secret@123` | Võ Minh Trí — Chủ trọ độc lập (kiểm thử đa chủ trọ) |
-
----
-
-## 🌐 Danh mục cổng & Đường dẫn dịch vụ
-
-Sau khi khởi chạy, bạn có thể truy cập các dịch vụ qua các đường dẫn sau:
-
-| Dịch vụ | Đường dẫn (URL) | Ghi chú |
+| Service | Access URL | Description / Notes |
 | :--- | :--- | :--- |
-| **Frontend Web App** | [http://localhost:3000](http://localhost:3000) | Giao diện người dùng Next.js 16 |
-| **Backend REST API** | [http://localhost:8080/api/v1](http://localhost:8080/api/v1) | NestJS REST API |
-| **Swagger API Docs** | [http://localhost:8080/api/docs](http://localhost:8080/api/docs) | Tài liệu API tương tác trực tiếp |
-| **Prisma Studio** | [http://localhost:5555](http://localhost:5555) | Giao diện duyệt và sửa DB trực quan (`pnpm run db:studio`) |
-| **PgAdmin 4** | [http://localhost:5050](http://localhost:5050) | Đăng nhập: `admin@dormio.vn` / `admin123` |
-| **PostgreSQL Database** | `localhost:5432` | User: `dormio`, DB: `dormio_db`, Pass: `dormio123` |
+| **Frontend Web App** | [http://localhost:3000](http://localhost:3000) | Next.js 16 Web Application (Portals for Landlord, Tenant, Staff, Admin) |
+| **Backend REST API** | [http://localhost:3001/api/v1](http://localhost:3001/api/v1) | NestJS REST API with URI versioning |
+| **Swagger API Docs** | [http://localhost:3001/api/docs](http://localhost:3001/api/docs) | Interactive Swagger OpenAPI documentation |
+| **OpenAPI Specification** | [http://localhost:3001/api/docs-json](http://localhost:3001/api/docs-json) | Raw JSON OpenAPI contract |
+| **Prisma Studio** | [http://localhost:5555](http://localhost:5555) | Web-based database browser (`pnpm run db:studio`) |
+| **pgAdmin 4** | [http://localhost:5050](http://localhost:5050) | Credentials: `admin@gmail.com` / `admin123` |
+| **PostgreSQL Database** | `localhost:5432` | User: `dormio`, Database: `dormio_db`, Password: `dormio123` |
 | **Redis Cache / BullMQ** | `localhost:6379` | Password: `redis123` |
 
 ---
 
-## ⌨️ Bảng lệnh tắt (NPM / PNPM Scripts)
-
-Toàn bộ các tác vụ vận hành có thể gọi nhanh từ thư mục gốc:
-
-### Cài đặt & Khởi chạy
-- `pnpm run install:all` : Cài đặt node_modules cho Root, Backend và Frontend.
-- `pnpm run dev` : Chạy đồng thời dev server Backend và Frontend.
-- `pnpm run dev:be` : Chạy riêng NestJS backend với chế độ watch.
-- `pnpm run dev:fe` : Chạy riêng Next.js frontend.
-
-### Cơ sở dữ liệu & Prisma
-- `pnpm run db:push` : Đồng bộ schema Prisma trực tiếp vào cơ sở dữ liệu PostgreSQL.
-- `pnpm run db:generate` : Sinh Prisma Client mới nhất theo schema.
-- `pnpm run db:migrate` : Tạo và chạy Prisma migration trong môi trường dev.
-- `pnpm run seed` : Nạp toàn bộ dữ liệu mẫu (mock users, rooms, contracts, invoices).
-- `pnpm run db:studio` : Mở giao diện Prisma Studio trên trình duyệt.
-- `pnpm run db:reset` : Xóa sạch và tạo mới toàn bộ cơ sở dữ liệu.
-
-### Docker Compose
-- `pnpm run docker:up` : Bật các container Postgres, Redis, PgAdmin dưới nền.
-- `pnpm run docker:down` : Dừng các container Docker.
-- `pnpm run docker:restart` : Khởi động lại các container.
-- `pnpm run docker:logs` : Xem live logs của tất cả các container.
-- `pnpm run docker:clean` : Dừng và xóa toàn bộ volumes dữ liệu.
-
-### Kiểm thử & Build
-- `pnpm run test` : Chạy toàn bộ Unit Tests của Backend (Jest).
-- `pnpm run build` : Biên dịch production cho cả Backend và Frontend.
-- `pnpm run lint` : Kiểm tra cú pháp và định dạng mã nguồn (ESLint).
-
----
-
-## 📂 Cấu trúc thư mục dự án
+## 📂 Project Directory Structure
 
 ```text
 Dormio/
-├── backend/                  # NestJS v11 Application
+├── backend/                       # NestJS v11 REST API Application
 │   ├── prisma/
-│   │   ├── schema.prisma     # Prisma Schema (PostgreSQL Models)
-│   │   └── seed.ts           # Database Seeder script
+│   │   ├── schema.prisma          # PostgreSQL relational schema models
+│   │   └── seed.ts                # Database seeder script
 │   ├── src/
-│   │   ├── common/           # Decorators, Filters, Guards (JWT/RBAC), PrismaModule
-│   │   ├── config/           # Typed configuration loader
-│   │   ├── modules/
-│   │   │   ├── auth/         # Xác thực, Đăng nhập, Đổi mật khẩu
-│   │   │   ├── billing-cron/ # Cron tự động quét và tính hóa đơn hàng tháng
-│   │   │   ├── contracts/    # Hợp đồng thuê phòng
-│   │   │   ├── grievances/   # Tiếp nhận và xử lý khiếu nại (UC-T-07)
-│   │   │   ├── invoices/     # Quản lý hóa đơn & lịch sử thanh toán (UC-T-05, UC-T-08)
-│   │   │   ├── meter-readings/# Nhập chỉ số đồng hồ điện nước qua AI OCR (UC-T-03)
-│   │   │   ├── notifications/# Hệ thống thông báo đa kênh
-│   │   │   └── payments/     # Quyết toán VietQR trực tiếp & Webhook (UC-T-04, UC-L-06)
-│   │   ├── app.module.ts     # Root NestJS Module
-│   │   └── main.ts           # Entry point Backend
+│   │   ├── common/                # Decorators, filters, guards, interceptors, PrismaModule
+│   │   │   ├── enums/             # Business error code enum & domain enums
+│   │   │   ├── exceptions/        # BusinessException hierarchy
+│   │   │   ├── filters/           # Global HttpExceptionFilter
+│   │   │   └── guards/            # JwtAuthGuard, RolesGuard, PropertyOwnershipGuard
+│   │   ├── config/                # Environment configuration loader
+│   │   ├── modules/               # 25 Specialized Feature Modules
+│   │   │   ├── admin/             # Platform analytics, revenue, mass notices (UC-A-01 -> 06)
+│   │   │   ├── ai/                # AI conversational assistant & report generation
+│   │   │   ├── assets/            # Room fixtures and asset lifecycle
+│   │   │   ├── attendance/        # Timekeeping, check-in/out, GPS distance verification
+│   │   │   ├── auth/              # JWT authentication, registration, password reset
+│   │   │   ├── billing-cron/      # Automated monthly invoice generation cron
+│   │   │   ├── boarding-houses/   # Property CRUD & multi-property context (UC-L-01 -> 03)
+│   │   │   ├── contracts/         # Tenancy contracts (Flow A Platform & Flow B Direct)
+│   │   │   ├── deposits/          # Holding & security deposits (UC-L-20 -> 22)
+│   │   │   ├── employees/         # Staff onboarding & property assignment (UC-L-19)
+│   │   │   ├── expenses/          # Boarding house operational expense tracking
+│   │   │   ├── grievances/        # Tenant complaints & resolution workflow (UC-T-07)
+│   │   │   ├── invoices/          # Metered & flat utility calculation, invoices (UC-L-15)
+│   │   │   ├── maps/              # Google Maps location services & geocoding
+│   │   │   ├── messages/          # Real-time WebSocket chat (BHMS & BHRP)
+│   │   │   ├── meter-readings/    # Gemini AI OCR for electricity & water meters (UC-T-03)
+│   │   │   ├── notifications/     # In-app, push, and broadcast notifications
+│   │   │   ├── payments/          # Centralized PayOS VietQR payments & webhook reconciliation
+│   │   │   ├── posts/             # Public rental listing posts & quotas (UC-P-01)
+│   │   │   ├── rooms/             # Bulk generation, pricing, status, services (UC-L-05 -> 10)
+│   │   │   ├── schedules/         # Staff shift patterns and recurring calendar (UC-S-01)
+│   │   │   ├── services/          # Catalog of utility and recurring services
+│   │   │   ├── subscriptions/     # Landlord subscription tiers & posting quota billing
+│   │   │   ├── upload/            # Cloudinary and AWS S3 upload handlers
+│   │   │   └── users/             # User profile and CCCD identification (UC-PU-01)
+│   │   ├── app.module.ts          # Root module wiring dependencies
+│   │   └── main.ts                # Application bootstrap (CORS, Swagger, validation)
 │   └── tsconfig.json
 │
-├── frontend/                 # Next.js 16 App Router (React 19, Tailwind v4)
+├── frontend/                      # Next.js 16 App Router (React 19, TailwindCSS v4)
+│   ├── i8n/                       # Centralized localization dictionaries (vi.ts, en.ts)
+│   │   ├── vi/                    # Vietnamese translations (errors, common, modules)
+│   │   └── en/                    # English translations
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── (auth)/       # /login, /register, /forgot-password
-│   │   │   ├── (dashboard)/
-│   │   │   │   ├── landlord/ # Giao diện dành cho Chủ trọ
-│   │   │   │   └── tenant/   # Giao diện dành cho Khách thuê (/invoices, /meter-readings, /complaints)
-│   │   │   ├── (public)/     # Trang chủ, danh sách phòng trọ, tin đăng cho thuê
-│   │   │   └── layout.tsx    # Root layout & Navigation
-│   │   ├── components/       # UI Components tái sử dụng
-│   │   └── services/         # Client API Services (Axios/Fetch Wrapper)
+│   │   ├── app/                   # App Router route tree
+│   │   │   ├── (auth)/            # Login, registration, password recovery
+│   │   │   ├── (dashboard)/       # Authenticated role portals
+│   │   │   │   ├── admin/         # Platform administration & analytics
+│   │   │   │   ├── landlord/      # Properties, rooms, contracts, invoices, staff
+│   │   │   │   ├── staff/         # Shift schedule, timekeeping check-in/out
+│   │   │   │   └── tenant/        # Invoices, meter readings, grievances, contracts
+│   │   │   ├── (public)/          # Landing page, room search, post detail, booking
+│   │   │   └── layout.tsx         # Root layout with Language & Auth Providers
+│   │   ├── components/            # Reusable UI component library
+│   │   ├── context/               # LanguageContext (i18n) and session context
+│   │   ├── services/              # Type-safe HTTP API client services
+│   │   ├── store/                 # Zustand stores (property context, active filters)
+│   │   └── utils/                 # Business error resolver & formatting helpers
 │   └── package.json
 │
-├── docs/                     # Đặc tả kỹ thuật & Hướng dẫn Use Cases
-│   └── spec/                 # 00-global-conventions -> 07-auth_roles
-├── docker-compose.yml        # Docker compose config (Postgres 16, Redis 7, PgAdmin)
-├── package.json              # Root workspace management
-└── README.md
+├── docs/                          # Technical Specifications & Architecture Docs
+│   ├── technical_spec.md          # Master index file of use cases
+│   └── spec/                      # Detailed modular specs (00-global to 07-auth)
+├── docker-compose.yml             # Local Docker Compose setup (Postgres, Redis, pgAdmin)
+├── package.json                   # Root workspace orchestration
+└── README.md                      # Project documentation
 ```
 
 ---
 
-## 🧪 Kiểm thử & Đảm bảo chất lượng
+## 🧪 Testing & Quality Assurance
 
-Dự án áp dụng kiểm thử đơn vị (Unit Test) cho tất cả các service nghiệp vụ và luồng thanh toán / tính toán hóa đơn:
+Dormio enforces comprehensive automated testing across core financial and operational services:
 
 ```bash
-# Chạy toàn bộ test suites của Backend
+# Run all backend unit tests
 pnpm run test:be
+
+# Run tests with code coverage report
+pnpm run test:be:cov
 ```
 
-Kết quả kiểm thử mẫu:
-```text
-PASS src/app.controller.spec.ts
-PASS src/modules/payments/payments.service.spec.ts
-PASS src/modules/meter-readings/meter-readings.service.spec.ts
-PASS src/modules/notifications/notifications.service.spec.ts
-PASS src/modules/contracts/contracts.service.spec.ts
-PASS src/modules/invoices/invoices.service.spec.ts
-PASS src/modules/billing-cron/billing-cron.service.spec.ts
-PASS src/modules/grievances/grievances.service.spec.ts
-
-Test Suites: 8 passed, 8 total
-Tests:       54 passed, 54 total
-Snapshots:   0 total
-Time:        9.483 s
-```
+Key test suites covering critical domain logic include:
+- `payments.service.spec.ts` — PayOS webhook signature verification, idempotency, invoice status updates.
+- `invoices.service.spec.ts` — Metered tier computation, late fee penalties, subtotal calculation.
+- `contracts.service.spec.ts` — Deposit linking, tenancy date validations, early termination rules.
+- `meter-readings.service.spec.ts` — Reading validations, MoM consumption variance checks.
+- `attendance.service.spec.ts` — Geofence radius checks, shift window allowances.
+- `http-exception.filter.spec.ts` — Standardized `BusinessErrorCode` formatting and error responses.
 
 ---
 
-## 📄 Bản quyền & Đóng góp
+## 📐 Engineering Guidelines & Conventions
 
-- Dự án được phát triển và sở hữu bởi **Dormio Development Team**.
-- Mọi thắc mắc hoặc yêu cầu đóng góp tính năng, vui lòng tạo Issue hoặc gửi Pull Request.
+1. **English Codebase**: All source code (variables, functions, classes, interfaces, DTOs, enums, database columns), comments, log messages, commit messages, and documentation must be written in **English**. Vietnamese is strictly reserved for user-facing UI labels, client-visible toasts, and localized notification texts.
+2. **Business Exceptions & Client i18n Mapping**:
+   - Backend domain errors must throw a `BusinessException` with a typed code from `BusinessErrorCode`.
+   - Frontend components resolve errors using `resolveErrorMessage(err, tErrors, fallbackMessage)` from `@/utils`, ensuring localized messages in both Vietnamese and English without fragile substring checking.
+3. **Property Ownership Guard**: Every BHMS controller must inject and apply `PropertyOwnershipGuard` on routes that mutate or read property-scoped data (`X-Boarding-House-Id`).
+4. **API Logging & Documentation**:
+   - All backend controllers must initialize a `Logger` instance and log endpoint invocations.
+   - All endpoints must include complete Swagger annotations (`@ApiTags`, `@ApiOperation`, `@ApiBearerAuth`, `@ApiResponse`).
+
+---
+
+## 📄 License & Contributions
+
+- **Ownership**: Developed and maintained by the **Dormio Development Team**.
+- **Contributions**: Contributions, bug reports, and feature requests are welcome via GitHub Issues and Pull Requests. Please review the project specifications under `/docs` prior to submitting changes.

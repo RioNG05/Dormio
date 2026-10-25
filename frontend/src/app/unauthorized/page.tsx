@@ -1,11 +1,11 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ShieldOff, Home, LogIn, LogOut, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
+import { Button, Text } from '@/components/ui'
 
 /**
  * Unauthorized page — shown when a logged-in user attempts to access a route
@@ -36,81 +36,103 @@ export default function UnauthorizedPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-50 px-4 py-12">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4 py-12">
       {/* Card */}
-      <div className="max-w-md w-full text-center bg-white rounded-2xl shadow-sm border border-zinc-100 px-8 py-10 space-y-6">
+      <div className="max-w-md w-full text-center bg-card rounded-2xl shadow-sm border border-line px-8 py-10 space-y-6">
         {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-200 text-[11px] font-black text-red-500 uppercase tracking-widest">
+        <Text
+          as="div"
+          variant="badge"
+          size="2xs"
+          weight="black"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-danger-soft border border-danger-subtle text-red-500 tracking-widest"
+        >
           <ShieldOff className="w-3.5 h-3.5" />
           {t('unauthorizedTagCode')}
-        </div>
+        </Text>
 
         {/* Icon */}
-        <div className="mx-auto w-20 h-20 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shadow-sm">
+        <div className="mx-auto w-20 h-20 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shadow-sm">
           <ShieldOff className="w-10 h-10 text-red-400" strokeWidth={1.5} />
         </div>
 
         {/* Heading */}
         <div className="space-y-2">
-          <h1 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
+          <Text as="h1" variant="heading" size="2xl" weight="extrabold">
             {t('unauthorizedTitle')}
-          </h1>
-          <p className="text-sm font-semibold text-zinc-500">{t('unauthorizedSubtitle')}</p>
+          </Text>
+          <Text variant="subtitle" size="sm" weight="semibold">
+            {t('unauthorizedSubtitle')}
+          </Text>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-zinc-400 leading-relaxed">{t('unauthorizedDesc')}</p>
+        <Text variant="body" size="sm" color="subtle">
+          {t('unauthorizedDesc')}
+        </Text>
 
         {/* Divider */}
-        <div className="h-px bg-zinc-100" />
+        <div className="h-px bg-card-hover" />
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
           {/* Row: Go Back + Back to Home */}
           <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
+            <Button
+              size="md"
+              fullWidth
               onClick={handleGoBack}
-              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-[#2AC1BC] text-white text-sm font-semibold shadow-sm hover:bg-[#22a8a4] active:scale-[0.98] transition-all cursor-pointer"
+              leftIcon={<ArrowLeft strokeWidth={2.5} />}
+              className="font-semibold text-sm"
             >
-              <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
               {t('unauthorizedBtnBack')}
-            </button>
+            </Button>
 
-            <Link
+            <Button
               href="/"
-              className="inline-flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50 active:scale-[0.98] transition-all"
+              variant="white"
+              size="md"
+              fullWidth
+              leftIcon={<Home strokeWidth={2} />}
+              className="font-semibold text-sm text-foreground/90 w-full"
             >
-              <Home className="w-4 h-4" strokeWidth={2} />
               {t('unauthorizedBtnHome')}
-            </Link>
+            </Button>
           </div>
 
           {/* Secondary: Log in (keep session, just navigate) */}
-          <Link
+          <Button
             href="/login"
-            className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-700 text-sm font-semibold hover:bg-zinc-50 active:scale-[0.98] transition-all"
+            variant="white"
+            size="md"
+            fullWidth
+            leftIcon={<LogIn />}
+            className="font-semibold text-sm text-foreground/90 w-full"
           >
-            <LogIn className="w-4 h-4" />
             {t('unauthorizedBtnLogin')}
-          </Link>
+          </Button>
 
           {/* Tertiary: Logout and switch account */}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="md"
+            fullWidth
             onClick={handleSwitchAccount}
-            className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl bg-red-50 border border-red-100 text-red-500 text-sm font-semibold hover:bg-red-100 active:scale-[0.98] transition-all cursor-pointer"
+            leftIcon={<LogOut />}
+            className="bg-danger-soft border border-danger-subtle text-red-500 font-semibold text-sm hover:bg-red-100 hover:text-red-600"
           >
-            <LogOut className="w-4 h-4" />
             {t('unauthorizedBtnSwitchAcc')}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Footer branding */}
-      <p className="mt-8 text-xs text-zinc-400 font-medium">
-        Dormio<span className="text-[#FF6B35]">.</span>
-      </p>
+      <Text variant="caption" size="xs" weight="medium" color="subtle" className="mt-8">
+        Dormio
+        <Text as="span" variant="caption" size="xs" weight="medium" className="text-accent">
+          .
+        </Text>
+      </Text>
     </div>
   )
 }

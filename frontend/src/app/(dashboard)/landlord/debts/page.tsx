@@ -1,28 +1,18 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   AlertTriangle,
-  Search,
-  RefreshCw,
   FileSpreadsheet,
   DollarSign,
-  Building2,
   Calendar,
-  Clock,
   Send,
-  Eye,
   CheckCircle2,
   Copy,
   Check,
   X,
-  LayoutGrid,
-  List,
-  ChevronLeft,
-  ChevronRight,
   User,
   Phone,
-  ShieldAlert,
   Loader2,
   Receipt,
   CreditCard,
@@ -30,18 +20,36 @@ import {
 
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   landlordInvoiceService,
   RoomDebtItem,
   LandlordDebtsSummary,
   ManualPaymentPayload,
 } from '@/services/landlord-invoice.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Checkbox, SearchInput } from '@/components/ui'
+import {
+  Button,
+  TableActionButton,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  SearchInput,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  Card,
+  TableRow,
+  Text,
+  Chip,
+  EmptyState,
+} from '@/components/ui'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 export default function LandlordDebtsPage() {
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
   const { locale } = useLanguage()
+  const { toast } = useToast()
   const isEn = locale === 'en'
 
   const [isMounted, setIsMounted] = useState(false)
@@ -109,11 +117,8 @@ export default function LandlordDebtsPage() {
     setIsMounted(true)
   }, [])
 
-  // Update default pageSize on viewMode change per Rule #9
+  // Clear selection on viewMode change without refetching data
   useEffect(() => {
-    const defaultSize = viewMode === 'grid' ? 6 : 10
-    setPageSize(defaultSize)
-    setCurrentPage(1)
     setSelectedRoomIds([])
   }, [viewMode])
 
@@ -216,7 +221,7 @@ export default function LandlordDebtsPage() {
       }
     } catch (err: unknown) {
       const errorMsg = (err as Error)?.message || t('landlordDebtsToastReminderFailed')
-      alert(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsSendingReminder(false)
     }
@@ -244,7 +249,7 @@ export default function LandlordDebtsPage() {
       setInvoicesModalRoom(null)
       await fetchDebts()
     } catch (err: unknown) {
-      alert((err as Error)?.message || t('landlordDebtsToastPaymentFailed'))
+      toast.error((err as Error)?.message || t('landlordDebtsToastPaymentFailed'))
     } finally {
       setIsSubmittingPayment(false)
     }
@@ -287,33 +292,33 @@ export default function LandlordDebtsPage() {
   // Export CSV
   const handleExportCSV = () => {
     if (debtRooms.length === 0) {
-      alert(t('landlordDebtsExportNoData'))
+      toast.warning(t('landlordDebtsExportNoData'))
       return
     }
 
     const headers = isEn
       ? [
-          'Room',
-          'Floor',
-          'Tenant',
-          'Phone',
-          'Total Debt (VND)',
-          'Overdue Debt (VND)',
-          'Max Aging Days',
-          'Status',
-          'Invoice Count',
-        ]
+        'Room',
+        'Floor',
+        'Tenant',
+        'Phone',
+        'Total Debt (VND)',
+        'Overdue Debt (VND)',
+        'Max Aging Days',
+        'Status',
+        'Invoice Count',
+      ]
       : [
-          'Phòng',
-          'Tầng',
-          'Khách thuê',
-          'Số điện thoại',
-          'Số tiền nợ (VND)',
-          'Nợ quá hạn (VND)',
-          'Số ngày nợ cao nhất',
-          'Tình trạng',
-          'Số lượng hóa đơn',
-        ]
+        'Phòng',
+        'Tầng',
+        'Khách thuê',
+        'Số điện thoại',
+        'Số tiền nợ (VND)',
+        'Nợ quá hạn (VND)',
+        'Số ngày nợ cao nhất',
+        'Tình trạng',
+        'Số lượng hóa đơn',
+      ]
 
     const rows = debtRooms.map(r => [
       r.roomNumber,
@@ -376,146 +381,88 @@ export default function LandlordDebtsPage() {
     )
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'totalDebt',
+        label: t('landlordDebtsTotalDebt'),
+        value: formatCurrency(summary.totalDebtAmount),
+        icon: <DollarSign className="w-5 h-5 text-danger shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[160px]',
+        labelClassName: 'text-rose-400',
+        valueClassName: 'text-rose-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'overdueDebt',
+        label: t('landlordDebtsOverdueDebt'),
+        value: formatCurrency(summary.overdueDebtAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[160px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'badDebt',
+        label: t('landlordDebtsBadDebt3Months'),
+        value: formatCurrency(summary.badDebtAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 lg:w-[160px]',
+        labelClassName: 'text-purple-400',
+        valueClassName: 'text-purple-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'debtorRooms',
+        label: t('landlordDebtsDebtorRooms'),
+        value: `${summary.debtorRoomsCount} ${t('landlordDebtsRoomUnit')}`,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[160px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-sm sm:text-base leading-none mt-1 tracking-tight',
+      },
+    ],
+    [t, summary],
+  )
+
   if (!isMounted) return null
 
   return (
     <div className="space-y-6 pb-20">
       {/* ─── Page Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-rose-500/20">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-zinc-900">
-                {t('landlordDebtsTitle')}
-              </h1>
-              <p className="text-xs text-zinc-500 font-medium">{t('landlordDebtsSubtitle')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 self-stretch sm:self-auto">
+      <DashboardPageHeader
+        title={t('landlordDebtsTitle')}
+        subtitle={t('landlordDebtsSubtitle')}
+        actions={
           <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleTriggerFlip}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 disabled:opacity-50 h-auto"
-            title={t('landlordDebtsSyncTooltip')}
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-600' : ''}`} />
-            <span>{isRefreshing ? t('landlordDebtsSyncing') : t('landlordDebtsSyncBtn')}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
+            variant="success"
+            size="md"
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 transition-all shadow-sm active:scale-95 h-auto"
+            leftIcon={<FileSpreadsheet />}
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>{t('landlordDebtsExportExcel')}</span>
+            {t('landlordDebtsExportExcel')}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* ─── Metric KPI Cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Debt */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              {t('landlordDebtsTotalDebt')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-rose-600 tracking-tight block">
-              {formatCurrency(summary.totalDebtAmount)}
-            </span>
-            <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
-              {t('landlordDebtsInvoicesUncollected', { count: summary.totalInvoicesCount })}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-rose-500/10 transition-all" />
-        </div>
-
-        {/* Overdue Debt */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              {t('landlordDebtsOverdueDebt')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xs">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-amber-600 tracking-tight block">
-              {formatCurrency(summary.overdueDebtAmount)}
-            </span>
-            <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
-              {t('landlordDebtsOverdueNotice')}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-amber-500/10 transition-all" />
-        </div>
-
-        {/* Bad Debt (>60 days) */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              {t('landlordDebtsBadDebt3Months')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xs">
-              <ShieldAlert className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-purple-600 tracking-tight block">
-              {formatCurrency(summary.badDebtAmount)}
-            </span>
-            <span className="text-[11px] text-zinc-400 font-medium mt-1 block">
-              {t('landlordDebtsBadDebtRooms', { count: summary.agingDistribution.over60Days })}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-purple-500/10 transition-all" />
-        </div>
-
-        {/* Debtor Rooms */}
-        <div className="bg-white rounded-2xl p-5 border border-zinc-200 shadow-sm relative overflow-hidden group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-              {t('landlordDebtsDebtorRooms')}
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xs">
-              <Building2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-black text-zinc-900 tracking-tight block">
-              {summary.debtorRoomsCount}{' '}
-              <span className="text-sm font-bold text-zinc-500">{t('landlordDebtsRoomUnit')}</span>
-            </span>
-            <span className="text-[11px] text-teal-600 font-bold mt-1 block">
-              {t('landlordDebtsAtBuilding', {
-                building: activeBuilding?.name || (isEn ? 'current' : 'hiện tại'),
-              })}
-            </span>
-          </div>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-teal-500/10 transition-all" />
-        </div>
-      </div>
+      {/* ─── Stat Banner ────────────────────────────────────────────────────── */}
+      <LandlordStatBanner
+        watermarkIcon={<AlertTriangle className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Filter & Control Bar ─────────────────────────────────────────────── */}
-      <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
-        {/* Search Input */}
+      <FilterToolbar
+        search={
           <SearchInput
             value={searchTerm}
             onChange={val => {
@@ -524,114 +471,82 @@ export default function LandlordDebtsPage() {
             }}
             placeholder={t('landlordDebtsSearchPlaceholder')}
             containerClassName="w-full space-y-0"
-            className="w-full text-xs font-semibold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-xl"
+            className="w-full text-xs font-semibold text-foreground bg-surface border border-line rounded-xl"
           />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={durationFilter}
+              onChange={e => {
+                setDurationFilter(e.target.value as typeof durationFilter)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: t('landlordDebtsAllDurations') },
+                { value: 'overdue', label: t('landlordDebtsFilterOverdue') },
+                { value: '1_month', label: t('landlordDebtsFilter1Month') },
+                { value: '2_months', label: t('landlordDebtsFilter2Months') },
+                { value: 'bad_debt', label: t('landlordDebtsFilterBadDebt') },
+              ]}
+              containerClassName="w-auto space-y-0"
+              className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
+            />
 
-        {/* Filters and View Switcher */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Duration Filter */}
-          <SelectInput
-            value={durationFilter}
-            onChange={e => {
-              setDurationFilter(e.target.value as typeof durationFilter)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'all', label: t('landlordDebtsAllDurations') },
-              { value: 'overdue', label: t('landlordDebtsFilterOverdue') },
-              { value: '1_month', label: t('landlordDebtsFilter1Month') },
-              { value: '2_months', label: t('landlordDebtsFilter2Months') },
-              { value: 'bad_debt', label: t('landlordDebtsFilterBadDebt') },
-            ]}
-            containerClassName="w-auto space-y-0"
-            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl"
+            <SelectInput
+              value={sortBy}
+              onChange={e => {
+                setSortBy(e.target.value as typeof sortBy)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'debt_desc', label: t('landlordDebtsSortDebtDesc') },
+                { value: 'aging_desc', label: t('landlordDebtsSortAgingDesc') },
+                { value: 'room_asc', label: t('landlordDebtsSortRoomAsc') },
+              ]}
+              containerClassName="w-auto space-y-0"
+              className="px-3 py-2 text-xs font-bold text-foreground/90 bg-surface border border-line rounded-xl"
+            />
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
           />
-
-          {/* Sort By */}
-          <SelectInput
-            value={sortBy}
-            onChange={e => {
-              setSortBy(e.target.value as typeof sortBy)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'debt_desc', label: t('landlordDebtsSortDebtDesc') },
-              { value: 'aging_desc', label: t('landlordDebtsSortAgingDesc') },
-              { value: 'room_asc', label: t('landlordDebtsSortRoomAsc') },
-            ]}
-            containerClassName="w-auto space-y-0"
-            className="px-3 py-2 text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200 rounded-xl"
-          />
-
-          {/* View Mode Toggle per Rule #9 */}
-          <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className={`p-1.5 h-auto w-auto rounded-lg transition-all ${
-                viewMode === 'grid'
-                  ? 'bg-white text-teal-600 shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              }`}
-              title={t('landlordDebtsViewGrid')}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode('table')}
-              className={`p-1.5 h-auto w-auto rounded-lg transition-all ${
-                viewMode === 'table'
-                  ? 'bg-white text-teal-600 shadow-sm font-bold'
-                  : 'text-zinc-400 hover:text-zinc-600'
-              }`}
-              title={t('landlordDebtsViewTable')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ─── Loading / Empty / Content ───────────────────────────────────────── */}
       {isLoading ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
+        <div className="p-16 flex flex-col items-center justify-center bg-card rounded-2xl border border-line text-center">
           <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-3" />
-          <p className="text-sm font-bold text-zinc-700">{t('landlordDebtsLoadingTitle')}</p>
-          <p className="text-xs text-zinc-400 mt-1">{t('landlordDebtsLoadingDesc')}</p>
+          <p className="text-sm font-bold text-foreground/90">{t('landlordDebtsLoadingTitle')}</p>
+          <p className="text-xs text-muted mt-1">{t('landlordDebtsLoadingDesc')}</p>
         </div>
       ) : debtRooms.length === 0 ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-zinc-200 text-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-          <h3 className="text-base font-black text-zinc-900">
-            {t('landlordDebtsEmptyFilteredTitle')}
-          </h3>
-          <p className="text-xs text-zinc-500 max-w-md mt-1.5">
-            {searchTerm || durationFilter !== 'all'
+        <EmptyState
+          icon={<CheckCircle2 className="w-8 h-8 text-success" />}
+          title={t('landlordDebtsEmptyFilteredTitle')}
+          description={
+            searchTerm || durationFilter !== 'all'
               ? t('landlordDebtsEmptyFilteredDesc')
-              : t('landlordDebtsEmptyAllPaidDesc')}
-          </p>
-          {(searchTerm || durationFilter !== 'all') && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchTerm('')
-                setDurationFilter('all')
-              }}
-              className="mt-4 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 rounded-xl text-xs font-bold text-zinc-700 transition-all border-0 h-auto"
-            >
-              {t('landlordDebtsClearFilter')}
-            </Button>
-          )}
-        </div>
+              : t('landlordDebtsEmptyAllPaidDesc')
+          }
+          action={
+            (searchTerm || durationFilter !== 'all') ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm('')
+                  setDurationFilter('all')
+                }}
+              >
+                {t('landlordDebtsClearFilter')}
+              </Button>
+            ) : undefined
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* ─── Grid View (Default per Rule #9) ─────────────────────────────────── */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -640,14 +555,6 @@ export default function LandlordDebtsPage() {
 
             const isBadDebt = room.agingCategory === 'bad_debt'
             const is2Months = room.agingCategory === '2_months'
-
-            const badgeBg = isBadDebt
-              ? 'bg-purple-100 text-purple-700 border-purple-200'
-              : is2Months
-                ? 'bg-rose-100 text-rose-700 border-rose-200'
-                : room.maxAgingDays > 0
-                  ? 'bg-amber-100 text-amber-700 border-amber-200'
-                  : 'bg-sky-100 text-sky-700 border-sky-200'
 
             const badgeLabel = isBadDebt
               ? t('landlordDebtsBadgeBadDebt')
@@ -658,165 +565,162 @@ export default function LandlordDebtsPage() {
                   : t('landlordDebtsBadgeDue')
 
             return (
-              <div
+              <Card
                 key={room.roomId}
-                className={`bg-white rounded-2xl border transition-all duration-200 shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden group ${
-                  isSelected ? 'border-teal-500 ring-2 ring-teal-500/20' : 'border-zinc-200'
+                onClick={() => setInvoicesModalRoom(room)}
+                className={`flex flex-col justify-between overflow-hidden group ${
+                  isSelected ? 'border-primary ring-2 ring-primary/20' : ''
                 }`}
               >
                 {/* Card Header */}
-                <div className="p-5 border-b border-zinc-100">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={isSelected}
-                        onChange={() => handleToggleSelectRoom(room.roomId)}
-                        size="sm"
-                        containerClassName="w-auto"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-black text-zinc-900 group-hover:text-teal-600 transition-colors">
-                            {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
-                          </span>
-                          {room.floor !== null && (
-                            <span className="text-[10px] font-bold text-zinc-500 px-2 py-0.5 bg-zinc-100 rounded-md">
-                              {t('landlordDebtsFloorPrefix', { floor: room.floor })}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-zinc-400 font-medium block">
-                          {room.buildingName}
-                        </span>
+                <Card.Header className="px-5 pt-5 pb-2.5 border-0">
+                  <div className="flex items-start justify-between gap-3 w-full">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Text
+                          as="span"
+                          size="base"
+                          weight="black"
+                          color="default"
+                          className="group-hover:text-primary transition-colors"
+                        >
+                          {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
+                        </Text>
+                        {room.floor !== null && (
+                          <Text
+                            as="span"
+                            size="3xs"
+                            weight="bold"
+                            color="secondary"
+                            className="px-2 py-0.5 bg-card-hover rounded-md"
+                          >
+                            {t('landlordDebtsFloorPrefix', { floor: room.floor })}
+                          </Text>
+                        )}
                       </div>
+                      <Text as="span" size="2xs" color="secondary" weight="medium" className="block mt-0.5">
+                        {room.buildingName}
+                      </Text>
                     </div>
 
-                    <span
-                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${badgeBg}`}
+                    <Chip
+                      size="sm"
+                      preventHover
+                      variant={
+                        isBadDebt
+                          ? 'danger'
+                          : is2Months
+                            ? 'danger'
+                            : room.maxAgingDays > 0
+                              ? 'warning'
+                              : 'neutral'
+                      }
                     >
                       {badgeLabel}
-                    </span>
+                    </Chip>
                   </div>
+                </Card.Header>
 
+                {/* Card Body */}
+                <Card.Body className="px-5 py-0 space-y-3">
                   {/* Tenant Details */}
-                  <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-600 flex items-center justify-center font-bold text-xs">
+                  <div className="flex items-center justify-between p-3 bg-surface rounded-xl">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-card-hover text-muted flex items-center justify-center font-bold text-xs shrink-0">
                         <User className="w-4 h-4" />
                       </div>
-                      <div>
-                        <span className="text-xs font-bold text-zinc-800 block">
+                      <div className="min-w-0">
+                        <Text as="span" size="xs" weight="bold" color="default" clamp={1} className="block">
                           {room.tenant?.name || t('landlordDebtsNoTenant')}
-                        </span>
+                        </Text>
                         {room.tenant?.phone ? (
                           <a
                             href={`tel:${room.tenant.phone}`}
-                            className="text-[11px] text-zinc-500 hover:text-teal-600 flex items-center gap-1 font-semibold"
+                            onClick={e => e.stopPropagation()}
+                            className="text-[11px] text-muted hover:text-primary flex items-center gap-1 font-semibold"
                           >
                             <Phone className="w-3 h-3" />
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-[11px] text-zinc-400">
+                          <Text as="span" size="3xs" color="subtle">
                             {t('landlordDebtsNoPhone')}
-                          </span>
+                          </Text>
                         )}
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                    <div className="text-right shrink-0">
+                      <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="tracking-wider block">
                         {t('landlordDebtsInvoicesCount')}
-                      </span>
-                      <span className="text-xs font-black text-zinc-700">
+                      </Text>
+                      <Text as="span" size="xs" weight="black" color="default">
                         {t('landlordDebtsInvoicesUnit', { count: room.invoicesCount })}
-                      </span>
+                      </Text>
                     </div>
                   </div>
-                </div>
 
-                {/* Card Financial Breakdown */}
-                <div className="p-5 bg-zinc-50/60 space-y-3">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
-                      {t('landlordDebtsTotalDebtLabel')}
-                    </span>
-                    <span className="text-lg font-black text-rose-600 tracking-tight">
-                      {formatCurrency(room.totalDebtAmount)}
-                    </span>
-                  </div>
-
-                  {room.overdueAmount > 0 && (
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-medium">
-                        {t('landlordDebtsOverduePartLabel')}
-                      </span>
-                      <span className="font-extrabold text-amber-600">
-                        {formatCurrency(room.overdueAmount)}
-                      </span>
+                  {/* Financial Breakdown */}
+                  <div className="p-3 bg-surface rounded-xl space-y-2 text-xs">
+                    <div className="flex items-baseline justify-between">
+                      <Text as="span" size="xs" weight="bold" color="secondary">
+                        {t('landlordDebtsTotalDebtLabel')}
+                      </Text>
+                      <Text as="span" size="lg" weight="black" color="danger" className="tracking-tight">
+                        {formatCurrency(room.totalDebtAmount)}
+                      </Text>
                     </div>
-                  )}
 
-                  {/* Oldest Debt Date */}
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-200/60">
-                    <span className="flex items-center gap-1 font-medium">
-                      <Calendar className="w-3 h-3 text-zinc-400" />
-                      {t('landlordDebtsOldestDebtDate')}
-                    </span>
-                    <span className="font-bold text-zinc-700">
-                      {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
-                    </span>
+                    {room.overdueAmount > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <Text as="span" size="xs" color="secondary" weight="medium">
+                          {t('landlordDebtsOverduePartLabel')}
+                        </Text>
+                        <Text as="span" size="xs" weight="extrabold" color="orange">
+                          {formatCurrency(room.overdueAmount)}
+                        </Text>
+                      </div>
+                    )}
+
+                    {/* Oldest Debt Date */}
+                    <div className="flex items-center justify-between text-[11px] text-muted pt-2 border-t border-line">
+                      <span className="flex items-center gap-1 font-medium">
+                        <Calendar className="w-3 h-3 text-muted" />
+                        {t('landlordDebtsOldestDebtDate')}
+                      </span>
+                      <Text as="span" size="2xs" weight="bold" color="default">
+                        {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                      </Text>
+                    </div>
                   </div>
-                </div>
+                </Card.Body>
 
-                {/* Card Actions */}
-                <div className="p-4 bg-white border-t border-zinc-100 flex items-center gap-2">
+                {/* Card Actions Footer */}
+                <Card.Footer className="px-5 pt-3 pb-4 flex items-center justify-end gap-2">
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInvoicesModalRoom(room)}
-                    className="flex-1 py-2 px-3 rounded-xl border border-zinc-200 hover:bg-zinc-50 text-zinc-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm h-auto"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>{t('landlordDebtsBtnViewInvoices')}</span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={() => {
+                    onClick={e => {
+                      e.stopPropagation()
                       setReminderModalRoom(room)
                       setReminderNote('')
                       setIsReminderDirty(false)
                       setReminderCopied(false)
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm shadow-teal-500/20 h-auto border-0"
+                    leftIcon={<Send />}
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{t('landlordDebtsBtnSendReminder')}</span>
+                    {t('landlordDebtsBtnSendReminder')}
                   </Button>
-                </div>
-              </div>
+                </Card.Footer>
+              </Card>
             )
           })}
         </div>
       ) : (
         /* ─── Table View (Rule #9) ────────────────────────────────────────────── */
-        <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
+        <div className="bg-card rounded-2xl border border-line overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-50/80 text-zinc-500 uppercase tracking-wider font-extrabold border-b border-zinc-200 text-[11px]">
+              <thead className="bg-surface/80 text-muted uppercase tracking-wider font-extrabold border-b border-line text-[11px]">
                 <tr>
-                  <th className="p-4 w-10 text-center">
-                    <Checkbox
-                      checked={isAllCurrentPageSelected}
-                      onChange={handleToggleSelectAll}
-                      size="sm"
-                      containerClassName="w-auto flex justify-center"
-                    />
-                  </th>
                   <th className="p-4">{t('landlordDebtsThRoomTenant')}</th>
                   <th className="p-4">{t('landlordDebtsThPhone')}</th>
                   <th className="p-4 text-right">{t('landlordDebtsThTotalDebt')}</th>
@@ -827,19 +731,11 @@ export default function LandlordDebtsPage() {
                   <th className="p-4 text-center">{t('landlordDebtsThActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100">
+              <tbody className="divide-y divide-line">
                 {debtRooms.map(room => {
                   const isSelected = selectedRoomIds.includes(room.roomId)
                   const isBadDebt = room.agingCategory === 'bad_debt'
                   const is2Months = room.agingCategory === '2_months'
-
-                  const badgeBg = isBadDebt
-                    ? 'bg-purple-100 text-purple-700 border-purple-200'
-                    : is2Months
-                      ? 'bg-rose-100 text-rose-700 border-rose-200'
-                      : room.maxAgingDays > 0
-                        ? 'bg-amber-100 text-amber-700 border-amber-200'
-                        : 'bg-sky-100 text-sky-700 border-sky-200'
 
                   const badgeLabel = isBadDebt
                     ? t('landlordDebtsBadDebtStatus')
@@ -850,113 +746,100 @@ export default function LandlordDebtsPage() {
                         : t('landlordDebtsBadgeDue')
 
                   return (
-                    <tr
+                    <TableRow
                       key={room.roomId}
-                      className={`hover:bg-zinc-50/80 transition-colors ${
-                        isSelected ? 'bg-teal-50/40' : ''
+                      className={`hover:bg-card-hover transition-colors duration-150 ${
+                        isSelected ? 'bg-primary-soft' : ''
                       }`}
+                      onClick={() => setInvoicesModalRoom(room)}
                     >
-                      <td className="p-4 text-center">
-                        <Checkbox
-                          checked={isSelected}
-                          onChange={() => handleToggleSelectRoom(room.roomId)}
-                          size="sm"
-                          containerClassName="w-auto flex justify-center"
-                        />
+                      <td className="p-4 whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default" className="block">
+                          {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
+                          {room.floor !== null && (
+                            <Text as="span" size="3xs" color="secondary" className="ml-1.5 font-normal">
+                              ({t('landlordDebtsFloorPrefix', { floor: room.floor })})
+                            </Text>
+                          )}
+                        </Text>
+                        <Text as="span" size="2xs" color="secondary" weight="medium">
+                          {room.tenant?.name || t('landlordDebtsNoTenant')}
+                        </Text>
                       </td>
 
-                      <td className="p-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-black text-xs">
-                            {room.roomNumber}
-                          </div>
-                          <div>
-                            <span className="font-bold text-zinc-900 block">
-                              {t('landlordDebtsRoomPrefix', { room: room.roomNumber })}
-                              {room.floor !== null && (
-                                <span className="text-[10px] text-zinc-400 font-normal ml-1.5">
-                                  ({t('landlordDebtsFloorPrefix', { floor: room.floor })})
-                                </span>
-                              )}
-                            </span>
-                            <span className="text-[11px] text-zinc-500 font-medium">
-                              {room.tenant?.name || t('landlordDebtsNoTenant')}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="p-4">
+                      <td className="p-4 whitespace-nowrap">
                         {room.tenant?.phone ? (
                           <a
                             href={`tel:${room.tenant.phone}`}
-                            className="text-xs text-zinc-700 hover:text-teal-600 font-semibold"
+                            onClick={e => e.stopPropagation()}
+                            className="text-xs text-foreground/90 hover:text-primary font-semibold"
                           >
                             {room.tenant.phone}
                           </a>
                         ) : (
-                          <span className="text-zinc-400">-</span>
+                          <Text as="span" size="xs" color="secondary">-</Text>
                         )}
                       </td>
 
-                      <td className="p-4 text-right">
-                        <span className="font-black text-rose-600 text-sm">
+                      <td className="p-4 text-right whitespace-nowrap">
+                        <Text as="span" size="sm" weight="black" color="danger">
                           {formatCurrency(room.totalDebtAmount)}
-                        </span>
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-right">
-                        <span className="font-extrabold text-amber-600">
+                      <td className="p-4 text-right whitespace-nowrap">
+                        <Text as="span" size="xs" weight="extrabold" color="orange">
                           {formatCurrency(room.overdueAmount)}
-                        </span>
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-center font-bold text-zinc-700">
-                        {t('landlordDebtsMonthsCount', { count: room.invoicesCount })}
+                      <td className="p-4 text-center whitespace-nowrap">
+                        <Text as="span" size="xs" weight="bold" color="default">
+                          {t('landlordDebtsMonthsCount', { count: room.invoicesCount })}
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-zinc-600 font-medium">
-                        {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                      <td className="p-4 whitespace-nowrap">
+                        <Text as="span" size="xs" color="secondary">
+                          {new Date(room.oldestDueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN')}
+                        </Text>
                       </td>
 
-                      <td className="p-4 text-center">
-                        <span
-                          className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${badgeBg}`}
+                      <td className="p-4 text-center whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          preventHover
+                          variant={
+                            isBadDebt
+                              ? 'danger'
+                              : is2Months
+                                ? 'danger'
+                                : room.maxAgingDays > 0
+                                  ? 'warning'
+                                  : 'neutral'
+                          }
                         >
                           {badgeLabel}
-                        </span>
+                        </Chip>
                       </td>
 
-                      <td className="p-4 text-center">
+                      <td className="p-4 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setInvoicesModalRoom(room)}
-                            className="h-8 w-8 p-0 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all"
-                            title={t('landlordDebtsBtnViewInvoices')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
+                          <TableActionButton
+                            variant="primary"
+                            icon={<Send />}
+                            onClick={event => {
+                              event.stopPropagation()
                               setReminderModalRoom(room)
                               setReminderNote('')
                               setIsReminderDirty(false)
                               setReminderCopied(false)
                             }}
-                            className="h-8 w-8 p-0 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-100 transition-all font-bold"
                             title={t('landlordDebtsBtnSendReminder')}
-                          >
-                            <Send className="w-4 h-4" />
-                          </Button>
+                          />
                         </div>
                       </td>
-                    </tr>
+                    </TableRow>
                   )
                 })}
               </tbody>
@@ -967,92 +850,31 @@ export default function LandlordDebtsPage() {
 
       {/* ─── Rule #9 Pagination Bar ───────────────────────────────────────────── */}
       {debtRooms.length > 0 && (
-        <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
-            <span>{t('landlordDebtsPaginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSize || ''}
-              onChange={e => {
-                const val = parseInt(e.target.value)
-                setPageSize(isNaN(val) || val <= 0 ? 1 : val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16 space-y-0"
-              className="w-16 text-center font-bold text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-lg px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-teal-500 text-xs h-7"
-            />
-            <span>{t('landlordDebtsPaginationPerPage')}</span>
-            <span className="text-zinc-300">|</span>
-            <span>
-              {startIndex} - {endIndex} {t('landlordDebtsPaginationOf')}{' '}
-              <span className="font-bold text-zinc-800">{totalRecords}</span>{' '}
-              {t('landlordDebtsPaginationRooms')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="h-9 w-9 p-0 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              title={t('landlordDebtsPaginationPrev')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {visiblePages.map(pageNum => (
-              <Button
-                key={pageNum}
-                type="button"
-                variant={pageNum === currentPage ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-                style={{
-                  backgroundColor: pageNum === currentPage ? '#2AC1BC' : undefined,
-                }}
-                className={`min-w-[36px] h-9 px-3 rounded-xl text-xs font-bold transition-all ${
-                  pageNum === currentPage
-                    ? 'text-white shadow-sm shadow-[#2AC1BC]/30'
-                    : 'text-zinc-600 hover:bg-zinc-100 border border-zinc-200'
-                }`}
-              >
-                {pageNum}
-              </Button>
-            ))}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="h-9 w-9 p-0 rounded-xl border border-zinc-200 text-zinc-500 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              title={t('landlordDebtsPaginationNext')}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalRecords}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={100}
+          unitLabel={t('landlordDebtsPaginationRooms')}
+        />
       )}
 
       {/* ─── Modal 1: Invoices List for Room ──────────────────────────────────── */}
       {invoicesModalRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-card w-full max-w-2xl rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-6 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+            <div className="p-6 bg-surface border-b border-line flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <Receipt className="w-5 h-5 text-teal-600" />
-                  <h3 className="text-lg font-black text-zinc-900">
+                  <h3 className="text-lg font-black text-foreground">
                     {t('landlordDebtsModalInvoicesTitle', { room: invoicesModalRoom.roomNumber })}
                   </h3>
                 </div>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   {t('landlordDebtsModalTenant', {
                     name: invoicesModalRoom.tenant?.name || (isEn ? 'None' : 'Chưa có tên'),
                   })}{' '}
@@ -1064,28 +886,26 @@ export default function LandlordDebtsPage() {
               </div>
 
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setInvoicesModalRoom(null)}
-                className="h-9 w-9 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-200/60 rounded-xl transition-all"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
             {/* Invoices List */}
             <div className="p-6 overflow-y-auto space-y-4">
-              <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-danger-soft border border-danger-subtle rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-extrabold text-rose-700 uppercase tracking-wider block">
+                  <span className="text-xs font-extrabold text-danger uppercase tracking-wider block">
                     {t('landlordDebtsModalTotalOutstanding')}
                   </span>
-                  <span className="text-2xl font-black text-rose-600">
+                  <span className="text-2xl font-black text-danger">
                     {formatCurrency(invoicesModalRoom.totalDebtAmount)}
                   </span>
                 </div>
-                <span className="px-3 py-1 bg-white text-rose-600 font-black text-xs rounded-full border border-rose-200 shadow-sm">
+                <span className="px-3 py-1 bg-card text-danger font-black text-xs rounded-full border border-danger-subtle shadow-sm">
                   {t('landlordDebtsModalInvoicesSummary', {
                     count: invoicesModalRoom.invoicesCount,
                   })}
@@ -1096,31 +916,30 @@ export default function LandlordDebtsPage() {
                 {invoicesModalRoom.invoices.map(inv => (
                   <div
                     key={inv.id}
-                    className="p-4 rounded-2xl border border-zinc-200 bg-white hover:border-teal-500/50 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    className="p-4 rounded-2xl border border-line bg-card hover:border-teal-500/50 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-zinc-900">
+                        <span className="font-black text-sm text-foreground">
                           {t('landlordDebtsModalPeriod', { period: inv.period })}
                         </span>
                         <span
-                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                            inv.status === 'overdue'
-                              ? 'bg-rose-100 text-rose-700 border-rose-200'
-                              : 'bg-amber-100 text-amber-700 border-amber-200'
-                          }`}
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${inv.status === 'overdue'
+                            ? 'bg-danger-soft text-danger border-danger-subtle'
+                            : 'bg-warning-soft text-warning border-warning-subtle'
+                            }`}
                         >
                           {inv.status === 'overdue'
                             ? t('landlordDebtsModalStatusOverdue')
                             : t('landlordDebtsModalStatusUncollected')}
                         </span>
                         {inv.agingDays > 0 && (
-                          <span className="text-[10px] font-bold text-zinc-400">
+                          <span className="text-[10px] font-bold text-muted">
                             {t('landlordDebtsModalOverdueDays', { days: inv.agingDays })}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-zinc-500 mt-1 block">
+                      <span className="text-xs text-muted mt-1 block">
                         {t('landlordDebtsModalDueDate', {
                           date: new Date(inv.dueDate).toLocaleDateString(isEn ? 'en-US' : 'vi-VN'),
                         })}
@@ -1128,14 +947,12 @@ export default function LandlordDebtsPage() {
                     </div>
 
                     <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                      <span className="text-base font-black text-rose-600">
+                      <span className="text-base font-black text-danger">
                         {formatCurrency(inv.totalAmount)}
                       </span>
 
                       <Button
-                        type="button"
                         variant="outline"
-                        size="sm"
                         onClick={() => {
                           setPaymentModalInvoice({
                             id: inv.id,
@@ -1147,10 +964,9 @@ export default function LandlordDebtsPage() {
                           setPaymentNote('')
                           setIsPaymentDirty(false)
                         }}
-                        className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all border border-emerald-200 flex items-center gap-1 active:scale-95 h-auto"
+                        leftIcon={<CreditCard />}
                       >
-                        <CreditCard className="w-3.5 h-3.5" />
-                        <span>{t('landlordDebtsModalCollectNow')}</span>
+                        {t('landlordDebtsModalCollectNow')}
                       </Button>
                     </div>
                   </div>
@@ -1159,13 +975,10 @@ export default function LandlordDebtsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-end">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setInvoicesModalRoom(null)}
-                className="px-5 py-2.5 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalClose')}
               </Button>
@@ -1177,7 +990,7 @@ export default function LandlordDebtsPage() {
       {/* ─── Modal 2: Send Debt Reminder ─────────────────────────────────────── */}
       {reminderModalRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col">
+          <div className="bg-card w-full max-w-lg rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -1191,56 +1004,54 @@ export default function LandlordDebtsPage() {
               </div>
 
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestCloseReminder}
-                className="h-8 w-8 p-0 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
             {/* Modal Body */}
             <div className="p-6 space-y-4">
               {reminderSuccessMessage && (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div className="p-4 bg-success-soft border border-success-subtle text-success rounded-2xl text-xs font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
                   <span>{reminderSuccessMessage}</span>
                 </div>
               )}
 
               {/* Tenant info banner */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl grid grid-cols-2 gap-3 text-xs">
+              <div className="p-4 bg-surface border border-line rounded-2xl grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsModalRecipient')}
                   </span>
-                  <span className="font-extrabold text-zinc-800 block">
+                  <span className="font-extrabold text-foreground block">
                     {reminderModalRoom.tenant?.name || (isEn ? 'No name' : 'Chưa có tên')}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsModalRecipientPhone')}
                   </span>
-                  <span className="font-extrabold text-zinc-800 block">
+                  <span className="font-extrabold text-foreground block">
                     {reminderModalRoom.tenant?.phone || (isEn ? 'None' : 'Chưa có')}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsTotalDebt')}
                   </span>
-                  <span className="font-black text-rose-600 block text-sm">
+                  <span className="font-black text-danger block text-sm">
                     {formatCurrency(reminderModalRoom.totalDebtAmount)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                  <span className="text-[10px] font-bold text-muted uppercase">
                     {t('landlordDebtsInvoicesCount')}
                   </span>
-                  <span className="font-extrabold text-zinc-800 block">
+                  <span className="font-extrabold text-foreground block">
                     {t('landlordDebtsModalInvoicesSummary', {
                       count: reminderModalRoom.invoicesCount,
                     })}
@@ -1260,67 +1071,47 @@ export default function LandlordDebtsPage() {
                   }}
                   placeholder={t('landlordDebtsModalMemoPlaceholder')}
                   containerClassName="w-full space-y-1.5"
-                  className="w-full px-3.5 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full px-3.5 py-2 text-xs text-foreground border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
 
               {/* Message Preview */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                  <label className="text-[11px] font-bold text-muted uppercase tracking-wider">
                     {t('landlordDebtsModalTemplateTitle')}
                   </label>
                   <Button
-                    type="button"
                     variant="ghost"
-                    size="sm"
                     onClick={() => handleCopyReminder(reminderModalRoom)}
-                    className="h-auto p-0 text-[11px] font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1 hover:bg-transparent"
+                    leftIcon={reminderCopied ? <Check className="text-success" /> : <Copy />}
                   >
-                    {reminderCopied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="text-emerald-600">{t('landlordDebtsModalCopied')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>{t('landlordDebtsModalCopyBtn')}</span>
-                      </>
-                    )}
+                    <span className={reminderCopied ? 'text-success' : undefined}>
+                      {reminderCopied ? t('landlordDebtsModalCopied') : t('landlordDebtsModalCopyBtn')}
+                    </span>
                   </Button>
                 </div>
-                <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs text-zinc-700 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto leading-relaxed">
+                <div className="p-3.5 bg-surface border border-line rounded-2xl text-xs text-foreground/90 font-mono whitespace-pre-wrap max-h-36 overflow-y-auto leading-relaxed">
                   {buildReminderText(reminderModalRoom, reminderNote)}
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end gap-2.5">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={handleRequestCloseReminder}
-                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalCancelBtn')}
               </Button>
 
               <Button
-                type="button"
-                variant="primary"
-                size="sm"
                 disabled={isSendingReminder}
+                isLoading={isSendingReminder}
                 onClick={() => handleSendInAppReminder(reminderModalRoom)}
-                className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-teal-600/20 disabled:opacity-50 h-auto border-0"
+                leftIcon={<Send />}
               >
-                {isSendingReminder ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
                 <span>{t('landlordDebtsModalSendAppBtn')}</span>
               </Button>
             </div>
@@ -1331,69 +1122,53 @@ export default function LandlordDebtsPage() {
       {/* ─── Modal 3: Manual Payment Recording ────────────────────────────────── */}
       {paymentModalInvoice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-zinc-200 overflow-hidden flex flex-col">
-            <div className="p-6 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between">
+          <div className="bg-card w-full max-w-md rounded-3xl shadow-2xl border border-line overflow-hidden flex flex-col">
+            <div className="p-6 bg-surface border-b border-line flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-base font-black text-zinc-900">
+                <CreditCard className="w-5 h-5 text-success" />
+                <h3 className="text-base font-black text-foreground">
                   {t('landlordDebtsModalPaymentTitle', { room: paymentModalInvoice.roomNumber })}
                 </h3>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={handleRequestClosePayment}
-                className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-600 rounded-xl"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
-                <span className="text-[11px] font-extrabold text-emerald-700 uppercase block">
+              <div className="p-4 bg-success-soft rounded-2xl border border-success-subtle text-center">
+                <span className="text-[11px] font-extrabold text-success uppercase block">
                   {t('landlordDebtsModalPaymentAmount', { period: paymentModalInvoice.period })}
                 </span>
-                <span className="text-2xl font-black text-emerald-700 block mt-1">
+                <span className="text-2xl font-black text-success block mt-1">
                   {formatCurrency(paymentModalInvoice.totalAmount)}
                 </span>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700">
+                <label className="text-xs font-bold text-foreground/90">
                   {t('landlordDebtsModalPaymentMethod')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    variant={paymentMethod === 'cash' ? 'primary' : 'outline'}
                     onClick={() => {
                       setPaymentMethod('cash')
                       setIsPaymentDirty(true)
                     }}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all h-auto ${
-                      paymentMethod === 'cash'
-                        ? 'bg-teal-50 border-teal-500 text-teal-700'
-                        : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                    }`}
                   >
                     {t('landlordDebtsModalMethodCash')}
                   </Button>
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    variant={paymentMethod === 'banking' ? 'primary' : 'outline'}
                     onClick={() => {
                       setPaymentMethod('banking')
                       setIsPaymentDirty(true)
                     }}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all h-auto ${
-                      paymentMethod === 'banking'
-                        ? 'bg-teal-50 border-teal-500 text-teal-700'
-                        : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'
-                    }`}
                   >
                     {t('landlordDebtsModalMethodBanking')}
                   </Button>
@@ -1411,35 +1186,25 @@ export default function LandlordDebtsPage() {
                   }}
                   placeholder={t('landlordDebtsModalPaymentNotePlaceholder')}
                   containerClassName="w-full space-y-1.5"
-                  className="w-full px-3 py-2 text-xs text-zinc-800 border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
+                  className="w-full px-3 py-2 text-xs text-foreground border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex items-center justify-end gap-2.5">
+            <div className="p-4 bg-surface border-t border-line flex items-center justify-end gap-2.5">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={handleRequestClosePayment}
-                className="px-4 py-2 bg-white border border-zinc-300 text-zinc-700 font-bold rounded-xl text-xs hover:bg-zinc-100 transition-all h-auto"
               >
                 {t('landlordDebtsModalCancelBtn')}
               </Button>
 
               <Button
-                type="button"
-                variant="primary"
-                size="sm"
                 disabled={isSubmittingPayment}
+                isLoading={isSubmittingPayment}
                 onClick={handleRecordPayment}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 disabled:opacity-50 h-auto border-0"
+                leftIcon={<Check />}
               >
-                {isSubmittingPayment ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
                 <span>{t('landlordDebtsModalConfirmPaymentBtn')}</span>
               </Button>
             </div>
@@ -1450,34 +1215,28 @@ export default function LandlordDebtsPage() {
       {/* ─── Rule #10: Unsaved Changes Confirmation Modal ─────────────────────── */}
       {confirmCloseTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-zinc-200 space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <div className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-line space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-base font-black text-zinc-900">
+              <h4 className="text-base font-black text-foreground">
                 {t('landlordDebtsModalConfirmDiscardTitle')}
               </h4>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {t('landlordDebtsModalConfirmDiscardDesc')}
               </p>
             </div>
             <div className="flex items-center justify-end gap-2.5 pt-2">
               <Button
-                type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setConfirmCloseTarget(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition-all h-auto border-0"
               >
                 {t('landlordDebtsModalKeepEditing')}
               </Button>
               <Button
-                type="button"
                 variant="danger"
-                size="sm"
                 onClick={handleConfirmDiscard}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-sm shadow-rose-600/20 h-auto border-0"
               >
                 {t('landlordDebtsModalDiscardAndClose')}
               </Button>

@@ -3,47 +3,22 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   TrendingUp,
-  Users,
   DollarSign,
   FileSpreadsheet,
   Calendar,
   Building2,
-  ChevronDown,
-  CheckCircle2,
-  ArrowUpRight,
   ShieldCheck,
-  MessageSquare,
-  Eye,
   Sparkles,
   Flame,
   Rocket,
-  Award,
   Clock,
   Compass,
-  Lightbulb,
   Zap,
-  HelpCircle,
-  Share2,
-  MapPin,
-  CheckCircle,
-  BarChart3,
-  PieChart,
   Home,
   Loader2,
-  Wrench,
   Inbox,
-  LayoutGrid,
-  List,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  AlertTriangle,
-  RefreshCw,
   X,
-  ArrowDownRight,
   Layers,
-  Target,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -53,21 +28,19 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  BarChart,
-  Bar,
 } from 'recharts'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { formatCurrency, formatVND } from '@/utils'
-import { Button, SelectInput, NumberInput } from '@/components/ui'
+import { Button, SelectInput, NumberInput, Pagination, ViewModeToggle, TableRow, EmptyState } from '@/components/ui'
+import { DashboardPageHeader } from '@/components/landlord'
 import {
   getBoardingHouseOverview,
   getMultiPropertyOverview,
   generateMultiPropertyAiStrategy,
   type BoardingHouseOverview,
   type MultiPropertyOverview,
-  type MultiPropertyBreakdown,
   type AiStrategyResponse,
 } from '@/services/boarding-house.service'
 
@@ -75,7 +48,6 @@ export default function ReportsPage() {
   const { activeBuilding, buildings, selectBuilding } = useAuth()
   const { locale } = useLanguage()
   const t = useTranslations('landlord')
-  const isEn = locale === 'en'
 
   const [mounted, setMounted] = useState(false)
 
@@ -99,17 +71,7 @@ export default function ReportsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(6)
-  const [windowStart, setWindowStart] = useState(1)
-
-  // Toast feedback state
-  const [toast, setToast] = useState<{
-    message: string
-    type: 'success' | 'info' | 'error'
-  } | null>(null)
-  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3500)
-  }
+  const { toast } = useToast()
 
   // Fetch Single Property Overview
   const fetchSingleOverview = useCallback(async (buildingId: string) => {
@@ -141,7 +103,7 @@ export default function ReportsPage() {
       setPortfolioOverview(data)
     } catch {
       setPortfolioOverview(null)
-      showToast(tRef.current('landlordReportsToastFetchError'), 'error')
+      toast.error(tRef.current('landlordReportsToastFetchError'))
     } finally {
       setIsPortfolioLoading(false)
     }
@@ -165,9 +127,9 @@ export default function ReportsPage() {
       const res = await generateMultiPropertyAiStrategy()
       setAiStrategy(res)
       setShowAiModal(true)
-      showToast(t('landlordReportsToastAiSuccess'), 'success')
+      toast.success(t('landlordReportsToastAiSuccess'))
     } catch (err: any) {
-      showToast(err?.message || t('landlordReportsToastAiError'), 'error')
+      toast.error(err?.message || t('landlordReportsToastAiError'))
     } finally {
       setIsAiGenerating(false)
     }
@@ -176,34 +138,10 @@ export default function ReportsPage() {
   // Pagination for Properties Breakdown (Rule #9)
   const propertiesList = portfolioOverview?.propertiesBreakdown ?? []
   const totalItems = propertiesList.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
-
-  // Reset page when pageSize or totalItems change
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages)
-  }, [page, totalPages])
-
-  // Adjust windowStart for 5-page window jumping
-  useEffect(() => {
-    if (page < windowStart) {
-      setWindowStart(Math.max(1, page - 4))
-    } else if (page > windowStart + 4) {
-      setWindowStart(page)
-    }
-  }, [page, windowStart])
-
   const displayedProperties = useMemo(() => {
     const start = (page - 1) * pageSize
     return propertiesList.slice(start, start + pageSize)
   }, [propertiesList, page, pageSize])
-
-  // Switch view mode and update default pageSize per Rule #9
-  const handleViewModeChange = (mode: 'grid' | 'table') => {
-    setViewMode(mode)
-    setPage(1)
-    setWindowStart(1)
-    setPageSize(mode === 'grid' ? 6 : 10)
-  }
 
   // Export CSV Data
   const handleExportCsv = () => {
@@ -249,9 +187,9 @@ export default function ReportsPage() {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      showToast(t('landlordReportsExportSuccess'))
+      toast.success(t('landlordReportsExportSuccess'))
     } else if (singleOverview) {
-      showToast(t('landlordReportsExportSingleStarting'))
+      toast.info(t('landlordReportsExportSingleStarting'))
     }
   }
 
@@ -305,113 +243,81 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12">
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-70 bg-zinc-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-zinc-700 flex items-center gap-3 animate-in slide-in-from-bottom-3 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-[#2AC1BC]" />
-          <span className="text-xs sm:text-sm font-bold">{toast.message}</span>
-        </div>
-      )}
-
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2.5">
-            <span>{t('landlordReportsTitle')}</span>
-            <span className="px-2.5 py-0.5 text-[11px] font-black bg-[#2AC1BC]/15 text-[#138e89] rounded-full border border-[#2AC1BC]/30 flex items-center gap-1">
-              <Layers className="w-3 h-3" />
-              {reportMode === 'portfolio'
-                ? t('landlordReportsBadgePortfolio')
-                : activeBuilding?.name || t('landlordReportsBadgeSingleFallback')}
-            </span>
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            {reportMode === 'portfolio'
-              ? t('landlordReportsSubtitlePortfolio')
-              : activeBuilding?.address || t('landlordReportsSubtitleSingle')}
-          </p>
-        </div>
+      <DashboardPageHeader
+        title={t('landlordReportsTitle')}
+        subtitle={
+          reportMode === 'portfolio'
+            ? t('landlordReportsSubtitlePortfolio')
+            : activeBuilding?.address || t('landlordReportsSubtitleSingle')
+        }
+        actions={
+          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            {/* Mode Switcher Tabs */}
+            <div className="bg-card-hover p-1 rounded-xl flex items-center gap-1 border border-line shadow-2xs">
+              <Button
+                variant={reportMode === 'portfolio' ? 'secondary' : 'ghost'}
+                size="md"
+                onClick={() => setReportMode('portfolio')}
+                className="text-xs font-bold"
+                leftIcon={<Layers className="text-primary" />}
+              >
+                <span>{t('landlordReportsTabPortfolio')}</span>
+              </Button>
+              <Button
+                variant={reportMode === 'single' ? 'secondary' : 'ghost'}
+                size="md"
+                onClick={() => setReportMode('single')}
+                className="text-xs font-bold"
+                leftIcon={<Building2 className="text-vacant" />}
+              >
+                <span>{t('landlordReportsTabSingle')}</span>
+              </Button>
+            </div>
 
-        {/* Action Controls: Mode Switcher, Building Selector & Export */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
-          {/* Mode Switcher Tabs */}
-          <div className="bg-zinc-100 p-1 rounded-xl flex items-center gap-1 border border-zinc-200 shadow-2xs">
+            {/* Dynamic Building Selector (When in single mode) */}
+            {reportMode === 'single' && (
+              <SelectInput
+                value={activeBuilding?.id || ''}
+                onChange={e => selectBuilding(e.target.value)}
+                containerClassName="w-auto space-y-0"
+                className="pl-8.5 pr-8 py-2 text-xs font-bold text-foreground/90 bg-card border border-line rounded-xl focus:outline-none focus:border-primary transition-colors cursor-pointer shadow-2xs"
+                leftIcon={<Building2 className="w-3.5 h-3.5 text-muted" />}
+                options={buildings.map(b => ({
+                  value: b.id,
+                  label: b.name,
+                }))}
+              />
+            )}
+
+            {/* AI Strategy Generation Button */}
+            {reportMode === 'portfolio' && (
+              <Button
+                size="md"
+                disabled={isAiGenerating}
+                isLoading={isAiGenerating}
+                onClick={handleGenerateAiStrategy}
+                leftIcon={<Sparkles className="text-amber-300" />}
+                className="from-primary to-teal-600 hover:opacity-95"
+              >
+                <span>
+                  {isAiGenerating ? t('landlordReportsAiAnalyzing') : t('landlordReportsAiButton')}
+                </span>
+              </Button>
+            )}
+
+            {/* Export Excel / CSV Button */}
             <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setReportMode('portfolio')}
-              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                reportMode === 'portfolio'
-                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+              size="md"
+              variant="outline"
+              onClick={handleExportCsv}
+              leftIcon={<FileSpreadsheet className="text-primary" />}
             >
-              <Layers className="w-3.5 h-3.5 text-[#2AC1BC]" />
-              <span>{t('landlordReportsTabPortfolio')}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setReportMode('single')}
-              className={`h-auto px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                reportMode === 'single'
-                  ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5 text-blue-500" />
-              <span>{t('landlordReportsTabSingle')}</span>
+              <span>{t('landlordReportsExportCsv')}</span>
             </Button>
           </div>
-
-          {/* Dynamic Building Selector (When in single mode) */}
-          {reportMode === 'single' && (
-            <SelectInput
-              value={activeBuilding?.id || ''}
-              onChange={e => selectBuilding(e.target.value)}
-              containerClassName="w-auto space-y-0"
-              className="pl-8.5 pr-8 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl focus:outline-none focus:border-[#2AC1BC] transition-colors cursor-pointer shadow-2xs"
-              leftIcon={<Building2 className="w-3.5 h-3.5 text-zinc-400" />}
-              options={buildings.map(b => ({
-                value: b.id,
-                label: b.name,
-              }))}
-            />
-          )}
-
-          {/* AI Strategy Generation Button */}
-          {reportMode === 'portfolio' && (
-            <Button
-              type="button"
-              disabled={isAiGenerating}
-              onClick={handleGenerateAiStrategy}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-linear-to-r from-[#2AC1BC] to-teal-600 hover:opacity-95 rounded-xl transition-all cursor-pointer shadow-md active:scale-95 disabled:opacity-60"
-            >
-              {isAiGenerating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              )}
-              <span>
-                {isAiGenerating ? t('landlordReportsAiAnalyzing') : t('landlordReportsAiButton')}
-              </span>
-            </Button>
-          )}
-
-          {/* Export Excel / CSV Button */}
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleExportCsv}
-            className="h-auto flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#138e89] bg-[#2AC1BC]/10 hover:bg-[#2AC1BC]/20 hover:text-[#138e89] border border-[#2AC1BC]/30 rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t('landlordReportsExportCsv')}</span>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* ========================================================================= */}
       {/* MODE 1: MULTI-PROPERTY PORTFOLIO */}
@@ -419,55 +325,48 @@ export default function ReportsPage() {
       {reportMode === 'portfolio' && (
         <>
           {isPortfolioLoading ? (
-            <div className="py-20 text-center text-zinc-400 space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+            <div className="py-20 text-center text-muted space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
               <p className="text-xs font-semibold">{t('landlordReportsPortfolioLoading')}</p>
             </div>
           ) : (
             <>
               {/* AI Marketing Strategy Banner Card */}
-              <div className="bg-linear-to-r from-teal-900 via-zinc-900 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden border border-teal-800/40">
-                <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-[#2AC1BC]/15 rounded-full blur-3xl pointer-events-none" />
+              <div className="bg-linear-to-r from-teal-900 via-emerald-950 to-indigo-950 p-5 sm:p-6 rounded-3xl text-white shadow-xl relative overflow-hidden border border-teal-800/40">
+                <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
                   <div className="space-y-1.5 max-w-2xl">
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
                         <Sparkles className="w-3 h-3" /> {t('landlordReportsAiBannerBadge')}
                       </span>
-                      <span className="text-xs text-zinc-300">
+                      <span className="text-xs text-white/80">
                         {t('landlordReportsAiBannerTag')}
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
                       {t('landlordReportsAiBannerTitle')}
                     </h3>
-                    <p className="text-xs text-zinc-300 leading-relaxed">
+                    <p className="text-xs text-white/80 leading-relaxed">
                       {t('landlordReportsAiBannerDesc', {
                         count: portfolioSummary.totalProperties,
                       })}
                     </p>
                   </div>
-                  <Button
-                    type="button"
+                  <Button size="xs" variant="dark"
                     disabled={isAiGenerating}
+                    isLoading={isAiGenerating}
                     onClick={handleGenerateAiStrategy}
-                    className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-zinc-100 text-zinc-900 text-xs font-bold rounded-2xl shadow-lg transition-all cursor-pointer active:scale-95 disabled:opacity-60"
+                    leftIcon={<Sparkles className="text-amber-500 fill-amber-500" />}
+                    className="shrink-0"
                   >
-                    {isAiGenerating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-[#2AC1BC]" />
-                        <span>{t('landlordReportsAiBannerCalculating')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span>
-                          {aiStrategy
-                            ? t('landlordReportsAiBannerReview')
-                            : t('landlordReportsAiBannerGenerate')}
-                        </span>
-                      </>
-                    )}
+                    <span>
+                      {isAiGenerating
+                        ? t('landlordReportsAiBannerCalculating')
+                        : aiStrategy
+                          ? t('landlordReportsAiBannerReview')
+                          : t('landlordReportsAiBannerGenerate')}
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -475,20 +374,20 @@ export default function ReportsPage() {
               {/* 4 Real Portfolio KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* KPI 1: Chain-wide Net Profit */}
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiNetProfit')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-success-soft text-success flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-emerald-600 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-success tracking-tight">
                       {formatCurrency(portfolioSummary.netProfit)}
                     </span>
-                    <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsKpiRevenueSub', {
                           amount: formatCurrency(portfolioSummary.currentMonthRevenue),
@@ -504,20 +403,20 @@ export default function ReportsPage() {
                 </div>
 
                 {/* KPI 2: Chain-wide Occupancy Rate */}
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiOccupancyRate')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
                       <Home className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                       {portfolioSummary.occupancyRate}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsKpiOccupancyRoomsSub', {
                           occupied: portfolioSummary.occupiedRooms,
@@ -530,20 +429,20 @@ export default function ReportsPage() {
                 </div>
 
                 {/* KPI 3: Outstanding Debt */}
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiTotalDebt')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-danger-soft text-danger flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-rose-500 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-danger tracking-tight">
                       {formatCurrency(portfolioSummary.unpaidDebt)}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsKpiUnpaidInvoicesSub', {
                           count: portfolioSummary.unpaidInvoicesCount,
@@ -554,20 +453,20 @@ export default function ReportsPage() {
                 </div>
 
                 {/* KPI 4: Collection Progress */}
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsKpiCollectionRate')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-deposit-soft text-deposit flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-purple-600 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-deposit tracking-tight">
                       {portfolioSummary.collectionRate}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsKpiPaidInvoicesSub', {
                           count: portfolioSummary.paidInvoicesCount,
@@ -581,30 +480,29 @@ export default function ReportsPage() {
               {/* Combined 6-Month Trends: Revenue & Occupancy */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {/* 6-Month Revenue Trend */}
-                <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs">
+                <div className="bg-card p-5 sm:p-6 rounded-3xl border border-line shadow-xs">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>{t('landlordReportsRevenueChartTitle')}</span>
-                        <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       </h3>
-                      <p className="text-xs text-zinc-500 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         {t('landlordReportsRevenueChartDesc')}
                       </p>
                     </div>
-                    <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                    <span className="p-2 rounded-xl bg-primary/10 text-primary">
                       <TrendingUp className="w-4 h-4" />
                     </span>
                   </div>
 
                   {!portfolioOverview?.revenueChart ||
                   portfolioOverview.revenueChart.length === 0 ? (
-                    <div className="py-16 text-center space-y-2">
-                      <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-zinc-600">
-                        {t('landlordReportsChartEmptyTransactions')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Inbox}
+                      title={t('landlordReportsChartEmptyTransactions')}
+                      size="sm"
+                    />
                   ) : (
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -657,30 +555,29 @@ export default function ReportsPage() {
                 </div>
 
                 {/* 6-Month Occupancy Trend */}
-                <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs">
+                <div className="bg-card p-5 sm:p-6 rounded-3xl border border-line shadow-xs">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>{t('landlordReportsOccupancyChartTitle')}</span>
-                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-vacant animate-pulse" />
                       </h3>
-                      <p className="text-xs text-zinc-500 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         {t('landlordReportsOccupancyChartDesc')}
                       </p>
                     </div>
-                    <span className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                    <span className="p-2 rounded-xl bg-info-soft text-info">
                       <Home className="w-4 h-4" />
                     </span>
                   </div>
 
                   {!portfolioOverview?.occupancyChart ||
                   portfolioOverview.occupancyChart.length === 0 ? (
-                    <div className="py-16 text-center space-y-2">
-                      <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-zinc-600">
-                        {t('landlordReportsChartEmptyRooms')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Inbox}
+                      title={t('landlordReportsChartEmptyRooms')}
+                      size="sm"
+                    />
                   ) : (
                     <div className="h-64 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -736,60 +633,33 @@ export default function ReportsPage() {
               </div>
 
               {/* Cross-Property Breakdown Table / Grid (Rule #9 Compliant) */}
-              <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs space-y-4">
+              <div className="bg-card p-5 sm:p-6 rounded-3xl border border-line shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+                    <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                       <span>{t('landlordReportsCompareTitle')}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-zinc-100 text-zinc-600">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-card-hover text-muted">
                         {t('landlordReportsCompareCount', { count: totalItems })}
                       </span>
                     </h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {t('landlordReportsCompareDesc')}
                     </p>
                   </div>
 
                   {/* Rule #9 View Toggle Buttons: Grid & Table */}
-                  <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-xl border border-zinc-200 shadow-2xs">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewModeChange('grid')}
-                      className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        viewMode === 'grid'
-                          ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                          : 'text-zinc-400 hover:text-zinc-700'
-                      }`}
-                      title={t('landlordReportsTooltipGrid')}
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewModeChange('table')}
-                      className={`h-auto p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        viewMode === 'table'
-                          ? 'bg-white text-zinc-900 shadow-xs hover:bg-white hover:text-zinc-900'
-                          : 'text-zinc-400 hover:text-zinc-700'
-                      }`}
-                      title={t('landlordReportsTooltipTable')}
-                    >
-                      <List className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  <ViewModeToggle
+                    value={viewMode}
+                    onChange={setViewMode}
+                  />
                 </div>
 
                 {displayedProperties.length === 0 ? (
-                  <div className="py-16 text-center space-y-2">
-                    <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                    <p className="text-xs font-bold text-zinc-600">
-                      {t('landlordReportsCompareEmpty')}
-                    </p>
-                  </div>
+                  <EmptyState
+                    icon={Inbox}
+                    title={t('landlordReportsCompareEmpty')}
+                    bordered
+                  />
                 ) : viewMode === 'grid' ? (
                   /* Grid View (Default) */
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -798,22 +668,22 @@ export default function ReportsPage() {
                       return (
                         <div
                           key={p.id}
-                          className="bg-white p-5 rounded-2xl border border-zinc-200 hover:border-[#2AC1BC]/50 hover:shadow-md transition-all space-y-3.5"
+                          className="bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-2xs hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 space-y-3.5"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
-                              <h4 className="text-sm font-bold text-zinc-900">{p.name}</h4>
-                              <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5">
+                              <h4 className="text-sm font-bold text-foreground">{p.name}</h4>
+                              <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
                                 {p.address}
                               </p>
                             </div>
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                                 occNum >= 80
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  ? 'bg-success-soft text-success border border-success-subtle'
                                   : occNum >= 50
-                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    ? 'bg-warning-soft text-warning border border-warning-subtle'
+                                    : 'bg-danger-soft text-danger border border-danger-subtle'
                               }`}
                             >
                               {p.occupancyRate}
@@ -822,20 +692,20 @@ export default function ReportsPage() {
 
                           {/* Room Breakdown Pills */}
                           <div className="grid grid-cols-3 gap-1.5 text-center text-[11px] font-bold">
-                            <div className="p-1.5 bg-zinc-50 rounded-lg">
-                              <span className="text-zinc-400 block text-[10px]">
+                            <div className="p-1.5 bg-surface rounded-lg">
+                              <span className="text-muted block text-[10px]">
                                 {t('landlordReportsCardTotalRooms')}
                               </span>
-                              <span className="text-zinc-900">{p.totalRooms}</span>
+                              <span className="text-foreground">{p.totalRooms}</span>
                             </div>
-                            <div className="p-1.5 bg-emerald-50/60 rounded-lg text-emerald-800">
-                              <span className="text-emerald-600 block text-[10px]">
+                            <div className="p-1.5 bg-success-soft rounded-lg text-success">
+                              <span className="text-success block text-[10px]">
                                 {t('landlordReportsCardOccupied')}
                               </span>
                               <span>{p.occupiedRooms}</span>
                             </div>
-                            <div className="p-1.5 bg-blue-50/60 rounded-lg text-blue-800">
-                              <span className="text-blue-600 block text-[10px]">
+                            <div className="p-1.5 bg-info-soft rounded-lg text-info">
+                              <span className="text-info block text-[10px]">
                                 {t('landlordReportsCardVacant')}
                               </span>
                               <span>{p.vacantRooms}</span>
@@ -843,32 +713,32 @@ export default function ReportsPage() {
                           </div>
 
                           {/* Financial Breakdown */}
-                          <div className="space-y-1.5 text-xs pt-1 border-t border-zinc-100 font-medium">
+                          <div className="space-y-1.5 text-xs pt-1 border-t border-line font-medium">
                             <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">
+                              <span className="text-muted">
                                 {t('landlordReportsCardMonthlyRevenue')}
                               </span>
-                              <span className="font-bold text-zinc-900">
+                              <span className="font-bold text-foreground">
                                 {formatCurrency(p.currentMonthRevenue)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-zinc-500">
+                              <span className="text-muted">
                                 {t('landlordReportsCardMonthlyExpenses')}
                               </span>
-                              <span className="font-bold text-zinc-700">
+                              <span className="font-bold text-foreground/90">
                                 {formatCurrency(p.currentMonthExpenses)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-zinc-500 font-bold">
+                              <span className="text-muted font-bold">
                                 {t('landlordReportsCardNetProfit')}
                               </span>
-                              <span className="font-extrabold text-emerald-600">
+                              <span className="font-extrabold text-success">
                                 {formatCurrency(p.netProfit)}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-rose-600 text-[11px]">
+                            <div className="flex items-center justify-between text-danger text-[11px]">
                               <span>{t('landlordReportsCardUnpaidDebt')}</span>
                               <span className="font-bold">{formatCurrency(p.unpaidDebt)}</span>
                             </div>
@@ -876,7 +746,7 @@ export default function ReportsPage() {
 
                           {/* Expiring contracts tag */}
                           {p.expiringContractsCount > 0 && (
-                            <div className="p-2 bg-amber-50 rounded-xl text-amber-800 text-[11px] font-bold flex items-center justify-between">
+                            <div className="p-2 bg-warning-soft rounded-xl text-warning text-[11px] font-bold flex items-center justify-between">
                               <span>{t('landlordReportsCardExpiringSoon')}</span>
                               <span className="px-1.5 py-0.5 bg-amber-200/60 rounded-md">
                                 {t('landlordReportsCardExpiringCount', {
@@ -891,9 +761,9 @@ export default function ReportsPage() {
                   </div>
                 ) : (
                   /* Table View */
-                  <div className="overflow-x-auto rounded-2xl border border-zinc-200">
+                  <div className="overflow-x-auto rounded-2xl border border-line">
                     <table className="w-full text-left text-xs border-collapse">
-                      <thead className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-bold">
+                      <thead className="bg-surface border-b border-line text-muted font-bold">
                         <tr>
                           <th className="p-3">{t('landlordReportsThProperty')}</th>
                           <th className="p-3 text-center">{t('landlordReportsThRooms')}</th>
@@ -905,59 +775,59 @@ export default function ReportsPage() {
                           <th className="p-3 text-center">{t('landlordReportsThExpiring')}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-100 font-medium">
+                      <tbody className="divide-y divide-line font-medium">
                         {displayedProperties.map(p => {
                           const occNum = parseFloat(p.occupancyRate) || 0
                           return (
-                            <tr key={p.id} className="hover:bg-zinc-50/80 transition-colors">
-                              <td className="p-3 font-bold text-zinc-900">
+                            <TableRow key={p.id} className="group">
+                              <td className="p-3 font-bold text-foreground">
                                 <div>{p.name}</div>
-                                <div className="text-[10px] text-zinc-400 font-normal">
+                                <div className="text-[10px] text-muted font-normal">
                                   {p.address}
                                 </div>
                               </td>
                               <td className="p-3 text-center">
-                                <span className="text-emerald-700 font-bold">
+                                <span className="text-success font-bold">
                                   {p.occupiedRooms}
                                 </span>{' '}
-                                / <span className="text-blue-700 font-bold">{p.vacantRooms}</span> /{' '}
+                                / <span className="text-info font-bold">{p.vacantRooms}</span> /{' '}
                                 <span>{p.totalRooms}</span>
                               </td>
                               <td className="p-3 text-center">
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
                                     occNum >= 80
-                                      ? 'bg-emerald-50 text-emerald-700'
+                                      ? 'bg-success-soft text-success'
                                       : occNum >= 50
-                                        ? 'bg-amber-50 text-amber-700'
-                                        : 'bg-rose-50 text-rose-700'
+                                        ? 'bg-warning-soft text-warning'
+                                        : 'bg-danger-soft text-danger'
                                   }`}
                                 >
                                   {p.occupancyRate}
                                 </span>
                               </td>
-                              <td className="p-3 text-right font-bold text-zinc-900">
+                              <td className="p-3 text-right font-bold text-foreground">
                                 {formatCurrency(p.currentMonthRevenue)}
                               </td>
-                              <td className="p-3 text-right text-zinc-600">
+                              <td className="p-3 text-right text-muted">
                                 {formatCurrency(p.currentMonthExpenses)}
                               </td>
-                              <td className="p-3 text-right font-extrabold text-emerald-600">
+                              <td className="p-3 text-right font-extrabold text-success">
                                 {formatCurrency(p.netProfit)}
                               </td>
-                              <td className="p-3 text-right font-bold text-rose-600">
+                              <td className="p-3 text-right font-bold text-danger">
                                 {formatCurrency(p.unpaidDebt)}
                               </td>
                               <td className="p-3 text-center">
                                 {p.expiringContractsCount > 0 ? (
-                                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-bold text-[11px]">
+                                  <span className="px-2 py-0.5 bg-warning-soft text-warning rounded-full font-bold text-[11px]">
                                     {p.expiringContractsCount}
                                   </span>
                                 ) : (
-                                  <span className="text-zinc-400">—</span>
+                                  <span className="text-muted">—</span>
                                 )}
                               </td>
-                            </tr>
+                            </TableRow>
                           )
                         })}
                       </tbody>
@@ -966,118 +836,30 @@ export default function ReportsPage() {
                 )}
 
                 {/* Rule #9 Standardized Pagination */}
-                {totalItems > 0 && (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-zinc-100 text-xs font-bold text-zinc-600">
-                    {/* Items per page & range */}
-                    <div className="flex items-center gap-2">
-                      <span>{t('landlordReportsPaginationShowing')}</span>
-                      <NumberInput
-                        min={1}
-                        max={100}
-                        value={pageSize}
-                        onChange={e => {
-                          const val = parseInt(e.target.value, 10)
-                          if (val > 0) setPageSize(val)
-                        }}
-                        containerClassName="w-16 space-y-0"
-                        className="py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-center text-xs font-bold focus:outline-none focus:border-[#2AC1BC]"
-                      />
-                      <span>{t('landlordReportsPaginationPerPage')}</span>
-                      <span className="text-zinc-400 mx-1">|</span>
-                      <span>
-                        {t('landlordReportsPaginationRange', {
-                          start: Math.min(totalItems, (page - 1) * pageSize + 1),
-                          end: Math.min(totalItems, page * pageSize),
-                          total: totalItems,
-                        })}
-                      </span>
-                    </div>
-
-                    {/* Window Jumping 5-page buttons */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(1)}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title={t('landlordReportsPaginationFirst')}
-                      >
-                        <ChevronsLeft className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title={t('landlordReportsPaginationPrev')}
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                      </Button>
-
-                      {Array.from({ length: Math.min(5, totalPages - windowStart + 1) }, (_, i) => {
-                        const pNum = windowStart + i
-                        return (
-                          <Button
-                            key={pNum}
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPage(pNum)}
-                            className={`h-8 w-8 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              page === pNum
-                                ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]/90 hover:text-white'
-                                : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
-                            }`}
-                          >
-                            {pNum}
-                          </Button>
-                        )
-                      })}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title={t('landlordReportsPaginationNext')}
-                      >
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(totalPages)}
-                        className="h-8 w-8 p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
-                        title={t('landlordReportsPaginationLast')}
-                      >
-                        <ChevronsRight className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <Pagination
+                  currentPage={page}
+                  totalItems={totalItems}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  pageSizeMax={100}
+                  className="pt-4 border-t border-line"
+                />
               </div>
 
               {/* Expiring Contracts Across All Properties */}
-              <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs space-y-4">
+              <div className="bg-card p-5 sm:p-6 rounded-3xl border border-line shadow-xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
+                    <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                       <span>{t('landlordReportsExpiringTitle')}</span>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-black bg-warning-soft text-warning">
                         {t('landlordReportsExpiringBadge', {
                           count: portfolioOverview?.expiringContracts?.length || 0,
                         })}
                       </span>
                     </h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {t('landlordReportsExpiringDesc')}
                     </p>
                   </div>
@@ -1086,7 +868,7 @@ export default function ReportsPage() {
 
                 {!portfolioOverview?.expiringContracts ||
                 portfolioOverview.expiringContracts.length === 0 ? (
-                  <div className="py-8 text-center text-zinc-400 text-xs font-semibold">
+                  <div className="py-8 text-center text-muted text-xs font-semibold">
                     {t('landlordReportsExpiringEmpty')}
                   </div>
                 ) : (
@@ -1094,22 +876,22 @@ export default function ReportsPage() {
                     {(portfolioOverview.expiringContracts ?? []).map(c => (
                       <div
                         key={c.id}
-                        className="p-4 rounded-2xl border border-amber-200/80 bg-amber-50/40 flex items-start justify-between gap-3 text-xs"
+                        className="p-4 rounded-2xl border border-warning-subtle bg-warning-soft flex items-start justify-between gap-3 text-xs"
                       >
                         <div className="space-y-1">
-                          <div className="font-bold text-zinc-900">
+                          <div className="font-bold text-foreground">
                             {c.propertyName} — {c.room}
                           </div>
-                          <div className="text-zinc-600 font-medium">
+                          <div className="text-muted font-medium">
                             {t('landlordReportsExpiringTenant')} {c.tenant}{' '}
                             {c.phone && `(${c.phone})`}
                           </div>
-                          <div className="text-[11px] text-zinc-500">
+                          <div className="text-[11px] text-muted">
                             {t('landlordReportsExpiringEndDate')} {c.endDate}
                           </div>
                         </div>
                         <div className="shrink-0 text-right">
-                          <span className="px-2 py-1 bg-amber-200/80 text-amber-900 rounded-lg font-black text-[11px] block">
+                          <span className="px-2 py-1 bg-amber-200/80 text-warning rounded-lg font-black text-[11px] block">
                             {t('landlordReportsExpiringDaysLeft', { days: c.daysLeft })}
                           </span>
                         </div>
@@ -1129,28 +911,28 @@ export default function ReportsPage() {
       {reportMode === 'single' && (
         <>
           {isSingleLoading ? (
-            <div className="py-20 text-center text-zinc-400 space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#2AC1BC]" />
+            <div className="py-20 text-center text-muted space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
               <p className="text-xs font-semibold">{t('landlordReportsSingleLoading')}</p>
             </div>
           ) : (
             <>
               {/* 4 Real Single-Property KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiOccupancy')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-info-soft text-info flex items-center justify-center">
                       <Home className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                       {singleRooms.occupancyRate}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsSingleKpiOccupancySub', {
                           occupied: singleRooms.occupiedRooms,
@@ -1161,20 +943,20 @@ export default function ReportsPage() {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiRevenue')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-[#2AC1BC]/15 text-[#2AC1BC] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-primary/15 text-primary flex items-center justify-center">
                       <DollarSign className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-primary tracking-tight">
                       {formatVND(Number(singleFinancial.currentMonthRevenue) || 0)}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsSingleKpiRevenueSub', {
                           count: singleFinancial.paidInvoicesCount,
@@ -1184,20 +966,20 @@ export default function ReportsPage() {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiDebt')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-danger-soft text-danger flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-rose-500 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-danger tracking-tight">
                       {formatVND(Number(singleFinancial.unpaidDebt) || 0)}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsSingleKpiDebtSub', {
                           count: singleFinancial.unpaidInvoicesCount,
@@ -1207,20 +989,20 @@ export default function ReportsPage() {
                   </div>
                 </div>
 
-                <div className="bg-white p-5 rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-md transition-all">
+                <div className="bg-card p-5 rounded-3xl border border-line shadow-xs hover:shadow-md transition-all">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-500">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordReportsSingleKpiCollection')}
                     </span>
-                    <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-2xl bg-deposit-soft text-deposit flex items-center justify-center">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-purple-600 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-black text-deposit tracking-tight">
                       {singleCollection.collectionRate}
                     </span>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 mt-1">
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-muted mt-1">
                       <span>
                         {t('landlordReportsSingleKpiCollectionSub', {
                           count: singleOverview?.depositNotifications?.length || 0,
@@ -1233,29 +1015,28 @@ export default function ReportsPage() {
 
               {/* Single Property Charts & Breakdown */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2 bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs">
+                <div className="lg:col-span-2 bg-card p-5 sm:p-6 rounded-3xl border border-line shadow-xs">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-sm sm:text-base font-bold text-zinc-900 flex items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>{t('landlordReportsSingleChartTitle')}</span>
-                        <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       </h3>
-                      <p className="text-xs text-zinc-500 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         {t('landlordReportsSingleChartDesc', { name: activeBuilding?.name || '' })}
                       </p>
                     </div>
-                    <span className="p-2 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                    <span className="p-2 rounded-xl bg-primary/10 text-primary">
                       <TrendingUp className="w-4 h-4" />
                     </span>
                   </div>
 
                   {!singleOverview?.revenueChart || singleOverview.revenueChart.length === 0 ? (
-                    <div className="py-16 text-center space-y-2">
-                      <Inbox className="w-8 h-8 text-zinc-300 mx-auto" />
-                      <p className="text-xs font-bold text-zinc-600">
-                        {t('landlordReportsChartEmptyTransactions')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Inbox}
+                      title={t('landlordReportsChartEmptyTransactions')}
+                      size="sm"
+                    />
                   ) : (
                     <div className="h-64 sm:h-72 w-full">
                       <ResponsiveContainer width="100%" height="100%">
@@ -1306,17 +1087,17 @@ export default function ReportsPage() {
                   )}
                 </div>
 
-                <div className="bg-white p-5 sm:p-6 rounded-3xl border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+                <div className="bg-card p-5 sm:p-6 rounded-3xl border border-line shadow-xs flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm sm:text-base font-bold text-zinc-900 mb-1">
+                    <h3 className="text-sm sm:text-base font-bold text-foreground mb-1">
                       {t('landlordReportsSingleRoomStatusTitle')}
                     </h3>
-                    <p className="text-xs text-zinc-500 mb-4">
+                    <p className="text-xs text-muted mb-4">
                       {t('landlordReportsSingleRoomStatusDesc')}
                     </p>
 
                     <div className="space-y-3">
-                      <div className="p-3 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-between text-xs font-bold text-[#138e89]">
+                      <div className="p-3 bg-primary/10 rounded-2xl flex items-center justify-between text-xs font-bold text-[#138e89]">
                         <span>{t('landlordReportsSingleRoomOccupied')}</span>
                         <span className="text-sm font-black">
                           {t('landlordReportsSingleRoomCount', {
@@ -1324,19 +1105,19 @@ export default function ReportsPage() {
                           })}
                         </span>
                       </div>
-                      <div className="p-3 bg-blue-50 rounded-2xl flex items-center justify-between text-xs font-bold text-blue-700">
+                      <div className="p-3 bg-info-soft rounded-2xl flex items-center justify-between text-xs font-bold text-info">
                         <span>{t('landlordReportsSingleRoomVacant')}</span>
                         <span className="text-sm font-black">
                           {t('landlordReportsSingleRoomCount', { count: singleRooms.vacantRooms })}
                         </span>
                       </div>
-                      <div className="p-3 bg-purple-50 rounded-2xl flex items-center justify-between text-xs font-bold text-purple-700">
+                      <div className="p-3 bg-deposit-soft rounded-2xl flex items-center justify-between text-xs font-bold text-deposit">
                         <span>{t('landlordReportsSingleRoomDeposit')}</span>
                         <span className="text-sm font-black">
                           {t('landlordReportsSingleRoomCount', { count: singleRooms.depositRooms })}
                         </span>
                       </div>
-                      <div className="p-3 bg-amber-50 rounded-2xl flex items-center justify-between text-xs font-bold text-amber-700">
+                      <div className="p-3 bg-warning-soft rounded-2xl flex items-center justify-between text-xs font-bold text-warning">
                         <span>{t('landlordReportsSingleRoomMaintenance')}</span>
                         <span className="text-sm font-black">
                           {t('landlordReportsSingleRoomCount', {
@@ -1347,14 +1128,14 @@ export default function ReportsPage() {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
+                  <div className="pt-3 border-t border-line flex items-center justify-between text-xs text-muted">
                     <span>
                       {t('landlordReportsSingleTotalLabel')}{' '}
-                      <strong className="text-zinc-900 font-bold">
+                      <strong className="text-foreground font-bold">
                         {t('landlordReportsSingleTotalRooms', { count: singleRooms.totalRooms })}
                       </strong>
                     </span>
-                    <span className="text-[#2AC1BC] font-extrabold">
+                    <span className="text-primary font-extrabold">
                       {t('landlordReportsSingleOccupancySuffix', {
                         rate: singleRooms.occupancyRate,
                       })}
@@ -1372,39 +1153,37 @@ export default function ReportsPage() {
       {/* ========================================================================= */}
       {showAiModal && aiStrategy && (
         <div className="fixed inset-0 z-80 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-zinc-200 animate-in zoom-in-95 duration-200">
+          <div className="bg-card rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-line animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-zinc-100 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="p-5 sm:p-6 border-b border-line flex items-center justify-between sticky top-0 bg-card z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-[#2AC1BC] to-teal-700 text-white flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-primary to-teal-700 text-white flex items-center justify-center shadow-md">
                   <Sparkles className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-black text-zinc-900">
+                  <h3 className="text-base sm:text-lg font-black text-foreground">
                     {aiStrategy.title}
                   </h3>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted">
                     {t('landlordReportsAiCreatedAt', {
-                      date: new Date(aiStrategy.createdAt).toLocaleString(isEn ? 'en-US' : 'vi-VN'),
+                      date: new Date(aiStrategy.createdAt).toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN'),
                     })}
                   </p>
                 </div>
               </div>
               <Button
-                type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setShowAiModal(false)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-700 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X />
               </Button>
             </div>
 
             {/* Modal Content */}
             <div className="p-5 sm:p-6 space-y-5">
               {/* Executive Summary */}
-              <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200 text-teal-950 space-y-1.5">
+              <div className="p-4 rounded-2xl bg-primary-soft border border-primary-subtle text-primary space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-[#138e89]">
                   <Compass className="w-3.5 h-3.5" />
                   <span>{t('landlordReportsAiSummaryHeader')}</span>
@@ -1415,12 +1194,12 @@ export default function ReportsPage() {
               {/* 3 Strategic Pillars */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {/* Pillar 1: Pricing */}
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
-                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                    <DollarSign className="w-4 h-4 text-success" />
                     <span>{t('landlordReportsAiPillarPricing')}</span>
                   </div>
-                  <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4">
+                  <ul className="text-xs text-muted space-y-1.5 list-disc pl-4">
                     {aiStrategy.pricingRecommendations.map((rec, i) => (
                       <li key={i}>{rec}</li>
                     ))}
@@ -1428,12 +1207,12 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Pillar 2: Marketing */}
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
-                    <Rocket className="w-4 h-4 text-blue-600" />
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                    <Rocket className="w-4 h-4 text-info" />
                     <span>{t('landlordReportsAiPillarMarketing')}</span>
                   </div>
-                  <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4">
+                  <ul className="text-xs text-muted space-y-1.5 list-disc pl-4">
                     {aiStrategy.marketingCampaigns.map((camp, i) => (
                       <li key={i}>{camp}</li>
                     ))}
@@ -1441,12 +1220,12 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Pillar 3: Operations */}
-                <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
-                    <Zap className="w-4 h-4 text-amber-600" />
+                <div className="p-4 rounded-2xl bg-surface border border-line space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                    <Zap className="w-4 h-4 text-warning" />
                     <span>{t('landlordReportsAiPillarOperations')}</span>
                   </div>
-                  <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4">
+                  <ul className="text-xs text-muted space-y-1.5 list-disc pl-4">
                     {aiStrategy.operationalOptimizations.map((op, i) => (
                       <li key={i}>{op}</li>
                     ))}
@@ -1456,26 +1235,26 @@ export default function ReportsPage() {
 
               {/* 30-Day Action Plan Timeline */}
               <div className="space-y-3 pt-2">
-                <h4 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#2AC1BC]" />
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-primary" />
                   <span>{t('landlordReportsAiActionPlanTitle')}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {aiStrategy.actionPlan30Days.map((step, i) => (
                     <div
                       key={i}
-                      className="p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-[#2AC1BC]/60 hover:shadow-xs transition-all space-y-1"
+                      className="p-3.5 rounded-2xl border border-line bg-card hover:border-primary/60 hover:shadow-xs transition-all space-y-1"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#2AC1BC]/15 text-[#138e89]">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-primary/15 text-[#138e89]">
                           {step.dayRange}
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-bold">
+                        <span className="text-[10px] text-muted font-bold">
                           {t('landlordReportsAiStepPrefix', { step: i + 1 })}
                         </span>
                       </div>
-                      <div className="text-xs font-bold text-zinc-900">{step.title}</div>
-                      <p className="text-[11px] text-zinc-500 leading-normal">{step.description}</p>
+                      <div className="text-xs font-bold text-foreground">{step.title}</div>
+                      <p className="text-[11px] text-muted leading-normal">{step.description}</p>
                     </div>
                   ))}
                 </div>
@@ -1483,22 +1262,18 @@ export default function ReportsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-zinc-100 flex items-center justify-end gap-2.5 bg-zinc-50/50">
-              <Button
-                type="button"
+            <div className="p-4 sm:p-5 border-t border-line flex items-center justify-end gap-2.5 bg-surface/50">
+              <Button size="xs"
                 variant="ghost"
                 onClick={() => setShowAiModal(false)}
-                className="px-4 py-2 text-xs font-bold text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-all cursor-pointer"
               >
                 {t('landlordReportsAiCloseBtn')}
               </Button>
-              <Button
-                type="button"
+              <Button size="xs"
                 onClick={() => {
                   setShowAiModal(false)
-                  showToast(t('landlordReportsToastAiPlanSaved'))
+                  toast.success(t('landlordReportsToastAiPlanSaved'))
                 }}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a5a0] rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
               >
                 {t('landlordReportsAiSavePlanBtn')}
               </Button>

@@ -1,10 +1,10 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { Building2, CheckCircle2, Star } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { formatCurrency } from '@/utils'
@@ -18,37 +18,24 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const isLegalPage = ['/terms', '/privacy', '/policy'].some(path => pathname?.startsWith(path))
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden bg-white">
-      {/* Cột Trái: Form Auth (Flex 1 - Responsive Padding, cố định layout, chỉ cuộn nội dung form/chính sách) */}
-      <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-white z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
-        {/* Header Brand Logo & Language Switcher */}
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-100 shrink-0">
+    <div className="flex h-screen max-h-screen overflow-hidden bg-background text-foreground transition-colors duration-200">
+      {/* Left Column: Auth Form */}
+      <div className="flex flex-1 flex-col justify-between h-full max-h-full overflow-hidden px-4 py-5 sm:px-8 sm:py-6 lg:px-12 xl:px-14 bg-background z-10 max-w-xl mx-auto w-full lg:max-w-2xl min-h-0">
+        {/* Header Brand Logo, Theme Switcher & Language Switcher */}
+        <div className="flex items-center justify-between pb-4 border-b border-line shrink-0">
           <Logo size="lg" />
 
           <div className="flex items-center gap-2">
+            <ThemeSwitcher />
             <LanguageSwitcher />
             {isLegalPage && (
               <>
-                <Link href="/register">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-xs font-bold text-zinc-700 hover:bg-zinc-50 border-zinc-200 px-3 py-1.5 rounded-xl h-auto"
-                  >
-                    {t('authLegalBackToRegister')}
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    className="text-xs font-bold px-3.5 py-1.5 rounded-xl h-auto shadow-xs"
-                  >
-                    {t('authLoginBtn')}
-                  </Button>
-                </Link>
+                <Button href="/register" variant="outline">
+                  {t('authLegalBackToRegister')}
+                </Button>
+                <Button href="/login">
+                  {t('authLoginBtn')}
+                </Button>
               </>
             )}
           </div>
@@ -60,7 +47,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Footer Legal Note */}
-        <div className="pt-3 border-t border-zinc-100 text-center sm:text-left shrink-0">
+        <div className="pt-3 border-t border-line text-center sm:text-left shrink-0">
           <Text variant="caption" size="2xs" color="subtle">
             {t('authLayoutFooterLegal', { year: new Date().getFullYear() })}
           </Text>
@@ -70,8 +57,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Cột Phải: Visual Interactive Dashboard Mockup Showcase (Cố định toàn màn hình, không bị kéo dài) */}
       <div className="hidden lg:flex flex-1 bg-[#090d12] relative flex-col items-center justify-center p-12 overflow-hidden border-l border-zinc-800 h-full max-h-full">
         {/* Ambient Glowing Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#2AC1BC]/15 rounded-full blur-[130px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF6B35]/15 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/15 rounded-full blur-[130px] pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.03] pointer-events-none" />
 
         {/* Showcase Glassmorphism Container */}
@@ -81,7 +68,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {/* Room Status Header */}
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/20 text-[#2AC1BC] flex items-center justify-center font-black">
+                <div className="w-10 h-10 rounded-2xl bg-primary/20 text-primary flex items-center justify-center font-black">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -150,7 +137,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   variant="caption"
                   size="3xs"
                   weight="black"
-                  className="text-[#2AC1BC] block"
+                  className="text-primary block"
                 >
                   {t('authLayoutShowcaseMetricAutoOcr')}
                 </Text>
@@ -175,7 +162,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                   variant="caption"
                   size="3xs"
                   weight="black"
-                  className="text-[#FF6B35] block"
+                  className="text-accent block"
                 >
                   {t('authLayoutShowcaseMetricOccupancyGrowth')}
                 </Text>
@@ -183,9 +170,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* VietQR Auto Reconciliation Banner */}
-            <div className="p-4 bg-gradient-to-r from-[#2AC1BC]/15 via-zinc-900 to-zinc-900 rounded-2xl border border-[#2AC1BC]/30 flex items-center justify-between gap-3">
+            <div className="p-4 bg-gradient-to-r from-primary/15 via-zinc-900 to-zinc-900 rounded-2xl border border-primary/30 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#2AC1BC] text-white flex items-center justify-center font-black shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-black shrink-0">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
@@ -210,7 +197,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             {/* Floating Verified Landlord Testimonial Overlay */}
             <div className="absolute -bottom-6 -right-6 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/80 p-4 rounded-2xl shadow-2xl flex items-center gap-3 max-w-xs animate-in fade-in duration-500">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF6B35] to-[#FF7B44] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-[#FF7B44] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md">
                 NQ
               </div>
               <div className="space-y-0.5">

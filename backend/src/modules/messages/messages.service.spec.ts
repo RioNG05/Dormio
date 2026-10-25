@@ -299,7 +299,7 @@ describe('MessagesService', () => {
 
       expect(contacts).toHaveLength(1)
       expect(contacts[0].fullName).toBe('Alice Smith')
-      expect(contacts[0].roomName).toBe('Phòng 101')
+      expect(contacts[0].roomName).toBe('Room 101')
       expect(contacts[0].boardingHouseName).toBe('Dormio Mansion')
     })
   })

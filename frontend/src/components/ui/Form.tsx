@@ -2,6 +2,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { AlertTriangle, CheckCircle2, AlertCircle, Info, ChevronDown, X } from 'lucide-react'
 import { Button } from './Button'
+import { Text } from './Text'
 
 /* -------------------------------------------------------------------------- */
 /*                               Form Context                                 */
@@ -42,7 +43,7 @@ export interface FormProps extends Omit<React.FormHTMLAttributes<HTMLFormElement
 
 const formVariantClasses: Record<NonNullable<FormProps['variant']>, string> = {
   plain: 'space-y-5 w-full',
-  card: 'bg-white rounded-3xl p-5 sm:p-8 border border-zinc-200/80 shadow-xs space-y-6 w-full',
+  card: 'bg-card rounded-3xl p-5 sm:p-8 border border-line shadow-xs space-y-6 w-full',
   modal: 'space-y-5 w-full',
   compact: 'space-y-3.5 w-full',
 }
@@ -143,25 +144,33 @@ export const FormHeader: React.FC<FormHeaderProps> = ({
     <div
       className={cn(
         'flex flex-col sm:flex-row sm:items-center justify-between gap-3',
-        bordered && 'border-b border-zinc-100 pb-4',
+        bordered && 'border-b border-line pb-4',
         className,
       )}
     >
       <div className="flex items-start sm:items-center gap-3">
         {icon && (
-          <div className="p-2 sm:p-2.5 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] shrink-0 flex items-center justify-center">
+          <div className="p-2 sm:p-2.5 rounded-2xl bg-primary/10 text-primary shrink-0 flex items-center justify-center">
             {icon}
           </div>
         )}
         <div className="space-y-0.5">
-          {title && (
-            <h3 className="text-base sm:text-lg font-black text-zinc-900 tracking-tight">
-              {title}
-            </h3>
-          )}
-          {description && (
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">{description}</p>
-          )}
+          {title &&
+            (typeof title === 'string' ? (
+              <Text as="h3" size="base" weight="black" color="default" className="sm:text-lg tracking-tight">
+                {title}
+              </Text>
+            ) : (
+              title
+            ))}
+          {description &&
+            (typeof description === 'string' ? (
+              <Text as="p" size="xs" color="secondary" weight="medium" className="leading-relaxed">
+                {description}
+              </Text>
+            ) : (
+              description
+            ))}
           {children}
         </div>
       </div>
@@ -210,7 +219,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
 
   return (
     <section
-      className={cn('space-y-4 w-full', divider && 'pt-5 border-t border-zinc-100', className)}
+      className={cn('space-y-4 w-full', divider && 'pt-5 border-t border-line', className)}
     >
       {(title || description || actions || collapsible) && (
         <div
@@ -222,16 +231,24 @@ export const FormSection: React.FC<FormSectionProps> = ({
           onClick={collapsible ? () => setIsOpen(!isOpen) : undefined}
         >
           <div className="flex items-center gap-2.5">
-            {icon && <div className="text-zinc-500 shrink-0 flex items-center">{icon}</div>}
+            {icon && <div className="text-muted shrink-0 flex items-center">{icon}</div>}
             <div>
-              {title && (
-                <h4 className="text-xs sm:text-sm font-extrabold text-zinc-800 tracking-tight">
-                  {title}
-                </h4>
-              )}
-              {description && (
-                <p className="text-[11px] text-zinc-400 font-normal">{description}</p>
-              )}
+              {title &&
+                (typeof title === 'string' ? (
+                  <Text as="h4" size="xs" weight="extrabold" color="default" className="sm:text-sm tracking-tight text-foreground">
+                    {title}
+                  </Text>
+                ) : (
+                  title
+                ))}
+              {description &&
+                (typeof description === 'string' ? (
+                  <Text as="p" size="2xs" color="subtle" weight="normal">
+                    {description}
+                  </Text>
+                ) : (
+                  description
+                ))}
             </div>
           </div>
 
@@ -240,7 +257,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
             {collapsible && (
               <ChevronDown
                 className={cn(
-                  'w-4 h-4 text-zinc-400 transition-transform duration-200',
+                  'w-4 h-4 text-muted transition-transform duration-200',
                   isOpen && 'transform rotate-180',
                 )}
               />
@@ -357,10 +374,16 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
           <div className="flex items-center justify-between gap-2">
             {label && (
               <label
-                className={cn('block text-xs font-bold text-zinc-700 select-none', labelClassName)}
+                className={cn('block text-xs font-bold text-foreground select-none', labelClassName)}
               >
-                <span>{label}</span>
-                {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  {label}
+                </Text>
+                {required && (
+                  <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                    *
+                  </Text>
+                )}
               </label>
             )}
             {labelRight && <div className="shrink-0">{labelRight}</div>}
@@ -370,9 +393,13 @@ export const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
         {children}
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in">
+            {error}
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )
@@ -419,9 +446,9 @@ export const FormActions = React.forwardRef<HTMLDivElement, FormActionsProps>(
           'flex items-stretch sm:items-center gap-3 pt-2 w-full',
           stackedOnMobile ? 'flex-col-reverse sm:flex-row' : 'flex-row',
           alignMap[align],
-          bordered && 'border-t border-zinc-100 pt-4 mt-2',
+          bordered && 'border-t border-line pt-4 mt-2',
           sticky &&
-            'sticky bottom-0 bg-white/95 backdrop-blur-xs py-3 border-t border-zinc-200/80 -mx-5 px-5 sm:-mx-8 sm:px-8 z-10 shadow-xs',
+            'sticky bottom-0 bg-card/95 backdrop-blur-xs py-3 border-t border-line -mx-5 px-5 sm:-mx-8 sm:px-8 z-10 shadow-xs',
           className,
         )}
         {...props}
@@ -452,20 +479,20 @@ const alertVariantStyles: Record<
   { container: string; icon: string }
 > = {
   error: {
-    container: 'bg-rose-500/10 border-rose-500/30 text-rose-700',
-    icon: 'text-rose-500',
+    container: 'bg-danger-soft border-danger-subtle text-danger',
+    icon: 'text-danger',
   },
   success: {
-    container: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700',
-    icon: 'text-emerald-500',
+    container: 'bg-success-soft border-success-subtle text-success',
+    icon: 'text-success',
   },
   warning: {
-    container: 'bg-amber-500/10 border-amber-500/30 text-amber-700',
-    icon: 'text-amber-500',
+    container: 'bg-warning-soft border-warning-subtle text-warning',
+    icon: 'text-warning',
   },
   info: {
-    container: 'bg-sky-500/10 border-sky-500/30 text-sky-700',
-    icon: 'text-sky-500',
+    container: 'bg-info-soft border-info-subtle text-info',
+    icon: 'text-info',
   },
 }
 
@@ -499,24 +526,30 @@ export const FormAlert: React.FC<FormAlertProps> = ({
       <div className="flex items-start gap-2.5 min-w-0">
         <IconComponent className={cn('w-4 h-4 shrink-0 mt-0.5', styles.icon)} />
         <div className="space-y-0.5">
-          {title && <p className="font-extrabold tracking-tight">{title}</p>}
+          {title &&
+            (typeof title === 'string' ? (
+              <Text as="p" size="xs" weight="extrabold" color="inherit" className="tracking-tight">
+                {title}
+              </Text>
+            ) : (
+              title
+            ))}
           {(message || children) && (
-            <div className="text-[11px] font-medium leading-relaxed opacity-90">
+            <Text as="div" size="2xs" weight="medium" color="inherit" className="leading-relaxed opacity-90">
               {message || children}
-            </div>
+            </Text>
           )}
         </div>
       </div>
 
       {onClose && (
         <Button
-          type="button"
           variant="ghost"
           size="icon"
           onClick={onClose}
-          className="w-6 h-6 p-0 hover:bg-black/5 rounded-lg shrink-0 -mt-1 -mr-1"
+          className="shrink-0 -mt-1 -mr-1"
         >
-          <X className="w-3.5 h-3.5" />
+          <X />
         </Button>
       )}
     </div>

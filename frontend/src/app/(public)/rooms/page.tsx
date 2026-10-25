@@ -41,6 +41,8 @@ import {
   FALLBACK_PROVINCES,
 } from '@/services/vietnam-address.service'
 
+import { Avatar, ViewModeToggle } from '@/components/ui'
+
 const DEFAULT_ROOM_IMAGE = '/house-placeholder.jpg'
 
 // ─── Helper: build full address string from structured fields ─────────────────
@@ -56,22 +58,22 @@ function buildAddressString(listing: PublicPostListing): string {
 // ─── Skeleton card for loading state ─────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs overflow-hidden flex flex-col md:flex-row animate-pulse">
-      <div className="md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 bg-zinc-200" />
+    <div className="bg-card rounded-3xl border border-line shadow-xs overflow-hidden flex flex-col md:flex-row animate-pulse">
+      <div className="md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 bg-line" />
       <div className="p-6 flex-1 space-y-4">
-        <div className="h-5 bg-zinc-200 rounded w-3/4" />
-        <div className="h-3 bg-zinc-200 rounded w-1/2" />
-        <div className="h-3 bg-zinc-200 rounded w-full" />
+        <div className="h-5 bg-line rounded w-3/4" />
+        <div className="h-3 bg-line rounded w-1/2" />
+        <div className="h-3 bg-line rounded w-full" />
         <div className="flex gap-2">
-          <div className="h-6 w-20 bg-zinc-200 rounded-full" />
-          <div className="h-6 w-20 bg-zinc-200 rounded-full" />
-          <div className="h-6 w-20 bg-zinc-200 rounded-full" />
+          <div className="h-6 w-20 bg-line rounded-full" />
+          <div className="h-6 w-20 bg-line rounded-full" />
+          <div className="h-6 w-20 bg-line rounded-full" />
         </div>
-        <div className="pt-3 border-t border-zinc-100 flex justify-between items-center">
-          <div className="h-8 w-28 bg-zinc-200 rounded" />
+        <div className="pt-3 border-t border-line flex justify-between items-center">
+          <div className="h-8 w-28 bg-line rounded" />
           <div className="flex gap-2">
-            <div className="h-9 w-24 bg-zinc-200 rounded-xl" />
-            <div className="h-9 w-20 bg-zinc-200 rounded-xl" />
+            <div className="h-9 w-24 bg-line rounded-xl" />
+            <div className="h-9 w-20 bg-line rounded-xl" />
           </div>
         </div>
       </div>
@@ -101,7 +103,7 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
       <button
         onClick={() => onPageChange(Math.max(1, windowStart - windowSize))}
         disabled={windowStart === 1}
-        className="px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 disabled:opacity-40 transition-colors cursor-pointer"
+        className="px-3 py-2 text-xs font-bold text-muted hover:text-foreground disabled:opacity-40 transition-colors cursor-pointer"
       >
         {prevLabel}
       </button>
@@ -111,8 +113,8 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
           onClick={() => onPageChange(p)}
           className={`w-8 h-8 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
             p === page
-              ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30'
-              : 'text-zinc-600 hover:bg-zinc-100'
+              ? 'bg-primary text-white shadow-md shadow-primary/30'
+              : 'text-muted hover:bg-card-hover'
           }`}
         >
           {p}
@@ -121,7 +123,7 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
       <button
         onClick={() => onPageChange(Math.min(totalPages, windowStart + windowSize))}
         disabled={windowEnd === totalPages}
-        className="px-3 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 disabled:opacity-40 transition-colors cursor-pointer"
+        className="px-3 py-2 text-xs font-bold text-muted hover:text-foreground disabled:opacity-40 transition-colors cursor-pointer"
       >
         {nextLabel}
       </button>
@@ -132,7 +134,7 @@ function Pagination({ page, totalPages, onPageChange, prevLabel, nextLabel }: Pa
 // ─── Full Page Skeleton for Suspense Fallback ────────────────────────────────
 function RoomsPageSkeleton() {
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20">
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center text-white shadow-2xl bg-zinc-950">
         <div className="max-w-4xl mx-auto flex flex-col items-center space-y-4 animate-pulse">
           <div className="h-6 w-48 bg-zinc-800 rounded-full" />
@@ -142,11 +144,11 @@ function RoomsPageSkeleton() {
       </section>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-4 bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs space-y-4">
-            <div className="h-6 bg-zinc-200 rounded w-1/3" />
-            <div className="h-10 bg-zinc-100 rounded-2xl" />
-            <div className="h-10 bg-zinc-100 rounded-2xl" />
-            <div className="h-10 bg-zinc-100 rounded-2xl" />
+          <div className="lg:col-span-4 bg-card rounded-3xl p-6 border border-line shadow-xs space-y-4">
+            <div className="h-6 bg-line rounded w-1/3" />
+            <div className="h-10 bg-card-hover rounded-2xl" />
+            <div className="h-10 bg-card-hover rounded-2xl" />
+            <div className="h-10 bg-card-hover rounded-2xl" />
           </div>
           <div className="lg:col-span-8 space-y-4">
             <SkeletonCard />
@@ -593,21 +595,21 @@ function RoomsContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20">
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center text-white shadow-2xl overflow-hidden bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[#2AC1BC]/15 rounded-full blur-[120px] pointer-events-none z-0" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 shadow-[0_0_20px_rgba(42,193,188,0.2)] backdrop-blur-xl">
-            <Sparkles className="w-3.5 h-3.5 text-[#2AC1BC]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-zinc-900/70 px-4 py-1.5 text-[11px] sm:text-xs font-extrabold text-primary tracking-wider mb-4 shadow-[0_0_20px_rgba(42,193,188,0.2)] backdrop-blur-xl">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span>{t('guestRoomsBadge')}</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] drop-shadow-md">
             <span className="inline-block whitespace-nowrap">{t('guestRoomsTitle1')}</span> <br />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+            <span className="bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent inline-block whitespace-nowrap">
               {t('guestRoomsTitle2')}
             </span>
           </h1>
@@ -622,14 +624,14 @@ function RoomsContent() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Sidebar Filter Card */}
-          <div className="lg:col-span-4 bg-white rounded-3xl p-6 border border-zinc-200/80 shadow-xs space-y-5">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3.5">
-              <h2 className="font-extrabold text-zinc-900 text-sm flex items-center gap-2">
-                <Filter className="w-4 h-4 text-[#2AC1BC]" /> {t('guestRoomsFilterTitle')}
+          <div className="lg:col-span-4 bg-card rounded-3xl p-6 border border-line shadow-xs space-y-5">
+            <div className="flex items-center justify-between border-b border-line pb-3.5">
+              <h2 className="font-extrabold text-foreground text-sm flex items-center gap-2">
+                <Filter className="w-4 h-4 text-primary" /> {t('guestRoomsFilterTitle')}
               </h2>
               <button
                 onClick={handleResetFilter}
-                className="text-xs font-semibold text-zinc-400 hover:text-zinc-700 flex items-center gap-1 transition-colors cursor-pointer"
+                className="text-xs font-semibold text-muted hover:text-foreground flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> {t('guestRoomsResetFilter')}
               </button>
@@ -637,30 +639,30 @@ function RoomsContent() {
 
             {/* Filter 0: Room Type / Category */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">Loại hình / Danh mục</label>
+              <label className="text-xs font-bold text-foreground/90">Loại hình / Danh mục</label>
               <div className="relative">
                 <select
                   id="filter-room-type"
                   value={roomType}
                   onChange={e => setRoomType(e.target.value)}
-                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-primary focus:bg-white transition-all cursor-pointer"
                 >
                   <option value="all">Tất cả loại phòng</option>
                   <option value="phong">{t('guestHomeTabRent')}</option>
                   <option value="studio">{t('guestHomeTabStudio')}</option>
                   <option value="nguyencan">{t('guestHomeTabWhole')}</option>
                 </select>
-                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               </div>
             </div>
 
             {/* Filter 1: Keyword */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">
+              <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsKeywordLabel')}
               </label>
               <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                 <input
                   id="filter-search"
                   type="text"
@@ -668,14 +670,14 @@ function RoomsContent() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                  className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
                 />
               </div>
             </div>
 
             {/* Filter 2: Province (Cascading Step 1) */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">
+              <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsProvinceLabel')}
               </label>
               <div className="relative">
@@ -683,7 +685,7 @@ function RoomsContent() {
                   id="filter-province"
                   value={province}
                   onChange={e => handleProvinceSelect(e.target.value)}
-                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer"
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-primary focus:bg-white transition-all cursor-pointer"
                 >
                   <option value="">{t('guestRoomsAllCities') || 'Tất cả tỉnh / thành'}</option>
                   {provinces.map(p => (
@@ -692,20 +694,20 @@ function RoomsContent() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               </div>
             </div>
 
             {/* Filter 3: Ward (Cascading Step 2 based on selected Province) */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700">{t('guestRoomsWardLabel')}</label>
+              <label className="text-xs font-bold text-foreground/90">{t('guestRoomsWardLabel')}</label>
               <div className="relative">
                 <select
                   id="filter-ward"
                   value={ward}
                   onChange={e => setWard(e.target.value)}
                   disabled={!province || isLoadingWards}
-                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-zinc-50 border border-zinc-200/80 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-3.5 pr-9 py-2.5 text-xs font-bold bg-surface border border-line rounded-2xl appearance-none focus:outline-none focus:border-primary focus:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">
                     {isLoadingWards
@@ -720,13 +722,13 @@ function RoomsContent() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               </div>
             </div>
 
             {/* Filter 5: Price range */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-700">
+              <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsMinPriceLabel')}
               </label>
               <input
@@ -736,9 +738,9 @@ function RoomsContent() {
                 value={minPrice}
                 onChange={e => setMinPrice(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
-              <label className="text-xs font-bold text-zinc-700">
+              <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsMaxPriceLabel')}
               </label>
               <input
@@ -748,13 +750,13 @@ function RoomsContent() {
                 value={maxPrice}
                 onChange={e => setMaxPrice(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
             </div>
 
             {/* Filter 6: Area range */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-700">
+              <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsMinAreaLabel')}
               </label>
               <input
@@ -764,9 +766,9 @@ function RoomsContent() {
                 value={minArea}
                 onChange={e => setMinArea(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
-              <label className="text-xs font-bold text-zinc-700">
+              <label className="text-xs font-bold text-foreground/90">
                 {t('guestRoomsMaxAreaLabel')}
               </label>
               <input
@@ -776,7 +778,7 @@ function RoomsContent() {
                 value={maxArea}
                 onChange={e => setMaxArea(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleApplyFilters()}
-                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-zinc-50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white transition-all"
+                className="w-full px-3.5 py-2.5 text-xs font-semibold bg-surface border border-line rounded-2xl focus:outline-none focus:border-primary focus:bg-white transition-all"
               />
             </div>
 
@@ -784,7 +786,7 @@ function RoomsContent() {
             <button
               id="apply-filters-btn"
               onClick={handleApplyFilters}
-              className="w-full py-3 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-2xl shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-3 bg-primary hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-2xl shadow-md shadow-primary/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Search className="w-3.5 h-3.5" /> {t('guestRoomsApplyFilter')}
             </button>
@@ -807,8 +809,8 @@ function RoomsContent() {
                     onClick={() => handleSelectType(tab.id)}
                     className={`px-4 py-2 rounded-2xl text-xs font-black shrink-0 transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-102'
-                        : 'bg-white text-zinc-600 border border-zinc-200/80 hover:border-zinc-300 hover:text-zinc-900'
+                        ? 'bg-gradient-to-r from-primary to-[#3BDAC8] text-white shadow-md shadow-primary/25 scale-102'
+                        : 'bg-card text-muted border border-line hover:border-line hover:text-foreground'
                     }`}
                   >
                     {tab.label}
@@ -820,9 +822,9 @@ function RoomsContent() {
             {/* Active Filter Chips / Badges (if any filter active) */}
             {hasActiveFilters && (
               <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
-                <span className="text-[11px] font-bold text-zinc-400">Đang lọc:</span>
+                <span className="text-[11px] font-bold text-muted">Đang lọc:</span>
                 {search && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Từ khóa: &ldquo;{search}&rdquo;
                     <button
                       onClick={() => handleRemoveFilter('search')}
@@ -834,7 +836,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {roomType && roomType !== 'all' && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Loại:{' '}
                     {roomType === 'phong'
                       ? t('guestHomeTabRent')
@@ -851,7 +853,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {(minPrice || maxPrice) && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Giá: {minPrice ? formatVND(Number(minPrice)) : '0₫'} -{' '}
                     {maxPrice ? formatVND(Number(maxPrice)) : 'Vô hạn'}
                     <button
@@ -864,7 +866,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {province && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Tỉnh/Thành: {province}
                     <button
                       onClick={() => handleRemoveFilter('province')}
@@ -876,7 +878,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {district && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Quận/Huyện: {district}
                     <button
                       onClick={() => handleRemoveFilter('district')}
@@ -888,7 +890,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {ward && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Phường/Xã: {ward}
                     <button
                       onClick={() => handleRemoveFilter('ward')}
@@ -900,7 +902,7 @@ function RoomsContent() {
                   </span>
                 )}
                 {(minArea || maxArea) && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#2AC1BC]/10 text-[#1f9692] border border-[#2AC1BC]/20">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-[#1f9692] border border-primary/20">
                     Diện tích: {minArea || 0}m² - {maxArea || '∞'}m²
                     <button
                       onClick={() => handleRemoveFilter('area')}
@@ -913,7 +915,7 @@ function RoomsContent() {
                 )}
                 <button
                   onClick={handleResetFilter}
-                  className="text-[11px] font-bold text-zinc-400 hover:text-red-600 underline cursor-pointer transition-colors ml-1"
+                  className="text-[11px] font-bold text-muted hover:text-red-600 underline cursor-pointer transition-colors ml-1"
                 >
                   {t('guestRoomsResetFilter')}
                 </button>
@@ -922,39 +924,24 @@ function RoomsContent() {
 
             {/* Results count + view toggle */}
             <div className="flex items-center justify-between pt-1">
-              <div className="text-xs text-zinc-500 font-bold">
+              <div className="text-xs text-muted font-bold">
                 {isLoading ? (
-                  <span className="text-zinc-400">{t('guestRoomsLoading')}</span>
+                  <span className="text-muted">{t('guestRoomsLoading')}</span>
                 ) : (
                   t('guestRoomsFoundCount', { count: total })
                 )}
               </div>
 
               {/* List / Map View Mode Toggle Buttons */}
-              <div className="flex items-center p-1 bg-zinc-100 rounded-2xl border border-zinc-200/80">
-                <button
-                  id="view-list-btn"
-                  onClick={() => setViewMode('list')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    viewMode === 'list'
-                      ? 'bg-white text-zinc-900 shadow-xs'
-                      : 'text-zinc-500 hover:text-zinc-900'
-                  }`}
-                >
-                  <Filter className="w-3.5 h-3.5" /> {t('guestRoomsListView')}
-                </button>
-                <button
-                  id="view-map-btn"
-                  onClick={() => setViewMode('map')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    viewMode === 'map'
-                      ? 'bg-[#2AC1BC] text-white shadow-xs'
-                      : 'text-zinc-500 hover:text-zinc-900'
-                  }`}
-                >
-                  <MapPin className="w-3.5 h-3.5" /> {t('guestRoomsMapView')}
-                </button>
-              </div>
+              <ViewModeToggle
+                value={viewMode}
+                onChange={setViewMode}
+                options={[
+                  { value: 'list', label: t('guestRoomsListView'), icon: <Filter className="w-3.5 h-3.5" /> },
+                  { value: 'map', label: t('guestRoomsMapView'), icon: <MapPin className="w-3.5 h-3.5" /> },
+                ]}
+                showLabels
+              />
             </div>
 
             {/* Map view */}
@@ -981,15 +968,15 @@ function RoomsContent() {
                             : 'top-1/4 left-3/4'
                     }`}
                   >
-                    <div className="px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
+                    <div className="px-3 py-1.5 bg-accent text-white text-xs font-black rounded-full shadow-2xl flex items-center gap-1 group-hover:scale-110 transition-transform">
                       <MapPin className="w-3.5 h-3.5" /> {formatVND(listing.depositAmount)}
                     </div>
                   </div>
                 ))}
 
-                <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-2xl text-xs font-bold text-zinc-900 flex justify-between items-center">
+                <div className="absolute bottom-4 left-4 right-4 bg-card/95 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-2xl text-xs font-bold text-foreground flex justify-between items-center">
                   <span>📍 {t('guestRoomsMapInfo')}</span>
-                  <span className="text-[#2AC1BC] font-extrabold">
+                  <span className="text-primary font-extrabold">
                     {t('guestRoomsMapPinTitle', { count: listings.length })}
                   </span>
                 </div>
@@ -1016,16 +1003,16 @@ function RoomsContent() {
                 {/* Empty state */}
                 {!isLoading && !error && listings.length === 0 && (
                   <div className="text-center py-20 space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center mx-auto">
-                      <Search className="w-7 h-7 text-zinc-400" />
+                    <div className="w-16 h-16 rounded-full bg-card-hover flex items-center justify-center mx-auto">
+                      <Search className="w-7 h-7 text-muted" />
                     </div>
-                    <h3 className="font-extrabold text-zinc-900 text-base">
+                    <h3 className="font-extrabold text-foreground text-base">
                       {t('guestRoomsEmptyTitle')}
                     </h3>
-                    <p className="text-sm text-zinc-400 font-medium">{t('guestRoomsEmptyDesc')}</p>
+                    <p className="text-sm text-muted font-medium">{t('guestRoomsEmptyDesc')}</p>
                     <button
                       onClick={handleResetFilter}
-                      className="px-5 py-2.5 bg-[#2AC1BC] text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
+                      className="px-5 py-2.5 bg-primary text-white text-xs font-extrabold rounded-xl shadow-md cursor-pointer"
                     >
                       {t('guestRoomsEmptyReset')}
                     </button>
@@ -1050,10 +1037,10 @@ function RoomsContent() {
                             router.push(`/rooms/${listing.id}`)
                           }
                         }}
-                        className="bg-white rounded-3xl border border-zinc-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row group cursor-pointer"
+                        className="bg-card rounded-3xl border border-line shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col md:flex-row group cursor-pointer"
                       >
                         {/* Left Image Column with Action Badges */}
-                        <div className="relative md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 overflow-hidden bg-zinc-100">
+                        <div className="relative md:w-[260px] lg:w-[290px] aspect-[4/3] md:aspect-auto shrink-0 overflow-hidden bg-card-hover">
                           <img
                             src={imageUrl}
                             alt={listing.title}
@@ -1077,8 +1064,8 @@ function RoomsContent() {
                               }}
                               className={`p-2 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-md ${
                                 isSaved
-                                  ? 'bg-rose-500 text-white'
-                                  : 'bg-zinc-900/70 text-white hover:bg-rose-500'
+                                  ? 'bg-danger text-white'
+                                  : 'bg-zinc-900/70 text-white hover:bg-danger'
                               }`}
                               title={isSaved ? t('guestRoomsSaved') : t('guestRoomsSave')}
                             >
@@ -1090,7 +1077,7 @@ function RoomsContent() {
                                 e.stopPropagation()
                                 setShareModalRoom(listing)
                               }}
-                              className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-[#2AC1BC] backdrop-blur-md transition-all cursor-pointer shadow-md"
+                              className="p-2 rounded-full bg-zinc-900/70 text-white hover:bg-primary backdrop-blur-md transition-all cursor-pointer shadow-md"
                               title={t('guestRoomsShareTitle')}
                             >
                               <Share2 className="w-3.5 h-3.5" />
@@ -1104,9 +1091,9 @@ function RoomsContent() {
                               e.stopPropagation()
                               setQuickViewRoom(listing)
                             }}
-                            className="absolute bottom-3 left-3 right-3 py-2 bg-white/95 hover:bg-white text-zinc-900 backdrop-blur-md text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 cursor-pointer z-10"
+                            className="absolute bottom-3 left-3 right-3 py-2 bg-card/95 hover:bg-card text-foreground backdrop-blur-md text-xs font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 cursor-pointer z-10"
                           >
-                            <Eye className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
+                            <Eye className="w-3.5 h-3.5 text-primary" />{' '}
                             {t('guestRoomsQuickView')}
                           </button>
                         </div>
@@ -1114,11 +1101,11 @@ function RoomsContent() {
                         {/* Details column */}
                         <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                           <div>
-                            <h3 className="font-extrabold text-zinc-900 text-lg leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1 mb-2">
+                            <h3 className="font-extrabold text-foreground text-lg leading-snug group-hover:text-primary transition-colors line-clamp-1 mb-2">
                               <Link
                                 href={`/rooms/${listing.id}`}
                                 onClick={e => e.stopPropagation()}
-                                className="hover:text-[#2AC1BC] transition-colors"
+                                className="hover:text-primary transition-colors"
                               >
                                 {listing.title}
                               </Link>
@@ -1130,22 +1117,22 @@ function RoomsContent() {
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={e => e.stopPropagation()}
-                                className="flex items-center text-xs text-zinc-400 font-semibold gap-1 hover:text-[#2AC1BC] hover:underline cursor-pointer transition-colors w-fit z-10"
+                                className="flex items-center text-xs text-muted font-semibold gap-1 hover:text-primary hover:underline cursor-pointer transition-colors w-fit z-10"
                                 title={t('guestContactMaps')}
                               >
-                                <MapPin className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                                <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                                 <span className="truncate">{address}</span>
                               </a>
                             )}
 
                             {listing.room?.area && (
-                              <span className="text-xs text-zinc-400 font-medium flex gap-1 mt-1">
-                                <Maximize2 className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+                              <span className="text-xs text-muted font-medium flex gap-1 mt-1">
+                                <Maximize2 className="w-3.5 h-3.5 text-primary shrink-0" />
                                 {listing.room.area} m²
                               </span>
                             )}
 
-                            <p className="text-xs text-zinc-500 font-medium leading-relaxed line-clamp-2 pt-1">
+                            <p className="text-xs text-muted font-medium leading-relaxed line-clamp-2 pt-1">
                               {listing.content}
                             </p>
                           </div>
@@ -1155,37 +1142,32 @@ function RoomsContent() {
                             <Link
                               href={`/landlords/${listing.poster.id}`}
                               onClick={e => e.stopPropagation()}
-                              className="flex items-center gap-2 hover:text-[#2AC1BC] transition-colors w-fit z-10 cursor-pointer group/poster"
+                              className="flex items-center gap-2 hover:text-primary transition-colors w-fit z-10 cursor-pointer group/poster"
                               title="Xem hồ sơ người đăng"
                             >
-                              {listing.poster.avatarUrl ? (
-                                <img
-                                  src={listing.poster.avatarUrl}
-                                  alt={listing.poster.username ?? ''}
-                                  className="w-6 h-6 rounded-full object-cover border border-zinc-200"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center border border-zinc-200">
-                                  <User className="w-3.5 h-3.5 text-zinc-400" />
-                                </div>
-                              )}
-                              <span className="text-xs text-zinc-500 font-semibold group-hover/poster:text-[#2AC1BC] transition-colors">
+                              <Avatar
+                                src={listing.poster.avatarUrl}
+                                name={listing.poster.username}
+                                size="2xs"
+                                bordered
+                              />
+                              <span className="text-xs text-muted font-semibold group-hover/poster:text-primary transition-colors">
                                 {listing.poster.username ?? t('guestRoomsDefaultLandlord')}
                               </span>
                             </Link>
                           )}
 
                           {/* Price + actions */}
-                          <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="pt-3 border-t border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="whitespace-nowrap">
-                              <span className="text-2xl font-black text-rose-500">
+                              <span className="text-2xl font-black text-danger">
                                 {formatVND(listing.depositAmount)}
                               </span>
-                              <span className="text-xs text-zinc-400 font-normal">
+                              <span className="text-xs text-muted font-normal">
                                 {' '}
                                 {t('guestRoomsMonth')}
                               </span>
-                              <span className="text-[11px] font-bold text-zinc-500 block">
+                              <span className="text-[11px] font-bold text-muted block">
                                 {t('guestRoomsDepositLabel')}{' '}
                                 {listing.depositAmount > 0
                                   ? formatVND(listing.depositAmount)
@@ -1222,20 +1204,20 @@ function RoomsContent() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-zinc-100 relative cursor-default">
+          <div className="bg-card rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-line relative cursor-default">
             <button
               onClick={() => setShareModalRoom(null)}
-              className="absolute top-4 right-4 p-1 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-700 cursor-pointer"
+              className="absolute top-4 right-4 p-1 hover:bg-card-hover rounded-full text-muted hover:text-foreground cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-black text-zinc-900 flex items-center gap-2">
-              <Share2 className="w-4 h-4 text-[#2AC1BC]" /> {t('guestRoomsShareTitle')}
+            <h3 className="text-base font-black text-foreground flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-primary" /> {t('guestRoomsShareTitle')}
             </h3>
-            <p className="text-xs text-zinc-500 font-medium line-clamp-1">{shareModalRoom.title}</p>
+            <p className="text-xs text-muted font-medium line-clamp-1">{shareModalRoom.title}</p>
 
-            <div className="flex items-center gap-2 p-2 bg-zinc-50 rounded-2xl border border-zinc-200">
+            <div className="flex items-center gap-2 p-2 bg-surface rounded-2xl border border-line">
               <input
                 type="text"
                 readOnly
@@ -1244,11 +1226,11 @@ function RoomsContent() {
                     ? window.location.origin + `/rooms/${shareModalRoom.id}`
                     : ''
                 }
-                className="w-full text-xs font-semibold text-zinc-600 bg-transparent px-2 focus:outline-none truncate"
+                className="w-full text-xs font-semibold text-muted bg-transparent px-2 focus:outline-none truncate"
               />
               <button
                 onClick={() => handleCopyShareLink(shareModalRoom)}
-                className="px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+                className="px-3 py-1.5 bg-primary hover:bg-[#22a9a4] text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copiedLink ? t('guestRoomsCopied') : t('guestRoomsCopy')}
@@ -1266,16 +1248,16 @@ function RoomsContent() {
           }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
         >
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 border border-zinc-100 relative cursor-default">
+          <div className="bg-card rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 border border-line relative cursor-default">
             <button
               onClick={() => setQuickViewRoom(null)}
-              className="absolute top-4 right-4 p-1 hover:bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-700 cursor-pointer"
+              className="absolute top-4 right-4 p-1 hover:bg-card-hover rounded-full text-muted hover:text-foreground cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="md:w-1/2 aspect-[4/3] rounded-2xl overflow-hidden bg-zinc-100">
+              <div className="md:w-1/2 aspect-[4/3] rounded-2xl overflow-hidden bg-card-hover">
                 <img
                   src={quickViewRoom.images?.[0]?.url || DEFAULT_ROOM_IMAGE}
                   alt={quickViewRoom.title}
@@ -1287,21 +1269,21 @@ function RoomsContent() {
               </div>
 
               <div className="md:w-1/2 space-y-4">
-                <span className="px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] text-[10px] font-extrabold rounded-full inline-block">
+                <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-extrabold rounded-full inline-block">
                   {quickViewRoom.room?.roomTypeName ? `${quickViewRoom.room.roomTypeName} • ` : ''}
                   {t('guestRoomsVerifiedLandlord')}
                 </span>
-                <h3 className="text-xl font-black text-zinc-900 leading-snug">
+                <h3 className="text-xl font-black text-foreground leading-snug">
                   {quickViewRoom.title}
                 </h3>
-                <div className="text-xs font-semibold text-zinc-400 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
+                <div className="text-xs font-semibold text-muted flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />{' '}
                   {buildAddressString(quickViewRoom)}
                 </div>
-                <div className="text-2xl font-black text-rose-500">
+                <div className="text-2xl font-black text-danger">
                   {formatVND(quickViewRoom.depositAmount)}
-                  <span className="text-xs text-zinc-400 font-normal"> {t('guestRoomsMonth')}</span>
-                  <span className="text-[11px] font-bold text-zinc-500 block">
+                  <span className="text-xs text-muted font-normal"> {t('guestRoomsMonth')}</span>
+                  <span className="text-[11px] font-bold text-muted block">
                     {t('guestRoomsDepositLabel')}{' '}
                     {quickViewRoom.depositAmount > 0
                       ? formatVND(quickViewRoom.depositAmount)
@@ -1310,32 +1292,32 @@ function RoomsContent() {
                 </div>
 
                 {/* Features tags */}
-                <div className="space-y-2 pt-2 border-t border-zinc-100">
-                  <span className="text-xs font-bold text-zinc-700 block">
+                <div className="space-y-2 pt-2 border-t border-line">
+                  <span className="text-xs font-bold text-foreground/90 block">
                     {t('guestRoomsFeaturedAmenities')}
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {quickViewRoom.room?.roomTypeName && (
-                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />{' '}
                         {quickViewRoom.room.roomTypeName}
                       </span>
                     )}
                     {quickViewRoom.room?.area && (
-                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />{' '}
                         {quickViewRoom.room.area} m²
                       </span>
                     )}
                     {quickViewRoom.room?.floor && (
-                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" /> Tầng{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" /> Tầng{' '}
                         {quickViewRoom.room.floor}
                       </span>
                     )}
                     {quickViewRoom.room?.boardingHouseName && (
-                      <span className="px-2.5 py-1 bg-zinc-100 text-[#2AC1BC] rounded-lg text-[11px] font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-[#2AC1BC]" />{' '}
+                      <span className="px-2.5 py-1 bg-card-hover text-primary rounded-lg text-[11px] font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-primary" />{' '}
                         {quickViewRoom.room.boardingHouseName}
                       </span>
                     )}
@@ -1347,7 +1329,7 @@ function RoomsContent() {
                     href={`/rooms/${quickViewRoom.id}`}
                     className="flex-1 py-3 bg-zinc-900 text-white rounded-xl font-bold text-xs hover:bg-zinc-800 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t('guestRoomsDetailBtn')}
+                    <ArrowRight className="w-3.5 h-3.5 text-primary" /> {t('guestRoomsDetailBtn')}
                   </Link>
                 </div>
               </div>

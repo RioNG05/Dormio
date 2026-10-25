@@ -17,6 +17,7 @@ import {
   EyeOff,
 } from 'lucide-react'
 import { useAuth, DemoPreset } from '@/context/AuthContext'
+import { Button, Text } from '@/components/ui'
 
 export default function DemoControlBar() {
   const router = useRouter()
@@ -26,14 +27,18 @@ export default function DemoControlBar() {
 
   if (isDismissed) {
     return (
-      <button
+      <Button
+        variant="ghost"
+        rounded="full"
         onClick={() => setIsDismissed(false)}
-        className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-[#2AC1BC] rounded-full border border-zinc-700 shadow-lg text-[10px] font-bold flex items-center gap-1 cursor-pointer hover:bg-zinc-800 transition-all"
+        leftIcon={<Sparkles className="fill-primary" />}
+        className="fixed bottom-4 right-4 z-50 p-2 bg-zinc-900/90 text-primary border border-zinc-700 shadow-lg text-[10px] font-bold hover:bg-zinc-800"
         title="Mở lại bảng thử nghiệm"
       >
-        <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" />
-        <span>Thử nghiệm</span>
-      </button>
+        <Text as="span" size="3xs" weight="bold" color="inherit">
+          Thử nghiệm
+        </Text>
+      </Button>
     )
   }
 
@@ -82,39 +87,47 @@ export default function DemoControlBar() {
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-[#2AC1BC] text-white flex items-center justify-center font-black">
+              <div className="w-7 h-7 rounded-xl bg-primary text-white flex items-center justify-center font-black">
                 <Sparkles className="w-4 h-4 fill-white" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-white">Bảng Thử Nghiệm Project</h4>
-                <p className="text-[10px] text-zinc-400 font-medium">
+                <Text as="h4" size="xs" weight="black" color="white">
+                  Bảng Thử Nghiệm Project
+                </Text>
+                <Text as="p" size="3xs" color="subtle" weight="medium">
                   Chuyển đổi vai trò & kiểm thử các luồng 1-click
-                </p>
+                </Text>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded="full"
                 onClick={() => setIsDismissed(true)}
                 title="Ẩn nút thử nghiệm"
-                className="p-1 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+                className="!h-7 !w-7 text-muted hover:text-rose-400 hover:bg-zinc-800"
               >
                 <EyeOff className="w-4 h-4" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded="full"
                 onClick={() => setIsOpen(false)}
-                className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full transition-colors cursor-pointer"
+                className="!h-7 !w-7 text-muted hover:text-white hover:bg-zinc-800"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* 1-Click Role Presets */}
           <div className="space-y-2">
-            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+            <Text as="span" size="3xs" weight="extrabold" color="subtle" uppercase className="tracking-wider block">
               CHỌN VAI TRÒ KIỂM THỬ:
-            </span>
+            </Text>
 
             <div className="grid grid-cols-1 gap-2">
               {/* Guest */}
@@ -122,12 +135,14 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('guest', '/')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'guest'
-                    ? 'border-white bg-white text-zinc-950 shadow-md'
+                    ? 'border-white bg-card text-foreground shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>🌐 1. Khách Vãng Lai (Chưa đăng nhập)</span>
-                {activePreset === 'guest' && <Check className="w-4 h-4 text-zinc-950 stroke-[3]" />}
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  🌐 1. Khách Vãng Lai (Chưa đăng nhập)
+                </Text>
+                {activePreset === 'guest' && <Check className="w-4 h-4 text-foreground stroke-[3]" />}
               </button>
 
               {/* Tenant */}
@@ -135,11 +150,13 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('tenant', '/tenant')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'tenant'
-                    ? 'border-[#FF6B35] bg-[#FF6B35] text-white shadow-md'
+                    ? 'border-accent bg-accent text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>👤 2. Khách Thuê </span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  👤 2. Khách Thuê
+                </Text>
                 {activePreset === 'tenant' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
@@ -148,11 +165,13 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('staff', '/staff')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'staff'
-                    ? 'border-[#2AC1BC] bg-[#2AC1BC] text-white shadow-md'
+                    ? 'border-primary bg-primary text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>👷 3. Nhân Viên Vận Hành (Staff)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  👷 3. Nhân Viên Vận Hành (Staff)
+                </Text>
                 {activePreset === 'staff' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
 
@@ -161,11 +180,13 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('landlord_empty', '/landlord')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'landlord_empty'
-                    ? 'border-rose-500 bg-rose-500 text-white shadow-md'
+                    ? 'border-danger bg-danger text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>🏠 4. Chủ Trọ Mới (Dashboard Trống Trơn)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  🏠 4. Chủ Trọ Mới (Dashboard Trống Trơn)
+                </Text>
                 {activePreset === 'landlord_empty' && (
                   <Check className="w-4 h-4 text-white stroke-[3]" />
                 )}
@@ -176,11 +197,13 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('landlord_active', '/landlord')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'landlord_active'
-                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-md'
+                    ? 'border-success bg-success text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>📊 5. Chủ Trọ Đang Vận Hành</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  📊 5. Chủ Trọ Đang Vận Hành
+                </Text>
                 {activePreset === 'landlord_active' && (
                   <Check className="w-4 h-4 text-white stroke-[3]" />
                 )}
@@ -191,11 +214,13 @@ export default function DemoControlBar() {
                 onClick={() => handleSelectPreset('admin', '/admin')}
                 className={`p-2.5 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                   activePreset === 'admin'
-                    ? 'border-purple-600 bg-purple-600 text-white shadow-md'
+                    ? 'border-deposit bg-deposit text-white shadow-md'
                     : 'border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800'
                 }`}
               >
-                <span>👑 6. Admin Nền Tảng (System)</span>
+                <Text as="span" size="xs" weight="bold" color="inherit">
+                  👑 6. Admin Nền Tảng (System)
+                </Text>
                 {activePreset === 'admin' && <Check className="w-4 h-4 text-white stroke-[3]" />}
               </button>
             </div>
@@ -209,17 +234,21 @@ export default function DemoControlBar() {
         className="px-4 py-3 bg-zinc-950/95 hover:bg-zinc-900 text-white rounded-full border border-zinc-700 shadow-2xl flex items-center gap-2.5 transition-all cursor-pointer hover:scale-105 group"
       >
         <span className="relative flex h-2.5 w-2.5 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2AC1BC] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2AC1BC]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
         </span>
 
-        <span className="text-xs font-black text-[#2AC1BC]">🧪 Test Suite:</span>
-        <span className="text-xs font-extrabold text-zinc-200">{getPresetLabel(activePreset)}</span>
+        <Text as="span" size="xs" weight="black" color="brand">
+          🧪 Test Suite:
+        </Text>
+        <Text as="span" size="xs" weight="extrabold" color="inherit" className="text-zinc-200">
+          {getPresetLabel(activePreset)}
+        </Text>
 
         {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+          <ChevronDown className="w-4 h-4 text-muted group-hover:text-white transition-colors" />
         ) : (
-          <ChevronUp className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+          <ChevronUp className="w-4 h-4 text-muted group-hover:text-white transition-colors" />
         )}
       </button>
     </div>

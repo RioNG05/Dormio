@@ -30,12 +30,12 @@ export default function ForgotPasswordPage() {
           variant="caption"
           size="3xs"
           weight="black"
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-full border border-[#2AC1BC]/30 uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full border border-primary/30 uppercase tracking-wider"
         >
-          <Sparkles className="w-3.5 h-3.5 fill-[#2AC1BC]" /> {t('authForgotPassBadge')}
+          <Sparkles className="w-3.5 h-3.5 fill-primary" /> {t('authForgotPassBadge')}
         </Text>
 
-        <Text as="h1" variant="heading" size="2xl" className="text-zinc-900 tracking-tight">
+        <Text as="h1" variant="heading" size="2xl" className="text-foreground tracking-tight">
           {t('authForgotPassword')}
         </Text>
         <Text variant="body" size="xs" color="subtle" className="leading-relaxed">
@@ -44,12 +44,12 @@ export default function ForgotPasswordPage() {
       </div>
 
       {submitted ? (
-        <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-200 text-center space-y-4 animate-in fade-in duration-300">
-          <div className="w-14 h-14 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+        <div className="bg-surface rounded-3xl p-6 border border-line text-center space-y-4 animate-in fade-in duration-300">
+          <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <Text as="h3" variant="heading" size="base" className="text-zinc-900">
+            <Text as="h3" variant="heading" size="base" className="text-foreground">
               {t('authForgotPassSuccessTitle')}
             </Text>
             <Text variant="body" size="xs" color="subtle" className="mt-1 leading-relaxed">
@@ -57,11 +57,9 @@ export default function ForgotPasswordPage() {
             </Text>
           </div>
           <Button
-            type="button"
             variant="secondary"
             size="md"
             onClick={() => setSubmitted(false)}
-            className="px-6 py-2.5 rounded-xl font-extrabold text-xs"
           >
             {t('authForgotPassResendBtn')}
           </Button>
@@ -69,32 +67,20 @@ export default function ForgotPasswordPage() {
       ) : (
         <>
           {/* Input Method Selector Tabs (Phone vs Email) using Button Component */}
-          <div className="flex p-1 bg-zinc-100/80 rounded-2xl border border-zinc-200/60 gap-1">
+          <div className="flex p-1 bg-card-hover/80 rounded-2xl border border-line gap-1">
             <Button
-              type="button"
-              variant={method === 'phone' ? 'primary' : 'ghost'}
-              size="sm"
+              variant={method === 'phone' ? undefined : 'ghost'}
               onClick={() => setMethod('phone')}
-              leftIcon={<Phone className="w-3.5 h-3.5" />}
-              className={`flex-1 rounded-xl text-xs font-extrabold ${
-                method === 'phone'
-                  ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-                  : 'text-zinc-500 hover:text-zinc-800'
-              }`}
+              leftIcon={<Phone />}
+              className="flex-1"
             >
               {t('authLoginMethodPhone')}
             </Button>
             <Button
-              type="button"
-              variant={method === 'email' ? 'primary' : 'ghost'}
-              size="sm"
+              variant={method === 'email' ? undefined : 'ghost'}
               onClick={() => setMethod('email')}
-              leftIcon={<Mail className="w-3.5 h-3.5" />}
-              className={`flex-1 rounded-xl text-xs font-extrabold ${
-                method === 'email'
-                  ? 'bg-white text-[#2AC1BC] hover:bg-white shadow-xs'
-                  : 'text-zinc-500 hover:text-zinc-800'
-              }`}
+              leftIcon={<Mail />}
+              className="flex-1"
             >
               {t('authLoginMethodEmail')}
             </Button>
@@ -106,7 +92,7 @@ export default function ForgotPasswordPage() {
               label={
                 method === 'phone' ? t('authForgotPassPhoneLabel') : t('authForgotPassEmailLabel')
               }
-              labelClassName="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider"
+              labelClassName="text-[11px] font-extrabold text-muted uppercase tracking-wider"
               type={method === 'phone' ? 'tel' : 'email'}
               required
               placeholder={method === 'phone' ? '0987 654 321' : 'nguyenvana@gmail.com'}
@@ -114,22 +100,21 @@ export default function ForgotPasswordPage() {
               onChange={e => setAccountIdentifier(e.target.value)}
               leftIcon={
                 method === 'phone' ? (
-                  <Phone className="w-4 h-4 text-zinc-400" />
+                  <Phone className="w-4 h-4 text-muted" />
                 ) : (
-                  <Mail className="w-4 h-4 text-zinc-400" />
+                  <Mail className="w-4 h-4 text-muted" />
                 )
               }
-              className="rounded-2xl py-3 border-zinc-200 focus:border-[#2AC1BC]"
+              className="rounded-2xl py-3 border-line focus:border-primary"
             />
 
             {/* Submit Button using Base Form.Actions & Button */}
             <Form.Actions align="center" stackedOnMobile={false} className="pt-2">
-              <Button
+              <Button fullWidth
                 type="submit"
-                variant="primary"
                 size="lg"
-                rightIcon={<ArrowRight className="w-4 h-4" />}
-                className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+                rightIcon={<ArrowRight />}
+                className="sm:text-sm"
               >
                 {t('authForgotPassSubmitBtn')}
               </Button>
@@ -148,7 +133,7 @@ export default function ForgotPasswordPage() {
               variant="body"
               size="xs"
               weight="extrabold"
-              className="text-[#2AC1BC] hover:underline"
+              className="text-primary hover:underline"
             >
               {t('authForgotPassBackToLogin')}
             </Text>

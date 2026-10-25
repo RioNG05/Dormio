@@ -121,7 +121,7 @@ describe('SubscriptionTierGuard', () => {
     expect(thrownError?.getResponse()).toEqual({
       statusCode: 403,
       error: 'Forbidden',
-      code: 'SUBSCRIPTION_TIER_REQUIRED',
+      code: 'TIER_SUBSCRIPTION_REQUIRED',
       message:
         'This feature requires the Plus plan or higher. Your current plan is Free. Please upgrade your subscription to access this feature.',
       requiredTier: SubscriptionPackage.plus,
@@ -173,7 +173,7 @@ describe('SubscriptionTierGuard', () => {
     expect(thrownError?.getResponse()).toEqual({
       statusCode: 403,
       error: 'Forbidden',
-      code: 'SUBSCRIPTION_TIER_REQUIRED',
+      code: 'TIER_SUBSCRIPTION_REQUIRED',
       message:
         'This feature requires the Pro plan or higher. Your current plan is Plus. Please upgrade your subscription to access this feature.',
       requiredTier: SubscriptionPackage.pro,

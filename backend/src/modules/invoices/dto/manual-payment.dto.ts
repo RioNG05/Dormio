@@ -14,7 +14,7 @@ export class ManualPaymentDto {
 
   @ApiPropertyOptional({
     description: 'Landlord transaction memo or note',
-    example: 'Khách thanh toán tiền mặt trực tiếp tại quầy',
+    example: 'Tenant paid cash directly in person',
   })
   @IsOptional()
   @IsString()

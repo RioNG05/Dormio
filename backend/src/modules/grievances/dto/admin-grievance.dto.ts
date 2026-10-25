@@ -63,6 +63,13 @@ export class AdminGrievanceQueryDto {
   priority?: GrievancePriorityFilter = GrievancePriorityFilter.ALL
 
   @ApiPropertyOptional({
+    description: 'Filter by boarding house ID',
+  })
+  @IsOptional()
+  @IsString()
+  boardingHouseId?: string
+
+  @ApiPropertyOptional({
     description:
       'Search by keyword (title, description, tenant name, phone, house name, room number)',
   })
@@ -96,7 +103,7 @@ export class AdminGrievanceQueryDto {
 export class ResolveGrievanceDto {
   @ApiProperty({
     example:
-      'Đã hòa giải giữa hai bên. Chủ trọ đồng ý hoàn lại 100% tiền cọc 2.000.000đ cho khách thuê.',
+      'Mediation reached between both parties. Landlord agreed to refund 100% deposit of 2,000,000 VND to tenant.',
     description:
       'Written explanation / resolution note visible to the tenant and recorded in audit log',
   })
@@ -117,7 +124,7 @@ export class ResolveGrievanceDto {
 export class RejectGrievanceDto {
   @ApiProperty({
     example:
-      'Từ chối giải quyết: Giao dịch diễn ra hoàn toàn ngoài nền tảng và không có hợp đồng thuê phòng trên Dormio.',
+      'Resolution rejected: Transaction took place entirely off-platform and without a valid lease contract on Dormio.',
     description: 'Written explanation / rejection note visible to the tenant',
   })
   @IsNotEmpty({ message: 'Rejection reason is required' })
@@ -130,10 +137,10 @@ export class AdminGrievanceItemDto {
   @ApiProperty({ example: 'grievance-uuid-1' })
   id: string
 
-  @ApiProperty({ example: 'Chủ trọ tự ý giữ tiền cọc' })
+  @ApiProperty({ example: 'Landlord arbitrarily withholding deposit' })
   title: string
 
-  @ApiProperty({ example: 'Mô tả chi tiết khiếu nại của khách thuê...' })
+  @ApiProperty({ example: 'Detailed description of tenant grievance...' })
   description: string
 
   @ApiProperty({ enum: ['complaint', 'inquiry', 'feedback'], example: 'complaint' })
@@ -148,7 +155,7 @@ export class AdminGrievanceItemDto {
   @ApiProperty({ example: 'user-tenant-1' })
   tenantId: string
 
-  @ApiProperty({ example: 'Trần Thị Thuỳ Dung' })
+  @ApiProperty({ example: 'Tran Thi Thuy Dung' })
   tenantName: string
 
   @ApiProperty({ example: '0912345678' })
@@ -169,19 +176,19 @@ export class AdminGrievanceItemDto {
   @ApiProperty({ example: '101', nullable: true })
   roomNumber: string | null
 
-  @ApiProperty({ example: 'Nguyễn Quang Huy', nullable: true })
+  @ApiProperty({ example: 'Nguyen Quang Huy', nullable: true })
   landlordName: string | null
 
   @ApiProperty({ example: '0344265925', nullable: true })
   landlordPhone: string | null
 
-  @ApiProperty({ example: 'Đã hòa giải thành công.', nullable: true })
+  @ApiProperty({ example: 'Mediation completed successfully.', nullable: true })
   resolutionNote: string | null
 
   @ApiProperty({ example: '2026-09-08T10:00:00.000Z', nullable: true })
   resolvedAt: string | null
 
-  @ApiProperty({ example: 'Admin Quản Trị', nullable: true })
+  @ApiProperty({ example: 'System Administrator', nullable: true })
   resolvedByName: string | null
 
   @ApiProperty({ type: [GrievanceImageDto] })

@@ -8,7 +8,7 @@ export class AiChatMessageDto {
   @IsNotEmpty()
   role: 'user' | 'assistant' | 'model'
 
-  @ApiProperty({ example: 'Làm thế nào để đặt cọc giữ chỗ phòng online an toàn trên sàn Dormio?' })
+  @ApiProperty({ example: 'How do I safely make an online reservation deposit on the Dormio platform?' })
   @IsString()
   @IsNotEmpty()
   content: string

@@ -58,8 +58,8 @@ function checkUserPermission(
  */
 function HydrationSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-      <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin" />
+    <div className="min-h-screen flex items-center justify-center bg-surface">
+      <Loader2 className="w-8 h-8 text-primary animate-spin" />
     </div>
   )
 }
@@ -97,6 +97,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return
     }
 
+    // Spec: Rule 7 - block dashboard if mustChangePassword is true, redirect to change-password
+    if (user.mustChangePassword) {
+      router.replace('/change-password')
+      return
+    }
+
     // Redirect authenticated users with wrong role to the dedicated unauthorized page
     const hasPermission = checkUserPermission(pathname ?? '', user, capabilities)
     if (!hasPermission) {
@@ -114,8 +120,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  // While redirect is pending (not logged in or wrong role), render spinner
-  if (!isLoggedIn || user === null) {
+  // While redirect is pending (not logged in or wrong role or mustChangePassword), render spinner
+  if (!isLoggedIn || user === null || user.mustChangePassword) {
     return <HydrationSpinner />
   }
 

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { X, Send, Bot, User, Loader2 } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
+import { Button, TextInput, Text } from '@/components/ui'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -58,6 +59,7 @@ export default function AIChatBot() {
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setIsLoading(true)
+    messagesEndRef.current?.focus()
 
     try {
       const response = await api.post<{ reply: string }>(
@@ -75,9 +77,6 @@ export default function AIChatBot() {
         },
       )
 
-      // The api client typically returns { success: true, data: ... } or just the data depending on unwrapping
-      // The backend returns: { success: true, data: { reply: "..." } }
-      // So response might be the raw object or the data property. We will safely handle it:
       const replyData = (response as any).data
         ? (response as any).data.reply
         : (response as any).reply
@@ -102,63 +101,68 @@ export default function AIChatBot() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Launcher Button */}
       {!isOpen && (
-        <button
+        <Button
+          rounded="full"
+          size="icon"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-[100] group cursor-pointer"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 !w-14 !h-14 shadow-lg hover:scale-105 z-[100] group"
           title={t('aiChatBotTitle')}
           aria-label={t('aiChatBotTitle')}
         >
-          <Bot className="w-7 h-7 group-hover:animate-pulse" />
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#FF6B35] border-2 border-white rounded-full"></div>
-        </button>
+          <Bot className="group-hover:animate-pulse" />
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-accent border-2 border-white rounded-full" />
+        </Button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] bg-white sm:rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden sm:border border-zinc-200 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] bg-card sm:rounded-2xl shadow-2xl flex flex-col z-[100] overflow-hidden sm:border border-line animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
-          <div className="bg-[#2AC1BC] p-4 flex justify-between items-center text-white shrink-0">
+          <div className="bg-primary p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <Bot className="w-6 h-6" />
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm shrink-0">
+                <Bot className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-base">{t('aiChatHeaderTitle')}</h3>
-                <p className="text-xs text-teal-100 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                <Text as="h3" size="base" weight="bold" color="inherit" className="text-white">
+                  {t('aiChatHeaderTitle')}
+                </Text>
+                <Text as="p" size="xs" color="inherit" className="text-teal-100 flex items-center gap-1.5 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
                   {t('aiChatAlwaysOnline')}
-                </p>
+                </Text>
               </div>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              rounded="full"
               onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+              className="text-white hover:bg-white/20 hover:text-white"
               aria-label={t('aiChatCloseAria')}
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50/50 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-surface/50 custom-scrollbar">
             {messages.map(msg => (
               <div
                 key={msg.id}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`flex gap-2 max-w-[85%] ${
-                    msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                  }`}
+                  className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                    }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      msg.role === 'user'
-                        ? 'bg-zinc-200 text-zinc-600'
-                        : 'bg-[#2AC1BC]/10 text-[#2AC1BC]'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
+                      ? 'bg-line text-muted'
+                      : 'bg-primary/10 text-primary'
+                      }`}
                   >
                     {msg.role === 'user' ? (
                       <User className="w-4 h-4" />
@@ -167,33 +171,49 @@ export default function AIChatBot() {
                     )}
                   </div>
                   <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${
-                      msg.role === 'user'
-                        ? 'bg-[#2AC1BC] text-white rounded-tr-sm prose-invert'
-                        : 'bg-white border border-zinc-200 text-zinc-800 rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
-                    }`}
+                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${msg.role === 'user'
+                      ? 'bg-primary text-white rounded-tr-sm prose-invert'
+                      : 'bg-card border border-line text-foreground rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
+                      }`}
                   >
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => (
+                          <Text as="p" size="sm" color="inherit" className="my-1 leading-relaxed">
+                            {children}
+                          </Text>
+                        ),
+                        strong: ({ children }) => (
+                          <Text as="strong" size="sm" weight="black" color="inherit">
+                            {children}
+                          </Text>
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
             ))}
+
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex gap-2 max-w-[85%]">
-                  <div className="w-8 h-8 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <Bot className="w-5 h-5" />
                   </div>
-                  <div className="px-4 py-3 rounded-2xl bg-white border border-zinc-200 rounded-tl-sm shadow-sm flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"></span>
+                  <div className="px-4 py-3 rounded-2xl bg-card border border-line rounded-tl-sm shadow-sm flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce" />
                     <span
                       className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"
                       style={{ animationDelay: '0.15s' }}
-                    ></span>
+                    />
                     <span
                       className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"
                       style={{ animationDelay: '0.3s' }}
-                    ></span>
+                    />
                   </div>
                 </div>
               </div>
@@ -202,30 +222,33 @@ export default function AIChatBot() {
           </div>
 
           {/* Input */}
-          <div className="p-4 bg-white border-t border-zinc-100 shrink-0">
-            <form onSubmit={handleSend} className="relative flex items-center">
-              <input
-                type="text"
+          <div className="p-3.5 sm:p-4 bg-card border-t border-line shrink-0">
+            <form onSubmit={handleSend} className="relative flex items-center w-full">
+              <TextInput
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={t('aiChatInputPlaceholder')}
-                className="w-full pl-4 pr-12 py-3 bg-zinc-100 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all text-sm outline-none"
                 disabled={isLoading}
+                containerClassName="w-full space-y-0"
+                className="pr-12 text-xs sm:text-sm py-2.5 bg-card-hover/80"
+                rightIcon={
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!input.trim() || isLoading}
+                    isLoading={isLoading}
+                    className="!h-7 !w-7 rounded-lg shrink-0"
+                    aria-label="Send"
+                  >
+                    <Send className="ml-0.5" />
+                  </Button>
+                }
               />
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4 ml-0.5" />
-                )}
-              </button>
             </form>
             <div className="text-center mt-2">
-              <span className="text-[10px] text-zinc-400">{t('aiChatPoweredBy')}</span>
+              <Text as="span" size="xs" color="subtle" className="text-[10px]">
+                {t('aiChatPoweredBy')}
+              </Text>
             </div>
           </div>
         </div>

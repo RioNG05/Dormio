@@ -79,7 +79,7 @@ export class DepositsService {
     }
 
     if (!tenantName) {
-      tenantName = 'Khách vãng lai'
+      tenantName = 'Walk-in Guest'
     }
 
     const amountNum = Number(deposit.amount)
@@ -98,7 +98,7 @@ export class DepositsService {
       roomId: deposit.roomId,
       roomNumber: deposit.room?.roomNumber || 'N/A',
       boardingHouseId: deposit.boardingHouseId,
-      boardingHouseName: deposit.boardingHouse?.name || 'Nhà trọ',
+      boardingHouseName: deposit.boardingHouse?.name || 'Boarding House',
       contractId: deposit.contractId,
       postId: deposit.postId,
       type: deposit.type,
@@ -151,22 +151,22 @@ export class DepositsService {
     })
 
     if (!room) {
-      throw new NotFoundException('Phòng không tồn tại hoặc không thuộc nhà trọ này.')
+      throw new NotFoundException('Room does not exist or does not belong to this boarding house.')
     }
 
     // 2. Validate room status
     if (room.status === RoomStatus.occupied) {
-      throw new BadRequestException('Phòng hiện đã có người thuê, không thể nhận cọc giữ chỗ.')
+      throw new BadRequestException('Room is currently occupied and cannot accept a holding deposit.')
     }
 
     if (room.status === RoomStatus.maintainace) {
       throw new BadRequestException(
-        'Phòng đang trong thời gian bảo trì, không thể nhận cọc giữ chỗ.',
+        'Room is currently under maintenance and cannot accept a holding deposit.',
       )
     }
 
     if (room.status === RoomStatus.deposited) {
-      throw new BadRequestException('Phòng hiện đã được đặt cọc giữ chỗ.')
+      throw new BadRequestException('Room is already deposited.')
     }
 
     // Check if there is an active unconverted deposit for this room
@@ -180,7 +180,7 @@ export class DepositsService {
     })
 
     if (existingActiveDeposit) {
-      throw new BadRequestException('Phòng này hiện đã có một phiếu cọc giữ chỗ đang có hiệu lực.')
+      throw new BadRequestException('This room currently has an active holding deposit.')
     }
 
     // 3. Serialize metadata note
@@ -425,7 +425,7 @@ export class DepositsService {
     })
 
     if (!deposit) {
-      throw new NotFoundException('Phiếu đặt cọc không tồn tại hoặc không thuộc nhà trọ này.')
+      throw new NotFoundException('Deposit record does not exist or does not belong to this boarding house.')
     }
 
     return this.formatDeposit(deposit)
@@ -456,12 +456,12 @@ export class DepositsService {
     })
 
     if (!deposit) {
-      throw new NotFoundException('Phiếu đặt cọc không tồn tại.')
+      throw new NotFoundException('Deposit record does not exist.')
     }
 
     if (deposit.status !== DepositStatus.paid) {
       throw new BadRequestException(
-        'Chỉ có thể hoàn tiền cho phiếu cọc đang ở trạng thái đã thu tiền (paid).',
+        'Can only refund a deposit that is in paid status.',
       )
     }
 
@@ -482,9 +482,9 @@ export class DepositsService {
       deductedAmount,
       refundAmount,
       deductionReason:
-        dto.deductionReason || (deductedAmount > 0 ? 'Khấu trừ tiền cọc' : undefined),
+        dto.deductionReason || (deductedAmount > 0 ? 'Deposit deduction' : undefined),
       note: dto.note
-        ? `${existingMeta.note || ''} [Hoàn cọc: ${dto.note}]`.trim()
+        ? `${existingMeta.note || ''} [Refund: ${dto.note}]`.trim()
         : existingMeta.note,
     }
     const serializedNote = this.serializeDepositNote(updatedMeta)
@@ -564,12 +564,12 @@ export class DepositsService {
     })
 
     if (!deposit) {
-      throw new NotFoundException('Phiếu đặt cọc không tồn tại.')
+      throw new NotFoundException('Deposit record does not exist.')
     }
 
     if (deposit.status !== DepositStatus.paid) {
       throw new BadRequestException(
-        'Chỉ có thể khấu trừ/tịch thu phiếu cọc đang ở trạng thái đã thu tiền (paid).',
+        'Can only forfeit a deposit that is in paid status.',
       )
     }
 
@@ -582,7 +582,7 @@ export class DepositsService {
       refundAmount: 0,
       deductionReason: dto.deductionReason,
       note: dto.note
-        ? `${existingMeta.note || ''} [Tịch thu cọc: ${dto.note}]`.trim()
+        ? `${existingMeta.note || ''} [Forfeited: ${dto.note}]`.trim()
         : existingMeta.note,
     }
     const serializedNote = this.serializeDepositNote(updatedMeta)
@@ -817,7 +817,7 @@ export class DepositsService {
                 receiverId: originalPayment.payerId,
                 boardingHouseId: deposit.boardingHouseId,
                 type: 'deposit_refunded',
-                content: `Khoản đặt cọc giữ chỗ ${formattedAmount} VND cho phòng ${roomNumber} đã được hệ thống hoàn tiền tự động do hết hạn giữ chỗ mà không phát sinh hợp đồng thuê.`,
+                content: `Holding deposit of ${formattedAmount} VND for room ${roomNumber} has been automatically refunded by the system due to reservation expiration without a lease contract.`,
                 isRead: false,
               },
             })

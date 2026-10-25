@@ -202,7 +202,7 @@ export interface RoomDashboardTenant {
   phoneNumber: string
   email?: string | null
   avatarUrl?: string | null
-  isPrimary: boolean
+  isPrimary?: boolean
   hasIdentification: boolean
   identityNumber?: string | null
   dateOfBirth?: string | null
@@ -265,9 +265,29 @@ export interface RoomDashboardMeterReading {
   createdAt: string
 }
 
+export interface RoomDashboardOccupant {
+  id: string
+  tenantId: string
+  fullName: string
+  phoneNumber: string
+  email?: string | null
+  avatarUrl?: string | null
+  hasAccount: boolean
+  hasIdentification: boolean
+  identityNumber?: string | null
+  dateOfBirth?: string | null
+  gender?: string | null
+  status: string
+  joinedAt: string
+  note?: string | null
+  hasContract: boolean
+  contractId?: string | null
+}
+
 export interface RoomDashboardResponse {
   room: RoomItem
   services: RoomServiceItem[]
+  occupants?: RoomDashboardOccupant[]
   currentContract?: RoomDashboardContract | null
   rentalHistory: RoomDashboardRentalHistoryItem[]
   invoices: RoomDashboardInvoice[]

@@ -60,7 +60,7 @@ export class CreateAssetDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  quantity?: number = 1
+  quantity?: number
 
   @ApiPropertyOptional({
     description: 'Current physical condition of the asset',
@@ -69,7 +69,7 @@ export class CreateAssetDto {
   })
   @IsOptional()
   @IsEnum(AssetCondition)
-  condition?: AssetCondition = AssetCondition.good
+  condition?: AssetCondition
 
   @ApiPropertyOptional({
     description: 'Purchase price in VND',
@@ -93,10 +93,11 @@ export class CreateAssetDto {
   @ApiPropertyOptional({
     description: 'Image URL of the asset photo',
     example: 'https://storage.example.com/assets/fan.jpg',
+    nullable: true,
   })
   @IsOptional()
   @IsString()
-  imageUrl?: string
+  imageUrl?: string | null
 
   @ApiPropertyOptional({
     description: 'Additional notes or warranty info',
@@ -105,4 +106,51 @@ export class CreateAssetDto {
   @IsOptional()
   @IsString()
   note?: string
+
+  @ApiPropertyOptional({
+    description: 'Depreciation lifespan in years',
+    example: 5,
+    default: 5,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  depreciationYears?: number
+
+  @ApiPropertyOptional({
+    description: 'Model code or model number of the equipment',
+    example: 'CU/CS-PU12XKH-8M',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  modelCode?: string
+
+  @ApiPropertyOptional({
+    description: 'Serial number of the unit',
+    example: 'SN-2024-AC-00192',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  serialNumber?: string
+
+  @ApiPropertyOptional({
+    description: 'Warranty duration or expiration detail',
+    example: '24 tháng chính hãng',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  warrantyPeriod?: string
+
+  @ApiPropertyOptional({
+    description: 'Supplier or vendor name',
+    example: 'Điện Máy Xanh Q.1',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  supplier?: string
 }

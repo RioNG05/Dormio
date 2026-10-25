@@ -8,7 +8,7 @@ export class StaffShiftTypeResponseDto {
   id: string
 
   @ApiProperty({
-    example: 'Ca Sáng (07:00 - 15:00)',
+    example: 'Morning Shift (07:00 - 15:00)',
     description: 'Shift name as configured in database',
   })
   name: string

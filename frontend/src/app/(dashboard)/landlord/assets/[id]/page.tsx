@@ -1,401 +1,735 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   Package,
   Wrench,
   Calendar,
-  Building2,
   Home,
   User,
-  DollarSign,
-  ShieldCheck,
-  Tag,
   Plus,
   Edit3,
   Trash2,
-  CheckCircle2,
-  AlertTriangle,
   Clock,
-  MapPin,
-  FileText,
-  ChevronRight,
-  AlertCircle,
   Info,
-  ChevronLeft,
   BarChart3,
-  TrendingDown,
+  Loader2,
+  AlertTriangle,
+  Phone,
+  Mail,
+  Eye,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Asset, MaintenanceLog, calculateDepreciation } from '../data'
-import { assetService, AssetCondition } from '@/services/asset.service'
-import { Button, TextInput, SelectInput, TextareaInput } from '@/components/ui'
-
-// Mock Room Tenants dictionary for automatic tenant reflection when room changes
-const mockRoomTenants: Record<string, { name: string; phone: string }> = {
-  '101': { name: 'Nguyễn Văn A', phone: '0901234567' },
-  '102': { name: 'Trần Thị B', phone: '0987654321' },
-  '103': { name: 'Lê Văn C', phone: '0912345678' },
-  '105': { name: 'Phạm Hoàng D', phone: '0909999888' },
-  '201': { name: 'Vũ Thị E', phone: '0933445566' },
-  '202': { name: 'Hoàng Văn F', phone: '0977889900' },
-}
+import { useToast } from '@/context/ToastContext'
+import { calculateDepreciation } from '../data'
+import {
+  assetService,
+  AssetCondition,
+  AssetItem,
+  AssetMaintenanceLog,
+} from '@/services/asset.service'
+import { getRooms, RoomItem } from '@/services/room.service'
+import {
+  Button,
+  TableActionButton,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  Modal,
+  Text,
+  Chip,
+  Breadcrumb,
+  EmptyState,
+} from '@/components/ui'
+import { ImageUpload } from '@/components/ImageUpload'
+import { uploadImageToBackend } from '@/services/upload.service'
+import { cn } from '@/lib/utils'
+import { resolveErrorMessage, formatCurrency, formatDate } from '@/utils'
 
 export default function AssetDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { activeBuilding } = useAuth()
   const t = useTranslations('landlord')
+  const tErrors = useTranslations('errors')
   const { locale } = useLanguage()
-  const isEn = locale === 'en'
+  const { toast } = useToast()
 
-  const getStatusLabel = (status: string) => {
-    if (status === 'Đang sử dụng') return t('landlordAssetsStatusInUse')
-    if (status === 'Sẵn sàng') return t('landlordAssetsStatusReady')
-    if (status === 'Bảo trì') return t('landlordAssetsStatusMaintenance')
-    if (status === 'Hỏng hóc') return t('landlordAssetsStatusBroken')
-    return status
-  }
+  // ─── Data & Loading States ────────────────────────────────────────────────
+  const [asset, setAsset] = useState<AssetItem | null>(null)
+  const [availableRooms, setAvailableRooms] = useState<RoomItem[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const getCategoryLabel = (category: string) => {
-    if (category === 'Điện lạnh') return t('landlordAssetsCatRefrigeration')
-    if (category === 'Nội thất') return t('landlordAssetsCatFurniture')
-    if (category === 'Gia dụng') return t('landlordAssetsCatAppliances')
-    if (category === 'Điện nước') return t('landlordAssetsCatUtilities')
-    if (category === 'An ninh') return t('landlordAssetsCatSecurity')
-    return category
-  }
+  // Maintenance Logs State
+  const [maintenanceLogs, setMaintenanceLogs] = useState<AssetMaintenanceLog[]>([])
+  const [totalMaintenanceCost, setTotalMaintenanceCost] = useState<number>(0)
 
-  const [asset, setAsset] = useState<Asset | null>(null)
-  const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([])
-  const [logPage, setLogPage] = useState(1)
-  const logsPerPage = 2
+  // Maintenance Action Status Updating
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false)
 
-  // Building Code Prefix for Asset ID (e.g. DORMIO-Q1)
-  const buildingPrefix = activeBuilding?.id ? activeBuilding.id.toUpperCase() : 'DORMIO-Q1'
-
-  // Maintenance Log Modal State
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false)
-  const [logType, setLogType] = useState('Bảo dưỡng định kỳ')
-  const [logDescription, setLogDescription] = useState('')
-  const [logCost, setLogCost] = useState('200.000 ₫')
-  const [logPerformer, setLogPerformer] = useState('')
-
-  // Edit Asset Modal State (with SKU & Depreciation)
+  // ─── Modal States ──────────────────────────────────────────────────────────
+  // 1. Edit Asset Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [editSku, setEditSku] = useState('')
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [editName, setEditName] = useState('')
   const [editCategory, setEditCategory] = useState('Điện lạnh')
-  const [editRoom, setEditRoom] = useState('101')
-  const [editPurchaseValue, setEditPurchaseValue] = useState('8.500.000 ₫')
-  const [editPurchaseDate, setEditPurchaseDate] = useState('10/01/2024')
+  const [editRoomId, setEditRoomId] = useState<string>('')
+  const [editLocation, setEditLocation] = useState('')
+  const [editPurchasePrice, setEditPurchasePrice] = useState('0')
+  const [editPurchaseDate, setEditPurchaseDate] = useState('')
   const [editDepreciationYears, setEditDepreciationYears] = useState(5)
-  const [editStatus, setEditStatus] = useState('Đang sử dụng')
+  const [editCondition, setEditCondition] = useState<AssetCondition>('good')
   const [editModelCode, setEditModelCode] = useState('')
   const [editSerialNumber, setEditSerialNumber] = useState('')
   const [editWarrantyPeriod, setEditWarrantyPeriod] = useState('')
   const [editSupplier, setEditSupplier] = useState('')
+  const [editImageUrl, setEditImageUrl] = useState('')
+  const [editImagePreview, setEditImagePreview] = useState('')
+  const [editNote, setEditNote] = useState('')
+  const [inspectImageUrl, setInspectImageUrl] = useState<string | null>(null)
 
-  // Alert & Confirm Modals
-  const [alertModal, setAlertModal] = useState<{
-    isOpen: boolean
-    title: string
-    message: string
-    type: 'warning' | 'error' | 'success' | 'info'
-  }>({
-    isOpen: false,
-    title: isEn ? 'Notification' : 'Thông báo',
-    message: '',
-    type: 'info',
-  })
+  // 2. Maintenance Log Modal (Create / Finish Maintenance)
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false)
+  const [isSavingLog, setIsSavingLog] = useState(false)
+  const [logType, setLogType] = useState('routine')
+  const [logDescription, setLogDescription] = useState('')
+  const [logCost, setLogCost] = useState('')
+  const [logPerformer, setLogPerformer] = useState('')
+  const [logPerformedAt, setLogPerformedAt] = useState(new Date().toISOString().split('T')[0])
+  const [logSetCondition, setLogSetCondition] = useState<AssetCondition | ''>('')
 
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean
-    title: string
-    message: string
-    onConfirm: () => void
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {},
-  })
+  // 3. Delete Asset Modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const showAlert = (
-    message: string,
-    type: 'warning' | 'error' | 'success' | 'info' = 'warning',
-    title?: string,
-  ) => {
-    setAlertModal({
-      isOpen: true,
-      title: title || (isEn ? 'Notification' : 'Thông báo'),
-      message,
-      type,
-    })
-  }
+  // 4. Delete Log Modal
+  const [logToDelete, setLogToDelete] = useState<AssetMaintenanceLog | null>(null)
+  const [isDeletingLog, setIsDeletingLog] = useState(false)
+
+  // 5. Unsaved Changes Confirmation Modal (Rule #10)
+  const [showConfirmCloseEditModal, setShowConfirmCloseEditModal] = useState(false)
+  const [showConfirmCloseLogModal, setShowConfirmCloseLogModal] = useState(false)
+
+  // ─── Status & Category Label Helpers ─────────────────────────────────────
+  const getStatusLabel = useCallback(
+    (conditionOrStatus?: string) => {
+      switch (conditionOrStatus) {
+        case 'good':
+        case 'Đang sử dụng':
+          return t('landlordAssetsStatusInUse')
+        case 'new':
+        case 'Sẵn sàng':
+          return t('landlordAssetsStatusReady')
+        case 'under_repair':
+        case 'Bảo trì':
+          return t('landlordAssetsStatusMaintenance')
+        case 'damaged':
+        case 'Hỏng hóc':
+          return t('landlordAssetsStatusBroken')
+        case 'lost':
+        case 'Đã mất':
+          return t('landlordAssetsStatusLost')
+        case 'disposed':
+        case 'Đã thanh lý':
+          return t('landlordAssetsStatusDisposed')
+        default:
+          return conditionOrStatus || t('landlordAssetsStatusInUse')
+      }
+    },
+    [t],
+  )
+
+  const getCategoryLabel = useCallback(
+    (category?: string | null) => {
+      switch (category) {
+        case 'Điện lạnh':
+        case 'refrigeration':
+          return t('landlordAssetsCatRefrigeration')
+        case 'Nội thất':
+        case 'furniture':
+          return t('landlordAssetsCatFurniture')
+        case 'Gia dụng':
+        case 'appliances':
+          return t('landlordAssetsCatAppliances')
+        case 'Điện nước':
+        case 'utilities':
+          return t('landlordAssetsCatUtilities')
+        case 'An ninh':
+        case 'security':
+          return t('landlordAssetsCatSecurity')
+        default:
+          return category || t('landlordAssetsCatGeneral')
+      }
+    },
+    [t],
+  )
+
+  const getLogTypeLabel = useCallback(
+    (type: string) => {
+      switch (type) {
+        case 'routine':
+        case 'Bảo dưỡng định kỳ':
+          return t('landlordAssetsDetailLogTypeRoutine')
+        case 'repair':
+        case 'Sửa chữa linh kiện':
+          return t('landlordAssetsDetailLogTypeRepair')
+        case 'clean_gas':
+        case 'Vệ sinh & Nạp gas':
+          return t('landlordAssetsDetailLogTypeCleanGas')
+        case 'replace':
+        case 'Thay thế mới':
+          return t('landlordAssetsDetailLogTypeReplace')
+        default:
+          return type
+      }
+    },
+    [t],
+  )
+
+  const getConditionChipVariant = useCallback(
+    (condition?: string): 'default' | 'primary' | 'secondary' | 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' => {
+      switch (condition) {
+        case 'good':
+          return 'success'
+        case 'new':
+          return 'info'
+        case 'under_repair':
+          return 'warning'
+        case 'damaged':
+          return 'danger'
+        case 'lost':
+        case 'disposed':
+        default:
+          return 'neutral'
+      }
+    },
+    [],
+  )
+
+  const getLogTypeChipVariant = useCallback(
+    (type?: string): 'default' | 'primary' | 'secondary' | 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' => {
+      switch (type) {
+        case 'routine':
+          return 'info'
+        case 'repair':
+          return 'warning'
+        case 'clean_gas':
+          return 'primary'
+        case 'replace':
+          return 'danger'
+        default:
+          return 'neutral'
+      }
+    },
+    [],
+  )
+
+  // ─── Data Fetching ────────────────────────────────────────────────────────
+  // Load rooms for selection dropdown
+  useEffect(() => {
+    if (!activeBuilding?.id) return
+    getRooms(activeBuilding.id)
+      .then(res => {
+        setAvailableRooms(res.data || [])
+      })
+      .catch(err => {
+        console.warn('Failed to load rooms for asset detail dropdown:', err)
+      })
+  }, [activeBuilding?.id])
+
+  // Fetch asset details & maintenance logs
+  const fetchAssetAndLogs = useCallback(async () => {
+    if (!id || !activeBuilding?.id) return
+
+    setIsLoading(true)
+    setLoadError(null)
+
+    try {
+      const [assetRes, logsRes] = await Promise.all([
+        assetService.getAssetDetail(activeBuilding.id, String(id)),
+        assetService.getMaintenanceLogs(activeBuilding.id, String(id)).catch(() => ({
+          success: true,
+          data: [],
+          totalCost: 0,
+        })),
+      ])
+
+      if (assetRes?.data) {
+        setAsset(assetRes.data)
+      }
+
+      if (logsRes?.data) {
+        setMaintenanceLogs(logsRes.data)
+        setTotalMaintenanceCost(logsRes.totalCost || 0)
+      }
+    } catch (err: unknown) {
+      const errorMsg = resolveErrorMessage(err, tErrors, t('landlordAssetsLoadFailed'))
+      setLoadError(errorMsg)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [id, activeBuilding?.id, tErrors, t])
 
   useEffect(() => {
-    if (id && activeBuilding?.id) {
-      assetService
-        .getAssetDetail(activeBuilding.id, String(id))
-        .then(res => {
-          if (res?.data) {
-            const item = res.data
-            const statusLabel =
-              item.condition === 'good'
-                ? 'Đang sử dụng'
-                : item.condition === 'new'
-                  ? 'Sẵn sàng'
-                  : item.condition === 'under_repair'
-                    ? 'Bảo trì'
-                    : 'Hỏng hóc'
+    fetchAssetAndLogs()
+  }, [fetchAssetAndLogs])
 
-            setAsset({
-              id: item.id,
-              sku: item.code,
-              name: item.name,
-              category: item.category || 'Điện lạnh',
-              building: activeBuilding.id,
-              buildingName: activeBuilding.name,
-              room: item.roomNumber ? `Phòng ${item.roomNumber}` : item.location,
-              roomId: item.roomId,
-              status: statusLabel,
-              dateAdded: item.createdAt ? item.createdAt.split('T')[0] : '',
-              purchaseDate: item.purchaseDate ? item.purchaseDate.split('T')[0] : '',
-              purchaseValue: item.purchasePrice ? Number(item.purchasePrice) : 0,
-              numericValue: item.purchasePrice ? Number(item.purchasePrice) : 0,
-              value: item.purchasePrice
-                ? `${Number(item.purchasePrice).toLocaleString('vi-VN')} ₫`
-                : '0 ₫',
-              note: item.note || '',
-              maintenanceLogs: [],
-            })
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load asset detail:', err)
-        })
+  // ─── Actions: Status & Maintenance Workflow ──────────────────────────────
+  /**
+   * Quick toggle maintenance or open maintenance recording modal
+   */
+  const handleInitiateMaintenanceWorkflow = () => {
+    if (!asset) return
+
+    const isCurrentlyUnderRepair = asset.condition === 'under_repair'
+
+    if (isCurrentlyUnderRepair) {
+      // Opening Complete Maintenance modal
+      setLogType('repair')
+      setLogDescription('')
+      setLogCost('0')
+      setLogPerformer('')
+      setLogPerformedAt(new Date().toISOString().split('T')[0])
+      setLogSetCondition('good')
+      setIsLogModalOpen(true)
+    } else {
+      // Opening Report Maintenance modal
+      setLogType('repair')
+      setLogDescription('')
+      setLogCost('0')
+      setLogPerformer('')
+      setLogPerformedAt(new Date().toISOString().split('T')[0])
+      setLogSetCondition('under_repair')
+      setIsLogModalOpen(true)
     }
-  }, [id, activeBuilding?.id])
-
-  if (!asset) {
-    return (
-      <div className="p-8 sm:p-12 text-center text-zinc-500">
-        <Package className="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-3 text-zinc-300 animate-pulse" />
-        <p className="font-bold text-xs sm:text-sm">{t('landlordAssetsDetailLoading')}</p>
-      </div>
-    )
   }
 
-  // Check if location is a tenant room (starts with numbers, P101, Phòng 101, etc.)
-  const isTenantRoom = (roomStr: string) => {
-    if (!roomStr) return false
-    const trimmed = roomStr.trim()
-    return /^\d+$/.test(trimmed) || /^p\d+/i.test(trimmed) || /^phòng\s*\d+/i.test(trimmed)
+  /**
+   * Save a new maintenance log record
+   */
+  const handleSaveMaintenanceLog = async () => {
+    if (!logDescription.trim()) {
+      toast.warning(t('landlordAssetsDetailLogDesc'))
+      return
+    }
+
+    if (!activeBuilding?.id || !id) return
+
+    const numCost = parseInt(String(logCost).replace(/\D/g, '')) || 0
+    setIsSavingLog(true)
+
+    try {
+      const payload = {
+        type: logType,
+        description: logDescription.trim(),
+        cost: numCost,
+        performer: logPerformer.trim() || undefined,
+        performedAt: logPerformedAt ? new Date(logPerformedAt).toISOString() : new Date().toISOString(),
+        setCondition: logSetCondition ? (logSetCondition as AssetCondition) : undefined,
+      }
+
+      const res = await assetService.createMaintenanceLog(activeBuilding.id, String(id), payload)
+
+      if (res.data) {
+        setMaintenanceLogs(prev => [res.data, ...prev])
+        setTotalMaintenanceCost(prev => prev + numCost)
+      }
+
+      if (logSetCondition && asset) {
+        setAsset({
+          ...asset,
+          condition: logSetCondition as AssetCondition,
+        })
+      }
+
+      setIsLogModalOpen(false)
+      setShowConfirmCloseLogModal(false)
+      toast.success(t('landlordAssetsDetailLogAddedSuccess'))
+    } catch (err: unknown) {
+      const errorMsg = resolveErrorMessage(err, tErrors, t('landlordAssetsDetailLogAddFailed'))
+      toast.error(errorMsg)
+    } finally {
+      setIsSavingLog(false)
+    }
   }
 
-  const hasRoomLink = isTenantRoom(asset.room)
-  const currentTenant = mockRoomTenants[asset.room] || { name: 'Nguyễn Văn A', phone: '0901234567' }
-  const dep = calculateDepreciation(asset)
+  /**
+   * Delete a maintenance log record
+   */
+  const handleConfirmDeleteLog = async () => {
+    if (!activeBuilding?.id || !id || !logToDelete) return
 
-  // Pagination calculation for Maintenance Logs
-  const totalLogPages = Math.ceil(maintenanceLogs.length / logsPerPage) || 1
-  const paginatedLogs = maintenanceLogs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage)
+    setIsDeletingLog(true)
+    try {
+      await assetService.deleteMaintenanceLog(activeBuilding.id, String(id), logToDelete.id)
+      setMaintenanceLogs(prev => prev.filter(l => l.id !== logToDelete.id))
+      setTotalMaintenanceCost(prev => Math.max(0, prev - Number(logToDelete.cost)))
+      toast.success(t('landlordAssetsDetailLogDeleteSuccess'))
+      setLogToDelete(null)
+    } catch (err: unknown) {
+      const errorMsg = resolveErrorMessage(err, tErrors, t('landlordAssetsDetailLogDeleteFailed'))
+      toast.error(errorMsg)
+    } finally {
+      setIsDeletingLog(false)
+    }
+  }
 
+  // ─── Actions: Edit Asset ──────────────────────────────────────────────────
   const handleOpenEditModal = () => {
-    setEditSku(asset.sku || asset.id)
-    setEditName(asset.name)
-    setEditCategory(asset.category)
-    setEditRoom(asset.room)
-    setEditPurchaseValue(asset.value)
-    setEditPurchaseDate(asset.purchaseDate || asset.dateAdded || '10/01/2024')
+    if (!asset) return
+    setEditName(asset.name || '')
+    setEditCategory(asset.category || 'Điện lạnh')
+    setEditRoomId(asset.roomId || '')
+    setEditLocation(asset.location || '')
+    setEditPurchasePrice(String(asset.purchasePrice || 0))
+    setEditPurchaseDate(asset.purchaseDate ? asset.purchaseDate.split('T')[0] : '')
     setEditDepreciationYears(asset.depreciationYears || 5)
-    setEditStatus(asset.status)
+    setEditCondition(asset.condition || 'good')
     setEditModelCode(asset.modelCode || '')
     setEditSerialNumber(asset.serialNumber || '')
     setEditWarrantyPeriod(asset.warrantyPeriod || '')
     setEditSupplier(asset.supplier || '')
+    setEditImageUrl(asset.imageUrl || '')
+    setEditImagePreview('')
+    setEditNote(asset.note || '')
     setIsEditModalOpen(true)
   }
 
-  const handleSaveEditAsset = () => {
-    if (!editName.trim()) {
-      showAlert(t('landlordAssetsNameRequired'), 'warning', t('landlordAssetsInfoMissing'))
-      return
-    }
-    if (!editSku.trim()) {
-      showAlert(t('landlordAssetsSkuRequired'), 'warning', t('landlordAssetsInfoMissing'))
-      return
-    }
-
-    const numVal = parseInt(editPurchaseValue.replace(/\D/g, '')) || 0
-    const formattedVal = numVal > 0 ? `${numVal.toLocaleString('vi-VN')} ₫` : editPurchaseValue
-    const cleanSku = editSku.trim().toUpperCase()
-    const generatedId = `${buildingPrefix}-${cleanSku}`
-
-    setAsset(prev =>
-      prev
-        ? {
-            ...prev,
-            id: generatedId,
-            sku: cleanSku,
-            name: editName.trim(),
-            category: editCategory,
-            room: editRoom,
-            value: formattedVal,
-            numericValue: numVal,
-            purchaseValue: numVal,
-            purchaseDate: editPurchaseDate,
-            depreciationYears: Number(editDepreciationYears) || 5,
-            status: editStatus,
-            modelCode: editModelCode.trim(),
-            serialNumber: editSerialNumber.trim(),
-            warrantyPeriod: editWarrantyPeriod.trim(),
-            supplier: editSupplier.trim(),
-          }
-        : null,
+  const isEditDirty = useMemo(() => {
+    if (!asset) return false
+    return (
+      editName !== (asset.name || '') ||
+      editCategory !== (asset.category || 'Điện lạnh') ||
+      editRoomId !== (asset.roomId || '') ||
+      editLocation !== (asset.location || '') ||
+      parseInt(String(editPurchasePrice).replace(/\D/g, '')) !== (asset.purchasePrice || 0) ||
+      editDepreciationYears !== (asset.depreciationYears || 5) ||
+      editCondition !== asset.condition ||
+      editModelCode !== (asset.modelCode || '') ||
+      editSerialNumber !== (asset.serialNumber || '') ||
+      editWarrantyPeriod !== (asset.warrantyPeriod || '') ||
+      editSupplier !== (asset.supplier || '') ||
+      editImageUrl !== (asset.imageUrl || '') ||
+      Boolean(editImagePreview) ||
+      editNote !== (asset.note || '')
     )
+  }, [
+    asset,
+    editName,
+    editCategory,
+    editRoomId,
+    editLocation,
+    editPurchasePrice,
+    editDepreciationYears,
+    editCondition,
+    editModelCode,
+    editSerialNumber,
+    editWarrantyPeriod,
+    editSupplier,
+    editImageUrl,
+    editImagePreview,
+    editNote,
+  ])
 
-    setIsEditModalOpen(false)
-    showAlert(t('landlordAssetsToastEditSuccess'), 'success', t('landlordAssetsToastEditSuccess'))
+  const handleRequestCloseEditModal = () => {
+    if (isEditDirty) {
+      setShowConfirmCloseEditModal(true)
+    } else {
+      setIsEditModalOpen(false)
+    }
   }
 
-  const handleAddMaintenanceLog = () => {
-    if (!logDescription.trim()) {
-      showAlert(t('landlordAssetsDetailLogDesc'), 'warning', t('landlordAssetsInfoMissing'))
-      return
-    }
+  const handleDiscardAndCloseEdit = () => {
+    setShowConfirmCloseEditModal(false)
+    setIsEditModalOpen(false)
+    setEditImageUrl('')
+    setEditImagePreview('')
+  }
 
-    const newLog: MaintenanceLog = {
-      id: `LOG-${Date.now().toString().slice(-4)}`,
-      date: new Date().toLocaleDateString('vi-VN'),
-      type: logType,
-      description: logDescription.trim(),
-      cost: logCost.trim() || '0 ₫',
-      performer: logPerformer.trim() || 'Kỹ thuật viên',
-    }
+  const isLogDirty = useMemo(() => {
+    return Boolean(
+      logDescription.trim() ||
+      (logCost && logCost !== '0') ||
+      logPerformer.trim()
+    )
+  }, [logDescription, logCost, logPerformer])
 
-    setMaintenanceLogs(prev => [newLog, ...prev])
-    setLogPage(1) // Reset to page 1 to view newly added log
+  const handleRequestCloseLogModal = () => {
+    if (isLogDirty) {
+      setShowConfirmCloseLogModal(true)
+    } else {
+      setIsLogModalOpen(false)
+    }
+  }
+
+  const handleDiscardAndCloseLog = () => {
+    setShowConfirmCloseLogModal(false)
     setIsLogModalOpen(false)
     setLogDescription('')
+    setLogCost('0')
     setLogPerformer('')
-    showAlert(t('landlordAssetsDetailLogSaveBtn'), 'success', t('landlordAssetsDetailLogSaveBtn'))
+    setLogSetCondition('')
   }
 
-  const handleStatusChange = (newStatus: string) => {
-    setAsset(prev => (prev ? { ...prev, status: newStatus } : null))
-    showAlert(
-      isEn
-        ? `Updated asset status to: ${getStatusLabel(newStatus)}`
-        : `Đã cập nhật trạng thái tài sản thành: ${getStatusLabel(newStatus)}`,
-      'success',
-      isEn ? 'Status updated' : 'Cập nhật trạng thái',
+  const handleEditImageSelect = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const base64 = e.target?.result as string
+      if (base64) {
+        setEditImagePreview(base64)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleEditImageRemove = () => {
+    setEditImagePreview('')
+    setEditImageUrl('')
+  }
+
+  const handleSaveEditAsset = async () => {
+    if (!editName.trim()) {
+      toast.warning(t('landlordAssetsFieldName'))
+      return
+    }
+
+    if (!activeBuilding?.id || !id) return
+
+    const numVal = parseInt(String(editPurchasePrice).replace(/\D/g, '')) || 0
+    setIsSavingEdit(true)
+
+    try {
+      let finalImageUrl: string | null = null
+
+      // If user selected a new preview image (base64 data), upload it to Cloudinary now upon submit
+      if (editImagePreview) {
+        try {
+          const uploadRes = await uploadImageToBackend(editImagePreview, 'dormio/assets')
+          if (uploadRes?.url) {
+            finalImageUrl = uploadRes.url
+          }
+        } catch (uploadErr: any) {
+          console.error('Image upload failed on submit:', uploadErr)
+          toast.error(uploadErr?.message || 'Không thể tải ảnh lên máy chủ. Vui lòng thử lại.')
+          setIsSavingEdit(false)
+          return
+        }
+      } else {
+        finalImageUrl = editImageUrl.trim() ? editImageUrl.trim() : null
+      }
+
+      const res = await assetService.updateAsset(activeBuilding.id, String(id), {
+        name: editName.trim(),
+        category: editCategory,
+        roomId: editRoomId || null,
+        location: editLocation.trim() || 'Common Area',
+        purchasePrice: numVal,
+        purchaseDate: editPurchaseDate ? new Date(editPurchaseDate).toISOString() : undefined,
+        depreciationYears: Number(editDepreciationYears) || 5,
+        condition: editCondition,
+        modelCode: editModelCode.trim() || undefined,
+        serialNumber: editSerialNumber.trim() || undefined,
+        warrantyPeriod: editWarrantyPeriod.trim() || undefined,
+        supplier: editSupplier.trim() || undefined,
+        imageUrl: finalImageUrl,
+        note: editNote.trim() || undefined,
+      })
+
+      if (res?.data) {
+        setAsset(res.data)
+      }
+
+      setIsEditModalOpen(false)
+      setShowConfirmCloseEditModal(false)
+      setEditImagePreview('')
+      toast.success(t('landlordAssetsToastEditSuccess'))
+    } catch (err: unknown) {
+      const errorMsg = resolveErrorMessage(err, tErrors, t('landlordAssetsSaveFailed'))
+      toast.error(errorMsg)
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+  // ─── Actions: Delete Asset ────────────────────────────────────────────────
+  const handleDeleteAsset = async () => {
+    if (!activeBuilding?.id || !id) return
+    setIsDeleting(true)
+    try {
+      await assetService.deleteAsset(activeBuilding.id, String(id))
+      toast.success(t('landlordAssetsToastDeleteSuccess'))
+      setShowDeleteModal(false)
+      router.push('/landlord/assets')
+    } catch (err: unknown) {
+      const errorMsg = resolveErrorMessage(err, tErrors, t('landlordAssetsDeleteFailed'))
+      toast.error(errorMsg)
+      setIsDeleting(false)
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="p-12 text-center text-muted flex flex-col items-center justify-center min-h-[360px]">
+        <Package className="w-12 h-12 mb-3 text-muted-foreground animate-pulse" />
+        <p className="font-bold text-sm text-foreground">{t('landlordAssetsDetailLoading')}</p>
+      </div>
     )
   }
 
-  const handleDeleteAsset = () => {
-    setConfirmModal({
-      isOpen: true,
-      title: t('landlordAssetsDetailDeleteConfirmTitle'),
-      message: `Bạn có chắc chắn muốn xóa tài sản [${asset.name}] khỏi hệ thống? Hành động này không thể hoàn tác.`,
-      onConfirm: () => {
-        setConfirmModal(prev => ({ ...prev, isOpen: false }))
-        showAlert(
-          t('landlordAssetsToastDeleteSuccess'),
-          'success',
-          t('landlordAssetsToastDeleteSuccess'),
-        )
-        setTimeout(() => router.push('/landlord/assets'), 1000)
-      },
-    })
+  // Error or Not Found state
+  if (loadError || !asset) {
+    return (
+      <div className="py-12 max-w-lg mx-auto">
+        <EmptyState
+          icon={AlertTriangle}
+          title={loadError || t('landlordAssetsLoadFailed')}
+          description={t('landlordAssetsEmptySub')}
+          action={{
+            label: t('landlordAssetsDetailBack'),
+            onClick: () => router.push('/landlord/assets'),
+          }}
+          bordered
+        />
+      </div>
+    )
   }
+
+  // Depreciation calculations
+  const dep = calculateDepreciation({
+    purchasePrice: asset.purchasePrice,
+    purchaseDate: asset.purchaseDate,
+    depreciationYears: asset.depreciationYears || 5,
+  })
+
+  const isMaintenance = asset.condition === 'under_repair'
+  const isGood = asset.condition === 'good'
+  const isReady = asset.condition === 'new'
+  const isBroken = asset.condition === 'damaged'
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold text-zinc-500 flex-wrap">
-        <Link
-          href="/landlord/assets"
-          className="hover:text-[#2AC1BC] flex items-center gap-1 transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> {t('landlordAssetsDetailBack')}
-        </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-zinc-300 shrink-0" />
-        <span className="text-zinc-900 font-extrabold truncate">
-          {asset.name} (SKU: {asset.sku || asset.id})
-        </span>
-      </div>
+      <Breadcrumb
+        backHref="/landlord/assets"
+        backLabel={t('landlordAssetsDetailBack')}
+        current={`${asset.name} (SKU: ${asset.code})`}
+      />
 
-      {/* Main Asset Header Card (With Sub-bar for Location & Tenant right under Title) */}
-      <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
-        <div className="flex items-start gap-3.5 sm:gap-4 min-w-0">
-          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-2xl bg-orange-50 border border-orange-200/80 text-[#FF6B35] flex items-center justify-center shrink-0 shadow-2xs">
-            <Package className="w-6 sm:w-8 h-6 sm:h-8" />
-          </div>
-          <div className="space-y-2 min-w-0">
+      {/* Main Asset Header Card */}
+      <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
+        <div className="flex items-start gap-3.5 sm:gap-4 min-w-0 flex-1">
+          {asset.imageUrl ? (
+            <div
+              onClick={() => setInspectImageUrl(asset.imageUrl || null)}
+              className="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl overflow-hidden border border-line bg-surface shrink-0 shadow-2xs relative group cursor-pointer"
+              title={t('landlordAssetsInspectImage')}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={asset.imageUrl}
+                alt={asset.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                <Eye className="w-5 h-5" />
+              </div>
+            </div>
+          ) : (
+            <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-accent-soft border border-accent-subtle text-accent flex items-center justify-center shrink-0 shadow-2xs">
+              <Package className="w-8 h-8" />
+            </div>
+          )}
+
+          <div className="space-y-2 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-black uppercase tracking-wider bg-zinc-100 text-zinc-700 border border-zinc-200">
-                {getCategoryLabel(asset.category)}
-              </span>
-              <span className="text-[10px] sm:text-xs font-black text-[#2AC1BC] bg-[#2AC1BC]/10 px-2 py-0.5 rounded-md border border-[#2AC1BC]/30">
-                SKU: {asset.sku || asset.id}
-              </span>
-              <span
-                className={`px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold border ${
-                  asset.status === 'Đang sử dụng'
-                    ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                    : asset.status === 'Sẵn sàng'
-                      ? 'bg-blue-50 text-blue-600 border-blue-200'
-                      : asset.status === 'Bảo trì'
-                        ? 'bg-orange-50 text-[#FF6B35] border-orange-200 animate-pulse'
-                        : 'bg-rose-50 text-rose-600 border-rose-200'
-                }`}
+              <Chip
+                size="sm"
+                variant="neutral"
+                preventHover
               >
-                {getStatusLabel(asset.status)}
-              </span>
+                {getCategoryLabel(asset.category)}
+              </Chip>
+              <Chip
+                size="sm"
+                variant="default"
+                preventHover
+                className="font-mono"
+              >
+                SKU: {asset.code}
+              </Chip>
+              <Chip
+                size="sm"
+                variant={getConditionChipVariant(asset.condition)}
+                preventHover
+                className="font-bold"
+              >
+                {getStatusLabel(asset.condition)}
+              </Chip>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight leading-snug">
+            <Text
+              as="h1"
+              size="2xl"
+              weight="black"
+              color="default"
+              className="tracking-tight leading-snug"
+            >
               {asset.name}
-            </h1>
+            </Text>
 
-            {/* LOCATION & TENANT SUB-BAR DIRECTLY UNDER TITLE (Links integrated into Room Name & Tenant Name) */}
-            <div className="flex flex-wrap items-center gap-3.5 text-xs font-semibold text-zinc-600 pt-2 border-t border-zinc-100">
-              <div className="flex items-center gap-1.5 bg-zinc-50 px-3 py-1.5 rounded-xl border border-zinc-200/80">
-                <Home className="w-4 h-4 text-[#2AC1BC] shrink-0" />
+            {/* Room Location & Live Tenant Sub-bar */}
+            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted pt-2 border-t border-line">
+              <div className="flex items-center gap-1.5 bg-surface px-3 py-1.5 rounded-xl border border-line">
+                <Home className="w-4 h-4 text-primary shrink-0" />
                 <span>
                   {t('landlordAssetsDetailLocation')}{' '}
-                  {hasRoomLink ? (
+                  {asset.roomId ? (
                     <Link
-                      href={`/landlord/rooms?id=${asset.room}`}
-                      className="font-extrabold text-[#2AC1BC] hover:underline hover:text-[#25ad87] transition-colors"
+                      href={`/landlord/rooms?id=${asset.roomId}`}
+                      className="font-extrabold text-primary hover:underline hover:text-primary-hover transition-colors"
                     >
-                      {isEn ? `Room ${asset.room}` : `Phòng ${asset.room}`}
+                      {asset.roomName}
                     </Link>
                   ) : (
-                    <strong className="text-zinc-900 font-extrabold">{asset.room}</strong>
+                    <strong className="text-foreground font-extrabold">{asset.location}</strong>
                   )}
                 </span>
               </div>
 
-              {hasRoomLink && (
-                <div className="flex items-center gap-1.5 bg-emerald-50/80 px-3 py-1.5 rounded-xl border border-emerald-200/80">
-                  <User className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>
-                    {t('landlordAssetsDetailTenant')}{' '}
-                    <Link
-                      href="/landlord/customers"
-                      className="font-extrabold text-emerald-700 hover:underline hover:text-emerald-800 transition-colors"
-                    >
-                      {currentTenant.name}
-                    </Link>{' '}
-                    <span className="text-zinc-600 font-medium">({currentTenant.phone})</span>
-                  </span>
+              {/* Resolved Active Tenant from Room */}
+              {asset.roomId && (
+                <div
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${asset.tenant
+                    ? 'bg-success-soft border-success-subtle text-success'
+                    : 'bg-surface border-line text-muted'
+                    }`}
+                >
+                  <User className="w-4 h-4 shrink-0" />
+                  {asset.tenant ? (
+                    <span>
+                      {t('landlordAssetsDetailTenant')}{' '}
+                      <Link
+                        href="/landlord/customers"
+                        className="font-extrabold text-success hover:underline hover:text-success/80 transition-colors"
+                      >
+                        {asset.tenant.name}
+                      </Link>
+                      {asset.tenant.phone && (
+                        <span className="text-muted font-medium ml-1">
+                          ({asset.tenant.phone})
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="italic font-medium">
+                      {t('landlordAssetsDetailTenantVacant')}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -403,130 +737,242 @@ export default function AssetDetailPage() {
         </div>
 
         {/* Quick Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
+        <div className="flex flex-wrap items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-line">
+          {/* Notice / Finish Maintenance Action Button */}
           <Button
-            variant="secondary"
-            size="sm"
-            onClick={() =>
-              handleStatusChange(asset.status === 'Bảo trì' ? 'Đang sử dụng' : 'Bảo trì')
+            size='md'
+            variant={isMaintenance ? 'success' : 'warning'}
+            onClick={handleInitiateMaintenanceWorkflow}
+            leftIcon={
+              isUpdatingStatus ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Wrench />
+              )
             }
-            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            isLoading={isUpdatingStatus}
+            disabled={isUpdatingStatus}
           >
-            <Wrench className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-amber-600" />{' '}
-            {asset.status === 'Bảo trì'
+            {isMaintenance
               ? t('landlordAssetsDetailBtnFinishMaintenance')
               : t('landlordAssetsDetailBtnSendMaintenance')}
           </Button>
+
+          {/* Edit Asset Button */}
           <Button
+            size='md'
             variant="secondary"
-            size="sm"
             onClick={handleOpenEditModal}
-            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            leftIcon={<Edit3 className="text-primary" />}
           >
-            <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#2AC1BC]" />{' '}
             {t('landlordAssetsBtnEdit')}
           </Button>
+
+          {/* Delete Asset Button */}
           <Button
+            size='md'
             variant="danger"
-            size="sm"
-            onClick={handleDeleteAsset}
-            className="h-auto px-3 sm:px-3.5 py-2 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
+            onClick={() => setShowDeleteModal(true)}
+            leftIcon={<Trash2 />}
           >
-            <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" /> {t('landlordAssetsBtnDelete')}
+            {t('landlordAssetsBtnDelete')}
           </Button>
         </div>
       </div>
 
-      {/* Grid Layout Details (Items-stretch so both columns are ALWAYS 100% equal in height) */}
+      {/* Grid Layout Details */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
-        {/* Left Column (7 Cols on desktop: Info + Valuation) */}
+        {/* Left Column: Info + Valuation + Tenant Profile Card */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-4 sm:space-y-6">
           {/* General Information Card */}
-          <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-zinc-100">
-              <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-[#2AC1BC]" />
-              <h2 className="text-sm sm:text-base font-black text-zinc-900">
-                {t('landlordAssetsDetailGeneral')}
-              </h2>
+          <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-line">
+              <div className="flex items-center gap-2">
+                <Info className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-primary" />
+                <Text as="h2" size="base" weight="black" color="default">
+                  {t('landlordAssetsDetailGeneral')}
+                </Text>
+              </div>
+              <Chip size="sm" variant="neutral" preventHover className="font-semibold">
+                {t('landlordAssetsQuantityCount', { count: asset.quantity })}
+              </Chip>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsDetailModel')}
                 </span>
-                <span className="font-bold text-zinc-800">
-                  {asset.modelCode || '— Chưa cập nhật'}
+                <span className="font-bold text-foreground font-mono">
+                  {asset.modelCode || '—'}
                 </span>
               </div>
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsDetailSerial')}
                 </span>
-                <span className="font-bold text-zinc-800">
-                  {asset.serialNumber || '— Chưa cập nhật'}
+                <span className="font-bold text-foreground font-mono">
+                  {asset.serialNumber || '—'}
                 </span>
               </div>
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsFieldPurchaseDate')}
                 </span>
-                <span className="font-bold text-zinc-800">
-                  {asset.purchaseDate || asset.dateAdded}
+                <span className="font-bold text-foreground">
+                  {asset.purchaseDate ? formatDate(asset.purchaseDate, locale) : '—'}
                 </span>
               </div>
-              <div className="p-3 sm:p-3.5 bg-zinc-50 rounded-2xl space-y-1">
-                <span className="text-zinc-400 font-medium block">
+
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1">
+                <span className="text-muted font-medium block">
                   {t('landlordAssetsDetailWarranty')}
                 </span>
-                <span className="font-bold text-emerald-700">
-                  {asset.warrantyPeriod || '12 tháng'}
+                <span className="font-bold text-success">
+                  {asset.warrantyPeriod || t('landlordAssetsDetailNotUpdated')}
                 </span>
               </div>
+
+              <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1 sm:col-span-2">
+                <span className="text-muted font-medium block">
+                  {t('landlordAssetsDetailSupplier')}
+                </span>
+                <span className="font-bold text-foreground">
+                  {asset.supplier || t('landlordAssetsDetailSupplierPh')}
+                </span>
+              </div>
+
+              {asset.note && (
+                <div className="p-3 sm:p-3.5 bg-surface rounded-2xl space-y-1 sm:col-span-2">
+                  <span className="text-muted font-medium block">
+                    {t('landlordAssetsFieldNote')}
+                  </span>
+                  <p className="font-medium text-foreground leading-relaxed">{asset.note}</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* REAL-WORLD LINEAR DEPRECIATION VALUATION CARD */}
-          <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+          {/* Occupant Tenant Card (if room is rented) */}
+          {asset.tenant && (
+            <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-3 border-b border-line">
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-emerald-600" />
-                  <h2 className="text-sm sm:text-base font-black text-zinc-900">
-                    {t('landlordAssetsDetailDepreciation')}
-                  </h2>
+                  <User className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-success" />
+                  <Text as="h2" size="base" weight="black" color="default">
+                    {t('landlordAssetsDetailTenant')} {asset.roomName}
+                  </Text>
                 </div>
-                <span className="text-[10px] font-black text-zinc-500 bg-zinc-100 px-2 py-1 rounded-lg">
+                {asset.tenant.contractId && (
+                  <Chip
+                    size="xs"
+                    variant="success"
+                    preventHover
+                    className="font-mono font-bold"
+                  >
+                    {t('landlordAssetsDetailContractPrefix', {
+                      code: asset.tenant.contractId.slice(-6).toUpperCase(),
+                    })}
+                  </Chip>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="flex items-center gap-2.5 p-3 bg-surface rounded-2xl border border-line">
+                  <div className="w-9 h-9 rounded-xl bg-success-soft text-success flex items-center justify-center font-black">
+                    {asset.tenant.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-foreground truncate">{asset.tenant.name}</p>
+                    {asset.tenant.phone && (
+                      <a
+                        href={`tel:${asset.tenant.phone}`}
+                        className="text-muted hover:text-primary transition-colors flex items-center gap-1 font-medium"
+                      >
+                        <Phone className="w-3 h-3 text-muted" /> {asset.tenant.phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-surface rounded-2xl border border-line flex flex-col justify-center space-y-1">
+                  {asset.tenant.email && (
+                    <div className="flex items-center gap-1.5 text-muted truncate">
+                      <Mail className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{asset.tenant.email}</span>
+                    </div>
+                  )}
+                  {asset.tenant.startDate && asset.tenant.endDate && (
+                    <div className="flex items-center gap-1.5 text-muted text-[11px]">
+                      <Calendar className="w-3.5 h-3.5 shrink-0" />
+                      <span>
+                        {t('landlordAssetsDetailContractDuration', {
+                          start: formatDate(asset.tenant.startDate, locale),
+                          end: formatDate(asset.tenant.endDate, locale),
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button href="/landlord/customers" variant="outline">
+                  {t('landlordAssetsDetailViewTenant')}
+                </Button>
+                {asset.tenant.contractId && (
+                  <Button href="/landlord/contracts" variant="secondary">
+                    {t('landlordAssetsDetailViewContract')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Linear Depreciation Valuation Card */}
+          <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-line">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-success" />
+                  <Text as="h2" size="base" weight="black" color="default">
+                    {t('landlordAssetsDetailDepreciation')}
+                  </Text>
+                </div>
+                <Chip size="xs" variant="neutral" preventHover className="font-bold">
                   {t('landlordAssetsDetailYearsUsed', {
                     years: asset.depreciationYears || 5,
                     months: dep.totalMonths,
                   })}
-                </span>
+                </Chip>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
-                <div className="p-3.5 sm:p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl space-y-1">
-                  <span className="text-emerald-700 font-medium block">
+                <div className="p-3.5 sm:p-4 bg-success-soft border border-success-subtle rounded-2xl space-y-1">
+                  <span className="text-success font-medium block">
                     {t('landlordAssetsDetailInitialValue')}
                   </span>
-                  <span className="font-black text-emerald-900 text-base sm:text-lg">
-                    {asset.value}
+                  <span className="font-black text-success text-base sm:text-lg">
+                    {formatCurrency(asset.purchasePrice || 0, locale)}
                   </span>
-                  <span className="text-[10px] text-emerald-700 font-medium block">
-                    Ngày mua: {asset.purchaseDate || asset.dateAdded}
+                  <span className="text-[10px] text-success font-medium block">
+                    {t('landlordAssetsFieldPurchaseDate')}:{' '}
+                    {asset.purchaseDate ? formatDate(asset.purchaseDate, locale) : '—'}
                   </span>
                 </div>
 
-                <div className="p-3.5 sm:p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl space-y-1">
-                  <span className="text-amber-700 font-medium block">
+                <div className="p-3.5 sm:p-4 bg-warning-soft border border-warning-subtle rounded-2xl space-y-1">
+                  <span className="text-warning font-medium block">
                     {t('landlordAssetsDetailAccumulatedDepreciation', {
                       percent: dep.depreciatedPercent,
                     })}
                   </span>
-                  <span className="font-black text-amber-900 text-base sm:text-lg">
-                    - {dep.accumulatedDepreciation.toLocaleString('vi-VN')} ₫
+                  <span className="font-black text-warning text-base sm:text-lg">
+                    - {formatCurrency(dep.accumulatedDepreciation, locale)}
                   </span>
-                  <span className="text-[10px] text-amber-700 font-medium block">
+                  <span className="text-[10px] text-warning font-medium block">
                     {t('landlordAssetsDetailUsedMonths', {
                       used: dep.monthsUsed,
                       total: dep.totalMonths,
@@ -534,106 +980,145 @@ export default function AssetDetailPage() {
                   </span>
                 </div>
 
-                <div className="p-3.5 sm:p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl space-y-1">
-                  <span className="text-blue-700 font-medium block">
+                <div className="p-3.5 sm:p-4 bg-info-soft border border-info-subtle rounded-2xl space-y-1">
+                  <span className="text-info font-medium block">
                     {t('landlordAssetsDetailCurrentEstimated', { percent: dep.remainingPercent })}
                   </span>
-                  <span className="font-black text-blue-900 text-base sm:text-lg">
-                    {dep.currentValue.toLocaleString('vi-VN')} ₫
+                  <span className="font-black text-info text-base sm:text-lg">
+                    {formatCurrency(dep.currentValue, locale)}
                   </span>
-                  <span className="text-[10px] text-blue-700 font-medium block">
-                    Khấu hao ~{Math.round(dep.monthlyDepreciation).toLocaleString('vi-VN')} ₫/tháng
+                  <span className="text-[10px] text-info font-medium block">
+                    {t('landlordAssetsDetailMonthlyDepreciation', {
+                      amount: formatCurrency(Math.round(dep.monthlyDepreciation), locale),
+                    })}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* VISUAL DEPRECIATION PROGRESS BAR */}
+            {/* Visual Depreciation Progress Bar */}
             <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-xs font-extrabold text-zinc-700">
+              <div className="flex justify-between text-xs font-extrabold text-foreground/90">
                 <span>
                   {t('landlordAssetsDetailRemainingRatio', { percent: dep.remainingPercent })}
                 </span>
-                <span className="text-amber-600">
+                <span className="text-warning">
                   {t('landlordAssetsDetailDepreciatedRatio', { percent: dep.depreciatedPercent })}
                 </span>
               </div>
-              <div className="w-full h-3 bg-amber-100 rounded-full overflow-hidden flex p-0.5 border border-zinc-200">
+              <div className="w-full h-3 bg-warning-soft rounded-full overflow-hidden flex p-0.5 border border-line">
                 <div
                   style={{ width: `${dep.remainingPercent}%` }}
-                  className="h-full bg-[#2AC1BC] rounded-full transition-all duration-500 shadow-xs"
+                  className="h-full bg-primary rounded-full transition-all duration-500 shadow-xs"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column (5 Cols on desktop: Always 100% equal height with Left Column) */}
+        {/* Right Column: Maintenance Logs Section (Persistent DB records) */}
         <div className="lg:col-span-5 flex flex-col">
-          {/* Maintenance Logs Section */}
-          <div className="bg-white border border-zinc-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
+          <div className="bg-card border border-line rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs space-y-4 flex-1 flex flex-col justify-between">
             <div className="space-y-4 flex-1 flex flex-col">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-100 shrink-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-line shrink-0">
                 <div className="flex items-center gap-2">
-                  <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-amber-500 shrink-0" />
-                  <h2 className="text-sm sm:text-base font-black text-zinc-900">
+                  <Wrench className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-warning shrink-0" />
+                  <Text as="h2" size="base" weight="black" color="default">
                     {t('landlordAssetsDetailMaintenanceHistory')}
-                  </h2>
+                  </Text>
                 </div>
                 <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setIsLogModalOpen(true)}
-                  className="h-auto px-3 py-1.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
+                  variant="warning"
+                  onClick={() => {
+                    setLogType('routine')
+                    setLogDescription('')
+                    setLogCost('0')
+                    setLogPerformer('')
+                    setLogPerformedAt(new Date().toISOString().split('T')[0])
+                    setLogSetCondition('')
+                    setIsLogModalOpen(true)
+                  }}
+                  leftIcon={<Plus />}
                 >
-                  <Plus className="w-3.5 h-3.5" /> {t('landlordAssetsDetailAddMaintenanceBtn')}
+                  {t('landlordAssetsDetailAddMaintenanceBtn')}
                 </Button>
               </div>
 
-              {maintenanceLogs.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-zinc-400 text-xs space-y-2.5 my-auto">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200/80 flex items-center justify-center shadow-2xs">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-extrabold text-zinc-800 text-sm">
-                      {t('landlordAssetsDetailNoMaintenance')}
-                    </p>
-                    <p className="text-xs text-zinc-400 font-medium max-w-xs mx-auto mt-1">
-                      {t('landlordAssetsDetailNoMaintenanceDesc')}
-                    </p>
-                  </div>
+              {/* Maintenance Expenditure Summary */}
+              {totalMaintenanceCost > 0 && (
+                <div className="p-3 bg-surface border border-line rounded-2xl flex items-center justify-between text-xs">
+                  <Text size="xs" weight="semibold" color="secondary">
+                    {t('landlordAssetsDetailTotalMaintenanceCost')}
+                  </Text>
+                  <Chip
+                    size="sm"
+                    variant="warning"
+                    preventHover
+                    className="font-mono font-black"
+                  >
+                    {formatCurrency(totalMaintenanceCost, locale)}
+                  </Chip>
                 </div>
+              )}
+
+              {/* Maintenance Logs List */}
+              {maintenanceLogs.length === 0 ? (
+                <EmptyState
+                  icon={Clock}
+                  title={t('landlordAssetsDetailNoMaintenance')}
+                  description={t('landlordAssetsDetailNoMaintenanceDesc')}
+                  size="sm"
+                />
               ) : (
-                <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1 max-h-[340px] sm:max-h-[370px]">
+                <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1 max-h-[460px]">
                   {maintenanceLogs.map(log => (
                     <div
                       key={log.id}
-                      className="p-3.5 sm:p-4 bg-zinc-50 rounded-2xl border border-zinc-200/60 space-y-2.5 text-xs"
+                      className="p-3.5 sm:p-4 bg-surface rounded-2xl border border-line space-y-2.5 text-xs transition-colors hover:border-line-hover"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md font-extrabold text-[10px]">
-                            {log.type}
-                          </span>
-                          <span className="text-zinc-400 font-medium text-[11px] flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-zinc-400 inline shrink-0" />{' '}
-                            {log.date}
+                          <Chip
+                            size="xs"
+                            variant={getLogTypeChipVariant(log.type)}
+                            preventHover
+                            className="font-bold"
+                          >
+                            {getLogTypeLabel(log.type)}
+                          </Chip>
+                          <span className="text-muted font-medium text-[11px] flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-muted inline shrink-0" />{' '}
+                            {formatDate(log.performedAt, locale)}
                           </span>
                         </div>
-                        <span className="font-black text-emerald-600 text-xs sm:text-sm bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 shrink-0">
-                          {log.cost}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <Chip
+                            size="xs"
+                            variant="success"
+                            preventHover
+                            className="font-mono font-black shrink-0"
+                          >
+                            {formatCurrency(log.cost, locale)}
+                          </Chip>
+                          <TableActionButton
+                            icon={<Trash2 />}
+                            variant="ghost-danger"
+                            onClick={() => setLogToDelete(log)}
+                            title={t('landlordAssetsDetailLogDeleteBtn')}
+                          />
+                        </div>
                       </div>
 
-                      <p className="font-bold text-zinc-800 leading-relaxed text-xs sm:text-sm break-words">
+                      <p className="font-bold text-foreground leading-relaxed text-xs sm:text-sm break-words">
                         {log.description}
                       </p>
 
-                      <div className="text-[11px] text-zinc-400 font-medium pt-1.5 border-t border-zinc-200/50 flex items-center justify-between">
+                      <div className="text-[11px] text-muted font-medium pt-1.5 border-t border-line flex items-center justify-between">
                         <span>
                           {t('landlordAssetsDetailPerformer')}{' '}
-                          <strong className="text-zinc-700">{log.performer}</strong>
+                          <strong className="text-foreground/90">
+                            {log.performer || t('landlordAssetsDetailNotUpdated')}
+                          </strong>
                         </span>
                       </div>
                     </div>
@@ -645,426 +1130,554 @@ export default function AssetDetailPage() {
         </div>
       </div>
 
-      {/* EDIT ASSET MODAL WITH SKU & DEPRECIATION PARAMETERS */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsEditModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 flex flex-col max-h-[90vh]">
-            <div className="px-5 sm:px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-50 text-[#FF6B35] rounded-xl">
-                  <Edit3 className="w-5 h-5 text-[#2AC1BC]" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base sm:text-lg text-zinc-900">
-                    {t('landlordAssetsModalEditTitle')} [{t('landlordAssetsFieldSku')}: {editSku}]
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium">{t('landlordAssetsModalSub')}</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditModalOpen(false)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-600 rounded-xl hover:bg-zinc-100 transition-colors"
-              >
-                <Plus className="w-5 h-5 rotate-45" />
-              </Button>
-            </div>
+      {/* ─── MODAL 1: EDIT ASSET MODAL ─────────────────────────────────────── */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleRequestCloseEditModal}
+        size="3xl"
+        zIndex={50}
+        showCloseButton={true}
+      >
+        <Modal.Header
+          title={`${t('landlordAssetsModalEditTitle')} [${asset.code}]`}
+          description={t('landlordAssetsModalSub')}
+          icon={<Edit3 className="w-5 h-5 text-primary" />}
+        />
+        <Modal.Body className="p-4 sm:p-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            <TextInput
+              label={`${t('landlordAssetsFieldSku')} *`}
+              type="text"
+              value={asset.code}
+              disabled={true}
+              className="px-3.5 py-2.5 text-xs font-bold border border-line rounded-xl uppercase font-mono opacity-80"
+            />
 
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-                {/* SKU Code Input */}
-                <TextInput
-                  label={`${t('landlordAssetsFieldSku')} *`}
-                  type="text"
-                  value={editSku}
-                  onChange={e => setEditSku(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-bold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none uppercase font-mono"
-                />
+            <TextInput
+              label={`${t('landlordAssetsFieldName')} *`}
+              type="text"
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-                <TextInput
-                  label={`${t('landlordAssetsFieldName')} *`}
-                  type="text"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                />
+            <SelectInput
+              label={t('landlordAssetsFieldCategory')}
+              value={editCategory}
+              onChange={e => setEditCategory(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+              options={[
+                { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
+                { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
+                { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
+                { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
+                { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
+              ]}
+            />
 
-                <SelectInput
-                  label={t('landlordAssetsFieldCategory')}
-                  value={editCategory}
-                  onChange={e => setEditCategory(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  options={[
-                    { value: 'Điện lạnh', label: t('landlordAssetsCatRefrigeration') },
-                    { value: 'Nội thất', label: t('landlordAssetsCatFurniture') },
-                    { value: 'Gia dụng', label: t('landlordAssetsCatAppliances') },
-                    { value: 'Điện nước', label: t('landlordAssetsCatUtilities') },
-                    { value: 'An ninh', label: t('landlordAssetsCatSecurity') },
-                  ]}
-                />
+            <SelectInput
+              label={t('landlordAssetsFieldRoom')}
+              value={editRoomId}
+              onChange={e => {
+                const selected = e.target.value
+                setEditRoomId(selected)
+                if (selected) {
+                  const targetRoom = availableRooms.find(r => r.id === selected)
+                  if (targetRoom) {
+                    setEditLocation(t('landlordAssetsRoomPrefix', { room: targetRoom.roomNumber }))
+                  }
+                } else {
+                  setEditLocation(t('landlordAssetsRoomSharedOption'))
+                }
+              }}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+              options={[
+                { value: '', label: t('landlordAssetsRoomSharedOption') },
+                ...availableRooms.map(r => ({
+                  value: r.id,
+                  label: t('landlordAssetsRoomPrefix', { room: r.roomNumber }),
+                })),
+              ]}
+            />
 
-                <SelectInput
-                  label={t('landlordAssetsFieldRoom')}
-                  value={editRoom}
-                  onChange={e => setEditRoom(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  options={[
-                    {
-                      value: '101',
-                      label: isEn
-                        ? 'Room 101 (Tenant: Nguyen Van A)'
-                        : 'Phòng 101 (Khách: Nguyễn Văn A)',
-                    },
-                    {
-                      value: '102',
-                      label: isEn
-                        ? 'Room 102 (Tenant: Tran Thi B)'
-                        : 'Phòng 102 (Khách: Trần Thị B)',
-                    },
-                    {
-                      value: '103',
-                      label: isEn
-                        ? 'Room 103 (Tenant: Le Van C)'
-                        : 'Phòng 103 (Khách: Lê Văn C)',
-                    },
-                    {
-                      value: '105',
-                      label: isEn
-                        ? 'Room 105 (Tenant: Pham Hoang D)'
-                        : 'Phòng 105 (Khách: Phạm Hoàng D)',
-                    },
-                    {
-                      value: '201',
-                      label: isEn
-                        ? 'Room 201 (Tenant: Vu Thi E)'
-                        : 'Phòng 201 (Khách: Vũ Thị E)',
-                    },
-                    {
-                      value: 'Kho',
-                      label: isEn ? 'Storage (No tenant)' : 'Kho chứa đồ (Không có khách)',
-                    },
-                    {
-                      value: 'Khu sinh hoạt chung',
-                      label: isEn
-                        ? 'Common area (No tenant)'
-                        : 'Khu sinh hoạt chung (Không có khách)',
-                    },
-                  ]}
-                />
+            <TextInput
+              label={t('landlordAssetsFieldPurchaseValue')}
+              type="number"
+              value={editPurchasePrice}
+              onChange={e => setEditPurchasePrice(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-                <TextInput
-                  label={t('landlordAssetsFieldPurchaseValue')}
-                  type="text"
-                  value={editPurchaseValue}
-                  onChange={e => setEditPurchaseValue(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                />
+            <TextInput
+              label={t('landlordAssetsFieldPurchaseDate')}
+              type="date"
+              value={editPurchaseDate}
+              onChange={e => setEditPurchaseDate(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-                <TextInput
-                  label={t('landlordAssetsFieldPurchaseDate')}
-                  type="text"
-                  placeholder="VD: 10/01/2024"
-                  value={editPurchaseDate}
-                  onChange={e => setEditPurchaseDate(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                />
+            <SelectInput
+              label={t('landlordAssetsFieldStatus')}
+              value={editCondition}
+              onChange={e => setEditCondition(e.target.value as AssetCondition)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+              options={[
+                { value: 'good', label: t('landlordAssetsStatusInUse') },
+                { value: 'new', label: t('landlordAssetsStatusReady') },
+                { value: 'under_repair', label: t('landlordAssetsStatusMaintenance') },
+                { value: 'damaged', label: t('landlordAssetsStatusBroken') },
+                { value: 'lost', label: t('landlordAssetsStatusLost') },
+                { value: 'disposed', label: t('landlordAssetsStatusDisposed') },
+              ]}
+            />
 
-                <SelectInput
-                  label={t('landlordAssetsFieldDepreciationYears')}
-                  value={editDepreciationYears}
-                  onChange={e => setEditDepreciationYears(Number(e.target.value))}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  options={[
-                    { value: 3, label: `3 ${isEn ? 'years (36 months)' : 'năm (36 tháng)'}` },
-                    { value: 5, label: `5 ${isEn ? 'years (60 months)' : 'năm (60 tháng)'}` },
-                    { value: 8, label: `8 ${isEn ? 'years (96 months)' : 'năm (96 tháng)'}` },
-                    { value: 10, label: `10 ${isEn ? 'years (120 months)' : 'năm (120 tháng)'}` },
-                  ]}
-                />
+            <TextInput
+              label={t('landlordAssetsFieldDepreciationYears')}
+              type="number"
+              min={1}
+              value={String(editDepreciationYears)}
+              onChange={e => setEditDepreciationYears(Number(e.target.value) || 1)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-                <SelectInput
-                  label={t('landlordAssetsFieldStatus')}
-                  value={editStatus}
-                  onChange={e => setEditStatus(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none appearance-none bg-white cursor-pointer"
-                  options={[
-                    { value: 'Đang sử dụng', label: t('landlordAssetsStatusInUse') },
-                    { value: 'Sẵn sàng', label: t('landlordAssetsStatusReady') },
-                    { value: 'Bảo trì', label: t('landlordAssetsStatusMaintenance') },
-                    { value: 'Hỏng hóc', label: t('landlordAssetsStatusBroken') },
-                  ]}
-                />
+            <TextInput
+              label={t('landlordAssetsFieldModelCode')}
+              type="text"
+              value={editModelCode}
+              onChange={e => setEditModelCode(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-                <TextInput
-                  label={t('landlordAssetsFieldModelCode')}
-                  type="text"
-                  value={editModelCode}
-                  onChange={e => setEditModelCode(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                />
+            <TextInput
+              label={t('landlordAssetsFieldSerial')}
+              type="text"
+              value={editSerialNumber}
+              onChange={e => setEditSerialNumber(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-                <TextInput
-                  label={t('landlordAssetsFieldWarranty')}
-                  type="text"
-                  value={editWarrantyPeriod}
-                  onChange={e => setEditWarrantyPeriod(e.target.value)}
-                  className="px-3.5 py-2.5 text-xs font-semibold border border-zinc-200 rounded-xl focus:border-[#2AC1BC] outline-none"
-                />
-              </div>
-            </div>
+            <TextInput
+              label={t('landlordAssetsFieldWarranty')}
+              type="text"
+              value={editWarrantyPeriod}
+              onChange={e => setEditWarrantyPeriod(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-            <div className="p-4 border-t border-zinc-100 flex items-center justify-end gap-3 bg-zinc-50">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsEditModalOpen(false)}
-                className="h-auto px-4 py-2 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 cursor-pointer"
-              >
-                {t('landlordAssetsBtnCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveEditAsset}
-                className="h-auto px-5 py-2 text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
-              >
-                {t('landlordAssetsBtnSave')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            <TextInput
+              label={t('landlordAssetsFieldSupplier')}
+              type="text"
+              value={editSupplier}
+              onChange={e => setEditSupplier(e.target.value)}
+              className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none"
+            />
 
-      {/* MAINTENANCE LOG MODAL */}
-      {isLogModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsLogModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-base text-zinc-900">
-                {t('landlordAssetsDetailLogModalTitle')}
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsLogModalOpen(false)}
-                className="h-auto text-zinc-400 hover:text-zinc-600 p-1"
-              >
-                <Plus className="w-5 h-5 rotate-45" />
-              </Button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <SelectInput
-                label={t('landlordAssetsDetailLogType')}
-                value={logType}
-                onChange={e => setLogType(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
-                options={[
-                  { value: 'Bảo dưỡng định kỳ', label: t('landlordAssetsDetailLogTypeRoutine') },
-                  { value: 'Sửa chữa linh kiện', label: t('landlordAssetsDetailLogTypeRepair') },
-                  { value: 'Vệ sinh & Nạp gas', label: t('landlordAssetsDetailLogTypeCleanGas') },
-                  { value: 'Thay thế mới', label: t('landlordAssetsDetailLogTypeReplace') },
-                ]}
-              />
-
+            <div className="sm:col-span-2">
               <TextareaInput
-                label={`${t('landlordAssetsDetailLogDesc')} *`}
+                label={t('landlordAssetsFieldNote')}
                 rows={2}
-                placeholder={t('landlordAssetsDetailLogDescPh')}
-                value={logDescription}
-                onChange={e => setLogDescription(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none resize-none"
-              />
-
-              <TextInput
-                label={t('landlordAssetsDetailLogCost')}
-                type="text"
-                placeholder="VD: 250.000 ₫"
-                value={logCost}
-                onChange={e => setLogCost(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
-              />
-
-              <TextInput
-                label={t('landlordAssetsDetailLogPerformer')}
-                type="text"
-                placeholder={t('landlordAssetsDetailLogPerformerPh')}
-                value={logPerformer}
-                onChange={e => setLogPerformer(e.target.value)}
-                className="px-3 py-2 font-semibold border border-zinc-200 rounded-xl outline-none"
+                value={editNote}
+                onChange={e => setEditNote(e.target.value)}
+                className="px-3.5 py-2.5 text-xs font-semibold border border-line rounded-xl focus:border-primary outline-none resize-none"
               />
             </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsLogModalOpen(false)}
-                className="h-auto px-4 py-2 font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl cursor-pointer"
-              >
-                {t('landlordAssetsBtnCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleAddMaintenanceLog}
-                className="h-auto px-4 py-2 font-black text-white bg-[#2AC1BC] hover:bg-[#25ad87] rounded-xl shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all"
-              >
-                {t('landlordAssetsDetailLogSaveBtn')}
-              </Button>
+            {/* Asset Photo Upload (1 image - deferred preview until submit) */}
+            <div className="sm:col-span-2 pt-1">
+              <ImageUpload
+                label={t('landlordAssetsFieldImage')}
+                helperText={t('landlordAssetsFieldImageHelper')}
+                value={editImagePreview || editImageUrl}
+                onFileSelect={handleEditImageSelect}
+                onRemove={handleEditImageRemove}
+                aspectRatio="video"
+                disabled={isSavingEdit}
+                showInspectButton={Boolean(editImagePreview || editImageUrl)}
+                onInspect={url => setInspectImageUrl(url)}
+              />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* CONFIRM MODAL */}
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        onConfirm={confirmModal.onConfirm}
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-      />
-
-      {/* ALERT MODAL */}
-      <AlertModal
-        isOpen={alertModal.isOpen}
-        title={alertModal.title}
-        message={alertModal.message}
-        type={alertModal.type}
-        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
-      />
-    </div>
-  )
-}
-
-function ConfirmModal({
-  isOpen,
-  title,
-  message,
-  onConfirm,
-  onCancel,
-}: {
-  isOpen: boolean
-  title: string
-  message: string
-  onConfirm: () => void
-  onCancel: () => void
-}) {
-  if (!isOpen) return null
-  return (
-    <div
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onCancel()
-      }}
-    >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-200 mx-auto flex items-center justify-center shadow-inner">
-          <AlertTriangle className="w-7 h-7" />
-        </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-2.5 pt-2">
+        </Modal.Body>
+        <Modal.Footer className="flex items-center justify-end gap-3 p-4 bg-surface border-t border-line">
           <Button
-            variant="secondary"
-            size="sm"
-            onClick={onCancel}
-            className="h-auto px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100"
+            size='md'
+            variant="outline"
+            onClick={handleRequestCloseEditModal}
+            disabled={isSavingEdit}
           >
-            Cancel
+            {t('landlordAssetsBtnCancel')}
           </Button>
           <Button
-            variant="primary"
-            size="sm"
-            onClick={onConfirm}
-            className="h-auto px-4 py-2.5 text-xs font-black text-white bg-amber-500 hover:bg-amber-600 rounded-xl shadow-md shadow-amber-500/20"
+            size='md'
+            onClick={handleSaveEditAsset}
+            isLoading={isSavingEdit}
+            disabled={isSavingEdit}
           >
-            OK
+            {t('landlordAssetsBtnSave')}
           </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
+        </Modal.Footer>
+      </Modal>
 
-function AlertModal({
-  isOpen,
-  title,
-  message,
-  type = 'info',
-  onClose,
-}: {
-  isOpen: boolean
-  title: string
-  message: string
-  type?: 'warning' | 'error' | 'success' | 'info'
-  onClose: () => void
-}) {
-  const t = useTranslations('landlord')
-  if (!isOpen) return null
-  const config = {
-    warning: {
-      bgColor: 'bg-amber-500/10 text-amber-600 border-amber-200',
-      icon: <AlertTriangle className="w-7 h-7 text-amber-500" />,
-      btnColor: 'bg-amber-500 text-white',
-    },
-    error: {
-      bgColor: 'bg-rose-500/10 text-rose-600 border-rose-200',
-      icon: <AlertCircle className="w-7 h-7 text-rose-500" />,
-      btnColor: 'bg-rose-500 text-white',
-    },
-    success: {
-      bgColor: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
-      icon: <CheckCircle2 className="w-7 h-7 text-emerald-500" />,
-      btnColor: 'bg-emerald-500 text-white',
-    },
-    info: {
-      bgColor: 'bg-orange-50 text-[#FF6B35] border-orange-200',
-      icon: <Info className="w-7 h-7 text-[#FF6B35]" />,
-      btnColor: 'bg-[#FF6B35] text-white',
-    },
-  }[type]
+      {/* ─── MODAL 2: MAINTENANCE LOG MODAL ────────────────────────────────── */}
+      <Modal
+        isOpen={isLogModalOpen}
+        onClose={handleRequestCloseLogModal}
+        size="lg"
+        zIndex={50}
+        showCloseButton={true}
+      >
+        <Modal.Header
+          title={
+            logSetCondition === 'good'
+              ? t('landlordAssetsDetailFinishMaintenanceModalTitle')
+              : t('landlordAssetsDetailLogModalTitle')
+          }
+          description={
+            logSetCondition === 'good'
+              ? t('landlordAssetsDetailFinishMaintenanceDesc')
+              : undefined
+          }
+          icon={<Wrench className="w-5 h-5 text-warning" />}
+        />
+        <Modal.Body className="p-4 sm:p-6 space-y-3.5 text-xs">
+          <SelectInput
+            label={t('landlordAssetsDetailLogType')}
+            value={logType}
+            onChange={e => setLogType(e.target.value)}
+            className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
+            options={[
+              { value: 'routine', label: t('landlordAssetsDetailLogTypeRoutine') },
+              { value: 'repair', label: t('landlordAssetsDetailLogTypeRepair') },
+              { value: 'clean_gas', label: t('landlordAssetsDetailLogTypeCleanGas') },
+              { value: 'replace', label: t('landlordAssetsDetailLogTypeReplace') },
+            ]}
+          />
 
-  return (
-    <div
-      className="fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={e => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-        <div
-          className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border ${config.bgColor}`}
-        >
-          {config.icon}
-        </div>
-        <div className="space-y-1.5">
-          <h3 className="text-lg font-black text-zinc-900">{title}</h3>
-          <p className="text-xs text-zinc-500 font-medium leading-relaxed">{message}</p>
-        </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onClose}
-          className={`h-auto w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md ${config.btnColor}`}
-        >
-          {t('landlordAssetsBtnUnderstood')}
-        </Button>
-      </div>
+          <TextareaInput
+            label={`${t('landlordAssetsDetailLogDesc')}`}
+            required
+            rows={2}
+            placeholder={t('landlordAssetsDetailLogDescPh')}
+            value={logDescription}
+            onChange={e => setLogDescription(e.target.value)}
+            className="px-3 py-2 font-semibold border border-line rounded-xl outline-none resize-none"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TextInput
+              label={t('landlordAssetsDetailLogCost')}
+              type="number"
+              placeholder="0"
+              value={logCost}
+              onChange={e => setLogCost(e.target.value)}
+              className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
+            />
+
+            <TextInput
+              label={t('landlordAssetsDetailLogPerformer')}
+              type="text"
+              placeholder={t('landlordAssetsDetailLogPerformerPh')}
+              value={logPerformer}
+              onChange={e => setLogPerformer(e.target.value)}
+              className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <TextInput
+              label={t('landlordAssetsColPurchaseDate')}
+              type="date"
+              value={logPerformedAt}
+              onChange={e => setLogPerformedAt(e.target.value)}
+              className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
+            />
+
+            <SelectInput
+              label={t('landlordAssetsFieldConditionAfter')}
+              value={logSetCondition}
+              onChange={e => setLogSetCondition(e.target.value as AssetCondition | '')}
+              className="px-3 py-2 font-semibold border border-line rounded-xl outline-none"
+              options={[
+                { value: '', label: t('landlordAssetsDetailConditionKeep') },
+                { value: 'good', label: t('landlordAssetsStatusInUse') },
+                { value: 'under_repair', label: t('landlordAssetsStatusMaintenance') },
+                { value: 'damaged', label: t('landlordAssetsStatusBroken') },
+                { value: 'new', label: t('landlordAssetsStatusReady') },
+              ]}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="flex justify-end gap-2 p-4 bg-surface border-t border-line">
+          <Button
+            size='md'
+            variant="outline"
+            onClick={handleRequestCloseLogModal}
+            disabled={isSavingLog}
+          >
+            {t('landlordAssetsBtnCancel')}
+          </Button>
+          <Button
+            size='md'
+            onClick={handleSaveMaintenanceLog}
+            isLoading={isSavingLog}
+          >
+            {t('landlordAssetsDetailLogSaveBtn')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ─── MODAL 3: DELETE ASSET MODAL ───────────────────────────────────── */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        size="md"
+        zIndex={60}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-danger-soft text-danger rounded-2xl flex items-center justify-center mx-auto">
+            <Trash2 className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsDeleteConfirmTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsDeleteConfirmDesc', {
+                name: asset?.name || '',
+                code: asset?.code || '',
+              })}
+            </Text>
+          </div>
+
+          {asset && (
+            <div className="p-3 bg-surface border border-line rounded-xl text-left space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <Chip size="xs" variant="primary" preventHover className="font-mono font-bold">
+                  {asset.code}
+                </Chip>
+                <Chip size="xs" variant="neutral" preventHover>
+                  {getCategoryLabel(asset.category)}
+                </Chip>
+              </div>
+              <p className="font-bold text-sm text-foreground truncate">{asset.name}</p>
+              <div className="flex items-center justify-between text-muted text-[11px] pt-1 border-t border-line/60">
+                <span>{asset.roomName}</span>
+                {asset.purchasePrice ? (
+                  <span className="font-bold text-foreground">
+                    {formatCurrency(asset.purchasePrice, locale)}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              size='md'
+              variant="outline"
+              onClick={() => setShowDeleteModal(false)}
+              className="flex-1"
+              disabled={isDeleting}
+            >
+              {t('landlordAssetsBtnCancel')}
+            </Button>
+            <Button
+              size='md'
+              variant="danger"
+              onClick={handleDeleteAsset}
+              className="flex-1"
+              isLoading={isDeleting}
+            >
+              {t('landlordAssetsDeleteConfirmBtn')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* ─── MODAL 4: DELETE MAINTENANCE LOG CONFIRMATION ──────────────────── */}
+      <Modal
+        isOpen={Boolean(logToDelete)}
+        onClose={() => setLogToDelete(null)}
+        size="sm"
+        zIndex={65}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-danger-soft text-danger rounded-2xl flex items-center justify-center mx-auto">
+            <Trash2 className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsDetailLogDeleteBtn')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsDetailLogDeleteConfirm')}
+            </Text>
+          </div>
+
+          {logToDelete && (
+            <div className="p-3 bg-surface border border-line rounded-xl text-left space-y-1 text-xs">
+              <div className="flex items-center justify-between">
+                <Chip
+                  size="xs"
+                  variant={getLogTypeChipVariant(logToDelete.type)}
+                  preventHover
+                  className="font-bold"
+                >
+                  {getLogTypeLabel(logToDelete.type)}
+                </Chip>
+                <span className="font-mono text-muted text-[11px]">
+                  {formatDate(logToDelete.performedAt, locale)}
+                </span>
+              </div>
+              <p className="font-medium text-foreground line-clamp-2">{logToDelete.description}</p>
+              <div className="pt-1">
+                <Chip
+                  size="xs"
+                  variant="success"
+                  preventHover
+                  className="font-mono font-black"
+                >
+                  {formatCurrency(logToDelete.cost, locale)}
+                </Chip>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              size='md'
+              variant="outline"
+              onClick={() => setLogToDelete(null)}
+              className="flex-1"
+              disabled={isDeletingLog}
+            >
+              {t('landlordAssetsBtnCancel')}
+            </Button>
+            <Button
+              size='md'
+              variant="danger"
+              onClick={handleConfirmDeleteLog}
+              className="flex-1"
+              isLoading={isDeletingLog}
+            >
+              {t('landlordAssetsBtnDelete')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* ─── MODAL 5: CONFIRM CLOSE MODAL FOR EDIT (Rule #10) ──────────────── */}
+      <Modal
+        isOpen={showConfirmCloseEditModal}
+        onClose={() => setShowConfirmCloseEditModal(false)}
+        size="sm"
+        zIndex={70}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-warning-soft text-warning rounded-2xl flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsConfirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsConfirmCloseDesc')}
+            </Text>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              size='md'
+              variant="outline"
+              onClick={() => setShowConfirmCloseEditModal(false)}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size='md'
+              variant="danger"
+              onClick={handleDiscardAndCloseEdit}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* ─── MODAL 5B: CONFIRM CLOSE MODAL FOR LOG (Rule #10) ──────────────── */}
+      <Modal
+        isOpen={showConfirmCloseLogModal}
+        onClose={() => setShowConfirmCloseLogModal(false)}
+        size="sm"
+        zIndex={75}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 text-center space-y-4">
+          <div className="w-12 h-12 bg-warning-soft text-warning rounded-2xl flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <Text as="h4" size="base" weight="black" color="default">
+              {t('landlordAssetsConfirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('landlordAssetsConfirmCloseDesc')}
+            </Text>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setShowConfirmCloseLogModal(false)}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={handleDiscardAndCloseLog}
+              className="flex-1"
+            >
+              {t('landlordAssetsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* ─── MODAL 6: IMAGE LIGHTBOX INSPECT MODAL ─────────────────────────── */}
+      <Modal
+        isOpen={Boolean(inspectImageUrl)}
+        onClose={() => setInspectImageUrl(null)}
+        size="lg"
+        zIndex={80}
+      >
+        <Modal.Header
+          title={t('landlordAssetsInspectImage')}
+          onClose={() => setInspectImageUrl(null)}
+        />
+        <Modal.Body className="p-4 flex items-center justify-center bg-black/5 dark:bg-black/40">
+          {inspectImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={inspectImageUrl}
+              alt={asset.name}
+              className="max-h-[75vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+            />
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }

@@ -26,4 +26,12 @@ export class UploadMeterReadingDto {
   @IsNumber()
   @Min(0)
   readingValue?: number
+
+  @ApiPropertyOptional({
+    description: 'Optional contract ID for multi-room scoping',
+    example: 'd9b2d63d-a233-4123-847e-2972986422b4',
+  })
+  @IsOptional()
+  @IsUUID()
+  contractId?: string
 }

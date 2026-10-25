@@ -215,7 +215,7 @@ export class AdminAnalyticsService {
     const regionAgg: Record<string, { houses: number; rooms: number; occupiedRooms: number }> = {}
 
     for (const h of allHousesWithRooms) {
-      const regionName = h.province?.trim() || h.city?.trim() || 'Khác'
+      const regionName = h.province?.trim() || h.city?.trim() || 'Other'
       if (!regionAgg[regionName]) {
         regionAgg[regionName] = { houses: 0, rooms: 0, occupiedRooms: 0 }
       }

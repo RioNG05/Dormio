@@ -42,7 +42,7 @@ export class ExpensesService {
     paidAt: Date
     room?: { id: string; roomNumber: string } | null
   }): ExpenseItemDto {
-    const roomName = expense.room ? `Phòng ${expense.room.roomNumber}` : 'Toàn tòa nhà'
+    const roomName = expense.room ? `Room ${expense.room.roomNumber}` : 'Whole Building'
 
     return {
       id: expense.id,
@@ -82,7 +82,7 @@ export class ExpensesService {
         },
       })
       if (!room) {
-        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.')
+        throw new BadRequestException('The selected room does not belong to this boarding house.')
       }
     }
 
@@ -296,7 +296,7 @@ export class ExpensesService {
     })
 
     if (!expense) {
-      throw new NotFoundException('Không tìm thấy khoản chi phí này.')
+      throw new NotFoundException('Expense not found.')
     }
 
     return this.mapToExpenseDto(expense)
@@ -321,7 +321,7 @@ export class ExpensesService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy khoản chi phí cần cập nhật.')
+      throw new NotFoundException('Expense to update not found.')
     }
 
     // If updating roomId, verify room belongs to boarding house
@@ -333,7 +333,7 @@ export class ExpensesService {
         },
       })
       if (!room) {
-        throw new BadRequestException('Phòng được chọn không thuộc nhà trọ này.')
+        throw new BadRequestException('The selected room does not belong to this boarding house.')
       }
     }
 
@@ -376,7 +376,7 @@ export class ExpensesService {
     })
 
     if (!existing) {
-      throw new NotFoundException('Không tìm thấy khoản chi phí cần xóa.')
+      throw new NotFoundException('Expense to delete not found.')
     }
 
     await this.prisma.expense.delete({
@@ -385,7 +385,7 @@ export class ExpensesService {
 
     return {
       success: true,
-      message: 'Đã xóa khoản chi phí thành công.',
+      message: 'Expense deleted successfully.',
     }
   }
 }

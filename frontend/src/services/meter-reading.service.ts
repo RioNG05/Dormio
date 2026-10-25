@@ -38,6 +38,7 @@ export interface UploadMeterReadingPayload {
   serviceId: string
   imageUrl: string
   readingValue?: number
+  contractId?: string
 }
 
 export interface UploadMeterReadingResponse {
@@ -104,11 +105,13 @@ export const meterReadingService = {
   /**
    * Get active metered services and draft readings
    */
-  async getActiveMeteredServices(): Promise<ActiveMeteredServicesResponse> {
+  async getActiveMeteredServices(contractId?: string): Promise<ActiveMeteredServicesResponse> {
     const response = await api.get<{
       success: boolean
       data: ActiveMeteredServicesResponse
-    }>('/v1/tenant/meter-readings/active-services')
+    }>('/v1/tenant/meter-readings/active-services', {
+      params: contractId ? { contractId } : undefined,
+    })
     return response.data
   },
 
@@ -144,12 +147,18 @@ export const meterReadingService = {
   /**
    * Confirm all readings and generate invoice
    */
-  async confirmAndGenerateInvoice(): Promise<ConfirmReadingsResponse> {
+  async confirmAndGenerateInvoice(contractId?: string): Promise<ConfirmReadingsResponse> {
     const response = await api.post<{
       success: boolean
       data: ConfirmReadingsResponse
       message?: string
-    }>('/v1/tenant/meter-readings/confirm')
+    }>(
+      '/v1/tenant/meter-readings/confirm',
+      undefined,
+      {
+        params: contractId ? { contractId } : undefined,
+      },
+    )
     return response.data
   },
 

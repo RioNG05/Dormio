@@ -109,7 +109,7 @@ export class CreateManualInvoiceDto {
 
   @ApiPropertyOptional({
     description: 'Optional note from landlord',
-    example: 'Đã trừ 50k hỗ trợ wifi',
+    example: 'Deducted 50k for wifi subsidy',
   })
   @IsOptional()
   @IsString()

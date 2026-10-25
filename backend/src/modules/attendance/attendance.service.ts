@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { BadRequestException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import {
+  BusinessNotFoundException,
+  BusinessBadRequestException,
+} from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import { AttendanceStatus, AuditLogAction, ScheduleStatus } from '@prisma'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import {
@@ -208,7 +213,7 @@ export class AttendanceService {
       const editedByName = attendance?.editedByUser
         ? attendance.editedByUser.userIdentification?.fullName ||
           attendance.editedByUser.username ||
-          'Chủ nhà'
+          'Landlord'
         : null
 
       return {
@@ -218,7 +223,7 @@ export class AttendanceService {
         employeeName: userName,
         employeePhone: item.employee.user.phoneNumber,
         employeeAvatar: item.employee.user.avatarUrl,
-        positionName: assignment?.position?.name || 'Nhân viên',
+        positionName: assignment?.position?.name || 'Staff',
         shiftId: item.shiftId,
         shiftName: item.shift.name,
         shiftStartTime: this.formatTime(item.shift.startTime),
@@ -281,7 +286,7 @@ export class AttendanceService {
     })
 
     if (!schedule) {
-      throw new NotFoundException('Không tìm thấy ca làm việc tại nhà trọ này')
+      throw new NotFoundException('Work shift not found in this boarding house')
     }
 
     const existingAttendance = await this.prisma.attendance.findFirst({
@@ -391,8 +396,8 @@ export class AttendanceService {
     const editedByName = result.editedByUser
       ? result.editedByUser.userIdentification?.fullName ||
         result.editedByUser.username ||
-        'Chủ nhà'
-      : 'Chủ nhà'
+        'Landlord'
+      : 'Landlord'
 
     return {
       workScheduleId: schedule.id,
@@ -401,7 +406,7 @@ export class AttendanceService {
       employeeName: userName,
       employeePhone: schedule.employee.user.phoneNumber,
       employeeAvatar: schedule.employee.user.avatarUrl,
-      positionName: assignment?.position?.name || 'Nhân viên',
+      positionName: assignment?.position?.name || 'Staff',
       shiftId: schedule.shiftId,
       shiftName: schedule.shift.name,
       shiftStartTime: this.formatTime(schedule.shift.startTime),
@@ -426,26 +431,26 @@ export class AttendanceService {
       return [
         {
           id: 'duty-clean-1',
-          title: 'Quét dọn, lau sàn hành lang tất cả các tầng từ 1 đến 4 và cầu thang bộ',
+          title: 'Sweep and mop corridor floors for all levels 1 to 4 and stairwells',
           requiresPhoto: true,
           completed: false,
         },
         {
           id: 'duty-clean-2',
-          title: 'Thu gom rác thải tập kết tại từng tầng và vận chuyển ra điểm gom rác đô thị',
+          title: 'Collect waste from each floor and transfer to municipal collection point',
           requiresPhoto: true,
           completed: false,
         },
         {
           id: 'duty-clean-3',
-          title: 'Vệ sinh khu vực giặt phơi chung và kiểm tra máy giặt hoạt động bình thường',
+          title: 'Clean shared laundry area and ensure washing machines operate normally',
           requiresPhoto: false,
           completed: false,
-          note: 'Khu vực sân phơi thông thoáng, máy giặt hoạt động tốt',
+          note: 'Laundry area well-ventilated, washing machines in good condition',
         },
         {
           id: 'duty-clean-4',
-          title: 'Bổ sung nước rửa tay, xà phòng tại khu vực vệ sinh chung tầng trệt',
+          title: 'Replenish hand soap and sanitizers in ground floor shared restrooms',
           requiresPhoto: true,
           completed: false,
         },
@@ -456,26 +461,26 @@ export class AttendanceService {
       return [
         {
           id: 'duty-maint-1',
-          title: 'Kiểm tra chỉ số công tơ điện, đồng hồ nước các phòng định kỳ',
+          title: 'Check electricity and water meter readings periodically',
           requiresPhoto: true,
           completed: false,
-          note: 'Ghi nhận chỉ số định kỳ theo ca',
+          note: 'Record periodic shift meter readings',
         },
         {
           id: 'duty-maint-2',
-          title: 'Kiểm tra áp lực nước máy bơm tầng thượng và bình nóng lạnh năng lượng mặt trời',
+          title: 'Check rooftop water pump pressure and solar water heaters',
           requiresPhoto: true,
           completed: false,
         },
         {
           id: 'duty-maint-3',
-          title: 'Rà soát kiểm tra đèn chiếu sáng hành lang và chốt niêm phong bình chữa cháy PCCC',
+          title: 'Inspect corridor lighting and fire extinguisher inspection seals',
           requiresPhoto: true,
           completed: false,
         },
         {
           id: 'duty-maint-4',
-          title: 'Tiếp nhận và xử lý nhanh các sự cố điện nước phát sinh từ cư dân trong ca trực',
+          title: 'Promptly handle electrical and plumbing issues reported by residents during shift',
           requiresPhoto: false,
           completed: false,
         },
@@ -486,26 +491,26 @@ export class AttendanceService {
     return [
       {
         id: 'duty-sec-1',
-        title: 'Kiểm soát an ninh cổng chính và sắp xếp khu vực để xe sinh viên ngăn nắp',
+        title: 'Control main gate security and arrange motorbike parking orderly',
         requiresPhoto: true,
         completed: false,
       },
       {
         id: 'duty-sec-2',
-        title: 'Kiểm tra mở cổng sáng (06:00) và kiểm tra hoạt động của chốt khóa cổng tự động',
+        title: 'Check morning gate opening (06:00) and verify automated gate lock function',
         requiresPhoto: true,
         completed: false,
       },
       {
         id: 'duty-sec-3',
-        title: 'Giám sát camera an ninh hành lang các tầng 1, 2, 3 và ghi nhận nhật ký trực',
+        title: 'Monitor security cameras on floors 1, 2, 3 and maintain duty logbook',
         requiresPhoto: false,
         completed: false,
-        note: 'Đang theo dõi trong ca trực',
+        note: 'Monitoring actively during shift',
       },
       {
         id: 'duty-sec-4',
-        title: 'Tuần tra chống ồn, bảo đảm an ninh trật tự và khóa an toàn cổng ban đêm (23:00)',
+        title: 'Patrol noise levels, maintain public order, and securely lock gates at night (23:00)',
         requiresPhoto: true,
         completed: false,
       },
@@ -522,7 +527,7 @@ export class AttendanceService {
     coWorkers: any[],
   ): StaffTodayOverviewResponseDto {
     const activeAssignment = employee.employeeAssignments[0]
-    const positionName = activeAssignment?.position?.name || 'Nhân viên'
+    const positionName = activeAssignment?.position?.name || 'Staff'
     const positionDesc = activeAssignment?.position?.description || null
     const positionId = activeAssignment?.position?.id || 'default-pos'
 
@@ -648,7 +653,7 @@ export class AttendanceService {
     })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
+      throw new NotFoundException('Staff profile not found for this account.')
     }
 
     const activeAssignment =
@@ -659,7 +664,7 @@ export class AttendanceService {
       }))
 
     if (!activeAssignment) {
-      throw new BadRequestException('Nhân viên chưa được phân công nhiệm vụ tại nhà trọ nào.')
+      throw new BadRequestException('Staff is not assigned to any boarding house.')
     }
 
     const now = new Date()
@@ -697,7 +702,7 @@ export class AttendanceService {
         shift = await this.prisma.shift.create({
           data: {
             boardingHouseId: activeAssignment.boardingHouseId,
-            name: 'Ca Sáng (07:00 - 15:00)',
+            name: 'Morning Shift (07:00 - 15:00)',
             startTime: new Date('1970-01-01T07:00:00Z'),
             endTime: new Date('1970-01-01T15:00:00Z'),
           },
@@ -759,7 +764,7 @@ export class AttendanceService {
         a.employee.user.username ||
         a.employee.user.phoneNumber,
       phone: a.employee.user.phoneNumber,
-      positionName: a.position?.name || 'Nhân viên',
+      positionName: a.position?.name || 'Staff',
       avatar: a.employee.user.avatarUrl || null,
     }))
 
@@ -780,7 +785,10 @@ export class AttendanceService {
       where: { userId },
     })
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ATTEND_STAFF_PROFILE_NOT_FOUND,
+        'Staff profile not found.',
+      )
     }
 
     const schedule = await this.prisma.workSchedule.findUnique({
@@ -792,7 +800,10 @@ export class AttendanceService {
     })
 
     if (!schedule || schedule.employeeId !== employee.id) {
-      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ATTEND_SCHEDULE_NOT_FOUND,
+        'Work schedule not found or does not belong to you.',
+      )
     }
 
     const existingAttendance = await this.prisma.attendance.findFirst({
@@ -803,7 +814,10 @@ export class AttendanceService {
     })
 
     if (existingAttendance?.checkIn) {
-      throw new BadRequestException('Bạn đã thực hiện check-in cho ca trực này rồi.')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.ATTEND_ALREADY_CHECKED_IN,
+        'You have already checked in for this shift.',
+      )
     }
 
     const now = new Date()
@@ -850,8 +864,8 @@ export class AttendanceService {
         .join(', ') || schedule.boardingHouse.name
     const placeStr = dto.watermark?.place || boardingHouseAddress
     const note = isLate
-      ? `Check-in muộn lúc ${timeStr} tại ${placeStr}. Giải trình: "${dto.explanation || 'Chưa có'}"`
-      : `Check-in đúng giờ lúc ${timeStr} tại ${placeStr}.`
+      ? `Late check-in at ${timeStr} at ${placeStr}. Explanation: "${dto.explanation || 'None'}"`
+      : `On-time check-in at ${timeStr} at ${placeStr}.`
 
     await this.prisma.$transaction(async tx => {
       let recordId: string
@@ -923,7 +937,10 @@ export class AttendanceService {
       where: { userId },
     })
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ATTEND_STAFF_PROFILE_NOT_FOUND,
+        'Staff profile not found.',
+      )
     }
 
     const schedule = await this.prisma.workSchedule.findUnique({
@@ -935,7 +952,10 @@ export class AttendanceService {
     })
 
     if (!schedule || schedule.employeeId !== employee.id) {
-      throw new NotFoundException('Lịch làm việc không tồn tại hoặc không thuộc về bạn.')
+      throw new BusinessNotFoundException(
+        BusinessErrorCode.ATTEND_SCHEDULE_NOT_FOUND,
+        'Work schedule not found or does not belong to you.',
+      )
     }
 
     const attendance = await this.prisma.attendance.findFirst({
@@ -946,11 +966,17 @@ export class AttendanceService {
     })
 
     if (!attendance || !attendance.checkIn) {
-      throw new BadRequestException('Bạn cần hoàn tất check-in trước khi check-out.')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.ATTEND_NOT_CHECKED_IN,
+        'You need to check in before checking out.',
+      )
     }
 
     if (attendance.checkOut) {
-      throw new BadRequestException('Bạn đã hoàn thành check-out cho ca trực này rồi.')
+      throw new BusinessBadRequestException(
+        BusinessErrorCode.ATTEND_ALREADY_CHECKED_OUT,
+        'You have already completed check-out for this shift.',
+      )
     }
 
     const now = new Date()
@@ -996,8 +1022,8 @@ export class AttendanceService {
         .join(', ') || schedule.boardingHouse.name
     const placeStr = dto.watermark?.place || boardingHouseAddress
     const appendNote = isEarly
-      ? `Check-out sớm lúc ${timeStr} tại ${placeStr}. Giải trình: "${dto.explanation || 'Chưa có'}"`
-      : `Check-out hoàn thành lúc ${timeStr} tại ${placeStr}.`
+      ? `Early check-out at ${timeStr} at ${placeStr}. Explanation: "${dto.explanation || 'None'}"`
+      : `Check-out completed at ${timeStr} at ${placeStr}.`
     const combinedNote = attendance.note ? `${attendance.note} | ${appendNote}` : appendNote
 
     await this.prisma.$transaction(async tx => {
@@ -1055,7 +1081,7 @@ export class AttendanceService {
     })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy thông tin nhân viên.')
+      throw new NotFoundException('Staff profile not found.')
     }
 
     const schedule = await this.prisma.workSchedule.findUnique({
@@ -1063,7 +1089,7 @@ export class AttendanceService {
     })
 
     if (!schedule || schedule.employeeId !== employee.id) {
-      throw new NotFoundException('Lịch làm việc không hợp lệ.')
+      throw new NotFoundException('Invalid work schedule.')
     }
 
     let attendance = await this.prisma.attendance.findFirst({
@@ -1154,7 +1180,7 @@ export class AttendanceService {
     })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
+      throw new NotFoundException('Staff profile not found for this account.')
     }
 
     let targetYear: number
@@ -1254,7 +1280,7 @@ export class AttendanceService {
     })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
+      throw new NotFoundException('Staff profile not found for this account.')
     }
 
     const assignedHouseIds = employee.employeeAssignments.map(a => a.boardingHouseId)
@@ -1275,7 +1301,7 @@ export class AttendanceService {
         this.prisma.shift.create({
           data: {
             boardingHouseId: houseId,
-            name: 'Ca Sáng (07:00 - 15:00)',
+            name: 'Morning Shift (07:00 - 15:00)',
             startTime: new Date('1970-01-01T07:00:00Z'),
             endTime: new Date('1970-01-01T15:00:00Z'),
           },
@@ -1283,7 +1309,7 @@ export class AttendanceService {
         this.prisma.shift.create({
           data: {
             boardingHouseId: houseId,
-            name: 'Ca Chiều (15:00 - 23:00)',
+            name: 'Afternoon Shift (15:00 - 23:00)',
             startTime: new Date('1970-01-01T15:00:00Z'),
             endTime: new Date('1970-01-01T23:00:00Z'),
           },
@@ -1291,7 +1317,7 @@ export class AttendanceService {
         this.prisma.shift.create({
           data: {
             boardingHouseId: houseId,
-            name: 'Ca Đêm (23:00 - 07:00)',
+            name: 'Night Shift (23:00 - 07:00)',
             startTime: new Date('1970-01-01T23:00:00Z'),
             endTime: new Date('1970-01-01T07:00:00Z'),
           },
@@ -1354,7 +1380,7 @@ export class AttendanceService {
     })
 
     if (!employee) {
-      throw new NotFoundException('Không tìm thấy hồ sơ nhân viên tương ứng với tài khoản này.')
+      throw new NotFoundException('Staff profile not found for this account.')
     }
 
     const where: any = {

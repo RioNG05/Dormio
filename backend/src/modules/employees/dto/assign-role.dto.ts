@@ -12,7 +12,7 @@ export class AssignRoleDto {
 
   @ApiPropertyOptional({
     description: 'Inline creation of a new job position name if positionId is not supplied',
-    example: 'Kế toán kiêm Thủ quỹ',
+    example: 'Accountant & Cashier',
   })
   @IsOptional()
   @IsString()
@@ -21,7 +21,7 @@ export class AssignRoleDto {
 
   @ApiPropertyOptional({
     description: 'Duty description / task list for inline position creation',
-    example: 'Thu tiền phòng, lập hóa đơn, theo dõi công nợ hàng tháng',
+    example: 'Collecting rent, creating invoices, tracking monthly accounts receivable',
   })
   @IsOptional()
   @IsString()

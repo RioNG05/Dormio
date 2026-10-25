@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Check, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Text } from './Text'
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   /**
@@ -91,6 +92,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     const isChecked = isControlled ? checked : undefined
     const hasError = Boolean(error)
     const errorMessage = typeof error === 'string' ? error : undefined
+    const hasDescription = Boolean(description)
 
     const sizeConfig = {
       sm: {
@@ -117,7 +119,13 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     }[size]
 
     return (
-      <div className={cn('flex flex-col gap-1 w-full', containerClassName)}>
+      <div
+        className={cn(
+          'flex flex-col gap-1',
+          variant === 'card' ? 'w-full' : 'w-fit max-w-full',
+          containerClassName,
+        )}
+      >
         <label
           htmlFor={inputId}
           onClick={e => {
@@ -127,21 +135,25 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             }
           }}
           className={cn(
-            'group inline-flex items-start gap-2.5 select-none transition-all',
+            'group inline-flex select-none transition-all',
+            hasDescription ? 'items-start gap-2.5' : 'items-center gap-2',
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
             variant === 'card' &&
               cn(
-                'p-3.5 rounded-2xl border transition-all duration-200',
-                'border-zinc-200 bg-white hover:border-[#2AC1BC]/60 hover:bg-zinc-50/50',
-                isChecked && 'border-[#2AC1BC] bg-[#2AC1BC]/5 shadow-xs',
-                hasError && 'border-rose-300 bg-rose-50/20',
+                'p-3.5 rounded-2xl border transition-all duration-200 w-full',
+                'border-line bg-card hover:border-primary/60 hover:bg-card-hover',
+                isChecked && 'border-primary bg-primary-soft shadow-xs',
+                hasError && 'border-danger/60 bg-danger-soft',
               ),
             labelClassName,
           )}
         >
           {/* Custom Checkbox Square + Accessible Hidden Native Input */}
           <div
-            className={cn('relative shrink-0 flex items-center justify-center', sizeConfig.offset)}
+            className={cn(
+              'relative shrink-0 flex items-center justify-center',
+              hasDescription && sizeConfig.offset,
+            )}
           >
             <input
               ref={innerRef}
@@ -163,19 +175,19 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                 'flex items-center justify-center transition-all duration-200 border',
                 sizeConfig.box,
                 // Unchecked baseline
-                'border-zinc-300 bg-white group-hover:border-[#2AC1BC]',
+                'border-line bg-input group-hover:border-primary',
                 // Focus styling
-                'peer-focus-visible:ring-2 peer-focus-visible:ring-[#2AC1BC]/40 peer-focus-visible:ring-offset-1',
+                'peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 peer-focus-visible:ring-offset-1',
                 // Checked or Indeterminate styling
-                'peer-checked:bg-[#2AC1BC] peer-checked:border-[#2AC1BC] peer-checked:text-white',
-                indeterminate && 'bg-[#2AC1BC] border-[#2AC1BC] text-white',
-                isChecked && 'bg-[#2AC1BC] border-[#2AC1BC] text-white',
+                'peer-checked:bg-primary peer-checked:border-primary peer-checked:text-white',
+                indeterminate && 'bg-primary border-primary text-white',
+                isChecked && 'bg-primary border-primary text-white',
                 // Error styling
                 hasError &&
-                  'border-rose-400 bg-rose-50/20 peer-checked:bg-rose-500 peer-checked:border-rose-500',
+                'border-danger bg-danger-soft peer-checked:bg-danger peer-checked:border-danger',
                 // Disabled styling
                 disabled &&
-                  'bg-zinc-100 border-zinc-200 text-zinc-400 group-hover:border-zinc-200 cursor-not-allowed peer-checked:bg-zinc-400 peer-checked:border-zinc-400',
+                'bg-surface border-line text-muted cursor-not-allowed peer-checked:bg-muted peer-checked:border-muted',
                 boxClassName,
                 className,
               )}
@@ -203,30 +215,42 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 
           {/* Label and Description */}
           {(label || description) && (
-            <div className="flex flex-col text-left flex-1 min-w-0">
+            <div
+              className={cn(
+                'flex flex-col text-left min-w-0',
+                hasDescription ? 'flex-1' : 'justify-center',
+              )}
+            >
               {label && (
-                <span
+                <Text
+                  as="span"
+                  size={size === 'sm' ? 'xs' : 'sm'}
+                  weight="medium"
+                  color={disabled ? 'subtle' : hasError ? 'danger' : 'secondary'}
                   className={cn(
-                    'font-medium text-zinc-700 leading-snug break-words',
+                    'break-words',
+                    hasDescription ? 'leading-snug' : 'leading-none inline-flex items-center',
                     sizeConfig.text,
-                    disabled && 'text-zinc-400',
-                    hasError && 'text-rose-700',
                   )}
                 >
                   {label}
-                  {required && <span className="text-rose-500 font-bold ml-1">*</span>}
-                </span>
+                  {required && (
+                    <Text as="span" size="xs" weight="bold" color="danger" className="ml-1">
+                      *
+                    </Text>
+                  )}
+                </Text>
               )}
               {description && (
-                <span
-                  className={cn(
-                    'text-zinc-400 leading-relaxed font-normal mt-0.5 break-words',
-                    sizeConfig.desc,
-                    disabled && 'text-zinc-300',
-                  )}
+                <Text
+                  as="span"
+                  size="2xs"
+                  color={disabled ? 'subtle' : 'subtle'}
+                  weight="normal"
+                  className={cn('leading-relaxed mt-0.5 break-words', sizeConfig.desc)}
                 >
                   {description}
-                </span>
+                </Text>
               )}
             </div>
           )}
@@ -234,11 +258,13 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 
         {/* Validation error message or explanatory helper text */}
         {errorMessage ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in pl-7">
+          <Text as="p" size="2xs" weight="medium" color="danger" className="animate-in fade-in pl-7">
             {errorMessage}
-          </p>
+          </Text>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400 pl-7">{helperText}</p>
+          <Text as="p" size="2xs" color="subtle" className="pl-7">
+            {helperText}
+          </Text>
         ) : null}
       </div>
     )

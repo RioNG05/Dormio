@@ -29,7 +29,7 @@ export class RoomDebtTenantDto {
   @ApiProperty({ description: 'Tenant user UUID' })
   id: string
 
-  @ApiProperty({ description: 'Tenant full name', example: 'Nguyễn Văn Tuấn' })
+  @ApiProperty({ description: 'Tenant full name', example: 'Nguyen Van Tuan' })
   name: string
 
   @ApiProperty({ description: 'Tenant phone number', example: '0912345678' })
@@ -49,7 +49,7 @@ export class RoomDebtItemDto {
   @ApiPropertyOptional({ description: 'Floor number', example: 1, nullable: true })
   floor: number | null
 
-  @ApiProperty({ description: 'Boarding house name', example: 'Dormio Tân Bình' })
+  @ApiProperty({ description: 'Boarding house name', example: 'Dormio Tan Binh' })
   buildingName: string
 
   @ApiPropertyOptional({
@@ -161,7 +161,7 @@ export class SendDebtReminderDto {
 
   @ApiPropertyOptional({
     description: 'Optional custom note/memo from landlord',
-    example: 'Vui lòng thanh toán trước ngày 25 để tránh phạt chậm.',
+    example: 'Please settle payment before the 25th to avoid late penalties.',
   })
   @IsOptional()
   @IsString()
@@ -172,10 +172,10 @@ export class DebtReminderResponseDto {
   @ApiProperty({ example: true })
   success: boolean
 
-  @ApiProperty({ example: 'Đã gửi thông báo nhắc nợ thành công' })
+  @ApiProperty({ example: 'Debt reminder notification sent successfully' })
   message: string
 
-  @ApiProperty({ example: 'Nguyễn Văn Tuấn' })
+  @ApiProperty({ example: 'Nguyen Van Tuan' })
   tenantName: string
 
   @ApiProperty({ example: '0912345678' })

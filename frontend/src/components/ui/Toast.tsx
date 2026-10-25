@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react'
+import { Text } from './Text'
+import { Button } from './Button'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -35,51 +37,51 @@ const TYPE_CONFIGS: Record<
 > = {
   success: {
     icon: CheckCircle2,
-    cardBg: 'bg-emerald-50/95 dark:bg-emerald-950/95',
-    borderColor: 'border-emerald-200/90 dark:border-emerald-800/70',
-    shadowColor: 'shadow-emerald-500/10',
-    iconBg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-400',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-    titleColor: 'text-emerald-950 dark:text-emerald-100',
-    descColor: 'text-emerald-800/90 dark:text-emerald-300',
+    cardBg: 'bg-card/95 backdrop-blur-md',
+    borderColor: 'border-success-subtle',
+    shadowColor: 'shadow-success/10',
+    iconBg: 'bg-success-soft text-success',
+    iconColor: 'text-success',
+    titleColor: 'text-foreground',
+    descColor: 'text-muted',
     closeColor:
-      'text-emerald-600/70 hover:text-emerald-900 dark:text-emerald-400/70 dark:hover:text-emerald-100',
+      'text-muted hover:text-foreground',
   },
   error: {
     icon: AlertCircle,
-    cardBg: 'bg-rose-50/95 dark:bg-rose-950/95',
-    borderColor: 'border-rose-200/90 dark:border-rose-800/70',
-    shadowColor: 'shadow-rose-500/10',
-    iconBg: 'bg-rose-100 text-rose-600 dark:bg-rose-900/60 dark:text-rose-400',
-    iconColor: 'text-rose-600 dark:text-rose-400',
-    titleColor: 'text-rose-950 dark:text-rose-100',
-    descColor: 'text-rose-800/90 dark:text-rose-300',
+    cardBg: 'bg-card/95 backdrop-blur-md',
+    borderColor: 'border-danger-subtle',
+    shadowColor: 'shadow-danger/10',
+    iconBg: 'bg-danger-soft text-danger',
+    iconColor: 'text-danger',
+    titleColor: 'text-foreground',
+    descColor: 'text-muted',
     closeColor:
-      'text-rose-600/70 hover:text-rose-900 dark:text-rose-400/70 dark:hover:text-rose-100',
+      'text-muted hover:text-foreground',
   },
   warning: {
     icon: AlertTriangle,
-    cardBg: 'bg-amber-50/95 dark:bg-amber-950/95',
-    borderColor: 'border-amber-200/90 dark:border-amber-800/70',
-    shadowColor: 'shadow-amber-500/10',
-    iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-900/60 dark:text-amber-400',
-    iconColor: 'text-amber-600 dark:text-amber-400',
-    titleColor: 'text-amber-950 dark:text-amber-100',
-    descColor: 'text-amber-800/90 dark:text-amber-300',
+    cardBg: 'bg-card/95 backdrop-blur-md',
+    borderColor: 'border-warning-subtle',
+    shadowColor: 'shadow-warning/10',
+    iconBg: 'bg-warning-soft text-warning',
+    iconColor: 'text-warning',
+    titleColor: 'text-foreground',
+    descColor: 'text-muted',
     closeColor:
-      'text-amber-600/70 hover:text-amber-900 dark:text-amber-400/70 dark:hover:text-amber-100',
+      'text-muted hover:text-foreground',
   },
   info: {
     icon: Info,
-    cardBg: 'bg-teal-50/95 dark:bg-teal-950/95',
-    borderColor: 'border-teal-200/90 dark:border-teal-800/70',
-    shadowColor: 'shadow-[#2AC1BC]/10',
-    iconBg: 'bg-teal-100 text-[#2AC1BC] dark:bg-teal-900/60 dark:text-teal-400',
-    iconColor: 'text-[#2AC1BC] dark:text-[#2AC1BC]',
-    titleColor: 'text-teal-950 dark:text-teal-100',
-    descColor: 'text-teal-800/90 dark:text-teal-300',
+    cardBg: 'bg-card/95 backdrop-blur-md',
+    borderColor: 'border-primary-subtle',
+    shadowColor: 'shadow-primary/10',
+    iconBg: 'bg-primary-soft text-primary',
+    iconColor: 'text-primary',
+    titleColor: 'text-foreground',
+    descColor: 'text-muted',
     closeColor:
-      'text-teal-600/70 hover:text-teal-900 dark:text-teal-400/70 dark:hover:text-teal-100',
+      'text-muted hover:text-foreground',
   },
 }
 
@@ -168,28 +170,39 @@ export function ToastCard({ toast, onDismiss }: ToastCardProps) {
       {/* Content */}
       <div className="flex-1 min-w-0 pr-1">
         {displayTitle && (
-          <h4 className={`text-sm font-extrabold leading-snug tracking-tight ${config.titleColor}`}>
+          <Text
+            as="h4"
+            size="sm"
+            weight="extrabold"
+            color="inherit"
+            className={`leading-snug tracking-tight ${config.titleColor}`}
+          >
             {displayTitle}
-          </h4>
+          </Text>
         )}
-        <p
-          className={`text-xs font-medium leading-relaxed ${
+        <Text
+          as="p"
+          size="xs"
+          weight="medium"
+          color="inherit"
+          className={`leading-relaxed ${
             displayTitle ? `mt-0.5 ${config.descColor}` : config.titleColor
           }`}
         >
           {displayBody}
-        </p>
+        </Text>
       </div>
 
       {/* Dismiss Button */}
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onDismiss(id)}
         aria-label="Dismiss toast"
-        className={`p-1 -mr-1 -mt-1 rounded-lg transition-colors cursor-pointer shrink-0 ${config.closeColor} hover:bg-black/5 dark:hover:bg-white/10`}
+        className={`!h-6 !w-6 -mr-1 -mt-1 rounded-lg shrink-0 ${config.closeColor} hover:bg-black/5 dark:hover:bg-white/10`}
       >
-        <X className="w-4 h-4" />
-      </button>
+        <X />
+      </Button>
     </div>
   )
 }

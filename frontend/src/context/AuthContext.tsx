@@ -2,7 +2,10 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { getMyBoardingHouses } from '@/services/boarding-house.service'
+import { getMyTenancies, TenantTenancyItem } from '@/services/contract.service'
 import { api } from '@/services/api'
+
+export type { TenantTenancyItem }
 
 export interface UserProfile {
   id?: string
@@ -68,6 +71,8 @@ interface AuthContextType {
   upgradeToLandlord: (houseDetails: { houseName: string; houseAddress: string }) => void
   setDemoPreset: (preset: DemoPreset) => void
   refreshCapabilities: () => Promise<void>
+  updateAvatar: (avatarUrl: string) => void
+  updateUserProfile: (data: Partial<UserProfile>) => void
 
   // Multi-Building Management for Landlord Dashboard
   buildings: BuildingItem[]
@@ -76,6 +81,14 @@ interface AuthContextType {
   activeBuilding: BuildingItem
   selectBuilding: (id: string) => void
   refreshBuildings: () => Promise<void>
+
+  // Multi-Room Tenancy Management for Tenant Dashboard
+  tenancies: TenantTenancyItem[]
+  isTenanciesLoading: boolean
+  activeTenancyId: string
+  activeTenancy: TenantTenancyItem | null
+  selectTenancy: (contractId: string) => void
+  refreshTenancies: () => Promise<void>
 }
 
 const EMPTY_BUILDING: BuildingItem = {
@@ -98,6 +111,7 @@ function syncAuthCookies(
   role?: string | null,
   token?: string | null,
   capabilities?: UserCapabilities | null,
+  mustChangePassword?: boolean | null,
 ) {
   if (typeof document === 'undefined') return
   if (role) {
@@ -117,6 +131,13 @@ function syncAuthCookies(
   } else if (capabilities === null) {
     document.cookie = `dormio_user_capabilities=; path=/; max-age=0; SameSite=Lax`
   }
+  if (mustChangePassword !== undefined) {
+    if (mustChangePassword) {
+      document.cookie = `dormio_must_change_password=true; path=/; max-age=2592000; SameSite=Lax`
+    } else {
+      document.cookie = `dormio_must_change_password=; path=/; max-age=0; SameSite=Lax`
+    }
+  }
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -131,6 +152,8 @@ const AuthContext = createContext<AuthContextType>({
   upgradeToLandlord: () => {},
   setDemoPreset: () => {},
   refreshCapabilities: async () => {},
+  updateAvatar: () => {},
+  updateUserProfile: () => {},
 
   buildings: [],
   isBuildingsLoading: true,
@@ -138,6 +161,13 @@ const AuthContext = createContext<AuthContextType>({
   activeBuilding: EMPTY_BUILDING,
   selectBuilding: () => {},
   refreshBuildings: async () => {},
+
+  tenancies: [],
+  isTenanciesLoading: true,
+  activeTenancyId: '',
+  activeTenancy: null,
+  selectTenancy: () => {},
+  refreshTenancies: async () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -154,6 +184,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // No active building until API loads real data
   const [activeBuildingId, setActiveBuildingId] = useState<string>('')
+
+  // Tenancies loaded from API for tenant multi-room scoping
+  const [tenancies, setTenancies] = useState<TenantTenancyItem[]>([])
+  const [isTenanciesLoading, setIsTenanciesLoading] = useState<boolean>(true)
+  const [activeTenancyId, setActiveTenancyId] = useState<string>('')
 
   // Live multi-role capabilities — initialized from localStorage cache if available
   const [capabilities, setCapabilities] = useState<UserCapabilities>(() => {
@@ -252,6 +287,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  /**
+   * Fetch real active tenancies for tenant across boarding houses and sync activeTenancyId
+   */
+  const loadTenanciesFromApi = useCallback(async () => {
+    setIsTenanciesLoading(true)
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      if (!token) {
+        setTenancies([])
+        setActiveTenancyId('')
+        return
+      }
+
+      let fetchedTenancies: TenantTenancyItem[] = []
+      try {
+        fetchedTenancies = await getMyTenancies({ silent: true })
+      } catch {
+        fetchedTenancies = []
+      }
+
+      if (fetchedTenancies && fetchedTenancies.length > 0) {
+        setTenancies(fetchedTenancies)
+        setActiveTenancyId(prev => {
+          const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          const saved =
+            typeof window !== 'undefined' ? localStorage.getItem('dormio_active_tenancy_id') : null
+          const validSaved =
+            saved && UUID_RE.test(saved) && fetchedTenancies.some(t => t.contractId === saved)
+          const validPrev =
+            prev && UUID_RE.test(prev) && fetchedTenancies.some(t => t.contractId === prev)
+          const nextId = validPrev
+            ? prev
+            : validSaved
+              ? saved!
+              : fetchedTenancies[0].contractId
+          if (typeof window !== 'undefined')
+            localStorage.setItem('dormio_active_tenancy_id', nextId)
+          return nextId
+        })
+      } else {
+        setTenancies([])
+        setActiveTenancyId('')
+      }
+    } catch (e) {
+      console.error('Failed to load tenancies from API:', e)
+    } finally {
+      setIsTenanciesLoading(false)
+    }
+  }, [])
+
   // Read initial session from localStorage
   useEffect(() => {
     const savedState =
@@ -266,15 +351,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       typeof window !== 'undefined' ? localStorage.getItem('dormio_house_address') : null
     const savedBuildingId =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_active_building_id') : null
+    const savedTenancyId =
+      typeof window !== 'undefined' ? localStorage.getItem('dormio_active_tenancy_id') : null
     const savedName =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_name') : null
     const savedEmail =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_email') : null
     const savedPhone =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_phone') : null
+    const savedAvatar =
+      typeof window !== 'undefined' ? localStorage.getItem('dormio_user_avatar') : null
     const savedId = typeof window !== 'undefined' ? localStorage.getItem('dormio_user_id') : null
     const savedCapsStr =
       typeof window !== 'undefined' ? localStorage.getItem('dormio_user_capabilities') : null
+    const savedMustChange =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('dormio_must_change_password') === 'true'
+        : false
 
     if (savedState === 'true' && savedToken) {
       const resolvedRole = savedRole || 'tenant'
@@ -286,13 +379,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phone: savedPhone || '',
         role: resolvedRole,
         avatar:
+          savedAvatar ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
         houseName: savedHouseName || undefined,
         houseAddress: savedHouseAddress || undefined,
+        mustChangePassword: savedMustChange,
       })
 
       if (savedBuildingId) {
         setActiveBuildingId(savedBuildingId)
+      }
+      if (savedTenancyId) {
+        setActiveTenancyId(savedTenancyId)
       }
 
       let parsedCaps: UserCapabilities | null = null
@@ -324,9 +422,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Hydration complete — user state and capabilities are resolved from localStorage
       setIsHydrating(false)
-      syncAuthCookies(resolvedRole, savedToken, parsedCaps)
+      syncAuthCookies(resolvedRole, savedToken, parsedCaps, savedMustChange)
       loadBuildingsFromApi()
       loadCapabilitiesFromApi()
+      loadTenanciesFromApi()
     } else {
       // User is logged out / unauthenticated guest
       setIsLoggedIn(false)
@@ -334,15 +433,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBuildings([])
       setActiveBuildingId('')
       setIsBuildingsLoading(false)
+      setTenancies([])
+      setActiveTenancyId('')
+      setIsTenanciesLoading(false)
       setCapabilities(DEFAULT_CAPABILITIES)
       setIsHydrating(false)
-      syncAuthCookies(null, null, null)
+      syncAuthCookies(null, null, null, null)
     }
-  }, [loadBuildingsFromApi, loadCapabilitiesFromApi])
+  }, [loadBuildingsFromApi, loadCapabilitiesFromApi, loadTenanciesFromApi])
 
   const selectBuilding = (id: string) => {
     setActiveBuildingId(id)
     localStorage.setItem('dormio_active_building_id', id)
+  }
+
+  const selectTenancy = (id: string) => {
+    setActiveTenancyId(id)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dormio_active_tenancy_id', id)
+    }
   }
 
   const login = (userData?: Partial<UserProfile>) => {
@@ -376,6 +485,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (updatedUser.name) localStorage.setItem('dormio_user_name', updatedUser.name)
     if (updatedUser.email) localStorage.setItem('dormio_user_email', updatedUser.email)
     if (updatedUser.phone) localStorage.setItem('dormio_user_phone', updatedUser.phone)
+    if (updatedUser.avatar) localStorage.setItem('dormio_user_avatar', updatedUser.avatar)
   }
 
   // Called by login/register pages after receiving a real JWT token from the backend
@@ -407,15 +517,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('dormio_logged_in', 'true')
     localStorage.setItem('dormio_user_role', resolvedRole)
     localStorage.setItem('dormio_user_capabilities', JSON.stringify(initialCaps))
-    syncAuthCookies(resolvedRole, token, initialCaps)
+    if (typeof userData.mustChangePassword === 'boolean') {
+      if (userData.mustChangePassword) {
+        localStorage.setItem('dormio_must_change_password', 'true')
+      } else {
+        localStorage.removeItem('dormio_must_change_password')
+      }
+    }
+    syncAuthCookies(resolvedRole, token, initialCaps, !!userData.mustChangePassword)
     if (userData.id) localStorage.setItem('dormio_user_id', userData.id)
     if (userData.name) localStorage.setItem('dormio_user_name', userData.name)
     if (userData.email) localStorage.setItem('dormio_user_email', userData.email)
     if (userData.phone) localStorage.setItem('dormio_user_phone', userData.phone)
+    if (updatedUser.avatar) localStorage.setItem('dormio_user_avatar', updatedUser.avatar)
 
     // Immediately load real buildings so all dashboard pages use real UUIDs
     if (resolvedRole === 'landlord') {
       loadBuildingsFromApi()
+    }
+
+    // Immediately load real tenancies if tenant
+    if (resolvedRole === 'tenant') {
+      loadTenanciesFromApi()
     }
 
     // Load live capabilities for all roles — a landlord may also be a tenant, etc.
@@ -463,20 +586,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBuildings([])
     setActiveBuildingId('')
     setIsBuildingsLoading(false)
+    setTenancies([])
+    setActiveTenancyId('')
+    setIsTenanciesLoading(false)
     setCapabilities(DEFAULT_CAPABILITIES)
-    syncAuthCookies(null, null, null)
+    syncAuthCookies(null, null, null, null)
     localStorage.removeItem('dormio_logged_in')
     localStorage.removeItem('dormio_user_role')
+    localStorage.removeItem('dormio_must_change_password')
     localStorage.removeItem('dormio_house_name')
     localStorage.removeItem('dormio_house_address')
     localStorage.removeItem('dormio_active_building_id')
+    localStorage.removeItem('dormio_active_tenancy_id')
     localStorage.removeItem('auth_token')
     localStorage.removeItem('dormio_user_id')
     localStorage.removeItem('dormio_user_name')
     localStorage.removeItem('dormio_user_email')
     localStorage.removeItem('dormio_user_phone')
     localStorage.removeItem('dormio_user_capabilities')
+    localStorage.removeItem('dormio_user_avatar')
   }
+
+  const updateAvatar = useCallback((avatarUrl: string) => {
+    setUser(prev => (prev ? { ...prev, avatar: avatarUrl } : null))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dormio_user_avatar', avatarUrl)
+    }
+  }, [])
+
+  const updateUserProfile = useCallback((data: Partial<UserProfile>) => {
+    setUser(prev => (prev ? { ...prev, ...data } : null))
+    if (typeof window !== 'undefined') {
+      if (data.avatar) localStorage.setItem('dormio_user_avatar', data.avatar)
+      if (data.name) localStorage.setItem('dormio_user_name', data.name)
+      if (data.email) localStorage.setItem('dormio_user_email', data.email)
+      if (data.phone) localStorage.setItem('dormio_user_phone', data.phone)
+      if (typeof data.mustChangePassword === 'boolean') {
+        if (data.mustChangePassword) {
+          localStorage.setItem('dormio_must_change_password', 'true')
+          document.cookie = `dormio_must_change_password=true; path=/; max-age=2592000; SameSite=Lax`
+        } else {
+          localStorage.removeItem('dormio_must_change_password')
+          document.cookie = `dormio_must_change_password=; path=/; max-age=0; SameSite=Lax`
+        }
+      }
+    }
+  }, [])
 
   const toggleLoginDemo = () => {
     if (isLoggedIn) {
@@ -584,6 +739,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const activeBuilding =
     buildings.find(b => b.id === activeBuildingId) || buildings[0] || EMPTY_BUILDING
 
+  // Find active tenancy for tenant dashboard
+  const activeTenancy =
+    tenancies.find(t => t.contractId === activeTenancyId) ||
+    tenancies[0] ||
+    null
+
   return (
     <AuthContext.Provider
       value={{
@@ -598,12 +759,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         upgradeToLandlord,
         setDemoPreset,
         refreshCapabilities: loadCapabilitiesFromApi,
+        updateAvatar,
+        updateUserProfile,
         buildings,
         isBuildingsLoading,
         activeBuildingId,
         activeBuilding,
         selectBuilding,
         refreshBuildings: loadBuildingsFromApi,
+        tenancies,
+        isTenanciesLoading,
+        activeTenancyId,
+        activeTenancy,
+        selectTenancy,
+        refreshTenancies: loadTenanciesFromApi,
       }}
     >
       {children}

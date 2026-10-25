@@ -14,27 +14,24 @@ import {
   Wifi,
   Speaker,
   FileSignature,
-  ChevronLeft,
-  ChevronRight,
   MessageCircle,
   ShieldCheck,
   CheckCircle2,
   Clock,
-  Printer,
-  X,
   AlertCircle,
   Bike,
   CreditCard,
   ArrowRight,
   Copy,
   Check,
-  FileText,
-  Download,
-  ExternalLink,
   Sparkles,
+  WrenchOff,
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { DashboardPageHeader } from '@/components/layout'
+import { Button, Pagination, Chip, Modal, EmptyState, Text } from '@/components/ui'
+
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatCurrency } from '@/utils'
 import { api } from '@/services/api'
 import { tenantInvoiceService, TenantInvoice } from '@/services/tenant-invoice.service'
@@ -92,6 +89,7 @@ interface TenancyApiResponse {
 export default function TenantOverviewPage() {
   const t = useTranslations('tenantPortal')
   const { locale } = useLanguage()
+  const { activeTenancyId } = useAuth()
   const { unreadCount: unreadMessagesCount } = useUnreadMessages()
 
   const [loading, setLoading] = useState(true)
@@ -99,7 +97,6 @@ export default function TenantOverviewPage() {
   const [latestInvoice, setLatestInvoice] = useState<TenantInvoice | null>(null)
 
   // States for modals and UI
-  const [isContractOpen, setIsContractOpen] = useState(false)
   const [selectedNotice, setSelectedNotice] = useState<any>(null)
   const [copiedBank, setCopiedBank] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -110,20 +107,32 @@ export default function TenantOverviewPage() {
 
     async function fetchDashboardData() {
       try {
+        setLoading(true)
         const [response, invoices] = await Promise.all([
-          api.get<TenancyApiResponse>('/v1/tenant/tenancy', { silent: true }).catch(() => null),
-          tenantInvoiceService.getTenantInvoices().catch(() => []),
+          api
+            .get<TenancyApiResponse>('/v1/tenant/tenancy', {
+              silent: true,
+              params: activeTenancyId ? { contractId: activeTenancyId } : undefined,
+            })
+            .catch(() => null),
+          tenantInvoiceService
+            .getTenantInvoices(activeTenancyId || undefined)
+            .catch(() => []),
         ])
 
         if (!isMounted) return
 
         if (response?.data) {
           setTenancyData(response.data)
+        } else {
+          setTenancyData(null)
         }
 
         if (invoices && invoices.length > 0) {
           const unpaid = invoices.find(inv => inv.status === 'unpaid' || inv.status === 'overdue')
           setLatestInvoice(unpaid || null)
+        } else {
+          setLatestInvoice(null)
         }
       } catch (err) {
         // Silent catch for dev mode
@@ -139,7 +148,7 @@ export default function TenantOverviewPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [activeTenancyId])
 
   // Format phone display
   const formatPhoneDisplay = (phone: string) => {
@@ -221,21 +230,21 @@ export default function TenantOverviewPage() {
   const getServiceIconAndColor = (name: string) => {
     const lower = name.toLowerCase()
     if (lower.includes('điện') || lower.includes('electric')) {
-      return { icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50 border-amber-100' }
+      return { icon: Zap, color: 'text-amber-500', bg: 'bg-warning-soft border-warning-subtle' }
     }
     if (lower.includes('nước') || lower.includes('water')) {
-      return { icon: Droplets, color: 'text-sky-500', bg: 'bg-sky-50 border-sky-100' }
+      return { icon: Droplets, color: 'text-sky-500', bg: 'bg-vacant-soft border-vacant-subtle' }
     }
     if (lower.includes('rác') || lower.includes('trash') || lower.includes('vệ sinh')) {
-      return { icon: Trash2, color: 'text-emerald-500', bg: 'bg-emerald-50 border-emerald-100' }
+      return { icon: Trash2, color: 'text-emerald-500', bg: 'bg-success-soft border-success-subtle' }
     }
     if (lower.includes('wifi') || lower.includes('mạng') || lower.includes('internet')) {
-      return { icon: Wifi, color: 'text-purple-500', bg: 'bg-purple-50 border-purple-100' }
+      return { icon: Wifi, color: 'text-purple-500', bg: 'bg-deposit-soft border-deposit-subtle' }
     }
     if (lower.includes('xe') || lower.includes('parking') || lower.includes('bike')) {
-      return { icon: Bike, color: 'text-teal-500', bg: 'bg-teal-50 border-teal-100' }
+      return { icon: Bike, color: 'text-teal-500', bg: 'bg-primary-soft border-primary-subtle' }
     }
-    return { icon: Building, color: 'text-indigo-500', bg: 'bg-indigo-50 border-indigo-100' }
+    return { icon: Building, color: 'text-indigo-500', bg: 'bg-info-soft border-info-subtle' }
   }
 
   // Services list (from backend only)
@@ -266,8 +275,8 @@ export default function TenantOverviewPage() {
         date: formatDateStr(item.createdAt),
         tag: item.isNew ? t('noticeTagNew') : t('noticeTagNotice'),
         color: item.isNew
-          ? 'bg-rose-100 text-rose-700 border-rose-200'
-          : 'bg-teal-100 text-teal-700 border-teal-200',
+          ? 'bg-danger-soft text-danger border-danger-subtle'
+          : 'bg-primary-soft text-primary border-primary-subtle',
         content: item.content,
         isNew: item.isNew,
       }))
@@ -278,7 +287,6 @@ export default function TenantOverviewPage() {
 
   // Pagination for announcements (4 items per page)
   const itemsPerPage = 4
-  const totalPages = Math.max(1, Math.ceil(allAnnouncements.length / itemsPerPage))
   const currentAnnouncements = allAnnouncements.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
@@ -295,81 +303,87 @@ export default function TenantOverviewPage() {
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-12 animate-in fade-in duration-300 max-w-7xl mx-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          {roomInfo ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold mb-2">
+      <DashboardPageHeader
+        badge={
+          roomInfo ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-success-soft text-success border border-success-subtle text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{t('roomStatusActive')}</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 text-xs font-bold mb-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card-hover text-muted border border-line text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-zinc-400" />
               <span>{t('noActiveRoom')}</span>
             </div>
-          )}
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t('title')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1 leading-relaxed">{t('subtitle')}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          {roomInfo && (
+          )
+        }
+        title={t('title')}
+        subtitle={t('subtitle')}
+        actions={
+          <>
             <Button
-              onClick={() => setIsContractOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-800 text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-all"
+              href="/tenant/messages"
+              size="md"
+              className="relative sm:text-sm"
+              leftIcon={<MessageCircle />}
             >
-              <FileSignature className="w-4 h-4 text-[#2AC1BC]" />
-              <span>{t('viewContract')}</span>
-            </Button>
-          )}
-
-          <Link href="/tenant/messages">
-            <Button className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs sm:text-sm font-bold shadow-sm shadow-[#2AC1BC]/20 cursor-pointer transition-all">
-              <MessageCircle className="w-4 h-4" />
               <span>{t('chatWithLandlord')}</span>
               {unreadMessagesCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-danger text-white text-[10px] font-black shadow-xs animate-in zoom-in-75 duration-150">
                   {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                 </span>
               )}
             </Button>
-          </Link>
-        </div>
-      </div>
+
+            {roomInfo && (
+              <Button
+                href="/tenant/contract"
+                size="md"
+                variant='accent'
+                leftIcon={<FileSignature />}
+                className="sm:text-sm"
+              >
+                {t('viewContract')}
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* Quick Billing Alert Banner (Only when unpaid invoice exists) */}
       {latestInvoice && (
-        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-white border border-orange-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 rounded-3xl border border-accent-subtle bg-accent-soft/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#FF6B35] text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#FF6B35]/30">
+            <div className="w-11 h-11 rounded-2xl bg-accent text-white flex items-center justify-center shrink-0 shadow-sm shadow-accent/30">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-orange-900">
+                <span className="text-xs font-bold uppercase tracking-wider text-accent">
                   {t('currentInvoiceReady')}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase">
+                <span className="px-2 py-0.5 rounded-md bg-warning-soft text-warning text-[10px] font-extrabold uppercase">
                   {t('unpaid')}
                 </span>
               </div>
-              <div className="text-sm sm:text-base font-black text-zinc-900 mt-0.5">
+              <div className="text-sm sm:text-base font-black text-foreground mt-0.5">
                 {latestInvoice.period} &bull; {formatCurrency(latestInvoice.amount, locale)}
-                <span className="text-xs font-normal text-zinc-500 ml-2">
+                <span className="text-xs font-normal text-muted ml-2">
                   ({t('dueDate')}: {formatDateStr(latestInvoice.dueDate)})
                 </span>
               </div>
             </div>
           </div>
 
-          <Link href={`/tenant/invoices/${latestInvoice.id}`} className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B35] hover:bg-[#e85a26] text-white text-xs font-bold shadow-xs cursor-pointer transition-all">
-              <span>{t('payNow')}</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <Button
+            href={`/tenant/invoices/${latestInvoice.id}`}
+            size="xs"
+            variant="orange"
+            rightIcon={<ArrowRight />}
+            className="w-full sm:w-auto"
+          >
+            {t('payNow')}
+          </Button>
         </div>
       )}
 
@@ -379,10 +393,10 @@ export default function TenantOverviewPage() {
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Hero Room Details Card or Empty Tenancy State */}
           {roomInfo ? (
-            <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-xs overflow-hidden">
-              <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-zinc-100 bg-gradient-to-r from-zinc-50/80 via-white to-teal-50/20">
+            <div className="rounded-3xl border border-line bg-card shadow-xs overflow-hidden">
+              <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-line bg-gradient-to-r from-card via-surface to-primary/5">
                 <div className="flex items-center gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-zinc-200 shrink-0 shadow-xs">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-line shrink-0 shadow-xs">
                     <img
                       src={roomInfo.roomImage}
                       alt={roomInfo.roomNumber}
@@ -391,15 +405,15 @@ export default function TenantOverviewPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
+                      <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                         {t('roomNumber')} {roomInfo.roomNumber}
                       </h2>
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-extrabold uppercase">
+                      <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-extrabold uppercase">
                         {roomInfo.roomType}
                       </span>
                     </div>
-                    <div className="text-xs sm:text-sm font-medium text-zinc-500 flex items-center gap-1.5 mt-1">
-                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                    <div className="text-xs sm:text-sm font-medium text-muted flex items-center gap-1.5 mt-1">
+                      <MapPin className="w-3.5 h-3.5 text-muted shrink-0" />
                       <span>
                         {roomInfo.buildingName} &bull; {roomInfo.address}
                       </span>
@@ -407,31 +421,31 @@ export default function TenantOverviewPage() {
                   </div>
                 </div>
 
-                <div className="sm:text-right bg-teal-50/60 sm:bg-transparent p-4 sm:p-0 rounded-2xl w-full sm:w-auto border border-teal-100 sm:border-0">
-                  <div className="text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
+                <div className="sm:text-right bg-primary-soft sm:bg-transparent p-4 sm:p-0 rounded-2xl w-full sm:w-auto border border-primary-subtle sm:border-0">
+                  <div className="text-[11px] font-extrabold text-muted uppercase tracking-wider">
                     {t('rentPrice')}
                   </div>
-                  <div className="text-2xl font-black text-[#2AC1BC] mt-0.5">
+                  <div className="text-2xl font-black text-primary mt-0.5">
                     {formatCurrency(roomInfo.rentPrice, locale)}
-                    <span className="text-xs font-normal text-zinc-400"> {t('monthUnit')}</span>
+                    <span className="text-xs font-normal text-muted"> {t('monthUnit')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Room Lease Progress Bar */}
-              <div className="px-6 sm:px-8 py-4 bg-zinc-50/70 border-b border-zinc-100 flex flex-col gap-2">
+              <div className="px-6 sm:px-8 py-4 bg-surface/70 border-b border-line flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-zinc-600 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-[#2AC1BC]" />
+                  <span className="text-muted flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-primary" />
                     {t('contractDuration')}: {roomInfo.contractStart} &ndash; {roomInfo.contractEnd}
                   </span>
-                  <span className="text-emerald-700">
+                  <span className="text-success">
                     {t('daysRemaining', { days: roomInfo.daysRemaining })}
                   </span>
                 </div>
-                <div className="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-line rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-[#2AC1BC] h-2 rounded-full transition-all duration-500"
+                    className="bg-primary h-2 rounded-full transition-all duration-500"
                     style={{
                       width: `${Math.round(
                         (roomInfo.daysElapsed / Math.max(1, roomInfo.totalDays)) * 100,
@@ -442,48 +456,41 @@ export default function TenantOverviewPage() {
               </div>
 
               {/* Room Details Grid */}
-              <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white">
+              <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6 bg-card">
                 {/* Landlord Contact */}
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-zinc-100 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-xl bg-card-hover text-muted flex items-center justify-center shrink-0 mt-0.5">
                       <User className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-zinc-400">{t('landlord')}</div>
-                      <div className="text-sm font-bold text-zinc-900 mt-0.5">
+                      <div className="text-xs font-semibold text-muted">{t('landlord')}</div>
+                      <div className="text-sm font-bold text-foreground mt-0.5">
                         {roomInfo.landlord}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
                       <Phone className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-zinc-400">{t('phone')}</div>
+                      <div className="text-xs font-semibold text-muted">{t('phone')}</div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <a
                           href={`tel:${roomInfo.phone}`}
-                          className="text-sm font-bold text-[#2AC1BC] hover:underline"
+                          className="text-sm font-bold text-primary hover:underline"
                         >
                           {roomInfo.phoneDisplay}
                         </a>
                         <Button
                           variant="secondary"
-                          size="sm"
-                          type="button"
                           onClick={handleCopyBank}
-                          className="px-2 py-0.5 h-auto rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-600 text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
                           title={t('stkLabel')}
+                          leftIcon={copiedBank ? <Check className="text-success" /> : <Copy />}
                         >
-                          {copiedBank ? (
-                            <Check className="w-3 h-3 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
-                          <span>{copiedBank ? t('copied') : t('stkLabel')}</span>
+                          {copiedBank ? t('copied') : t('stkLabel')}
                         </Button>
                       </div>
                     </div>
@@ -493,27 +500,27 @@ export default function TenantOverviewPage() {
                 {/* Deposit & Escrow */}
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-zinc-100 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <div className="w-9 h-9 rounded-xl bg-card-hover text-muted flex items-center justify-center shrink-0 mt-0.5">
+                      <ShieldCheck className="w-4 h-4 text-success" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-zinc-400">{t('deposit')}</div>
-                      <div className="text-sm font-bold text-zinc-900 mt-0.5">
+                      <div className="text-xs font-semibold text-muted">{t('deposit')}</div>
+                      <div className="text-sm font-bold text-foreground mt-0.5">
                         {formatCurrency(roomInfo.deposit, locale)}
                       </div>
-                      <div className="text-[11px] text-zinc-400">{t('escrowProtected')}</div>
+                      <div className="text-[11px] text-muted">{t('escrowProtected')}</div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-zinc-100 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
-                      <AlertCircle className="w-4 h-4 text-[#2AC1BC]" />
+                    <div className="w-9 h-9 rounded-xl bg-card-hover text-muted flex items-center justify-center shrink-0 mt-0.5">
+                      <AlertCircle className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-zinc-400">
+                      <div className="text-xs font-semibold text-muted">
                         {t('hotlineSupport')}
                       </div>
-                      <div className="text-sm font-bold text-zinc-900 mt-0.5">
+                      <div className="text-sm font-bold text-foreground mt-0.5">
                         {roomInfo.hotline}
                       </div>
                     </div>
@@ -522,59 +529,56 @@ export default function TenantOverviewPage() {
               </div>
 
               {/* Room Amenities Chips */}
-              <div className="p-6 sm:p-8 pt-0 bg-white border-t border-zinc-100/80">
-                <div className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-3">
+              <div className="p-6 sm:p-8 pt-0 bg-card border-t border-line">
+                <div className="text-xs font-black uppercase tracking-wider text-muted mb-3">
                   {t('roomAmenitiesTitle')}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {roomInfo.amenities.map((item, idx) => (
-                    <span
+                    <Chip
                       key={idx}
-                      className="px-3 py-1.5 rounded-xl bg-zinc-50 border border-zinc-200/80 text-xs font-semibold text-zinc-700 flex items-center gap-1.5"
+                      size='sm'
+                      variant='neutral'
+                      leftIcon={<CheckCircle2 className="text-primary" />}
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                      <span>{item}</span>
-                    </span>
+                      {item}
+                    </Chip>
                   ))}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="rounded-3xl border border-zinc-200/80 bg-white p-8 shadow-xs text-center space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
-                <Building className="w-8 h-8" />
-              </div>
-              <h3 className="text-base font-black text-zinc-900">{t('noActiveContractTitle')}</h3>
-              <p className="text-xs text-zinc-500 max-w-md mx-auto">{t('noActiveContractDesc')}</p>
-              {FEATURE_FLAGS.ENABLE_BHRP && (
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <Link href="/rooms">
-                    <Button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer">
-                      {t('exploreHousesBtn')}
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
+            <EmptyState
+              icon={<Building className="w-8 h-8" />}
+              title={t('noActiveContractTitle')}
+              description={t('noActiveContractDesc')}
+              action={
+                FEATURE_FLAGS.ENABLE_BHRP ? (
+                  <Button href="/rooms">
+                    {t('exploreHousesBtn')}
+                  </Button>
+                ) : undefined
+              }
+            />
           )}
 
           {/* Card: Services & Utility Rates */}
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs">
+          <div className="rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-black text-zinc-900 tracking-tight">
+                <h3 className="text-lg font-black text-foreground tracking-tight">
                   {t('servicesTitle')}
                 </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">{t('servicesSubtitle')}</p>
+                <p className="text-xs text-muted mt-0.5">{t('servicesSubtitle')}</p>
               </div>
-              <span className="text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 px-3 py-1 rounded-full">
+              <Chip size='sm' variant='primary'>
                 {t('activeServices', { count: services.length })}
-              </span>
+              </Chip>
             </div>
 
             {services.length === 0 ? (
-              <div className="py-8 text-center text-xs text-zinc-400 space-y-1">
-                <Sparkles className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
+              <div className="py-8 text-center text-xs text-muted space-y-1">
+                <WrenchOff className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
                 <p className="font-semibold">{t('noServices')}</p>
               </div>
             ) : (
@@ -582,7 +586,7 @@ export default function TenantOverviewPage() {
                 {services.map((svc, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 p-4 rounded-2xl border border-zinc-100 bg-zinc-50/50 hover:bg-white hover:border-zinc-200/80 hover:shadow-xs transition-all duration-200"
+                    className="flex items-center gap-4 p-4 rounded-2xl border border-line bg-surface/50 hover:bg-card hover:border-zinc-200/80 hover:shadow-xs transition-all duration-200"
                   >
                     <div
                       className={`w-12 h-12 rounded-xl flex items-center justify-center ${svc.bg} ${svc.color} shrink-0 border`}
@@ -590,9 +594,9 @@ export default function TenantOverviewPage() {
                       <svc.icon className="w-6 h-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-zinc-900 truncate">{svc.name}</div>
-                      <div className="text-xs font-extrabold text-zinc-700 mt-0.5">{svc.price}</div>
-                      <div className="text-[11px] font-medium text-zinc-400 mt-0.5">{svc.type}</div>
+                      <div className="text-sm font-bold text-foreground truncate">{svc.name}</div>
+                      <div className="text-xs font-extrabold text-foreground/90 mt-0.5">{svc.price}</div>
+                      <div className="text-[11px] font-medium text-muted mt-0.5">{svc.type}</div>
                     </div>
                   </div>
                 ))}
@@ -603,27 +607,27 @@ export default function TenantOverviewPage() {
 
         {/* Right Column: Announcements (Compact, 4 per page) */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-          <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-xs flex flex-col h-fit">
-            <div className="px-5 py-3.5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50 rounded-t-3xl">
+          <div className="rounded-3xl border border-line bg-card shadow-xs flex flex-col h-fit">
+            <div className="px-5 py-3.5 border-b border-line flex items-center justify-between bg-surface/50 rounded-t-3xl">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC]">
+                <div className="p-1.5 rounded-xl bg-primary/10 text-primary">
                   <Speaker className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm sm:text-base font-black text-zinc-900">
+                <h3 className="text-sm sm:text-base font-black text-foreground">
                   {t('announcementsTitle')}
                 </h3>
               </div>
-              <span className="text-[10px] sm:text-[11px] font-bold text-zinc-500 bg-white px-2.5 py-0.5 rounded-full border border-zinc-200">
+              <span className="text-[10px] sm:text-[11px] font-bold text-muted bg-card px-2.5 py-0.5 rounded-full border border-line">
                 {t('noticesCount', { count: allAnnouncements.length })}
               </span>
             </div>
 
             {/* List of 4 announcements or empty */}
             {allAnnouncements.length === 0 ? (
-              <div className="p-8 text-center text-xs text-zinc-400 space-y-2">
+              <div className="p-8 text-center text-xs text-muted space-y-2">
                 <Speaker className="w-8 h-8 mx-auto text-zinc-300" />
-                <p className="font-semibold text-zinc-600">{t('noAnnouncementsTitle')}</p>
-                <p className="text-[11px] text-zinc-400">{t('noAnnouncementsDesc')}</p>
+                <p className="font-semibold text-muted">{t('noAnnouncementsTitle')}</p>
+                <p className="text-[11px] text-muted">{t('noAnnouncementsDesc')}</p>
               </div>
             ) : (
               <>
@@ -632,10 +636,10 @@ export default function TenantOverviewPage() {
                     <div
                       key={item.id}
                       onClick={() => setSelectedNotice(item)}
-                      className="p-3 rounded-2xl bg-zinc-50/70 border border-zinc-100 hover:border-[#2AC1BC]/50 hover:bg-white hover:shadow-xs transition-all cursor-pointer space-y-1.5 group"
+                      className="p-3 rounded-2xl bg-surface/70 border border-line hover:border-primary/50 hover:bg-card hover:shadow-xs transition-all cursor-pointer space-y-1.5 group"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] sm:text-[11px] font-bold text-zinc-400 flex items-center gap-1">
+                        <span className="text-[10px] sm:text-[11px] font-bold text-muted flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {item.date}
                         </span>
                         <span
@@ -644,10 +648,10 @@ export default function TenantOverviewPage() {
                           {item.tag}
                         </span>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-zinc-900 leading-snug group-hover:text-[#2AC1BC] transition-colors line-clamp-1">
+                      <h4 className="text-xs sm:text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1">
                         {item.title}
                       </h4>
-                      <p className="text-[11px] sm:text-xs text-zinc-500 leading-relaxed line-clamp-1">
+                      <p className="text-[11px] sm:text-xs text-muted leading-relaxed line-clamp-1">
                         {item.content}
                       </p>
                     </div>
@@ -655,54 +659,15 @@ export default function TenantOverviewPage() {
                 </div>
 
                 {/* Pagination Controls - 4 items per page */}
-                <div className="px-4 py-2.5 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50 rounded-b-3xl">
-                  <div className="text-[11px] font-semibold text-zinc-400">
-                    {t('showingRange', {
-                      from: (currentPage - 1) * itemsPerPage + 1,
-                      to: Math.min(currentPage * itemsPerPage, allAnnouncements.length),
-                      total: allAnnouncements.length,
-                    })}
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <Button
-                        key={i}
-                        variant={currentPage === i + 1 ? 'primary' : 'ghost'}
-                        size="sm"
-                        type="button"
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`w-7 h-7 p-0 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          currentPage === i + 1
-                            ? 'bg-[#2AC1BC] text-white shadow-xs hover:bg-[#2AC1BC]'
-                            : 'text-zinc-600 hover:bg-zinc-100'
-                        }`}
-                      >
-                        {i + 1}
-                      </Button>
-                    ))}
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className="h-8 w-8 p-0 rounded-lg text-zinc-500 hover:text-zinc-900 cursor-pointer disabled:opacity-30"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={allAnnouncements.length}
+                  pageSize={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  showPageSizeInput={false}
+                  variant="flat"
+                  className="px-4 py-2.5 border-t border-line bg-surface/50 rounded-b-3xl"
+                />
               </>
             )}
           </div>
@@ -711,224 +676,36 @@ export default function TenantOverviewPage() {
 
       {/* Modal: View Full Notice Detail */}
       {selectedNotice && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setSelectedNotice(null)
-          }}
+        <Modal
+          isOpen={!!selectedNotice}
+          onClose={() => setSelectedNotice(null)}
+          title={selectedNotice.title}
+          size="md"
         >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-zinc-200 p-6 space-y-4">
-            <div className="flex items-start justify-between gap-3 border-b border-zinc-100 pb-4">
-              <div>
-                <span
-                  className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border mb-2 ${selectedNotice.color}`}
-                >
-                  {selectedNotice.tag}
-                </span>
-                <h3 className="text-base font-bold text-zinc-900 leading-snug">
-                  {selectedNotice.title}
-                </h3>
-                <div className="text-xs text-zinc-400 mt-1 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" /> {selectedNotice.date} &bull;{' '}
-                  {t('sentByManagement')}
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setSelectedNotice(null)}
-                className="p-2 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
+          <div className="space-y-4 pt-1">
+            <div className="flex items-center justify-between gap-2 border-b border-line pb-3">
+              <span
+                className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${selectedNotice.color}`}
               >
-                <X className="w-5 h-5" />
-              </Button>
+                {selectedNotice.tag}
+              </span>
+              <div className="text-xs text-muted flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> {selectedNotice.date} &bull;{' '}
+                {t('sentByManagement')}
+              </div>
             </div>
 
-            <div className="text-xs sm:text-sm text-zinc-600 leading-relaxed pt-2">
+            <div className="text-xs sm:text-sm text-foreground/90 leading-relaxed">
               {selectedNotice.content}
             </div>
 
-            <div className="pt-4 flex justify-end">
-              <Button
-                onClick={() => setSelectedNotice(null)}
-                className="px-5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold cursor-pointer"
-              >
+            <div className="pt-4 flex justify-end border-t border-line">
+              <Button onClick={() => setSelectedNotice(null)}>
                 {t('btnClose')}
               </Button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Modal: Electronic Tenancy Agreement */}
-      {isContractOpen && roomInfo && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsContractOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-zinc-200">
-            <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/60">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center shrink-0">
-                  <FileSignature className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-zinc-900">
-                    {t('contractModalTitle')}
-                  </h3>
-                  <div className="text-xs font-semibold text-zinc-400">
-                    {t('contractCode')}:{' '}
-                    <span className="text-zinc-700 font-bold">{roomInfo.contractCode}</span>
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setIsContractOpen(false)}
-                className="p-2 h-auto text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-xs sm:text-sm text-zinc-700 custom-scrollbar leading-relaxed">
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
-                  <div>
-                    <div className="font-black text-emerald-800 text-xs sm:text-sm">
-                      {t('digitallySignedBadge')}
-                    </div>
-                    <div className="text-[11px] text-emerald-600 font-medium">
-                      {t('signedAt')}: {roomInfo.contractStart} 08:30 GMT+7 &bull; SHA-256:
-                      9f8a...4b12
-                    </div>
-                  </div>
-                </div>
-                <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-emerald-200/60 text-emerald-900 text-[10px] font-black uppercase">
-                  {t('verified')}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100">
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">
-                    {t('partyA')}
-                  </div>
-                  <div className="font-bold text-zinc-900">{roomInfo.landlord}</div>
-                  <div className="text-xs text-zinc-500">
-                    {t('idCard')}: {roomInfo.landlordIdCard}
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    {t('phone')}: {roomInfo.phoneDisplay}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">
-                    {t('partyB')}
-                  </div>
-                  <div className="font-bold text-zinc-900">{roomInfo.tenantName}</div>
-                  <div className="text-xs text-zinc-500">
-                    {t('idCard')}: {roomInfo.tenantIdCard}
-                  </div>
-                  <div className="text-xs text-zinc-500">{t('phone')}: 0987.654.321</div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-zinc-900 border-b border-zinc-100 pb-2">
-                  {t('termsTitle')}
-                </h4>
-                <div className="space-y-2 text-xs text-zinc-600">
-                  <p className="flex items-start gap-2">
-                    <span className="font-bold text-[#2AC1BC]">1.</span>
-                    <span>{t('term1')}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="font-bold text-[#2AC1BC]">2.</span>
-                    <span>{t('term2')}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="font-bold text-[#2AC1BC]">3.</span>
-                    <span>{t('term3')}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-200 overflow-hidden">
-                <table className="w-full text-xs text-left">
-                  <tbody className="divide-y divide-zinc-200">
-                    <tr className="bg-zinc-50/50">
-                      <td className="px-4 py-2.5 font-bold text-zinc-500">{t('rentPrice')}</td>
-                      <td className="px-4 py-2.5 font-black text-[#2AC1BC]">
-                        {formatCurrency(roomInfo.rentPrice, locale)} {t('monthUnit')}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-2.5 font-bold text-zinc-500">{t('deposit')}</td>
-                      <td className="px-4 py-2.5 font-bold text-zinc-900">
-                        {formatCurrency(roomInfo.deposit, locale)}
-                      </td>
-                    </tr>
-                    <tr className="bg-zinc-50/50">
-                      <td className="px-4 py-2.5 font-bold text-zinc-500">
-                        {t('contractDuration')}
-                      </td>
-                      <td className="px-4 py-2.5 font-bold text-zinc-900">
-                        {roomInfo.contractStart} &ndash; {roomInfo.contractEnd}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {roomInfo.documentUrl && (
-                <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-zinc-700">
-                    <FileText className="w-4 h-4 text-[#2AC1BC]" />
-                    <span>{t('contractAttachedFile')}</span>
-                  </div>
-                  <a
-                    href={roomInfo.documentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-xl text-xs font-bold text-[#2AC1BC] transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>{t('contractDownload')}</span>
-                  </a>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 sm:p-6 border-t border-zinc-100 flex items-center justify-between gap-3 bg-zinc-50/50">
-              <Button
-                variant="secondary"
-                size="sm"
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-2 px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl cursor-pointer transition-colors shadow-2xs"
-              >
-                <Printer className="w-4 h-4" />
-                <span>{t('btnPrintContract')}</span>
-              </Button>
-
-              <Button
-                variant="primary"
-                size="sm"
-                type="button"
-                onClick={() => setIsContractOpen(false)}
-                className="px-5 py-2 h-auto text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#23a8a3] rounded-xl cursor-pointer transition-all shadow-sm shadow-[#2AC1BC]/20"
-              >
-                {t('btnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   )

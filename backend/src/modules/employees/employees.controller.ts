@@ -90,7 +90,7 @@ export class EmployeesController {
   @ApiOperation({
     summary: 'Get all job positions for this boarding house',
     description:
-      'Retrieves the list of configured job roles (Bảo vệ, Vệ sinh, Quản lý...) and staff count per position.',
+      'Retrieves the list of configured job roles (Security, Cleaning, Manager...) and staff count per position.',
   })
   @ApiOkResponse({
     type: [JobPositionDto],

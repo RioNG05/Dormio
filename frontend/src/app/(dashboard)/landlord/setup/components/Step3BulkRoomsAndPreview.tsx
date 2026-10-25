@@ -167,9 +167,9 @@ export function Step3BulkRoomsAndPreview({
     <section className="space-y-6 animate-in fade-in duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Generation Settings Form */}
-        <div className="lg:col-span-7 rounded-3xl border border-zinc-200/80 bg-white p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+        <div className="lg:col-span-7 rounded-3xl border border-line bg-card p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="flex items-center gap-3 border-b border-line pb-4">
+            <div className="w-10 h-10 rounded-2xl bg-deposit-soft text-deposit flex items-center justify-center font-bold">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
@@ -228,8 +228,6 @@ export function Step3BulkRoomsAndPreview({
                 {nameFormatPresets.map(preset => (
                   <Button
                     key={preset.value}
-                    type="button"
-                    size="sm"
                     variant={roomsConfig.nameFormat === preset.value ? 'primary' : 'outline'}
                     onClick={() =>
                       onChangeRoomsConfig(prev => ({
@@ -237,7 +235,6 @@ export function Step3BulkRoomsAndPreview({
                         nameFormat: preset.value,
                       }))
                     }
-                    className="h-7 px-2.5 text-[11px]"
                   >
                     {preset.label}
                   </Button>
@@ -304,24 +301,22 @@ export function Step3BulkRoomsAndPreview({
                   .map((service, idx) => {
                     const isSelected = roomsConfig.serviceIndices.includes(idx)
                     return (
-                      <Button
+                      <Button rounded="full"
                         key={service.id}
-                        type="button"
-                        size="sm"
                         variant={isSelected ? 'secondary' : 'outline'}
                         onClick={() => toggleServiceIndex(idx)}
                         className={cn(
                           'h-8 text-xs font-semibold',
                           isSelected &&
-                            'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#13615e] hover:bg-[#2AC1BC]/20',
+                            'bg-primary/10 border-primary text-[#13615e] hover:bg-primary/20',
                         )}
                         leftIcon={
                           <span
                             className={cn(
                               'w-3.5 h-3.5 rounded-full flex items-center justify-center border text-[9px]',
                               isSelected
-                                ? 'bg-[#2AC1BC] text-white border-transparent'
-                                : 'border-zinc-300 bg-white',
+                                ? 'bg-primary text-white border-transparent'
+                                : 'border-line bg-card',
                             )}
                           >
                             {isSelected && '✓'}
@@ -339,8 +334,8 @@ export function Step3BulkRoomsAndPreview({
 
         {/* Right Column: Live Room Preview Panel & Quota Indicator */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-3xl border border-zinc-200/80 bg-white p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div className="rounded-3xl border border-line bg-card p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-line pb-3">
               <div className="flex items-center gap-2">
                 <Text as="h3" size="sm" weight="black" color="default">
                   {t('landlordSetupPreviewTitle')}
@@ -351,7 +346,7 @@ export function Step3BulkRoomsAndPreview({
                 size="xs"
                 weight="extrabold"
                 color="brand"
-                className="bg-[#2AC1BC]/10 px-2.5 py-0.5 rounded-full"
+                className="bg-primary/10 px-2.5 py-0.5 rounded-full"
               >
                 {totalRoomsToCreate} {t('landlordSetupRoomsTotal')}
               </Text>
@@ -359,9 +354,9 @@ export function Step3BulkRoomsAndPreview({
 
             {/* Quota Indicator Banner */}
             {isQuotaExceeded ? (
-              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 text-xs text-amber-900 space-y-1.5 animate-in fade-in">
-                <div className="flex items-center gap-2 font-bold text-amber-900">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <div className="p-3.5 rounded-2xl bg-warning-soft border border-warning-subtle text-xs text-warning space-y-1.5 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-warning">
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
                   <Text as="span" size="xs" weight="bold" color="inherit">
                     {t('landlordSetupQuotaExceededTitle')
                       .replace('{total}', String(totalRoomsToCreate))
@@ -376,9 +371,9 @@ export function Step3BulkRoomsAndPreview({
                 </Text>
               </div>
             ) : (
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-900 font-semibold">
+              <div className="p-3 rounded-xl bg-success-soft border border-success-subtle flex items-center justify-between text-xs text-success font-semibold">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   <Text as="span" size="xs" weight="semibold" color="inherit">
                     {t('landlordSetupQuotaLimitLabel')}
                   </Text>
@@ -396,7 +391,7 @@ export function Step3BulkRoomsAndPreview({
               {generatedRoomsPreview.map(group => (
                 <div
                   key={group.floor}
-                  className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100 space-y-2"
+                  className="p-3 rounded-2xl bg-surface border border-line space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <Text as="span" variant="overline" size="2xs" color="secondary">
@@ -411,23 +406,20 @@ export function Step3BulkRoomsAndPreview({
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {group.rooms.map(room => (
-                      <Button
+                      <Button rounded="full"
                         key={room.index}
-                        type="button"
-                        size="sm"
                         variant={room.isCustomized ? 'secondary' : 'outline'}
                         onClick={() => handleOpenRoomModal(group.floor, room.index)}
                         title={t('landlordSetupPreviewClickToEditHint')}
                         className={cn(
                           'h-7 px-2.5 text-xs font-bold transition-all shadow-2xs hover:scale-105 active:scale-95',
                           room.isCustomized
-                            ? 'bg-[#2AC1BC]/10 border-[#2AC1BC] text-[#13615e] ring-1 ring-[#2AC1BC]/40'
-                            : 'bg-white border-zinc-200 text-zinc-800 hover:border-[#2AC1BC] hover:text-[#2AC1BC]',
+                            ? 'bg-primary/10 border-primary text-[#13615e] ring-1 ring-primary/40'
+                            : 'bg-card border-line text-foreground hover:border-primary hover:text-primary',
                         )}
                         rightIcon={
                           room.isCustomized ? (
                             <span
-                              className="w-1.5 h-1.5 rounded-full bg-[#2AC1BC]"
                               title={t('landlordSetupPreviewCustomBadge')}
                             />
                           ) : undefined
@@ -441,8 +433,8 @@ export function Step3BulkRoomsAndPreview({
               ))}
             </div>
 
-            <div className="pt-2 text-[11px] text-zinc-500 flex items-center gap-1.5 border-t border-zinc-100">
-              <Info className="w-3.5 h-3.5 text-[#2AC1BC] shrink-0" />
+            <div className="pt-2 text-[11px] text-muted flex items-center gap-1.5 border-t border-line">
+              <Info className="w-3.5 h-3.5 text-primary shrink-0" />
               <Text as="span" size="2xs" color="secondary">
                 {t('landlordSetupPreviewClickToEditHint')}
               </Text>
@@ -454,20 +446,17 @@ export function Step3BulkRoomsAndPreview({
       {/* Step 3 Navigation / Submit */}
       <Form.Actions align="between" className="pt-2">
         <Button
-          type="button"
           variant="outline"
           disabled={isSubmitting}
           onClick={onBack}
-          leftIcon={<ChevronLeft className="w-4 h-4" />}
+          leftIcon={<ChevronLeft />}
         >
           {t('landlordSetupBackToStep2')}
         </Button>
         <Button
-          type="button"
-          variant="primary"
           disabled={isSubmitting || isQuotaExceeded || totalRoomsToCreate < 1}
           onClick={onNext}
-          rightIcon={<ChevronRight className="w-4 h-4" />}
+          rightIcon={<ChevronRight />}
         >
           {t('landlordSetupNextToStep4')}
         </Button>

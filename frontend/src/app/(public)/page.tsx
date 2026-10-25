@@ -3,27 +3,24 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import { Button, Text, TextInput, SelectInput, ChipGroup } from '@/components/ui'
 import {
   Search,
   MapPin,
-  Building,
-  CreditCard,
   ShieldCheck,
-  ChevronDown,
   ArrowRight,
   Banknote,
   Sparkles,
-  Star,
-  Zap,
   Receipt,
   FileText,
   Users,
   BarChart3,
   CheckCircle2,
+  SquareArrowOutUpRight,
+  Send,
 } from 'lucide-react'
 import { formatVND } from '@/utils'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
 import { postService, type PublicPostListing } from '@/services/post.service'
 
@@ -39,14 +36,13 @@ function buildAddressString(listing: PublicPostListing): string {
 
 export default function HomePage() {
   const t = useTranslations('guest')
-  const { locale } = useLanguage()
   const router = useRouter()
 
   const [activeTab, setActiveTab] = useState<'phong' | 'studio' | 'nguyencan'>('phong')
   const [processTab, setProcessTab] = useState<'tenant' | 'landlord'>('landlord')
   const [searchQuery, setSearchQuery] = useState('')
   const [priceFilter, setPriceFilter] = useState('')
-  const [selectedCityFilter, setSelectedCityFilter] = useState<'all' | 'hcm' | 'hanoi'>('all')
+  const [selectedCityFilter] = useState<'all' | 'hcm' | 'hanoi'>('all')
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -111,171 +107,232 @@ export default function HomePage() {
     }
   }, [selectedCityFilter])
 
+  const processSteps =
+    processTab === 'tenant' && FEATURE_FLAGS.ENABLE_BHRP
+      ? [
+        {
+          num: '01',
+          title: t('guestHomeTenantStep1Title'),
+          desc: t('guestHomeTenantStep1Desc'),
+          accent: 'brand' as const,
+        },
+        {
+          num: '02',
+          title: t('guestHomeTenantStep2Title'),
+          desc: t('guestHomeTenantStep2Desc'),
+          accent: 'orange' as const,
+        },
+        {
+          num: '03',
+          title: t('guestHomeTenantStep3Title'),
+          desc: t('guestHomeTenantStep3Desc'),
+          accent: 'brand' as const,
+        },
+      ]
+      : [
+        {
+          num: '01',
+          title: t('guestHomeLandlordStep1Title'),
+          desc: t('guestHomeLandlordStep1Desc'),
+          accent: 'brand' as const,
+        },
+        {
+          num: '02',
+          title: t('guestHomeLandlordStep2Title'),
+          desc: t('guestHomeLandlordStep2Desc'),
+          accent: 'orange' as const,
+        },
+        {
+          num: '03',
+          title: t('guestHomeLandlordStep3Title'),
+          desc: t('guestHomeLandlordStep3Desc'),
+          accent: 'brand' as const,
+        },
+      ]
+
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-card">
       {/* High-End Professional Hero Section (Fit Screen Height & Seamless Section Transition Divider) */}
       <section className="relative min-h-[calc(100vh-80px)] lg:h-[calc(100vh-80px)] flex flex-col justify-center items-center py-12 sm:py-16 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center overflow-hidden border-b border-zinc-800">
         {/* Dark Radial Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
 
         {/* Soft Ambient Glow Orbs behind text */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#2AC1BC]/20 rounded-full blur-[140px] pointer-events-none z-0" />
-        <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-[#FF6B35]/15 rounded-full blur-[120px] pointer-events-none z-0" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-primary/20 rounded-full blur-[140px] pointer-events-none z-0" />
+        <div className="absolute top-1/3 right-1/4 w-[400px] h-[300px] bg-accent/15 rounded-full blur-[120px] pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
           {/* Glowing Glassmorphism Pill Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#2AC1BC]/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold text-[#2AC1BC] tracking-wider mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
-            <ShieldCheck className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t('guestHomeBadge')}</span>
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-zinc-900/70 px-4 sm:px-5 py-1.5 sm:py-2 mb-4 sm:mb-6 shadow-[0_0_25px_rgba(42,193,188,0.25)] backdrop-blur-xl transition-transform hover:scale-105">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            <Text
+              as="span"
+              variant="badge"
+              size="xs"
+              weight="extrabold"
+              color="brand"
+              className="text-[10px] sm:text-xs"
+            >
+              {t('guestHomeBadge')}
+            </Text>
           </div>
 
           {/* Headline with Single Continuous Gradient from Teal to Orange on 'dễ dàng, tiện lợi' */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.18] drop-shadow-md">
-            <span className="inline-block whitespace-nowrap">{t('guestHomeTitleLine1')}</span>{' '}
+          <div>
+            <Text
+              as="h1"
+              variant="heading"
+              weight="black"
+              color="white" className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md inline-block whitespace-nowrap">
+              {t('guestHomeTitleLine1')}
+            </Text>{' '}
             <br />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap">
+            <Text
+              as="h1"
+              variant="heading"
+              weight="black"
+              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#36D7D1] to-[#6BEAE6] bg-clip-text text-transparent inline-block whitespace-nowrap"
+            >
               {t('guestHomeTitleLine2')}
-            </span>{' '}
+            </Text>{' '}
             <br />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent inline-block whitespace-nowrap">
+            <Text
+              as="h1"
+              variant="heading"
+              weight="black"
+              className="sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent inline-block whitespace-nowrap"
+            >
               {t('guestHomeTitleLine3')}
-            </span>
-          </h1>
+            </Text>
+          </div>
 
           {/* Sub-headline */}
-          <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl mx-auto leading-relaxed mt-4 sm:mt-5 font-medium tracking-wide text-balance">
+          <Text
+            as="p"
+            variant="subtitle"
+            size="xs"
+            weight="medium"
+            className="sm:text-sm text-zinc-300 max-w-2xl mx-auto leading-relaxed mt-4 sm:mt-5 tracking-wide text-balance"
+          >
             {t('guestHomeSubtitle')}
-          </p>
+          </Text>
 
           {/* Hero Content / Actions */}
           {FEATURE_FLAGS.ENABLE_BHRP ? (
             /* Floating Search Card Widget with Premium Shadows */
-            <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-zinc-900 border border-white/80 animate-in fade-in duration-700">
+            <div className="mt-6 sm:mt-8 w-full max-w-3xl bg-card/95 backdrop-blur-xl rounded-[28px] p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.45)] text-foreground border border-white/80 animate-in fade-in duration-700">
               {/* Category Tabs */}
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-3.5 border-b border-zinc-100 pb-3">
-                <button
-                  onClick={() => setActiveTab('phong')}
-                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
-                    activeTab === 'phong'
-                      ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105'
-                      : 'text-zinc-500 font-bold hover:text-zinc-900'
-                  }`}
-                >
-                  {t('guestHomeTabRent')}
-                </button>
-                <button
-                  onClick={() => setActiveTab('studio')}
-                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
-                    activeTab === 'studio'
-                      ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105'
-                      : 'text-zinc-500 font-bold hover:text-zinc-900'
-                  }`}
-                >
-                  {t('guestHomeTabStudio')}
-                </button>
-                <button
-                  onClick={() => setActiveTab('nguyencan')}
-                  className={`px-5 sm:px-6 py-2 rounded-full font-black text-xs transition-all cursor-pointer ${
-                    activeTab === 'nguyencan'
-                      ? 'bg-gradient-to-r from-[#2AC1BC] to-[#3BDAC8] text-white shadow-md shadow-[#2AC1BC]/25 scale-105'
-                      : 'text-zinc-500 font-bold hover:text-zinc-900'
-                  }`}
-                >
-                  {t('guestHomeTabWhole')}
-                </button>
-              </div>
+              <ChipGroup
+                value={activeTab}
+                onChange={setActiveTab}
+                size="md"
+                options={[
+                  { value: 'phong', label: t('guestHomeTabRent') },
+                  { value: 'studio', label: t('guestHomeTabStudio') },
+                  { value: 'nguyencan', label: t('guestHomeTabWhole') },
+                ]}
+                className="justify-center sm:justify-start gap-2 mb-3.5 border-b border-line pb-3"
+              />
 
               {/* Inputs Row */}
               <form
                 onSubmit={handleSearch}
                 className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-left items-end"
               >
-                <div className="sm:col-span-5 space-y-1">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
-                    {t('guestHomeKeywordLabel')}
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                    <input
-                      type="text"
-                      placeholder={t('guestHomeKeywordPlaceholder')}
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          handleSearch()
-                        }
-                      }}
-                      className="w-full pl-9 pr-3 h-11 text-xs font-semibold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all"
-                    />
-                  </div>
-                </div>
+                <TextInput
+                  label={t('guestHomeKeywordLabel')}
+                  labelClassName="text-[10px] font-black text-muted uppercase tracking-wider"
+                  leftIcon={<Search className="w-4 h-4" />}
+                  placeholder={t('guestHomeKeywordPlaceholder')}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSearch()
+                    }
+                  }}
+                  containerClassName="sm:col-span-5"
+                  className="h-11 bg-surface/80 border-line rounded-2xl focus:bg-white"
+                />
 
-                <div className="sm:col-span-4 space-y-1">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-wider block">
-                    {t('guestHomePriceLabel')}
-                  </label>
-                  <div className="relative">
-                    <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                    <select
-                      value={priceFilter}
-                      onChange={e => setPriceFilter(e.target.value)}
-                      className="w-full pl-9 pr-8 h-11 text-xs font-bold bg-zinc-50/80 border border-zinc-200/90 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] focus:bg-white focus:ring-4 focus:ring-[#2AC1BC]/10 transition-all cursor-pointer"
-                    >
-                      <option value="">{t('guestHomeAllPrices')}</option>
-                      <option value="under3">{t('guestHomeUnder3m')}</option>
-                      <option value="3to5">{t('guestHomeFrom3to5m')}</option>
-                      <option value="above5">{t('guestHomeAbove5m')}</option>
-                    </select>
-                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
-                  </div>
-                </div>
+                <SelectInput
+                  label={t('guestHomePriceLabel')}
+                  labelClassName="text-[10px] font-black text-muted uppercase tracking-wider"
+                  leftIcon={<Banknote className="w-4 h-4" />}
+                  value={priceFilter}
+                  onChange={e => setPriceFilter(e.target.value)}
+                  options={[
+                    { value: '', label: t('guestHomeAllPrices') },
+                    { value: 'under3', label: t('guestHomeUnder3m') },
+                    { value: '3to5', label: t('guestHomeFrom3to5m') },
+                    { value: 'above5', label: t('guestHomeAbove5m') },
+                  ]}
+                  containerClassName="sm:col-span-4"
+                  className="h-11 bg-surface/80 border-line rounded-2xl"
+                />
 
-                <div className="sm:col-span-3 space-y-1">
-                  <span className="text-[10px] font-black text-transparent select-none uppercase tracking-wider block hidden sm:block">
-                    &nbsp;
-                  </span>
-                  <button
-                    type="submit"
-                    className="w-full h-11 bg-gradient-to-r from-[#FF6B35] to-[#FF7B44] hover:from-[#ff5518] hover:to-[#ff6d31] text-white font-extrabold text-xs rounded-2xl shadow-md shadow-[#FF6B35]/25 flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                <div className="sm:col-span-3 space-y-1.5">
+                  <Text
+                    as="span"
+                    size="3xs"
+                    weight="black"
+                    uppercase
+                    className="text-transparent select-none tracking-wider hidden sm:block"
                   >
-                    <Search className="w-3.5 h-3.5" /> {t('guestHomeSearchNow')}
-                  </button>
+                    &nbsp;
+                  </Text>
+                  <Button
+                    type="submit"
+                    variant="accent"
+                    size="md"
+                    fullWidth
+                    leftIcon={<Search />}
+                    className="h-11 rounded-2xl text-xs font-extrabold shadow-md shadow-accent/25 hover:scale-[1.02]"
+                  >
+                    {t('guestHomeSearchNow')}
+                  </Button>
                 </div>
               </form>
             </div>
           ) : (
             <div className="mt-8 sm:mt-10 flex flex-col items-center gap-6 w-full max-w-2xl animate-in fade-in duration-700">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
-                <Link href="/landlord" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white font-extrabold text-sm rounded-full shadow-lg shadow-[#2AC1BC]/25 hover:shadow-[#2AC1BC]/40 hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    {t('guestHomeTrialBtn')}
-                  </button>
-                </Link>
-                <Link href="/pricing" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-extrabold text-sm rounded-full border border-white/20 hover:border-white/40 backdrop-blur-md hover:scale-105 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2">
-                    {t('guestFeaturesViewPricingBtn')}
-                    <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
-                  </button>
-                </Link>
+                <Button
+                  href="/landlord"
+                  size="lg"
+                  rounded="full"
+                  rightIcon={<SquareArrowOutUpRight />}
+                  className="w-full sm:w-auto"
+                >
+                  {t('guestHomeTrialBtn')}
+                </Button>
+                <Button
+                  href="/pricing"
+                  variant="ghost"
+                  size="lg"
+                  rounded="full"
+                  rightIcon={<ArrowRight />}
+                  className="w-full sm:w-auto px-8 py-3.5 text-white bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-md transition-all duration-300"
+                >
+                  {t('guestFeaturesViewPricingBtn')}
+                </Button>
               </div>
 
               {/* Value Badges */}
-              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-zinc-300 font-semibold">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t('guestHomeBadgeFreeTrial')}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t('guestHomeBadgeNoCard')}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#2AC1BC]" />
-                  <span>{t('guestHomeBadgeSupport')}</span>
-                </div>
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                {[
+                  t('guestHomeBadgeFreeTrial'),
+                  t('guestHomeBadgeNoCard'),
+                  t('guestHomeBadgeSupport'),
+                ].map(badgeText => (
+                  <div key={badgeText} className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    <Text as="span" size="xs" weight="semibold" className="text-zinc-300">
+                      {badgeText}
+                    </Text>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -283,65 +340,89 @@ export default function HomePage() {
           {/* Action Buttons Below Search (only when BHRP enabled) */}
           {FEATURE_FLAGS.ENABLE_BHRP && (
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-              <Link href="#features">
-                <button className="px-7 py-3 bg-zinc-900/80 hover:bg-[#FF6B35] text-white font-black text-xs sm:text-sm rounded-full border border-zinc-700/80 hover:border-[#FF6B35] backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300 cursor-pointer">
-                  {t('guestHomeExploreBtn')}
-                </button>
-              </Link>
+              <Button
+                href="#features"
+                variant="dark"
+                size="md"
+                rounded="full"
+                className="px-7 py-3 bg-zinc-900/80 hover:bg-accent text-white font-black text-xs sm:text-sm border border-zinc-700/80 hover:border-accent backdrop-blur-md shadow-xs hover:shadow-[0_10px_25px_rgba(255,107,53,0.35)] hover:scale-105 transition-all duration-300"
+              >
+                {t('guestHomeExploreBtn')}
+              </Button>
             </div>
           )}
 
           {/* Social Proof Stars */}
-          <div className="flex items-center justify-center gap-2 mt-5 sm:mt-6 text-xs text-zinc-400 font-medium">
-            <div className="flex text-amber-400 text-sm tracking-widest">★★★★★</div>
-            <span className="text-zinc-300">{t('guestHomeTrustedBy')}</span>
+          <div className="flex items-center justify-center gap-2 mt-5 sm:mt-6">
+            <Text as="div" size="sm" className="flex text-amber-400 tracking-widest">
+              ★★★★★
+            </Text>
+            <Text as="span" size="xs" weight="medium" className="text-zinc-300">
+              {t('guestHomeTrustedBy')}
+            </Text>
           </div>
         </div>
       </section>
 
-      {/* Process 3 Steps Section based on exact user reference image */}
+      {/* Process 3 Steps Section */}
       <section
         id="features"
-        className="py-20 bg-zinc-50/50 border-b border-zinc-100 animate-in fade-in duration-500"
+        className="py-20 bg-surface/50 border-b border-line animate-in fade-in duration-500"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] text-[11px] font-extrabold tracking-wider uppercase mb-3 border border-[#2AC1BC]/20">
+          <Text
+            as="div"
+            variant="badge"
+            color="brand"
+            className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-primary/10 mb-3 border border-primary/20"
+          >
             {t('guestHomeProcessBadge')}
-          </div>
+          </Text>
 
           {/* Main Headline */}
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-zinc-900 leading-snug">
-            <span className="block sm:inline">{t('guestHomeProcessTitle1')} </span>
-            <span className="block sm:inline">{t('guestHomeProcessTitle2')}</span>
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium max-w-xl mx-auto mt-2 mb-8 leading-relaxed">
+          <div>
+            <Text size="4xl" weight='bold' color="inherit" className="block sm:inline">
+              {t('guestHomeProcessTitle1')}{' '}
+            </Text>
+            <Text size="4xl" weight='bold' color="inherit" className="block sm:inline">
+              {t('guestHomeProcessTitle2')}
+            </Text>
+          </div>
+          <Text
+            as="p"
+            variant="subtitle"
+            size="xs"
+            className="sm:text-sm max-w-xl mx-auto mt-2 mb-8"
+          >
             {t('guestHomeProcessSubtitle')}
-          </p>
+          </Text>
 
           {/* Interactive Role Switcher Pill Tabs (only when BHRP enabled) */}
           {FEATURE_FLAGS.ENABLE_BHRP && (
-            <div className="inline-flex items-center p-1 sm:p-1.5 bg-white border border-zinc-200/80 rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
-              <button
+            <div className="inline-flex items-center p-1 sm:p-1.5 bg-card border border-line rounded-full shadow-xs mb-12 max-w-full overflow-x-auto">
+              <Button
+                variant={processTab === 'tenant' ? undefined : 'ghost'}
+                rounded="full"
                 onClick={() => setProcessTab('tenant')}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                  processTab === 'tenant'
-                    ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'tenant'
+                  ? 'shadow-md shadow-primary/25'
+                  : 'text-muted hover:text-foreground'
+                  }`}
               >
                 {t('guestHomeForTenant')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={processTab === 'landlord' ? undefined : 'ghost'}
+                rounded="full"
                 onClick={() => setProcessTab('landlord')}
-                className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                  processTab === 'landlord'
-                    ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/25'
-                    : 'text-zinc-500 hover:text-zinc-900'
-                }`}
+                className={`px-4 sm:px-6 py-2 sm:py-2.5 font-bold text-xs whitespace-nowrap shrink-0 ${processTab === 'landlord'
+                  ? 'shadow-md shadow-primary/25'
+                  : 'text-muted hover:text-foreground'
+                  }`}
               >
                 {t('guestHomeForLandlord')}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -349,101 +430,41 @@ export default function HomePage() {
           <div
             className={`grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left ${!FEATURE_FLAGS.ENABLE_BHRP ? 'mt-10' : ''}`}
           >
-            {processTab === 'tenant' && FEATURE_FLAGS.ENABLE_BHRP ? (
-              <>
-                {/* Step 01 */}
-                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
-                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
-                    01
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">
-                      {t('guestHomeTenantStep1Title')}
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t('guestHomeTenantStep1Desc')}
-                    </p>
-                  </div>
+            {processSteps.map(step => (
+              <div
+                key={step.num}
+                className={`bg-card rounded-3xl p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${step.accent === 'orange'
+                  ? 'hover:border-accent/30'
+                  : 'hover:border-primary/30'
+                  }`}
+              >
+                <Text
+                  as="div"
+                  size="sm"
+                  weight="black"
+                  color={step.accent}
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center ${step.accent === 'orange' ? 'bg-accent/10' : 'bg-primary/10'
+                    }`}
+                >
+                  {step.num}
+                </Text>
+                <div className="space-y-2">
+                  <Text as="h3" variant="heading" size="lg" weight="extrabold">
+                    {step.title}
+                  </Text>
+                  <Text
+                    as="p"
+                    variant="body"
+                    size="xs"
+                    weight="medium"
+                    color="secondary"
+                    className="leading-relaxed"
+                  >
+                    {step.desc}
+                  </Text>
                 </div>
-
-                {/* Step 02 */}
-                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
-                  <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] font-black text-sm flex items-center justify-center">
-                    02
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">
-                      {t('guestHomeTenantStep2Title')}
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t('guestHomeTenantStep2Desc')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 03 */}
-                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
-                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
-                    03
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">
-                      {t('guestHomeTenantStep3Title')}
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t('guestHomeTenantStep3Desc')}
-                    </p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Step 01 Landlord */}
-                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
-                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
-                    01
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">
-                      {t('guestHomeLandlordStep1Title')}
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t('guestHomeLandlordStep1Desc')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 02 Landlord */}
-                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
-                  <div className="w-10 h-10 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] font-black text-sm flex items-center justify-center">
-                    02
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">
-                      {t('guestHomeLandlordStep2Title')}
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t('guestHomeLandlordStep2Desc')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 03 Landlord */}
-                <div className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/30 transition-all duration-300 flex flex-col justify-between space-y-6">
-                  <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] font-black text-sm flex items-center justify-center">
-                    03
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-extrabold text-zinc-900">
-                      {t('guestHomeLandlordStep3Title')}
-                    </h3>
-                    <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                      {t('guestHomeLandlordStep3Desc')}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -452,12 +473,12 @@ export default function HomePage() {
       <section className="py-20 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-zinc-900">
+            <Text as="h2" variant="heading" size="3xl">
               {t('guestHomeFeaturedRoomsTitle')}
-            </h2>
-            <p className="text-xs text-zinc-500 mt-1 font-semibold">
+            </Text>
+            <Text as="p" variant="subtitle" size="xs" weight="semibold" className="mt-1">
               {t('guestHomeFeaturedRoomsSub')}
-            </p>
+            </Text>
           </div>
         </div>
 
@@ -469,30 +490,28 @@ export default function HomePage() {
                 {[1, 2, 3].map(n => (
                   <div
                     key={n}
-                    className="rounded-3xl bg-white shadow-sm border border-zinc-200 overflow-hidden animate-pulse"
+                    className="rounded-3xl bg-card shadow-sm border border-line overflow-hidden animate-pulse"
                   >
-                    <div className="aspect-video w-full bg-zinc-200" />
+                    <div className="aspect-video w-full bg-line" />
                     <div className="p-6 space-y-3">
-                      <div className="h-5 bg-zinc-200 rounded w-3/4" />
-                      <div className="h-3 bg-zinc-200 rounded w-1/2" />
-                      <div className="pt-4 border-t border-zinc-100 flex justify-between items-center">
-                        <div className="h-6 w-24 bg-zinc-200 rounded" />
-                        <div className="h-8 w-24 bg-zinc-200 rounded-xl" />
+                      <div className="h-5 bg-line rounded w-3/4" />
+                      <div className="h-3 bg-line rounded w-1/2" />
+                      <div className="pt-4 border-t border-line flex justify-between items-center">
+                        <div className="h-6 w-24 bg-line rounded" />
+                        <div className="h-8 w-24 bg-line rounded-xl" />
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : featuredRooms.length === 0 ? (
-              <div className="rounded-3xl bg-zinc-50 border border-zinc-200 p-12 text-center space-y-3">
-                <p className="text-zinc-500 font-bold text-sm">
-                  Hiện chưa có phòng trọ nào được đăng tại khu vực này.
-                </p>
-                <Link href="/rooms">
-                  <button className="px-5 py-2.5 bg-[#2AC1BC] hover:bg-[#23a8a3] text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                    Khám phá tất cả phòng trọ
-                  </button>
-                </Link>
+              <div className="rounded-3xl bg-surface border border-line p-12 text-center space-y-3">
+                <Text as="p" size="sm" weight="bold" color="secondary">
+                  {t('guestHomeNoRooms')}
+                </Text>
+                <Button href="/rooms" size="md" className="px-5 py-2.5 text-xs">
+                  {t('guestHomeExploreAllRooms')}
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -504,48 +523,68 @@ export default function HomePage() {
                   return (
                     <div
                       key={room.id}
-                      className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm border border-zinc-200 hover:shadow-xl transition-all duration-300"
+                      className="group flex flex-col overflow-hidden rounded-3xl bg-card shadow-sm border border-line hover:shadow-xl transition-all duration-300"
                     >
-                      <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
+                      <div className="relative aspect-video w-full overflow-hidden bg-card-hover">
                         <img
                           src={image}
                           alt={room.title}
                           className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white shadow-sm flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />{' '}
-                          {t('guestHomeVerified')}
+                        <div className="absolute top-3 left-3 bg-zinc-900/80 backdrop-blur-md px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                          <Text as="span" size="2xs" weight="black" color="white">
+                            {t('guestHomeVerified')}
+                          </Text>
                         </div>
                         {room.room?.roomTypeName && (
-                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-zinc-700 shadow-sm">
+                          <Text
+                            as="div"
+                            size="2xs"
+                            weight="bold"
+                            className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-foreground/90 shadow-sm"
+                          >
                             {room.room.roomTypeName}
-                          </div>
+                          </Text>
                         )}
                       </div>
 
                       <div className="flex flex-1 flex-col p-6 gap-3">
-                        <h3 className="font-extrabold text-base text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#2AC1BC] transition-colors">
+                        <Text
+                          as="h3"
+                          variant="heading"
+                          size="base"
+                          weight="extrabold"
+                          clamp={2}
+                          className="leading-snug group-hover:text-primary transition-colors"
+                        >
                           {room.title}
-                        </h3>
-                        <div className="flex items-center text-xs text-zinc-500 font-semibold gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                          <span className="truncate">{address || 'Việt Nam'}</span>
+                        </Text>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-muted shrink-0" />
+                          <Text as="span" size="xs" weight="semibold" color="secondary" truncate>
+                            {address || t('guestHomeDefaultCountry')}
+                          </Text>
                         </div>
 
-                        <div className="mt-auto pt-4 border-t border-zinc-100 flex items-center justify-between">
+                        <div className="mt-auto pt-4 border-t border-line flex items-center justify-between">
                           <div>
-                            <span className="text-lg font-black text-rose-600">
+                            <Text as="span" size="lg" weight="black" color="danger">
                               {formatVND(room.depositAmount)}
-                            </span>
-                            <span className="text-xs text-zinc-400 font-normal">
+                            </Text>
+                            <Text as="span" size="xs" color="subtle">
                               {t('guestHomeMonth')}
-                            </span>
+                            </Text>
                           </div>
-                          <Link href={`/rooms/${room.id}`}>
-                            <button className="flex items-center gap-1.5 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                              {t('guestHomeViewDetail')} <ArrowRight className="w-3.5 h-3.5" />
-                            </button>
-                          </Link>
+                          <Button
+                            href={`/rooms/${room.id}`}
+                            variant="dark"
+                            size="xs"
+                            rightIcon={<ArrowRight />}
+                            className="px-4 py-2 rounded-xl"
+                          >
+                            {t('guestHomeViewDetail')}
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -556,12 +595,16 @@ export default function HomePage() {
 
             {featuredRooms.length > 0 && (
               <div className="mt-12 text-center">
-                <Link href="/rooms">
-                  <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
-                    Khám phá thêm phòng trọ trên sàn{' '}
-                    <ArrowRight className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  </button>
-                </Link>
+                <Button
+                  href="/rooms"
+                  variant="white"
+                  size="lg"
+                  rounded="full"
+                  rightIcon={<ArrowRight className="text-primary" />}
+                  className="px-8 py-3.5 font-extrabold text-xs hover:shadow-md"
+                >
+                  {t('guestHomeExploreMoreRooms')}
+                </Button>
               </div>
             )}
           </>
@@ -569,91 +612,112 @@ export default function HomePage() {
           /* BHMS Core Features Grid */
           <div className="space-y-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Feature 1 */}
-              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div className="w-14 h-14 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Receipt className="w-7 h-7" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                    {t('guestHomeBhmsFeature1Title')}
-                  </h3>
-                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t('guestHomeBhmsFeature1Desc')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div className="w-14 h-14 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <FileText className="w-7 h-7" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
-                    {t('guestHomeBhmsFeature2Title')}
-                  </h3>
-                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t('guestHomeBhmsFeature2Desc')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#2AC1BC]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div className="w-14 h-14 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Users className="w-7 h-7" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#2AC1BC] transition-colors">
-                    {t('guestHomeBhmsFeature3Title')}
-                  </h3>
-                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t('guestHomeBhmsFeature3Desc')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="group rounded-3xl bg-white p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl hover:border-[#FF6B35]/40 transition-all duration-300 flex flex-col justify-between space-y-6">
-                <div className="w-14 h-14 rounded-2xl bg-[#FF6B35]/10 text-[#FF6B35] flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <BarChart3 className="w-7 h-7" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-xl font-extrabold text-zinc-900 group-hover:text-[#FF6B35] transition-colors">
-                    {t('guestHomeBhmsFeature4Title')}
-                  </h3>
-                  <p className="text-sm text-zinc-600 leading-relaxed font-medium">
-                    {t('guestHomeBhmsFeature4Desc')}
-                  </p>
-                </div>
-              </div>
+              {[
+                {
+                  icon: Receipt,
+                  title: t('guestHomeBhmsFeature1Title'),
+                  desc: t('guestHomeBhmsFeature1Desc'),
+                  accent: 'brand' as const,
+                },
+                {
+                  icon: FileText,
+                  title: t('guestHomeBhmsFeature2Title'),
+                  desc: t('guestHomeBhmsFeature2Desc'),
+                  accent: 'orange' as const,
+                },
+                {
+                  icon: Users,
+                  title: t('guestHomeBhmsFeature3Title'),
+                  desc: t('guestHomeBhmsFeature3Desc'),
+                  accent: 'brand' as const,
+                },
+                {
+                  icon: BarChart3,
+                  title: t('guestHomeBhmsFeature4Title'),
+                  desc: t('guestHomeBhmsFeature4Desc'),
+                  accent: 'orange' as const,
+                },
+              ].map((feature, idx) => {
+                const Icon = feature.icon
+                const isOrange = feature.accent === 'orange'
+                return (
+                  <div
+                    key={idx}
+                    className={`group rounded-3xl bg-card p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6 ${isOrange ? 'hover:border-accent/40' : 'hover:border-primary/40'
+                      }`}
+                  >
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${isOrange
+                        ? 'bg-accent/10 text-accent'
+                        : 'bg-primary/10 text-primary'
+                        }`}
+                    >
+                      <Icon className="w-7 h-7" />
+                    </div>
+                    <div className="space-y-3">
+                      <Text
+                        as="h3"
+                        variant="heading"
+                        size="xl"
+                        weight="extrabold"
+                        className={`transition-colors ${isOrange
+                          ? 'group-hover:text-accent'
+                          : 'group-hover:text-primary'
+                          }`}
+                      >
+                        {feature.title}
+                      </Text>
+                      <Text
+                        as="p"
+                        variant="body"
+                        size="sm"
+                        weight="medium"
+                        color="secondary"
+                        className="leading-relaxed"
+                      >
+                        {feature.desc}
+                      </Text>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
             <div className="text-center pt-4">
-              <Link href="/pricing">
-                <button className="px-8 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-extrabold text-xs sm:text-sm rounded-full border border-zinc-200/80 hover:border-zinc-300 shadow-xs hover:shadow-md transition-all cursor-pointer inline-flex items-center gap-2">
-                  {t('guestHomeBhmsViewDetails')} <ArrowRight className="w-4 h-4 text-[#2AC1BC]" />
-                </button>
-              </Link>
+              <Button
+                href="/pricing"
+                variant="white"
+                size="lg"
+                rounded="full"
+                rightIcon={<ArrowRight className="text-primary" />}
+                className="px-8 py-3.5 font-extrabold text-xs sm:text-sm hover:shadow-md"
+              >
+                {t('guestHomeBhmsViewDetails')}
+              </Button>
             </div>
           </div>
         )}
       </section>
 
       {/* Verified Tenant Reviews & Social Proof Section */}
-      <section className="py-20 bg-zinc-50 border-y border-zinc-200/80">
+      <section className="py-20 bg-surface border-y border-line">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 space-y-2">
-            <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block">
+            <Text as="span" variant="overline" size="xs" weight="extrabold" color="brand" className="block">
               {t('guestHomeReviewsBadge')}
-            </span>
-            <h2 className="text-3xl font-black tracking-tight text-zinc-900">
+            </Text>
+            <Text as="h2" variant="heading" size="3xl">
               {t('guestHomeReviewsTitle')}
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-500 font-semibold max-w-xl mx-auto">
+            </Text>
+            <Text
+              as="p"
+              variant="subtitle"
+              size="xs"
+              weight="semibold"
+              className="sm:text-sm max-w-xl mx-auto"
+            >
               {t('guestHomeReviewsSub')}
-            </p>
+            </Text>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -685,28 +749,37 @@ export default function HomePage() {
             ].map((review, idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-3xl p-8 border border-zinc-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6"
+                className="bg-card rounded-3xl p-8 border border-line shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between space-y-6"
               >
                 <div className="space-y-4">
-                  <div className="flex text-amber-400 text-sm tracking-widest">
+                  <Text as="div" size="sm" className="flex text-amber-400 tracking-widest">
                     {'★'.repeat(review.rating)}
-                  </div>
-                  <p className="text-xs text-zinc-600 font-semibold leading-relaxed italic">
-                    "{review.text}"
-                  </p>
+                  </Text>
+                  <Text
+                    as="p"
+                    variant="body"
+                    size="xs"
+                    weight="semibold"
+                    color="secondary"
+                    className="leading-relaxed italic"
+                  >
+                    &ldquo;{review.text}&rdquo;
+                  </Text>
                 </div>
 
-                <div className="pt-4 border-t border-zinc-100 flex items-center gap-3">
+                <div className="pt-4 border-t border-line flex items-center gap-3">
                   <img
                     src={review.avatar}
                     alt={review.name}
                     className="w-10 h-10 rounded-full object-cover shrink-0"
                   />
                   <div>
-                    <h4 className="font-extrabold text-xs text-zinc-900">{review.name}</h4>
-                    <span className="text-[11px] font-bold text-[#2AC1BC] block">
+                    <Text as="h4" size="xs" weight="extrabold">
+                      {review.name}
+                    </Text>
+                    <Text as="span" variant="caption" weight="bold" color="brand" className="block">
                       {review.role}
-                    </span>
+                    </Text>
                   </div>
                 </div>
               </div>
@@ -719,22 +792,31 @@ export default function HomePage() {
       <section className="relative my-16 mx-4 sm:mx-6 lg:mx-auto max-w-7xl rounded-3xl overflow-hidden bg-zinc-900 text-white shadow-2xl border border-zinc-800">
         <div className="px-8 py-14 md:px-16 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-2 text-center lg:text-left">
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+            <Text as="h2" variant="heading" size="2xl" color="white" className="sm:text-4xl">
               {t('guestHomeCtaTitle')}
-            </h2>
-            <p className="text-zinc-400 text-xs sm:text-sm font-semibold">{t('guestHomeCtaSub')}</p>
+            </Text>
+            <Text as="p" variant="subtitle" size="xs" weight="semibold" color="subtle" className="sm:text-sm">
+              {t('guestHomeCtaSub')}
+            </Text>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
-            <Link href="/register">
-              <button className="px-8 py-3.5 bg-gradient-to-r from-[#2AC1BC] to-[#209F9B] hover:from-[#23B3AE] hover:to-[#1B8E8A] text-white rounded-xl text-xs font-bold shadow-lg shadow-[#2AC1BC]/20 transition-all cursor-pointer">
-                {t('guestHomeCtaTrialBtn')}
-              </button>
-            </Link>
-            <Link href="/contact">
-              <button className="px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
-                {t('guestHomeCtaConsultBtn')}
-              </button>
-            </Link>
+            <Button
+              href="/register"
+              size="lg"
+              className="px-8 py-3.5"
+              rightIcon={<SquareArrowOutUpRight />}
+            >
+              {t('guestHomeCtaTrialBtn')}
+            </Button>
+            <Button
+              href="/contact"
+              variant="accent"
+              size="lg"
+              className="px-8 py-3.5"
+              rightIcon={<Send />}
+            >
+              {t('guestHomeCtaConsultBtn')}
+            </Button>
           </div>
         </div>
       </section>

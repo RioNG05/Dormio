@@ -33,6 +33,11 @@ export enum RoomStatus {
   maintainace = 'maintainace',
 }
 
+export enum OccupantStatus {
+  active = 'active',
+  moved_out = 'moved_out',
+}
+
 export enum ContractStatus {
   draft = 'draft',
   active = 'active',
@@ -155,6 +160,15 @@ export enum AttendanceStatus {
   on_time = 'on_time',
   late = 'late',
   absent = 'absent',
+}
+
+export enum AssetCondition {
+  new = 'new',
+  good = 'good',
+  damaged = 'damaged',
+  under_repair = 'under_repair',
+  lost = 'lost',
+  disposed = 'disposed',
 }
 
 export class Decimal {

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { postService, PublicPostListing } from '@/services/post.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput } from '@/components/ui'
+import { Button, TextInput, NumberInput, SelectInput, TextareaInput, Breadcrumb, Modal } from '@/components/ui'
 import {
   ArrowLeft,
   Newspaper,
@@ -362,14 +362,14 @@ export default function AdminPostDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6 pb-12">
-        <div className="h-6 bg-zinc-200 rounded w-48 animate-pulse" />
-        <div className="bg-white rounded-3xl border border-zinc-200 p-8 space-y-6 animate-pulse">
-          <div className="h-10 bg-zinc-200 rounded w-2/3" />
-          <div className="h-64 bg-zinc-100 rounded-2xl w-full" />
+        <div className="h-6 bg-line rounded w-48 animate-pulse" />
+        <div className="bg-card rounded-3xl border border-line p-8 space-y-6 animate-pulse">
+          <div className="h-10 bg-line rounded w-2/3" />
+          <div className="h-64 bg-card-hover rounded-2xl w-full" />
           <div className="space-y-3">
-            <div className="h-4 bg-zinc-200 rounded w-full" />
-            <div className="h-4 bg-zinc-200 rounded w-5/6" />
-            <div className="h-4 bg-zinc-200 rounded w-4/6" />
+            <div className="h-4 bg-line rounded w-full" />
+            <div className="h-4 bg-line rounded w-5/6" />
+            <div className="h-4 bg-line rounded w-4/6" />
           </div>
         </div>
       </div>
@@ -381,17 +381,17 @@ export default function AdminPostDetailPage() {
       <div className="space-y-6 pb-12">
         <Link
           href="/admin/blogs"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-orange-600 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-orange-600 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{t('adminBlogsDetailBack')}</span>
         </Link>
-        <div className="bg-white rounded-3xl border border-red-200 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+        <div className="bg-card rounded-3xl border border-danger-subtle p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-danger-soft text-red-500 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <h2 className="text-base font-bold text-zinc-900">{t('adminBlogsDetailNotFound')}</h2>
-          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+          <h2 className="text-base font-bold text-foreground">{t('adminBlogsDetailNotFound')}</h2>
+          <p className="text-xs text-muted max-w-sm mx-auto">
             {error || t('adminBlogsDetailNotFoundDesc')}
           </p>
           <Link
@@ -425,47 +425,38 @@ export default function AdminPostDetailPage() {
     <div className="space-y-6 pb-16">
       {/* Top Breadcrumb & Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs">
-          <Link
-            href="/admin/blogs"
-            className="inline-flex items-center gap-1 font-bold text-zinc-500 hover:text-orange-600 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>{t('adminBlogsDetailBack')}</span>
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-zinc-400 truncate max-w-[260px]">{post.title}</span>
-        </div>
+        <Breadcrumb
+          backHref="/admin/blogs"
+          backLabel={t('adminBlogsDetailBack')}
+          current={post.title}
+        />
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Lock / Unlock Post */}
           {post.status === 'locked' ? (
             <Button
-              variant="primary"
-              size="sm"
+              size="md"
               onClick={() => setIsUnlockModalOpen(true)}
               disabled={actionLoading}
-              className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               title={t('adminModActionUnlock')}
+              leftIcon={<Unlock />}
             >
-              <Unlock className="w-3.5 h-3.5" />
               <span>{t('adminModActionUnlock')}</span>
             </Button>
           ) : (
             <Button
+              size="md"
               variant="danger"
-              size="sm"
               onClick={() => {
                 setLockReason('')
                 setLockReasonError('')
                 setIsLockModalOpen(true)
               }}
               disabled={actionLoading}
-              className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
               title={t('adminModActionLock')}
+              leftIcon={<Lock />}
             >
-              <Lock className="w-3.5 h-3.5" />
               <span>{t('adminModActionLock')}</span>
             </Button>
           )}
@@ -474,66 +465,61 @@ export default function AdminPostDetailPage() {
           {post.status !== 'locked' &&
             (post.status === 'posted' ? (
               <Button
+                size="md"
                 variant="secondary"
-                size="sm"
                 onClick={handleRevertToDraft}
                 disabled={actionLoading}
-                className="h-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                 title={t('adminBlogsDetailRevertTitle')}
+                leftIcon={<RotateCcw className="text-warning" />}
               >
-                <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
                 <span>{t('adminBlogsDetailRevertBtn')}</span>
               </Button>
             ) : (
               <Button
+                size="md"
                 variant="secondary"
-                size="sm"
                 onClick={handlePublishPost}
                 disabled={actionLoading}
-                className="h-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
                 title={t('adminBlogsDetailPublishTitle')}
+                leftIcon={<CheckCircle2 className="text-success" />}
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>{t('adminBlogsDetailPublishBtn')}</span>
               </Button>
             ))}
 
           {/* Edit Content */}
           <Button
+            size="md"
             variant="secondary"
-            size="sm"
             onClick={handleOpenEdit}
-            className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            leftIcon={<Edit3 />}
           >
-            <Edit3 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailEditBtn')}</span>
           </Button>
 
           {/* Delete Post */}
           <Button
-            variant="ghost"
-            size="sm"
+            size="md"
+            variant="ghost-danger"
             onClick={() => {
               setDeleteReason('')
               setDeleteError('')
               setIsDeleteModalOpen(true)
             }}
-            className="h-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            leftIcon={<Trash2 />}
           >
-            <Trash2 className="w-3.5 h-3.5" />
             <span>{t('adminBlogsDetailDeleteBtn')}</span>
           </Button>
 
           {/* Refresh */}
           <Button
+            size="md"
             variant="secondary"
-            size="sm"
             onClick={() => fetchPostDetail(true)}
-            disabled={loading}
-            className="h-auto p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-600 transition-colors shadow-2xs cursor-pointer"
+            isLoading={loading}
             title={t('adminModRefresh')}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw />
           </Button>
         </div>
       </div>
@@ -543,13 +529,13 @@ export default function AdminPostDetailPage() {
         <div
           className={`p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-2xs animate-fadeIn ${
             feedbackMsg.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-success-soft text-success border border-success-subtle'
+              : 'bg-danger-soft text-danger border border-danger-subtle'
           }`}
         >
           <div className="flex items-center gap-2">
             {feedbackMsg.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
             ) : (
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
             )}
@@ -557,41 +543,39 @@ export default function AdminPostDetailPage() {
           </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon-xs"
             onClick={() => setFeedbackMsg(null)}
-            className="h-auto p-1 hover:bg-black/5 rounded-lg text-zinc-500 cursor-pointer"
           >
-            <X className="w-3.5 h-3.5" />
+            <X />
           </Button>
         </div>
       )}
 
       {/* Locked Post Warning Banner */}
       {post.status === 'locked' && (
-        <div className="p-5 rounded-3xl bg-red-50 border border-red-200 text-red-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+        <div className="p-5 rounded-3xl bg-danger-soft border border-danger-subtle text-danger flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
           <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0 border border-red-200">
+            <div className="w-10 h-10 rounded-2xl bg-danger-soft text-red-600 flex items-center justify-center shrink-0 border border-danger-subtle">
               <Lock className="w-5 h-5" />
             </div>
             <div className="space-y-1">
-              <div className="font-black text-red-900 text-sm flex items-center gap-2">
+              <div className="font-black text-danger text-sm flex items-center gap-2">
                 <span>{t('adminModBadgeLocked')}</span>
-                <span className="text-[10px] uppercase font-bold text-red-700 bg-red-200/70 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] uppercase font-bold text-danger bg-red-200/70 px-2 py-0.5 rounded-md">
                   {t('adminModLockTitle')}
                 </span>
               </div>
-              <p className="text-xs text-red-800 font-medium leading-relaxed">
+              <p className="text-xs text-danger font-medium leading-relaxed">
                 {post.lockReason || t('adminModLockSubtitle')}
               </p>
             </div>
           </div>
           <Button
             variant="danger"
-            size="sm"
             onClick={() => setIsUnlockModalOpen(true)}
-            className="h-auto px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+            className="shrink-0"
+            leftIcon={<Unlock />}
           >
-            <Unlock className="w-3.5 h-3.5" />
             <span>{t('adminModActionUnlock')}</span>
           </Button>
         </div>
@@ -599,14 +583,14 @@ export default function AdminPostDetailPage() {
 
       {/* Reported / Grievance Notice Banner */}
       {isReported && (
-        <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2 shadow-2xs">
-          <div className="flex items-center gap-2 font-bold text-amber-800 text-xs">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="p-5 rounded-3xl bg-warning-soft border border-warning-subtle text-warning space-y-2 shadow-2xs">
+          <div className="flex items-center gap-2 font-bold text-warning text-xs">
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
             <span>
               {t('adminModInspectReports')} ({post.reportsCount || post.reportReasons?.length || 1})
             </span>
           </div>
-          <ul className="list-disc pl-5 space-y-1 text-xs font-medium text-amber-800">
+          <ul className="list-disc pl-5 space-y-1 text-xs font-medium text-warning">
             {(post.reportReasons && post.reportReasons.length > 0
               ? post.reportReasons
               : [t('adminBlogsReportReasonBaitPricing')]
@@ -618,19 +602,19 @@ export default function AdminPostDetailPage() {
       )}
 
       {/* Header Card */}
-      <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-2xs space-y-4">
+      <div className="bg-card p-6 rounded-3xl border border-line shadow-2xs space-y-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="space-y-2 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide ${
                   post.status === 'posted'
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-success-soft text-success'
                     : post.status === 'draft'
-                      ? 'bg-amber-100 text-amber-800'
+                      ? 'bg-warning-soft text-warning'
                       : post.status === 'locked'
-                        ? 'bg-red-100 text-red-800 ring-1 ring-red-300'
-                        : 'bg-zinc-100 text-zinc-700'
+                        ? 'bg-danger-soft text-danger ring-1 ring-red-300'
+                        : 'bg-card-hover text-foreground/90'
                 }`}
               >
                 {post.status === 'posted'
@@ -650,44 +634,44 @@ export default function AdminPostDetailPage() {
               )}
 
               {post.room?.boardingHouseName && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-zinc-100 text-zinc-700">
-                  <Building2 className="w-3.5 h-3.5 text-zinc-500" />
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-card-hover text-foreground/90">
+                  <Building2 className="w-3.5 h-3.5 text-muted" />
                   <span>{post.room.boardingHouseName}</span>
                 </span>
               )}
 
               {post.room?.roomNumber && (
-                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 text-zinc-600">
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-card-hover text-muted">
                   {t('adminBlogsDetailRoom', { number: post.room.roomNumber })}
                 </span>
               )}
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight leading-tight">
               {post.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500 pt-1">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted pt-1">
               <div className="flex items-center gap-1.5 font-mono">
-                <span className="text-zinc-400">UUID:</span>
-                <span className="text-zinc-700 font-semibold">{post.id}</span>
+                <span className="text-muted">UUID:</span>
+                <span className="text-foreground/90 font-semibold">{post.id}</span>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-xs"
                   onClick={handleCopyId}
-                  className="h-auto p-1 text-zinc-400 hover:text-zinc-700 rounded transition-colors cursor-pointer"
+                  className="rounded"
                   title={t('adminBlogsDetailCopyUuid')}
                 >
                   {copied ? (
-                    <Check className="w-3 h-3 text-emerald-600" />
+                    <Check className="text-success" />
                   ) : (
-                    <Copy className="w-3 h-3 text-zinc-400" />
+                    <Copy className="text-muted" />
                   )}
                 </Button>
               </div>
 
               <div className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                <Calendar className="w-3.5 h-3.5 text-muted" />
                 <span>
                   {t('adminBlogsDetailCreated')}{' '}
                   {post.createdAt
@@ -701,34 +685,34 @@ export default function AdminPostDetailPage() {
           </div>
 
           {/* Quick Metrics Badge */}
-          <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 flex items-center gap-5 shrink-0 self-start">
+          <div className="bg-surface p-4 rounded-2xl border border-line flex items-center gap-5 shrink-0 self-start">
             <div className="text-center">
-              <div className="text-base font-black text-zinc-900 flex items-center justify-center gap-1">
+              <div className="text-base font-black text-foreground flex items-center justify-center gap-1">
                 <Eye className="w-4 h-4 text-orange-600" />
                 {(post.viewsCount || 0).toLocaleString()}
               </div>
-              <div className="text-[11px] font-bold text-zinc-400 mt-0.5">
+              <div className="text-[11px] font-bold text-muted mt-0.5">
                 {t('adminBlogsDetailViews')}
               </div>
             </div>
-            <div className="w-px h-8 bg-zinc-200" />
+            <div className="w-px h-8 bg-line" />
             <div className="text-center">
-              <div className="text-base font-black text-zinc-900 flex items-center justify-center gap-1">
+              <div className="text-base font-black text-foreground flex items-center justify-center gap-1">
                 <Bookmark className="w-4 h-4 text-orange-600" />
                 {post.savedCount || 0}
               </div>
-              <div className="text-[11px] font-bold text-zinc-400 mt-0.5">
+              <div className="text-[11px] font-bold text-muted mt-0.5">
                 {t('adminBlogsDetailBookmarks')}
               </div>
             </div>
-            <div className="w-px h-8 bg-zinc-200" />
+            <div className="w-px h-8 bg-line" />
             <div className="text-center">
-              <div className="text-base font-black text-emerald-700">
+              <div className="text-base font-black text-success">
                 {post.depositAmount
                   ? `${Number(post.depositAmount).toLocaleString('vi-VN')} ₫`
                   : '0 ₫'}
               </div>
-              <div className="text-[11px] font-bold text-zinc-400 mt-0.5">
+              <div className="text-[11px] font-bold text-muted mt-0.5">
                 {t('adminBlogsDetailDeposit')}
               </div>
             </div>
@@ -741,13 +725,13 @@ export default function AdminPostDetailPage() {
         {/* Left Column (2 Cols): Images & Full Post Body */}
         <div className="lg:col-span-2 space-y-6">
           {/* Image Showcase */}
-          <div className="bg-white p-5 rounded-3xl border border-zinc-200/90 shadow-2xs space-y-3">
-            <h2 className="text-xs font-black text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-card p-5 rounded-3xl border border-line shadow-2xs space-y-3">
+            <h2 className="text-xs font-black text-muted uppercase tracking-wider flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-orange-600" />
               <span>{t('adminBlogsDetailGallery')}</span>
             </h2>
 
-            <div className="relative h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200">
+            <div className="relative h-80 sm:h-96 w-full rounded-2xl overflow-hidden bg-card-hover border border-line">
               <img src={currentImage.url} alt={post.title} className="w-full h-full object-cover" />
               <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-xs text-white text-xs font-bold px-2.5 py-1 rounded-lg">
                 {activeImageIndex + 1} / {allImages.length}
@@ -758,32 +742,27 @@ export default function AdminPostDetailPage() {
             {allImages.length > 1 && (
               <div className="flex items-center gap-2.5 overflow-x-auto pb-1 pt-1">
                 {allImages.map((img, idx) => (
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     key={img.id || idx}
+                    type="button"
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`h-auto p-0 relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
-                      activeImageIndex === idx
-                        ? 'border-orange-600 ring-2 ring-orange-500/20 shadow-xs'
-                        : 'border-zinc-200 hover:border-zinc-300 opacity-70 hover:opacity-100'
-                    }`}
+                    className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-line hover:border-orange-500 focus:outline-none transition-colors"
                   >
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
-                  </Button>
+                  </button>
                 ))}
               </div>
             )}
           </div>
 
           {/* Full Post Content */}
-          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-2xs space-y-3">
-            <h2 className="text-xs font-black text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-card p-6 rounded-3xl border border-line shadow-2xs space-y-3">
+            <h2 className="text-xs font-black text-muted uppercase tracking-wider flex items-center gap-1.5">
               <Newspaper className="w-3.5 h-3.5 text-orange-600" />
               <span>{t('adminBlogsDetailFullDesc')}</span>
             </h2>
 
-            <div className="prose prose-zinc max-w-none text-xs leading-relaxed text-zinc-800 whitespace-pre-line bg-zinc-50/50 p-5 rounded-2xl border border-zinc-100">
+            <div className="prose prose-zinc max-w-none text-xs leading-relaxed text-foreground whitespace-pre-line bg-surface/50 p-5 rounded-2xl border border-line">
               {post.content}
             </div>
           </div>
@@ -792,8 +771,8 @@ export default function AdminPostDetailPage() {
         {/* Right Column (1 Col): Author, Property & Location Details */}
         <div className="space-y-6">
           {/* Author / Poster Card */}
-          <div className="bg-white p-5 rounded-3xl border border-zinc-200/90 shadow-2xs space-y-4">
-            <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-card p-5 rounded-3xl border border-line shadow-2xs space-y-4">
+            <h3 className="text-xs font-black text-muted uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-orange-600" />
               <span>{t('adminBlogsDetailAuthorInfo')}</span>
             </h3>
@@ -802,55 +781,55 @@ export default function AdminPostDetailPage() {
               <img
                 src={post.poster?.avatarUrl || '/avatar-placeholder.png'}
                 alt=""
-                className="w-12 h-12 rounded-2xl object-cover border border-zinc-200"
+                className="w-12 h-12 rounded-2xl object-cover border border-line"
               />
               <div className="space-y-0.5">
-                <div className="font-black text-zinc-900 text-sm">
+                <div className="font-black text-foreground text-sm">
                   {post.poster?.username || t('adminBlogsAdminAuthor')}
                 </div>
-                <div className="text-[11px] text-zinc-400 font-mono truncate max-w-[190px]">
+                <div className="text-[11px] text-muted font-mono truncate max-w-[190px]">
                   {post.poster?.id ? `ID: ${post.poster.id}` : t('adminBlogsAdminAuthor')}
                 </div>
               </div>
             </div>
 
-            <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-100 text-[11px] text-zinc-500 leading-relaxed">
+            <div className="p-3 bg-surface rounded-2xl border border-line text-[11px] text-muted leading-relaxed">
               {t('adminBlogsDetailModerationDesc')}
             </div>
           </div>
 
           {/* Associated Room & Boarding House Card */}
           {post.room && (
-            <div className="bg-white p-5 rounded-3xl border border-zinc-200/90 shadow-2xs space-y-4">
-              <h3 className="text-xs font-black text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="bg-card p-5 rounded-3xl border border-line shadow-2xs space-y-4">
+              <h3 className="text-xs font-black text-muted uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-orange-600" />
                 <span>{t('adminBlogsDetailRoomAndBuilding')}</span>
               </h3>
 
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-zinc-100">
-                  <span className="text-zinc-500">{t('adminBlogsDetailBoardingHouse')}</span>
-                  <span className="font-bold text-zinc-900">
+                <div className="flex justify-between py-1 border-b border-line">
+                  <span className="text-muted">{t('adminBlogsDetailBoardingHouse')}</span>
+                  <span className="font-bold text-foreground">
                     {post.room.boardingHouseName || '—'}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-zinc-100">
-                  <span className="text-zinc-500">{t('adminBlogsDetailRoomNumber')}</span>
-                  <span className="font-bold text-zinc-900">{post.room.roomNumber || '—'}</span>
+                <div className="flex justify-between py-1 border-b border-line">
+                  <span className="text-muted">{t('adminBlogsDetailRoomNumber')}</span>
+                  <span className="font-bold text-foreground">{post.room.roomNumber || '—'}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-zinc-100">
-                  <span className="text-zinc-500">{t('adminBlogsDetailFloor')}</span>
-                  <span className="font-bold text-zinc-900">{post.room.floor || 1}</span>
+                <div className="flex justify-between py-1 border-b border-line">
+                  <span className="text-muted">{t('adminBlogsDetailFloor')}</span>
+                  <span className="font-bold text-foreground">{post.room.floor || 1}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-zinc-100">
-                  <span className="text-zinc-500">{t('adminBlogsDetailArea')}</span>
-                  <span className="font-bold text-zinc-900">
+                <div className="flex justify-between py-1 border-b border-line">
+                  <span className="text-muted">{t('adminBlogsDetailArea')}</span>
+                  <span className="font-bold text-foreground">
                     {post.room.area ? `${post.room.area} m²` : '—'}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-zinc-100">
-                  <span className="text-zinc-500">{t('adminBlogsDetailRoomType')}</span>
-                  <span className="font-bold text-zinc-900 uppercase text-[11px]">
+                <div className="flex justify-between py-1 border-b border-line">
+                  <span className="text-muted">{t('adminBlogsDetailRoomType')}</span>
+                  <span className="font-bold text-foreground uppercase text-[11px]">
                     {post.room.roomTypeName || 'common'}
                   </span>
                 </div>
@@ -858,12 +837,12 @@ export default function AdminPostDetailPage() {
 
               {/* Address details */}
               {post.address && (
-                <div className="pt-2 border-t border-zinc-100 space-y-1 text-xs">
-                  <div className="font-bold text-zinc-700 flex items-center gap-1">
+                <div className="pt-2 border-t border-line space-y-1 text-xs">
+                  <div className="font-bold text-foreground/90 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-orange-600 shrink-0" />
                     <span>{t('adminBlogsDetailLocation')}</span>
                   </div>
-                  <div className="text-zinc-500 leading-relaxed text-[11px]">
+                  <div className="text-muted leading-relaxed text-[11px]">
                     {[
                       post.address.houseNumber,
                       post.address.street,
@@ -880,371 +859,354 @@ export default function AdminPostDetailPage() {
           )}
 
           {/* Quick Action Box */}
-          <div className="bg-orange-50/50 p-5 rounded-3xl border border-orange-200/60 shadow-2xs space-y-3">
-            <h3 className="text-xs font-black text-orange-800 flex items-center gap-1.5">
+          <div className="bg-accent-soft p-5 rounded-3xl border border-accent-subtle shadow-2xs space-y-3">
+            <h3 className="text-xs font-black text-accent flex items-center gap-1.5">
               <ShieldAlert className="w-4 h-4 text-orange-600" />
               <span>{t('adminBlogsDetailModerationNote')}</span>
             </h3>
-            <p className="text-[11px] text-zinc-600 leading-relaxed">
+            <p className="text-[11px] text-muted leading-relaxed">
               {t('adminBlogsDetailModerationDesc')}
             </p>
           </div>
         </div>
       </div>
 
-      {/* ─── MODAL 1: EDIT POST MODAL (Rule #10 compliant) ─── */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-scaleIn max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                  <Edit3 className="w-4 h-4" />
-                </div>
-                <h2 className="text-base font-black text-zinc-900">
-                  {t('adminBlogsDetailEditModalTitle')}
-                </h2>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRequestCloseEdit}
-                className="h-auto p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      {/* MODAL 1: EDIT POST MODAL (Rule #10 compliant) */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleRequestCloseEdit}
+        size="xl"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-8 h-8 rounded-xl bg-accent-soft text-orange-600 flex items-center justify-center">
+              <Edit3 className="w-4 h-4" />
+            </div>
+          }
+          title={t('adminBlogsDetailEditModalTitle')}
+          onClose={handleRequestCloseEdit}
+        />
+
+        <Modal.Body className="space-y-4 text-xs">
+          {editError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{editError}</span>
+            </div>
+          )}
+
+          {/* Title */}
+          <TextInput
+            label={`${t('adminBlogsFieldTitle')}:`}
+            type="text"
+            value={formTitle}
+            onChange={e => setFormTitle(e.target.value)}
+            className="px-3 py-2 bg-surface border border-line rounded-xl font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
+          />
+
+          {/* Status & Deposit */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <SelectInput
+              label={`${t('adminBlogsFieldStatus')}:`}
+              value={formStatus}
+              onChange={e => setFormStatus(e.target.value as any)}
+              className="px-3 py-2 bg-surface border border-line rounded-xl font-semibold text-foreground cursor-pointer focus:outline-none focus:border-orange-500"
+              options={[
+                { value: 'posted', label: t('adminBlogsStatusPublished') },
+                { value: 'draft', label: t('adminBlogsStatusDraft') },
+                { value: 'hidden', label: t('adminBlogsStatusHidden') },
+                { value: 'locked', label: t('adminModBadgeLocked') },
+              ]}
+            />
+
+            <NumberInput
+              label={`${t('adminBlogsFieldDeposit')}:`}
+              min={0}
+              step={100000}
+              value={formDepositAmount}
+              onChange={e => setFormDepositAmount(Number(e.target.value) || 0)}
+              className="px-3 py-2 bg-surface border border-line rounded-xl font-bold text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
+            />
+          </div>
+
+          {/* Cover Image URL */}
+          <TextInput
+            label={`${t('adminBlogsFieldCoverImage')}:`}
+            type="text"
+            value={formCoverImage}
+            onChange={e => setFormCoverImage(e.target.value)}
+            className="px-3 py-2 bg-surface border border-line rounded-xl font-medium text-foreground focus:outline-none focus:border-orange-500 focus:bg-white"
+          />
+
+          {/* Content */}
+          <TextareaInput
+            label={`${t('adminBlogsFieldContent')}:`}
+            rows={8}
+            value={formContent}
+            onChange={e => setFormContent(e.target.value)}
+            className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
+          />
+        </Modal.Body>
+
+        <Modal.Footer className="flex items-center justify-end gap-2.5">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRequestCloseEdit}
+            disabled={isSaving}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            onClick={handleSaveEdit}
+            disabled={isSaving}
+            isLoading={isSaving}
+          >
+            <span>{t('adminBlogsDetailSaveChanges')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* MODAL 2: LOCK POST MODAL (Rule #10 compliant) */}
+      <Modal
+        isOpen={isLockModalOpen}
+        onClose={handleRequestCloseLock}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5 text-red-600" />
+            </div>
+          }
+          title={t('adminModLockTitle')}
+          description={post.id}
+          onClose={handleRequestCloseLock}
+        />
+
+        <Modal.Body className="space-y-4 text-xs">
+          <p className="text-xs text-muted leading-relaxed">{t('adminModLockSubtitle')}</p>
+
+          {lockReasonError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{lockReasonError}</span>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="font-bold text-foreground/90 block">
+              {t('adminModLockReasonLabel')}
+            </label>
+
+            {/* Preset Chips */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                t('adminModLockPresetFakePrice'),
+                t('adminModLockPresetScamDeposit'),
+                t('adminModLockPresetViolation'),
+              ].map(preset => (
+                <Button
+                  key={preset}
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => {
+                    setLockReason(preset)
+                    setLockReasonError('')
+                  }}
+                >
+                  {preset}
+                </Button>
+              ))}
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-              {editError && (
-                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                  <span>{editError}</span>
-                </div>
-              )}
+            <TextareaInput
+              rows={3}
+              value={lockReason}
+              onChange={e => {
+                setLockReason(e.target.value)
+                if (e.target.value.trim()) setLockReasonError('')
+              }}
+              placeholder={t('adminModLockReasonPlaceholder')}
+              className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed mt-1"
+            />
+          </div>
+        </Modal.Body>
 
-              {/* Title */}
-              <TextInput
-                label={`${t('adminBlogsFieldTitle')}:`}
-                type="text"
-                value={formTitle}
-                onChange={e => setFormTitle(e.target.value)}
-                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
-              />
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRequestCloseLock}
+            disabled={isLocking}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            onClick={handleConfirmLock}
+            disabled={isLocking}
+            isLoading={isLocking}
+          >
+            <span>{t('adminModLockConfirmBtn')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-              {/* Status & Deposit */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <SelectInput
-                  label={`${t('adminBlogsFieldStatus')}:`}
-                  value={formStatus}
-                  onChange={e => setFormStatus(e.target.value as any)}
-                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-semibold text-zinc-800 cursor-pointer focus:outline-none focus:border-orange-500"
-                  options={[
-                    { value: 'posted', label: t('adminBlogsStatusPublished') },
-                    { value: 'draft', label: t('adminBlogsStatusDraft') },
-                    { value: 'hidden', label: t('adminBlogsStatusHidden') },
-                    { value: 'locked', label: t('adminModBadgeLocked') },
-                  ]}
-                />
-
-                <NumberInput
-                  label={`${t('adminBlogsFieldDeposit')}:`}
-                  min={0}
-                  step={100000}
-                  value={formDepositAmount}
-                  onChange={e => setFormDepositAmount(Number(e.target.value) || 0)}
-                  className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900 focus:outline-none focus:border-orange-500 focus:bg-white"
-                />
-              </div>
-
-              {/* Cover Image URL */}
-              <TextInput
-                label={`${t('adminBlogsFieldCoverImage')}:`}
-                type="text"
-                value={formCoverImage}
-                onChange={e => setFormCoverImage(e.target.value)}
-                className="px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl font-medium text-zinc-800 focus:outline-none focus:border-orange-500 focus:bg-white"
-              />
-
-              {/* Content */}
-              <TextareaInput
-                label={`${t('adminBlogsFieldContent')}:`}
-                rows={8}
-                value={formContent}
-                onChange={e => setFormContent(e.target.value)}
-                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-orange-500 focus:bg-white leading-relaxed"
-              />
+      {/* MODAL 3: UNLOCK POST MODAL */}
+      <Modal
+        isOpen={isUnlockModalOpen}
+        onClose={() => setIsUnlockModalOpen(false)}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-success-soft border border-success-subtle flex items-center justify-center shrink-0">
+              <Unlock className="w-5 h-5 text-success" />
             </div>
+          }
+          title={t('adminModUnlockTitle')}
+          description={post.id}
+          onClose={() => setIsUnlockModalOpen(false)}
+        />
 
-            <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-end gap-2.5">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRequestCloseEdit}
-                disabled={isSaving}
-                className="h-auto px-4 py-2 rounded-xl bg-white border border-zinc-200 text-zinc-700 font-bold hover:bg-zinc-100 transition-colors cursor-pointer"
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveEdit}
-                disabled={isSaving}
-                isLoading={isSaving}
-                className="h-auto px-5 py-2 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
-              >
-                <span>{t('adminBlogsDetailSaveChanges')}</span>
-              </Button>
+        <Modal.Body className="space-y-4">
+          <p className="text-xs text-muted leading-relaxed">
+            {t('adminModUnlockConfirm', { title: post.title })}
+          </p>
+        </Modal.Body>
+
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => setIsUnlockModalOpen(false)}
+            disabled={isUnlocking}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            onClick={handleConfirmUnlock}
+            disabled={isUnlocking}
+            isLoading={isUnlocking}
+          >
+            <span>{t('adminModUnlockConfirmBtn')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* MODAL 4: DELETE POST MODAL (Rule #10 compliant) */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleRequestCloseDelete}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-danger-soft border border-danger-subtle flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+          }
+          title={t('adminBlogsDetailDeleteModalTitle')}
+          description={post.id}
+          onClose={handleRequestCloseDelete}
+        />
+
+        <Modal.Body className="space-y-4 text-xs">
+          <p className="text-xs text-muted leading-relaxed">
+            {t('adminBlogsDetailDeleteModalDesc', {
+              title: post.title,
+              author: post.poster?.username || 'the author',
+            })}
+          </p>
+
+          {deleteError && (
+            <div className="p-3 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{deleteError}</span>
+            </div>
+          )}
+
+          <div className="space-y-1 text-xs">
+            <TextareaInput
+              label={t('adminBlogsDeleteReasonLabel')}
+              rows={3}
+              value={deleteReason}
+              onChange={e => {
+                setDeleteReason(e.target.value)
+                if (e.target.value.trim()) setDeleteError('')
+              }}
+              placeholder={t('adminBlogsDeleteReasonPlaceholder')}
+              className="p-3 bg-surface border border-line rounded-2xl font-medium text-foreground placeholder:text-muted focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed"
+            />
+            <div className="text-[10px] text-muted text-right">
+              {deleteReason.length} / 500 {t('adminBlogsDetailCharsUnit')}
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
 
-      {/* ─── MODAL 2: LOCK POST MODAL (Rule #10 compliant) ─── */}
-      {isLockModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-zinc-900">{t('adminModLockTitle')}</h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">{post.id}</p>
-              </div>
-            </div>
+        <Modal.Footer className="flex items-center justify-end gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={handleRequestCloseDelete}
+            disabled={isDeleting}
+          >
+            {t('adminBlogsCancel')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            onClick={handleConfirmDelete}
+            disabled={isDeleting || !deleteReason.trim()}
+            isLoading={isDeleting}
+          >
+            <span>{t('adminBlogsDetailConfirmDeleteAndDispatch')}</span>
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-            <p className="text-xs text-zinc-600 leading-relaxed">{t('adminModLockSubtitle')}</p>
-
-            {lockReasonError && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{lockReasonError}</span>
-              </div>
-            )}
-
-            <div className="space-y-2 text-xs">
-              <label className="font-bold text-zinc-700 block">
-                {t('adminModLockReasonLabel')}
-              </label>
-
-              {/* Preset Chips */}
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  t('adminModLockPresetFakePrice'),
-                  t('adminModLockPresetScamDeposit'),
-                  t('adminModLockPresetViolation'),
-                ].map(preset => (
-                  <Button
-                    key={preset}
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setLockReason(preset)
-                      setLockReasonError('')
-                    }}
-                    className={`h-auto px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
-                      lockReason === preset
-                        ? 'bg-red-50 border-red-300 text-red-700'
-                        : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100'
-                    }`}
-                  >
-                    {preset}
-                  </Button>
-                ))}
-              </div>
-
-              <TextareaInput
-                label={t('adminModLockReasonLabel')}
-                rows={3}
-                value={lockReason}
-                onChange={e => {
-                  setLockReason(e.target.value)
-                  if (e.target.value.trim()) setLockReasonError('')
-                }}
-                placeholder={t('adminModLockReasonPlaceholder')}
-                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed mt-1"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRequestCloseLock}
-                disabled={isLocking}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleConfirmLock}
-                disabled={isLocking}
-                isLoading={isLocking}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-              >
-                <span>{t('adminModLockConfirmBtn')}</span>
-              </Button>
-            </div>
+      {/* MODAL 5: RULE #10 CONFIRMATION POP-UP */}
+      <Modal
+        isOpen={confirmCloseModal.isOpen}
+        onClose={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+        size="sm"
+      >
+        <Modal.Body className="space-y-4 pt-4 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 3: UNLOCK POST MODAL ─── */}
-      {isUnlockModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-emerald-600">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
-                <Unlock className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-zinc-900">{t('adminModUnlockTitle')}</h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">{post.id}</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-zinc-600 leading-relaxed">
-              {t('adminModUnlockConfirm', { title: post.title })}
+          <div>
+            <h3 className="text-base font-black text-foreground">
+              {t('adminBlogsDiscardModalTitle')}
+            </h3>
+            <p className="text-xs text-muted mt-1 leading-relaxed">
+              {t('adminBlogsDiscardModalDesc')}
             </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsUnlockModalOpen(false)}
-                disabled={isUnlocking}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleConfirmUnlock}
-                disabled={isUnlocking}
-                isLoading={isUnlocking}
-                className="h-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
-              >
-                <span>{t('adminModUnlockConfirmBtn')}</span>
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 4: DELETE POST MODAL (Rule #10 compliant) ─── */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-scaleIn">
-            <div className="flex items-center gap-3 text-red-600">
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-zinc-900">
-                  {t('adminBlogsDetailDeleteModalTitle')}
-                </h3>
-                <p className="text-xs text-zinc-500 font-mono truncate max-w-[240px]">{post.id}</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-zinc-600 leading-relaxed">
-              {t('adminBlogsDetailDeleteModalDesc', {
-                title: post.title,
-                author: post.poster?.username || 'the author',
-              })}
-            </p>
-
-            {deleteError && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{deleteError}</span>
-              </div>
-            )}
-
-            <div className="space-y-1 text-xs">
-              <TextareaInput
-                label={t('adminBlogsDeleteReasonLabel')}
-                rows={3}
-                value={deleteReason}
-                onChange={e => {
-                  setDeleteReason(e.target.value)
-                  if (e.target.value.trim()) setDeleteError('')
-                }}
-                placeholder={t('adminBlogsDeleteReasonPlaceholder')}
-                className="p-3 bg-zinc-50 border border-zinc-200 rounded-2xl font-medium text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:bg-white leading-relaxed"
-              />
-              <div className="text-[10px] text-zinc-400 text-right">
-                {deleteReason.length} / 500 {t('adminBlogsDetailCharsUnit')}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRequestCloseDelete}
-                disabled={isDeleting}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                {t('adminBlogsCancel')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleConfirmDelete}
-                disabled={isDeleting || !deleteReason.trim()}
-                isLoading={isDeleting}
-                className="h-auto px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>{t('adminBlogsDetailConfirmDeleteAndDispatch')}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── MODAL 5: RULE #10 CONFIRMATION POP-UP ─── */}
-      {confirmCloseModal.isOpen && (
-        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 space-y-4 animate-scaleIn">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-black text-zinc-900">
-                {t('adminBlogsDiscardModalTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                {t('adminBlogsDiscardModalDesc')}
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
-                className="h-auto px-3.5 py-2 rounded-xl bg-zinc-100 text-zinc-700 text-xs font-bold hover:bg-zinc-200 transition-colors cursor-pointer"
-              >
-                {t('adminBlogsContinueEditing')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={confirmCloseModal.onDiscard}
-                className="h-auto px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold hover:bg-orange-700 transition-colors cursor-pointer shadow-2xs"
-              >
-                {t('adminBlogsDiscardAndClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+        </Modal.Body>
+        <Modal.Footer className="flex items-center gap-2">
+          <Button
+            size="md"
+            variant="secondary"
+            className="flex-1"
+            onClick={() => setConfirmCloseModal({ isOpen: false, onDiscard: () => {} })}
+          >
+            {t('adminBlogsContinueEditing')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            className="flex-1"
+            onClick={confirmCloseModal.onDiscard}
+          >
+            {t('adminBlogsDiscardAndClose')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }

@@ -1,276 +1,709 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Logo from '@/components/Logo'
-import { usePathname } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { useAuth } from '@/context/AuthContext'
+import { usePathname, useRouter } from 'next/navigation'
 import {
-  Menu,
+  Search,
+  Command,
   X,
-  Home,
+  MapPin,
+  Building,
+  ArrowRight,
+  Menu,
   Building2,
-  Layers,
-  BookOpen,
-  Mail,
-  User,
-  ShieldCheck,
-  ChevronDown,
-  Sparkles,
-  LogOut,
-  FileText,
-  CreditCard,
   UserCheck,
+  Sparkles,
+  CheckCircle2,
+  LogOut,
   Heart,
+  ChevronDown,
+  PlusCircle,
+  BarChart3,
+  Clock,
+  FileText,
 } from 'lucide-react'
-
+import { useAuth } from '@/context/AuthContext'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+import ThemeSwitcher from '@/components/ThemeSwitcher'
+import NotificationBell from '@/components/NotificationBell'
+import Logo from '@/components/Logo'
+import { useTranslations } from '@/context/LanguageContext'
 import { FEATURE_FLAGS } from '@/config/features'
+import { Button, Text, Modal, TextInput, NumberInput, Avatar } from '@/components/ui'
+
+interface UserMenuItem {
+  key: string
+  label: string
+  href?: string
+  onClick?: () => void
+  icon: React.ReactNode
+  className?: string
+  dividerAbove?: boolean
+  isDanger?: boolean
+}
+
+function MenuItemRenderer({
+  item,
+  onClose,
+  isMobile,
+}: {
+  item: UserMenuItem
+  onClose: () => void
+  isMobile?: boolean
+}) {
+  const handleClick = () => {
+    onClose()
+    if (item.onClick) item.onClick()
+  }
+
+  const buttonElement = (
+    <Button
+      onClick={item.href ? undefined : handleClick}
+      variant={item.isDanger ? 'ghost-danger' : 'ghost'}
+      size="lg"
+      fullWidth
+      justify={isMobile ? 'between' : 'start'}
+      leftIcon={item.icon}
+      rightIcon={isMobile ? <ArrowRight /> : undefined}
+    >
+      <Text as="span" size="xs" weight="bold" color={item.isDanger ? 'danger' : 'inherit'}>
+        {item.label}
+      </Text>
+    </Button>
+  )
+
+  return (
+    <>
+      {item.dividerAbove && <div className="border-t border-line my-1" />}
+      {item.href ? (
+        <Link href={item.href} onClick={handleClick} className="block w-full">
+          {buttonElement}
+        </Link>
+      ) : (
+        buttonElement
+      )}
+    </>
+  )
+}
 
 export function PublicHeader() {
   const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const router = useRouter()
+  const tNav = useTranslations('nav')
+  const tUpgrade = useTranslations('landlordUpgradeModal')
+  const {
+    isLoggedIn,
+    user,
+    logout,
+    upgradeToLandlord,
+    buildings,
+    capabilities,
+  } = useAuth()
 
-  const { isLoggedIn, user, logout, toggleLoginDemo } = useAuth()
+  const handleManageBoardingHouse = () => {
+    if (!isLoggedIn) {
+      router.push('/login?from=/landlord')
+      return
+    }
+    const hasHouse = (buildings && buildings.length > 0) || Boolean(capabilities?.isLandlord)
+    if (hasHouse) {
+      router.push('/landlord')
+    } else {
+      router.push('/landlord/setup')
+    }
+  }
 
-  const navLinks = [
-    { href: '/', label: 'Trang chủ', icon: Home },
-    ...(FEATURE_FLAGS.ENABLE_BHRP ? [{ href: '/rooms', label: 'Phòng trọ', icon: Building2 }] : []),
-    { href: '/pricing', label: 'Tính năng & Giá', icon: Layers },
-    { href: '/blog', label: 'Blog', icon: BookOpen },
-    { href: '/contact', label: 'Liên hệ', icon: Mail },
+  const [isCommandOpen, setIsCommandOpen] = useState(false)
+  const [commandQuery, setCommandQuery] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const userMenuRef = React.useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Landlord Upgrade Modal State
+  const [isLandlordModalOpen, setIsLandlordModalOpen] = useState(false)
+  const [houseName, setHouseName] = useState('')
+  const [houseAddress, setHouseAddress] = useState('')
+  const [roomCount, setRoomCount] = useState('10')
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setIsCommandOpen(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
+  const handleUpgradeSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!houseName || !houseAddress) return
+
+    upgradeToLandlord({ houseName, houseAddress })
+    setUpgradeSuccess(true)
+
+    setTimeout(() => {
+      setUpgradeSuccess(false)
+      setIsLandlordModalOpen(false)
+      router.push('/landlord')
+    }, 1500)
+  }
+
+  const searchResults = [
+    ...(FEATURE_FLAGS.ENABLE_BHRP
+      ? [
+        {
+          type: 'room',
+          title: tNav('searchMockRoom1Title'),
+          href: '/rooms/1',
+          price: tNav('searchMockRoom1Price'),
+          location: tNav('searchMockRoom1Location'),
+        },
+        {
+          type: 'room',
+          title: tNav('searchMockRoom2Title'),
+          href: '/rooms/2',
+          price: tNav('searchMockRoom2Price'),
+          location: tNav('searchMockRoom2Location'),
+        },
+        {
+          type: 'room',
+          title: tNav('searchMockRoom3Title'),
+          href: '/rooms/3',
+          price: tNav('searchMockRoom3Price'),
+          location: tNav('searchMockRoom3Location'),
+        },
+      ]
+      : []),
+    {
+      type: 'blog',
+      title: tNav('searchMockBlog1Title'),
+      href: '/blog',
+      category: tNav('searchMockBlog1Category'),
+      price: undefined,
+      location: undefined,
+    },
+    {
+      type: 'blog',
+      title: tNav('searchMockBlog2Title'),
+      href: '/blog',
+      category: tNav('searchMockBlog2Category'),
+      price: undefined,
+      location: undefined,
+    },
+  ].filter(
+    item =>
+      commandQuery === '' ||
+      item.title.toLowerCase().includes(commandQuery.toLowerCase()) ||
+      (item.location && item.location.toLowerCase().includes(commandQuery.toLowerCase())),
+  )
+
+  const navItems = [
+    { href: '/', label: tNav('home') },
+    ...(FEATURE_FLAGS.ENABLE_BHRP ? [{ href: '/rooms', label: tNav('rooms') }] : []),
+    { href: '/pricing', label: tNav('pricing') },
+    { href: '/blog', label: tNav('blog') },
+    { href: '/contact', label: tNav('contact') },
   ]
 
+  const userMenuItems: UserMenuItem[] = user
+    ? [
+      ...(user.role === 'employee'
+        ? [
+          {
+            key: 'staff-portal',
+            label: tNav('staffPortalLink'),
+            href: '/staff',
+            icon: <Clock className="w-4 h-4 text-primary" />,
+            className: 'text-primary hover:bg-primary/10',
+          },
+        ]
+        : []),
+      {
+        key: 'profile',
+        label: tNav('myProfile'),
+        href: '/profile',
+        icon: <UserCheck className="w-4 h-4 text-primary" />,
+      },
+      {
+        key: 'send-application',
+        label: tNav('sendApplication'),
+        href: '/send-application',
+        icon: <FileText className="w-4 h-4 text-amber-500" />,
+      },
+      {
+        key: 'rented-rooms',
+        label:
+          user.role === 'landlord'
+            ? tNav('manageHouses')
+            : user.role === 'employee'
+              ? tNav('myShifts')
+              : tNav('myRentedRooms'),
+        href:
+          user.role === 'landlord'
+            ? '/landlord/rooms'
+            : user.role === 'employee'
+              ? '/staff'
+              : '/tenant',
+        icon: <Building className="w-4 h-4 text-vacant" />,
+      },
+      ...(FEATURE_FLAGS.ENABLE_BHRP
+        ? [
+          {
+            key: 'saved-rooms',
+            label: tNav('mySavedRooms'),
+            href: '/saved-posts',
+            icon: <Heart className="w-4 h-4 text-danger fill-danger/10" />,
+          },
+          {
+            key: 'post-listing',
+            label: tNav('postListing'),
+            href: '/posts/create',
+            icon: <PlusCircle className="w-4 h-4 text-accent" />,
+            dividerAbove: true,
+          },
+          {
+            key: 'post-analytics',
+            label: tNav('postAnalytics'),
+            href: '/posts/analytics',
+            icon: <BarChart3 className="w-4 h-4 text-primary" />,
+          },
+        ]
+        : []),
+      {
+        key: 'logout',
+        label: tNav('logout'),
+        onClick: logout,
+        icon: <LogOut className="w-4 h-4 text-danger" />,
+        isDanger: true,
+        dividerAbove: true,
+      },
+    ]
+    : []
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-zinc-200/80 bg-white/95 backdrop-blur-md transition-all">
-      <div className="mx-auto flex h-16 md:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Logo size="md" />
+    <>
+      {/* Public Header */}
+      <header className="sticky top-0 z-40 w-full border-b border-line bg-card/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 md:h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Logo */}
+          <Logo size="md" />
 
-        {/* Desktop & Tablet Navigation Links */}
-        <nav className="hidden md:flex items-center gap-4 lg:gap-8">
-          {navLinks.map(link => {
-            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-xs lg:text-sm font-bold transition-colors ${
-                  isActive ? 'text-[#2AC1BC]' : 'text-zinc-600 hover:text-[#2AC1BC]'
-                }`}
-              >
-                {link.label}
-              </Link>
-            )
-          })}
-        </nav>
-
-        {/* Auth & Profile Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {isLoggedIn ? (
-            <>
-              {/* Prominent "Đăng ký trở thành chủ trọ" or "Bảng điều khiển" Button next to Avatar */}
-              <Link href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}>
-                <Button
-                  className={`rounded-xl px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-bold shadow-md flex items-center gap-1.5 transition-all hover:scale-105 ${
-                    user?.role === 'landlord'
-                      ? 'bg-[#2AC1BC] hover:bg-[#25aca7] shadow-[#2AC1BC]/25'
-                      : 'bg-[#FF6B35] hover:bg-[#d55e23] shadow-[#FF6B35]/25'
-                  }`}
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">
-                    {user?.role === 'landlord'
-                      ? 'Bảng điều khiển Chủ trọ'
-                      : 'Đăng ký trở thành chủ trọ'}
-                  </span>
-                  <span className="sm:hidden">
-                    {user?.role === 'landlord' ? 'Chủ trọ' : 'Làm Chủ trọ'}
-                  </span>
-                </Button>
-              </Link>
-
-              {/* User Profile Avatar Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-zinc-100 transition-colors border border-zinc-200/80 bg-white"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={
-                      user?.avatar ||
-                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
-                    }
-                    alt={user?.name || 'User Avatar'}
-                    className="w-8 h-8 rounded-xl object-cover border border-[#2AC1BC]/30"
-                  />
-                  <span className="hidden lg:inline text-xs font-bold text-zinc-800">
-                    {user?.name || 'Tài khoản'}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
-                </button>
-
-                {/* Profile Dropdown Menu */}
-                {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white p-3 shadow-2xl border border-zinc-200/80 z-50 flex flex-col gap-2 text-xs">
-                    {/* User Info Header */}
-                    <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 flex flex-col">
-                      <span className="font-bold text-zinc-900 text-sm">
-                        {user?.name || 'Tài khoản'}
-                      </span>
-                      <span className="text-zinc-500 text-[11px]">
-                        {user?.email || 'user@example.com'}
-                      </span>
-                      <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-[#2AC1BC] uppercase">
-                        ● Khách thuê trọ
-                      </span>
-                    </div>
-
-                    {/* Quick Landlord Action */}
-                    <Link
-                      href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}
-                      onClick={() => setUserDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 p-2.5 rounded-xl font-bold transition-colors ${
-                        user?.role === 'landlord'
-                          ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] hover:bg-[#2AC1BC]/20'
-                          : 'bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35]/20'
-                      }`}
-                    >
-                      <Building2 className="w-4 h-4 shrink-0" />
-                      <span>
-                        {user?.role === 'landlord'
-                          ? 'Bảng điều khiển Chủ trọ →'
-                          : 'Đăng ký trở thành chủ trọ →'}
-                      </span>
-                    </Link>
-
-                    {/* Menu links */}
-                    <div className="flex flex-col gap-1 pt-1 border-t border-zinc-100 text-zinc-700">
-                      {FEATURE_FLAGS.ENABLE_BHRP && (
-                        <Link
-                          href="/saved-posts"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
-                        >
-                          <Heart className="w-4 h-4 text-zinc-400" /> Phòng trọ đã lưu
-                        </Link>
-                      )}
-                      <Link
-                        href="/tenant/contracts"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
-                      >
-                        <FileText className="w-4 h-4 text-zinc-400" /> Hợp đồng của tôi
-                      </Link>
-                      <Link
-                        href="/tenant/invoices"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-zinc-100 font-semibold"
-                      >
-                        <CreditCard className="w-4 h-4 text-zinc-400" /> Hóa đơn tiền phòng
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout()
-                          setUserDropdownOpen(false)
-                        }}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-red-50 text-red-600 font-semibold text-left transition-colors mt-1 border-t border-zinc-100 w-full"
-                      >
-                        <LogOut className="w-4 h-4" /> Đăng xuất tài khoản
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="hidden sm:inline-flex text-xs md:text-sm font-bold text-zinc-700 hover:text-[#2AC1BC] transition-colors px-2.5 py-1.5"
-              >
-                Đăng nhập
-              </Link>
-              <Link href="/register">
-                <Button className="rounded-xl px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white text-xs md:text-sm font-bold shadow-md shadow-[#2AC1BC]/25">
-                  Đăng ký tài khoản
-                </Button>
-              </Link>
-            </>
-          )}
-
-          {/* Mobile Hamburger Toggle Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-zinc-700 hover:bg-zinc-100 transition-colors"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Drawer Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-16 bg-white/98 backdrop-blur-xl border-b border-zinc-200 px-4 pt-3 pb-6 flex flex-col gap-3 shadow-2xl z-50">
-          <div className="flex flex-col gap-1">
-            {navLinks.map(link => {
-              const Icon = link.icon
-              const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href)
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-6">
+            {navItems.map(item => {
+              const isActive =
+                pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
 
               return (
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    isActive ? 'bg-[#2AC1BC]/10 text-[#2AC1BC]' : 'text-zinc-700 hover:bg-zinc-100'
-                  }`}
+                  key={item.href}
+                  href={item.href}
+                  className={`text-xs font-bold transition-all relative py-1 ${isActive
+                    ? 'text-primary font-extrabold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full'
+                    : 'text-foreground/90 hover:text-primary'
+                    }`}
                 >
-                  <Icon className="w-4 h-4 text-[#2AC1BC]" />
-                  {link.label}
+                  <Text as="span" size="xs" weight={isActive ? 'extrabold' : 'bold'} color="inherit">
+                    {item.label}
+                  </Text>
                 </Link>
               )
             })}
+          </nav>
+
+          {/* Desktop Right Action Buttons & User Menu */}
+          <div className="hidden lg:flex items-center gap-3">
+            <Button
+              rounded="full"
+              onClick={handleManageBoardingHouse}
+              leftIcon={<Building2 />}
+            >
+              {tNav('manageYourHouse')}
+            </Button>
+
+            {/* Auth Actions Conditional Rendering */}
+            {isLoggedIn && user ? (
+              <div className="flex items-center gap-3">
+                {/* User Avatar & Dropdown Menu */}
+                <div ref={userMenuRef} className="relative pl-2 border-l border-line">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center gap-2 p-1 rounded-2xl hover:bg-card-hover text-left h-auto"
+                  >
+                    <Avatar
+                      src={user.avatar}
+                      name={user.name}
+                      size="sm"
+                      bordered
+                      className="shadow-xs"
+                    />
+                    <div className="hidden sm:block text-left">
+                      <Text
+                        as="span"
+                        size="xs"
+                        weight="black"
+                        color="default"
+                        className="block leading-tight truncate max-w-[100px]"
+                      >
+                        {user.name}
+                      </Text>
+                    </div>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-muted transition-transform ${isUserMenuOpen ? 'rotate-180' : ''
+                        }`}
+                    />
+                  </Button>
+
+                  {/* Dropdown Menu Popup */}
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-card rounded-2xl border border-line shadow-2xl p-2 z-50 animate-in fade-in duration-200 space-y-1">
+                      <div className="px-3 py-2 border-b border-line">
+                        <Text as="p" size="xs" weight="black" color="default" className="truncate">
+                          {user.name}
+                        </Text>
+                        <Text as="p" size="3xs" color="subtle" weight="medium" className="truncate">
+                          {user.phone}
+                        </Text>
+                      </div>
+
+                      {userMenuItems.map(item => (
+                        <MenuItemRenderer
+                          key={item.key}
+                          item={item}
+                          onClose={() => setIsUserMenuOpen(false)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Button href="/login" variant="ghost" rounded="full">
+                  {tNav('login')}
+                </Button>
+              </div>
+            )}
+
+            {/* Notification Popup, Theme Switcher & Language Switcher */}
+            <div className="flex items-center gap-1.5 pl-1.5 border-l border-zinc-200/80 dark:border-line">
+              {isLoggedIn && <NotificationBell align="right" />}
+              <ThemeSwitcher />
+              <LanguageSwitcher />
+            </div>
           </div>
 
-          <div className="pt-3 border-t border-zinc-100 flex flex-col gap-2">
-            <Link
-              href={user?.role === 'landlord' ? '/landlord' : '/landlord/setup'}
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-sm font-bold shadow-md ${
-                user?.role === 'landlord' ? 'bg-[#2AC1BC]' : 'bg-[#FF6B35]'
-              }`}
+          {/* Mobile Controls */}
+          <div className="flex items-center gap-1.5 lg:hidden">
+            {isLoggedIn && <NotificationBell align="right" />}
+            <ThemeSwitcher />
+            <LanguageSwitcher />
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="rounded-2xl border border-zinc-200/80 dark:border-line"
+              aria-label="Toggle Navigation Menu"
             >
-              <Building2 className="w-4 h-4" />{' '}
-              {user?.role === 'landlord' ? 'Bảng điều khiển Chủ trọ' : 'Đăng ký trở thành chủ trọ'}
-            </Link>
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6 text-zinc-900 dark:text-foreground" />
+              ) : (
+                <Menu className="w-6 h-6 text-zinc-900 dark:text-foreground" />
+              )}
+            </Button>
+          </div>
+        </div>
 
-            {isLoggedIn ? (
-              <button
-                onClick={() => {
-                  logout()
-                  setMobileMenuOpen(false)
-                }}
-                className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 mt-1"
+        {/* Mobile Dropdown Menu (Vertically Scrollable) */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-b border-line bg-card px-4 py-6 space-y-6 animate-in slide-in-from-top-3 duration-200 shadow-2xl max-h-[calc(100vh-5rem)] overflow-y-auto">
+            <nav className="flex flex-col space-y-2">
+              {navItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="px-4 py-3 rounded-2xl text-sm font-extrabold text-foreground hover:bg-card-hover transition-all flex items-center justify-between"
+                >
+                  <Text as="span" size="sm" weight="extrabold" color="inherit">
+                    {item.label}
+                  </Text>
+                  <ArrowRight className="w-4 h-4 text-zinc-300" />
+                </Link>
+              ))}
+            </nav>
+
+            {/* Mobile Auth Actions */}
+            <div className="pt-4 border-t border-line space-y-3">
+              {isLoggedIn && user ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3.5 bg-surface rounded-2xl border border-line">
+                    <Avatar
+                      src={user.avatar}
+                      name={user.name}
+                      size="md"
+                      bordered
+                    />
+                    <div>
+                      <Text as="h4" size="xs" weight="black" color="default">
+                        {user.name}
+                      </Text>
+                      <Text as="p" size="3xs" color="subtle" weight="semibold">
+                        {user.role === 'landlord' ? tNav('landlordRole') : tNav('tenantRole')}
+                      </Text>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="md"
+                    rounded="full"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      handleManageBoardingHouse()
+                    }}
+                    className="w-full shadow-md justify-center"
+                    leftIcon={<Building2 />}
+                  >
+                    {tNav('manageYourHouse')}
+                  </Button>
+
+                  {/* Inner Profile Links for Mobile/Tablet */}
+                  <div className="bg-surface rounded-2xl p-2 border border-line space-y-1">
+                    {userMenuItems.map(item => (
+                      <MenuItemRenderer
+                        key={`mobile-${item.key}`}
+                        item={item}
+                        onClose={() => setIsMobileMenuOpen(false)}
+                        isMobile
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Button
+                    size="md"
+                    rounded="full"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      handleManageBoardingHouse()
+                    }}
+                    className="w-full shadow-md justify-center"
+                    leftIcon={<Building2 />}
+                  >
+                    {tNav('manageYourHouse')}
+                  </Button>
+                  <Button
+                    href="/login"
+                    variant="outline"
+                    size="md"
+                    rounded="full"
+                    className="w-full justify-center"
+                  >
+                    {tNav('login')}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Landlord Upgrade Form Modal */}
+      <Modal
+        isOpen={isLandlordModalOpen}
+        onClose={() => setIsLandlordModalOpen(false)}
+        size="md"
+        className="rounded-3xl"
+      >
+        <Modal.Body className="p-6 sm:p-8 space-y-6">
+          {upgradeSuccess ? (
+            <div className="text-center py-8 space-y-4 animate-in fade-in duration-300">
+              <div className="w-16 h-16 rounded-full bg-success-soft text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <Text as="h3" size="xl" weight="black" color="default">
+                {tUpgrade('congratsTitle')}
+              </Text>
+              <Text as="p" size="xs" color="secondary" weight="medium" className="max-w-xs mx-auto">
+                {tUpgrade('congratsDesc')}
+              </Text>
+            </div>
+          ) : (
+            <form onSubmit={handleUpgradeSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-danger-soft text-accent text-[10px] font-black rounded-full uppercase tracking-wider">
+                  <Sparkles className="w-3 h-3 fill-accent" />
+                  <Text as="span" size="3xs" weight="black" color="orange">
+                    {tUpgrade('badge')}
+                  </Text>
+                </span>
+                <Text as="h3" size="xl" weight="black" color="default">
+                  {tUpgrade('title')}
+                </Text>
+                <Text as="p" size="xs" color="secondary" weight="medium" className="leading-relaxed">
+                  {tUpgrade('desc')}
+                </Text>
+              </div>
+
+              <div className="space-y-4 pt-1">
+                <TextInput
+                  label={tUpgrade('houseNameLabel')}
+                  required
+                  placeholder={tUpgrade('houseNamePlaceholder')}
+                  value={houseName}
+                  onChange={e => setHouseName(e.target.value)}
+                  leftIcon={<Building2 className="w-4 h-4" />}
+                />
+
+                <TextInput
+                  label={tUpgrade('houseAddressLabel')}
+                  required
+                  placeholder={tUpgrade('houseAddressPlaceholder')}
+                  value={houseAddress}
+                  onChange={e => setHouseAddress(e.target.value)}
+                  leftIcon={<MapPin className="w-4 h-4" />}
+                />
+
+                <NumberInput
+                  label={tUpgrade('roomCountLabel')}
+                  placeholder={tUpgrade('roomCountPlaceholder')}
+                  value={roomCount}
+                  onChange={e => setRoomCount(e.target.value)}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                size="md"
+                rounded="full"
+                className="w-full bg-accent hover:bg-[#ff5518] shadow-lg shadow-accent/25 border-none justify-center"
               >
-                <LogOut className="w-4 h-4" /> Đăng xuất ({user?.name})
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-800 hover:bg-zinc-50"
+                {tUpgrade('confirmBtn')}
+              </Button>
+            </form>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Search Command Palette Modal */}
+      {isCommandOpen && (
+        <div
+          onClick={e => {
+            if (e.target === e.currentTarget) setIsCommandOpen(false)
+          }}
+          className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-zinc-950/60 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
+        >
+          <div className="bg-card rounded-3xl max-w-xl w-full p-4 shadow-2xl space-y-4 border border-line cursor-default">
+            <div className="relative flex items-center border-b border-line pb-3">
+              <Search className="w-5 h-5 text-primary absolute left-3" />
+              <input
+                type="text"
+                autoFocus
+                placeholder={tUpgrade('searchPlaceholder')}
+                value={commandQuery}
+                onChange={e => setCommandQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-2 text-sm font-bold text-foreground focus:outline-none"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                rounded="full"
+                onClick={() => setIsCommandOpen(false)}
+                className="absolute right-2 !h-7 !w-7"
+                aria-label="Close search"
               >
-                <User className="w-4 h-4" /> Đăng nhập tài khoản
-              </Link>
-            )}
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto space-y-2">
+              <Text
+                as="span"
+                size="3xs"
+                weight="black"
+                color="subtle"
+                uppercase
+                className="tracking-wider block px-3"
+              >
+                {tUpgrade('instantSearchTitle', { count: searchResults.length })}
+              </Text>
+
+              {searchResults.length === 0 ? (
+                <Text
+                  as="div"
+                  size="xs"
+                  weight="semibold"
+                  color="subtle"
+                  align="center"
+                  className="p-8"
+                >
+                  {tNav('noSearchResults', { query: commandQuery })}
+                </Text>
+              ) : (
+                searchResults.map((item, idx) => (
+                  <Link
+                    key={idx}
+                    href={item.href}
+                    onClick={() => setIsCommandOpen(false)}
+                    className="flex items-center justify-between p-3 rounded-2xl hover:bg-card-hover transition-colors group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        {item.type === 'room' ? (
+                          <Building className="w-4 h-4" />
+                        ) : (
+                          <Command className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <Text
+                          as="h4"
+                          size="xs"
+                          weight="extrabold"
+                          color="default"
+                          className="group-hover:text-primary transition-colors"
+                        >
+                          {item.title}
+                        </Text>
+                        <Text as="span" size="3xs" color="subtle" weight="medium">
+                          {item.location || item.category}
+                        </Text>
+                      </div>
+                    </div>
+                    {item.price && (
+                      <Text as="span" size="xs" weight="black" color="danger">
+                        {item.price}
+                      </Text>
+                    )}
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
-    </header>
+    </>
   )
 }
+export default PublicHeader

@@ -33,25 +33,25 @@ export class GrievancesController {
 
   @Post()
   @ApiOperation({
-    summary: 'Gửi đơn khiếu nại / thắc mắc / góp ý lên Ban Quản Trị hệ thống (UC-T-07)',
+    summary: 'Submit grievance / inquiry / feedback to system Admin (UC-T-07)',
     description:
-      'Người dùng gửi đơn khiếu nại, thắc mắc tính năng hoặc đóng góp ý kiến kèm bằng chứng ảnh (nếu có).',
+      'User submits a grievance, feature inquiry, or feedback with optional proof images.',
   })
   @ApiOkResponse({
-    description: 'Đơn khiếu nại đã được tiếp nhận thành công',
+    description: 'Grievance submitted successfully',
     type: GrievanceDetailResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Dữ liệu đầu vào không hợp lệ',
+    description: 'Invalid input data',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    description: 'Unauthorized or invalid token',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Không tìm thấy hợp đồng thuê phòng của người dùng',
+    description: 'User lease contract not found',
   })
   async createGrievance(
     @Request() req: any,
@@ -64,17 +64,17 @@ export class GrievancesController {
 
   @Get()
   @ApiOperation({
-    summary: 'Lấy lịch sử các khiếu nại của khách thuê (UC-T-07)',
+    summary: 'Get tenant grievance history (UC-T-07)',
     description:
-      'Truy vấn tất cả khiếu nại mà khách thuê đã gửi, trạng thái xử lý và phản hồi từ BQT.',
+      'Query all grievances submitted by the tenant, processing status, and admin resolution.',
   })
   @ApiOkResponse({
-    description: 'Danh sách khiếu nại của khách thuê',
+    description: 'Tenant grievance history list',
     type: GrievanceListResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    description: 'Unauthorized or invalid token',
   })
   async getTenantGrievances(@Request() req: any): Promise<GrievanceListResponseDto> {
     const userId = req.user?.id || req.user?.sub
@@ -84,22 +84,22 @@ export class GrievancesController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Xem chi tiết một đơn khiếu nại (UC-T-07)',
+    summary: 'Get grievance details (UC-T-07)',
     description:
-      'Xem chi tiết khiếu nại, hình ảnh bằng chứng và kết quả giải quyết / phản hồi từ BQT.',
+      'View grievance details, attached proof images, and admin resolution/response.',
   })
-  @ApiParam({ name: 'id', description: 'Mã định danh khiếu nại (UUID)' })
+  @ApiParam({ name: 'id', description: 'Grievance UUID' })
   @ApiOkResponse({
-    description: 'Chi tiết khiếu nại',
+    description: 'Grievance details',
     type: GrievanceDetailResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Không tìm thấy khiếu nại hoặc không có quyền truy cập',
+    description: 'Grievance not found or access denied',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
-    description: 'Chưa đăng nhập hoặc token không hợp lệ',
+    description: 'Unauthorized or invalid token',
   })
   async getTenantGrievanceById(
     @Request() req: any,

@@ -1,105 +1,105 @@
 import { ApiProperty } from '@nestjs/swagger'
 
 export class GrievanceImageDto {
-  @ApiProperty({ example: 'img-uuid-1', description: 'Mã định danh ảnh' })
+  @ApiProperty({ example: 'img-uuid-1', description: 'Image UUID' })
   id: string
 
   @ApiProperty({
     example: 'https://res.cloudinary.com/dormio/image/upload/evidence1.jpg',
-    description: 'Đường dẫn ảnh bằng chứng',
+    description: 'Evidence image URL',
   })
   url: string
 
   @ApiProperty({
     example: '2026-08-31T16:00:00.000Z',
-    description: 'Thời điểm tải lên',
+    description: 'Upload timestamp',
   })
   createdAt: string
 }
 
 export class GrievanceDto {
-  @ApiProperty({ example: 'grievance-uuid-1', description: 'Mã khiếu nại' })
+  @ApiProperty({ example: 'grievance-uuid-1', description: 'Grievance UUID' })
   id: string
 
   @ApiProperty({
     enum: ['complaint', 'inquiry', 'feedback'],
     example: 'complaint',
-    description: 'Loại đơn: complaint (khiếu nại), inquiry (thắc mắc), feedback (góp ý)',
+    description: 'Grievance type: complaint, inquiry, feedback',
   })
   type: 'complaint' | 'inquiry' | 'feedback'
 
   @ApiProperty({
-    example: 'Chủ trọ tự ý tăng tiền điện sai thỏa thuận hợp đồng',
-    description: 'Tiêu đề khiếu nại',
+    example: 'Landlord arbitrarily increased electricity rates contrary to lease agreement',
+    description: 'Grievance title',
   })
   title: string
 
   @ApiProperty({
-    example: 'Mô tả chi tiết nội dung sự việc...',
-    description: 'Nội dung chi tiết',
+    example: 'Detailed description of the incident...',
+    description: 'Detailed description',
   })
   description: string
 
   @ApiProperty({
     enum: ['low', 'medium', 'high'],
     example: 'medium',
-    description: 'Mức độ ưu tiên',
+    description: 'Priority level',
   })
   priority: 'low' | 'medium' | 'high'
 
   @ApiProperty({
     enum: ['pending', 'in_progress', 'resolved', 'rejected'],
     example: 'pending',
-    description: 'Trạng thái xử lý của Ban Quản Trị',
+    description: 'Resolution status by Admin',
   })
   status: 'pending' | 'in_progress' | 'resolved' | 'rejected'
 
   @ApiProperty({
-    example: 'Nhà trọ Dormio Tân Bình',
+    example: 'Dormio Tan Binh Boarding House',
     nullable: true,
-    description: 'Tên nhà trọ xảy ra sự việc',
+    description: 'Boarding house name',
   })
   boardingHouseName: string | null
 
-  @ApiProperty({ example: '101', nullable: true, description: 'Số phòng' })
+  @ApiProperty({ example: '101', nullable: true, description: 'Room number' })
   roomNumber: string | null
 
   @ApiProperty({
-    example: 'Đã cảnh cáo chủ trọ và yêu cầu hoàn trả số tiền chênh lệch.',
+    example: 'Warned the landlord and required refunding the overcharged difference.',
     nullable: true,
-    description: 'Ghi chú phản hồi / kết quả giải quyết của BQT',
+    description: 'Admin response / resolution notes',
   })
   resolutionNote: string | null
 
   @ApiProperty({
     example: '2026-09-01T10:00:00.000Z',
     nullable: true,
-    description: 'Thời điểm giải quyết',
+    description: 'Resolution timestamp',
   })
   resolvedAt: string | null
 
   @ApiProperty({
-    example: 'Nguyễn Quang Huy (Admin)',
+    example: 'Nguyen Quang Huy (Admin)',
     nullable: true,
-    description: 'Người xử lý khiếu nại',
+    description: 'Resolved by Admin',
   })
   resolvedByName: string | null
 
   @ApiProperty({
     type: [GrievanceImageDto],
-    description: 'Danh sách ảnh bằng chứng đính kèm',
+    description: 'List of attached proof images',
   })
   images: GrievanceImageDto[]
 
   @ApiProperty({
     example: '2026-08-31T15:30:00.000Z',
-    description: 'Ngày gửi khiếu nại',
+    description: 'Submission date',
   })
   createdAt: string
 
   @ApiProperty({
     example: '2026-08-31T15:30:00.000Z',
-    description: 'Ngày cập nhật gần nhất',
+    description: 'Last updated date',
   })
   updatedAt: string
 }

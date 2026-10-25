@@ -675,7 +675,6 @@ export class PaymentsService {
     }
 
     const primaryTenant =
-      matchedInvoice.contract?.tenantContracts.find(tc => tc.isPrimary) ||
       matchedInvoice.contract?.tenantContracts[0]
 
     const payerId = primaryTenant?.tenantId || null
@@ -699,7 +698,6 @@ export class PaymentsService {
    */
   private mapPaymentToDto(payment: any): LandlordPaymentItemDto {
     const primaryTenant =
-      payment.invoice?.contract?.tenantContracts?.find((tc: any) => tc.isPrimary) ||
       payment.invoice?.contract?.tenantContracts?.[0]
 
     const payerName =

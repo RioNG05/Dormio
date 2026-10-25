@@ -4,11 +4,15 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, ExternalLink } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { userService } from '@/services/user.service'
-import { TextInput, Button, Form } from '@/components/ui'
+import { TextInput, Button, Form, Text } from '@/components/ui'
+import { resolveErrorMessage } from '@/utils'
 
 export default function SecurityTab() {
   const t = useTranslations('guest')
+  const tErrors = useTranslations('errors')
+  const { toast } = useToast()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -19,12 +23,10 @@ export default function SecurityTab() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [passwordSavedSuccess, setPasswordSavedSuccess] = useState(false)
 
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMessage(null)
-    setPasswordSavedSuccess(false)
 
     if (newPassword.length < 8) {
       setErrorMessage(t('guestProfilePasswordErrorMinLength'))
@@ -48,22 +50,12 @@ export default function SecurityTab() {
         newPassword,
       })
 
-      setPasswordSavedSuccess(true)
+      toast.success(t('guestProfilePasswordSuccess'))
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      setTimeout(() => setPasswordSavedSuccess(false), 4000)
-    } catch (err: any) {
-      const msg = err?.message || ''
-      if (msg.includes('current_password_incorrect')) {
-        setErrorMessage(t('guestProfilePasswordErrorCurrentIncorrect'))
-      } else if (msg.includes('new_password_must_differ')) {
-        setErrorMessage(t('guestProfilePasswordErrorMustDiffer'))
-      } else if (msg.includes('at least 8 characters') || msg.includes('8 ký tự')) {
-        setErrorMessage(t('guestProfilePasswordErrorMinLength'))
-      } else {
-        setErrorMessage(msg || t('guestProfilePasswordErrorGeneral'))
-      }
+    } catch (err) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('guestProfilePasswordErrorGeneral')))
     } finally {
       setIsSubmitting(false)
     }
@@ -71,15 +63,6 @@ export default function SecurityTab() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Password Toast Success */}
-      {passwordSavedSuccess && (
-        <Form.Alert
-          variant="success"
-          message={t('guestProfilePasswordSuccess')}
-          onClose={() => setPasswordSavedSuccess(false)}
-        />
-      )}
-
       {/* Password Error Alert */}
       {errorMessage && (
         <Form.Alert variant="error" message={errorMessage} onClose={() => setErrorMessage(null)} />
@@ -93,9 +76,11 @@ export default function SecurityTab() {
           actions={
             <Link
               href="/forgot-password"
-              className="text-xs text-zinc-400 font-bold inline-flex items-center gap-1 underline transition-colors"
+              className="inline-flex items-center gap-1 underline transition-colors text-muted hover:text-foreground"
             >
-              <span>{t('guestProfilePasswordForgotLink')}</span>
+              <Text as="span" size="xs" weight="bold" color="inherit">
+                {t('guestProfilePasswordForgotLink')}
+              </Text>
               <ExternalLink className="w-3 h-3" />
             </Link>
           }
@@ -111,14 +96,12 @@ export default function SecurityTab() {
           onChange={e => setCurrentPassword(e.target.value)}
           rightIcon={
             <Button
-              type="button"
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              className="w-7 h-7 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent rounded-md"
               tabIndex={-1}
             >
-              {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showCurrentPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
         />
@@ -135,14 +118,12 @@ export default function SecurityTab() {
             onChange={e => setNewPassword(e.target.value)}
             rightIcon={
               <Button
-                type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-xs"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="w-7 h-7 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent rounded-md"
                 tabIndex={-1}
               >
-                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showNewPassword ? <EyeOff /> : <Eye />}
               </Button>
             }
           />
@@ -150,7 +131,7 @@ export default function SecurityTab() {
           {/* Password Strength Indicator */}
           {newPassword && (
             <div className="flex items-center gap-2 pt-1">
-              <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-1.5 bg-line rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
                     newPassword.length >= 10 &&
@@ -159,15 +140,22 @@ export default function SecurityTab() {
                       ? 'bg-emerald-500 w-full'
                       : newPassword.length >= 8
                         ? 'bg-amber-500 w-2/3'
-                        : 'bg-rose-500 w-1/3'
+                        : 'bg-danger w-1/3'
                   }`}
                 />
               </div>
-              <span className="text-[10px] font-extrabold text-zinc-500 whitespace-nowrap">
+              <Text
+                as="span"
+                variant="caption"
+                size="3xs"
+                weight="extrabold"
+                color="secondary"
+                className="whitespace-nowrap"
+              >
                 {newPassword.length >= 10 && /[A-Z]/.test(newPassword) && /[0-9]/.test(newPassword)
                   ? t('guestProfilePasswordStrengthStrong')
                   : t('guestProfilePasswordStrengthMedium')}
-              </span>
+              </Text>
             </div>
           )}
         </div>
@@ -183,24 +171,23 @@ export default function SecurityTab() {
           onChange={e => setConfirmPassword(e.target.value)}
           rightIcon={
             <Button
-              type="button"
               variant="ghost"
-              size="icon"
+              size="icon-xs"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="w-7 h-7 p-0 text-zinc-400 hover:text-zinc-600 hover:bg-transparent rounded-md"
               tabIndex={-1}
             >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showConfirmPassword ? <EyeOff /> : <Eye />}
             </Button>
           }
         />
 
         <Form.Actions>
           <Button
+            fullWidth
+            size="md"
             type="submit"
             disabled={isSubmitting}
             isLoading={isSubmitting}
-            className="w-full py-3.5 bg-[#2AC1BC] hover:bg-[#23B3AE] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/25"
             rightIcon={<span>&rarr;</span>}
           >
             {t('guestProfilePasswordBtnSave')}

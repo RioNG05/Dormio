@@ -5,7 +5,7 @@ import { Type } from 'class-transformer'
 export class QueryExpensesDto {
   @ApiPropertyOptional({
     description: 'Search by expense name, description, or room number',
-    example: 'thang máy',
+    example: 'elevator',
   })
   @IsOptional()
   @IsString()
@@ -13,7 +13,7 @@ export class QueryExpensesDto {
 
   @ApiPropertyOptional({
     description: 'Filter by expense category',
-    example: 'Bảo trì & Sửa chữa',
+    example: 'Maintenance & Repairs',
   })
   @IsOptional()
   @IsString()

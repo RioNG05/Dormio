@@ -8,11 +8,20 @@ import {
   MapPin,
   Send,
   CheckCircle2,
-  ChevronDown,
   ExternalLink,
+  PhoneCall,
+  MoveRight,
+  SquareArrowOutUpRight
 } from 'lucide-react'
-import Link from 'next/link'
 import { useTranslations } from '@/context/LanguageContext'
+import {
+  Button,
+  Form,
+  SelectInput,
+  Text,
+  TextareaInput,
+  TextInput,
+} from '@/components/ui'
 
 export default function ContactPage() {
   const t = useTranslations('guest')
@@ -31,25 +40,37 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white animate-in fade-in duration-500 pb-20 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-card animate-in fade-in duration-500 pb-20 overflow-x-hidden">
       {/* 100% Full-Width Screen Hero Banner Header */}
       <section className="relative w-full py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=80')] bg-cover bg-center border-b border-zinc-800">
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
+        <div className="absolute inset-0 bg-linear-to-b from-zinc-950/95 via-zinc-950/85 to-zinc-950/98 backdrop-blur-[2px] z-0" />
         <div className="relative z-10 max-w-4xl mx-auto space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2AC1BC]/20 text-[#2AC1BC] text-xs font-black rounded-full border border-[#2AC1BC]/30 shadow-lg">
-            <Sparkles className="w-4 h-4" /> {t('guestContactBadge')}
-          </span>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.18] drop-shadow-md">
-            <span>{t('guestContactTitle1')}</span> <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-[#2AC1BC] via-[#3BDAC8] via-[#FFAE42] to-[#FF6B35] bg-clip-text text-transparent">
+          <div>
+            <Text
+              as="h1"
+              weight='extrabold'
+              color="white"
+              className='text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md'>
+              {t('guestContactTitle1')}
+            </Text>{' '}
+            <br className="hidden sm:inline" />
+            <Text
+              as="h1"
+              weight='extrabold'
+              className="text-3xl sm:text-5xl lg:text-6xl leading-[1.18] drop-shadow-md bg-gradient-to-r from-primary via-[#3BDAC8] via-[#FFAE42] to-accent bg-clip-text text-transparent"
+            >
               {t('guestContactTitle2')}
-            </span>
-          </h1>
+            </Text>
+          </div>
 
-          <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed max-w-xl mx-auto text-balance">
+          <Text
+            variant="subtitle"
+            size="xs"
+            weight="medium"
+            className="sm:text-sm text-zinc-300 leading-relaxed max-w-xl mx-auto text-balance"
+          >
             {t('guestContactSubtitle')}
-          </p>
+          </Text>
         </div>
       </section>
 
@@ -59,83 +80,123 @@ export default function ContactPage() {
           {/* Left Column: Direct Support Channels */}
           <div className="lg:col-span-5 space-y-6">
             <div className="space-y-2">
-              <span className="text-xs font-extrabold text-[#2AC1BC] uppercase tracking-wider block">
+              <Text
+                as="span"
+                variant="overline"
+                size="xs"
+                weight="extrabold"
+                color="brand"
+                className="block"
+              >
                 {t('guestContactDirectChannels')}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-snug">
+              </Text>
+              <Text
+                as="h2"
+                variant="heading"
+                size="2xl"
+                weight="black"
+                className="sm:text-3xl leading-snug"
+              >
                 {t('guestContactAlwaysReady')}
-              </h2>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+              </Text>
+              <Text variant="subtitle" size="xs" weight="medium" className="leading-relaxed">
                 {t('guestContactHours')}
-              </p>
+              </Text>
             </div>
 
             <div className="space-y-4 pt-2">
               {/* Channel 1: Phone / Zalo */}
               <a
                 href="tel:0344265925"
-                className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#FF6B35] transition-all group shadow-xs cursor-pointer block"
+                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-accent transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactCallTooltip')}
               >
-                <div className="p-3.5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                <div className="p-3.5 bg-accent/10 text-accent rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-900 text-sm">
+                  <Text as="h3" variant="heading" size="sm" weight="extrabold">
                     {t('guestContactHotlineTitle')}
-                  </h3>
-                  <p className="text-xs font-black text-[#FF6B35] mt-0.5 group-hover:underline">
+                  </Text>
+                  <Text
+                    variant="body"
+                    size="xs"
+                    weight="black"
+                    color="orange"
+                    className="mt-0.5 group-hover:underline"
+                  >
                     0344.265.925 {t('guestContact247Support')}
-                  </p>
-                  <span className="text-[10px] text-zinc-400 font-medium block mt-1">
+                  </Text>
+                  <Text
+                    as="span"
+                    variant="caption"
+                    size="3xs"
+                    weight="medium"
+                    color="subtle"
+                    className="block mt-1"
+                  >
                     {t('guestContactHotlineSub')}
-                  </span>
+                  </Text>
                 </div>
               </a>
 
               {/* Channel 2: Email */}
               <a
                 href="mailto:contact@dormio.site"
-                className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-[#2AC1BC] transition-all group shadow-xs cursor-pointer block"
+                className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-primary transition-all group shadow-xs cursor-pointer block"
                 title={t('guestContactEmailTooltip')}
               >
-                <div className="p-3.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                <div className="p-3.5 bg-primary/10 text-primary rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-900 text-sm">
+                  <Text as="h3" variant="heading" size="sm" weight="extrabold">
                     {t('guestContactEmailTitle')}
-                  </h3>
-                  <p className="text-xs font-semibold text-zinc-800 mt-0.5 group-hover:text-[#2AC1BC] group-hover:underline">
+                  </Text>
+                  <Text
+                    variant="body"
+                    size="xs"
+                    weight="semibold"
+                    className="text-foreground mt-0.5 group-hover:text-primary group-hover:underline"
+                  >
                     contact@dormio.site
-                  </p>
-                  <span className="text-[10px] text-zinc-400 font-medium block mt-1">
+                  </Text>
+                  <Text
+                    as="span"
+                    variant="caption"
+                    size="3xs"
+                    weight="medium"
+                    color="subtle"
+                    className="block mt-1"
+                  >
                     {t('guestContactEmailSub')}
-                  </span>
+                  </Text>
                 </div>
               </a>
 
               {/* Channel 3: Headquarters Address */}
-              <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 flex items-start gap-4 hover:border-zinc-400 transition-all group shadow-xs">
+              <div className="p-5 rounded-3xl bg-surface border border-line flex items-start gap-4 hover:border-zinc-400 transition-all group shadow-xs">
                 <div className="p-3.5 bg-zinc-900 text-white rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
-                  <MapPin className="w-5 h-5 text-[#2AC1BC]" />
+                  <MapPin className="w-5 h-5 text-primary" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-extrabold text-zinc-900 text-sm">
+                  <Text as="h3" variant="heading" size="sm" weight="extrabold">
                     {t('guestContactOfficeTitle')}
-                  </h3>
-                  <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+                  </Text>
+                  <Text variant="body" size="xs" weight="medium" color="secondary" className="leading-relaxed">
                     {t('guestContactOfficeAddress')}
-                  </p>
+                  </Text>
 
                   <a
                     href="https://www.google.com/maps/search/?api=1&query=Ho%C3%A0+L%E1%BA%A1c%2C+Th%E1%BA%A1ch+Th%E1%BA%A5t%2C+H%C3%A0+N%E1%BB%99i"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2AC1BC] hover:underline pt-1"
+                    className="inline-flex items-center gap-1 hover:underline pt-1"
                   >
-                    <span>{t('guestContactMaps')}</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <Text as="span" size="2xs" weight="bold" color="brand">
+                      {t('guestContactMaps')}
+                    </Text>
+                    <ExternalLink className="w-3 h-3 text-primary" />
                   </a>
                 </div>
               </div>
@@ -143,145 +204,138 @@ export default function ContactPage() {
           </div>
 
           {/* Right Column: Contact Form */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/80 shadow-xl space-y-6">
+          <div className="lg:col-span-7 bg-card rounded-3xl p-6 sm:p-8 border border-line shadow-xl space-y-6">
             {submitted ? (
               <div className="text-center py-12 space-y-4">
-                <div className="w-16 h-16 rounded-full bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-black text-zinc-900">
+                <Text as="h3" variant="heading" size="xl" weight="black">
                   {t('guestContactSuccessTitle')}
-                </h3>
-                <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+                </Text>
+                <Text variant="subtitle" size="xs" className="max-w-md mx-auto leading-relaxed">
                   {t('guestContactSuccessDesc', { phone })}
-                </p>
-                <button
-                  onClick={() => setSubmitted(false)}
-                  className="px-6 py-2.5 bg-zinc-900 text-white font-extrabold text-xs rounded-xl hover:bg-zinc-800 transition-all cursor-pointer shadow-md"
-                >
+                </Text>
+                <Button variant="dark" size="md" onClick={() => setSubmitted(false)}>
                   {t('guestContactSendAnotherBtn')}
-                </button>
+                </Button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="border-b border-zinc-100 pb-3">
-                  <h3 className="text-lg font-black text-zinc-900">{t('guestContactFormTitle')}</h3>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('guestContactFormSubtitle')}
-                  </p>
-                </div>
+              <Form onSubmit={handleSubmit}>
+                <Form.Header
+                  title={t('guestContactFormTitle')}
+                  description={t('guestContactFormSubtitle')}
+                />
 
-                {/* Topic Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('guestContactTopicLabel')}
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={topic}
-                      onChange={e => setTopic(e.target.value)}
-                      className="w-full pl-4 pr-10 py-3 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-2xl appearance-none focus:outline-none focus:border-[#2AC1BC] cursor-pointer"
-                    >
-                      <option value="tu-van">{t('guestContactTopicOpt1')}</option>
-                      <option value="bhrp">{t('guestContactTopicOpt2')}</option>
-                      <option value="ky-thuat">{t('guestContactTopicOpt3')}</option>
-                      <option value="khac">{t('guestContactTopicOpt4')}</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none stroke-[2.5]" />
-                  </div>
-                </div>
+                {/* Topic Selection using SelectInput */}
+                <SelectInput
+                  label={t('guestContactTopicLabel')}
+                  value={topic}
+                  onChange={e => setTopic(e.target.value)}
+                  options={[
+                    { value: 'tu-van', label: t('guestContactTopicOpt1') },
+                    { value: 'bhrp', label: t('guestContactTopicOpt2') },
+                    { value: 'ky-thuat', label: t('guestContactTopicOpt3') },
+                    { value: 'khac', label: t('guestContactTopicOpt4') },
+                  ]}
+                  className="py-3 bg-surface rounded-2xl"
+                />
 
-                {/* Dynamic input when topic === "khac" */}
+                {/* Dynamic input when topic === "khac" using TextInput */}
                 {topic === 'khac' && (
-                  <div className="space-y-1.5 animate-in fade-in duration-300">
-                    <label className="text-xs font-bold text-zinc-700">
-                      {t('guestContactCustomSubjectLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t('guestContactCustomSubjectPlaceholder')}
-                      value={customSubject}
-                      onChange={e => setCustomSubject(e.target.value)}
-                      className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
+                  <TextInput
+                    label={t('guestContactCustomSubjectLabel')}
+                    placeholder={t('guestContactCustomSubjectPlaceholder')}
+                    value={customSubject}
+                    onChange={e => setCustomSubject(e.target.value)}
+                    containerClassName="animate-in fade-in duration-300"
+                    className="py-3 bg-surface rounded-2xl"
+                  />
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700">
-                      {t('guestContactFullNameLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t('guestContactFullNamePlaceholder')}
-                      required
-                      value={fullName}
-                      onChange={e => setFullName(e.target.value)}
-                      className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700">
-                      {t('guestContactPhoneLabel')}
-                    </label>
-                    <input
-                      type="text"
-                      placeholder={t('guestContactPhonePlaceholder')}
-                      required
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700">
-                    {t('guestContactContentLabel')}
-                  </label>
-                  <textarea
-                    rows={4}
-                    placeholder={t('guestContactContentPlaceholder')}
+                <Form.Grid cols={2}>
+                  <TextInput
+                    label={t('guestContactFullNameLabel')}
+                    placeholder={t('guestContactFullNamePlaceholder')}
                     required
-                    value={content}
-                    onChange={e => setContent(e.target.value)}
-                    className="w-full px-4 py-3 text-xs font-semibold bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:border-[#2AC1BC]"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    className="py-3 bg-surface rounded-2xl"
                   />
-                </div>
 
-                {/* Solid Brand Teal Action Button */}
-                <button
+                  <TextInput
+                    label={t('guestContactPhoneLabel')}
+                    placeholder={t('guestContactPhonePlaceholder')}
+                    required
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    className="py-3 bg-surface rounded-2xl"
+                  />
+                </Form.Grid>
+
+                <TextareaInput
+                  label={t('guestContactContentLabel')}
+                  rows={4}
+                  placeholder={t('guestContactContentPlaceholder')}
+                  required
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  className="py-3 bg-surface rounded-2xl"
+                />
+
+                {/* Solid Brand Teal Action Button using Button */}
+                <Button
                   type="submit"
-                  className="w-full py-4 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-[#2AC1BC]/25 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.01]"
+                  size="lg"
+                  fullWidth
+                  rightIcon={<Send />}
                 >
-                  <Send className="w-4 h-4" /> {t('guestContactSubmitBtn')} &rarr;
-                </button>
-              </form>
+                  {t('guestContactSubmitBtn')}
+                </Button>
+              </Form>
             )}
           </div>
         </div>
 
         {/* Bottom CTA Banner */}
         <div className="bg-zinc-900 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-2xl border border-zinc-800">
-          <h2 className="text-2xl sm:text-4xl font-black text-white leading-snug">
+          <Text
+            as="h2"
+            variant="heading"
+            size="2xl"
+            weight="black"
+            color="white"
+            className="sm:text-4xl leading-snug"
+          >
             {t('guestContactCtaTitle')}
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto font-medium">
+          </Text>
+          <Text
+            variant="subtitle"
+            size="xs"
+            weight="medium"
+            color="subtle"
+            className="sm:text-sm max-w-lg mx-auto"
+          >
             {t('guestContactCtaSubtitle')}
-          </p>
+          </Text>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link href="/landlord/setup" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#2AC1BC] hover:bg-[#72b3a3] text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2AC1BC]/30 transition-all cursor-pointer hover:scale-105">
-                {t('guestContactUseFreeBtn')} &rarr;
-              </button>
-            </Link>
-            <Link href="/pricing" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white font-extrabold text-xs rounded-2xl transition-all cursor-pointer">
-                {t('guestFeaturesViewPricingBtn')}
-              </button>
-            </Link>
+            <Button
+              href="/landlord/setup"
+              size="lg"
+              rightIcon={<SquareArrowOutUpRight />}
+              className="w-full sm:w-auto"
+            >
+              {t('guestContactUseFreeBtn')}
+            </Button>
+            <Button
+              href="/pricing"
+              variant="accent"
+              size="lg"
+              rightIcon={<MoveRight />}
+              className="w-full sm:w-auto"
+            >
+              {t('guestFeaturesViewPricingBtn')}
+            </Button>
           </div>
         </div>
       </div>

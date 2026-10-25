@@ -69,7 +69,7 @@ export class AdminHousesService {
         return {
           id: h.id,
           name: h.name,
-          landlordName: h.owner?.username || 'Chủ trọ',
+          landlordName: h.owner?.username || 'Landlord',
           landlordPhone: h.owner?.phoneNumber || '0901.000.000',
           landlordEmail: h.owner?.email || 'landlord@dormio.vn',
           address,

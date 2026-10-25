@@ -21,7 +21,6 @@ import {
   ArrowLeft,
   Search,
   Camera,
-  Eye,
   ShieldCheck,
   ArrowRight,
   FileText,
@@ -37,7 +36,22 @@ import {
   getLocalizedExplanation,
 } from '../data'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
-import { Button, TextInput, NumberInput, SelectInput } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  NumberInput,
+  SelectInput,
+  Pagination,
+  Modal,
+  EmptyState,
+  TableActionButton,
+  Text,
+  Chip,
+  Card,
+  TableRow,
+  ViewModeToggle,
+} from '@/components/ui'
+import { DashboardPageHeader } from '@/components/layout'
 import {
   staffAttendanceService,
   StaffAttendanceHistorySummary,
@@ -51,6 +65,9 @@ function StaffShiftHistoryContent() {
   // Dynamic Shift Types fetched from Backend (no hardcoded data)
   const [availableShifts, setAvailableShifts] = useState<StaffShiftType[]>([])
   const [isShiftsLoading, setIsShiftsLoading] = useState<boolean>(false)
+
+  // View Mode: Grid (default, Rule #9) vs Table
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   useEffect(() => {
     let mounted = true
@@ -148,7 +165,6 @@ function StaffShiftHistoryContent() {
     setAppliedShift(modalShift)
     setAppliedStatus(modalStatus)
     setCurrentPage(1)
-    setWindowStart(1)
     setIsFilterModalOpen(false)
   }
 
@@ -169,7 +185,6 @@ function StaffShiftHistoryContent() {
     setModalShift('all')
     setModalStatus('all')
     setCurrentPage(1)
-    setWindowStart(1)
   }
 
   // Data & loading state
@@ -183,18 +198,24 @@ function StaffShiftHistoryContent() {
   })
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Pagination states (Table view: default 10)
-  const [pageSizeInput, setPageSizeInput] = useState<number>(10)
+  // Pagination states (Rule #9: Grid=6, Table=10 default)
+  const [pageSizeInput, setPageSizeInput] = useState<number>(6)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalItems, setTotalItems] = useState<number>(0)
-  const [windowStart, setWindowStart] = useState<number>(1)
+
+  // Handle switching view mode (Rule #9)
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode)
+    setPageSizeInput(mode === 'grid' ? 6 : 10)
+    setCurrentPage(1)
+  }
 
   // Preview watermark photo modal
   const [previewImageModal, setPreviewImageModal] = useState<{
     isOpen: boolean
     title: string
-    imageUrl: string
+    imageUrl?: string
     watermark?: AttendanceWatermark
     note?: string
   } | null>(null)
@@ -210,7 +231,7 @@ function StaffShiftHistoryContent() {
   const fetchHistory = useCallback(async () => {
     setIsLoading(true)
     try {
-      const validPageSize = Math.max(1, pageSizeInput || 10)
+      const validPageSize = Math.max(1, pageSizeInput || 6)
       const res = await staffAttendanceService.getHistory({
         page: currentPage,
         limit: validPageSize,
@@ -249,67 +270,73 @@ function StaffShiftHistoryContent() {
     }
   }, [fetchHistory])
 
-  // Pagination window helpers (Rule #9: 5-page window jumping)
-  const validPageSize = Math.max(1, pageSizeInput || 10)
-  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages)
-  const startIndex = (safeCurrentPage - 1) * validPageSize
-  const endIndex = Math.min(startIndex + validPageSize, totalItems)
-
-  const windowEnd = Math.min(windowStart + 4, totalPages)
-  const pageNumbers: number[] = []
-  for (let i = windowStart; i <= windowEnd; i++) {
-    pageNumbers.push(i)
-  }
-
-  const handleNextWindow = () => {
-    const nextStart = windowStart + 5
-    if (nextStart <= totalPages) {
-      setWindowStart(nextStart)
-      setCurrentPage(nextStart)
+  const renderStatusChip = (item: AttendanceRecord) => {
+    if (item.status === 'on_time') {
+      return (
+        <Chip variant="success" size="xs" preventHover>
+          {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
+        </Chip>
+      )
     }
+    if (item.status === 'late') {
+      return (
+        <Chip variant="warning" size="xs" preventHover>
+          {t('tableStatusLate')}
+        </Chip>
+      )
+    }
+    if (item.status === 'absent') {
+      return (
+        <Chip variant="danger" size="xs" preventHover>
+          {t('tableStatusAbsent')}
+        </Chip>
+      )
+    }
+    return (
+      <Chip variant="neutral" size="xs" preventHover>
+        {t('statusNotYet')}
+      </Chip>
+    )
   }
 
-  const handlePrevWindow = () => {
-    const prevStart = Math.max(1, windowStart - 5)
-    setWindowStart(prevStart)
-    setCurrentPage(prevStart)
+  const handleOpenRecordDetail = (item: AttendanceRecord) => {
+    setPreviewImageModal({
+      isOpen: true,
+      title: `${item.workDate} (${getShiftName(item.shiftName)})`,
+      imageUrl: item.checkInPhoto || item.checkOutPhoto || undefined,
+      watermark: item.checkInWatermark
+        ? {
+            ...item.checkInWatermark,
+            place: getLocalizedPlace(item.checkInWatermark.place, locale),
+            staffName: getLocalizedStaffName(item.checkInWatermark.staffName, locale),
+          }
+        : undefined,
+      note: getLocalizedExplanation(
+        item.checkInExplanation || item.checkOutExplanation || item.note,
+        locale,
+      ),
+    })
   }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
       {/* HEADER BAR */}
-      <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/staff"
-              className="p-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 transition-colors"
-              title={t('btnBackToOverview')}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <span className="text-xs font-black text-[#2AC1BC] uppercase tracking-wider">
-              {t('attHistoryTag')}
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t('attHistoryTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 font-medium">{t('attHistorySubtitle')}</p>
-        </div>
-
-        {/* Action Link to Work Schedule */}
-        <div className="flex items-center gap-2 self-start md:self-center shrink-0">
-          <Link
+      <DashboardPageHeader
+        title={t('attHistoryTitle')}
+        subtitle={t('attHistorySubtitle')}
+        badge={t('attHistoryTag')}
+        actions={
+          <Button
+            variant="secondary"
+            size="md"
             href="/staff/schedule"
-            className="px-4 py-2.5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-black flex items-center gap-2 transition-all shadow-2xs border border-zinc-200/80 cursor-pointer"
+            leftIcon={<Calendar className="w-4 h-4 text-primary" />}
+            rightIcon={<ArrowRight className="w-3.5 h-3.5 text-muted" />}
           >
-            <Calendar className="w-4 h-4 text-[#2AC1BC]" />
-            <span>{t('btnViewWorkSchedule')}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-zinc-400" />
-          </Link>
-        </div>
-      </div>
+            {t('btnViewWorkSchedule')}
+          </Button>
+        }
+      />
 
       {/* Metric Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
@@ -318,578 +345,513 @@ function StaffShiftHistoryContent() {
             {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-2 animate-pulse"
+                className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-2 animate-pulse"
               >
-                <div className="h-2.5 w-16 bg-zinc-200 rounded" />
-                <div className="h-7 w-12 bg-zinc-200 rounded" />
-                <div className="h-2.5 w-20 bg-zinc-100 rounded" />
+                <div className="h-2.5 w-16 bg-line rounded" />
+                <div className="h-7 w-12 bg-line rounded" />
+                <div className="h-2.5 w-20 bg-card-hover rounded" />
               </div>
             ))}
           </>
         ) : (
           <>
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricTotalShifts')}
-              </span>
-              <div className="text-2xl font-black text-zinc-900">{summary.total}</div>
-              <span className="text-[10px] font-semibold text-zinc-500 block">
+              </Text>
+              <Text size="2xl" weight="black" color="default">
+                {summary.total}
+              </Text>
+              <Text size="3xs" weight="semibold" color="secondary" className="block">
                 {t('metricMonthSub')}
-              </span>
+              </Text>
             </div>
 
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricOnTime')}
-              </span>
-              <div className="text-2xl font-black text-[#2AC1BC]">{summary.onTime}</div>
-              <span className="text-[10px] font-bold text-emerald-600 block">
+              </Text>
+              <Text size="2xl" weight="black" color="brand">
+                {summary.onTime}
+              </Text>
+              <Text size="3xs" weight="bold" color="success" className="block">
                 {t('metricOnTimeSub')}
-              </span>
+              </Text>
             </div>
 
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricLate')}
-              </span>
-              <div className="text-2xl font-black text-amber-600">{summary.late}</div>
-              <span className="text-[10px] font-medium text-amber-600 block">
+              </Text>
+              <Text size="2xl" weight="black" color="warning">
+                {summary.late}
+              </Text>
+              <Text size="3xs" weight="medium" color="warning" className="block">
                 {t('metricLateSub')}
-              </span>
+              </Text>
             </div>
 
-            <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricAbsent')}
-              </span>
-              <div className="text-2xl font-black text-zinc-400">{summary.absent}</div>
-              <span className="text-[10px] font-medium text-zinc-400 block">
+              </Text>
+              <Text size="2xl" weight="black" color="secondary">
+                {summary.absent}
+              </Text>
+              <Text size="3xs" weight="medium" color="secondary" className="block">
                 {t('metricAbsentSub')}
-              </span>
+              </Text>
             </div>
 
-            <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 space-y-1">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+            <div className="col-span-2 sm:col-span-1 bg-card rounded-2xl border border-line shadow-2xs p-4 space-y-1">
+              <Text size="3xs" weight="bold" color="secondary" uppercase className="block">
                 {t('metricHours')}
-              </span>
-              <div className="text-2xl font-black text-purple-600">{summary.hours}h</div>
-              <span className="text-[10px] font-bold text-zinc-500 block">
+              </Text>
+              <Text size="2xl" weight="black" color="default">
+                {summary.hours}h
+              </Text>
+              <Text size="3xs" weight="bold" color="secondary" className="block">
                 {t('metricHoursSub')}
-              </span>
+              </Text>
             </div>
           </>
         )}
       </div>
 
-      {/* FILTER CONTROLS BAR (Above Table) */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      {/* FILTER CONTROLS BAR (Above Content) */}
+      <div className="bg-card rounded-2xl border border-line shadow-2xs p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Nút bấm "Sử dụng bộ lọc" */}
           <Button
             variant="secondary"
-            size="sm"
-            type="button"
             onClick={handleOpenFilterModal}
-            className="px-4 py-2 h-auto rounded-xl bg-teal-50 hover:bg-teal-100 text-[#2AC1BC] hover:text-[#22a8a4] border border-[#2AC1BC]/30 text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer active:scale-95"
             title={t('titleFilterOpen')}
+            leftIcon={<Filter className="text-primary" />}
+            rightIcon={hasAnyAppliedFilter ? <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> : undefined}
           >
-            <Filter className="w-3.5 h-3.5 text-[#2AC1BC]" />
-            <span>{t('btnUseFilters')}</span>
-            {hasAnyAppliedFilter && (
-              <span className="w-2 h-2 rounded-full bg-[#2AC1BC] animate-pulse" />
-            )}
+            {t('btnUseFilters')}
           </Button>
 
-          {/* Khi ấn apply ở modal thì hiện filter được áp dụng ở bên cạnh */}
           {hasAnyAppliedFilter ? (
             <div className="flex flex-wrap items-center gap-1.5">
               {/* Date Range Chip */}
               {(appliedStartDate || appliedEndDate) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
-                  <Calendar className="w-3 h-3 text-[#2AC1BC]" />
-                  <span>
-                    {appliedStartDate && appliedEndDate
-                      ? `${appliedStartDate} → ${appliedEndDate}`
-                      : appliedStartDate
-                        ? t('filterDateFrom', { date: appliedStartDate })
-                        : t('filterDateTo', { date: appliedEndDate })}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={() => {
-                      setAppliedStartDate('')
-                      setAppliedEndDate('')
-                      setCurrentPage(1)
-                      setWindowStart(1)
-                    }}
-                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
-                    title={t('titleRemoveDateFilter')}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </span>
+                <Chip
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Calendar className="w-3 h-3 text-primary" />}
+                  onRemove={() => {
+                    setAppliedStartDate('')
+                    setAppliedEndDate('')
+                    setCurrentPage(1)
+                  }}
+                  title={t('titleRemoveDateFilter')}
+                >
+                  {appliedStartDate && appliedEndDate
+                    ? `${appliedStartDate} → ${appliedEndDate}`
+                    : appliedStartDate
+                      ? t('filterDateFrom', { date: appliedStartDate })
+                      : t('filterDateTo', { date: appliedEndDate })}
+                </Chip>
               )}
 
               {/* Shift Chip */}
               {appliedShift !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
-                  <Clock className="w-3 h-3 text-[#2AC1BC]" />
-                  <span>{getShiftName(appliedShift)}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={() => {
-                      setAppliedShift('all')
-                      setCurrentPage(1)
-                      setWindowStart(1)
-                    }}
-                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
-                    title={t('titleRemoveShiftFilter')}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </span>
+                <Chip
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Clock className="w-3 h-3 text-primary" />}
+                  onRemove={() => {
+                    setAppliedShift('all')
+                    setCurrentPage(1)
+                  }}
+                  title={t('titleRemoveShiftFilter')}
+                >
+                  {getShiftName(appliedShift)}
+                </Chip>
               )}
 
               {/* Status Chip */}
               {appliedStatus !== 'all' && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-zinc-100 border border-zinc-200/80 text-zinc-800 text-xs font-semibold">
-                  <ShieldCheck className="w-3 h-3 text-[#2AC1BC]" />
-                  <span>
-                    {appliedStatus === 'on_time' && t('tableStatusOnTime')}
-                    {appliedStatus === 'late' && t('tableStatusLate')}
-                    {appliedStatus === 'absent' && t('tableStatusAbsent')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    onClick={() => {
-                      setAppliedStatus('all')
-                      setCurrentPage(1)
-                      setWindowStart(1)
-                    }}
-                    className="p-0.5 h-auto text-zinc-400 hover:text-red-500 hover:bg-transparent ml-0.5 cursor-pointer"
-                    title={t('titleRemoveStatusFilter')}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
-                </span>
+                <Chip
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<ShieldCheck className="w-3 h-3 text-primary" />}
+                  onRemove={() => {
+                    setAppliedStatus('all')
+                    setCurrentPage(1)
+                  }}
+                  title={t('titleRemoveStatusFilter')}
+                >
+                  {appliedStatus === 'on_time' && t('tableStatusOnTime')}
+                  {appliedStatus === 'late' && t('tableStatusLate')}
+                  {appliedStatus === 'absent' && t('tableStatusAbsent')}
+                </Chip>
               )}
 
               {/* Clear All Chip */}
               <Button
                 variant="ghost"
-                size="sm"
-                type="button"
                 onClick={handleClearAllFilters}
-                className="h-auto p-0 text-xs text-red-600 hover:text-red-700 hover:bg-transparent font-bold ml-1 hover:underline cursor-pointer"
+                className="ml-1 hover:underline"
               >
                 {t('btnClearAll')}
               </Button>
             </div>
           ) : (
-            <span className="text-xs text-zinc-400 font-medium italic">{t('noActiveFilters')}</span>
+            <Text size="xs" color="secondary" weight="medium" italic>
+              {t('noActiveFilters')}
+            </Text>
           )}
         </div>
 
-        {/* Total records count */}
-        <div className="text-xs text-zinc-500 font-medium self-start md:self-center">
-          {t('totalRecords')} <strong className="text-zinc-900 font-bold">{totalItems}</strong>
-        </div>
-      </div>
-
-      {/* TABLE VIEW */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-zinc-50/80 border-b border-zinc-200/80 text-[11px] font-black text-zinc-500 uppercase tracking-wider">
-              <tr>
-                <th className="py-3.5 px-4">{t('tableColDate')}</th>
-                <th className="py-3.5 px-3">{t('tableColShift')}</th>
-                <th className="py-3.5 px-3">{t('tableColCheckIn')}</th>
-                <th className="py-3.5 px-3">{t('tableColCheckOut')}</th>
-                <th className="py-3.5 px-3">{t('tableColStatus')}</th>
-                <th className="py-3.5 px-3">{t('tableColHours')}</th>
-                <th className="py-3.5 px-3">{t('tableColNote')}</th>
-                <th className="py-3.5 px-3 text-center">{t('tableColAction')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 font-medium text-zinc-800">
-              {isLoading ? (
-                <>
-                  {[...Array(5)].map((_, idx) => (
-                    <tr key={idx} className="animate-pulse">
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-20 bg-zinc-200 rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-28 bg-zinc-200 rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-16 bg-zinc-200 rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-16 bg-zinc-200 rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-5 w-18 bg-zinc-100 rounded-lg" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-10 bg-zinc-200 rounded" />
-                      </td>
-                      <td className="py-4 px-3">
-                        <div className="h-4 w-36 bg-zinc-100 rounded" />
-                      </td>
-                      <td className="py-4 px-3 text-center">
-                        <div className="h-6 w-10 bg-zinc-100 rounded-lg mx-auto" />
-                      </td>
-                    </tr>
-                  ))}
-                </>
-              ) : attendances.length > 0 ? (
-                attendances.map(item => (
-                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-4 px-3 font-bold text-zinc-900 whitespace-nowrap">
-                      {item.workDate}
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap font-bold">
-                      <div>{getShiftName(item.shiftName)}</div>
-                      <div className="text-[10px] text-zinc-400 font-normal">{item.shiftTime}</div>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <span>{item.checkIn || '--:--'}</span>
-                        {item.checkInPhoto && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            type="button"
-                            onClick={() =>
-                              setPreviewImageModal({
-                                isOpen: true,
-                                title: `${t('tableColCheckIn')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                                imageUrl: item.checkInPhoto!,
-                                watermark: item.checkInWatermark
-                                  ? {
-                                      ...item.checkInWatermark,
-                                      place: getLocalizedPlace(item.checkInWatermark.place, locale),
-                                      staffName: getLocalizedStaffName(
-                                        item.checkInWatermark.staffName,
-                                        locale,
-                                      ),
-                                    }
-                                  : undefined,
-                                note: getLocalizedExplanation(item.checkInExplanation, locale),
-                              })
-                            }
-                            className="p-1 h-auto rounded-md text-[#2AC1BC] hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
-                            title={t('viewWatermarkCheckIn')}
-                          >
-                            <Camera className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 font-mono font-bold">
-                        <span>{item.checkOut || '--:--'}</span>
-                        {item.checkOutPhoto && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            type="button"
-                            onClick={() =>
-                              setPreviewImageModal({
-                                isOpen: true,
-                                title: `${t('tableColCheckOut')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
-                                imageUrl: item.checkOutPhoto!,
-                                watermark: item.checkOutWatermark
-                                  ? {
-                                      ...item.checkOutWatermark,
-                                      place: getLocalizedPlace(item.checkOutWatermark.place, locale),
-                                      staffName: getLocalizedStaffName(
-                                        item.checkOutWatermark.staffName,
-                                        locale,
-                                      ),
-                                    }
-                                  : undefined,
-                                note: getLocalizedExplanation(item.checkOutExplanation, locale),
-                              })
-                            }
-                            className="p-1 h-auto rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
-                            title={t('viewWatermarkCheckOut')}
-                          >
-                            <Camera className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-3 whitespace-nowrap">
-                      {item.status === 'on_time' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {item.isEarlyCheckOut ? t('tableStatusEarly') : t('tableStatusOnTime')}
-                        </span>
-                      )}
-                      {item.status === 'late' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-amber-50 text-amber-700 border border-amber-200">
-                          {t('tableStatusLate')}
-                        </span>
-                      )}
-                      {item.status === 'absent' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-red-50 text-red-700 border border-red-200">
-                          {t('tableStatusAbsent')}
-                        </span>
-                      )}
-                      {item.status === 'not_yet' && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-zinc-100 text-zinc-600">
-                          {t('statusNotYet')}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-3 font-black text-[#2AC1BC]">{item.totalHours}h</td>
-                    <td className="py-4 px-3 text-[11px] text-zinc-500 max-w-xs">
-                      {item.checkInExplanation ? (
-                        <div
-                          className="text-amber-800 font-medium truncate"
-                          title={getLocalizedExplanation(item.checkInExplanation, locale)}
-                        >
-                          <span className="font-bold">{t('tableLateShort')}</span> &quot;
-                          {getLocalizedExplanation(item.checkInExplanation, locale)}&quot;
-                        </div>
-                      ) : item.checkOutExplanation ? (
-                        <div
-                          className="text-amber-800 font-medium truncate"
-                          title={getLocalizedExplanation(item.checkOutExplanation, locale)}
-                        >
-                          <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
-                          {getLocalizedExplanation(item.checkOutExplanation, locale)}&quot;
-                        </div>
-                      ) : item.editedByLandlord ? (
-                        <span className="text-blue-600 font-semibold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
-                        </span>
-                      ) : (
-                        getLocalizedExplanation(item.note, locale) || '--'
-                      )}
-                    </td>
-                    <td className="py-4 px-3 text-center whitespace-nowrap">
-                      {item.checkInPhoto || item.checkOutPhoto ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          type="button"
-                          onClick={() =>
-                            setPreviewImageModal({
-                              isOpen: true,
-                              title: `${item.workDate} (${getShiftName(item.shiftName)})`,
-                              imageUrl: (item.checkInPhoto || item.checkOutPhoto)!,
-                              watermark: item.checkInWatermark
-                                ? {
-                                    ...item.checkInWatermark,
-                                    place: getLocalizedPlace(item.checkInWatermark.place, locale),
-                                    staffName: getLocalizedStaffName(
-                                      item.checkInWatermark.staffName,
-                                      locale,
-                                    ),
-                                  }
-                                : undefined,
-                              note: getLocalizedExplanation(
-                                item.checkInExplanation || item.checkOutExplanation || item.note,
-                                locale,
-                              ),
-                            })
-                          }
-                          className="p-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-[#2AC1BC]/10 text-zinc-600 hover:text-[#2AC1BC] transition-colors inline-flex items-center gap-1 cursor-pointer"
-                          title={t('viewPhotoProof')}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </Button>
-                      ) : (
-                        <span className="text-zinc-300 font-mono text-xs">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Empty State */}
-      {!isLoading && attendances.length === 0 && (
-        <div className="p-8 rounded-3xl bg-white border border-dashed border-zinc-200 text-center space-y-2">
-          <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400">
-            <Clock className="w-5 h-5" />
+        {/* Total records count & View Mode Toggle */}
+        <div className="flex items-center gap-4 self-start md:self-center">
+          <div className="text-xs text-muted font-medium">
+            {t('totalRecords')} <strong className="text-foreground font-bold">{totalItems}</strong>
           </div>
-          <p className="text-xs font-bold text-zinc-700">{t('emptyHistoryTitle')}</p>
-          <p className="text-[11px] text-zinc-400">{t('emptyHistoryDesc')}</p>
-          {hasAnyAppliedFilter && (
-            <div className="pt-1">
-              <Button
-                variant="secondary"
-                size="sm"
-                type="button"
-                onClick={handleClearAllFilters}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 h-auto rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold transition-all cursor-pointer"
+          <ViewModeToggle value={viewMode} onChange={handleViewModeChange} />
+        </div>
+      </div>
+
+      {/* CONTENT: GRID (Default) OR TABLE VIEW */}
+      {viewMode === 'grid' ? (
+        /* GRID VIEW */
+        isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, idx) => (
+              <div
+                key={idx}
+                className="bg-card rounded-2xl border border-line p-5 space-y-4 animate-pulse"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
-                <span>{t('btnResetFilters')}</span>
-              </Button>
-            </div>
-          )}
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-24 bg-line rounded" />
+                  <div className="h-5 w-16 bg-line rounded-lg" />
+                </div>
+                <div className="h-12 bg-surface rounded-xl" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-12 bg-card-hover rounded-xl" />
+                  <div className="h-12 bg-card-hover rounded-xl" />
+                </div>
+                <div className="h-4 w-28 bg-line rounded" />
+              </div>
+            ))}
+          </div>
+        ) : attendances.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {attendances.map(item => (
+              <Card
+                key={item.id}
+                interactive
+                onClick={() => handleOpenRecordDetail(item)}
+                className="p-5 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary shrink-0" />
+                      <Text size="sm" weight="black" color="default">
+                        {item.workDate}
+                      </Text>
+                    </div>
+                    {renderStatusChip(item)}
+                  </div>
+
+                  <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                    <Text size="xs" weight="bold" color="default">
+                      {getShiftName(item.shiftName)}
+                    </Text>
+                    <Text size="3xs" color="secondary">
+                      {item.shiftTime}
+                    </Text>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 rounded-xl bg-card-hover border border-line space-y-0.5">
+                      <Text size="3xs" color="secondary" weight="semibold">
+                        {t('tableColCheckIn')}
+                      </Text>
+                      <div className="flex items-center justify-between">
+                        <Text size="xs" weight="black" className="font-mono">
+                          {item.checkIn || '--:--'}
+                        </Text>
+                        {item.checkInPhoto && (
+                          <Camera className="w-3.5 h-3.5 text-primary" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-card-hover border border-line space-y-0.5">
+                      <Text size="3xs" color="secondary" weight="semibold">
+                        {t('tableColCheckOut')}
+                      </Text>
+                      <div className="flex items-center justify-between">
+                        <Text size="xs" weight="black" className="font-mono">
+                          {item.checkOut || '--:--'}
+                        </Text>
+                        {item.checkOutPhoto && (
+                          <Camera className="w-3.5 h-3.5 text-primary" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {(item.checkInExplanation || item.checkOutExplanation || item.note) && (
+                    <div className="text-[11px] text-muted truncate">
+                      <span className="font-bold text-warning">{t('tableColNote')}: </span>
+                      {getLocalizedExplanation(
+                        item.checkInExplanation || item.checkOutExplanation || item.note,
+                        locale,
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-line flex items-center justify-between text-xs">
+                  <Text size="3xs" color="secondary" weight="medium">
+                    {t('tableColHours')}
+                  </Text>
+                  <Text size="sm" weight="black" color="brand">
+                    {item.totalHours}h
+                  </Text>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : null
+      ) : (
+        /* TABLE VIEW */
+        <div className="bg-card rounded-2xl border border-line shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-surface/80 border-b border-line text-[11px] font-black text-muted uppercase tracking-wider">
+                <tr>
+                  <th className="py-3.5 px-4">{t('tableColDate')}</th>
+                  <th className="py-3.5 px-3">{t('tableColShift')}</th>
+                  <th className="py-3.5 px-3">{t('tableColCheckIn')}</th>
+                  <th className="py-3.5 px-3">{t('tableColCheckOut')}</th>
+                  <th className="py-3.5 px-3">{t('tableColStatus')}</th>
+                  <th className="py-3.5 px-3">{t('tableColHours')}</th>
+                  <th className="py-3.5 px-3">{t('tableColNote')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line font-medium text-foreground">
+                {isLoading ? (
+                  <>
+                    {[...Array(5)].map((_, idx) => (
+                      <tr key={idx} className="animate-pulse">
+                        <td className="py-4 px-4">
+                          <div className="h-4 w-20 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-28 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-16 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-16 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-5 w-18 bg-card-hover rounded-lg" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-10 bg-line rounded" />
+                        </td>
+                        <td className="py-4 px-3">
+                          <div className="h-4 w-36 bg-card-hover rounded" />
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ) : attendances.length > 0 ? (
+                  attendances.map(item => (
+                    <TableRow
+                      key={item.id}
+                      interactive
+                      onClick={() => handleOpenRecordDetail(item)}
+                    >
+                      <td className="py-4 px-4 font-bold text-foreground whitespace-nowrap">
+                        <Text size="xs" weight="bold" color="default">
+                          {item.workDate}
+                        </Text>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap font-bold">
+                        <Text size="xs" weight="bold" color="default">
+                          {getShiftName(item.shiftName)}
+                        </Text>
+                        <Text size="3xs" color="secondary" weight="normal">
+                          {item.shiftTime}
+                        </Text>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 font-mono font-bold">
+                          <Text size="xs" weight="bold" color="default" className="font-mono">
+                            {item.checkIn || '--:--'}
+                          </Text>
+                          {item.checkInPhoto && (
+                            <TableActionButton
+                              icon={<Camera />}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  isOpen: true,
+                                  title: `${t('tableColCheckIn')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                  imageUrl: item.checkInPhoto!,
+                                  watermark: item.checkInWatermark
+                                    ? {
+                                        ...item.checkInWatermark,
+                                        place: getLocalizedPlace(item.checkInWatermark.place, locale),
+                                        staffName: getLocalizedStaffName(
+                                          item.checkInWatermark.staffName,
+                                          locale,
+                                        ),
+                                      }
+                                    : undefined,
+                                  note: getLocalizedExplanation(item.checkInExplanation, locale),
+                                })
+                              }
+                              title={t('viewWatermarkCheckIn')}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 font-mono font-bold">
+                          <Text size="xs" weight="bold" color="default" className="font-mono">
+                            {item.checkOut || '--:--'}
+                          </Text>
+                          {item.checkOutPhoto && (
+                            <TableActionButton
+                              icon={<Camera />}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  isOpen: true,
+                                  title: `${t('tableColCheckOut')}: ${item.workDate} (${getShiftName(item.shiftName)})`,
+                                  imageUrl: item.checkOutPhoto!,
+                                  watermark: item.checkOutWatermark
+                                    ? {
+                                        ...item.checkOutWatermark,
+                                        place: getLocalizedPlace(item.checkOutWatermark.place, locale),
+                                        staffName: getLocalizedStaffName(
+                                          item.checkOutWatermark.staffName,
+                                          locale,
+                                        ),
+                                      }
+                                    : undefined,
+                                  note: getLocalizedExplanation(item.checkOutExplanation, locale),
+                                })
+                              }
+                              title={t('viewWatermarkCheckOut')}
+                            />
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        {renderStatusChip(item)}
+                      </td>
+                      <td className="py-4 px-3 font-black text-primary">
+                        <Text size="xs" weight="black" color="brand">
+                          {item.totalHours}h
+                        </Text>
+                      </td>
+                      <td className="py-4 px-3 text-[11px] text-muted max-w-xs">
+                        {item.checkInExplanation ? (
+                          <div
+                            className="text-warning font-medium truncate"
+                            title={getLocalizedExplanation(item.checkInExplanation, locale)}
+                          >
+                            <span className="font-bold">{t('tableLateShort')}</span> &quot;
+                            {getLocalizedExplanation(item.checkInExplanation, locale)}&quot;
+                          </div>
+                        ) : item.checkOutExplanation ? (
+                          <div
+                            className="text-warning font-medium truncate"
+                            title={getLocalizedExplanation(item.checkOutExplanation, locale)}
+                          >
+                            <span className="font-bold">{t('tableEarlyShort')}</span> &quot;
+                            {getLocalizedExplanation(item.checkOutExplanation, locale)}&quot;
+                          </div>
+                        ) : item.editedByLandlord ? (
+                          <span className="text-info font-semibold flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> {t('tableManualApproved')}
+                          </span>
+                        ) : (
+                          getLocalizedExplanation(item.note, locale) || '--'
+                        )}
+                      </td>
+                    </TableRow>
+                  ))
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {/* RULE #9 STANDARDIZED PAGINATION BAR */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-2xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-xs text-zinc-600 font-medium">
-          <div className="flex items-center gap-1.5">
-            <span>{t('paginationShowing')}</span>
-            <NumberInput
-              min={1}
-              max={100}
-              value={pageSizeInput}
-              onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                setPageSizeInput(isNaN(val) ? 0 : val)
-                setCurrentPage(1)
-                setWindowStart(1)
-              }}
-              containerClassName="w-14 space-y-0"
-              className="w-14 px-2 py-1 text-center font-bold text-zinc-900 border border-zinc-200 rounded-lg focus:outline-none focus:border-[#2AC1BC]"
-            />
-            <span>{t('paginationPerPage')}</span>
-          </div>
-
-          <span className="text-zinc-300">|</span>
-
-          <span>
-            {totalItems > 0 ? startIndex + 1 : 0}-{endIndex} {t('paginationOf')} {totalItems}{' '}
-            {t('paginationItems')}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={handlePrevWindow}
-            disabled={windowStart === 1}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t('paginationJumpBack5')}
-          >
-            <ChevronsLeft className="w-4 h-4 text-zinc-600" />
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={safeCurrentPage === 1}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t('paginationPrev')}
-          >
-            <ChevronLeft className="w-4 h-4 text-zinc-600" />
-          </Button>
-
-          {pageNumbers.map(num => (
-            <Button
-              key={num}
-              variant={safeCurrentPage === num ? 'primary' : 'ghost'}
-              size="sm"
-              type="button"
-              onClick={() => setCurrentPage(num)}
-              className={`w-8 h-8 p-0 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                safeCurrentPage === num
-                  ? 'bg-[#2AC1BC] text-white shadow-2xs hover:bg-[#2AC1BC]'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-              }`}
-            >
-              {num}
-            </Button>
-          ))}
-
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={safeCurrentPage >= totalPages}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t('paginationNext')}
-          >
-            <ChevronRight className="w-4 h-4 text-zinc-600" />
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            type="button"
-            onClick={handleNextWindow}
-            disabled={windowStart + 5 > totalPages}
-            className="p-2 h-auto rounded-xl border border-zinc-200 hover:bg-zinc-50 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-            title={t('paginationJumpForward5')}
-          >
-            <ChevronsRight className="w-4 h-4 text-zinc-600" />
-          </Button>
-        </div>
-      </div>
-
-      {/* WATERMARK PHOTO MODAL */}
-      {previewImageModal && previewImageModal.isOpen && (
-        <div
-          onClick={() => setPreviewImageModal(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200"
-          >
-            <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#2AC1BC]" />
-                <h3 className="text-sm font-black text-zinc-900 truncate">
-                  {previewImageModal.title}
-                </h3>
-              </div>
+      {/* Empty State */}
+      {!isLoading && attendances.length === 0 && (
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title={t('emptyHistoryTitle')}
+          description={t('emptyHistoryDesc')}
+          action={
+            hasAnyAppliedFilter ? (
               <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setPreviewImageModal(null)}
-                className="p-1 h-auto rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                variant="secondary"
+                size="md"
+                onClick={handleClearAllFilters}
+                leftIcon={<RotateCcw className="text-muted" />}
               >
-                <X className="w-4 h-4" />
+                {t('btnResetFilters')}
               </Button>
-            </div>
+            ) : undefined
+          }
+        />
+      )}
 
-            <div className="relative bg-zinc-950 aspect-video max-h-[380px] flex items-center justify-center">
-              <img
-                src={previewImageModal.imageUrl}
-                alt="Audit proof"
-                className="w-full h-full object-contain"
-              />
-            </div>
+      {/* RULE #9 STANDARDIZED PAGINATION BAR */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSizeInput}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSizeInput}
+        pageSizeMax={100}
+      />
+
+      {/* WATERMARK PHOTO / RECORD DETAIL MODAL */}
+      {previewImageModal && previewImageModal.isOpen && (
+        <Modal
+          isOpen={previewImageModal.isOpen}
+          onClose={() => setPreviewImageModal(null)}
+          title={previewImageModal.title}
+          size="md"
+        >
+          <Modal.Body className="space-y-4 pt-1">
+            {previewImageModal.imageUrl ? (
+              <div className="relative bg-zinc-950 rounded-2xl overflow-hidden aspect-video max-h-[380px] flex items-center justify-center border border-line">
+                <img
+                  src={previewImageModal.imageUrl}
+                  alt="Audit proof"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="p-6 rounded-2xl bg-surface border border-line text-center text-xs text-muted font-medium">
+                {t('noPhotoProofAttached') || 'Không có ảnh chấm công đính kèm.'}
+              </div>
+            )}
 
             {previewImageModal.watermark && (
-              <div className="p-4 bg-zinc-900 text-white space-y-1.5 text-xs font-mono">
-                <div className="flex items-center justify-between text-[#2AC1BC] font-bold">
+              <div className="p-4 rounded-xl bg-surface border border-line space-y-1.5 text-xs font-mono">
+                <div className="flex items-center justify-between text-primary font-bold">
                   <span>🕒 {previewImageModal.watermark.time}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <Chip variant="success" size="xs" preventHover>
                     AUDIT VERIFIED
-                  </span>
+                  </Chip>
                 </div>
-                <div className="text-zinc-200 font-sans text-xs">
+                <div className="text-foreground font-sans text-xs">
                   📍 {previewImageModal.watermark.place}
                 </div>
-                <div className="text-zinc-400 font-sans text-[11px]">
+                <div className="text-muted font-sans text-[11px]">
                   👤 {previewImageModal.watermark.staffName} • GPS:{' '}
                   {previewImageModal.watermark.coordinates}
                 </div>
@@ -897,241 +859,214 @@ function StaffShiftHistoryContent() {
             )}
 
             {previewImageModal.note && (
-              <div className="p-4 bg-amber-50 border-t border-amber-200/80 text-xs text-amber-900 space-y-1">
-                <span className="font-bold flex items-center gap-1 text-amber-800">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <div className="p-4 rounded-xl bg-warning-soft border border-warning-subtle text-xs text-warning space-y-1">
+                <span className="font-bold flex items-center gap-1 text-warning">
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                   {t('explanationNoteTitle')}
                 </span>
-                <p className="italic text-zinc-800 font-medium">
+                <p className="italic text-foreground font-medium">
                   &quot;{previewImageModal.note}&quot;
                 </p>
               </div>
             )}
-
-            <div className="p-4 bg-zinc-50 border-t border-zinc-200 flex justify-end">
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() => setPreviewImageModal(null)}
-                className="px-4 py-2 h-auto bg-zinc-200 hover:bg-zinc-300 text-zinc-800 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-              >
-                {t('btnClose')}
-              </Button>
-            </div>
-          </div>
-        </div>
+          </Modal.Body>
+          <Modal.Footer className="flex justify-end">
+            <Button
+              size="md"
+              variant="secondary"
+              onClick={() => setPreviewImageModal(null)}
+            >
+              {t('btnClose')}
+            </Button>
+          </Modal.Footer>
+        </Modal>
       )}
 
       {/* FILTER MODAL */}
-      {isFilterModalOpen && (
-        <div
-          onClick={handleRequestCloseFilterModal}
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150 cursor-pointer"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden cursor-default my-auto border border-zinc-200 animate-in zoom-in-95 duration-200"
-          >
-            {/* Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center text-[#2AC1BC]">
-                  <Filter className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-zinc-900">{t('titleFilterModal')}</h3>
-                  <p className="text-[11px] text-zinc-500 font-medium">{t('descFilterModal')}</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={handleRequestCloseFilterModal}
-                className="p-1.5 h-auto rounded-lg hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
-                title={t('btnClose')}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+      <Modal
+        isOpen={isFilterModalOpen}
+        onClose={handleRequestCloseFilterModal}
+        size="md"
+      >
+        <Modal.Header
+          icon={
+            <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center text-primary">
+              <Filter className="w-4 h-4" />
             </div>
+          }
+          title={t('titleFilterModal')}
+          description={t('descFilterModal')}
+          onClose={handleRequestCloseFilterModal}
+        />
 
-            {/* Body */}
-            <div className="p-5 space-y-4">
-              {/* Ngày trực: Date Range (From - To) */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                    <span>{t('filterDateRange')}</span>
-                  </label>
-                  {(modalStartDate || modalEndDate) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      type="button"
-                      onClick={() => {
-                        setModalStartDate('')
-                        setModalEndDate('')
-                      }}
-                      className="text-[11px] h-auto p-0 text-zinc-400 hover:text-red-500 hover:bg-transparent font-semibold cursor-pointer"
-                    >
-                      {t('filterClearDates')}
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 block mb-1">
-                      {t('filterFromDate')}
-                    </span>
-                    <TextInput
-                      type="date"
-                      value={modalStartDate}
-                      onChange={e => setModalStartDate(e.target.value)}
-                      containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-zinc-400 block mb-1">
-                      {t('filterToDate')}
-                    </span>
-                    <TextInput
-                      type="date"
-                      value={modalEndDate}
-                      min={modalStartDate || undefined}
-                      onChange={e => setModalEndDate(e.target.value)}
-                      containerClassName="space-y-0"
-                      className="w-full px-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
-                    />
-                  </div>
-                </div>
+        <Modal.Body className="space-y-4">
+          {/* Ngày trực: Date Range (From - To) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Text size="xs" weight="bold" color="default" className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                <span>{t('filterDateRange')}</span>
+              </Text>
+              {(modalStartDate || modalEndDate) && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => {
+                    setModalStartDate('')
+                    setModalEndDate('')
+                  }}
+                >
+                  {t('filterClearDates')}
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <Text size="3xs" weight="bold" color="secondary" className="block mb-1">
+                  {t('filterFromDate')}
+                </Text>
+                <TextInput
+                  type="date"
+                  value={modalStartDate}
+                  onChange={e => setModalStartDate(e.target.value)}
+                  containerClassName="space-y-0"
+                  className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+                />
               </div>
-
-              {/* Ca làm việc: Dynamic from backend */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{t('filterShiftType')}</span>
-                </label>
-                <div className="relative">
-                  <SelectInput
-                    value={modalShift}
-                    onChange={e => setModalShift(e.target.value)}
-                    disabled={isShiftsLoading}
-                    options={[
-                      { value: 'all', label: t('filterAllShifts') },
-                      ...availableShifts.map(s => ({
-                        value: s.name,
-                        label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
-                      })),
-                    ]}
-                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer disabled:opacity-50"
-                  />
-                  {isShiftsLoading && (
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                      <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Trạng thái chấm công */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#2AC1BC]" />
-                  <span>{t('filterStatus')}</span>
-                </label>
-                <SelectInput
-                  value={modalStatus}
-                  onChange={e =>
-                    setModalStatus(e.target.value as 'all' | 'on_time' | 'late' | 'absent')
-                  }
-                  options={[
-                    { value: 'all', label: t('filterAllStatuses') },
-                    { value: 'on_time', label: t('tableStatusOnTime') },
-                    { value: 'late', label: t('tableStatusLate') },
-                    { value: 'absent', label: t('tableStatusAbsent') },
-                  ]}
-                  className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-hidden focus:ring-2 focus:ring-[#2AC1BC]/20 focus:border-[#2AC1BC] transition-all cursor-pointer"
+              <div>
+                <Text size="3xs" weight="bold" color="secondary" className="block mb-1">
+                  {t('filterToDate')}
+                </Text>
+                <TextInput
+                  type="date"
+                  value={modalEndDate}
+                  min={modalStartDate || undefined}
+                  onChange={e => setModalEndDate(e.target.value)}
+                  containerClassName="space-y-0"
+                  className="w-full px-3 py-2 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
                 />
               </div>
             </div>
+          </div>
 
-            {/* Footer */}
-            <div className="p-4 bg-zinc-50/80 border-t border-zinc-200/80 flex items-center justify-between gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={handleResetModalDrafts}
-                className="px-3 py-2 h-auto text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200/50 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-                title={t('titleResetDialog')}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t('btnReset')}</span>
-              </Button>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  type="button"
-                  onClick={handleRequestCloseFilterModal}
-                  className="px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
-                >
-                  {t('btnCancel')}
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  type="button"
-                  onClick={handleApplyModalFilter}
-                  className="px-4 py-2 h-auto text-xs font-bold text-white bg-[#2AC1BC] hover:bg-[#22a8a4] rounded-xl transition-all shadow-2xs active:scale-95 cursor-pointer"
-                >
-                  {t('btnApplyFilters')}
-                </Button>
-              </div>
+          {/* Ca làm việc: Dynamic from backend */}
+          <div className="space-y-1.5">
+            <Text size="xs" weight="bold" color="default" className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-primary" />
+              <span>{t('filterShiftType')}</span>
+            </Text>
+            <div className="relative">
+              <SelectInput
+                value={modalShift}
+                onChange={e => setModalShift(e.target.value)}
+                disabled={isShiftsLoading}
+                options={[
+                  { value: 'all', label: t('filterAllShifts') },
+                  ...availableShifts.map(s => ({
+                    value: s.name,
+                    label: `${getShiftName(s.name)} (${s.startTime} - ${s.endTime})`,
+                  })),
+                ]}
+                className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer disabled:opacity-50"
+              />
+              {isShiftsLoading && (
+                <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-3.5 h-3.5 text-muted animate-spin" />
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+
+          {/* Trạng thái chấm công */}
+          <div className="space-y-1.5">
+            <Text size="xs" weight="bold" color="default" className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span>{t('filterStatus')}</span>
+            </Text>
+            <SelectInput
+              value={modalStatus}
+              onChange={e =>
+                setModalStatus(e.target.value as 'all' | 'on_time' | 'late' | 'absent')
+              }
+              options={[
+                { value: 'all', label: t('filterAllStatuses') },
+                { value: 'on_time', label: t('tableStatusOnTime') },
+                { value: 'late', label: t('tableStatusLate') },
+                { value: 'absent', label: t('tableStatusAbsent') },
+              ]}
+              className="w-full px-3 py-2.5 bg-surface border border-line rounded-xl text-xs font-semibold text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+            />
+          </div>
+        </Modal.Body>
+
+        {/* Footer */}
+        <Modal.Footer className="flex items-center justify-between gap-3">
+          <Button
+            size="md"
+            variant="ghost"
+            onClick={handleResetModalDrafts}
+            title={t('titleResetDialog')}
+            leftIcon={<RotateCcw />}
+          >
+            {t('btnReset')}
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="md"
+              variant="secondary"
+              onClick={handleRequestCloseFilterModal}
+            >
+              {t('btnCancel')}
+            </Button>
+            <Button
+              size="md"
+              onClick={handleApplyModalFilter}
+            >
+              {t('btnApplyFilters')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
 
       {/* RULE #10 CONFIRMATION MODAL */}
-      {showConfirmCloseModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100"
-          >
-            <div className="p-6">
-              <div className="flex items-center gap-2.5 mb-2 text-amber-600">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                <h3 className="text-base font-bold text-zinc-900">{t('confirmCloseTitle')}</h3>
-              </div>
-              <p className="text-xs text-zinc-600 leading-relaxed">{t('filterConfirmCloseDesc')}</p>
-            </div>
-            <div className="flex items-center gap-3 px-6 pb-6">
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() => setShowConfirmCloseModal(false)}
-                className="flex-1 px-4 py-2 h-auto text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer"
-              >
-                {t('btnContinueEditing')}
-              </Button>
-              <Button
-                variant="danger"
-                type="button"
-                onClick={handleConfirmDiscardAndClose}
-                className="flex-1 px-4 py-2 h-auto text-xs font-bold text-white rounded-xl transition-colors cursor-pointer shadow-2xs"
-              >
-                {t('btnDiscardAndClose')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={showConfirmCloseModal}
+        onClose={() => setShowConfirmCloseModal(false)}
+        size="sm"
+      >
+        <Modal.Body className="pt-4 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-6 h-6" />
           </div>
-        </div>
-      )}
+          <div className="space-y-1">
+            <Text as="h3" size="base" weight="bold" color="default">
+              {t('confirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" className="leading-relaxed">
+              {t('filterConfirmCloseDesc')}
+            </Text>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="flex items-center gap-3">
+          <Button
+            size="md"
+            variant="secondary"
+            onClick={() => setShowConfirmCloseModal(false)}
+            className="flex-1"
+          >
+            {t('btnContinueEditing')}
+          </Button>
+          <Button
+            size="md"
+            variant="danger"
+            onClick={handleConfirmDiscardAndClose}
+            className="flex-1"
+          >
+            {t('btnDiscardAndClose')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }
@@ -1139,7 +1074,12 @@ function StaffShiftHistoryContent() {
 export default function StaffShiftHistoryPage() {
   return (
     <Suspense
-      fallback={<div className="p-8 text-center text-xs text-zinc-400 font-bold">Loading...</div>}
+      fallback={
+        <div className="p-8 text-center text-xs text-muted font-bold flex items-center justify-center gap-2">
+          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span>Loading...</span>
+        </div>
+      }
     >
       <StaffShiftHistoryContent />
     </Suspense>

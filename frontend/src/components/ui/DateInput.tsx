@@ -520,7 +520,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     const renderCalendarBody = () => (
       <div className="flex flex-col">
         {/* Calendar Navigation Header */}
-        <div className="flex items-center justify-between gap-1 pb-3 mb-2 border-b border-zinc-100">
+        <div className="flex items-center justify-between gap-1 pb-3 mb-2 border-b border-line">
           <button
             type="button"
             onClick={
@@ -530,7 +530,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                   ? () => handleYearChange(viewYear - 12)
                   : handlePrevMonth
             }
-            className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-card-hover text-muted hover:text-foreground transition-colors cursor-pointer"
             title={
               calendarView === 'months'
                 ? isEn
@@ -557,15 +557,15 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                 calendarView === 'months'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border border-zinc-200/60',
+                  ? 'bg-primary text-white shadow-xs shadow-primary/30'
+                  : 'bg-card-hover hover:bg-line text-foreground border border-line',
               )}
             >
               <span>{monthNames[viewMonth]}</span>
               <ChevronDown
                 className={cn(
                   'w-3.5 h-3.5 transition-transform duration-200',
-                  calendarView === 'months' ? 'rotate-180 text-white' : 'text-zinc-400',
+                  calendarView === 'months' ? 'rotate-180 text-white' : 'text-muted',
                 )}
               />
             </button>
@@ -577,15 +577,15 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                 calendarView === 'years'
-                  ? 'bg-[#2AC1BC] text-white shadow-xs shadow-[#2AC1BC]/30'
-                  : 'bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 border border-zinc-200/60',
+                  ? 'bg-primary text-white shadow-xs shadow-primary/30'
+                  : 'bg-card-hover hover:bg-line text-foreground border border-line',
               )}
             >
               <span>{viewYear}</span>
               <ChevronDown
                 className={cn(
                   'w-3.5 h-3.5 transition-transform duration-200',
-                  calendarView === 'years' ? 'rotate-180 text-white' : 'text-zinc-400',
+                  calendarView === 'years' ? 'rotate-180 text-white' : 'text-muted',
                 )}
               />
             </button>
@@ -600,7 +600,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                   ? () => handleYearChange(viewYear + 12)
                   : handleNextMonth
             }
-            className="p-1.5 rounded-xl hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl hover:bg-card-hover text-muted hover:text-foreground transition-colors cursor-pointer"
             title={
               calendarView === 'months'
                 ? isEn
@@ -645,10 +645,10 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                   className={cn(
                     'py-3 px-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer select-none text-center',
                     isSelected
-                      ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30 scale-105 font-black'
+                      ? 'bg-primary text-white shadow-md shadow-primary/30 scale-105 font-black'
                       : isDisabled
-                        ? 'text-zinc-300 bg-zinc-50/50 cursor-not-allowed pointer-events-none opacity-40'
-                        : 'text-zinc-700 bg-zinc-50 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]',
+                        ? 'text-zinc-300 bg-surface/50 cursor-not-allowed pointer-events-none opacity-40'
+                        : 'text-foreground/90 bg-surface hover:bg-primary/15 hover:text-primary',
                   )}
                 >
                   {name}
@@ -684,10 +684,10 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                   className={cn(
                     'py-2.5 px-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer select-none text-center',
                     isSelected
-                      ? 'bg-[#2AC1BC] text-white shadow-md shadow-[#2AC1BC]/30 scale-105 font-black'
+                      ? 'bg-primary text-white shadow-md shadow-primary/30 scale-105 font-black'
                       : isDisabled
-                        ? 'text-zinc-300 bg-zinc-50/50 cursor-not-allowed pointer-events-none opacity-40'
-                        : 'text-zinc-700 bg-zinc-50 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]',
+                        ? 'text-zinc-300 bg-surface/50 cursor-not-allowed pointer-events-none opacity-40'
+                        : 'text-foreground/90 bg-surface hover:bg-primary/15 hover:text-primary',
                   )}
                 >
                   {y}
@@ -703,7 +703,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             {/* Day of Week Header */}
             <div className="grid grid-cols-7 gap-1 mb-1 text-center">
               {dayHeaders.map(day => (
-                <div key={day} className="text-[10px] font-black text-zinc-400 py-1 uppercase">
+                <div key={day} className="text-[10px] font-black text-muted py-1 uppercase">
                   {day}
                 </div>
               ))}
@@ -723,11 +723,11 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
                       !dayItem.isCurrentMonth && 'text-zinc-300 pointer-events-none opacity-40',
                       dayItem.isCurrentMonth && !dayItem.isSelected && !dayItem.isDisabled && (
                         dayItem.isToday
-                          ? 'border-2 border-[#2AC1BC] text-[#2AC1BC] hover:bg-[#2AC1BC]/10'
-                          : 'text-zinc-700 hover:bg-[#2AC1BC]/15 hover:text-[#2AC1BC]'
+                          ? 'border-2 border-primary text-primary hover:bg-primary/10'
+                          : 'text-foreground/90 hover:bg-primary/15 hover:text-primary'
                       ),
                       dayItem.isSelected && (
-                        'bg-[#2AC1BC] text-white font-black shadow-md shadow-[#2AC1BC]/30 scale-105'
+                        'bg-primary text-white font-black shadow-md shadow-primary/30 scale-105'
                       ),
                       dayItem.isDisabled && dayItem.isCurrentMonth && (
                         'text-zinc-300 cursor-not-allowed pointer-events-none opacity-30'
@@ -743,12 +743,12 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         )}
 
         {/* Bottom Quick Actions Footer */}
-        <div className="flex items-center justify-between pt-3 mt-3 border-t border-zinc-100 text-xs">
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-line text-xs">
           {calendarView !== 'days' ? (
             <button
               type="button"
               onClick={() => setCalendarView('days')}
-              className="font-bold text-[#2AC1BC] hover:text-[#239f9b] px-2 py-1 rounded-lg hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
+              className="font-bold text-primary hover:text-[#239f9b] px-2 py-1 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer"
             >
               {isEn ? '← Back to days' : '← Quay lại ngày'}
             </button>
@@ -756,7 +756,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             <button
               type="button"
               onClick={handleSelectToday}
-              className="font-bold text-[#2AC1BC] hover:text-[#239f9b] px-2 py-1 rounded-lg hover:bg-[#2AC1BC]/10 transition-colors cursor-pointer"
+              className="font-bold text-primary hover:text-[#239f9b] px-2 py-1 rounded-lg hover:bg-primary/10 transition-colors cursor-pointer"
             >
               {textToday}
             </button>
@@ -767,7 +767,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               <button
                 type="button"
                 onClick={handleClear}
-                className="font-semibold text-zinc-400 hover:text-zinc-600 px-2 py-1 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
+                className="font-semibold text-muted hover:text-foreground px-2 py-1 rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
               >
                 {textClear}
               </button>
@@ -775,7 +775,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="font-bold text-zinc-600 hover:text-zinc-900 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 transition-colors cursor-pointer"
+              className="font-bold text-muted hover:text-foreground px-3 py-1.5 rounded-xl bg-card-hover hover:bg-line transition-colors cursor-pointer"
             >
               {textClose}
             </button>
@@ -809,13 +809,13 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           <label
             onClick={() => !disabled && setIsOpen(prev => !prev)}
             className={cn(
-              'block text-xs font-bold text-zinc-700 select-none cursor-pointer',
-              disabled && 'text-zinc-400 cursor-not-allowed',
+              'block text-xs font-bold text-foreground select-none cursor-pointer',
+              disabled && 'text-muted cursor-not-allowed',
               labelClassName,
             )}
           >
             <span>{label}</span>
-            {required && <span className="text-rose-500 font-bold ml-1">*</span>}
+            {required && <span className="text-danger font-bold ml-1">*</span>}
           </label>
         )}
 
@@ -825,7 +825,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             type="button"
             disabled={disabled}
             onClick={() => !disabled && setIsOpen(prev => !prev)}
-            className="absolute left-3 flex items-center text-zinc-400 hover:text-[#2AC1BC] transition-colors cursor-pointer disabled:cursor-not-allowed"
+            className="absolute left-3 flex items-center text-muted hover:text-primary transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             <CalendarIcon className="w-4 h-4" />
           </button>
@@ -841,12 +841,12 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             className={cn(
               'w-full rounded-xl border pl-9 pr-9 py-2.5 text-xs font-semibold transition-all duration-200 outline-none select-none',
               disabled
-                ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed shadow-none'
+                ? 'bg-surface text-muted border-line cursor-not-allowed shadow-none'
                 : error
-                  ? 'bg-white border-rose-400 text-rose-900 ring-2 ring-rose-500/15'
+                  ? 'bg-input border-danger text-danger ring-2 ring-danger/15'
                   : isOpen
-                    ? 'bg-white border-[#2AC1BC] ring-3 ring-[#2AC1BC]/15 text-zinc-900 shadow-sm'
-                    : 'bg-white border-zinc-200 text-zinc-800 hover:border-zinc-300 hover:bg-zinc-50/50 shadow-2xs',
+                    ? 'bg-input border-primary ring-3 ring-primary/20 text-foreground shadow-sm'
+                    : 'bg-input border-line text-foreground hover:border-primary/50 hover:bg-card-hover/50 shadow-2xs',
               className,
             )}
           />
@@ -857,7 +857,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               type="button"
               onClick={handleClear}
               title="Xóa ngày"
-              className="absolute right-3 p-1 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
+              className="absolute right-3 p-1 rounded-lg text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -867,7 +867,7 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           {isOpen && !isMobile && (
             <div
               className={cn(
-                'absolute z-50 w-80 max-w-[calc(100vw-2rem)] rounded-3xl border border-zinc-200/90 bg-white/95 backdrop-blur-md shadow-2xl shadow-zinc-950/15 p-4',
+                'absolute z-50 w-80 max-w-[calc(100vw-2rem)] rounded-3xl border border-line bg-card/95 backdrop-blur-md shadow-2xl shadow-black/15 dark:shadow-black/50 p-4',
                 alignPosition === 'right' ? 'right-0' : 'left-0',
                 dropPosition === 'top'
                   ? 'bottom-full mb-2 origin-bottom animate-in fade-in slide-in-from-bottom-2 zoom-in-95 duration-150 ease-out'
@@ -881,27 +881,27 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           {/* Mobile Bottom-sheet Modal rendered via React Portal */}
           {isOpen && isMobile && mounted && typeof document !== 'undefined' && createPortal(
             <div
-              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-xs animate-in fade-in duration-200 p-0"
+              className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-xs animate-in fade-in duration-200 p-0"
               onClick={() => setIsOpen(false)}
             >
               <div
-                className="w-full max-w-sm bg-white rounded-t-3xl p-4 shadow-2xl border-t border-zinc-200 animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-sm bg-card rounded-t-3xl p-4 shadow-2xl border-t border-line animate-in slide-in-from-bottom duration-200 max-h-[90vh] overflow-y-auto"
                 onClick={e => e.stopPropagation()}
               >
                 {/* Mobile Header Handle & Title */}
                 <div className="flex flex-col items-center mb-3">
-                  <div className="w-10 h-1 bg-zinc-300 rounded-full mb-3" />
+                  <div className="w-10 h-1 bg-line rounded-full mb-3" />
                   <div className="w-full flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-[#2AC1BC]" />
-                      <span className="text-xs font-bold text-zinc-800">
+                      <CalendarIcon className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-bold text-foreground">
                         {label || textSelectDate}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsOpen(false)}
-                      className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer"
+                      className="p-1 rounded-full text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -916,9 +916,9 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         </div>
 
         {error ? (
-          <p className="text-[11px] font-medium text-rose-600 animate-in fade-in">{error}</p>
+          <p className="text-[11px] font-medium text-danger animate-in fade-in">{error}</p>
         ) : helperText ? (
-          <p className="text-[11px] text-zinc-400">{helperText}</p>
+          <p className="text-[11px] text-muted">{helperText}</p>
         ) : null}
       </div>
     )

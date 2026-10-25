@@ -231,7 +231,7 @@ describe('BoardingHousesService - Multi-Property Reports (UC-L-24)', () => {
       const result = await service.generateMultiPropertyAiStrategy('user-1')
 
       expect(result).toBeDefined()
-      expect(result.title).toContain('Chiến lược tiếp thị')
+      expect(result.title).toContain('Marketing Strategy')
       expect(result.executiveSummary).toBeDefined()
       expect(result.pricingRecommendations.length).toBeGreaterThan(0)
       expect(result.marketingCampaigns.length).toBeGreaterThan(0)

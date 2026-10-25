@@ -198,7 +198,7 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
         `Gemini Vision image blocked by safety filter: ${JSON.stringify(candidate.safetyRatings)}`,
       )
       throw new Error(
-        'Hình ảnh bị bộ lọc an toàn của Google chặn. Vui lòng chụp lại ảnh rõ nét, không bị lóa.',
+        'Image was blocked by Google safety filters. Please take a clearer, glare-free picture.',
       )
     }
 
@@ -241,7 +241,7 @@ BẮT BUỘC TRẢ VỀ JSON THEO ĐÚNG ĐỊNH DẠNG SAU (CHỈ JSON, KHÔNG 
       const errorMessage =
         parsed.errorMessage ||
         (!isValid
-          ? 'Ảnh tải lên không phải là công tơ hợp lệ hoặc không thể nhận diện được chỉ số'
+          ? 'Uploaded image is not a valid meter or the reading could not be recognized'
           : null)
 
       let readingValue: number | null = null

@@ -5,7 +5,10 @@ import {
   ForbiddenException,
   BadRequestException,
   UnauthorizedException,
+  HttpStatus,
 } from '@nestjs/common'
+import { BusinessForbiddenException } from '../../common/exceptions/business.exception'
+import { BusinessErrorCode } from '../../common/enums/business-error-code.enum'
 import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { PayOsService } from '../payments/payos.service'
@@ -1274,11 +1277,10 @@ export class PostsService {
     }
 
     if (!user.userIdentification) {
-      throw new ForbiddenException({
-        code: 'IDENTITY_VERIFICATION_REQUIRED',
-        message:
-          'Vui lòng hoàn thành xác minh danh tính (CCCD) trước khi thực hiện đặt cọc trực tuyến theo quy định nền tảng (UC-PU-04).',
-      })
+      throw new BusinessForbiddenException(
+        BusinessErrorCode.AUTH_IDENTITY_VERIFICATION_REQUIRED,
+        'Identity verification (CCCD) required before performing online deposit.',
+      )
     }
 
     // 2. Load post or room

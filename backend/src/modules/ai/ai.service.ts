@@ -163,7 +163,7 @@ export class AiService {
 Hãy sử dụng thông tin này để trả lời chủ trọ (Tuyệt đối không nêu thông tin cá nhân khách thuê).`
         }
       } catch (err) {
-        this.logger.error('Lỗi khi lấy context user cho AI: ' + err)
+        this.logger.error('Error fetching user context for AI: ' + err)
       }
     }
 
@@ -192,7 +192,7 @@ Hãy sử dụng thông tin này để trả lời chủ trọ (Tuyệt đối k
     const data = await response.json()
     const replyText =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      'Xin lỗi, tôi không thể xử lý câu hỏi này lúc này. Vui lòng thử lại sau.'
+      'Sorry, I cannot process this question right now. Please try again later.'
 
     let conversationId: string | undefined = undefined
 

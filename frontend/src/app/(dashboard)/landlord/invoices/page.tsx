@@ -1,67 +1,52 @@
 'use client'
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react'
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   Plus,
-  Search,
-  Filter,
   FileText,
-  Download,
-  MoreHorizontal,
   Receipt,
-  Building2,
-  ChevronDown,
   Sparkles,
-  MapPin,
   FileSpreadsheet,
-  Eye,
   Calendar,
-  DollarSign,
-  CheckCircle2,
-  Clock,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
   QrCode,
-  Printer,
   X,
   Check,
-  LayoutGrid,
-  List,
   Zap,
   Droplets,
-  Wifi,
   ShieldCheck,
   Send,
-  Smartphone,
-  ArrowUpRight,
-  User,
-  RefreshCw,
-  Loader2,
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
-import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useTranslations } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import {
   Button,
+  TableActionButton,
   TextInput,
   NumberInput,
   SelectInput,
-  TextareaInput,
-  Checkbox,
-  Form,
   SearchInput,
+  Pagination,
+  ViewModeToggle,
+  FilterToolbar,
+  Card,
+  TableRow,
+  Text,
+  Chip,
+  Modal,
+  EmptyState,
 } from '@/components/ui'
-import { cn } from '@/lib/utils'
 import {
   landlordInvoiceService,
   LandlordInvoiceItem,
   LandlordInvoicesSummary,
 } from '@/services/landlord-invoice.service'
 import { getRooms, RoomItem } from '@/services/room.service'
+import { formatDate } from '@/utils'
 
 type InvoiceItem = LandlordInvoiceItem
 
@@ -95,10 +80,22 @@ function InvoicesContent() {
 
   const [isMounted, setIsMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  const currentYear = useMemo(() => new Date().getFullYear(), [])
   const [activeTab, setActiveTab] = useState<'all' | 'unpaid' | 'paid' | 'overdue'>('all')
   const [searchTerm, setSearchTerm] = useState(urlSearch)
   const [selectedMonth, setSelectedMonth] = useState('all')
-  const [selectedYear, setSelectedYear] = useState('2026')
+  const [selectedYear, setSelectedYear] = useState<string>(() => String(new Date().getFullYear()))
+
+  const yearOptions = useMemo(
+    () => [
+      { value: 'all', label: t('landlordInvoicesAllYears') },
+      ...Array.from({ length: 5 }, (_, i) => {
+        const y = String(currentYear - i)
+        return { value: y, label: y }
+      }),
+    ],
+    [currentYear, t],
+  )
 
   // Pagination State (Rule #9: Grid=6, Table=10, 5-page window jumping)
   const [pageSize, setPageSize] = useState<number>(viewMode === 'grid' ? 6 : 10)
@@ -241,7 +238,6 @@ function InvoicesContent() {
     }
   }, [urlId, urlSearch, invoices])
 
-  if (!isMounted) return null
 
   // Calculate Metrics from serverSummary
   const totalInvoicesCount = serverSummary.totalInvoicesCount
@@ -250,18 +246,6 @@ function InvoicesContent() {
   const overdueCount = serverSummary.overdueCount
   const totalPaidAmount = serverSummary.totalPaidAmount
   const totalUnpaidAmount = serverSummary.totalUnpaidAmount
-
-  // Pagination Logic with 5-page window jumping (Rule #9)
-  const totalPages = Math.ceil(totalRecords / pageSize) || 1
-  const windowSize = 5
-  const windowStart = Math.floor((currentPage - 1) / windowSize) * windowSize + 1
-  const windowEnd = Math.min(windowStart + windowSize - 1, totalPages)
-  const visiblePages = Array.from(
-    { length: windowEnd - windowStart + 1 },
-    (_, i) => windowStart + i,
-  )
-  const startIndex = (currentPage - 1) * pageSize
-  const endIndex = Math.min(startIndex + pageSize, totalRecords)
 
   const paginatedInvoices = invoices
   const totalItems = totalRecords
@@ -393,323 +377,213 @@ function InvoicesContent() {
     return `https://img.vietqr.io/image/${bankBin}-${accountNo}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=DORMIO%20BHMS`
   }
 
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordInvoicesTotalInvoicesShort'),
+        value: totalInvoicesCount,
+        icon: <Receipt className="w-5 h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[150px]',
+        labelColor: 'subtle',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'overdue',
+        label: t('landlordInvoicesOverdueShort'),
+        value: overdueCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[150px]',
+        labelClassName: 'text-rose-400',
+        valueClassName: 'text-rose-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'paid',
+        label: t('landlordInvoicesPaidShort').replace('{count}', String(paidCount)),
+        value: formatLargeMoney(totalPaidAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 lg:w-[160px]',
+        labelClassName: 'text-emerald-400',
+        valueClassName: 'text-emerald-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+      {
+        key: 'unpaid',
+        label: t('landlordInvoicesUnpaidShort').replace('{count}', String(unpaidCount)),
+        value: formatLargeMoney(totalUnpaidAmount),
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[160px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-xs sm:text-base leading-none mt-1 tracking-tight',
+      },
+    ],
+    [t, totalInvoicesCount, overdueCount, paidCount, totalPaidAmount, unpaidCount, totalUnpaidAmount],
+  )
+
+  if (!isMounted) return null
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Actions Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-[#2AC1BC]" /> {t('landlordInvoicesTitle')}
-          </h1>
-          <p className="text-xs text-zinc-500 font-semibold mt-0.5">
-            {t('landlordInvoicesSubtitle')}
-          </p>
-        </div>
+      <DashboardPageHeader
+        title={t('landlordInvoicesTitle')}
+        subtitle={t('landlordInvoicesSubtitle')}
+        actions={
+          <>
+            <Button
+              variant="success"
+              size="md"
+              leftIcon={<FileSpreadsheet className="shrink-0" />}
+            >
+              {t('landlordInvoicesBtnExportExcel')}
+            </Button>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenOcrModal}
-            className="flex-1 sm:flex-none border-amber-200/80 bg-amber-50 text-amber-900 hover:bg-amber-100 text-xs"
-            leftIcon={<Sparkles className="w-4 h-4 text-amber-600 fill-amber-500 shrink-0" />}
-          >
-            {t('landlordInvoicesBtnOcrScan')}
-          </Button>
+            <Button
+              size="md"
+              onClick={handleOpenCreateModal}
+              className="sm:w-auto"
+              leftIcon={<Plus className="shrink-0" />}
+            >
+              {t('landlordInvoicesBtnCreateInvoice')}
+            </Button>
+          </>
+        }
+      />
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 sm:flex-none border-zinc-200/80 bg-white text-zinc-700 hover:bg-zinc-50 text-xs"
-            leftIcon={<FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />}
-          >
-            {t('landlordInvoicesBtnExportExcel')}
-          </Button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleOpenCreateModal}
-            className="w-full sm:w-auto text-xs"
-            leftIcon={<Plus className="w-4 h-4 shrink-0" />}
-          >
-            {t('landlordInvoicesBtnCreateInvoice')}
-          </Button>
-        </div>
-      </div>
-
-      {/* Dark Hero Summary Banner (Matching Image 2 Design) */}
-      <div className="bg-zinc-900 rounded-3xl p-5 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-zinc-800">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none transform translate-x-4 -translate-y-4">
-          <Receipt className="w-64 h-64" />
-        </div>
-
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          {/* Left Title, Address Pill with Map button, and Description */}
-          <div className="space-y-3 max-w-xl">
-            <h2 className="text-2xl md:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-              {activeBuilding.name}
-            </h2>
-
-            {/* Address Pill with Integrated Map Link */}
-            <div className="inline-flex flex-wrap sm:flex-nowrap items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 border border-white/15 rounded-xl transition-all max-w-full">
-              <MapPin className="w-4 h-4 text-[#2AC1BC] shrink-0" />
-              <span className="text-xs font-bold text-zinc-200 truncate max-w-[200px] sm:max-w-none">
-                {activeBuilding.address}
-              </span>
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(activeBuilding.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="ml-auto sm:ml-1.5 px-2.5 py-1 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-[10px] font-black rounded-lg transition-colors flex items-center gap-1 shrink-0"
-              >
-                <span>{t('landlordInvoicesViewMap')}</span> &rarr;
-              </a>
-            </div>
-
-            <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              {t('landlordInvoicesBannerSub')}
-            </p>
-          </div>
-
-          {/* Right Stat Cards (2 Rows, 2 Cards per Row, Non-wrapping Money Amounts) */}
-          <div className="flex flex-col items-stretch sm:items-end gap-3 w-full lg:w-auto">
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 w-full sm:w-auto">
-              {/* Card 1: Tổng Hóa Đơn */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 transition-colors rounded-2xl border border-white/10 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-zinc-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesTotalInvoicesShort')}
-                  </span>
-                  <span className="font-black text-white text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">
-                    {totalInvoicesCount}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 2: Quá Hạn */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-rose-500/10 hover:bg-rose-500/20 transition-colors rounded-2xl border border-rose-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-rose-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesOverdueShort')}
-                  </span>
-                  <span className="font-black text-rose-400 text-base sm:text-lg leading-none mt-1 whitespace-nowrap truncate">
-                    {overdueCount}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Đã Thu */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors rounded-2xl border border-emerald-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-emerald-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesPaidShort').replace('{count}', String(paidCount))}
-                  </span>
-                  <span className="font-black text-emerald-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(totalPaidAmount)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 4: Chưa Thu */}
-              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500/10 hover:bg-amber-500/20 transition-colors rounded-2xl border border-amber-500/30 backdrop-blur-md min-w-[130px] sm:min-w-[170px]">
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] uppercase font-extrabold text-amber-400 tracking-wider whitespace-nowrap">
-                    {t('landlordInvoicesUnpaidShort').replace('{count}', String(unpaidCount))}
-                  </span>
-                  <span className="font-black text-amber-400 text-xs sm:text-base leading-none mt-1 whitespace-nowrap tracking-tight">
-                    {formatLargeMoney(totalUnpaidAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Dark Hero Summary Banner */}
+      <LandlordStatBanner
+        chips={statChips}
+        watermarkIcon={<Receipt className="w-64 h-64" />}
+      />
 
       {/* Main Filter & Tabs Control Bar */}
-      <div className="bg-white p-3.5 sm:p-4 border border-zinc-200/80 rounded-2xl shadow-2xs space-y-3">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="flex-1">
-            <SearchInput
-              placeholder={t('landlordInvoicesSearchPlaceholder')}
-              value={searchTerm}
-              onChange={val => {
-                setSearchTerm(val)
+      <FilterToolbar
+        search={
+          <SearchInput
+            placeholder={t('landlordInvoicesSearchPlaceholder')}
+            value={searchTerm}
+            onChange={val => {
+              setSearchTerm(val)
+              setCurrentPage(1)
+            }}
+            containerClassName="w-full space-y-0"
+          />
+        }
+        filters={
+          <>
+            <SelectInput
+              value={selectedMonth}
+              onChange={e => {
+                setSelectedMonth(e.target.value)
                 setCurrentPage(1)
               }}
+              leftIcon={<Calendar className="w-3.5 h-3.5 text-primary" />}
+              containerClassName="w-auto min-w-[130px] space-y-0"
+              options={[
+                { value: 'all', label: t('landlordInvoicesAllMonths') },
+                { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
+                { value: '02', label: t('landlordInvoicesMonthPrefix').replace('{month}', '02') },
+                { value: '03', label: t('landlordInvoicesMonthPrefix').replace('{month}', '03') },
+                { value: '04', label: t('landlordInvoicesMonthPrefix').replace('{month}', '04') },
+                { value: '05', label: t('landlordInvoicesMonthPrefix').replace('{month}', '05') },
+                { value: '06', label: t('landlordInvoicesMonthPrefix').replace('{month}', '06') },
+                { value: '07', label: t('landlordInvoicesMonthPrefix').replace('{month}', '07') },
+                { value: '08', label: t('landlordInvoicesMonthPrefix').replace('{month}', '08') },
+                { value: '09', label: t('landlordInvoicesMonthPrefix').replace('{month}', '09') },
+                { value: '10', label: t('landlordInvoicesMonthPrefix').replace('{month}', '10') },
+                { value: '11', label: t('landlordInvoicesMonthPrefix').replace('{month}', '11') },
+                { value: '12', label: t('landlordInvoicesMonthPrefix').replace('{month}', '12') },
+              ]}
             />
-          </div>
-
-          {/* Month, Year & View Switcher Row on Mobile */}
-          <div className="flex items-center gap-2 justify-between shrink-0 flex-wrap sm:flex-nowrap">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {/* Month Filter Dropdown */}
-              <div className="flex-1 sm:flex-none min-w-[130px]">
-                <SelectInput
-                  value={selectedMonth}
-                  onChange={e => {
-                    setSelectedMonth(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                  leftIcon={<Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />}
-                  options={[
-                    { value: 'all', label: t('landlordInvoicesAllMonths') },
-                    { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
-                    { value: '02', label: t('landlordInvoicesMonthPrefix').replace('{month}', '02') },
-                    { value: '03', label: t('landlordInvoicesMonthPrefix').replace('{month}', '03') },
-                    { value: '04', label: t('landlordInvoicesMonthPrefix').replace('{month}', '04') },
-                    { value: '05', label: t('landlordInvoicesMonthPrefix').replace('{month}', '05') },
-                    { value: '06', label: t('landlordInvoicesMonthPrefix').replace('{month}', '06') },
-                    { value: '07', label: t('landlordInvoicesMonthPrefix').replace('{month}', '07') },
-                    { value: '08', label: t('landlordInvoicesMonthPrefix').replace('{month}', '08') },
-                    { value: '09', label: t('landlordInvoicesMonthPrefix').replace('{month}', '09') },
-                    { value: '10', label: t('landlordInvoicesMonthPrefix').replace('{month}', '10') },
-                    { value: '11', label: t('landlordInvoicesMonthPrefix').replace('{month}', '11') },
-                    { value: '12', label: t('landlordInvoicesMonthPrefix').replace('{month}', '12') },
-                  ]}
-                />
-              </div>
-
-              {/* Year Filter Dropdown */}
-              <div className="flex-1 sm:flex-none min-w-[110px]">
-                <SelectInput
-                  value={selectedYear}
-                  onChange={e => {
-                    setSelectedYear(e.target.value)
-                    setCurrentPage(1)
-                  }}
-                  options={[
-                    { value: 'all', label: t('landlordInvoicesAllYears') },
-                    { value: '2026', label: '2026' },
-                    { value: '2025', label: '2025' },
-                    { value: '2024', label: '2024' },
-                  ]}
-                />
-              </div>
-            </div>
-
-            {/* View Switcher */}
-            <div className="flex items-center bg-zinc-100 p-1 rounded-xl border border-zinc-200 shrink-0">
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                className={cn(
-                  'h-7 w-7 rounded-lg',
-                  viewMode === 'grid' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
-                )}
-                title={t('landlordInvoicesViewGrid')}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('table')}
-                className={cn(
-                  'h-7 w-7 rounded-lg',
-                  viewMode === 'table' ? 'bg-white shadow-2xs' : 'text-zinc-500 hover:text-zinc-900',
-                )}
-                title={t('landlordInvoicesViewTable')}
-              >
-                <List className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs font-extrabold border-t border-zinc-100 pt-3">
-          <Button
-            size="sm"
-            variant={activeTab === 'all' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveTab('all')
-              setCurrentPage(1)
-            }}
-            className="rounded-xl text-xs"
-          >
-            {t('landlordInvoicesTabAll').replace('{count}', String(totalInvoicesCount))}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={activeTab === 'unpaid' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveTab('unpaid')
-              setCurrentPage(1)
-            }}
-            className="rounded-xl text-xs"
-          >
-            {t('landlordInvoicesTabUnpaid').replace('{count}', String(unpaidCount))}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={activeTab === 'paid' ? 'primary' : 'secondary'}
-            onClick={() => {
-              setActiveTab('paid')
-              setCurrentPage(1)
-            }}
-            className="rounded-xl text-xs"
-          >
-            {t('landlordInvoicesTabPaid').replace('{count}', String(paidCount))}
-          </Button>
-
-          <Button
-            size="sm"
-            variant={activeTab === 'overdue' ? 'danger' : 'secondary'}
-            onClick={() => {
-              setActiveTab('overdue')
-              setCurrentPage(1)
-            }}
-            className={cn(
-              'rounded-xl text-xs',
-              activeTab !== 'overdue' && 'bg-rose-50 text-rose-700 hover:bg-rose-100',
-            )}
-          >
-            {t('landlordInvoicesTabOverdue').replace('{count}', String(overdueCount))}
-          </Button>
-        </div>
-      </div>
+            <SelectInput
+              value={selectedYear}
+              onChange={e => {
+                setSelectedYear(e.target.value)
+                setCurrentPage(1)
+              }}
+              containerClassName="w-auto min-w-[110px] space-y-0"
+              options={yearOptions}
+            />
+            <SelectInput
+              value={activeTab}
+              onChange={e => {
+                setActiveTab(e.target.value as 'all' | 'unpaid' | 'paid' | 'overdue')
+                setCurrentPage(1)
+              }}
+              containerClassName="w-auto min-w-[150px] space-y-0"
+              options={[
+                {
+                  value: 'all',
+                  label: t('landlordInvoicesTabAll', { count: totalInvoicesCount }),
+                },
+                {
+                  value: 'unpaid',
+                  label: t('landlordInvoicesTabUnpaid', { count: unpaidCount }),
+                },
+                {
+                  value: 'paid',
+                  label: t('landlordInvoicesTabPaid', { count: paidCount }),
+                },
+                {
+                  value: 'overdue',
+                  label: t('landlordInvoicesTabOverdue', { count: overdueCount }),
+                },
+              ]}
+            />
+          </>
+        }
+        viewMode={
+          <ViewModeToggle
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        }
+      />
 
       {/* Main Content Display (Grid or Table View) */}
       {invoices.length === 0 ? (
-        <div className="py-16 px-6 text-center bg-white border border-zinc-200 rounded-3xl space-y-4 shadow-2xs">
-          <div className="w-16 h-16 rounded-3xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center mx-auto">
-            <Receipt className="w-8 h-8" />
-          </div>
-          <div className="space-y-1.5 max-w-md mx-auto">
-            <h3 className="font-black text-base text-zinc-900">
-              {t('landlordInvoicesNoDataTitle')}
-            </h3>
-            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-              {t('landlordInvoicesNoDataDesc')}
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleOpenCreateModal}
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
-            {t('landlordInvoicesBtnCreateInvoice')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Receipt className="w-8 h-8" />}
+          title={t('landlordInvoicesNoDataTitle')}
+          description={t('landlordInvoicesNoDataDesc')}
+          action={
+            <Button
+              onClick={handleOpenCreateModal}
+              leftIcon={<Plus />}
+            >
+              {t('landlordInvoicesBtnCreateInvoice')}
+            </Button>
+          }
+        />
       ) : paginatedInvoices.length === 0 ? (
-        <div className="p-12 text-center bg-white border border-zinc-200 rounded-2xl space-y-3">
-          <Receipt className="w-12 h-12 text-zinc-300 mx-auto stroke-1" />
-          <h3 className="font-extrabold text-sm text-zinc-800">
-            {t('landlordInvoicesEmptyTitle')}
-          </h3>
-          <p className="text-xs text-zinc-400">{t('landlordInvoicesEmptyDesc')}</p>
-        </div>
+        <EmptyState
+          icon={<Receipt className="w-8 h-8" />}
+          title={t('landlordInvoicesEmptyTitle')}
+          description={t('landlordInvoicesEmptyDesc')}
+          action={
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm('')
+                setSelectedMonth('all')
+                setSelectedYear('all')
+                setActiveTab('all')
+              }}
+            >
+              {t('landlordInvoicesBtnResetFilter') || 'Reset'}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* GRID VIEW (Rule #9 Default) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -718,142 +592,144 @@ function InvoicesContent() {
             const isOverdue = inv.status === 'Quá hạn'
 
             return (
-              <div
+              <Card
                 key={inv.id}
-                className={`bg-white border rounded-2xl p-4 space-y-4 hover:shadow-md transition-all flex flex-col justify-between ${
-                  isPaid
-                    ? 'border-emerald-200 hover:border-emerald-300'
-                    : isOverdue
-                      ? 'border-rose-200 hover:border-rose-300 bg-rose-50/20'
-                      : 'border-zinc-200/80 hover:border-[#2AC1BC]/40'
-                }`}
+                className={`space-y-4 flex flex-col justify-between ${isPaid
+                  ? 'border-success-subtle hover:border-emerald-300'
+                  : isOverdue
+                    ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
+                    : 'border-line hover:border-primary/40'
+                  }`}
+                onClick={event => {
+                  event.stopPropagation()
+                  setSelectedInvoice(inv)
+                }}
               >
                 {/* Header info */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-2.5 border-b border-zinc-100">
-                    <span className="font-extrabold text-sm text-zinc-900 flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-[#2AC1BC]" /> {inv.roomName}
-                    </span>
-                    <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
-                        isPaid
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : isOverdue
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
-                    >
-                      {inv.status}
-                    </span>
+                <Card.Header className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <Text as="span" size="sm" weight="extrabold" color="default">
+                      {inv.roomName}
+                    </Text>
                   </div>
+                  <Chip
+                    preventHover
+                    size="sm"
+                    variant={isPaid ? 'success' : isOverdue ? 'danger' : 'warning'}
+                  >
+                    {getInvoiceStatusLabel(inv.status)}
+                  </Chip>
+                </Card.Header>
 
+                <Card.Body className="px-4 sm:px-5 py-0 space-y-2">
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="semibold">
                         {t('landlordInvoicesLabelTenant')}
-                      </span>
-                      <span className="font-bold text-zinc-900">{inv.tenantName}</span>
+                      </Text>
+                      <Text as="span" size="xs" weight="bold" color="default">
+                        {inv.tenantName}
+                      </Text>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="semibold">
                         {t('landlordInvoicesLabelPeriod')}
-                      </span>
-                      <span className="font-bold text-zinc-800">
+                      </Text>
+                      <Text as="span" size="xs" weight="bold" color="default">
                         {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
-                      </span>
+                      </Text>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-500 font-semibold">
+                    <div className="flex items-center justify-between">
+                      <Text as="span" size="xs" color="secondary" weight="semibold">
                         {t('landlordInvoicesLabelInvoiceId')}
-                      </span>
-                      <span className="font-mono text-zinc-600 text-[11px]">{inv.id}</span>
+                      </Text>
+                      <Text as="span" size="2xs" color="subtle" mono>
+                        {inv.id}
+                      </Text>
                     </div>
                   </div>
 
                   {/* Fee Items Breakdown Summary */}
-                  <div className="p-3 bg-zinc-50 rounded-xl space-y-1.5 text-[11px]">
-                    <div className="flex justify-between text-zinc-600">
-                      <span>{t('landlordInvoicesFeeRent')}</span>
-                      <span className="font-bold text-zinc-800">
+                  <div className="p-3 bg-surface rounded-xl space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <Text as="span" size="2xs" color="secondary">
+                        {t('landlordInvoicesFeeRent')}
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default">
                         {inv.rentAmount.toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
-                    <div className="flex justify-between text-zinc-600">
-                      <span>
+                    <div className="flex justify-between items-center">
+                      <Text as="span" size="2xs" color="secondary">
                         {t('landlordInvoicesFeeElec').replace(
                           '{usage}',
                           String(inv.elecNew - inv.elecOld),
                         )}
-                      </span>
-                      <span className="font-bold text-zinc-800">
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default">
                         {((inv.elecNew - inv.elecOld) * inv.elecRate).toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
-                    <div className="flex justify-between text-zinc-600">
-                      <span>
+                    <div className="flex justify-between items-center">
+                      <Text as="span" size="2xs" color="secondary">
                         {t('landlordInvoicesFeeWater').replace(
                           '{usage}',
                           String(inv.waterNew - inv.waterOld),
                         )}
-                      </span>
-                      <span className="font-bold text-zinc-800">
+                      </Text>
+                      <Text as="span" size="2xs" weight="bold" color="default">
                         {((inv.waterNew - inv.waterOld) * inv.waterRate).toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
                   </div>
-                </div>
+                </Card.Body>
 
                 {/* Total & Action Footer */}
-                <div className="pt-3 border-t border-zinc-100 space-y-3">
+                <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wider">
+                      <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block tracking-wider">
                         {t('landlordInvoicesLabelTotal')}
-                      </span>
-                      <span className="font-black text-base text-[#2AC1BC]">
+                      </Text>
+                      <Text as="span" size="base" weight="black" color="brand">
                         {inv.totalAmount.toLocaleString('vi-VN')} ₫
-                      </span>
+                      </Text>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold ${isOverdue ? 'text-rose-600 font-black' : 'text-zinc-400'}`}
+                    <Text
+                      as="span"
+                      size="3xs"
+                      weight={isOverdue ? 'black' : 'bold'}
+                      color={isOverdue ? 'danger' : 'secondary'}
                     >
-                      {t('landlordInvoicesLabelDeadline').replace('{deadline}', inv.deadline)}
-                    </span>
+                      {t('landlordInvoicesLabelDeadline').replace('{deadline}', formatDate(inv.deadline))}
+                    </Text>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSelectedInvoice(inv)}
-                      className="flex-1 text-xs"
-                      leftIcon={<Eye className="w-3.5 h-3.5" />}
-                    >
-                      {t('landlordInvoicesBtnViewDetail')}
-                    </Button>
-                    {!isPaid && (
+                  {!isPaid && (
+                    <div className="flex items-center justify-end">
                       <Button
-                        size="sm"
+                        variant="success"
+                        fullWidth
                         onClick={() => handleMarkAsPaid(inv.id)}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3"
                         title={t('landlordInvoicesTooltipMarkPaid')}
-                        leftIcon={<Check className="w-3.5 h-3.5" />}
+                        leftIcon={<Check />}
                       >
                         {t('landlordInvoicesBtnCollect')}
                       </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
+                    </div>
+                  )}
+                </Card.Footer>
+              </Card>
             )
           })}
         </div>
       ) : (
         /* TABLE VIEW (Rule #9 Alternative) */
-        <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-2xs overflow-hidden">
+        <div className="bg-card border border-line rounded-2xl shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="text-[11px] text-zinc-500 bg-zinc-50 border-b border-zinc-200 uppercase font-black tracking-wider">
+              <thead className="text-[11px] text-muted bg-surface border-b border-line uppercase font-black tracking-wider">
                 <tr>
                   <th className="px-4 py-3">{t('landlordInvoicesColInvoiceId')}</th>
                   <th className="px-4 py-3">{t('landlordInvoicesRoom')}</th>
@@ -865,51 +741,82 @@ function InvoicesContent() {
                   <th className="px-4 py-3 text-right">{t('landlordInvoicesColActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-semibold">
+              <tbody className="divide-y divide-line font-semibold">
                 {paginatedInvoices.map(inv => (
-                  <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="px-4 py-3.5 font-bold font-mono text-zinc-900 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#2AC1BC]" />
-                      {inv.id}
+                  <TableRow
+                    key={inv.id}
+                    className="group"
+                    onClick={() => setSelectedInvoice(inv)}
+                  >
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary shrink-0" />
+                        <Text as="span" size="xs" weight="bold" color="default" mono>
+                          {inv.id}
+                        </Text>
+                      </div>
                     </td>
-                    <td className="px-4 py-3.5 font-black text-zinc-900">{inv.roomName}</td>
-                    <td className="px-4 py-3.5 text-zinc-700">{inv.tenantName}</td>
-                    <td className="px-4 py-3.5 text-zinc-600">
-                      {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="xs" weight="black" color="default">
+                        {inv.roomName}
+                      </Text>
                     </td>
-                    <td className="px-4 py-3.5 font-black text-[#2AC1BC] text-sm">
-                      {inv.totalAmount.toLocaleString('vi-VN')} ₫
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="xs" weight="medium" color="default">
+                        {inv.tenantName}
+                      </Text>
                     </td>
-                    <td
-                      className={`px-4 py-3.5 font-bold ${inv.status === 'Quá hạn' ? 'text-rose-600 font-black' : 'text-zinc-600'}`}
-                    >
-                      {inv.deadline}
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="xs" color="secondary">
+                        {t('landlordInvoicesLabelPeriodMonth').replace('{period}', inv.period)}
+                      </Text>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text as="span" size="sm" weight="black" color="brand">
+                        {inv.totalAmount.toLocaleString('vi-VN')} ₫
+                      </Text>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Text
+                        as="span"
+                        size="xs"
+                        weight={inv.status === 'Quá hạn' ? 'black' : 'bold'}
+                        color={inv.status === 'Quá hạn' ? 'danger' : 'secondary'}
+                      >
+                        {formatDate(inv.deadline)}
+                      </Text>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <Chip
+                        preventHover
+                        size="sm"
+                        variant={
                           inv.status === 'Đã thu'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            ? 'success'
                             : inv.status === 'Quá hạn'
-                              ? 'bg-rose-50 text-rose-700 border-rose-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}
+                              ? 'danger'
+                              : 'warning'
+                        }
                       >
                         {getInvoiceStatusLabel(inv.status)}
-                      </span>
+                      </Chip>
                     </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setSelectedInvoice(inv)}
-                        className="text-xs"
-                        leftIcon={<Eye className="w-3.5 h-3.5" />}
-                      >
-                        {t('landlordInvoicesBtnViewDetail')}
-                      </Button>
+                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                      {inv.status !== 'Đã thu' ? (
+                        <TableActionButton
+                          icon={<Check />}
+                          variant="success"
+                          onClick={event => {
+                            event.stopPropagation()
+                            handleMarkAsPaid(inv.id)
+                          }}
+                          title={t('landlordInvoicesTooltipMarkPaid')}
+                        />
+                      ) : (
+                        <Text as="span" size="xs" color="secondary">—</Text>
+                      )}
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>
@@ -919,172 +826,90 @@ function InvoicesContent() {
 
       {/* Pagination Bar (Standard Dormio Rule #9) */}
       {totalItems > 0 && (
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold">
-          <div className="flex items-center gap-2 text-zinc-600">
-            <span>{t('landlordInvoicesPaginationShow')}</span>
-            <NumberInput
-              min={1}
-              max={50}
-              value={pageSize}
-              onChange={e => {
-                const val = parseInt(e.target.value) || 1
-                setPageSize(val)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-16"
-              className="text-center font-black py-1 text-xs"
-            />
-            <span>{t('landlordInvoicesPaginationPerPage')}</span>
-            <span className="text-zinc-400">|</span>
-            <span>
-              {totalItems === 0 ? '0' : `${startIndex + 1}-${endIndex}`}{' '}
-              {t('landlordInvoicesPaginationOf')} {totalItems}{' '}
-              {t('landlordInvoicesPaginationItems')}
-            </span>
-          </div>
-
-          {/* Page Jumping Controls */}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              className="h-8 w-8"
-            >
-              <ChevronLeft className="w-4 h-4 text-zinc-600" />
-            </Button>
-
-            {windowStart > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(windowStart - windowSize, 1))}
-                className="h-8 px-2 text-xs"
-                title={t('landlordInvoicesTooltipPrev5')}
-              >
-                &laquo;
-              </Button>
-            )}
-
-            {visiblePages.map(p => (
-              <Button
-                key={p}
-                variant={currentPage === p ? 'primary' : 'outline'}
-                size="icon"
-                onClick={() => setCurrentPage(p)}
-                className={cn('h-8 w-8 text-xs', currentPage !== p && 'text-zinc-700')}
-              >
-                {p}
-              </Button>
-            ))}
-
-            {windowStart + windowSize <= totalPages && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(windowStart + windowSize, totalPages))}
-                className="h-8 px-2 text-xs"
-                title={t('landlordInvoicesTooltipNext5')}
-              >
-                &raquo;
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              className="h-8 w-8"
-            >
-              <ChevronRight className="w-4 h-4 text-zinc-600" />
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeMax={50}
+          unitLabel={t('landlordInvoicesPaginationItems')}
+        />
       )}
 
       {/* 📄 DETAILED INVOICE LIGHTBOX MODAL / DRAWER */}
-      {selectedInvoice && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setSelectedInvoice(null)
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 border border-zinc-200">
+      <Modal
+        isOpen={Boolean(selectedInvoice)}
+        onClose={() => setSelectedInvoice(null)}
+        size="3xl"
+      >
+        {selectedInvoice && (
+          <>
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
+            <Modal.Header
+              icon={
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
                   <Receipt className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-black text-base text-zinc-900 flex items-center gap-2">
+              }
+              title={
+                <div className="flex items-center gap-2">
+                  <span>
                     {t('landlordInvoicesModalDetailTitle').replace(
                       '{room}',
                       selectedInvoice.roomName,
                     )}
-                    <span
-                      className={`px-2.5 py-0.5 text-[10px] font-black rounded-full border ${
-                        selectedInvoice.status === 'Đã thu'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : selectedInvoice.status === 'Quá hạn'
-                            ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
-                    >
-                      {getInvoiceStatusLabel(selectedInvoice.status)}
-                    </span>
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">
-                    {t('landlordInvoicesModalDetailSub')
-                      .replace('{id}', selectedInvoice.id)
-                      .replace('{period}', selectedInvoice.period)}
-                  </p>
+                  </span>
+                  <Chip
+                    size="sm"
+                    preventHover
+                    variant={
+                      selectedInvoice.status === 'Đã thu'
+                        ? 'success'
+                        : selectedInvoice.status === 'Quá hạn'
+                          ? 'danger'
+                          : 'warning'
+                    }
+                  >
+                    {getInvoiceStatusLabel(selectedInvoice.status)}
+                  </Chip>
                 </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedInvoice(null)}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+              }
+              description={t('landlordInvoicesModalDetailSub')
+                .replace('{id}', selectedInvoice.id)
+                .replace('{period}', selectedInvoice.period)}
+            />
 
             {/* Modal Scroll Content */}
-            <div className="p-6 overflow-y-auto space-y-6 text-xs custom-scrollbar">
+            <Modal.Body className="p-6 space-y-6 text-xs">
               {/* Tenant & Building Info Card */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-surface border border-line rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
                     {t('landlordInvoicesSectionTenant')}
                   </span>
-                  <p className="font-black text-sm text-zinc-900">{selectedInvoice.tenantName}</p>
-                  <p className="text-zinc-500 font-semibold">{selectedInvoice.tenantPhone}</p>
+                  <p className="font-black text-sm text-foreground">{selectedInvoice.tenantName}</p>
+                  <p className="text-muted font-semibold">{selectedInvoice.tenantPhone}</p>
                 </div>
 
                 <div className="space-y-1 sm:text-right">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">
+                  <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
                     {t('landlordInvoicesSectionDeadlineAndCreated')}
                   </span>
-                  <p className="font-bold text-zinc-800">
+                  <p className="font-bold text-foreground">
                     {t('landlordInvoicesDeadlinePrefix')}{' '}
                     <span
-                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-rose-600 font-extrabold' : 'text-zinc-800'}`}
+                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-danger font-extrabold' : 'text-foreground'}`}
                     >
                       {selectedInvoice.deadline}
                     </span>
                     {selectedInvoice.status === 'Quá hạn' && (
-                      <span className="ml-1.5 px-2 py-0.5 bg-rose-50 text-rose-700 text-[10px] font-black rounded-md border border-rose-200">
+                      <span className="ml-1.5 px-2 py-0.5 bg-danger-soft text-danger text-[10px] font-black rounded-md border border-danger-subtle">
                         {t('landlordInvoicesStatusOverdue')}
                       </span>
                     )}
                   </p>
-                  <p className="text-zinc-500 font-medium">
+                  <p className="text-muted font-medium">
                     {t('landlordInvoicesCreatedPrefix')} {selectedInvoice.createdAt}
                   </p>
                 </div>
@@ -1092,14 +917,14 @@ function InvoicesContent() {
 
               {/* Fee Breakdown Table */}
               <div className="space-y-3">
-                <h4 className="font-extrabold text-xs text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-[#2AC1BC]" />{' '}
+                <h4 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-primary" />{' '}
                   {t('landlordInvoicesSectionFeeBreakdown')}
                 </h4>
 
-                <div className="border border-zinc-200 rounded-2xl overflow-x-auto custom-scrollbar">
+                <div className="border border-line rounded-2xl overflow-x-auto custom-scrollbar">
                   <table className="w-full text-xs text-left min-w-[500px]">
-                    <thead className="bg-zinc-50 border-b border-zinc-200 font-black text-zinc-500 uppercase text-[10px]">
+                    <thead className="bg-surface border-b border-line font-black text-muted uppercase text-[10px]">
                       <tr>
                         <th className="px-4 py-2.5">{t('landlordInvoicesColItem')}</th>
                         <th className="px-4 py-2.5">{t('landlordInvoicesColOldNewIndex')}</th>
@@ -1109,36 +934,36 @@ function InvoicesContent() {
                         <th className="px-4 py-2.5 text-right">{t('landlordInvoicesColAmount')}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-100 font-semibold">
+                    <tbody className="divide-y divide-line font-semibold">
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900">
+                        <td className="px-4 py-3 font-bold text-foreground">
                           {t('landlordInvoicesItemRoomRent').replace(
                             '{room}',
                             selectedInvoice.roomName,
                           )}
                         </td>
-                        <td className="px-4 py-3 text-zinc-400">-</td>
+                        <td className="px-4 py-3 text-muted">-</td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
                         </td>
                       </tr>
 
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
+                        <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
                           <Zap className="w-3.5 h-3.5 text-amber-500" />{' '}
                           {t('landlordInvoicesItemElec')}
                         </td>
-                        <td className="px-4 py-3 text-zinc-600">
+                        <td className="px-4 py-3 text-muted">
                           {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} (
-                            {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
+                          {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.elecRate.toLocaleString('vi-VN')} ₫
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {(
                             (selectedInvoice.elecNew - selectedInvoice.elecOld) *
                             selectedInvoice.elecRate
@@ -1148,18 +973,18 @@ function InvoicesContent() {
                       </tr>
 
                       <tr>
-                        <td className="px-4 py-3 font-bold text-zinc-900 flex items-center gap-1.5">
-                          <Droplets className="w-3.5 h-3.5 text-blue-500" />{' '}
+                        <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
+                          <Droplets className="w-3.5 h-3.5 text-vacant" />{' '}
                           {t('landlordInvoicesItemWater')}
                         </td>
-                        <td className="px-4 py-3 text-zinc-600">
+                        <td className="px-4 py-3 text-muted">
                           {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} (
-                            {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
+                          {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
                         </td>
                         <td className="px-4 py-3 text-right">
                           {selectedInvoice.waterRate.toLocaleString('vi-VN')} ₫
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-zinc-900">
+                        <td className="px-4 py-3 text-right font-black text-foreground">
                           {(
                             (selectedInvoice.waterNew - selectedInvoice.waterOld) *
                             selectedInvoice.waterRate
@@ -1170,29 +995,29 @@ function InvoicesContent() {
 
                       {selectedInvoice.serviceFees.map((fee, idx) => (
                         <tr key={idx}>
-                          <td className="px-4 py-3 font-bold text-zinc-900">{fee.name}</td>
-                          <td className="px-4 py-3 text-zinc-400">
+                          <td className="px-4 py-3 font-bold text-foreground">{fee.name}</td>
+                          <td className="px-4 py-3 text-muted">
                             {t('landlordInvoicesItemFixedMonthly')}
                           </td>
                           <td className="px-4 py-3 text-right">
                             {fee.amount.toLocaleString('vi-VN')} ₫
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-zinc-900">
+                          <td className="px-4 py-3 text-right font-black text-foreground">
                             {fee.amount.toLocaleString('vi-VN')} ₫
                           </td>
                         </tr>
                       ))}
 
                       {selectedInvoice.discount > 0 && (
-                        <tr className="bg-rose-50/40">
-                          <td className="px-4 py-3 font-bold text-rose-700">
+                        <tr className="bg-danger-soft">
+                          <td className="px-4 py-3 font-bold text-danger">
                             {t('landlordInvoicesItemDiscount')}
                           </td>
-                          <td className="px-4 py-3 text-zinc-400">-</td>
-                          <td className="px-4 py-3 text-right text-rose-700">
+                          <td className="px-4 py-3 text-muted">-</td>
+                          <td className="px-4 py-3 text-right text-danger">
                             -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-rose-700">
+                          <td className="px-4 py-3 text-right font-black text-danger">
                             -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
                           </td>
                         </tr>
@@ -1205,8 +1030,8 @@ function InvoicesContent() {
               {/* Total Calculation Card & VietQR Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 {/* VietQR Bank Card */}
-                <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl flex items-center gap-4">
-                  <div className="w-24 h-24 bg-white rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-zinc-200">
+                <div className="p-4 bg-success-soft border border-success-subtle rounded-2xl flex items-center gap-4">
+                  <div className="w-24 h-24 bg-card rounded-xl p-1 shadow-2xs shrink-0 flex items-center justify-center overflow-hidden border border-line">
                     <img
                       src={getVietQrUrl(selectedInvoice)}
                       alt={t('landlordInvoicesVietQrAlt')}
@@ -1215,12 +1040,12 @@ function InvoicesContent() {
                   </div>
 
                   <div className="space-y-1 text-[11px] min-w-0">
-                    <span className="font-extrabold text-[#2AC1BC] flex items-center gap-1">
+                    <span className="font-extrabold text-primary flex items-center gap-1">
                       <QrCode className="w-3.5 h-3.5" /> {t('landlordInvoicesVietQrAuto')}
                     </span>
-                    <p className="font-bold text-zinc-900">{t('landlordInvoicesVietQrBank')}</p>
-                    <p className="font-mono text-zinc-700 font-bold">STK: 0988123456</p>
-                    <p className="text-zinc-500 font-medium truncate">
+                    <p className="font-bold text-foreground">{t('landlordInvoicesVietQrBank')}</p>
+                    <p className="font-mono text-foreground/90 font-bold">STK: 0988123456</p>
+                    <p className="text-muted font-medium truncate">
                       {t('landlordInvoicesVietQrMemo').replace(
                         '{memo}',
                         `${selectedInvoice.id} ${selectedInvoice.roomName.replace(' ', '')}`,
@@ -1231,10 +1056,10 @@ function InvoicesContent() {
 
                 {/* Grand Total */}
                 <div className="p-5 bg-zinc-900 text-white rounded-2xl space-y-2 text-right shadow-inner">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
                     {t('landlordInvoicesGrandTotal')}
                   </span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#2AC1BC] block">
+                  <span className="text-2xl sm:text-3xl font-black text-primary block">
                     {selectedInvoice.totalAmount.toLocaleString('vi-VN')} ₫
                   </span>
                   {selectedInvoice.paidAt && (
@@ -1246,15 +1071,14 @@ function InvoicesContent() {
                   )}
                 </div>
               </div>
-            </div>
+            </Modal.Body>
 
             {/* Modal Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-wrap items-center justify-between gap-3">
+            <Modal.Footer className="flex flex-wrap items-center justify-between gap-3 bg-card">
               {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
               {selectedInvoice.status !== 'Đã thu' ? (
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     const roomNum = selectedInvoice.roomId
                     const tenantName = selectedInvoice.tenantName
@@ -1263,15 +1087,14 @@ function InvoicesContent() {
                       `/landlord/messages?room=${encodeURIComponent(roomNum)}&tenant=${encodeURIComponent(tenantName)}&invId=${encodeURIComponent(selectedInvoice.id)}&amount=${selectedInvoice.totalAmount}&period=${encodeURIComponent(selectedInvoice.period)}&autoSend=true`,
                     )
                   }}
-                  className="bg-zinc-100 hover:bg-[#2AC1BC]/10 hover:text-[#2AC1BC] text-zinc-700 text-xs"
-                  leftIcon={<Send className="w-3.5 h-3.5 text-[#2AC1BC]" />}
+                  leftIcon={<Send />}
                 >
                   {t('landlordInvoicesBtnRemindChat')}
                 </Button>
               ) : (
                 /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
-                <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black rounded-xl">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="flex items-center gap-2 px-3.5 py-2 bg-success-soft border border-success-subtle text-success text-xs font-black rounded-xl">
+                  <ShieldCheck className="w-4 h-4 text-success shrink-0" />
                   <span>
                     {t('landlordInvoicesPaidAtBadge')
                       .replace('{time}', selectedInvoice.paidAt || '')
@@ -1283,59 +1106,40 @@ function InvoicesContent() {
               <div className="flex items-center gap-2">
                 {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
                 {selectedInvoice.status !== 'Đã thu' && (
-                  <Button
-                    size="sm"
+                  <Button variant="success"
                     onClick={() =>
                       handleMarkAsPaid(selectedInvoice.id, t('landlordInvoicesPaymentMethodManual'))
                     }
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs"
-                    leftIcon={<Check className="w-4 h-4" />}
+                    leftIcon={<Check />}
                   >
                     {t('landlordInvoicesBtnConfirmPaid')}
                   </Button>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       {/* ➕ CREATE NEW INVOICE MODAL */}
-      {isCreateModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleRequestCloseCreate()
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#2AC1BC]/10 text-[#2AC1BC] flex items-center justify-center font-black">
-                  <Plus className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-zinc-900">
-                    {t('landlordInvoicesModalCreateTitle')}
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-semibold">
-                    {t('landlordInvoicesModalCreateSub')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleRequestCloseCreate}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={handleRequestCloseCreate}
+        size="2xl"
+      >
+        {/* Modal Header */}
+        <Modal.Header
+          icon={
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
+              <Plus className="w-5 h-5" />
             </div>
+          }
+          title={t('landlordInvoicesModalCreateTitle')}
+          description={t('landlordInvoicesModalCreateSub')}
+        />
 
-            {/* Modal Form Content */}
-            <div className="p-6 overflow-y-auto space-y-4 text-xs custom-scrollbar">
+        {/* Modal Form Content */}
+        <Modal.Body className="p-6 space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <SelectInput
                   label={t('landlordInvoicesFieldRoom')}
@@ -1397,8 +1201,8 @@ function InvoicesContent() {
               </div>
 
               {/* Meter Readings Inputs */}
-              <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-3">
-                <span className="font-black text-xs text-zinc-900 uppercase tracking-wider block">
+              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+                <span className="font-black text-xs text-foreground uppercase tracking-wider block">
                   {t('landlordInvoicesMeterReadingsTitle')}
                 </span>
 
@@ -1419,8 +1223,8 @@ function InvoicesContent() {
                       setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 })
                       setIsCreateFormDirty(true)
                     }}
-                    labelClassName="text-amber-700"
-                    className="border-amber-300 text-amber-800"
+                    labelClassName="text-warning"
+                    className="border-amber-300 text-warning"
                   />
 
                   <NumberInput
@@ -1439,24 +1243,24 @@ function InvoicesContent() {
                       setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 })
                       setIsCreateFormDirty(true)
                     }}
-                    labelClassName="text-blue-700"
-                    className="border-blue-300 text-blue-800"
+                    labelClassName="text-info"
+                    className="border-blue-300 text-info"
                   />
                 </div>
               </div>
 
               {/* Total Summary preview */}
-              <div className="p-4 bg-[#2AC1BC]/10 border border-[#2AC1BC]/30 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-extrabold text-zinc-500 block uppercase">
+                  <span className="text-[10px] font-extrabold text-muted block uppercase">
                     {t('landlordInvoicesPreviewTotal')}
                   </span>
-                  <span className="text-xl font-black text-[#2AC1BC]">
+                  <span className="text-xl font-black text-primary">
                     {(
                       createForm.rentAmount +
                       Math.max(0, createForm.elecNew - createForm.elecOld) * createForm.elecRate +
                       Math.max(0, createForm.waterNew - createForm.waterOld) *
-                        createForm.waterRate +
+                      createForm.waterRate +
                       createForm.wifiFee +
                       createForm.trashFee -
                       createForm.discount
@@ -1464,220 +1268,192 @@ function InvoicesContent() {
                     ₫
                   </span>
                 </div>
-                <span className="text-[11px] font-bold text-zinc-500">
+                <span className="text-[11px] font-bold text-muted">
                   {t('landlordInvoicesDeadlinePrefix')} {createForm.deadline}
                 </span>
               </div>
-            </div>
+        </Modal.Body>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex items-center justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRequestCloseCreate}
-              >
-                {t('landlordInvoicesBtnCancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={isSubmitting}
-                isLoading={isSubmitting}
-                onClick={handleCreateInvoiceSubmit}
-              >
-                {isSubmitting
-                  ? t('landlordInvoicesBtnSubmitting')
-                  : t('landlordInvoicesBtnSubmitCreate')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* Footer */}
+        <Modal.Footer className="bg-card flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRequestCloseCreate}
+          >
+            {t('landlordInvoicesBtnCancel')}
+          </Button>
+          <Button
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            onClick={handleCreateInvoiceSubmit}
+          >
+            {isSubmitting
+              ? t('landlordInvoicesBtnSubmitting')
+              : t('landlordInvoicesBtnSubmitCreate')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* 🤖 AI OCR METER READING SPLIT-SCREEN VERIFICATION MODAL */}
-      {isOcrModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleRequestCloseOcr()
-          }}
-        >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-zinc-200">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-white">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-amber-500/10 text-amber-600 rounded-2xl">
-                  <Sparkles className="w-6 h-6 fill-amber-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-black text-zinc-900">
-                    {t('landlordInvoicesOcrModalTitle')}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordInvoicesOcrModalSub')}
-                  </p>
+      <Modal
+        isOpen={isOcrModalOpen}
+        onClose={handleRequestCloseOcr}
+        size="4xl"
+      >
+        {/* Header */}
+        <Modal.Header
+          icon={
+            <div className="p-3 bg-amber-500/10 text-warning rounded-2xl">
+              <Sparkles className="w-6 h-6 fill-amber-500" />
+            </div>
+          }
+          title={t('landlordInvoicesOcrModalTitle')}
+          description={t('landlordInvoicesOcrModalSub')}
+        />
+
+        {/* Split Screen Content */}
+        <Modal.Body className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Side: Photo with AI Bounding Box */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Text as="span" size="xs" weight="black" color="default" uppercase className="tracking-wider">
+                  {t('landlordInvoicesOcrPhotoTitle')}
+                </Text>
+                <Chip size="sm" preventHover variant="success">
+                  {t('landlordInvoicesOcrAccuracy')}
+                </Chip>
+              </div>
+
+              <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
+                <div className="text-center space-y-2">
+                  <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
+                    {ocrMeterValue}
+                    <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
+                      OCR Box
+                    </span>
+                  </div>
+                  <Text size="2xs" color="secondary">{t('landlordInvoicesOcrMeterDesc')}</Text>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleRequestCloseOcr}
-                className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
             </div>
 
-            {/* Split Screen Content */}
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto custom-scrollbar">
-              {/* Left Side: Photo with AI Bounding Box */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider">
-                    {t('landlordInvoicesOcrPhotoTitle')}
-                  </span>
-                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-full text-[10px] font-extrabold">
-                    {t('landlordInvoicesOcrAccuracy')}
-                  </span>
+            {/* Right Side: AI Extracted Details & Inputs */}
+            <div className="space-y-4 bg-surface p-5 rounded-2xl border border-line flex flex-col justify-between">
+              <div className="space-y-4">
+                <Text as="span" size="xs" weight="black" color="default" uppercase className="tracking-wider block">
+                  {t('landlordInvoicesOcrDetailsTitle')}
+                </Text>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-card rounded-xl border border-line">
+                    <Text as="span" size="3xs" weight="extrabold" color="secondary" className="block">
+                      {t('landlordInvoicesOcrOldIndex')}
+                    </Text>
+                    <Text as="span" size="base" weight="black" color="default">1.318 kWh</Text>
+                  </div>
+                  <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
+                    <TextInput
+                      label={t('landlordInvoicesOcrNewIndex')}
+                      value={ocrMeterValue}
+                      onChange={e => {
+                        setOcrMeterValue(e.target.value)
+                        setIsOcrFormDirty(true)
+                      }}
+                      labelClassName="text-warning text-[10px]"
+                      className="text-base font-black text-warning border-none bg-transparent"
+                    />
+                  </div>
                 </div>
 
-                <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
-                  <div className="text-center space-y-2">
-                    <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
-                      {ocrMeterValue}
-                      <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
-                        OCR Box
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-zinc-400">{t('landlordInvoicesOcrMeterDesc')}</p>
+                <div className="p-4 bg-card rounded-xl border border-line space-y-2">
+                  <div className="flex justify-between text-xs font-bold text-muted">
+                    <span>{t('landlordInvoicesOcrUsage')}</span>
+                    <Text as="span" weight="black" color="default">
+                      {Math.max(0, parseInt(ocrMeterValue || '0') - 1318)} kWh
+                    </Text>
+                  </div>
+                  <div className="flex justify-between text-xs font-bold text-muted">
+                    <span>{t('landlordInvoicesOcrUnitPrice')}</span>
+                    <Text as="span" color="default">3.500 ₫ / kWh</Text>
+                  </div>
+                  <div className="border-t border-line pt-2 flex justify-between text-sm font-black text-foreground">
+                    <span>{t('landlordInvoicesOcrAmount')}</span>
+                    <Text as="span" color="brand" weight="black">
+                      {(
+                        Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld) *
+                        createForm.elecRate
+                      ).toLocaleString('vi-VN')}{' '}
+                      ₫
+                    </Text>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: AI Extracted Details & Inputs */}
-              <div className="space-y-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <span className="text-xs font-black text-zinc-700 uppercase tracking-wider block">
-                    {t('landlordInvoicesOcrDetailsTitle')}
-                  </span>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <span className="text-[10px] font-extrabold text-zinc-400 block">
-                        {t('landlordInvoicesOcrOldIndex')}
-                      </span>
-                      <span className="text-base font-black text-zinc-800">1.318 kWh</span>
-                    </div>
-                    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
-                      <TextInput
-                        label={t('landlordInvoicesOcrNewIndex')}
-                        value={ocrMeterValue}
-                        onChange={e => {
-                          setOcrMeterValue(e.target.value)
-                          setIsOcrFormDirty(true)
-                        }}
-                        labelClassName="text-amber-700 text-[10px]"
-                        className="text-base font-black text-amber-700 border-none bg-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2">
-                    <div className="flex justify-between text-xs font-bold text-zinc-600">
-                      <span>{t('landlordInvoicesOcrUsage')}</span>
-                      <span className="text-zinc-900 font-black">
-                        {Math.max(0, parseInt(ocrMeterValue || '0') - 1318)} kWh
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs font-bold text-zinc-600">
-                      <span>{t('landlordInvoicesOcrUnitPrice')}</span>
-                      <span className="text-zinc-900">3.500 ₫ / kWh</span>
-                    </div>
-                    <div className="border-t border-zinc-100 pt-2 flex justify-between text-sm font-black text-zinc-900">
-                      <span>{t('landlordInvoicesOcrAmount')}</span>
-                      <span className="text-[#2AC1BC]">
-                        {(
-                          Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld) *
-                          createForm.elecRate
-                        ).toLocaleString('vi-VN')}{' '}
-                        ₫
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRequestCloseOcr}
-                    className="flex-1"
-                  >
-                    {t('landlordInvoicesBtnCancel')}
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => {
-                      setIsOcrModalOpen(false)
-                      setIsOcrFormDirty(false)
-                    }}
-                    className="flex-1"
-                  >
-                    {t('landlordInvoicesOcrConfirm')}
-                  </Button>
-                </div>
+              <div className="pt-2 flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleRequestCloseOcr}
+                  className="flex-1"
+                >
+                  {t('landlordInvoicesBtnCancel')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsOcrModalOpen(false)
+                    setIsOcrFormDirty(false)
+                  }}
+                  className="flex-1"
+                >
+                  {t('landlordInvoicesOcrConfirm')}
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+      </Modal>
 
       {/* ⚠️ SYSTEM POP-UP CONFIRMATION MODAL (Rule #10 Dormio Standard) */}
-      {confirmCloseTarget && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setConfirmCloseTarget(null)
-          }}
-        >
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-200 text-center space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="w-14 h-14 bg-amber-50 text-amber-500 border border-amber-200/80 rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-black text-zinc-900">
-                {t('landlordInvoicesConfirmCloseTitle')}
-              </h3>
-              <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
-                {t('landlordInvoicesConfirmCloseDesc')}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmCloseTarget(null)}
-                className="flex-1"
-              >
-                {t('landlordInvoicesConfirmCloseKeep')}
-              </Button>
-
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={handleConfirmCloseModal}
-                className="flex-1"
-              >
-                {t('landlordInvoicesConfirmCloseDiscard')}
-              </Button>
-            </div>
+      <Modal
+        isOpen={Boolean(confirmCloseTarget)}
+        onClose={() => setConfirmCloseTarget(null)}
+        size="sm"
+        zIndex={60}
+        showCloseButton={false}
+      >
+        <Modal.Body className="p-6 sm:p-7 text-center space-y-5">
+          <div className="w-14 h-14 bg-warning-soft text-amber-500 border border-warning-subtle rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
+            <AlertTriangle className="w-7 h-7" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <Text as="h3" size="lg" weight="black" color="default">
+              {t('landlordInvoicesConfirmCloseTitle')}
+            </Text>
+            <Text size="xs" color="secondary" weight="semibold" className="leading-relaxed">
+              {t('landlordInvoicesConfirmCloseDesc')}
+            </Text>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmCloseTarget(null)}
+              className="flex-1"
+            >
+              {t('landlordInvoicesConfirmCloseKeep')}
+            </Button>
+
+            <Button
+              variant="danger"
+              onClick={handleConfirmCloseModal}
+              className="flex-1"
+            >
+              {t('landlordInvoicesConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }
@@ -1685,7 +1461,7 @@ function InvoicesContent() {
 function InvoicesFallback() {
   const t = useTranslations('landlord')
   return (
-    <div className="p-8 text-center text-xs font-bold text-zinc-400">
+    <div className="p-8 text-center text-xs font-bold text-muted">
       {t('landlordInvoicesLoading')}
     </div>
   )

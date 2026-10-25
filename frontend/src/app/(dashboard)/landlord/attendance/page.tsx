@@ -8,28 +8,14 @@ import {
   AlertTriangle,
   XCircle,
   HelpCircle,
-  Filter,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  LayoutGrid,
-  List,
   Edit3,
-  X,
-  User,
-  Shield,
   Loader2,
   Download,
-  RotateCcw,
-  Sparkles,
-  Percent,
-  CalendarDays,
-  FileSpreadsheet,
   Info,
-  Check,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations, useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import {
   attendanceService,
   AttendanceRecord,
@@ -38,7 +24,22 @@ import {
 } from '@/services/attendance.service'
 import { staffService, StaffItem } from '@/services/staff.service'
 import { scheduleService, ShiftItem } from '@/services/schedule.service'
-import { Button, TextInput, NumberInput, SelectInput, TextareaInput, SearchInput } from '@/components/ui'
+import {
+  Button,
+  TableActionButton,
+  TextInput,
+  SelectInput,
+  TextareaInput,
+  SearchInput,
+  Pagination,
+  ViewModeToggle,
+  Card,
+  TableRow,
+  EmptyState,
+  Modal,
+  Chip,
+} from '@/components/ui'
+import { DashboardPageHeader, LandlordStatBanner, type LandlordStatChipItem } from '@/components/landlord'
 
 function formatDateString(date: Date): string {
   const year = date.getFullYear()
@@ -72,7 +73,6 @@ export default function AttendancePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [pageSize, setPageSize] = useState<number>(6) // Default Grid = 6
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [windowStart, setWindowStart] = useState<number>(1)
 
   // ─── Filter & Date Range States ────────────────────────────────────────
   const [datePreset, setDatePreset] = useState<'today' | 'week' | 'month' | 'custom'>('month')
@@ -106,10 +106,7 @@ export default function AttendancePage() {
   })
 
   // Feedback Toast
-  const [toastMessage, setToastMessage] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
+  const { toast } = useToast()
 
   // ─── Modal States ──────────────────────────────────────────────────────
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false)
@@ -126,12 +123,9 @@ export default function AttendancePage() {
   const [isDirty, setIsDirty] = useState(false)
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false)
 
-  // Switch pageSize when toggling viewMode (Grid default = 6, Table = 10)
+  // Switch viewMode
   const handleViewModeChange = (mode: 'grid' | 'table') => {
     setViewMode(mode)
-    setPageSize(mode === 'grid' ? 6 : 10)
-    setCurrentPage(1)
-    setWindowStart(1)
   }
 
   // ─── Date Preset Handler ───────────────────────────────────────────────
@@ -158,12 +152,6 @@ export default function AttendancePage() {
       setEndDate(formatDateString(last))
     }
     setCurrentPage(1)
-    setWindowStart(1)
-  }
-
-  const showToast = (type: 'success' | 'error', text: string) => {
-    setToastMessage({ type, text })
-    setTimeout(() => setToastMessage(null), 4000)
   }
 
   // ─── Load Dependencies (Staff, Shifts) ─────────────────────────────────
@@ -204,10 +192,7 @@ export default function AttendancePage() {
       }
     } catch (err) {
       console.error('Failed to fetch attendance:', err)
-      showToast(
-        'error',
-        isEn ? 'Could not load attendance logs.' : 'Không thể tải dữ liệu bảng chấm công.',
-      )
+      toast.error(t('landlordAttendanceLoadError'))
     } finally {
       setIsLoading(false)
     }
@@ -303,79 +288,70 @@ export default function AttendancePage() {
         note: overrideNote || undefined,
       })
 
-      showToast('success', t('landlordAttendanceToastManualSuccess'))
+      toast.success(t('landlordAttendanceToastManualSuccess'))
       performCloseOverride()
       fetchAttendance()
     } catch (err: any) {
-      showToast(
-        'error',
-        err?.response?.data?.message ||
-          (isEn ? 'Error updating attendance' : 'Lỗi khi cập nhật chấm công'),
-      )
+      toast.error(err?.response?.data?.message || t('landlordAttendanceUpdateError'))
     } finally {
       setIsSubmittingOverride(false)
     }
   }
 
-  // ─── Status Badge Styler ───────────────────────────────────────────────
+  // ─── Status Badge Styler ───────────────────────────────────────────
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'on_time':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            <span>{t('landlordAttendanceStatOnTime')}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="success"
+            leftIcon={<CheckCircle2 className="w-3 h-3 text-success" />}
+          >
+            {t('landlordAttendanceStatOnTime')}
+          </Chip>
         )
       case 'late':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-amber-700 bg-amber-50 rounded-xl border border-amber-200">
-            <Clock className="w-3 h-3 text-amber-600" />
-            <span>{t('landlordAttendanceStatLate')}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="warning"
+            leftIcon={<Clock className="w-3 h-3 text-warning" />}
+          >
+            {t('landlordAttendanceStatLate')}
+          </Chip>
         )
       case 'absent':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-rose-700 bg-rose-50 rounded-xl border border-rose-200">
-            <XCircle className="w-3 h-3 text-rose-600" />
-            <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="danger"
+            leftIcon={<XCircle className="w-3 h-3 text-danger" />}
+          >
+            {t('landlordAttendanceStatusAbsent')}
+          </Chip>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-extrabold text-zinc-600 bg-zinc-100 rounded-xl border border-zinc-200">
-            <HelpCircle className="w-3 h-3 text-zinc-400" />
-            <span>{isEn ? 'Not checked in' : 'Chưa chấm công'}</span>
-          </span>
+          <Chip
+            size="sm"
+            preventHover
+            variant="neutral"
+            leftIcon={<HelpCircle className="w-3 h-3 text-muted" />}
+          >
+            {t('landlordAttendanceStatusNotYet')}
+          </Chip>
         )
-    }
-  }
-
-  // ─── Rule #9: Standardized 5-page window jumping ────────────────────────
-  const totalPages = Math.ceil(totalItems / pageSize) || 1
-  const pageNumbers = useMemo(() => {
-    const pages: number[] = []
-    for (let i = windowStart; i < windowStart + 5 && i <= totalPages; i++) {
-      pages.push(i)
-    }
-    return pages
-  }, [windowStart, totalPages])
-
-  const handlePageJump = (delta: number) => {
-    const nextWindow = windowStart + delta
-    if (nextWindow >= 1 && nextWindow <= totalPages) {
-      setWindowStart(nextWindow)
-      setCurrentPage(nextWindow)
     }
   }
 
   // ─── Export simulation ─────────────────────────────────────────────────
   const handleExportData = () => {
     if (records.length === 0) {
-      showToast(
-        'error',
-        isEn ? 'No attendance data to export' : 'Không có dữ liệu để xuất bảng công',
-      )
+      toast.error(t('landlordAttendanceExportNoData'))
       return
     }
 
@@ -387,20 +363,17 @@ export default function AttendancePage() {
           : 'Ngày,Nhân viên,SĐT,Vị trí,Ca làm việc,Khung giờ,Check-in,Check-out,Trạng thái,Người điều chỉnh',
         ...records.map(
           r =>
-            `"${formatDisplayDate(r.workDate)}","${r.employeeName}","${
-              r.employeePhone
-            }","${r.positionName || (isEn ? 'Staff' : 'Nhân viên')}","${r.shiftName}","${
-              r.shiftStartTime
+            `"${formatDisplayDate(r.workDate)}","${r.employeeName}","${r.employeePhone
+            }","${r.positionName || t('landlordAttendanceStaffDefault')}","${r.shiftName}","${r.shiftStartTime
             }-${r.shiftEndTime}","${formatDisplayTime(
               r.checkIn,
-            )}","${formatDisplayTime(r.checkOut)}","${
-              r.attendanceStatus === 'on_time'
-                ? 'Đúng giờ'
-                : r.attendanceStatus === 'late'
-                  ? 'Đi trễ'
-                  : r.attendanceStatus === 'absent'
-                    ? 'Vắng mặt'
-                    : 'Chưa chấm công'
+            )}","${formatDisplayTime(r.checkOut)}","${r.attendanceStatus === 'on_time'
+              ? 'Đúng giờ'
+              : r.attendanceStatus === 'late'
+                ? 'Đi trễ'
+                : r.attendanceStatus === 'absent'
+                  ? 'Vắng mặt'
+                  : 'Chưa chấm công'
             }","${r.editedByName || ''}"`,
         ),
       ].join('\n')
@@ -412,195 +385,145 @@ export default function AttendancePage() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    showToast('success', t('landlordAttendanceExportSuccess'))
+    toast.success(t('landlordAttendanceExportSuccess'))
   }
+
+  const statChips: LandlordStatChipItem[] = useMemo(
+    () => [
+      {
+        key: 'total',
+        label: t('landlordAttendanceStatTotal'),
+        value: summary.totalShifts,
+        icon: <Clock className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[130px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'onTime',
+        label: t('landlordAttendanceStatOnTime'),
+        value: summary.onTimeCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(42,193,188,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-primary/10 hover:bg-primary/20 border-primary/30 lg:w-[130px]',
+        labelColor: 'brand',
+        valueColor: 'brand',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'late',
+        label: t('landlordAttendanceStatLate'),
+        value: summary.lateCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 lg:w-[130px]',
+        labelClassName: 'text-amber-400',
+        valueClassName: 'text-amber-400 text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'absent',
+        label: t('landlordAttendanceStatusAbsent'),
+        value: summary.absentCount,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-danger shadow-[0_0_8px_rgba(244,63,94,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-danger/10 hover:bg-danger/20 border-danger/30 lg:w-[130px]',
+        labelClassName: 'text-rose-400',
+        valueColor: 'danger',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'notYet',
+        label: t('landlordAttendanceStatusUpcoming'),
+        value: summary.notYetCount,
+        icon: <HelpCircle className="w-4.5 sm:w-5 h-4.5 sm:h-5 text-muted shrink-0" />,
+        containerClassName:
+          'px-3.5 py-2.5 bg-white/5 hover:bg-white/10 border-white/10 lg:w-[130px]',
+        labelColor: 'secondary',
+        valueColor: 'white',
+        valueClassName: 'text-base sm:text-lg leading-none mt-1',
+      },
+      {
+        key: 'rate',
+        label: t('landlordAttendanceStatDiligence'),
+        value: `${summary.attendanceRate}%`,
+        icon: (
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] shrink-0" />
+        ),
+        containerClassName:
+          'px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 lg:w-[130px]',
+        labelClassName: 'text-emerald-400',
+        valueClassName: 'text-emerald-400 text-base sm:text-lg leading-none mt-1',
+      },
+    ],
+    [t, isEn, summary],
+  )
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-      {/* Toast Feedback */}
-      {toastMessage && (
-        <div
-          className={`fixed bottom-6 right-6 z-[80] px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 text-xs font-bold animate-in slide-in-from-bottom-5 duration-200 ${
-            toastMessage.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-emerald-500/10'
-              : 'bg-rose-50 text-rose-800 border-rose-200 shadow-rose-500/10'
-          }`}
-        >
-          {toastMessage.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          ) : (
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-          )}
-          <span>{toastMessage.text}</span>
-        </div>
-      )}
-
       {/* ─── Top Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-[#2AC1BC] uppercase tracking-wider mb-1">
-            <Clock className="w-4 h-4" />
-            <span>{isEn ? ' · Staff Management' : ' · Quản lý nhân sự'}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight">
-            {t('landlordAttendanceTitle')}
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-            {t('landlordAttendanceSubtitleFull')}:{' '}
-            <strong className="text-zinc-800">
-              {activeBuilding?.name || (isEn ? 'property' : 'Tòa nhà')}
-            </strong>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
+      <DashboardPageHeader
+        title={t('landlordAttendanceTitle')}
+        subtitle={`${t('landlordAttendanceSubtitleFull')}`}
+        actions={
           <Button
-            type="button"
-            variant="outline"
-            size="sm"
+            variant="success"
+            size="md"
             onClick={handleExportData}
-            leftIcon={<Download className="w-4 h-4 text-zinc-500" />}
-            className="px-4 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 rounded-xl transition-all shadow-sm cursor-pointer h-auto"
+            leftIcon={<Download />}
           >
-            <span>{t('landlordAttendanceBtnExport')} (CSV)</span>
+            {t('landlordAttendanceBtnExport')} (CSV)
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* ─── Metric Overview Cards ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-zinc-400 mb-1">
-            {t('landlordAttendanceStatTotal')}
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-zinc-900">{summary.totalShifts}</div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'Within filter' : 'Trong kỳ lọc'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-emerald-600 mb-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>{t('landlordAttendanceStatOnTime')}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600">
-            {summary.onTimeCount}
-          </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'On-time check-in' : 'Check-in chuẩn'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-amber-600 mb-1 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>{t('landlordAttendanceStatLate')}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-amber-600">{summary.lateCount}</div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'Over scheduled time' : 'Quá giờ quy định'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-rose-600 mb-1 flex items-center gap-1">
-            <XCircle className="w-3 h-3" />
-            <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-rose-600">{summary.absentCount}</div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'No check-in' : 'Không check-in'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-zinc-200/80 rounded-2xl shadow-sm">
-          <div className="text-[11px] font-bold uppercase text-zinc-400 mb-1 flex items-center gap-1">
-            <HelpCircle className="w-3 h-3" />
-            <span>{isEn ? 'Upcoming' : 'Chưa tới giờ'}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-zinc-700">{summary.notYetCount}</div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'Upcoming shift' : 'Ca sắp tới'}
-          </p>
-        </div>
-
-        <div className="p-4 bg-white border border-[#2AC1BC]/30 rounded-2xl shadow-sm bg-[#2AC1BC]/[0.02]">
-          <div className="text-[11px] font-bold uppercase text-[#2AC1BC] mb-1 flex items-center gap-1">
-            <Percent className="w-3 h-3" />
-            <span>{isEn ? 'Diligence' : 'Chuyên cần'}</span>
-          </div>
-          <div className="text-xl sm:text-2xl font-black text-[#2AC1BC]">
-            {summary.attendanceRate}%
-          </div>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {isEn ? 'On-time / Checked in' : 'Đúng giờ / Đã điểm danh'}
-          </p>
-        </div>
-      </div>
+      {/* ─── Stat Banner ────────────────────────────────────────────────────── */}
+      <LandlordStatBanner
+        watermarkIcon={<Clock className="w-64 h-64" />}
+        chips={statChips}
+      />
 
       {/* ─── Filter & Control Bar ───────────────────────────────────────── */}
-      <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div className="bg-card border border-line rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Preset Buttons & Date Range */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200">
+            <div className="flex items-center p-1 bg-card-hover rounded-xl border border-line">
               <Button
-                type="button"
                 variant={datePreset === 'today' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => handleDatePresetChange('today')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'today'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
               >
-                {isEn ? 'Today' : 'Hôm nay'}
+                {t('landlordAttendancePresetToday')}
               </Button>
               <Button
-                type="button"
                 variant={datePreset === 'week' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => handleDatePresetChange('week')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'week'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
               >
-                {isEn ? 'This Week' : 'Tuần này'}
+                {t('landlordAttendancePresetWeek')}
               </Button>
               <Button
-                type="button"
                 variant={datePreset === 'month' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => handleDatePresetChange('month')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'month'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
               >
-                {isEn ? 'This Month' : 'Tháng này'}
+                {t('landlordAttendancePresetMonth')}
               </Button>
               <Button
-                type="button"
                 variant={datePreset === 'custom' ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => setDatePreset('custom')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                  datePreset === 'custom'
-                    ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                    : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-                }`}
               >
-                {isEn ? 'Custom' : 'Tùy chọn'}
+                {t('landlordAttendancePresetCustom')}
               </Button>
             </div>
 
             {/* Custom Date Inputs */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-semibold">
+            <div className="flex items-center gap-1.5 text-xs text-muted font-semibold">
               <TextInput
                 type="date"
                 value={startDate}
@@ -609,7 +532,7 @@ export default function AttendancePage() {
                   setDatePreset('custom')
                   setCurrentPage(1)
                 }}
-                className="px-2.5 py-1.5 border border-zinc-200 rounded-xl text-xs bg-zinc-50/60 font-semibold"
+                className="px-2.5 py-1.5 border border-line rounded-xl text-xs bg-surface/60 font-semibold"
                 containerClassName="space-y-0"
               />
               <span>→</span>
@@ -621,147 +544,123 @@ export default function AttendancePage() {
                   setDatePreset('custom')
                   setCurrentPage(1)
                 }}
-                className="px-2.5 py-1.5 border border-zinc-200 rounded-xl text-xs bg-zinc-50/60 font-semibold"
+                className="px-2.5 py-1.5 border border-line rounded-xl text-xs bg-surface/60 font-semibold"
                 containerClassName="space-y-0"
               />
             </div>
           </div>
-
-          {/* View Mode Toggle (Rule #9: Grid default) */}
-          <div className="flex items-center p-1 bg-zinc-100 rounded-xl border border-zinc-200 self-end md:self-auto">
-            <Button
-              type="button"
-              variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-              leftIcon={<LayoutGrid className="w-3.5 h-3.5" />}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                viewMode === 'grid'
-                  ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-              }`}
-            >
-              <span>{isEn ? 'Grid' : 'Lưới'}</span>
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => handleViewModeChange('table')}
-              leftIcon={<List className="w-3.5 h-3.5" />}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer h-auto border-0 ${
-                viewMode === 'table'
-                  ? 'bg-white text-zinc-900 shadow-sm hover:bg-white'
-                  : 'text-zinc-500 hover:text-zinc-800 hover:bg-transparent'
-              }`}
-            >
-              <span>{isEn ? 'Table' : 'Bảng'}</span>
-            </Button>
-          </div>
         </div>
 
-        {/* Filters Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-zinc-100">
-          <SearchInput
-            placeholder={t('landlordAttendanceFilterSearchPh')}
-            value={searchQuery}
-            onChange={val => {
-              setSearchQuery(val)
-              setCurrentPage(1)
-            }}
-            className="w-full text-xs font-semibold bg-zinc-50/50"
-            containerClassName="space-y-0"
-          />
+        {/* Filters & View Switcher Row */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2 border-t border-line">
+          {/* Left: Fixed-width Search */}
+          <div className="w-full sm:w-64 lg:w-72 shrink-0">
+            <SearchInput
+              placeholder={t('landlordAttendanceFilterSearchPh')}
+              value={searchQuery}
+              onChange={val => {
+                setSearchQuery(val)
+                setCurrentPage(1)
+              }}
+              className="w-full text-xs font-semibold bg-surface/50"
+              containerClassName="space-y-0"
+            />
+          </div>
 
-          <SelectInput
-            value={filterEmployeeId}
-            onChange={e => {
-              setFilterEmployeeId(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              {
-                value: '',
-                label: `${t('landlordAttendanceFilterStaffPh')} (${staffList.length})`,
-              },
-              ...staffList.map(s => ({
-                value: s.employeeId,
-                label: `${s.fullName} (${s.positionName || (isEn ? 'Staff' : 'Nhân viên')})`,
-              })),
-            ]}
-            className="text-xs font-semibold bg-zinc-50/50 cursor-pointer"
-            containerClassName="space-y-0"
-          />
+          {/* Right: Selects & View Mode Toggle */}
+          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 flex-1 min-w-0">
+            <SelectInput
+              value={filterEmployeeId}
+              onChange={e => {
+                setFilterEmployeeId(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                {
+                  value: '',
+                  label: `${t('landlordAttendanceFilterStaffPh')} (${staffList.length})`,
+                },
+                ...staffList.map(s => ({
+                  value: s.employeeId,
+                  label: `${s.fullName} (${s.positionName || t('landlordAttendanceStaffDefault')})`,
+                })),
+              ]}
+              className="text-xs font-semibold bg-surface/50 cursor-pointer"
+              containerClassName="w-auto min-w-[150px] space-y-0"
+            />
 
-          <SelectInput
-            value={filterShiftId}
-            onChange={e => {
-              setFilterShiftId(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              {
-                value: '',
-                label: `${t('landlordAttendanceFilterShiftPh')} (${shifts.length})`,
-              },
-              ...shifts.map(s => ({
-                value: s.id,
-                label: `${s.name} (${s.startTime} - ${s.endTime})`,
-              })),
-            ]}
-            className="text-xs font-semibold bg-zinc-50/50 cursor-pointer"
-            containerClassName="space-y-0"
-          />
+            <SelectInput
+              value={filterShiftId}
+              onChange={e => {
+                setFilterShiftId(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                {
+                  value: '',
+                  label: `${t('landlordAttendanceFilterShiftPh')} (${shifts.length})`,
+                },
+                ...shifts.map(s => ({
+                  value: s.id,
+                  label: `${s.name} (${s.startTime} - ${s.endTime})`,
+                })),
+              ]}
+              className="text-xs font-semibold bg-surface/50 cursor-pointer"
+              containerClassName="w-auto min-w-[140px] space-y-0"
+            />
 
-          <SelectInput
-            value={filterStatus}
-            onChange={e => {
-              setFilterStatus(e.target.value)
-              setCurrentPage(1)
-            }}
-            options={[
-              { value: 'all', label: t('landlordAttendanceFilterStatusPh') },
-              { value: 'on_time', label: t('landlordAttendanceStatusOnTime') },
-              { value: 'late', label: t('landlordAttendanceStatusLate') },
-              { value: 'absent', label: isEn ? 'Absent' : 'Vắng mặt' },
-              { value: 'not_yet', label: isEn ? 'Not checked in' : 'Chưa chấm công' },
-            ]}
-            className="text-xs font-semibold bg-zinc-50/50 cursor-pointer"
-            containerClassName="space-y-0"
-          />
+            <SelectInput
+              value={filterStatus}
+              onChange={e => {
+                setFilterStatus(e.target.value)
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'all', label: t('landlordAttendanceFilterStatusPh') },
+                { value: 'on_time', label: t('landlordAttendanceStatusOnTime') },
+                { value: 'late', label: t('landlordAttendanceStatusLate') },
+                { value: 'absent', label: t('landlordAttendanceStatusAbsent') },
+                { value: 'not_yet', label: t('landlordAttendanceStatusNotYet') },
+              ]}
+              className="text-xs font-semibold bg-surface/50 cursor-pointer"
+              containerClassName="w-auto min-w-[130px] space-y-0"
+            />
+
+            <div className="shrink-0 ml-auto lg:ml-0">
+              <ViewModeToggle
+                value={viewMode}
+                onChange={handleViewModeChange}
+                showLabels
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ─── Content Area ──────────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="bg-white border border-zinc-200 rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[350px]">
-          <Loader2 className="w-8 h-8 text-[#2AC1BC] animate-spin mb-3" />
-          <p className="text-xs font-bold text-zinc-500">
-            {isEn ? 'Loading attendance logs...' : 'Đang tải dữ liệu chấm công...'}
+        <div className="bg-card border border-line rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[350px]">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+          <p className="text-xs font-bold text-muted">
+            {t('landlordAttendanceLoading')}
           </p>
         </div>
       ) : records.length === 0 ? (
         /* Empty State */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm p-12 text-center text-zinc-500 py-20 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 bg-[#2AC1BC]/10 rounded-2xl flex items-center justify-center mb-4 text-[#2AC1BC]">
-            <Clock className="w-8 h-8" />
-          </div>
-          <h3 className="text-base font-extrabold text-zinc-900 mb-1">
-            {t('landlordAttendanceEmptyTitle')}
-          </h3>
-          <p className="max-w-md mx-auto mb-4 text-xs text-zinc-500 leading-relaxed">
-            {t('landlordAttendanceEmptyDesc')}
-          </p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDatePresetChange('month')}
-            className="px-4 py-2 text-xs font-bold text-[#2AC1BC] bg-[#2AC1BC]/10 rounded-xl hover:bg-[#2AC1BC]/20 transition-colors cursor-pointer h-auto border-0"
-          >
-            {isEn ? 'View Entire Month' : 'Xem toàn bộ tháng này'}
-          </Button>
-        </div>
+        <EmptyState
+          icon={<Clock className="w-8 h-8" />}
+          title={t('landlordAttendanceEmptyTitle')}
+          description={t('landlordAttendanceEmptyDesc')}
+          action={
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => handleDatePresetChange('month')}
+            >
+              {t('landlordAttendanceViewMonth')}
+            </Button>
+          }
+        />
       ) : viewMode === 'grid' ? (
         /* ═══════════════════════════════════════════════════════════════════
  PARALLEL VIEW 1: GRID VIEW (Default = 6 items per page)
@@ -769,15 +668,16 @@ export default function AttendancePage() {
         <div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {records.map(item => (
-              <div
+              <Card
                 key={item.workScheduleId}
-                className="bg-white border border-zinc-200/90 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                onClick={() => handleOpenOverride(item)}
+                className="flex flex-col justify-between"
               >
-                <div>
+              <Card.Header className="mx-4 sm:mx-5 mt-4 sm:mt-5 p-0">
                   {/* Top card bar: Date & Status */}
-                  <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-zinc-100">
-                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-zinc-800">
-                      <Calendar className="w-3.5 h-3.5 text-[#2AC1BC]" />
+                  <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-line">
+                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-foreground">
+                      <Calendar className="w-3.5 h-3.5 text-primary" />
                       <span>{formatDisplayDate(item.workDate)}</span>
                     </div>
                     {getStatusBadge(item.attendanceStatus)}
@@ -785,7 +685,7 @@ export default function AttendancePage() {
 
                   {/* Employee details */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 font-black text-sm uppercase">
+                    <div className="w-10 h-10 rounded-xl bg-card-hover border border-line flex items-center justify-center text-muted font-black text-sm uppercase">
                       {item.employeeAvatar ? (
                         <img
                           src={item.employeeAvatar}
@@ -797,20 +697,20 @@ export default function AttendancePage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-extrabold text-xs text-zinc-900 truncate">
+                      <div className="font-extrabold text-xs text-foreground truncate">
                         {item.employeeName}
                       </div>
-                      <div className="text-[11px] text-zinc-400 truncate">
-                        {item.positionName || (isEn ? 'Staff' : 'Nhân viên')} · {item.employeePhone}
+                      <div className="text-[11px] text-muted truncate">
+                        {item.positionName || t('landlordAttendanceStaffDefault')} · {item.employeePhone}
                       </div>
                     </div>
                   </div>
 
                   {/* Shift details & Working Hours */}
-                  <div className="bg-zinc-50 border border-zinc-200/60 rounded-xl p-2.5 space-y-1.5 mb-3">
+                  <div className="bg-surface border border-line rounded-xl p-2.5 space-y-1.5 mb-3">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-zinc-700">{item.shiftName}</span>
-                      <span className="text-[11px] font-semibold text-zinc-500">
+                      <span className="font-bold text-foreground/90">{item.shiftName}</span>
+                      <span className="text-[11px] font-semibold text-muted">
                         {item.shiftStartTime} - {item.shiftEndTime}
                       </span>
                     </div>
@@ -818,18 +718,18 @@ export default function AttendancePage() {
                     {/* Check-in / Check-out timestamps */}
                     <div className="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-200/40 text-[11px]">
                       <div>
-                        <span className="text-zinc-400 font-semibold block text-[10px] uppercase">
+                        <span className="text-muted font-semibold block text-[10px] uppercase">
                           Check-in
                         </span>
-                        <span className="font-bold text-zinc-800">
+                        <span className="font-bold text-foreground">
                           {formatDisplayTime(item.checkIn)}
                         </span>
                       </div>
                       <div>
-                        <span className="text-zinc-400 font-semibold block text-[10px] uppercase">
+                        <span className="text-muted font-semibold block text-[10px] uppercase">
                           Check-out
                         </span>
-                        <span className="font-bold text-zinc-800">
+                        <span className="font-bold text-foreground">
                           {formatDisplayTime(item.checkOut)}
                         </span>
                       </div>
@@ -838,455 +738,256 @@ export default function AttendancePage() {
 
                   {/* Edited by note if manual override */}
                   {item.editedByName && (
-                    <div className="text-[10px] text-zinc-400 italic mb-2">
+                    <div className="text-[10px] text-muted italic mb-2">
                       {isEn
                         ? `Adjusted by: ${item.editedByName}`
                         : `Đã điều chỉnh bởi: ${item.editedByName}`}
                     </div>
                   )}
-                </div>
+                </Card.Header>
 
                 {/* Bottom Action Button */}
-                <Button
-                  type="button"
+                <Card.Footer className="mx-4 sm:mx-5 mb-4 sm:mb-5 p-0 pt-2 border-0">
+                <Button fullWidth
                   variant="outline"
-                  size="sm"
                   onClick={() => handleOpenOverride(item)}
-                  leftIcon={<Edit3 className="w-3.5 h-3.5" />}
-                  className="w-full mt-2 py-2 px-3 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-[#2AC1BC] hover:text-white rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer h-auto border-0"
+                  leftIcon={<Edit3 />}
+                  className="mt-2"
                 >
                   <span>{t('landlordAttendanceBtnEdit')}</span>
                 </Button>
-              </div>
+                </Card.Footer>
+              </Card>
             ))}
           </div>
 
           {/* Rule #9: Standardized Pagination Bar */}
-          <div className="mt-4 p-4 bg-white border border-zinc-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-            <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-              <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-              <NumberInput
-                min={1}
-                max={100}
-                value={pageSize}
-                onChange={e => {
-                  const val = Number(e.target.value)
-                  if (val > 0) setPageSize(val)
-                }}
-                containerClassName="w-14 space-y-0"
-                className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white h-7 text-xs"
-              />
-              <span>/ trang</span>
-              <span className="text-zinc-300">|</span>
-              <span>
-                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalItems)}{' '}
-                {isEn ? 'of' : 'trên'} {totalItems} {isEn ? 'items' : 'mục'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart <= 1}
-                onClick={() => handlePageJump(-5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
-                title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
-              >
-                «
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-
-              {pageNumbers.map(p => (
-                <Button
-                  key={p}
-                  type="button"
-                  variant={currentPage === p ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 border-0 ${
-                    currentPage === p
-                      ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6]'
-                      : 'text-zinc-600 hover:bg-zinc-200'
-                  }`}
-                >
-                  {p}
-                </Button>
-              ))}
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart + 5 > totalPages}
-                onClick={() => handlePageJump(5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
-                title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
-              >
-                »
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeMax={100}
+            className="mt-4"
+          />
         </div>
       ) : (
         /* ═══════════════════════════════════════════════════════════════════
  PARALLEL VIEW 2: TABLE VIEW (Default = 10 items per page)
  ═══════════════════════════════════════════════════════════════════ */
-        <div className="bg-white border border-zinc-200 rounded-3xl shadow-sm overflow-hidden">
+        <div className="bg-card border border-line rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-zinc-100 bg-zinc-50/70 text-zinc-400 font-extrabold uppercase text-[10px] tracking-wider">
+                <tr className="border-b border-line bg-surface/70 text-muted font-extrabold uppercase text-[10px] tracking-wider">
                   <th className="py-3.5 px-4">{t('landlordAttendanceColDate')}</th>
                   <th className="py-3.5 px-4">{t('landlordAttendanceColStaff')}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Position' : 'Vị trí'}</th>
+                  <th className="py-3.5 px-4">{t('landlordAttendanceColPosition')}</th>
                   <th className="py-3.5 px-4">{t('landlordAttendanceColShift')}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Scheduled Time' : 'Khung giờ quy định'}</th>
+                  <th className="py-3.5 px-4">{t('landlordAttendanceColScheduledTime')}</th>
                   <th className="py-3.5 px-4">Check-in</th>
                   <th className="py-3.5 px-4">Check-out</th>
                   <th className="py-3.5 px-4">{t('landlordAttendanceColStatus')}</th>
-                  <th className="py-3.5 px-4">{isEn ? 'Adjusted By' : 'Người điều chỉnh'}</th>
+                  <th className="py-3.5 px-4">{t('landlordAttendanceColAdjustedBy')}</th>
                   <th className="py-3.5 px-4 text-right">{t('landlordAttendanceColActions')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 font-medium text-zinc-700">
+              <tbody className="divide-y divide-line font-medium text-foreground/90">
                 {records.map(item => (
-                  <tr key={item.workScheduleId} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="py-3 px-4 font-bold text-zinc-900">
+                  <TableRow
+                    key={item.workScheduleId}
+                    className="group"
+                    onClick={() => handleOpenOverride(item)}
+                  >
+                    <td className="py-3 px-4 font-bold text-foreground">
                       {formatDisplayDate(item.workDate)}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-extrabold text-zinc-900">{item.employeeName}</div>
-                      <div className="text-[10px] text-zinc-400">{item.employeePhone}</div>
+                      <div className="font-extrabold text-foreground">{item.employeeName}</div>
+                      <div className="text-[10px] text-muted">{item.employeePhone}</div>
                     </td>
-                    <td className="py-3 px-4 text-zinc-500 font-semibold">
-                      {item.positionName || (isEn ? 'Staff' : 'Nhân viên')}
+                    <td className="py-3 px-4 text-muted font-semibold">
+                      {item.positionName || t('landlordAttendanceStaffDefault')}
                     </td>
-                    <td className="py-3 px-4 font-bold text-zinc-800">{item.shiftName}</td>
-                    <td className="py-3 px-4 text-zinc-600 font-semibold">
+                    <td className="py-3 px-4 font-bold text-foreground">{item.shiftName}</td>
+                    <td className="py-3 px-4 text-muted font-semibold">
                       {item.shiftStartTime} – {item.shiftEndTime}
                     </td>
-                    <td className="py-3 px-4 font-bold text-zinc-800">
+                    <td className="py-3 px-4 font-bold text-foreground">
                       {formatDisplayTime(item.checkIn)}
                     </td>
-                    <td className="py-3 px-4 font-bold text-zinc-800">
+                    <td className="py-3 px-4 font-bold text-foreground">
                       {formatDisplayTime(item.checkOut)}
                     </td>
                     <td className="py-3 px-4">{getStatusBadge(item.attendanceStatus)}</td>
-                    <td className="py-3 px-4 text-zinc-400 text-[11px]">
+                    <td className="py-3 px-4 text-muted text-[11px]">
                       {item.editedByName || '—'}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenOverride(item)}
-                        className="p-1.5 text-zinc-400 hover:text-[#2AC1BC] hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer h-auto w-auto border-0"
+                      <TableActionButton
+                        icon={<Edit3 />}
+                        onClick={event => {
+                          event.stopPropagation()
+                          handleOpenOverride(item)
+                        }}
                         title={t('landlordAttendanceBtnEdit')}
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </Button>
+                      />
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
               </tbody>
             </table>
           </div>
 
           {/* Rule #9: Standardized Pagination Bar */}
-          <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs text-zinc-500 font-semibold">
-              <span>{isEn ? 'Showing' : 'Hiển thị'}</span>
-              <NumberInput
-                min={1}
-                max={100}
-                value={pageSize}
-                onChange={e => {
-                  const val = Number(e.target.value)
-                  if (val > 0) setPageSize(val)
-                }}
-                containerClassName="w-14 space-y-0"
-                className="w-14 px-2 py-1 text-center font-bold border border-zinc-200 rounded-lg bg-white h-7 text-xs"
-              />
-              <span>/ trang</span>
-              <span className="text-zinc-300">|</span>
-              <span>
-                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalItems)}{' '}
-                {isEn ? 'of' : 'trên'} {totalItems} {isEn ? 'items' : 'mục'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart <= 1}
-                onClick={() => handlePageJump(-5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
-                title={isEn ? 'Back 5 pages' : 'Lùi 5 trang'}
-              >
-                «
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-
-              {pageNumbers.map(p => (
-                <Button
-                  key={p}
-                  type="button"
-                  variant={currentPage === p ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 text-xs font-bold rounded-lg transition-colors cursor-pointer p-0 border-0 ${
-                    currentPage === p
-                      ? 'bg-[#2AC1BC] text-white shadow-sm hover:bg-[#25aba6]'
-                      : 'text-zinc-600 hover:bg-zinc-200'
-                  }`}
-                >
-                  {p}
-                </Button>
-              ))}
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                className="p-1 text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto w-auto border-0"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={windowStart + 5 > totalPages}
-                onClick={() => handlePageJump(5)}
-                className="px-2 py-1 text-xs font-bold text-zinc-500 hover:bg-zinc-200 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer h-auto border-0"
-                title={isEn ? 'Forward 5 pages' : 'Tiến 5 trang'}
-              >
-                »
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSizeMax={100}
+          />
         </div>
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
- MODAL: MANUAL ATTENDANCE OVERRIDE
- ═══════════════════════════════════════════════════════════════════ */}
-      {isOverrideModalOpen && selectedRecord && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) handleAttemptCloseOverride()
-          }}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-zinc-100 animate-in zoom-in-95 duration-200"
-            onInput={() => setIsDirty(true)}
-            onChange={() => setIsDirty(true)}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 bg-zinc-50/80">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-2xl">
+          MODAL: MANUAL ATTENDANCE OVERRIDE
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Modal
+        isOpen={isOverrideModalOpen && Boolean(selectedRecord)}
+        onClose={handleAttemptCloseOverride}
+        size="lg"
+      >
+        {selectedRecord && (
+          <>
+            <Modal.Header
+              title={t('landlordAttendanceModalManualTitle')}
+              description={
+                isEn
+                  ? 'Override status and append to AuditLog transaction'
+                  : 'Ghi đè trạng thái và lưu nhật ký kiểm toán (AuditLog)'
+              }
+              icon={
+                <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
-                <div>
-                  <h2 className="text-base font-extrabold text-zinc-900">
-                    {t('landlordAttendanceModalManualTitle')}
-                  </h2>
-                  <p className="text-[11px] text-zinc-400 font-semibold">
-                    {isEn
-                      ? 'Override status and append to AuditLog transaction'
-                      : 'Ghi đè trạng thái và lưu nhật ký kiểm toán (AuditLog)'}
-                  </p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleAttemptCloseOverride}
-                className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer h-auto w-auto border-0"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+              }
+            />
 
             {/* Form */}
             <form
               onSubmit={handleSubmitOverride}
-              className="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar"
+              className="flex flex-col flex-1 overflow-hidden"
+              onInput={() => setIsDirty(true)}
+              onChange={() => setIsDirty(true)}
             >
+              <Modal.Body className="space-y-4">
               {/* Shift info preview card */}
-              <div className="p-3.5 bg-zinc-50 border border-zinc-200/80 rounded-2xl space-y-2">
+              <div className="p-3.5 bg-surface border border-line rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-900">
+                  <span className="text-xs font-bold text-foreground">
                     {selectedRecord.employeeName}
                   </span>
-                  <span className="text-xs font-bold text-[#2AC1BC]">
+                  <span className="text-xs font-bold text-primary">
                     {formatDisplayDate(selectedRecord.workDate)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-zinc-500 font-semibold">
+                <div className="flex items-center justify-between text-[11px] text-muted font-semibold">
                   <span>
                     {selectedRecord.shiftName} ({selectedRecord.shiftStartTime} -{' '}
                     {selectedRecord.shiftEndTime})
                   </span>
-                  <span>{selectedRecord.positionName || (isEn ? 'Staff' : 'Nhân viên')}</span>
+                  <span>{selectedRecord.positionName || t('landlordAttendanceStaffDefault')}</span>
                 </div>
               </div>
 
               {/* Attendance Status Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700 flex items-center gap-1">
-                  <span>{isEn ? 'Attendance Status' : 'Trạng thái chấm công'}</span>
-                  <span className="text-rose-500">*</span>
+                <label className="text-xs font-bold text-foreground/90 flex items-center gap-1">
+                  <span>{t('landlordAttendanceModalStatusLabel')}</span>
+                  <span className="text-danger">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    type="button"
                     variant={overrideStatus === 'on_time' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('on_time')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'on_time'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'on_time'
-                          ? 'border-emerald-600 bg-emerald-600'
-                          : 'border-zinc-300 bg-white'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'on_time'
+                        ? 'border-success bg-success'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'on_time' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <span>{t('landlordAttendanceStatusOnTime')}</span>
                   </Button>
 
                   <Button
-                    type="button"
                     variant={overrideStatus === 'late' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('late')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'late'
-                        ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'late'
-                          ? 'border-amber-600 bg-amber-600'
-                          : 'border-zinc-300 bg-white'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'late'
+                        ? 'border-warning bg-warning'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'late' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
                     <span>{t('landlordAttendanceStatusLate')}</span>
                   </Button>
 
                   <Button
-                    type="button"
                     variant={overrideStatus === 'absent' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('absent')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'absent'
-                        ? 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'absent'
-                          ? 'border-rose-600 bg-rose-600'
-                          : 'border-zinc-300 bg-white'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'absent'
+                        ? 'border-danger bg-danger'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'absent' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
-                    <span>{isEn ? 'Absent' : 'Vắng mặt'}</span>
+                    <span>{t('landlordAttendanceStatusAbsent')}</span>
                   </Button>
 
                   <Button
-                    type="button"
                     variant={overrideStatus === 'not_yet' ? 'primary' : 'outline'}
-                    size="sm"
                     onClick={() => {
                       setOverrideStatus('not_yet')
                       setIsDirty(true)
                     }}
-                    className={`flex items-center justify-start gap-2 p-2.5 rounded-xl border text-xs cursor-pointer font-bold transition-all h-auto text-left ${
-                      overrideStatus === 'not_yet'
-                        ? 'bg-zinc-100 text-zinc-800 border-zinc-300 hover:bg-zinc-200 shadow-sm'
-                        : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
-                    }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${
-                        overrideStatus === 'not_yet'
-                          ? 'border-zinc-600 bg-zinc-600'
-                          : 'border-zinc-300 bg-white'
-                      }`}
+                      className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 ${overrideStatus === 'not_yet'
+                        ? 'border-zinc-600 bg-zinc-600'
+                        : 'border-line bg-card'
+                        }`}
                     >
                       {overrideStatus === 'not_yet' && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-card" />
                       )}
                     </div>
-                    <span>{isEn ? 'Not checked in' : 'Chưa chấm công'}</span>
+                    <span>{t('landlordAttendanceStatusNotYet')}</span>
                   </Button>
                 </div>
               </div>
@@ -1301,7 +1002,7 @@ export default function AttendancePage() {
                     setOverrideCheckIn(e.target.value)
                     setIsDirty(true)
                   }}
-                  className="w-full px-3 py-2 text-xs font-semibold bg-white"
+                  className="w-full px-3 py-2 text-xs font-semibold bg-card"
                   containerClassName="space-y-1.5"
                 />
 
@@ -1313,7 +1014,7 @@ export default function AttendancePage() {
                     setOverrideCheckOut(e.target.value)
                     setIsDirty(true)
                   }}
-                  className="w-full px-3 py-2 text-xs font-semibold bg-white"
+                  className="w-full px-3 py-2 text-xs font-semibold bg-card"
                   containerClassName="space-y-1.5"
                 />
               </div>
@@ -1337,110 +1038,88 @@ export default function AttendancePage() {
               />
 
               {/* AuditLog Notice */}
-              <div className="p-3 bg-blue-50/80 border border-blue-100 rounded-xl text-xs text-blue-700 flex items-start gap-2">
-                <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div className="p-3 bg-info-soft border border-info-subtle rounded-xl text-xs text-info flex items-start gap-2">
+                <Info className="w-4 h-4 text-info shrink-0 mt-0.5" />
                 <span className="leading-relaxed text-[11px]">
-                  {isEn ? (
-                    <>
-                      The system strictly complies with <strong>Rule #4</strong>: Every manual
-                      attendance adjustment by the landlord is logged into an AuditLog transaction
-                      along with user ID and exact timestamp.
-                    </>
-                  ) : (
-                    <>
-                      Hệ thống tuân thủ <strong>Rule #4</strong>: Mỗi điều chỉnh chấm công thủ công
-                      của chủ nhà sẽ được lưu vào giao dịch kiểm toán (AuditLog) cùng ID tài khoản
-                      và dấu thời gian thực.
-                    </>
-                  )}
+                  {t('landlordAttendanceModalAuditRuleNotice')}
                 </span>
               </div>
 
+              </Modal.Body>
+
               {/* Actions */}
-              <div className="pt-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAttemptCloseOverride}
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-700 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer h-auto"
-                >
-                  {t('landlordShiftsModalBtnCancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={isSubmittingOverride}
-                  className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25aba6] shadow-md shadow-[#2AC1BC]/20 transition-all cursor-pointer disabled:opacity-50 h-auto border-0"
-                >
-                  {isSubmittingOverride ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>{isEn ? 'Saving...' : 'Đang lưu...'}</span>
-                    </>
-                  ) : (
+              <Modal.Footer>
+                <div className="flex items-center justify-end gap-3 w-full">
+                  <Button
+                    size="md"
+                    variant="outline"
+                    onClick={handleAttemptCloseOverride}
+                  >
+                    {t('landlordShiftsModalBtnCancel')}
+                  </Button>
+                  <Button
+                    size="md"
+                    type="submit"
+                    disabled={isSubmittingOverride}
+                    isLoading={isSubmittingOverride}
+                  >
                     <span>{t('landlordAttendanceModalBtnSubmit')}</span>
-                  )}
-                </Button>
-              </div>
+                  </Button>
+                </div>
+              </Modal.Footer>
             </form>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* ═══════════════════════════════════════════════════════════════════
- CONFIRMATION MODAL ON UNSAVED CHANGES (Rule #10)
- ═══════════════════════════════════════════════════════════════════ */}
-      {isConfirmCloseOpen && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsConfirmCloseOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-1">
-              <h4 className="text-base font-black text-zinc-900">
-                {t('landlordShiftsConfirmCloseTitle')}
-              </h4>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                {isEn
-                  ? 'You have unsaved attendance adjustment details. If you close now, all changes will be discarded.'
-                  : 'Bạn có thông tin điều chỉnh chấm công chưa lưu. Nếu đóng bây giờ, toàn bộ các thay đổi sẽ bị hủy bỏ.'}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsConfirmCloseOpen(false)}
-                className="flex-1 py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-xl transition-all cursor-pointer h-auto border-0"
-              >
-                {t('landlordShiftsConfirmCloseKeep')}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={() => {
-                  setIsConfirmCloseOpen(false)
-                  performCloseOverride()
-                }}
-                className="flex-1 py-2.5 px-4 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm shadow-rose-600/20 h-auto"
-              >
-                {t('landlordShiftsConfirmCloseDiscard')}
-              </Button>
-            </div>
+          CONFIRMATION MODAL ON UNSAVED CHANGES (Rule #10)
+          ═══════════════════════════════════════════════════════════════════ */}
+      <Modal
+        isOpen={isConfirmCloseOpen}
+        onClose={() => setIsConfirmCloseOpen(false)}
+        size="sm"
+        zIndex={70}
+      >
+        <Modal.Body className="p-6 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-warning-soft text-warning border border-warning-subtle flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-foreground">
+              {t('landlordShiftsConfirmCloseTitle')}
+            </h4>
+            <p className="text-xs text-muted leading-relaxed">
+              {t('landlordAttendanceConfirmCloseDesc')}
+            </p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <div className="flex items-center gap-2.5 w-full">
+            <Button
+              size="md"
+              variant="outline"
+              onClick={() => setIsConfirmCloseOpen(false)}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseKeep')}
+            </Button>
+            <Button
+              size="md"
+              variant="danger"
+              onClick={() => {
+                setIsConfirmCloseOpen(false)
+                performCloseOverride()
+              }}
+              className="flex-1"
+            >
+              {t('landlordShiftsConfirmCloseDiscard')}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }

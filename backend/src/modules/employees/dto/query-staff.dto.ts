@@ -6,7 +6,7 @@ import { AssignmentStatus } from '@prisma'
 export class QueryStaffDto {
   @ApiPropertyOptional({
     description: 'Search by staff name, phone number, or position name',
-    example: 'Nguyễn Văn Bảo',
+    example: 'Nguyen Van Bao',
   })
   @IsOptional()
   @IsString()

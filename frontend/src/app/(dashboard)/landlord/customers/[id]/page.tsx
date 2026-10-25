@@ -15,7 +15,6 @@ import {
   Image as ImageIcon,
   FileSignature,
   AlertTriangle,
-  CheckCircle2,
   X,
   ExternalLink,
   Loader2,
@@ -27,7 +26,17 @@ import { Customer } from '../data'
 import { getLandlordContracts, getContractById } from '@/services/contract.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
-import { Button, TextInput, DateInput, SelectInput, TextareaInput } from '@/components/ui'
+import {
+  Button,
+  TextInput,
+  DateInput,
+  SelectInput,
+  TextareaInput,
+  Modal,
+  Text,
+  Breadcrumb,
+  EmptyState,
+} from '@/components/ui'
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -64,7 +73,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   const [alertModal, setAlertModal] = useState<{
@@ -109,6 +118,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         return
       }
 
+      // Strictly accept ONLY userId on param (cannot be a CCCD/CMND number)
+      const isCccd = /^\d{9,12}$/.test(rawId)
+      if (isCccd) {
+        setCustomer(null)
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(true)
       try {
         const res = await getLandlordContracts(activeBuilding.id, { limit: 100 })
@@ -120,18 +137,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         const cleanRawId = rawId.replace(/^cust_/, '')
 
         for (const c of contracts) {
-          // Check tenantContracts list
+          // Check tenantContracts list - ONLY match by tenant's userId
           const tContracts = c.tenantContracts || []
           for (const tc of tContracts) {
             const tu = tc.tenant
-            if (
-              tu &&
-              (tu.id === rawId ||
-                tu.id === cleanRawId ||
-                tu.phoneNumber === rawId ||
-                tu.userIdentification?.identityNumber === rawId ||
-                tc.id === rawId)
-            ) {
+            if (tu && (tu.id === rawId || tu.id === cleanRawId)) {
               matchedContract = c
               matchedTenantUser = tu
               break
@@ -139,23 +149,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           }
           if (matchedContract) break
 
-          // Check primary tenant
-          if (
-            c.tenant &&
-            (c.tenant.id === rawId ||
-              c.tenant.id === cleanRawId ||
-              c.tenant.phoneNumber === rawId ||
-              c.tenant.userIdentification?.identityNumber === rawId)
-          ) {
+          // Check primary tenant - ONLY match by tenant's userId
+          if (c.tenant && (c.tenant.id === rawId || c.tenant.id === cleanRawId)) {
             matchedContract = c
             matchedTenantUser = c.tenant
-            break
-          }
-
-          // Check contract ID
-          if (c.id === cleanRawId || c.id === rawId || `cust_${c.id}` === rawId) {
-            matchedContract = c
-            matchedTenantUser = c.tenant || c.tenantContracts?.[0]?.tenant || null
             break
           }
         }
@@ -178,11 +175,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           const ident = matchedTenantUser?.userIdentification
           const daysRemaining = fullContract.endDate
             ? Math.max(
-                0,
-                Math.ceil(
-                  (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-                ),
-              )
+              0,
+              Math.ceil(
+                (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+              ),
+            )
             : undefined
           const contractStatus =
             fullContract.status === 'active'
@@ -268,41 +265,104 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     loadCustomerDetail()
   }, [resolvedParams.id, activeBuilding?.id])
 
-  if (!isMounted) return null
+  // Track initial values for dirty check (Rule 10)
+  const initialEditValues = React.useMemo(() => {
+    if (!customer) return null
+    return {
+      name: customer.name || '',
+      phone: customer.phone !== '—' ? customer.phone : '',
+      cccd: customer.cccd !== '—' ? customer.cccd : '',
+      dob: customer.dob || '',
+      gender: customer.gender || 'nam',
+      address: customer.address || '',
+      email: customer.email || '',
+      job: customer.job || '',
+      workplace: customer.workplace || '',
+      note: customer.note || '',
+    }
+  }, [customer])
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-white rounded-2xl border border-zinc-200/80 shadow-xs">
-        <Loader2 className="w-8 h-8 animate-spin text-[#2AC1BC]" />
-        <p className="text-sm font-bold text-zinc-600">{t('landlordCustomersLoading')}</p>
-      </div>
-    )
+  const [discardConfirmModal, setDiscardConfirmModal] = useState<{
+    isOpen: boolean
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    onConfirm: () => { },
+  })
+
+  const resetEditForm = () => {
+    if (initialEditValues) {
+      setEditName(initialEditValues.name)
+      setEditPhone(initialEditValues.phone)
+      setEditCccd(initialEditValues.cccd)
+      setEditDob(initialEditValues.dob)
+      setEditGender(initialEditValues.gender)
+      setEditAddress(initialEditValues.address)
+      setEditEmail(initialEditValues.email)
+      setEditJob(initialEditValues.job)
+      setEditWorkplace(initialEditValues.workplace)
+      setEditNote(initialEditValues.note)
+    }
   }
 
-  if (!customer) {
-    return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-zinc-200 text-zinc-500 my-6 space-y-3 shadow-xs">
-        <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mx-auto text-zinc-400">
-          <User className="w-6 h-6" />
-        </div>
-        <p className="font-bold text-lg text-zinc-800">{t('landlordCustomersTenantNotFound')}</p>
-        <p className="text-xs text-zinc-500">
-          {t('landlordCustomersCccdOrCode')}:{' '}
-          <span className="font-mono font-bold text-zinc-700">{resolvedParams.id}</span>
-        </p>
-        <Link
-          href="/landlord/customers"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#2AC1BC] text-white text-xs font-bold rounded-xl hover:bg-[#25ad87] transition-colors shadow-2xs"
-        >
-          &larr; {t('landlordCustomersBackToList')}
-        </Link>
-      </div>
-    )
+  const handleCloseEditModal = () => {
+    if (!initialEditValues) {
+      setIsEditModalOpen(false)
+      return
+    }
+    const hasChanges =
+      editName !== initialEditValues.name ||
+      editPhone !== initialEditValues.phone ||
+      editCccd !== initialEditValues.cccd ||
+      editDob !== initialEditValues.dob ||
+      editGender !== initialEditValues.gender ||
+      editAddress !== initialEditValues.address ||
+      editEmail !== initialEditValues.email ||
+      editJob !== initialEditValues.job ||
+      editWorkplace !== initialEditValues.workplace ||
+      editNote !== initialEditValues.note
+
+    if (hasChanges) {
+      setDiscardConfirmModal({
+        isOpen: true,
+        onConfirm: () => {
+          resetEditForm()
+          setIsEditModalOpen(false)
+          setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))
+        },
+      })
+    } else {
+      resetEditForm()
+      setIsEditModalOpen(false)
+    }
   }
 
-  const isStaying = customer.status === 'Đang ở' || customer.status === 'Sắp hết hợp đồng'
+  const handleSaveCustomer = () => {
+    setCustomer(prev =>
+      prev
+        ? {
+          ...prev,
+          name: editName || prev.name,
+          phone: editPhone || prev.phone,
+          cccd: editCccd || prev.cccd,
+          dob: editDob || prev.dob,
+          gender: editGender || prev.gender,
+          address: editAddress || prev.address,
+          email: editEmail || prev.email,
+          job: editJob || prev.job,
+          workplace: editWorkplace || prev.workplace,
+          note: editNote || prev.note,
+          updatedAt: new Date().toLocaleDateString('vi-VN'),
+        }
+        : null,
+    )
+    setIsEditModalOpen(false)
+  }
+
+  const isStaying = customer ? (customer.status === 'Đang ở' || customer.status === 'Sắp hết hợp đồng') : false
 
   const handleOpenChat = () => {
+    if (!customer) return
     const targetUserId =
       customer.userId || (customer.id && !customer.id.startsWith('cust_') ? customer.id : '')
     if (!targetUserId && !customer.hasAccount) {
@@ -326,105 +386,101 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     router.push(`/landlord/messages?${query.toString()}`)
   }
 
-  const handleSaveCustomer = () => {
-    setCustomer(prev =>
-      prev
-        ? {
-            ...prev,
-            name: editName || prev.name,
-            phone: editPhone || prev.phone,
-            cccd: editCccd || prev.cccd,
-            dob: editDob || prev.dob,
-            gender: editGender || prev.gender,
-            address: editAddress || prev.address,
-            email: editEmail || prev.email,
-            job: editJob || prev.job,
-            workplace: editWorkplace || prev.workplace,
-            note: editNote || prev.note,
-            updatedAt: new Date().toLocaleDateString('vi-VN'),
-          }
-        : null,
+  if (!isMounted || isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-28 space-y-3 bg-card rounded-2xl border border-line shadow-xs">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm font-bold text-muted">{t('landlordCustomersLoading')}</p>
+      </div>
     )
-    setIsEditModalOpen(false)
+  }
+
+  if (!customer) {
+    return (
+      <div className="py-12">
+        <EmptyState
+          icon={User}
+          title={t('landlordCustomersTenantNotFound')}
+          description={`${t('landlordCustomersUserId')}: ${resolvedParams.id}`}
+          action={{
+            label: t('landlordCustomersBackToList'),
+            onClick: () => router.push('/landlord/customers'),
+          }}
+          bordered
+        />
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
-      {/* Top Header Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/80 shadow-xs">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Link
-            href="/landlord/customers"
-            className="p-2 -ml-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 rounded-full transition-colors cursor-pointer shrink-0"
-            title={t('landlordCustomersBackToList')}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+    <div className="space-y-6 pb-24 w-full">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        backHref="/landlord/customers"
+        backLabel={t('landlordCustomersBackToList')}
+        current={customer.name}
+      />
 
+      {/* Top Header Bar */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-card p-4 sm:p-5 rounded-2xl border border-line shadow-xs">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#2AC1BC] text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-primary text-white font-black text-lg flex items-center justify-center shadow-md shrink-0">
               {customer.name.charAt(0)}
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
                   {customer.name}
                 </h1>
                 <span
-                  className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${
-                    customer.status === 'Đang ở'
-                      ? 'bg-[#2AC1BC]/10 text-[#2AC1BC] border-[#2AC1BC]/30'
-                      : customer.status === 'Sắp hết hợp đồng'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                  }`}
+                  className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider border shrink-0 ${customer.status === 'Đang ở'
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : customer.status === 'Sắp hết hợp đồng'
+                      ? 'bg-warning-soft text-warning border-warning-subtle'
+                      : 'bg-card-hover text-muted border-line'
+                    }`}
                 >
                   {getCustomerStatusLabel(customer.status)}
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-semibold mt-0.5">
+              <Text size='xs' className="text-xs text-muted font-semibold mt-0.5">
                 {t('landlordCustomersPhone')}:{' '}
-                <span className="font-bold text-zinc-800">{customer.phone}</span>
-                {customer.cccd && customer.cccd !== '—' && (
-                  <>
-                    {' '}
-                    • {t('landlordCustomersCccd')}:{' '}
-                    <span className="font-bold text-zinc-800">{customer.cccd}</span>
-                  </>
-                )}
-              </p>
+                <span className="font-bold text-foreground">{customer.phone}</span>
+              </Text>
             </div>
           </div>
         </div>
 
         {/* Action Buttons Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-zinc-100">
-          <a
-            href={`tel:${customer.phone}`}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
-          >
-            <PhoneCall className="w-3.5 h-3.5" /> {t('landlordCustomersCallBtn')}
-          </a>
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-line">
           <Button
-            variant="primary"
-            size="sm"
-            type="button"
-            onClick={handleOpenChat}
-            className="h-auto flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            variant="success"
+            leftIcon={<PhoneCall />}
+            onClick={() => {
+              if (customer.phone && customer.phone !== '—') {
+                window.location.href = `tel:${customer.phone}`
+              }
+            }}
           >
-            <MessageCircle className="w-3.5 h-3.5" /> {t('landlordCustomersMessageBtn')}
+            {t('landlordCustomersCallBtn')}
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditModalOpen(true)}
-            className="flex-1 sm:flex-initial gap-1.5 text-zinc-700 bg-white border-zinc-200 hover:bg-zinc-50 whitespace-nowrap"
+            leftIcon={<MessageCircle />}
+            onClick={handleOpenChat}
           >
-            <Edit2 className="w-3.5 h-3.5 text-[#2AC1BC]" /> {t('landlordCustomersEditInfo')}
+            {t('landlordCustomersMessageBtn')}
+          </Button>
+          <Button
+            variant="secondary"
+            leftIcon={<Edit2 />}
+            onClick={() => setIsEditModalOpen(true)}
+          >
+            {t('landlordCustomersEditInfo')}
           </Button>
           <Button
             variant="danger"
-            size="sm"
+            leftIcon={<Trash2 />}
             onClick={() => {
               setConfirmModal({
                 isOpen: true,
@@ -438,9 +494,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 },
               })
             }}
-            className="flex-1 sm:flex-initial gap-1.5 text-rose-600 bg-rose-50 border border-rose-200 hover:bg-rose-100 shadow-none whitespace-nowrap"
           >
-            <Trash2 className="w-3.5 h-3.5" /> {t('landlordCustomersDeleteBtn')}
+            {t('landlordCustomersDeleteBtn')}
           </Button>
         </div>
       </div>
@@ -449,103 +504,103 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* CARD 1: THÔNG TIN CÁ NHÂN */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
-            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <User className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersPersonalInfo')}
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
+              <User className="w-4 h-4 text-primary" /> {t('landlordCustomersPersonalInfo')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersFullNameLabel')}
                 </span>
-                <p className="font-extrabold text-zinc-900 text-sm">{customer.name}</p>
+                <p className="font-extrabold text-foreground text-sm">{customer.name}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersCccdLabel')}
                 </span>
-                <p className="font-black text-[#2AC1BC] text-sm tracking-wide">
+                <p className="font-black text-primary text-sm tracking-wide">
                   {customer.cccd && customer.cccd !== '—' ? customer.cccd : 'Chưa cập nhật'}
                 </p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersDobLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.dob || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.dob || 'Chưa cập nhật'}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersGenderLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">
+                <p className="font-bold text-foreground">
                   {customer.gender === 'nam'
                     ? t('landlordCustomersGenderMale')
                     : t('landlordCustomersGenderFemale')}
                 </p>
               </div>
 
-              <div className="sm:col-span-2 p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="sm:col-span-2 p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersPermanentAddressLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.address || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.address || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
 
           {/* CARD 2: THÔNG TIN LIÊN HỆ & NGHỀ NGHIỆP */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
-            <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Phone className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersContactAndWork')}
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+            <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
+              <Phone className="w-4 h-4 text-primary" /> {t('landlordCustomersContactAndWork')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersPhoneLabel')}
                 </span>
-                <p className="font-black text-zinc-900 text-sm">{customer.phone}</p>
+                <p className="font-black text-foreground text-sm">{customer.phone}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersEmailLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.email || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.email || 'Chưa cập nhật'}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersJobLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.job || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.job || 'Chưa cập nhật'}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">
+              <div className="p-3 bg-surface rounded-xl border border-line space-y-1">
+                <span className="text-[10px] font-bold text-muted uppercase">
                   {t('landlordCustomersWorkplaceLabel')}
                 </span>
-                <p className="font-bold text-zinc-800">{customer.workplace || 'Chưa cập nhật'}</p>
+                <p className="font-bold text-foreground">{customer.workplace || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
 
           {/* CARD 3: HÌNH ẢNH GIẤY TỜ CCCD */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
-              <h3 className="font-black text-zinc-900 text-sm uppercase tracking-wider flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-[#2AC1BC]" />{' '}
+          <div className="bg-card border border-line rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex justify-between items-center border-b border-line pb-3">
+              <h3 className="font-black text-foreground text-sm uppercase tracking-wider flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-primary" />{' '}
                 {t('landlordCustomersIdCardsSection')}
               </h3>
               {customer.cardFrontUrl && customer.cardBackUrl ? (
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-bold">
+                <span className="px-2 py-0.5 bg-success-soft text-success border border-success-subtle rounded-full text-[10px] font-bold">
                   ✓ {t('landlordCustomersOcrVerified')}
                 </span>
               ) : (
-                <span className="px-2 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-full text-[10px] font-bold">
+                <span className="px-2 py-0.5 bg-card-hover text-muted border border-line rounded-full text-[10px] font-bold">
                   Chưa tải đủ ảnh
                 </span>
               )}
@@ -553,13 +608,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <span className="text-xs font-bold text-zinc-600 block">
+                <span className="text-xs font-bold text-muted block">
                   {t('landlordCustomersFrontIdCard')}
                 </span>
                 {customer.cardFrontUrl ? (
                   <div
                     onClick={() => setIsImagePreviewOpen(customer.cardFrontUrl!)}
-                    className="group relative border-2 border-dashed border-zinc-200 rounded-2xl h-44 overflow-hidden bg-zinc-50 flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
+                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-primary transition-all"
                   >
                     <img
                       src={customer.cardFrontUrl}
@@ -571,21 +626,21 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-zinc-200 rounded-2xl h-44 bg-zinc-50/50 flex flex-col items-center justify-center text-zinc-400 gap-2">
-                    <ImageIcon className="w-8 h-8 text-zinc-300" />
-                    <span className="text-xs font-semibold">Chưa cập nhật ảnh mặt trước</span>
+                  <div className="border-2 border-dashed border-line rounded-2xl h-44 bg-surface/50 flex flex-col items-center justify-center text-muted gap-2">
+                    <ImageIcon className="w-8 h-8 text-muted" />
+                    <span className="text-xs font-semibold">{t('landlordCustomersFrontIdCardEmpty')}</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-xs font-bold text-zinc-600 block">
+                <span className="text-xs font-bold text-muted block">
                   {t('landlordCustomersBackIdCard')}
                 </span>
                 {customer.cardBackUrl ? (
                   <div
                     onClick={() => setIsImagePreviewOpen(customer.cardBackUrl!)}
-                    className="group relative border-2 border-dashed border-zinc-200 rounded-2xl h-44 overflow-hidden bg-zinc-50 flex items-center justify-center cursor-pointer hover:border-[#2AC1BC] transition-all"
+                    className="group relative border-2 border-dashed border-line rounded-2xl h-44 overflow-hidden bg-surface flex items-center justify-center cursor-pointer hover:border-primary transition-all"
                   >
                     <img
                       src={customer.cardBackUrl}
@@ -597,9 +652,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-zinc-200 rounded-2xl h-44 bg-zinc-50/50 flex flex-col items-center justify-center text-zinc-400 gap-2">
-                    <ImageIcon className="w-8 h-8 text-zinc-300" />
-                    <span className="text-xs font-semibold">Chưa cập nhật ảnh mặt sau</span>
+                  <div className="border-2 border-dashed border-line rounded-2xl h-44 bg-surface/50 flex flex-col items-center justify-center text-muted gap-2">
+                    <ImageIcon className="w-8 h-8 text-muted" />
+                    <span className="text-xs font-semibold">{t('landlordCustomersBackIdCardEmpty')}</span>
                   </div>
                 )}
               </div>
@@ -610,34 +665,34 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* Right Column (1 Col) */}
         <div className="space-y-6">
           {/* CARD: PHÒNG ĐANG Ở & HỢP ĐỒNG */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Home className="w-4 h-4 text-[#2AC1BC]" />{' '}
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
+              <Home className="w-4 h-4 text-primary" />{' '}
               {t('landlordCustomersContractAndCurrentRoom')}
             </h3>
 
             {isStaying ? (
               <div className="space-y-3">
-                <div className="p-3.5 bg-[#2AC1BC]/10 rounded-2xl border border-[#2AC1BC]/30 space-y-2">
+                <div className="p-3.5 bg-primary/10 rounded-2xl border border-primary/30 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-zinc-600">
+                    <span className="text-xs font-bold text-muted">
                       {t('landlordCustomersCurrentlyRenting')}
                     </span>
                     {customer.roomId ? (
                       <Link
                         href={`/landlord/rooms/${customer.roomId}`}
-                        className="text-base font-black text-[#2AC1BC] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-base font-black text-primary hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         {t('landlordCustomersRoomWord')} {customer.room}{' '}
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Link>
                     ) : (
-                      <span className="text-base font-black text-[#2AC1BC]">
+                      <span className="text-base font-black text-primary">
                         {t('landlordCustomersRoomWord')} {customer.room}
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] text-zinc-500 font-semibold border-t border-[#2AC1BC]/20 pt-2 flex justify-between">
+                  <div className="text-[10px] text-muted font-semibold border-t border-primary/20 pt-2 flex justify-between">
                     <span>
                       {t('landlordCustomersBuilding')}: {customer.building}
                     </span>
@@ -648,13 +703,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                 </div>
 
-                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 space-y-1.5 text-xs">
+                <div className="p-3 bg-surface rounded-xl border border-line space-y-1.5 text-xs">
                   {customer.contractId && (
-                    <div className="flex justify-between items-center font-bold text-zinc-700">
+                    <div className="flex justify-between items-center font-bold text-foreground/90">
                       <span>{t('landlordCustomersContractCodeLabel')}</span>
                       <Link
                         href={`/landlord/contracts`}
-                        className="text-[#2AC1BC] hover:underline font-black flex items-center gap-1 cursor-pointer"
+                        className="text-primary hover:underline font-black flex items-center gap-1 cursor-pointer"
                         title={t('landlordCustomersViewContractDetail')}
                       >
                         {customer.contractId.slice(0, 8).toUpperCase()}{' '}
@@ -662,23 +717,23 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       </Link>
                     </div>
                   )}
-                  <div className="flex justify-between text-[11px] text-zinc-500 font-semibold">
+                  <div className="flex justify-between text-[11px] text-muted font-semibold">
                     <span>{t('landlordCustomersContractTermLabel')}</span>
                     <span>
                       {customer.joinDate} - {customer.endDate || '—'}
                     </span>
                   </div>
                   {customer.rentPrice !== undefined && customer.rentPrice > 0 && (
-                    <div className="flex justify-between text-[11px] text-zinc-700 font-semibold">
+                    <div className="flex justify-between text-[11px] text-foreground/90 font-semibold">
                       <span>Giá thuê:</span>
-                      <span className="font-bold text-zinc-900">
+                      <span className="font-bold text-foreground">
                         {Number(customer.rentPrice).toLocaleString('vi-VN')} ₫/tháng
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between text-[11px] text-emerald-700 font-bold pt-1 border-t border-zinc-200/60">
+                  <div className="flex justify-between text-[11px] text-success font-bold pt-1 border-t border-line">
                     <span>{t('landlordCustomersHoldingDepositLabel')}</span>
-                    <span className="font-black text-purple-600">
+                    <span className="font-black text-deposit">
                       {customer.depositAmount
                         ? Number(customer.depositAmount).toLocaleString('vi-VN') + ' ₫'
                         : '0 ₫'}
@@ -689,7 +744,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 {customer.roomId && (
                   <Link
                     href={`/landlord/rooms/${customer.roomId}`}
-                    className="w-full py-2.5 bg-[#2AC1BC] hover:bg-[#25ad87] text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white text-xs font-black rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer text-center"
                   >
                     <Home className="w-4 h-4" />{' '}
                     {t('landlordCustomersViewRoomDetailBtn').replace('{room}', customer.room)}{' '}
@@ -698,51 +753,50 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 )}
               </div>
             ) : (
-              <div className="p-4 text-center bg-zinc-50 rounded-xl border border-zinc-100 text-xs text-zinc-500 font-bold">
+              <div className="p-4 text-center bg-surface rounded-xl border border-line text-xs text-muted font-bold">
                 {t('landlordCustomersContractEndedDesc')}
               </div>
             )}
           </div>
 
           {/* CARD: LỊCH SỬ THUÊ & THANH TOÁN */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <Clock className="w-4 h-4 text-[#2AC1BC]" /> {t('landlordCustomersStayHistoryTitle')}
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-4">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
+              <Clock className="w-4 h-4 text-primary" /> {t('landlordCustomersStayHistoryTitle')}
             </h3>
 
             <div className="space-y-2.5">
-              <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs space-y-1">
+              <div className="p-3 bg-surface rounded-xl border border-line text-xs space-y-1">
                 <div className="flex justify-between items-center font-bold">
-                  <span className="text-zinc-900">
+                  <span className="text-foreground">
                     {t('landlordCustomersRoomWord')} {customer.room} ({customer.building})
                   </span>
                   <span
-                    className={`px-2 py-0.5 text-[9px] font-black rounded-full ${
-                      customer.status === 'Đang ở'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : customer.status === 'Sắp hết hợp đồng'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-blue-100 text-blue-700'
-                    }`}
+                    className={`px-2 py-0.5 text-[9px] font-black rounded-full ${customer.status === 'Đang ở'
+                      ? 'bg-success-soft text-success'
+                      : customer.status === 'Sắp hết hợp đồng'
+                        ? 'bg-accent-soft text-accent'
+                        : 'bg-info-soft text-info'
+                      }`}
                   >
                     {getCustomerStatusLabel(customer.status)}
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-500">
+                <p className="text-[10px] text-muted">
                   {t('landlordCustomersFromDate')} {customer.joinDate} -{' '}
                   {customer.endDate || t('landlordCustomersToDate')}
                 </p>
               </div>
 
               {customer.recentInvoices && customer.recentInvoices.length > 0 && (
-                <div className="p-3 bg-zinc-50/80 rounded-xl border border-zinc-100 text-xs space-y-1.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase block">
+                <div className="p-3 bg-surface/80 rounded-xl border border-line text-xs space-y-1.5">
+                  <span className="text-[10px] font-bold text-muted uppercase block">
                     Hóa đơn gần nhất
                   </span>
                   {customer.recentInvoices.slice(0, 2).map((inv: any) => (
                     <div key={inv.id} className="flex justify-between items-center text-[11px]">
-                      <span className="text-zinc-600 font-medium">HĐ {inv.id.slice(0, 6)}</span>
-                      <span className="font-bold text-zinc-800">
+                      <span className="text-muted font-medium">HĐ {inv.id.slice(0, 6)}</span>
+                      <span className="font-bold text-foreground">
                         {Number(inv.totalAmount).toLocaleString('vi-VN')} ₫
                       </span>
                     </div>
@@ -753,12 +807,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* CARD: GHI CHÚ CHỦ TRỌ */}
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 shadow-xs space-y-3">
-            <h3 className="font-black text-zinc-900 text-xs uppercase tracking-wider flex items-center gap-2 border-b border-zinc-100 pb-3">
-              <FileSignature className="w-4 h-4 text-[#2AC1BC]" />{' '}
+          <div className="bg-card border border-line rounded-2xl p-5 shadow-xs space-y-3">
+            <h3 className="font-black text-foreground text-xs uppercase tracking-wider flex items-center gap-2 border-b border-line pb-3">
+              <FileSignature className="w-4 h-4 text-primary" />{' '}
               {t('landlordCustomersLandlordNotesTitle')}
             </h3>
-            <p className="text-xs text-zinc-600 font-medium italic bg-zinc-50 p-3 rounded-xl border border-zinc-100 leading-relaxed">
+            <p className="text-xs text-muted font-medium italic bg-surface p-3 rounded-xl border border-line leading-relaxed">
               {customer.note ? `"${customer.note}"` : 'Không có ghi chú nào.'}
             </p>
           </div>
@@ -766,230 +820,240 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* MODAL 1: CHỈNH SỬA THÔNG TIN KHÁCH THUÊ */}
-      {isEditModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsEditModalOpen(false)
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#2AC1BC]/10 text-[#2AC1BC] rounded-xl">
-                  <Edit2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-zinc-900">
-                    {t('landlordCustomersEditTenantTitlePrefix')} {customer.name}
-                  </h2>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    {t('landlordCustomersEditTenantSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsEditModalOpen(false)}
-                className="h-auto p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        size="2xl"
+      >
+        <Modal.Header
+          icon={<Edit2 className="w-5 h-5 text-primary" />}
+          title={`${t('landlordCustomersEditTenantTitlePrefix')} ${customer.name}`}
+          description={t('landlordCustomersEditTenantSubtitle')}
+        />
+
+        <Modal.Body className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <TextInput
+              label={t('landlordCustomersFullNameLabel')}
+              required
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+            />
+
+            <TextInput
+              label={t('landlordCustomersPhoneLabel')}
+              required
+              value={editPhone}
+              onChange={e => setEditPhone(e.target.value)}
+            />
+
+            <TextInput
+              label={t('landlordCustomersCccdLabel')}
+              value={editCccd}
+              onChange={e => setEditCccd(e.target.value)}
+              className="font-bold text-primary"
+            />
+
+            <DateInput
+              label={t('landlordCustomersDobLabel')}
+              value={editDob}
+              onChange={e => setEditDob(e.target.value)}
+            />
+
+            <SelectInput
+              label={t('landlordCustomersGenderLabel')}
+              value={editGender}
+              onChange={e => setEditGender(e.target.value)}
+              options={[
+                { value: 'nam', label: t('landlordCustomersGenderMale') },
+                { value: 'nu', label: t('landlordCustomersGenderFemale') },
+              ]}
+            />
+
+            <TextInput
+              label={t('landlordCustomersEmailLabel')}
+              type="email"
+              value={editEmail}
+              onChange={e => setEditEmail(e.target.value)}
+            />
+
+            <div className="md:col-span-2">
+              <TextInput
+                label={t('landlordCustomersPermanentAddressLabel')}
+                value={editAddress}
+                onChange={e => setEditAddress(e.target.value)}
+              />
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[75vh] space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextInput
-                  label={t('landlordCustomersFullNameLabel')}
-                  required
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                />
+            <TextInput
+              label={t('landlordCustomersJobLabel')}
+              value={editJob}
+              onChange={e => setEditJob(e.target.value)}
+            />
 
-                <TextInput
-                  label={t('landlordCustomersPhoneLabel')}
-                  required
-                  value={editPhone}
-                  onChange={e => setEditPhone(e.target.value)}
-                />
+            <TextInput
+              label={t('landlordCustomersWorkplaceLabel')}
+              value={editWorkplace}
+              onChange={e => setEditWorkplace(e.target.value)}
+            />
 
-                <TextInput
-                  label={t('landlordCustomersCccdLabel')}
-                  value={editCccd}
-                  onChange={e => setEditCccd(e.target.value)}
-                  className="font-bold text-[#2AC1BC]"
-                />
-
-                <DateInput
-                  label={t('landlordCustomersDobLabel')}
-                  value={editDob}
-                  onChange={e => setEditDob(e.target.value)}
-                />
-
-                <SelectInput
-                  label={t('landlordCustomersGenderLabel')}
-                  value={editGender}
-                  onChange={e => setEditGender(e.target.value)}
-                  options={[
-                    { value: 'nam', label: t('landlordCustomersGenderMale') },
-                    { value: 'nu', label: t('landlordCustomersGenderFemale') },
-                  ]}
-                />
-
-                <TextInput
-                  label={t('landlordCustomersEmailLabel')}
-                  type="email"
-                  value={editEmail}
-                  onChange={e => setEditEmail(e.target.value)}
-                />
-
-                <div className="md:col-span-2">
-                  <TextInput
-                    label={t('landlordCustomersPermanentAddressLabel')}
-                    value={editAddress}
-                    onChange={e => setEditAddress(e.target.value)}
-                  />
-                </div>
-
-                <TextInput
-                  label={t('landlordCustomersJobLabel')}
-                  value={editJob}
-                  onChange={e => setEditJob(e.target.value)}
-                />
-
-                <TextInput
-                  label={t('landlordCustomersWorkplaceLabel')}
-                  value={editWorkplace}
-                  onChange={e => setEditWorkplace(e.target.value)}
-                />
-
-                <div className="md:col-span-2">
-                  <TextareaInput
-                    label={t('landlordCustomersNotesLabel')}
-                    rows={3}
-                    value={editNote}
-                    onChange={e => setEditNote(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/50">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditModalOpen(false)}
-                className="px-5 py-2 text-xs font-bold text-zinc-700 bg-white border-zinc-200 rounded-xl hover:bg-zinc-50"
-              >
-                {t('landlordCustomersCancelBtn')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveCustomer}
-                className="px-6 py-2 text-xs font-black text-white bg-[#2AC1BC] rounded-xl hover:bg-[#25ad87] shadow-md shadow-[#2AC1BC]/20"
-              >
-                {t('landlordCustomersSaveChangesBtn')}
-              </Button>
+            <div className="md:col-span-2">
+              <TextareaInput
+                label={t('landlordCustomersNotesLabel')}
+                rows={3}
+                value={editNote}
+                onChange={e => setEditNote(e.target.value)}
+              />
             </div>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="outline"
+            onClick={handleCloseEditModal}
+          >
+            {t('landlordCustomersCancelBtn')}
+          </Button>
+          <Button
+            onClick={handleSaveCustomer}
+          >
+            {t('landlordCustomersSaveChangesBtn')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* UNSAVED CHANGES CONFIRMATION MODAL (RULE 10) */}
+      <Modal
+        isOpen={discardConfirmModal.isOpen}
+        onClose={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4">
+          <div className="flex items-center gap-3 text-warning">
+            <div className="p-3 bg-warning-soft rounded-full shrink-0">
+              <AlertTriangle className="w-6 h-6 text-warning" />
+            </div>
+            <div>
+              <Text as="h3" weight="black" color="default" size="base">
+                Xác nhận đóng form
+              </Text>
+              <Text size="xs" color="secondary" weight="medium">
+                Bạn có các thay đổi chưa lưu. Bạn có chắc chắn muốn hủy bỏ và đóng biểu mẫu không?
+              </Text>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
+            <Button
+              variant="outline"
+              onClick={() => setDiscardConfirmModal(prev => ({ ...prev, isOpen: false }))}
+            >
+              Tiếp tục chỉnh sửa
+            </Button>
+            <Button
+              variant="danger"
+              onClick={discardConfirmModal.onConfirm}
+            >
+              Hủy thay đổi & Đóng
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
 
       {/* MODAL 2: XEM ẢNH CCCD PHÓNG TO */}
-      {isImagePreviewOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setIsImagePreviewOpen(null)
-          }}
-        >
-          <div className="relative max-w-3xl w-full bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl p-2 flex flex-col items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsImagePreviewOpen(null)}
-              className="h-auto absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors cursor-pointer z-10"
-            >
-              <X className="w-6 h-6" />
-            </Button>
+      <Modal
+        isOpen={!!isImagePreviewOpen}
+        onClose={() => setIsImagePreviewOpen(null)}
+        size="3xl"
+        className="bg-zinc-950 border-zinc-800 p-2 overflow-hidden"
+      >
+        <div className="relative w-full flex flex-col items-center">
+          <Button
+            rounded="full"
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsImagePreviewOpen(null)}
+            className="absolute top-2 right-2 z-10 text-white hover:bg-white/20"
+          >
+            <X />
+          </Button>
+          {isImagePreviewOpen && (
             <img
               src={isImagePreviewOpen}
               alt={t('landlordCustomersCccdEnlargedAlt')}
               className="w-full h-auto max-h-[80vh] object-contain rounded-xl"
             />
-          </div>
+          )}
         </div>
-      )}
+      </Modal>
 
       {/* MODAL 3: CONFIRM DELETE */}
-      {confirmModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setConfirmModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="p-3 bg-rose-100 rounded-full">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-zinc-900">{confirmModal.title}</h3>
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        size="md"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4">
+          <div className="flex items-center gap-3 text-danger">
+            <div className="p-3 bg-danger-soft rounded-full shrink-0">
+              <AlertTriangle className="w-6 h-6 text-danger" />
             </div>
-            <p className="text-xs text-zinc-500 font-medium">{confirmModal.message}</p>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl"
-              >
-                {t('landlordCustomersCancelBtn')}
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={confirmModal.onConfirm}
-                className="px-5 py-2 text-xs font-black text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs"
-              >
-                {t('landlordCustomersConfirmDeleteBtn')}
-              </Button>
-            </div>
+            <Text as="h3" weight="black" color="default" size="base">
+              {confirmModal.title}
+            </Text>
           </div>
-        </div>
-      )}
-
-      {/* MODAL 4: ALERT NOTIFICATION */}
-      {alertModal.isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onMouseDown={e => {
-            if (e.target === e.currentTarget) setAlertModal(prev => ({ ...prev, isOpen: false }))
-          }}
-        >
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-zinc-100 p-6 space-y-4 text-center">
-            <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-orange-50 text-[#FF6B35] border-orange-200">
-              <Info className="w-7 h-7 text-[#FF6B35]" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-zinc-900">{alertModal.title}</h3>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                {alertModal.message}
-              </p>
-            </div>
-
+          <Text size="xs" color="secondary" weight="medium">
+            {confirmModal.message}
+          </Text>
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-line">
             <Button
-              onClick={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
-              className="w-full py-2.5 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer bg-[#2AC1BC] hover:bg-[#25ad87] text-white shadow-[#2AC1BC]/20"
+              variant="outline"
+              onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
             >
-              {t('landlordCustomersUnderstood')}
+              {t('landlordCustomersCancelBtn')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmModal.onConfirm}
+            >
+              {t('landlordCustomersConfirmDeleteBtn')}
             </Button>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+      </Modal>
+
+      {/* MODAL 4: ALERT NOTIFICATION */}
+      <Modal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+        size="sm"
+        showCloseButton={false}
+      >
+        <Modal.Body className="space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border bg-accent-soft text-accent border-accent-subtle">
+            <Info className="w-7 h-7 text-accent" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Text as="h3" weight="black" color="default" size="base">
+              {alertModal.title}
+            </Text>
+            <Text size="xs" color="secondary" weight="medium" className="leading-relaxed">
+              {alertModal.message}
+            </Text>
+          </div>
+
+          <Button
+            fullWidth
+            variant="dark"
+            onClick={() => setAlertModal(prev => ({ ...prev, isOpen: false }))}
+          >
+            {t('landlordCustomersUnderstood')}
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   )
 }
