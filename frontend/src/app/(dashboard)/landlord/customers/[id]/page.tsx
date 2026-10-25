@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { Customer } from '../data'
 import { getLandlordContracts, getContractById } from '@/services/contract.service'
+import { getLandlordTenants, LandlordTenantItem } from '@/services/tenant.service'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import {
@@ -118,126 +119,163 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         return
       }
 
-      // Strictly accept ONLY userId on param (cannot be a CCCD/CMND number)
-      const isCccd = /^\d{9,12}$/.test(rawId)
-      if (isCccd) {
-        setCustomer(null)
-        setIsLoading(false)
-        return
-      }
-
       setIsLoading(true)
       try {
-        const res = await getLandlordContracts(activeBuilding.id, { limit: 100 })
-        const contracts: any[] = res?.data || []
+        const cleanRawId = rawId.replace(/^cust_/, '').replace(/^contract_/, '')
 
-        let matchedContract: any = null
-        let matchedTenantUser: any = null
+        // 1. Fetch unified tenant list for this boarding house (covers both direct occupants and contract tenants)
+        const tenantRes = await getLandlordTenants(activeBuilding.id, { limit: 100 })
+        const raw = tenantRes?.data as any
+        const tenantList: LandlordTenantItem[] = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : []
 
-        const cleanRawId = rawId.replace(/^cust_/, '')
+        // Match tenant by occupant ID, user ID, contract ID, phone, or identity number
+        let matchedTenant = tenantList.find(
+          item =>
+            item.id === rawId ||
+            item.userId === rawId ||
+            item.id === cleanRawId ||
+            item.userId === cleanRawId ||
+            (item.contractId && (item.contractId === rawId || item.contractId === cleanRawId)) ||
+            item.phoneNumber === rawId ||
+            (item.identityNumber && item.identityNumber === rawId),
+        )
 
-        for (const c of contracts) {
-          // Check tenantContracts list - ONLY match by tenant's userId
-          const tContracts = c.tenantContracts || []
-          for (const tc of tContracts) {
-            const tu = tc.tenant
-            if (tu && (tu.id === rawId || tu.id === cleanRawId)) {
-              matchedContract = c
-              matchedTenantUser = tu
-              break
+        // 2. If matched tenant has an active contract, fetch complete contract details
+        let fullContract: any = null
+        if (matchedTenant?.contractId) {
+          try {
+            const detailRes = await getContractById(activeBuilding.id, matchedTenant.contractId)
+            if (detailRes?.data) {
+              fullContract = detailRes.data
             }
-          }
-          if (matchedContract) break
-
-          // Check primary tenant - ONLY match by tenant's userId
-          if (c.tenant && (c.tenant.id === rawId || c.tenant.id === cleanRawId)) {
-            matchedContract = c
-            matchedTenantUser = c.tenant
-            break
+          } catch (detailErr) {
+            console.warn('Could not load contract detail for tenant:', detailErr)
           }
         }
 
-        if (matchedContract) {
-          // Fetch complete contract detail to obtain room services, deposit, invoices, docs
-          let fullContract = matchedContract
+        // 3. Fallback: If not found in unified tenantList, try searching directly in contracts list
+        if (!matchedTenant) {
           try {
-            const detailRes = await getContractById(activeBuilding.id, matchedContract.id)
-            if (detailRes?.data) {
-              fullContract = detailRes.data
-              if (!matchedTenantUser && fullContract.tenant) {
-                matchedTenantUser = fullContract.tenant
+            const contractRes = await getLandlordContracts(activeBuilding.id, { limit: 100 })
+            const contracts: any[] = contractRes?.data || []
+            for (const c of contracts) {
+              const tContracts = c.tenantContracts || []
+              for (const tc of tContracts) {
+                const tu = tc.tenant
+                if (tu && (tu.id === rawId || tu.id === cleanRawId || tc.id === rawId)) {
+                  fullContract = c
+                  matchedTenant = {
+                    id: `contract_${tc.id}`,
+                    userId: tu.id,
+                    fullName: tu.userIdentification?.fullName || tu.fullName || tu.username,
+                    phoneNumber: tu.phoneNumber,
+                    roomId: c.roomId,
+                    roomNumber: c.room?.roomNumber || '—',
+                    boardingHouseId: activeBuilding.id,
+                    tenancyType: 'contract',
+                    contractId: c.id,
+                    status: c.status === 'active' ? 'Đang ở' : 'Đã rời',
+                    joinedAt: c.startDate ? new Date(c.startDate).toLocaleDateString('vi-VN') : '—',
+                    endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('vi-VN') : undefined,
+                    identityNumber: tu.userIdentification?.identityNumber,
+                    dateOfBirth: tu.userIdentification?.dateOfBirth,
+                    gender: tu.userIdentification?.gender,
+                    address: tu.userIdentification?.placeOfResidence || tu.userIdentification?.permanentAddress,
+                    cardFrontUrl: tu.userIdentification?.cardFrontUrl,
+                    cardBackUrl: tu.userIdentification?.cardBackUrl,
+                    hasAccount: true,
+                  }
+                  break
+                }
+              }
+              if (matchedTenant) break
+
+              if (c.tenant && (c.tenant.id === rawId || c.tenant.id === cleanRawId)) {
+                fullContract = c
+                matchedTenant = {
+                  id: `contract_${c.id}`,
+                  userId: c.tenant.id,
+                  fullName: c.tenant.userIdentification?.fullName || c.tenant.fullName || c.tenant.username,
+                  phoneNumber: c.tenant.phoneNumber,
+                  roomId: c.roomId,
+                  roomNumber: c.room?.roomNumber || '—',
+                  boardingHouseId: activeBuilding.id,
+                  tenancyType: 'contract',
+                  contractId: c.id,
+                  status: c.status === 'active' ? 'Đang ở' : 'Đã rời',
+                  joinedAt: c.startDate ? new Date(c.startDate).toLocaleDateString('vi-VN') : '—',
+                  endDate: c.endDate ? new Date(c.endDate).toLocaleDateString('vi-VN') : undefined,
+                  identityNumber: c.tenant.userIdentification?.identityNumber,
+                  dateOfBirth: c.tenant.userIdentification?.dateOfBirth,
+                  gender: c.tenant.userIdentification?.gender,
+                  address: c.tenant.userIdentification?.placeOfResidence || c.tenant.userIdentification?.permanentAddress,
+                  cardFrontUrl: c.tenant.userIdentification?.cardFrontUrl,
+                  cardBackUrl: c.tenant.userIdentification?.cardBackUrl,
+                  hasAccount: true,
+                }
+                break
               }
             }
-          } catch (detailErr) {
-            console.warn('Could not load full contract detail, using list aggregate:', detailErr)
+          } catch (contractErr) {
+            console.warn('Fallback contract search failed:', contractErr)
+          }
+        }
+
+        if (matchedTenant) {
+          // Format address from object or string
+          let formattedAddress = matchedTenant.address || ''
+          if (typeof formattedAddress === 'object' && formattedAddress !== null) {
+            formattedAddress = Object.values(formattedAddress).filter(Boolean).join(', ')
           }
 
-          const ident = matchedTenantUser?.userIdentification
-          const daysRemaining = fullContract.endDate
+          const daysRemaining = matchedTenant.daysRemaining || (fullContract?.endDate
             ? Math.max(
-              0,
-              Math.ceil(
-                (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-              ),
-            )
-            : undefined
-          const contractStatus =
-            fullContract.status === 'active'
-              ? daysRemaining !== undefined && daysRemaining <= 30
-                ? 'Sắp hết hợp đồng'
-                : 'Đang ở'
-              : fullContract.status === 'draft'
-                ? 'Sắp hết hợp đồng'
-                : 'Đã rời'
-
-          // Format address from Json or string
-          let formattedAddress = ''
-          if (ident?.placeOfResidence) {
-            if (typeof ident.placeOfResidence === 'string') {
-              formattedAddress = ident.placeOfResidence
-            } else if (typeof ident.placeOfResidence === 'object') {
-              formattedAddress = Object.values(ident.placeOfResidence).filter(Boolean).join(', ')
-            }
-          } else if (ident?.permanentAddress) {
-            formattedAddress = ident.permanentAddress
-          }
+                0,
+                Math.ceil(
+                  (new Date(fullContract.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+                ),
+              )
+            : undefined)
 
           const mappedCustomer: Customer = {
-            id: matchedTenantUser?.id || `cust_${fullContract.id}`,
-            userId: matchedTenantUser?.id,
-            contractId: fullContract.id,
-            name:
-              ident?.fullName ||
-              matchedTenantUser?.fullName ||
-              matchedTenantUser?.username ||
-              t('landlordCustomersDefaultName'),
-            phone: matchedTenantUser?.phoneNumber || '—',
-            room: fullContract.room?.roomNumber || '—',
-            roomId: fullContract.room?.id,
-            floor: fullContract.room?.floor,
+            id: matchedTenant.id,
+            userId: matchedTenant.userId,
+            contractId: matchedTenant.contractId || fullContract?.id,
+            name: matchedTenant.fullName || t('landlordCustomersDefaultName'),
+            phone: matchedTenant.phoneNumber || '—',
+            room: matchedTenant.roomNumber || fullContract?.room?.roomNumber || '—',
+            roomId: matchedTenant.roomId || fullContract?.room?.id,
+            floor: fullContract?.room?.floor,
             building: activeBuilding.name || activeBuilding.id,
-            cccd: ident?.identityNumber || '—',
-            joinDate: fullContract.startDate
+            cccd: matchedTenant.identityNumber || '—',
+            joinDate: matchedTenant.joinedAt || (fullContract?.startDate
               ? new Date(fullContract.startDate).toLocaleDateString('vi-VN')
-              : '—',
-            endDate: fullContract.endDate
+              : '—'),
+            endDate: matchedTenant.endDate || (fullContract?.endDate
               ? new Date(fullContract.endDate).toLocaleDateString('vi-VN')
-              : undefined,
-            rentPrice: fullContract.rentPrice,
-            depositAmount: fullContract.deposit?.amount || fullContract.depositAmount || 0,
+              : undefined),
+            rentPrice: fullContract?.rentPrice,
+            depositAmount: fullContract?.deposit?.amount || fullContract?.depositAmount || 0,
             daysRemaining,
-            status: contractStatus,
-            email: matchedTenantUser?.email,
-            dob: ident?.dateOfBirth
-              ? new Date(ident.dateOfBirth).toLocaleDateString('vi-VN')
+            status: matchedTenant.status || (fullContract?.status === 'active' ? 'Đang ở' : 'Đã rời'),
+            email: matchedTenant.email || undefined,
+            dob: matchedTenant.dateOfBirth
+              ? (matchedTenant.dateOfBirth.includes('T')
+                  ? new Date(matchedTenant.dateOfBirth).toLocaleDateString('vi-VN')
+                  : matchedTenant.dateOfBirth)
               : undefined,
-            gender: ident?.gender === 'male' || ident?.gender === 'nam' ? 'nam' : 'nu',
+            gender: matchedTenant.gender === 'male' || matchedTenant.gender === 'nam' ? 'nam' : 'nu',
             address: formattedAddress || undefined,
-            cardFrontUrl: ident?.cardFrontUrl,
-            cardBackUrl: ident?.cardBackUrl,
-            note: fullContract.note || undefined,
-            hasAccount: !!matchedTenantUser?.id,
-            recentInvoices: fullContract.recentInvoices || [],
+            cardFrontUrl: matchedTenant.cardFrontUrl || undefined,
+            cardBackUrl: matchedTenant.cardBackUrl || undefined,
+            note: fullContract?.note || undefined,
+            hasAccount: matchedTenant.hasAccount ?? !!matchedTenant.userId,
+            tenancyType: matchedTenant.tenancyType,
+            recentInvoices: fullContract?.recentInvoices || [],
           }
 
           setCustomer(mappedCustomer)
@@ -704,7 +742,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
 
                 <div className="p-3 bg-surface rounded-xl border border-line space-y-1.5 text-xs">
-                  {customer.contractId && (
+                  {customer.contractId ? (
                     <div className="flex justify-between items-center font-bold text-foreground/90">
                       <span>{t('landlordCustomersContractCodeLabel')}</span>
                       <Link
@@ -715,6 +753,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                         {customer.contractId.slice(0, 8).toUpperCase()}{' '}
                         <ExternalLink className="w-3 h-3" />
                       </Link>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center font-bold text-foreground/90">
+                      <span>{t('landlordCustomersContractCodeLabel')}</span>
+                      <span className="text-warning font-semibold italic text-[11px]">
+                        Chưa lập hợp đồng
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-[11px] text-muted font-semibold">
@@ -749,6 +794,15 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     <Home className="w-4 h-4" />{' '}
                     {t('landlordCustomersViewRoomDetailBtn').replace('{room}', customer.room)}{' '}
                     &rarr;
+                  </Link>
+                )}
+
+                {!customer.contractId && customer.roomId && (
+                  <Link
+                    href={`/landlord/contracts/create?roomId=${customer.roomId}&tenantId=${customer.userId || ''}`}
+                    className="w-full py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black rounded-xl transition-all border border-primary/30 flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                  >
+                    <FileSignature className="w-4 h-4" /> Tạo hợp đồng thuê &rarr;
                   </Link>
                 )}
               </div>
