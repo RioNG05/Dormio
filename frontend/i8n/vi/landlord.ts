@@ -3940,6 +3940,7 @@ export const viLandlord = {
     landlordRoomDetailNoContractWarningTitle: "Phòng chưa lập hợp đồng",
     landlordRoomDetailNoContractWarningDesc: "Phòng đang có {count} cư dân nhưng chưa có hợp đồng thuê hợp lệ. Vui lòng lập hợp đồng để quản lý thu phí và điều khoản pháp lý.",
     landlordRoomDetailCreateContractNowBtn: "Lập hợp đồng ngay",
+    landlordRoomDetailNoTenantsInRoom: "Phòng hiện chưa có người ở",
     landlordRoomDetailEmptyOccupantsDesc: "Phòng hiện chưa có người ở. Bạn có thể thêm khách thuê trực tiếp hoặc lập hợp đồng mới.",
     landlordCustomersSelectBuildingFirst: "Vui lòng chọn nhà trọ trước khi thêm khách thuê.",
 }

@@ -3940,6 +3940,7 @@ export const enLandlord = {
     landlordRoomDetailNoContractWarningTitle: "No Contract Established",
     landlordRoomDetailNoContractWarningDesc: "This room currently has {count} occupant(s) without an active rental contract. Create a contract to manage billing and legal terms.",
     landlordRoomDetailCreateContractNowBtn: "Create Contract Now",
+    landlordRoomDetailNoTenantsInRoom: "No occupants in this room",
     landlordRoomDetailEmptyOccupantsDesc: "This room currently has no residents. You can add a tenant directly or create a new contract.",
     landlordCustomersSelectBuildingFirst: "Please select a boarding house before adding a tenant.",
 }

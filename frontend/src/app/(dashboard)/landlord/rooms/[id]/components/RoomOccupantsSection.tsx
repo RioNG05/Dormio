@@ -207,7 +207,7 @@ export function RoomOccupantsSection({
         ) : (
           <EmptyState
             icon={Users}
-            title={t('landlordRoomDetailNoTenantsInRoom') || 'Phòng hiện chưa có người ở'}
+            title={t('landlordRoomDetailNoTenantsInRoom')}
             description={t('landlordRoomDetailEmptyOccupantsDesc')}
             action={
               <div className="flex flex-col sm:flex-row items-center gap-2.5">
