@@ -15,6 +15,7 @@ export interface MassNotificationItem {
   targetType: AdminNotifyTarget
   targetLabel: string
   targetId?: string
+  targetIds?: string[]
   targetUserName?: string
   title: string
   content: string
@@ -42,9 +43,11 @@ export interface MassNotificationListResponse {
 }
 
 export interface CreateMassNotificationPayload {
-  channel: AdminNotifyChannel
+  channel?: AdminNotifyChannel
+  channels?: AdminNotifyChannel[]
   targetType: AdminNotifyTarget
   targetId?: string
+  targetIds?: string[]
   title: string
   content: string
 }

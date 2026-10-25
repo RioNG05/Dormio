@@ -17,6 +17,9 @@ import {
   RefreshCw,
   RotateCcw,
   CheckCircle2,
+  Check,
+  Loader2,
+  Phone,
 } from 'lucide-react'
 import {
   adminNotificationService,
@@ -36,8 +39,19 @@ import {
   TableRow,
   Modal,
   EmptyState,
+  Avatar,
 } from '@/components/ui'
 import { DashboardPageHeader } from '@/components/layout'
+import { adminUsersService, AdminUserItem } from '@/services/admin-users.service'
+
+interface SelectedUserRecipient {
+  id: string
+  name: string
+  phoneNumber?: string
+  email?: string
+  role?: string
+  avatarUrl?: string | null
+}
 
 interface NotificationCampaign {
   id: string
@@ -89,6 +103,14 @@ export default function AdminNotificationsPage() {
   const [composeTarget, setComposeTarget] =
     useState<NotificationCampaign['targetGroup']>('all_users')
   const [specificUserId, setSpecificUserId] = useState('')
+  // Selected specific user recipients
+  const [selectedRecipients, setSelectedRecipients] = useState<SelectedUserRecipient[]>([])
+  const [userSearchQuery, setUserSearchQuery] = useState('')
+  const [userSearchResults, setUserSearchResults] = useState<AdminUserItem[]>([])
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false)
+  const [userSearchDropdownOpen, setUserSearchDropdownOpen] = useState(false)
+  const userSearchDropdownRef = React.useRef<HTMLDivElement>(null)
+
   const [composeChannels, setComposeChannels] = useState<('in_app' | 'email' | 'sms' | 'zalo')[]>([
     'in_app',
   ])
@@ -130,6 +152,86 @@ export default function AdminNotificationsPage() {
     const timer = setTimeout(() => setFeedbackMsg(null), 4000)
     return () => clearTimeout(timer)
   }, [feedbackMsg])
+
+  // Click outside listener for user search dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        userSearchDropdownRef.current &&
+        !userSearchDropdownRef.current.contains(event.target as Node)
+      ) {
+        setUserSearchDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Debounced search for users by name, phone or email
+  useEffect(() => {
+    if (composeTarget !== 'specific_user') {
+      setUserSearchResults([])
+      return
+    }
+
+    const q = userSearchQuery.trim()
+    if (!q) {
+      setUserSearchResults([])
+      setIsSearchingUsers(false)
+      return
+    }
+
+    setIsSearchingUsers(true)
+    const timer = setTimeout(async () => {
+      try {
+        const res = await adminUsersService.getUsers({
+          query: q,
+          limit: 10,
+        })
+        setUserSearchResults(res?.items || [])
+      } catch (err) {
+        console.error('Error searching users:', err)
+        setUserSearchResults([])
+      } finally {
+        setIsSearchingUsers(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [userSearchQuery, composeTarget])
+
+  const handleToggleSelectUser = (u: AdminUserItem) => {
+    setSelectedRecipients(prev => {
+      const exists = prev.some(item => item.id === u.id)
+      if (exists) {
+        return prev.filter(item => item.id !== u.id)
+      } else {
+        const displayName = u.fullName || u.username || u.phoneNumber || u.email || 'User'
+        return [
+          ...prev,
+          {
+            id: u.id,
+            name: displayName,
+            phoneNumber: u.phoneNumber,
+            email: u.email || undefined,
+            role: u.role,
+            avatarUrl: u.avatarUrl,
+          },
+        ]
+      }
+    })
+    if (fieldErrors.targetId) {
+      setFieldErrors(prev => ({ ...prev, targetId: undefined }))
+    }
+  }
+
+  const handleRemoveRecipient = (userId: string) => {
+    setSelectedRecipients(prev => prev.filter(u => u.id !== userId))
+  }
+
+  const handleClearAllRecipients = () => {
+    setSelectedRecipients([])
+  }
 
   // Fetch campaigns from backend
   const fetchCampaigns = useCallback(
@@ -272,6 +374,8 @@ export default function AdminNotificationsPage() {
       composeName.trim() ||
       composeTitle.trim() ||
       composeContent.trim() ||
+      selectedRecipients.length > 0 ||
+      userSearchQuery.trim() ||
       specificUserId.trim() ||
       composeChannels.length > 1 ||
       !composeChannels.includes('in_app') ||
@@ -281,6 +385,8 @@ export default function AdminNotificationsPage() {
     composeName,
     composeTitle,
     composeContent,
+    selectedRecipients,
+    userSearchQuery,
     specificUserId,
     composeChannels,
     composeScheduleType,
@@ -322,8 +428,8 @@ export default function AdminNotificationsPage() {
     if (composeChannels.length === 0) {
       errors.channels = t('adminNotifyErrorNoChannel')
     }
-    if (composeTarget === 'specific_user' && !specificUserId.trim()) {
-      errors.targetId = t('adminNotifyErrorTargetIdRequired')
+    if (composeTarget === 'specific_user' && selectedRecipients.length === 0) {
+      errors.targetId = t('adminNotifyErrorTargetUsersRequired')
     }
     if (!composeTitle.trim() || composeTitle.trim().length < 3) {
       errors.title = t('adminNotifyErrorTitleLength')
@@ -342,10 +448,13 @@ export default function AdminNotificationsPage() {
 
     setIsSubmitting(true)
     try {
+      const targetIds = selectedRecipients.map(u => u.id)
       await adminNotificationService.createMassNotificationJob({
         channel: (composeChannels[0] as AdminNotifyChannel) || 'in_app',
+        channels: composeChannels as AdminNotifyChannel[],
         targetType: composeTarget as any,
-        targetId: composeTarget === 'specific_user' ? specificUserId.trim() : undefined,
+        targetId: composeTarget === 'specific_user' ? targetIds[0] : undefined,
+        targetIds: composeTarget === 'specific_user' ? targetIds : undefined,
         title: composeTitle.trim(),
         content: composeContent.trim(),
       })
@@ -1051,19 +1160,181 @@ export default function AdminNotificationsPage() {
             </div>
 
             {composeTarget === 'specific_user' && (
-              <div className="space-y-1 pt-1.5 animate-in fade-in duration-200">
-                <TextInput
-                  label={t('adminNotifySpecificUserUuid')}
-                  required
-                  value={specificUserId}
-                  onChange={e => {
-                    setSpecificUserId(e.target.value)
-                    if (fieldErrors.targetId)
-                      setFieldErrors(prev => ({ ...prev, targetId: undefined }))
-                  }}
-                  placeholder="123e4567-e89b-12d3-a456-426614174000"
-                  error={fieldErrors.targetId}
-                />
+              <div ref={userSearchDropdownRef} className="space-y-2.5 pt-2 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-foreground/90 block">
+                    {t('adminNotifyTargetSpecificUser')}
+                    <span className="text-danger ml-1 font-bold">*</span>
+                  </label>
+                  {selectedRecipients.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
+                        {t('adminNotifySelectedUsersCount', { count: selectedRecipients.length })}
+                      </span>
+                      {selectedRecipients.length >= 2 && (
+                        <button
+                          type="button"
+                          onClick={handleClearAllRecipients}
+                          className="text-[11px] text-danger hover:underline font-semibold"
+                        >
+                          {t('adminNotifyClearAllSelected')}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected users chips shelf */}
+                {selectedRecipients.length > 0 && (
+                  <div className="p-2.5 rounded-2xl bg-surface border border-line flex flex-wrap gap-2 max-h-36 overflow-y-auto">
+                    {selectedRecipients.map(u => (
+                      <div
+                        key={u.id}
+                        className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl bg-card border border-line text-foreground text-xs shadow-xs hover:border-primary/50 transition-colors"
+                      >
+                        <Avatar src={u.avatarUrl || undefined} name={u.name} size="xs" />
+                        <div className="flex flex-col">
+                          <span className="font-bold leading-tight line-clamp-1 max-w-[140px] sm:max-w-[180px]">
+                            {u.name}
+                          </span>
+                          <span className="text-[10px] text-muted leading-tight">
+                            {u.phoneNumber || u.email || u.role}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRecipient(u.id)}
+                          className="w-5 h-5 rounded-lg hover:bg-danger-soft text-muted hover:text-danger flex items-center justify-center transition-colors ml-1"
+                          title="Bỏ chọn"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Search Bar Input */}
+                <div className="relative">
+                  <TextInput
+                    placeholder={t('adminNotifySearchUserPlaceholder')}
+                    value={userSearchQuery}
+                    onChange={e => {
+                      setUserSearchQuery(e.target.value)
+                      setUserSearchDropdownOpen(true)
+                    }}
+                    onFocus={() => setUserSearchDropdownOpen(true)}
+                    leftIcon={<Search className="w-4 h-4 text-muted" />}
+                    rightIcon={
+                      isSearchingUsers ? (
+                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      ) : userSearchQuery ? (
+                        <button
+                          type="button"
+                          onClick={() => setUserSearchQuery('')}
+                          className="text-muted hover:text-foreground"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      ) : null
+                    }
+                    className="bg-surface"
+                    error={fieldErrors.targetId}
+                  />
+
+                  {/* Dropdown Results */}
+                  {userSearchDropdownOpen && userSearchQuery.trim().length > 0 && (
+                    <div className="absolute z-30 left-0 right-0 top-full mt-1.5 bg-card border border-line rounded-2xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                      {isSearchingUsers ? (
+                        <div className="p-4 flex items-center justify-center gap-2 text-muted text-xs">
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <span>{t('adminNotifySearchingUsers')}</span>
+                        </div>
+                      ) : userSearchResults.length === 0 ? (
+                        <div className="p-4 text-center text-muted text-xs">
+                          {t('adminNotifySelectUserEmpty')}
+                        </div>
+                      ) : (
+                        <div className="p-1 space-y-0.5">
+                          {userSearchResults.map(user => {
+                            const isSelected = selectedRecipients.some(item => item.id === user.id)
+                            const displayName =
+                              user.fullName || user.username || user.phoneNumber || user.email || 'User'
+                            return (
+                              <div
+                                key={user.id}
+                                onClick={() => handleToggleSelectUser(user)}
+                                className={`p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-3 transition-colors ${
+                                  isSelected
+                                    ? 'bg-primary/10 text-primary font-bold'
+                                    : 'hover:bg-surface text-foreground'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <Avatar
+                                    src={user.avatarUrl || undefined}
+                                    name={displayName}
+                                    size="sm"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-xs truncate">{displayName}</span>
+                                      <span
+                                        className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${
+                                          user.role === 'landlord'
+                                            ? 'bg-accent/15 text-accent'
+                                            : user.role === 'admin'
+                                              ? 'bg-purple-500/15 text-purple-600'
+                                              : user.role === 'employee'
+                                                ? 'bg-blue-500/15 text-blue-600'
+                                                : 'bg-amber-500/15 text-amber-600'
+                                        }`}
+                                      >
+                                        {user.role}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] text-muted flex items-center gap-3 truncate">
+                                      {user.phoneNumber && (
+                                        <span className="flex items-center gap-1 font-mono">
+                                          <Phone className="w-3 h-3" /> {user.phoneNumber}
+                                        </span>
+                                      )}
+                                      {user.email && (
+                                        <span className="flex items-center gap-1 truncate">
+                                          <Mail className="w-3 h-3 shrink-0" /> {user.email}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="shrink-0">
+                                  {isSelected ? (
+                                    <span className="px-2 py-1 rounded-lg bg-primary text-white text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                                      <Check className="w-3 h-3" />
+                                      {t('adminNotifyUserAlreadySelected')}
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 py-1 rounded-lg bg-surface border border-line text-foreground/80 text-[10px] font-bold hover:border-primary hover:text-primary transition-colors">
+                                      + {t('adminNotifySelectUserBtn')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {fieldErrors.targetId && (
+                  <p className="text-[11px] text-danger font-semibold flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.targetId}</span>
+                  </p>
+                )}
               </div>
             )}
           </div>
