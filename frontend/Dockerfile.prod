@@ -1,7 +1,12 @@
-# ─── Stage 1: Install dependencies ───────────────────────────────────────────
-FROM node:22-alpine AS deps
+# ─── Stage 0: Base image with pnpm ──────────────────────────────────────────
+FROM node:22-alpine AS base
 
-RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm@11.21.0
+
+
+# ─── Stage 1: Install dependencies ───────────────────────────────────────────
+FROM base AS deps
 
 WORKDIR /app
 
@@ -11,9 +16,7 @@ RUN pnpm install --frozen-lockfile
 
 
 # ─── Stage 2: Build ──────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
-
-RUN corepack enable && corepack prepare pnpm@11.21.0 --activate
+FROM base AS builder
 
 WORKDIR /app
 
@@ -58,6 +61,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Support both root server.js and monorepo frontend/server.js
-CMD ["sh", "-c", "if [ -f server.js ]; then node server.js; elif [ -f frontend/server.js ]; then node frontend/server.js; else node $(find . -name server.js | head -n 1); fi"]
-
+CMD ["node", "server.js"]
