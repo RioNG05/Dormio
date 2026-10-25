@@ -43,6 +43,7 @@ export interface RoomOccupantDto {
     cardFrontUrl?: string | null
     cardBackUrl?: string | null
     hasAccount: boolean
+    mustChangePassword?: boolean
   }
 }
 
@@ -68,6 +69,7 @@ export interface LandlordTenantItem {
   cardFrontUrl?: string | null
   cardBackUrl?: string | null
   hasAccount: boolean
+  mustChangePassword?: boolean
 }
 
 export interface LandlordTenantListResult {
@@ -76,6 +78,18 @@ export interface LandlordTenantListResult {
   page: number
   limit: number
   totalPages: number
+}
+
+export interface UpdateLandlordTenantPayload {
+  fullName?: string
+  identityNumber?: string
+  dateOfBirth?: string
+  gender?: 'male' | 'female'
+  placeOfResidence?: any
+  email?: string
+  job?: string
+  workplace?: string
+  note?: string
 }
 
 export const searchTenantByPhone = async (
@@ -153,6 +167,21 @@ export const getLandlordTenants = async (
   }
 }
 
+export const updateLandlordTenant = async (
+  boardingHouseId: string,
+  tenantIdOrUserId: string,
+  payload: UpdateLandlordTenantPayload,
+): Promise<{ success: boolean; message: string }> => {
+  const res = await api.patch<any>(
+    `/v1/landlord/tenants/${encodeURIComponent(tenantIdOrUserId)}`,
+    payload,
+    {
+      headers: { 'X-Boarding-House-Id': boardingHouseId },
+    },
+  )
+  return res?.data ?? res
+}
+
 export const checkoutOccupant = async (
   boardingHouseId: string,
   occupantId: string,
@@ -165,4 +194,3 @@ export const checkoutOccupant = async (
   )
   return res?.data ?? res
 }
-

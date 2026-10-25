@@ -4,7 +4,6 @@ import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowLeft,
   Edit2,
   Trash2,
   User,
@@ -24,7 +23,10 @@ import {
 } from 'lucide-react'
 import { Customer } from '../data'
 import { getLandlordContracts, getContractById } from '@/services/contract.service'
-import { getLandlordTenants, LandlordTenantItem } from '@/services/tenant.service'
+import { getLandlordTenants, updateLandlordTenant, LandlordTenantItem } from '@/services/tenant.service'
+import { useToast } from '@/context/ToastContext'
+import { resolveErrorMessage } from '@/utils/error-resolver'
+import { VietnamAddressFields, type VietnamAddressValue } from '@/components/common/VietnamAddressFields'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import {
@@ -43,6 +45,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const resolvedParams = use(params)
   const router = useRouter()
   const t = useTranslations('landlord')
+  const tErrors = useTranslations('errors')
+  const { toast } = useToast()
   const { activeBuilding } = useAuth()
 
   const getCustomerStatusLabel = (status: string) => {
@@ -100,6 +104,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const [editJob, setEditJob] = useState('')
   const [editWorkplace, setEditWorkplace] = useState('')
   const [editNote, setEditNote] = useState('')
+  const [editAddressObj, setEditAddressObj] = useState<VietnamAddressValue>({
+    country: 'Việt Nam',
+    province: '',
+    ward: '',
+    street: '',
+    address: '',
+  })
+  const [isSavingCustomer, setIsSavingCustomer] = useState(false)
 
   const showAlert = (
     message: string,
@@ -188,6 +200,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     cardFrontUrl: tu.userIdentification?.cardFrontUrl,
                     cardBackUrl: tu.userIdentification?.cardBackUrl,
                     hasAccount: true,
+                    mustChangePassword: tu.mustChangePassword,
                   }
                   break
                 }
@@ -216,6 +229,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   cardFrontUrl: c.tenant.userIdentification?.cardFrontUrl,
                   cardBackUrl: c.tenant.userIdentification?.cardBackUrl,
                   hasAccount: true,
+                  mustChangePassword: c.tenant.mustChangePassword,
                 }
                 break
               }
@@ -274,6 +288,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             cardBackUrl: matchedTenant.cardBackUrl || undefined,
             note: fullContract?.note || undefined,
             hasAccount: matchedTenant.hasAccount ?? !!matchedTenant.userId,
+            mustChangePassword: matchedTenant.mustChangePassword,
             tenancyType: matchedTenant.tenancyType,
             recentInvoices: fullContract?.recentInvoices || [],
           }
@@ -289,6 +304,25 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           setEditJob('')
           setEditWorkplace('')
           setEditNote(mappedCustomer.note || '')
+
+          let initialAddr: VietnamAddressValue = {
+            country: 'Việt Nam',
+            province: '',
+            ward: '',
+            street: formattedAddress || '',
+            address: formattedAddress || '',
+          }
+          if (typeof matchedTenant.address === 'object' && matchedTenant.address !== null) {
+            const a = matchedTenant.address as any
+            initialAddr = {
+              country: 'Việt Nam',
+              province: a.province || '',
+              ward: a.ward || '',
+              street: a.street || a.address || '',
+              address: a.address || formattedAddress || '',
+            }
+          }
+          setEditAddressObj(initialAddr)
         } else {
           setCustomer(null)
         }
@@ -303,6 +337,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     loadCustomerDetail()
   }, [resolvedParams.id, activeBuilding?.id])
 
+  const isIdentificationLocked = customer?.mustChangePassword === false
+
   // Track initial values for dirty check (Rule 10)
   const initialEditValues = React.useMemo(() => {
     if (!customer) return null
@@ -312,7 +348,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       cccd: customer.cccd !== '—' ? customer.cccd : '',
       dob: customer.dob || '',
       gender: customer.gender || 'nam',
-      address: customer.address || '',
+      addressObj: editAddressObj,
       email: customer.email || '',
       job: customer.job || '',
       workplace: customer.workplace || '',
@@ -335,7 +371,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       setEditCccd(initialEditValues.cccd)
       setEditDob(initialEditValues.dob)
       setEditGender(initialEditValues.gender)
-      setEditAddress(initialEditValues.address)
+      setEditAddress(initialEditValues.addressObj.address || '')
+      setEditAddressObj(initialEditValues.addressObj)
       setEditEmail(initialEditValues.email)
       setEditJob(initialEditValues.job)
       setEditWorkplace(initialEditValues.workplace)
@@ -354,7 +391,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       editCccd !== initialEditValues.cccd ||
       editDob !== initialEditValues.dob ||
       editGender !== initialEditValues.gender ||
-      editAddress !== initialEditValues.address ||
+      (editAddressObj.province !== initialEditValues.addressObj.province || editAddressObj.ward !== initialEditValues.addressObj.ward || editAddressObj.street !== initialEditValues.addressObj.street) ||
       editEmail !== initialEditValues.email ||
       editJob !== initialEditValues.job ||
       editWorkplace !== initialEditValues.workplace ||
@@ -375,26 +412,62 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  const handleSaveCustomer = () => {
-    setCustomer(prev =>
-      prev
-        ? {
-          ...prev,
-          name: editName || prev.name,
-          phone: editPhone || prev.phone,
-          cccd: editCccd || prev.cccd,
-          dob: editDob || prev.dob,
-          gender: editGender || prev.gender,
-          address: editAddress || prev.address,
-          email: editEmail || prev.email,
-          job: editJob || prev.job,
-          workplace: editWorkplace || prev.workplace,
-          note: editNote || prev.note,
-          updatedAt: new Date().toLocaleDateString('vi-VN'),
-        }
-        : null,
-    )
-    setIsEditModalOpen(false)
+  const handleSaveCustomer = async () => {
+    if (!customer || !activeBuilding?.id) return
+    const targetUserId = customer.userId || customer.id
+    const fullAddress =
+      editAddressObj.address ||
+      [editAddressObj.street, editAddressObj.ward, editAddressObj.province].filter(Boolean).join(', ')
+
+    setIsSavingCustomer(true)
+    try {
+      await updateLandlordTenant(activeBuilding.id, targetUserId, {
+        fullName: !isIdentificationLocked ? editName.trim() : undefined,
+        identityNumber: !isIdentificationLocked ? (editCccd.trim() || undefined) : undefined,
+        dateOfBirth: !isIdentificationLocked ? (editDob ? new Date(editDob).toISOString() : undefined) : undefined,
+        gender: !isIdentificationLocked ? (editGender === 'nam' ? 'male' : 'female') : undefined,
+        placeOfResidence: !isIdentificationLocked
+          ? {
+              country: 'Việt Nam',
+              province: editAddressObj.province || '',
+              ward: editAddressObj.ward || '',
+              street: editAddressObj.street || '',
+              address: fullAddress,
+            }
+          : undefined,
+        email: editEmail ? editEmail.trim() : undefined,
+        job: editJob ? editJob.trim() : undefined,
+        workplace: editWorkplace ? editWorkplace.trim() : undefined,
+        note: editNote ? editNote.trim() : undefined,
+      })
+
+      setCustomer(prev =>
+        prev
+          ? {
+              ...prev,
+              name: (!isIdentificationLocked && editName) ? editName : prev.name,
+              phone: editPhone || prev.phone,
+              cccd: (!isIdentificationLocked && editCccd) ? editCccd : prev.cccd,
+              dob: (!isIdentificationLocked && editDob) ? editDob : prev.dob,
+              gender: (!isIdentificationLocked && editGender) ? editGender : prev.gender,
+              address: (!isIdentificationLocked && fullAddress) ? fullAddress : prev.address,
+              email: editEmail || prev.email,
+              job: editJob || prev.job,
+              workplace: editWorkplace || prev.workplace,
+              note: editNote || prev.note,
+              updatedAt: new Date().toLocaleDateString('vi-VN'),
+            }
+          : null,
+      )
+      toast.success(t('landlordCustomersSaveSuccess'))
+      setIsEditModalOpen(false)
+    } catch (err) {
+      console.error('Failed to update tenant:', err)
+      const errMsg = resolveErrorMessage(err, tErrors, t('landlordCustomersSaveError'))
+      toast.error(errMsg)
+    } finally {
+      setIsSavingCustomer(false)
+    }
   }
 
   const isStaying = customer ? (customer.status === 'Đang ở' || customer.status === 'Sắp hết hợp đồng') : false
@@ -886,10 +959,21 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         />
 
         <Modal.Body className="space-y-4">
+          {/* NOTICE IF TENANT IDENTIFICATION IS LOCKED */}
+          {isIdentificationLocked && (
+            <div className="p-3.5 bg-accent-soft/30 border border-accent-subtle rounded-2xl flex items-start gap-2.5 text-accent">
+              <Info className="w-5 h-5 shrink-0 mt-0.5" />
+              <Text size="xs" weight="medium" color="default">
+                {t('landlordCustomersIdentificationLockedNotice')}
+              </Text>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TextInput
               label={t('landlordCustomersFullNameLabel')}
               required
+              disabled={isIdentificationLocked}
               value={editName}
               onChange={e => setEditName(e.target.value)}
             />
@@ -897,12 +981,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <TextInput
               label={t('landlordCustomersPhoneLabel')}
               required
+              disabled
+              readOnly
               value={editPhone}
-              onChange={e => setEditPhone(e.target.value)}
             />
 
             <TextInput
               label={t('landlordCustomersCccdLabel')}
+              disabled={isIdentificationLocked}
               value={editCccd}
               onChange={e => setEditCccd(e.target.value)}
               className="font-bold text-primary"
@@ -910,12 +996,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
             <DateInput
               label={t('landlordCustomersDobLabel')}
+              disabled={isIdentificationLocked}
               value={editDob}
               onChange={e => setEditDob(e.target.value)}
             />
 
             <SelectInput
               label={t('landlordCustomersGenderLabel')}
+              disabled={isIdentificationLocked}
               value={editGender}
               onChange={e => setEditGender(e.target.value)}
               options={[
@@ -931,11 +1019,16 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               onChange={e => setEditEmail(e.target.value)}
             />
 
-            <div className="md:col-span-2">
-              <TextInput
-                label={t('landlordCustomersPermanentAddressLabel')}
-                value={editAddress}
-                onChange={e => setEditAddress(e.target.value)}
+            {/* Cư trú hành chính phân cấp (Việt Nam) */}
+            <div className="md:col-span-2 pt-2 border-t border-line/60">
+              <Text as="h4" variant="subtitle" size="xs" weight="bold" className="mb-2 text-muted">
+                {t('landlordCustomersPermanentAddressLabel')}
+              </Text>
+              <VietnamAddressFields
+                value={editAddressObj}
+                onChange={setEditAddressObj}
+                disabled={isIdentificationLocked}
+                namespace="landlord"
               />
             </div>
 
@@ -971,6 +1064,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </Button>
           <Button
             onClick={handleSaveCustomer}
+            disabled={isSavingCustomer}
+            leftIcon={isSavingCustomer ? <Loader2 className="animate-spin w-4 h-4" /> : undefined}
           >
             {t('landlordCustomersSaveChangesBtn')}
           </Button>

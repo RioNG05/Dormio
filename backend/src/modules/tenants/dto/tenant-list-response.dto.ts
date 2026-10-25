@@ -63,6 +63,9 @@ export class LandlordTenantItemDto {
 
   @ApiProperty({ description: 'Whether the user has a full registered Dormio account' })
   hasAccount: boolean
+
+  @ApiProperty({ description: 'Whether the user must change password (true = not yet logged in / activated)' })
+  mustChangePassword: boolean
 }
 
 export class LandlordTenantListResponseDto {
@@ -81,4 +84,3 @@ export class LandlordTenantListResponseDto {
   @ApiProperty({ description: 'Total pages' })
   totalPages: number
 }
-

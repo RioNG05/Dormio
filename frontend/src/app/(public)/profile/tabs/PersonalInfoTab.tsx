@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { ShieldCheck, Edit3, Save, X, CreditCard } from 'lucide-react'
+import { Edit3, Save, X, CreditCard } from 'lucide-react'
 import { useTranslations } from '@/context/LanguageContext'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { Button, Form, Text, TextInput, DateInput, SelectInput } from '@/components/ui'
 import { ImageUpload } from '@/components/ImageUpload'
 import { userService, UserIdentification } from '@/services/user.service'
+import { VietnamAddressFields, type VietnamAddressValue } from '@/components/common/VietnamAddressFields'
 
 function normalizeDateForInput(val?: string | null): string {
   if (!val) return ''
@@ -39,6 +40,13 @@ export default function PersonalInfoTab() {
   const [idIssueDate, setIdIssueDate] = useState('')
   const [idIssuePlace, setIdIssuePlace] = useState('')
   const [address, setAddress] = useState('')
+  const [addressObj, setAddressObj] = useState<VietnamAddressValue>({
+    country: 'Việt Nam',
+    province: '',
+    ward: '',
+    street: '',
+    address: '',
+  })
 
   // Emergency contact
   const [emergencyName, setEmergencyName] = useState('')
@@ -60,6 +68,7 @@ export default function PersonalInfoTab() {
     idIssueDate: string
     idIssuePlace: string
     address: string
+    addressObj: VietnamAddressValue
     emergencyName: string
     emergencyPhone: string
     cardFrontUrl: string
@@ -114,6 +123,25 @@ export default function PersonalInfoTab() {
       setIdIssueDate(currentIssueDate)
       setIdIssuePlace(currentIssuePlace)
       setAddress(currentAddress)
+
+      let initialAddress: VietnamAddressValue = {
+        country: 'Việt Nam',
+        province: '',
+        ward: '',
+        street: currentAddress,
+        address: currentAddress,
+      }
+      if (typeof idData?.placeOfResidence === 'object' && idData?.placeOfResidence !== null) {
+        const p = idData.placeOfResidence as any
+        initialAddress = {
+          country: 'Việt Nam',
+          province: p.province || '',
+          ward: p.ward || '',
+          street: p.street || p.address || '',
+          address: p.address || currentAddress,
+        }
+      }
+      setAddressObj(initialAddress)
       setEmergencyName(parsedEmergencyName)
       setEmergencyPhone(parsedEmergencyPhone)
       setCardFrontUrl(currentFrontUrl)
@@ -130,6 +158,7 @@ export default function PersonalInfoTab() {
         idIssueDate: currentIssueDate,
         idIssuePlace: currentIssuePlace,
         address: currentAddress,
+        addressObj: initialAddress,
         emergencyName: parsedEmergencyName,
         emergencyPhone: parsedEmergencyPhone,
         cardFrontUrl: currentFrontUrl,
@@ -185,6 +214,7 @@ export default function PersonalInfoTab() {
       setIdIssueDate(savedData.idIssueDate)
       setIdIssuePlace(savedData.idIssuePlace)
       setAddress(savedData.address)
+      if (savedData.addressObj) setAddressObj(savedData.addressObj)
       setEmergencyName(savedData.emergencyName)
       setEmergencyPhone(savedData.emergencyPhone)
       setCardFrontUrl(savedData.cardFrontUrl)
@@ -200,18 +230,18 @@ export default function PersonalInfoTab() {
     const trimmedIdCard = identityCard.trim()
 
     if (!trimmedFullName) {
-      toast.error(t('guestDepositIdNameError') || 'Vui lòng nhập họ và tên đầy đủ.')
+      toast.error(t('guestDepositIdNameError'))
       return
     }
 
     if (trimmedIdCard) {
       if (!/^\d{12}$/.test(trimmedIdCard)) {
-        toast.error(t('guestDepositIdCccdError') || 'Số CCCD phải gồm đúng 12 chữ số.')
+        toast.error(t('guestDepositIdCccdError'))
         return
       }
 
       if (!dob) {
-        toast.error(t('guestDepositIdDobError') || 'Vui lòng chọn ngày sinh theo CCCD.')
+        toast.error(t('guestDepositIdDobError'))
         return
       }
     }
@@ -231,7 +261,15 @@ export default function PersonalInfoTab() {
           gender: gender || 'male',
           nationality: nationality.trim() || 'Việt Nam',
           placeOfOrigin: idIssuePlace.trim() || undefined,
-          placeOfResidence: address.trim() || undefined,
+          placeOfResidence: {
+            country: 'Việt Nam',
+            province: addressObj.province || '',
+            ward: addressObj.ward || '',
+            street: addressObj.street || '',
+            address:
+              addressObj.address ||
+              [addressObj.street, addressObj.ward, addressObj.province].filter(Boolean).join(', '),
+          },
           issueDate: idIssueDate || undefined,
           cardFrontUrl: cardFrontUrl.trim() || undefined,
           cardBackUrl: cardBackUrl.trim() || undefined,
@@ -257,7 +295,15 @@ export default function PersonalInfoTab() {
         identityCard: trimmedIdCard,
         idIssueDate,
         idIssuePlace: idIssuePlace.trim(),
-        address: address.trim(),
+        address:
+          addressObj.address ||
+          [addressObj.street, addressObj.ward, addressObj.province].filter(Boolean).join(', '),
+        addressObj: {
+          ...addressObj,
+          address:
+            addressObj.address ||
+            [addressObj.street, addressObj.ward, addressObj.province].filter(Boolean).join(', '),
+        },
         emergencyName: emergencyName.trim(),
         emergencyPhone: emergencyPhone.trim(),
         cardFrontUrl: cardFrontUrl.trim(),
@@ -394,13 +440,17 @@ export default function PersonalInfoTab() {
             className="py-3 bg-surface rounded-2xl"
           />
 
-          <TextInput
-            label={t('guestProfileInfoAddressLabel')}
-            disabled={!isEditingInfo}
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            className="py-3 bg-surface rounded-2xl"
-          />
+          <div className="md:col-span-2 pt-2 border-t border-line/60">
+            <Text as="h4" variant="subtitle" size="xs" weight="bold" className="mb-2 text-muted">
+              {t('guestProfileInfoAddressLabel')}
+            </Text>
+            <VietnamAddressFields
+              value={addressObj}
+              onChange={setAddressObj}
+              disabled={!isEditingInfo}
+              namespace="guest"
+            />
+          </div>
         </Form.Grid>
       </div>
 
@@ -476,12 +526,7 @@ export default function PersonalInfoTab() {
                 <Text as="span" size="xs" weight="extrabold" color="secondary">
                   {t('guestProfileEkycFront')}
                 </Text>
-                {cardFrontUrl && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-success-soft text-success border border-success-subtle flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" />
-                    {t('guestProfileEkycAiVerified')}
-                  </span>
-                )}
+
               </div>
 
               {cardFrontUrl ? (
@@ -491,10 +536,7 @@ export default function PersonalInfoTab() {
                     alt={t('guestProfileEkycFront')}
                     className="w-full h-full object-cover"
                   />
-                  <span className="absolute bottom-2 right-2 px-2.5 py-1 bg-success text-white rounded-md text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1 whitespace-nowrap">
-                    <ShieldCheck className="w-3 h-3" />
-                    {t('guestProfileEkycFaceMatched')}
-                  </span>
+
                 </div>
               ) : (
                 <div className="aspect-[16/10] bg-surface/50 rounded-xl border border-dashed border-line flex flex-col items-center justify-center p-4 text-center space-y-2">
@@ -517,12 +559,7 @@ export default function PersonalInfoTab() {
                 <Text as="span" size="xs" weight="extrabold" color="secondary">
                   {t('guestProfileEkycBack')}
                 </Text>
-                {cardBackUrl && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-success-soft text-success border border-success-subtle flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" />
-                    {t('guestProfileEkycAiVerified')}
-                  </span>
-                )}
+
               </div>
 
               {cardBackUrl ? (
@@ -532,10 +569,7 @@ export default function PersonalInfoTab() {
                     alt={t('guestProfileEkycBack')}
                     className="w-full h-full object-cover"
                   />
-                  <span className="absolute bottom-2 right-2 px-2.5 py-1 bg-success text-white rounded-md text-[10px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1 whitespace-nowrap">
-                    <ShieldCheck className="w-3 h-3" />
-                    {t('guestProfileEkycFingerprintValid')}
-                  </span>
+
                 </div>
               ) : (
                 <div className="aspect-[16/10] bg-surface/50 rounded-xl border border-dashed border-line flex flex-col items-center justify-center p-4 text-center space-y-2">

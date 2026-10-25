@@ -500,6 +500,7 @@ export default function ContractsPage() {
                       description={t('landlordContractsSubtitle')}
                       action={
                         <Button
+                          size='md'
                           onClick={() => router.push('/landlord/contracts/create')}
                           leftIcon={<Plus />}
                         >

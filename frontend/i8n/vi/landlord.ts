@@ -3961,6 +3961,19 @@ export const viLandlord = {
     landlordRoomDetailNoTenantsInRoom: "Phòng hiện chưa có người ở",
     landlordRoomDetailEmptyOccupantsDesc: "Phòng hiện chưa có người ở. Bạn có thể thêm khách thuê trực tiếp hoặc lập hợp đồng mới.",
     landlordCustomersSelectBuildingFirst: "Vui lòng chọn nhà trọ trước khi thêm khách thuê.",
+
+  landlordCustomersIdentificationLockedNotice: "Khách thuê đã kích hoạt và đổi mật khẩu tài khoản. Bạn không thể chỉnh sửa thông tin định danh cá nhân của họ.",
+  landlordCustomersProvinceLabel: "Tỉnh / Thành phố",
+  landlordCustomersProvinceSelect: "Chọn Tỉnh / Thành phố",
+  landlordCustomersProvinceLoading: "Đang tải danh sách tỉnh thành...",
+  landlordCustomersWardLabel: "Phường / Xã",
+  landlordCustomersWardSelect: "Chọn Phường / Xã",
+  landlordCustomersWardSelectProvinceFirst: "Vui lòng chọn Tỉnh/Thành trước",
+  landlordCustomersWardLoading: "Đang tải danh sách phường xã...",
+  landlordCustomersStreetLabel: "Địa chỉ chi tiết / Số nhà, tên đường",
+  landlordCustomersStreetPlaceholder: "Số nhà, tên đường, thôn, xóm...",
+  landlordCustomersSaveSuccess: "Cập nhật thông tin khách thuê thành công",
+  landlordCustomersSaveError: "Không thể cập nhật thông tin khách thuê",
 }
 
 export default viLandlord

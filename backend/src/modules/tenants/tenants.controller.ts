@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Query,
@@ -32,6 +33,7 @@ import { QuickAddTenantDto } from './dto/quick-add-tenant.dto'
 import { QueryTenantsDto } from './dto/query-tenants.dto'
 import { RoomOccupantResponseDto } from './dto/room-occupant-response.dto'
 import { LandlordTenantListResponseDto } from './dto/tenant-list-response.dto'
+import { UpdateLandlordTenantDto } from './dto/update-landlord-tenant.dto'
 
 @ApiTags('Landlord Tenants')
 @ApiBearerAuth()
@@ -116,6 +118,26 @@ export class TenantsController {
     return this.tenantsService.getLandlordTenants(boardingHouseId, query)
   }
 
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Update tenant information by landlord',
+    description:
+      'Allows landlord to update tenant personal identification (UserIdentification) only if mustChangePassword=true. Once tenant has accessed and changed their password, identification fields are locked and will be rejected.',
+  })
+  @ApiParam({ name: 'id', description: 'Tenant User UUID or Occupant UUID' })
+  @ApiOkResponse({ description: 'Tenant updated successfully' })
+  async updateTenant(
+    @Param('id') id: string,
+    @Body() dto: UpdateLandlordTenantDto,
+    @CurrentUser() user: User,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+  ) {
+    this.logger.log(
+      `updateTenant id="${id}" boardingHouseId="${boardingHouseId}" by landlord="${user.id}"`,
+    )
+    return this.tenantsService.updateTenant(user.id, boardingHouseId, id, dto)
+  }
+
   @Delete('occupants/:id')
   @ApiOperation({
     summary: 'Check out an occupant from a room',
@@ -132,4 +154,3 @@ export class TenantsController {
     return this.tenantsService.checkoutOccupant(id, user.id, boardingHouseId)
   }
 }
-

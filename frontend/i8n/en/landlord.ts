@@ -3961,6 +3961,19 @@ export const enLandlord = {
     landlordRoomDetailNoTenantsInRoom: "No occupants in this room",
     landlordRoomDetailEmptyOccupantsDesc: "This room currently has no residents. You can add a tenant directly or create a new contract.",
     landlordCustomersSelectBuildingFirst: "Please select a boarding house before adding a tenant.",
+
+  landlordCustomersIdentificationLockedNotice: "Tenant has already activated their account and changed password. Personal identification cannot be modified by the landlord.",
+  landlordCustomersProvinceLabel: "Province / City",
+  landlordCustomersProvinceSelect: "Select Province / City",
+  landlordCustomersProvinceLoading: "Loading provinces...",
+  landlordCustomersWardLabel: "Ward / Commune",
+  landlordCustomersWardSelect: "Select Ward / Commune",
+  landlordCustomersWardSelectProvinceFirst: "Please select a Province first",
+  landlordCustomersWardLoading: "Loading wards...",
+  landlordCustomersStreetLabel: "Detailed Address / Street & House No.",
+  landlordCustomersStreetPlaceholder: "House number, street name...",
+  landlordCustomersSaveSuccess: "Tenant updated successfully",
+  landlordCustomersSaveError: "Failed to update tenant",
 }
 
 export default enLandlord
