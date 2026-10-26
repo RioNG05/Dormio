@@ -30,6 +30,7 @@ import {
   deleteRoomAmenity,
   RoomAmenityItem,
 } from '@/services/room.service'
+import { resolveErrorMessage } from '@/utils/error-resolver'
 
 interface ManageRoomAmenitiesModalProps {
   isOpen: boolean
@@ -51,6 +52,7 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
   onSuccess,
 }) => {
   const t = useTranslations('landlord')
+  const tErrors = useTranslations('errors')
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('current')
   const [isLoading, setIsLoading] = useState(false)
@@ -72,7 +74,7 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
   // Delete confirmation submodal state
   const [deletingAmenity, setDeletingAmenity] = useState<RoomAmenityItem | null>(null)
 
-  // Unsaved changes confirmation modal
+  // Unsaved changes confirmation modal (Rule 10)
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
 
   // Load amenities data
@@ -84,12 +86,12 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       const res = await getRoomAmenities(boardingHouseId, roomId)
       setCurrentAmenities(res.currentAmenities || [])
       setSharedPool(res.availableSharedAmenities || [])
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || err?.message || 'Failed to load amenities')
+    } catch (err: unknown) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityLoadFailed')))
     } finally {
       setIsLoading(false)
     }
-  }, [boardingHouseId, roomId])
+  }, [boardingHouseId, roomId, t, tErrors])
 
   useEffect(() => {
     if (isOpen) {
@@ -97,13 +99,15 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       setActiveTab('current')
       setNewPrivateName('')
       setEditingAmenity(null)
+      setEditName('')
       setDeletingAmenity(null)
       setSuccessMessage(null)
+      setErrorMessage(null)
       setShowDiscardConfirm(false)
     }
   }, [isOpen, loadData])
 
-  // Clear toast after 3s
+  // Clear toast after 3.5s
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 3500)
@@ -111,10 +115,13 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
     }
   }, [successMessage])
 
-  // Check unsaved changes
-  const isFormDirty = () => {
-    return newPrivateName.trim().length > 0 || (editingAmenity !== null && editName !== editingAmenity.name)
-  }
+  // Check unsaved changes (Rule 10)
+  const isFormDirty = useCallback(() => {
+    const isNewPrivateDirty = newPrivateName.trim().length > 0
+    const isEditDirty =
+      editingAmenity !== null && editName.trim() !== (editingAmenity.name || '').trim()
+    return isNewPrivateDirty || isEditDirty
+  }, [newPrivateName, editingAmenity, editName])
 
   const handleRequestClose = () => {
     if (isFormDirty()) {
@@ -128,8 +135,17 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
     setShowDiscardConfirm(false)
     setNewPrivateName('')
     setEditingAmenity(null)
+    setEditName('')
     setDeletingAmenity(null)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+    setActiveTab('current')
     onClose()
+  }
+
+  const handleCloseEditModal = () => {
+    setEditingAmenity(null)
+    setEditName('')
   }
 
   // Attach shared amenity from house pool
@@ -141,8 +157,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       setSuccessMessage(t('landlordRoomDetailAmenityAddSuccess'))
       await loadData()
       onSuccess?.()
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || err?.message || 'Failed to attach amenity')
+    } catch (err: unknown) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityAttachFailed')))
     } finally {
       setIsActionLoading(false)
     }
@@ -163,8 +179,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       setActiveTab('current')
       await loadData()
       onSuccess?.()
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || err?.message || 'Failed to create private amenity')
+    } catch (err: unknown) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityCreateFailed')))
     } finally {
       setIsActionLoading(false)
     }
@@ -195,8 +211,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       setEditName('')
       await loadData()
       onSuccess?.()
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || err?.message || 'Failed to update amenity')
+    } catch (err: unknown) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityUpdateFailed')))
     } finally {
       setIsActionLoading(false)
     }
@@ -214,8 +230,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       setDeletingAmenity(null)
       await loadData()
       onSuccess?.()
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || err?.message || 'Failed to remove amenity')
+    } catch (err: unknown) {
+      setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityRemoveFailed')))
     } finally {
       setIsActionLoading(false)
     }
@@ -229,15 +245,15 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
     <>
       <Modal isOpen={isOpen} onClose={handleRequestClose} size="2xl">
         <Modal.Header
-          title={t('landlordRoomDetailAmenityModalTitle').replace('{roomNumber}', roomNumber)}
+          title={t('landlordRoomDetailAmenityModalTitle', { roomNumber })}
           icon={
-            <div className="p-2 bg-primary/10 text-primary rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
           }
         />
 
-        <Modal.Body className="space-y-5">
+        <Modal.Body className="space-y-5 max-h-[75vh] overflow-y-auto">
           {/* NOTICE BANNER REQUIRED BY USER */}
           <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
             <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -270,46 +286,37 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             </div>
           )}
 
-          {/* TABS NAVIGATION */}
-          <div className="flex border-b border-line gap-2">
-            <button
-              type="button"
+          {/* TABS NAVIGATION USING UI BUTTON COMPONENT (RULE 18) */}
+          <div className="flex flex-wrap sm:flex-nowrap border-b border-line pb-3 gap-2">
+            <Button
+              variant={activeTab === 'current' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('current')}
-              className={`pb-2.5 px-3 text-xs font-bold transition-colors border-b-2 flex items-center gap-1.5 ${
-                activeTab === 'current'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-secondary hover:text-foreground'
-              }`}
+              leftIcon={<Layers className="w-4 h-4" />}
+              className="w-full sm:w-auto"
             >
-              <Layers className="w-3.5 h-3.5" />
               {t('landlordRoomDetailAmenityTabCurrent')} ({currentAmenities.length})
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant={activeTab === 'addShared' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('addShared')}
-              className={`pb-2.5 px-3 text-xs font-bold transition-colors border-b-2 flex items-center gap-1.5 ${
-                activeTab === 'addShared'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-secondary hover:text-foreground'
-              }`}
+              leftIcon={<Building2 className="w-4 h-4" />}
+              className="w-full sm:w-auto"
             >
-              <Building2 className="w-3.5 h-3.5" />
               {t('landlordRoomDetailAmenityTabAddShared')} ({unattachedSharedAmenities.length})
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              variant={activeTab === 'createPrivate' ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => setActiveTab('createPrivate')}
-              className={`pb-2.5 px-3 text-xs font-bold transition-colors border-b-2 flex items-center gap-1.5 ${
-                activeTab === 'createPrivate'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-secondary hover:text-foreground'
-              }`}
+              leftIcon={<Plus className="w-4 h-4" />}
+              className="w-full sm:w-auto"
             >
-              <Plus className="w-3.5 h-3.5" />
               {t('landlordRoomDetailAmenityTabCreatePrivate')}
-            </button>
+            </Button>
           </div>
 
           {/* TAB 1: CURRENT AMENITIES LIST */}
@@ -342,16 +349,16 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
                       key={item.id}
                       className="p-3.5 flex items-center justify-between gap-3 hover:bg-surface/50 transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-surface border border-line flex items-center justify-center text-primary">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-surface border border-line flex items-center justify-center text-primary shrink-0">
                           {item.isShared ? (
                             <Building2 className="w-4 h-4" />
                           ) : (
                             <Lock className="w-4 h-4 text-warning" />
                           )}
                         </div>
-                        <div>
-                          <Text size="sm" weight="bold" color="default">
+                        <div className="min-w-0">
+                          <Text size="sm" weight="bold" color="default" className="truncate">
                             {item.name}
                           </Text>
                           <div className="mt-0.5">
@@ -368,24 +375,24 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="secondary"
+                          size="icon-sm"
                           onClick={() => handleOpenEdit(item)}
                           disabled={isActionLoading}
                           title={t('commonEdit')}
                         >
-                          <Edit2 className="w-3.5 h-3.5 text-secondary hover:text-foreground" />
+                          <Edit2 />
                         </Button>
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant="danger"
+                          size="icon-sm"
                           onClick={() => setDeletingAmenity(item)}
                           disabled={isActionLoading}
                           title={t('commonDelete')}
                         >
-                          <Trash2 className="w-3.5 h-3.5 text-danger" />
+                          <Trash2 />
                         </Button>
                       </div>
                     </div>
@@ -404,7 +411,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
               {unattachedSharedAmenities.length === 0 ? (
                 <EmptyState
                   icon={<Check className="w-8 h-8 text-success" />}
-                  title="Tất cả tiện nghi chung đã được gắn vào phòng này."
+                  title={t('landlordRoomDetailAmenityAllSharedAttached')}
+                  description={t('landlordRoomDetailAmenityAllSharedAttachedDesc')}
                   action={
                     <Button
                       size="sm"
@@ -423,9 +431,9 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
                       key={item.id}
                       className="p-3 border border-line rounded-xl bg-card flex items-center justify-between gap-3 shadow-2xs hover:border-primary/50 transition-colors"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         <Building2 className="w-4 h-4 text-primary shrink-0" />
-                        <Text size="xs" weight="bold" color="default">
+                        <Text size="xs" weight="bold" color="default" className="truncate">
                           {item.name}
                         </Text>
                       </div>
@@ -435,6 +443,7 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
                         onClick={() => handleAttachShared(item.id)}
                         disabled={isActionLoading}
                         leftIcon={<Plus className="w-3.5 h-3.5" />}
+                        className="shrink-0"
                       >
                         {t('landlordRoomDetailAmenityBtnAddShared')}
                       </Button>
@@ -482,8 +491,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
           )}
         </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleRequestClose}>
+        <Modal.Footer className="flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button variant="secondary" size="md" onClick={handleRequestClose} className="w-full sm:w-auto">
             {t('commonClose')}
           </Button>
         </Modal.Footer>
@@ -492,14 +501,14 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       {/* SUB-MODAL 1: EDIT AMENITY & SHARED FORK CHOICE */}
       <Modal
         isOpen={editingAmenity !== null}
-        onClose={() => setEditingAmenity(null)}
+        onClose={handleCloseEditModal}
         size="md"
       >
         <Modal.Header
           title={t('landlordRoomDetailAmenityEditModalTitle')}
           icon={<Edit2 className="w-5 h-5 text-primary" />}
         />
-        <Modal.Body className="space-y-4">
+        <Modal.Body className="space-y-4 max-h-[75vh] overflow-y-auto">
           <TextInput
             label={t('landlordRoomDetailAmenityNameLabel')}
             value={editName}
@@ -523,17 +532,19 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             <div className="bg-surface border border-line rounded-xl p-3 flex items-center gap-2 text-secondary">
               <Lock className="w-4 h-4 text-warning shrink-0" />
               <Text size="xs">
-                {t('landlordRoomDetailAmenityPrivate')} - Thay đổi chỉ áp dụng cho phòng {roomNumber}.
+                {t('landlordRoomDetailAmenityPrivateHelpText', { roomNumber })}
               </Text>
             </div>
           )}
         </Modal.Body>
 
-        <Modal.Footer className="flex-col sm:flex-row gap-2">
+        <Modal.Footer className="flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3">
           <Button
             variant="outline"
-            onClick={() => setEditingAmenity(null)}
+            size="md"
+            onClick={handleCloseEditModal}
             disabled={isActionLoading}
+            className="w-full sm:w-auto"
           >
             {t('landlordRoomDetailModalCancelBtn')}
           </Button>
@@ -542,19 +553,23 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             <>
               <Button
                 variant="secondary"
+                size="md"
                 onClick={() => handleSaveEdit(true)}
                 disabled={!editName.trim() || isActionLoading}
                 isLoading={isActionLoading}
                 leftIcon={<Lock className="w-3.5 h-3.5" />}
+                className="w-full sm:w-auto"
               >
                 {t('landlordRoomDetailAmenityBtnForkPrivate')}
               </Button>
               <Button
                 variant="primary"
+                size="md"
                 onClick={() => handleSaveEdit(false)}
                 disabled={!editName.trim() || isActionLoading}
                 isLoading={isActionLoading}
                 leftIcon={<Check className="w-3.5 h-3.5" />}
+                className="w-full sm:w-auto"
               >
                 {t('landlordRoomDetailAmenityBtnApplyAll')}
               </Button>
@@ -562,9 +577,11 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
           ) : (
             <Button
               variant="primary"
+              size="md"
               onClick={() => handleSaveEdit(false)}
               disabled={!editName.trim() || isActionLoading}
               isLoading={isActionLoading}
+              className="w-full sm:w-auto"
             >
               {t('landlordRoomDetailSaveChangesBtn')}
             </Button>
@@ -579,7 +596,7 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
         size="md"
         showCloseButton={false}
       >
-        <Modal.Body className="space-y-4">
+        <Modal.Body className="space-y-4 max-h-[75vh] overflow-y-auto">
           <div className="flex items-center gap-3 text-danger">
             <div className="p-3 bg-danger-soft rounded-full shrink-0">
               <AlertTriangle className="w-6 h-6" />
@@ -598,18 +615,23 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3">
           <Button
             variant="outline"
+            size="md"
             onClick={() => setDeletingAmenity(null)}
             disabled={isActionLoading}
+            className="w-full sm:w-auto"
           >
             {t('landlordRoomDetailModalCancelBtn')}
           </Button>
           <Button
             variant="danger"
+            size="md"
             onClick={handleConfirmDelete}
             isLoading={isActionLoading}
+            leftIcon={<Trash2 className="w-4 h-4" />}
+            className="w-full sm:w-auto"
           >
             {t('commonDelete')}
           </Button>
@@ -623,7 +645,7 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
         size="md"
         showCloseButton={false}
       >
-        <Modal.Body className="space-y-4">
+        <Modal.Body className="space-y-4 max-h-[75vh] overflow-y-auto">
           <div className="flex items-center gap-3 text-warning">
             <div className="p-3 bg-warning-soft rounded-full shrink-0">
               <AlertTriangle className="w-6 h-6 text-warning" />
@@ -638,12 +660,22 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline" onClick={() => setShowDiscardConfirm(false)}>
-            {t('landlordRoomDetailKeepEditingBtn')}
+        <Modal.Footer className="flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setShowDiscardConfirm(false)}
+            className="w-full sm:w-auto"
+          >
+            {t('landlordRoomDetailConfirmCloseContinue')}
           </Button>
-          <Button variant="danger" onClick={handleForceClose}>
-            {t('landlordRoomDetailDiscardCloseBtn')}
+          <Button
+            variant="danger"
+            size="md"
+            onClick={handleForceClose}
+            className="w-full sm:w-auto"
+          >
+            {t('landlordRoomDetailConfirmCloseDiscard')}
           </Button>
         </Modal.Footer>
       </Modal>
