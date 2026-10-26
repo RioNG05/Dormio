@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from '@/context/LanguageContext'
 import {
@@ -30,6 +30,13 @@ interface NotificationBellProps {
   className?: string
 }
 
+interface PopoverPosition {
+  left: number
+  width: number
+  placement: 'top' | 'bottom'
+  maxHeight: number
+}
+
 export default function NotificationBell({
   align = 'right',
   className = '',
@@ -40,6 +47,7 @@ export default function NotificationBell({
   const [notifications, setNotifications] = useState<InAppNotification[]>([])
   const [loading, setLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState<PopoverPosition | null>(null)
 
   // Read current user role from localStorage if present
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -87,9 +95,60 @@ export default function NotificationBell({
     }
   }, [])
 
-  // Close when clicking outside
+  // Calculate dynamic responsive position to prevent overflow off any screen edge
+  const updatePosition = useCallback(() => {
+    if (!containerRef.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const margin = 12
+
+    // Fluid responsive width: max 384px, or available screen width minus margins
+    const popoverWidth = Math.min(384, Math.max(260, vw - margin * 2))
+
+    // Calculate clamped horizontal offset relative to containerRef
+    const preferredOffset = align === 'right' ? rect.width - popoverWidth : 0
+    const minOffset = margin - rect.left
+    const maxOffset = vw - margin - rect.left - popoverWidth
+    const clampedOffset = Math.max(minOffset, Math.min(preferredOffset, maxOffset))
+
+    // Calculate available vertical space and auto-flip if space below is limited
+    const spaceBelow = vh - rect.bottom - margin
+    const spaceAbove = rect.top - margin
+    const placement: 'top' | 'bottom' = spaceBelow < 360 && spaceAbove > spaceBelow ? 'top' : 'bottom'
+    const availableHeight = placement === 'bottom' ? spaceBelow - 16 : spaceAbove - 16
+    const maxHeight = Math.max(240, Math.min(520, availableHeight))
+
+    setPosition({
+      left: clampedOffset,
+      width: popoverWidth,
+      placement,
+      maxHeight,
+    })
+  }, [align])
+
+  // Recalculate position on scroll or resize while popover is open
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    if (!isOpen) return
+
+    updatePosition()
+
+    const handleResizeOrScroll = () => {
+      updatePosition()
+    }
+
+    window.addEventListener('resize', handleResizeOrScroll, { passive: true })
+    window.addEventListener('scroll', handleResizeOrScroll, { passive: true, capture: true })
+
+    return () => {
+      window.removeEventListener('resize', handleResizeOrScroll)
+      window.removeEventListener('scroll', handleResizeOrScroll, true)
+    }
+  }, [isOpen, updatePosition])
+
+  // Close when clicking/tapping outside or pressing Escape
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
@@ -102,10 +161,12 @@ export default function NotificationBell({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside, { passive: true })
       document.addEventListener('keydown', handleKeyDown)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
@@ -133,7 +194,16 @@ export default function NotificationBell({
       router.push(targetUrl)
     } else {
       // Informative/greeting notification — do not redirect
-      // Kept open or acknowledged without page change
+    }
+  }
+
+  const handleToggleOpen = () => {
+    if (!isOpen) {
+      updatePosition()
+      loadNotifications()
+      setIsOpen(true)
+    } else {
+      setIsOpen(false)
     }
   }
 
@@ -232,10 +302,7 @@ export default function NotificationBell({
       <Button
         variant="ghost"
         size="icon-sm"
-        onClick={() => {
-          setIsOpen(!isOpen)
-          if (!isOpen) loadNotifications()
-        }}
+        onClick={handleToggleOpen}
         aria-label={t('notifications')}
         title={t('notifications')}
       >
@@ -250,14 +317,22 @@ export default function NotificationBell({
       {/* Floating Popover Panel */}
       {isOpen && (
         <div
-          className={`absolute top-full mt-2 w-80 sm:w-96 bg-card rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
+          role="dialog"
+          aria-label={t('notifications')}
+          style={{
+            width: position ? `${position.width}px` : 'min(384px, calc(100vw - 24px))',
+            left: position ? `${position.left}px` : 0,
+            maxHeight: position ? `${position.maxHeight}px` : 'min(520px, 80vh)',
+            transformOrigin: position?.placement === 'top' ? 'bottom' : 'top',
+          }}
+          className={`absolute ${
+            position?.placement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+          } bg-card rounded-2xl sm:rounded-3xl border border-line shadow-2xl z-50 overflow-hidden animate-scaleIn flex flex-col`}
         >
           {/* Popover Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-line bg-surface/70">
-            <div className="flex items-center gap-2">
-              <Text as="h3" size="xs" weight="black" color="default" uppercase className="tracking-wider">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line bg-surface/70 shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Text as="h3" size="xs" weight="black" color="default" uppercase className="tracking-wider shrink-0">
                 {t('notifications')}
               </Text>
               {unreadCount > 0 && (
@@ -272,7 +347,8 @@ export default function NotificationBell({
                 variant="ghost"
                 size="xs"
                 onClick={handleMarkAllAsRead}
-                leftIcon={<CheckCheck className="text-primary" />}
+                leftIcon={<CheckCheck className="text-primary w-3.5 h-3.5" />}
+                className="shrink-0"
               >
                 <Text color="brand" size="xs">
                   {t('notificationsMarkAllRead')}
@@ -282,7 +358,7 @@ export default function NotificationBell({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-84 overflow-y-auto divide-y divide-line">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-line custom-scrollbar overscroll-contain">
             {loading ? (
               <div className="py-8 text-center text-xs text-muted flex items-center justify-center gap-2">
                 <div className="w-4 h-4 rounded-full border-2 border-orange-500/20 border-t-orange-600 animate-spin" />
@@ -311,7 +387,7 @@ export default function NotificationBell({
                   <div
                     key={item.id}
                     onClick={() => handleNotificationClick(item)}
-                    className="p-3.5 transition-colors flex items-start gap-3 text-left bg-card hover:bg-card-hover cursor-pointer"
+                    className="p-3 sm:p-3.5 transition-colors flex items-start gap-3 text-left bg-card hover:bg-card-hover cursor-pointer"
                   >
                     {getNotificationIcon(item.type)}
 
@@ -331,23 +407,23 @@ export default function NotificationBell({
                         )}
                       </div>
 
-                      <Text size="2xs" color="secondary" clamp={2} className="leading-relaxed">
+                      <Text size="2xs" color="secondary" clamp={2} className="leading-relaxed break-words">
                         {item.content}
                       </Text>
 
-                      <div className="flex items-center justify-between text-[10px] pt-1">
-                        <Text as="span" size="3xs" color="subtle" mono>
+                      <div className="flex items-center justify-between text-[10px] pt-1 gap-2 flex-wrap sm:flex-nowrap">
+                        <Text as="span" size="3xs" color="subtle" mono className="shrink-0">
                           {formatTimeAgo(item.createdAt)}
                         </Text>
 
                         {hasRedirect ? (
-                          <Button variant="ghost" rightIcon={<ChevronRight className="text-accent" />}>
+                          <Button variant="ghost" size="xs" rightIcon={<ChevronRight className="text-accent w-3 h-3" />}>
                             <Text color="orange" size="xs" className="hover:underline">
                               {t('viewDetail')}
                             </Text>
                           </Button>
                         ) : (
-                          <Button variant="ghost" leftIcon={<CheckCircle2 className="text-success" />}>
+                          <Button variant="ghost" size="xs" leftIcon={<CheckCircle2 className="text-success w-3 h-3" />}>
                             <Text color="success" size="xs">
                               {t('notificationsSystemAnnouncement')}
                             </Text>
@@ -362,9 +438,10 @@ export default function NotificationBell({
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-line bg-surface/50 text-center">
+          <div className="p-2 border-t border-line bg-surface/50 text-center shrink-0">
             <Button
               variant="ghost"
+              size="sm"
               onClick={() => setIsOpen(false)}
               className="w-full"
             >
