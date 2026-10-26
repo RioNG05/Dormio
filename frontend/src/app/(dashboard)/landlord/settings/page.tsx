@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Building2,
@@ -15,13 +14,13 @@ import {
   ExternalLink,
   Phone,
   Layers,
-  Sparkles,
   Plus,
   Trash2,
+  HouseWifi,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
-import { useTranslations } from '@/context/LanguageContext'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import {
   Button,
   Checkbox,
@@ -33,6 +32,7 @@ import {
   TextInput,
   TextareaInput,
   EmptyState,
+  Modal,
 } from '@/components/ui'
 import { MapAddressPicker, type SelectedMapAddress } from '@/components/landlord/MapAddressPicker'
 import { CoverPhotoUpload } from '@/components/landlord/CoverPhotoUpload'
@@ -55,6 +55,7 @@ import {
   DEFAULT_AMENITIES,
   type AmenityItem,
 } from '../setup/types'
+import { formatCurrency, resolveErrorMessage } from '@/utils'
 
 export interface SettingRoomTypeItem {
   id: string
@@ -101,7 +102,10 @@ const INITIAL_FORM_DATA: HouseFormData = {
 
 export default function LandlordSettingsPage() {
   const router = useRouter()
+  const { locale } = useLanguage()
   const t = useTranslations('landlord')
+  const tCommon = useTranslations('common')
+  const tErrors = useTranslations('errors')
   const { toast } = useToast()
   const {
     user,
@@ -132,6 +136,11 @@ export default function LandlordSettingsPage() {
 
   // Quick add amenity input state
   const [newAmenityName, setNewAmenityName] = useState('')
+
+  // Confirmation modals state (Rule 10)
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
+  const [pendingSwitchHouseId, setPendingSwitchHouseId] = useState<string | null>(null)
+  const [roomTypeToDelete, setRoomTypeToDelete] = useState<SettingRoomTypeItem | null>(null)
 
   // Initialize selected house from active building or first available
   useEffect(() => {
@@ -232,7 +241,6 @@ export default function LandlordSettingsPage() {
       })
       .catch(err => {
         console.warn('Direct getBoardingHouseById failed, falling back to list:', err)
-        // Fallback: search within getMyBoardingHouses
         getMyBoardingHouses({ silent: true })
           .then(list => {
             if (!isMounted) return
@@ -246,7 +254,8 @@ export default function LandlordSettingsPage() {
           .catch(fallbackErr => {
             console.error('Failed to fallback load boarding house:', fallbackErr)
             if (isMounted) {
-              toast.error(t('landlordSettingsSaveError'))
+              const msg = resolveErrorMessage(fallbackErr, tErrors, t('landlordSettingsSaveError'))
+              toast.error(msg)
             }
           })
       })
@@ -259,7 +268,7 @@ export default function LandlordSettingsPage() {
     return () => {
       isMounted = false
     }
-  }, [selectedHouseId, toast, t])
+  }, [selectedHouseId, toast, t, tErrors])
 
   // Resolve province code when provinces list or formData.province is updated
   useEffect(() => {
@@ -327,9 +336,27 @@ export default function LandlordSettingsPage() {
     }
   }
 
-  const handleSwitchBuilding = (houseId: string) => {
-    setSelectedHouseId(houseId)
-    selectBuilding(houseId)
+  // Detect whether the user has modified any form field
+  const hasChanges = Boolean(
+    originalData && JSON.stringify(formData) !== JSON.stringify(originalData),
+  )
+
+  const handleSwitchBuildingChange = (houseId: string) => {
+    if (houseId === selectedHouseId) return
+    if (hasChanges) {
+      setPendingSwitchHouseId(houseId)
+    } else {
+      setSelectedHouseId(houseId)
+      selectBuilding(houseId)
+    }
+  }
+
+  const handleConfirmSwitchBuilding = () => {
+    if (pendingSwitchHouseId) {
+      setSelectedHouseId(pendingSwitchHouseId)
+      selectBuilding(pendingSwitchHouseId)
+      setPendingSwitchHouseId(null)
+    }
   }
 
   // ─── ROOM TYPES HANDLERS ──────────────────────────────────────────────────
@@ -353,15 +380,29 @@ export default function LandlordSettingsPage() {
     }))
   }
 
-  const handleRemoveRoomType = (id: string) => {
+  const handleRequestRemoveRoomType = (rt: SettingRoomTypeItem) => {
     if (formData.roomTypes.length <= 1) {
       toast.warning(t('landlordSettingsRoomTypeMinWarning'))
       return
     }
+    // If the room type was just added and is blank, remove immediately
+    if (rt.isNew && !rt.name.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        roomTypes: prev.roomTypes.filter(item => item.id !== rt.id),
+      }))
+      return
+    }
+    setRoomTypeToDelete(rt)
+  }
+
+  const handleConfirmRemoveRoomType = () => {
+    if (!roomTypeToDelete) return
     setFormData(prev => ({
       ...prev,
-      roomTypes: prev.roomTypes.filter(rt => rt.id !== id),
+      roomTypes: prev.roomTypes.filter(rt => rt.id !== roomTypeToDelete.id),
     }))
+    setRoomTypeToDelete(null)
   }
 
   // ─── AMENITIES HANDLERS ───────────────────────────────────────────────────
@@ -408,11 +449,17 @@ export default function LandlordSettingsPage() {
     return item.name
   }
 
-  const handleReset = () => {
+  const handleResetClick = () => {
+    if (!hasChanges) return
+    setIsResetConfirmOpen(true)
+  }
+
+  const handleConfirmReset = () => {
     if (originalData) {
       setFormData(originalData)
       setNewAmenityName('')
     }
+    setIsResetConfirmOpen(false)
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -438,6 +485,10 @@ export default function LandlordSettingsPage() {
 
     try {
       setIsSaving(true)
+      const parsedPaymentDate = formData.monthlyPaymentDate
+        ? Math.min(31, Math.max(1, parseInt(formData.monthlyPaymentDate, 10) || 5))
+        : 5
+
       const payload: UpdateBoardingHousePayload = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
@@ -450,7 +501,7 @@ export default function LandlordSettingsPage() {
         houseNumber: formData.houseNumber.trim(),
         totalFloor: formData.totalFloor ? parseInt(formData.totalFloor, 10) : undefined,
         builtAt: formData.builtAt ? new Date(formData.builtAt).toISOString() : undefined,
-        monthlyPaymentDate: formData.monthlyPaymentDate ? parseInt(formData.monthlyPaymentDate, 10) : 5,
+        monthlyPaymentDate: parsedPaymentDate,
         thumbnail: formData.thumbnail || undefined,
         roomTypes: validRoomTypes.map(rt => ({
           id: rt.isNew ? undefined : rt.id,
@@ -496,16 +547,12 @@ export default function LandlordSettingsPage() {
       toast.success(t('landlordSettingsSavedSuccess'))
     } catch (error) {
       console.error('Failed to update boarding house:', error)
-      toast.error(t('landlordSettingsSaveError'))
+      const errorMsg = resolveErrorMessage(error, tErrors, t('landlordSettingsSaveError'))
+      toast.error(errorMsg)
     } finally {
       setIsSaving(false)
     }
   }
-
-  // Detect whether the user has modified any form field
-  const hasChanges = Boolean(
-    originalData && JSON.stringify(formData) !== JSON.stringify(originalData),
-  )
 
   // Empty state when landlord has no properties
   if (!isBuildingsLoading && buildings.length === 0) {
@@ -527,7 +574,7 @@ export default function LandlordSettingsPage() {
 
   const roomCount = loadedHouse?.totalRooms ?? activeBuilding?.totalRooms ?? 0
   const servicesList = loadedHouse?.services ?? []
-  const contactPhone = user?.phone || '0988777666'
+  const contactPhone = user?.phone || '—'
   const selectedAmenitiesCount = formData.amenities.filter(a => a.checked).length
 
   return (
@@ -549,7 +596,7 @@ export default function LandlordSettingsPage() {
             <SelectInput
               label={t('landlordSettingsSelectPropertyLabel')}
               value={selectedHouseId}
-              onChange={e => handleSwitchBuilding(e.target.value)}
+              onChange={e => handleSwitchBuildingChange(e.target.value)}
               disabled={isLoadingHouse || isSaving}
             >
               {buildings.map(b => (
@@ -567,11 +614,11 @@ export default function LandlordSettingsPage() {
         {/* Status Card */}
         <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
+            <Text as="span" size="xs" weight="bold" color="secondary" className="uppercase tracking-wider">
               {t('landlordSettingsTabBuildingInfo')}
-            </span>
+            </Text>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-soft text-success border border-success-subtle">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               {t('landlordSettingsStatusActive')}
             </span>
           </div>
@@ -586,9 +633,9 @@ export default function LandlordSettingsPage() {
         {/* Total Rooms Card */}
         <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
+            <Text as="span" size="xs" weight="bold" color="secondary" className="uppercase tracking-wider">
               {t('landlordSettingsTotalRoomsLabel')}
-            </span>
+            </Text>
             <div className="p-1.5 rounded-lg bg-info-soft text-info">
               <Bed className="w-4 h-4" />
             </div>
@@ -601,20 +648,23 @@ export default function LandlordSettingsPage() {
               {t('landlordSettingsTotalRoomsSuffix')}
             </Text>
           </div>
-          <Link
+          <Button
             href="/landlord/rooms"
-            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+            variant="ghost"
+            size="sm"
+            rightIcon={<ExternalLink />}
+            className="p-0 h-auto font-bold text-xs text-primary hover:text-primary-hover hover:bg-transparent justify-start"
           >
-            {t('landlordSettingsManageRoomsBtn')} <ExternalLink className="w-3 h-3" />
-          </Link>
+            {t('landlordSettingsManageRoomsBtn')}
+          </Button>
         </div>
 
         {/* Services Card */}
         <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
+            <Text as="span" size="xs" weight="bold" color="secondary" className="uppercase tracking-wider">
               {t('landlordServicesTitle')}
-            </span>
+            </Text>
             <div className="p-1.5 rounded-lg bg-warning-soft text-warning">
               <Zap className="w-4 h-4" />
             </div>
@@ -624,23 +674,26 @@ export default function LandlordSettingsPage() {
               {servicesList.length}
             </Text>
             <Text as="span" size="xs" color="secondary">
-              dịch vụ
+              {t('landlordSettingsServicesCountSuffix')}
             </Text>
           </div>
-          <Link
+          <Button
             href="/landlord/services"
-            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+            variant="ghost"
+            size="sm"
+            rightIcon={<ExternalLink />}
+            className="p-0 h-auto font-bold text-xs text-primary hover:text-primary-hover hover:bg-transparent justify-start"
           >
-            {t('landlordSettingsManageServicesBtn')} <ExternalLink className="w-3 h-3" />
-          </Link>
+            {t('landlordSettingsManageServicesBtn')}
+          </Button>
         </div>
 
         {/* Room Types Card */}
         <div className="bg-card rounded-2xl p-4 border border-line shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted uppercase tracking-wider">
+            <Text as="span" size="xs" weight="bold" color="secondary" className="uppercase tracking-wider">
               {t('landlordSettingsRoomTypesSection')}
-            </span>
+            </Text>
             <div className="p-1.5 rounded-lg bg-deposit-soft text-deposit">
               <Layers className="w-4 h-4" />
             </div>
@@ -650,11 +703,13 @@ export default function LandlordSettingsPage() {
               {formData.roomTypes.length}
             </Text>
             <Text as="span" size="xs" color="secondary">
-              loại phòng
+              {t('landlordSettingsRoomTypesCountSuffix')}
             </Text>
           </div>
           <Text as="p" size="xs" color="secondary" className="truncate">
-            {formData.totalFloor ? `${formData.totalFloor} tầng` : 'Nhiều tầng'}
+            {formData.totalFloor
+              ? t('landlordSettingsFloorsCountSuffix', { count: formData.totalFloor })
+              : t('landlordSettingsMultipleFloors')}
           </Text>
         </div>
       </div>
@@ -699,7 +754,7 @@ export default function LandlordSettingsPage() {
               {/* Contact Phone (Prefilled with Landlord Phone) */}
               <TextInput
                 label={t('landlordSettingsPhoneContact')}
-                helperText="Số hotline / liên hệ hiển thị cho khách thuê"
+                helperText={t('landlordSettingsPhoneContactHelper')}
                 value={contactPhone}
                 readOnly
                 disabled
@@ -718,7 +773,7 @@ export default function LandlordSettingsPage() {
                 disabled={isSaving}
               />
 
-              {/* Monthly Payment Date */}
+              {/* Monthly Payment Date (Rule 19: 1–31, default 5) */}
               <NumberInput
                 label={t('landlordSetupMonthlyPaymentDateLabel')}
                 helperText={t('landlordSetupMonthlyPaymentDateHint')}
@@ -747,7 +802,8 @@ export default function LandlordSettingsPage() {
                   value={formData.thumbnail}
                   onChange={url => handleUpdateField('thumbnail', url)}
                   label={t('landlordSetupThumbnailLabel')}
-                  hint={t('landlordSetupThumbnailHint')}
+                  hint={t('landlordSetupThumbnailUploadHint')}
+                  maxSizeMb={15}
                 />
               </div>
 
@@ -850,6 +906,17 @@ export default function LandlordSettingsPage() {
                   />
                 </div>
               </Form.Grid>
+
+              {/* Map Address Picker */}
+              {/* <div className="pt-2">
+                <MapAddressPicker
+                  provinces={provinces}
+                  initialAddress={[formData.houseNumber, formData.street, formData.ward, formData.province]
+                    .filter(Boolean)
+                    .join(', ')}
+                  onSelectAddress={handleMapAddressSelect}
+                />
+              </div> */}
             </div>
           </Form.Section>
 
@@ -879,9 +946,9 @@ export default function LandlordSettingsPage() {
                     className="p-3.5 rounded-2xl bg-surface/70 border border-line space-y-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-sm text-foreground truncate">
+                      <Text as="span" size="sm" weight="bold" className="text-foreground truncate">
                         {service.name}
-                      </span>
+                      </Text>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           service.isMetered
@@ -895,10 +962,12 @@ export default function LandlordSettingsPage() {
                       </span>
                     </div>
                     <div className="flex items-baseline justify-between text-xs">
-                      <span className="text-muted font-medium">Đơn giá:</span>
-                      <span className="font-extrabold text-primary">
-                        {Number(service.price).toLocaleString('vi-VN')} đ / {service.unit}
-                      </span>
+                      <Text as="span" size="xs" color="secondary" weight="medium">
+                        {t('landlordSettingsServiceUnitPrice')}
+                      </Text>
+                      <Text as="span" size="xs" weight="black" className="text-primary">
+                        {formatCurrency(service.price, locale)} / {service.unit}
+                      </Text>
                     </div>
                   </div>
                 ))}
@@ -916,7 +985,7 @@ export default function LandlordSettingsPage() {
                 type="button"
                 variant="outline"
                 size="sm"
-                leftIcon={<Plus className="w-4 h-4" />}
+                leftIcon={<Plus />}
                 onClick={handleAddRoomType}
                 disabled={isSaving}
               >
@@ -966,11 +1035,11 @@ export default function LandlordSettingsPage() {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleRemoveRoomType(rt.id)}
+                            onClick={() => handleRequestRemoveRoomType(rt)}
                             title={t('landlordSetupDeleteRoomType')}
                             disabled={isSaving}
                           >
-                            <Trash2 className="w-4 h-4 text-danger" />
+                            <Trash2 className="text-danger" />
                           </Button>
                         )}
                       </div>
@@ -983,7 +1052,7 @@ export default function LandlordSettingsPage() {
 
           {/* Section 5: Boarding House Amenities Configuration */}
           <Form.Section
-            icon={<Sparkles className="w-4 h-4" />}
+            icon={<HouseWifi className="w-4 h-4" />}
             title={t('landlordSettingsAmenitiesSection')}
             description={t('landlordSettingsAmenitiesDesc')}
             actions={
@@ -1014,7 +1083,7 @@ export default function LandlordSettingsPage() {
                   type="button"
                   variant="secondary"
                   size="md"
-                  leftIcon={<Plus className="w-4 h-4" />}
+                  leftIcon={<Plus />}
                   onClick={handleAddAmenity}
                   disabled={!newAmenityName.trim() || isSaving}
                   className="self-end sm:self-auto shrink-0"
@@ -1065,7 +1134,7 @@ export default function LandlordSettingsPage() {
                               disabled={isSaving}
                               className="opacity-60 sm:opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-danger-soft transition-opacity shrink-0 ml-1"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="text-muted hover:text-danger" />
                             </Button>
                           </div>
                         }
@@ -1080,8 +1149,9 @@ export default function LandlordSettingsPage() {
           {/* Form Actions */}
           <Form.Actions align="between" className="pt-4 border-t border-line">
             <Button
+              type="button"
               variant="outline"
-              onClick={handleReset}
+              onClick={handleResetClick}
               disabled={!hasChanges || isSaving}
               leftIcon={<RotateCcw />}
             >
@@ -1099,6 +1169,99 @@ export default function LandlordSettingsPage() {
           </Form.Actions>
         </Form>
       )}
+
+      {/* Confirmation Modal: Discard / Reset changes (Rule 10) */}
+      <Modal
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        size="sm"
+        title={t('landlordSettingsDiscardModalTitle')}
+      >
+        <div className="space-y-4">
+          <Text as="p" size="sm" color="secondary">
+            {t('landlordSettingsDiscardModalDesc')}
+          </Text>
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto"
+              onClick={() => setIsResetConfirmOpen(false)}
+            >
+              {t('landlordSettingsDiscardModalKeepEditing')}
+            </Button>
+            <Button
+              variant="danger"
+              className="w-full sm:w-auto"
+              onClick={handleConfirmReset}
+            >
+              {t('landlordSettingsDiscardModalConfirm')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Confirmation Modal: Switch property with unsaved changes (Rule 10) */}
+      <Modal
+        isOpen={Boolean(pendingSwitchHouseId)}
+        onClose={() => setPendingSwitchHouseId(null)}
+        size="sm"
+        title={t('landlordSettingsSwitchPropertyDiscardTitle')}
+      >
+        <div className="space-y-4">
+          <Text as="p" size="sm" color="secondary">
+            {t('landlordSettingsSwitchPropertyDiscardDesc')}
+          </Text>
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto"
+              onClick={() => setPendingSwitchHouseId(null)}
+            >
+              {t('landlordSettingsDiscardModalKeepEditing')}
+            </Button>
+            <Button
+              variant="danger"
+              className="w-full sm:w-auto"
+              onClick={handleConfirmSwitchBuilding}
+            >
+              {t('landlordSettingsDiscardModalConfirm')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Confirmation Modal: Delete room type (Rule 10) */}
+      <Modal
+        isOpen={Boolean(roomTypeToDelete)}
+        onClose={() => setRoomTypeToDelete(null)}
+        size="sm"
+        title={t('landlordSettingsDeleteRoomTypeModalTitle')}
+      >
+        <div className="space-y-4">
+          <Text as="p" size="sm" color="secondary">
+            {t('landlordSettingsDeleteRoomTypeModalDesc').replace(
+              '{name}',
+              roomTypeToDelete?.name || '',
+            )}
+          </Text>
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto"
+              onClick={() => setRoomTypeToDelete(null)}
+            >
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              className="w-full sm:w-auto"
+              onClick={handleConfirmRemoveRoomType}
+            >
+              {t('landlordSettingsDeleteRoomTypeConfirm')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

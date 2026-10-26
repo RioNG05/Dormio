@@ -231,7 +231,8 @@ export function Step1GeneralInfo({
               onChange={url => onUpdateInfo('thumbnail', url)}
               onFileChange={onThumbnailFileChange}
               label={t('landlordSetupThumbnailLabel')}
-              hint={t('landlordSetupThumbnailHint')}
+              hint={t('landlordSetupThumbnailUploadHint')}
+              maxSizeMb={15}
             />
           </div>
 
