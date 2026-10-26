@@ -1525,6 +1525,21 @@ export class InvoicesService {
   }
 
   /**
+   * Helper to check if a service unit is billed on a per-person basis
+   */
+  private isPerPersonService(unit?: string): boolean {
+    if (!unit) return false
+    const u = unit.toLowerCase().trim()
+    return (
+      u === 'người/tháng' ||
+      u === 'người' ||
+      u.includes('người') ||
+      u.includes('nguoi') ||
+      u.includes('person')
+    )
+  }
+
+  /**
    * UC-L-06 Part 1 Step 3 / Part 3:
    * Automated flat-rate invoice generation on billing day for rooms with NO metered services
    */
@@ -1535,6 +1550,9 @@ export class InvoicesService {
       where: { id: roomId },
       include: {
         roomType: true,
+        occupants: {
+          where: { status: 'active' },
+        },
         roomServices: {
           where: {
             service: { isMetered: false, status: 'active' },
@@ -1579,14 +1597,19 @@ export class InvoicesService {
       },
     ]
 
+    const activeOccupantsCount = Math.max(1, room.occupants?.length || 1)
+
     for (const rs of room.roomServices) {
+      const isPerPerson = this.isPerPersonService(rs.service.unit)
+      const qty = isPerPerson ? activeOccupantsCount : 1
       const priceNum = Number(rs.service.price)
-      totalAmount += priceNum
+      const itemAmount = Math.round(priceNum * qty)
+      totalAmount += itemAmount
       lineItemsToCreate.push({
         serviceId: rs.serviceId,
-        quantity: 1,
+        quantity: qty,
         unitPrice: rs.service.price,
-        amount: Math.round(priceNum),
+        amount: itemAmount,
       })
     }
 
@@ -1627,6 +1650,9 @@ export class InvoicesService {
       include: {
         room: {
           include: {
+            occupants: {
+          where: { status: 'active' },
+        },
             roomServices: {
               where: {
                 service: {
@@ -1683,14 +1709,19 @@ export class InvoicesService {
       },
     ]
 
+    const activeOccupantsCount = Math.max(1, contract.room.occupants?.length || 1)
+
     for (const rs of contract.room.roomServices) {
+      const isPerPerson = this.isPerPersonService(rs.service.unit)
+      const qty = isPerPerson ? activeOccupantsCount : 1
       const priceNum = Number(rs.service.price)
-      totalAmount += priceNum
+      const itemAmount = Math.round(priceNum * qty)
+      totalAmount += itemAmount
       lineItemsToCreate.push({
         serviceId: rs.serviceId,
-        quantity: 1,
+        quantity: qty,
         unitPrice: rs.service.price,
-        amount: Math.round(priceNum),
+        amount: itemAmount,
       })
     }
 
@@ -1755,6 +1786,9 @@ export class InvoicesService {
       include: {
         room: {
           include: {
+            occupants: {
+          where: { status: 'active' },
+        },
             roomServices: {
               where: {
                 service: {
@@ -1816,14 +1850,19 @@ export class InvoicesService {
     const flatServices = contract.room.roomServices.filter(rs => !rs.service.isMetered)
     const meteredServices = contract.room.roomServices.filter(rs => rs.service.isMetered)
 
+    const activeOccupantsCount = Math.max(1, contract.room.occupants?.length || 1)
+
     for (const rs of flatServices) {
+      const isPerPerson = this.isPerPersonService(rs.service.unit)
+      const qty = isPerPerson ? activeOccupantsCount : 1
       const priceNum = Number(rs.service.price)
-      totalAmount += priceNum
+      const itemAmount = Math.round(priceNum * qty)
+      totalAmount += itemAmount
       lineItemsToCreate.push({
         serviceId: rs.serviceId,
-        quantity: 1,
+        quantity: qty,
         unitPrice: rs.service.price,
-        amount: Math.round(priceNum),
+        amount: itemAmount,
       })
     }
 

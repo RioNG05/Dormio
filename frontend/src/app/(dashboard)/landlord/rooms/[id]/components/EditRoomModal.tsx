@@ -9,8 +9,10 @@ import {
   Checkbox,
   Text,
   Modal,
+  SelectInput,
 } from '@/components/ui'
-import { useTranslations } from '@/context/LanguageContext'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { getServiceUnitOptions } from '@/constants/service-units'
 import { Room, defaultRoomServices } from '../../data'
 import { RoomCustomServiceItem } from './types'
 import { getAmenityLabel } from './RoomSidebar'
@@ -54,6 +56,7 @@ export const EditRoomModal: React.FC<EditRoomModalProps> = ({
   onSave,
 }) => {
   const t = useTranslations('landlord')
+  const { locale } = useLanguage()
 
   const [roomNumber, setRoomNumber] = useState(room.roomNumber)
   const [price, setPrice] = useState(room.price?.replace(' ₫', '') || '3000000')
@@ -226,27 +229,41 @@ export const EditRoomModal: React.FC<EditRoomModalProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     {!service.isRemovable ? (
-                      <Text as="span" weight="bold" size="xs" color="default">
-                        {service.name}
-                      </Text>
+                      <>
+                        <Text as="span" weight="bold" size="xs" color="default">
+                          {service.name}
+                        </Text>
+                        <Text as="span" size="2xs" color="subtle" weight="medium">
+                          ({service.unit})
+                        </Text>
+                      </>
                     ) : (
-                      <TextInput
-                        containerClassName="w-28 space-y-0"
-                        className="py-1 text-xs"
-                        value={service.name}
-                        onChange={e =>
-                          setServices(prev =>
-                            prev.map(s =>
-                              s.id === service.id ? { ...s, name: e.target.value } : s,
-                            ),
-                          )
-                        }
-                        placeholder={t('landlordRoomDetailServiceNamePlaceholder')}
-                      />
+                      <>
+                        <TextInput
+                          containerClassName="w-28 space-y-0"
+                          className="py-1 text-xs"
+                          value={service.name}
+                          onChange={e =>
+                            setServices(prev =>
+                              prev.map(s =>
+                                s.id === service.id ? { ...s, name: e.target.value } : s,
+                              ),
+                            )
+                          }
+                          placeholder={t('landlordRoomDetailServiceNamePlaceholder')}
+                        />
+                        <SelectInput
+                          containerClassName="w-32 space-y-0"
+                          className="py-1 text-xs"
+                          value={service.unit}
+                          onChange={(e: any) => setServices(prev => prev.map(s => s.id === service.id ? { ...s, unit: e.target.value } : s,
+                              ),
+                            )
+                          }
+                          options={getServiceUnitOptions(false, locale)}
+                        />
+                      </>
                     )}
-                    <Text as="span" size="2xs" color="subtle" weight="medium">
-                      ({service.unit})
-                    </Text>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -305,7 +322,7 @@ export const EditRoomModal: React.FC<EditRoomModalProps> = ({
                     name: '',
                     defaultPrice: '0',
                     customPrice: '0',
-                    unit: 'đ/tháng',
+                    unit: 'phòng/tháng',
                     isCustom: true,
                     isRemovable: true,
                   },

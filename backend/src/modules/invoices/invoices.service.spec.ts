@@ -893,5 +893,68 @@ describe('InvoicesService', () => {
         )
       })
     })
+    describe('Per-Person Service Billing Calculation', () => {
+      it('should multiply per-person service price by active occupants count in generateMonthlyDraftInvoice', async () => {
+        const dueDate = new Date('2026-10-05')
+        mockPrisma.contract.findUnique.mockResolvedValue({
+          id: 'contract-test-1',
+          rentPrice: 3000000,
+          status: 'active',
+          room: {
+            id: 'room-test-1',
+            occupants: [
+              { id: 'occ-1', status: 'active' },
+              { id: 'occ-2', status: 'active' },
+              { id: 'occ-3', status: 'active' },
+            ],
+            roomServices: [
+              {
+                serviceId: 'srv-trash',
+                service: {
+                  name: 'Tiền rác',
+                  price: 50000,
+                  unit: 'người/tháng',
+                  isMetered: false,
+                  status: 'active',
+                },
+              },
+              {
+                serviceId: 'srv-wifi',
+                service: {
+                  name: 'Internet',
+                  price: 100000,
+                  unit: 'phòng/tháng',
+                  isMetered: false,
+                  status: 'active',
+                },
+              },
+            ],
+            boardingHouse: { id: 'bh-1' },
+          },
+        })
+
+        mockPrisma.invoice.findFirst.mockResolvedValue(null)
+        mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+          return cb({
+            invoice: {
+              create: jest.fn().mockImplementation(args => ({
+                id: 'inv-created-1',
+                ...args.data,
+              })),
+            },
+            invoiceItem: {
+              create: jest.fn(),
+            },
+            auditLog: {
+              create: jest.fn(),
+            },
+          })
+        })
+
+        const result = await service.generateMonthlyDraftInvoice('contract-test-1', dueDate)
+        // Rent: 3,000,000 + Trash (50,000 * 3 = 150,000) + Wifi (100,000 * 1 = 100,000) = 3,250,000
+        expect(Number(result.totalAmount)).toBe(3250000)
+      })
+    })
   })
 })

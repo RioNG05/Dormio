@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { getServiceUnitOptions, isPerPersonUnit } from '@/constants/service-units'
 import {
   serviceService,
   ServiceItem,
@@ -227,20 +228,17 @@ export default function ServicesPage() {
 
     // Generic fallback
     let typeLabel = t('landlordServicesTypeFixed')
-    if (isMetered) typeLabel = t('landlordServicesTypeMetered')
-    else if (
+    if (isMetered) {
+      typeLabel = t('landlordServicesTypeMetered')
+    } else if (isPerPersonUnit(unit)) {
+      typeLabel = t('landlordServicesTypeFixedPerson')
+    } else if (
       lowerUnit.includes('phòng') ||
       lowerUnit.includes('phong') ||
       lowerUnit.includes('room')
-    )
+    ) {
       typeLabel = t('landlordServicesTypeFixedRoom')
-    else if (
-      lowerUnit.includes('người') ||
-      lowerUnit.includes('nguoi') ||
-      lowerUnit.includes('person')
-    )
-      typeLabel = t('landlordServicesTypeFixedPerson')
-    else if (
+    } else if (
       lowerUnit.includes('xe') ||
       lowerUnit.includes('chiếc') ||
       lowerUnit.includes('vehicle')
@@ -968,8 +966,14 @@ export default function ServicesPage() {
               label={t('landlordServicesFormMeasurementLabel')}
               value={formIsMetered ? 'metered' : 'fixed'}
               onChange={e => {
-                setFormIsMetered(e.target.value === 'metered')
+                const isMetered = e.target.value === 'metered'
+                setFormIsMetered(isMetered)
                 setIsDirty(true)
+                if (isMetered && formUnit !== 'kWh' && formUnit !== 'm³') {
+                  setFormUnit('kWh')
+                } else if (!isMetered && (formUnit === 'kWh' || formUnit === 'm³')) {
+                  setFormUnit('phòng/tháng')
+                }
               }}
               options={[
                 { value: 'metered', label: t('landlordServicesFormOptionMetered') },
@@ -998,19 +1002,18 @@ export default function ServicesPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <TextInput
+            <SelectInput
               label={t('landlordServicesFormUnitLabel')}
               required
-              type="text"
-              placeholder={t('landlordServicesFormUnitPlaceholder')}
               value={formUnit}
               onChange={e => {
                 setFormUnit(e.target.value)
                 setIsDirty(true)
               }}
+              options={getServiceUnitOptions(formIsMetered, locale)}
               containerClassName="w-full space-y-1"
               labelClassName="block font-extrabold text-foreground/90"
-              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+              className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none bg-card cursor-pointer"
             />
 
             <NumberInput
@@ -1029,6 +1032,15 @@ export default function ServicesPage() {
               className="w-full px-3.5 py-2.5 font-semibold border border-line rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
             />
           </div>
+
+          {isPerPersonUnit(formUnit) && (
+            <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-start gap-2">
+              <span className="text-sm">💡</span>
+              <Text size="xs" color="brand">
+                {t('landlordServicesPerPersonHint')}
+              </Text>
+            </div>
+          )}
 
           <div>
             <SelectInput

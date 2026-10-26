@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { Wrench, Layers, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useTranslations } from '@/context/LanguageContext'
-import { Button, Checkbox, Form, NumberInput, Text, TextInput } from '@/components/ui'
+import { useLanguage, useTranslations } from '@/context/LanguageContext'
+import { getServiceUnitOptions, isPerPersonUnit } from '@/constants/service-units'
+import { Button, Checkbox, Form, NumberInput, Text, TextInput, SelectInput } from '@/components/ui'
 import type { SetupRoomTypePayload, SetupServicePayload } from '@/services/boarding-house.service'
 import type { RoomTypeItem, ServiceItem } from '../types'
 
@@ -35,6 +36,7 @@ export function Step2ServicesAndRoomTypes({
   onNext,
 }: Step2ServicesAndRoomTypesProps) {
   const t = useTranslations('landlord')
+  const { locale } = useLanguage()
 
   return (
     <section className="space-y-6 animate-in fade-in duration-300">
@@ -77,7 +79,7 @@ export function Step2ServicesAndRoomTypes({
                 className="p-4 rounded-2xl border border-line bg-surface/50 space-y-3"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                  <div className="sm:col-span-4">
+                  <div className="sm:col-span-3">
                     <TextInput
                       label={t('landlordSetupServiceNameLabel').replace(
                         '{index}',
@@ -100,12 +102,12 @@ export function Step2ServicesAndRoomTypes({
                     />
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <TextInput
+                  <div className="sm:col-span-3">
+                    <SelectInput
                       label={t('landlordSetupServiceUnitLabel')}
                       value={service.unit}
                       onChange={e => onUpdateService(service.id, 'unit', e.target.value)}
-                      placeholder={t('landlordSetupServiceUnitPlaceholder')}
+                      options={getServiceUnitOptions(Boolean(service.isMetered), locale)}
                     />
                   </div>
 
@@ -114,7 +116,15 @@ export function Step2ServicesAndRoomTypes({
                       size="sm"
                       label={t('landlordSetupServiceMetered')}
                       checked={service.isMetered}
-                      onChange={e => onUpdateService(service.id, 'isMetered', e.target.checked)}
+                      onChange={e => {
+                        const checked = e.target.checked
+                        onUpdateService(service.id, 'isMetered', checked)
+                        if (checked && service.unit !== 'kWh' && service.unit !== 'm³') {
+                          onUpdateService(service.id, 'unit', 'kWh')
+                        } else if (!checked && (service.unit === 'kWh' || service.unit === 'm³')) {
+                          onUpdateService(service.id, 'unit', 'phòng/tháng')
+                        }
+                      }}
                     />
                     <Checkbox
                       size="sm"
@@ -135,6 +145,13 @@ export function Step2ServicesAndRoomTypes({
                     </Button>
                   </div>
                 </div>
+                {isPerPersonUnit(service.unit) && (
+                  <div className="pt-1">
+                    <Text size="2xs" color="brand" weight="medium">
+                      💡 {t('landlordServicesPerPersonHint')}
+                    </Text>
+                  </div>
+                )}
               </div>
             ))
           )}

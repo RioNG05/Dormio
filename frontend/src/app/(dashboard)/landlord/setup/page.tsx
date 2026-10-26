@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Layers, Sparkles, CreditCard } from 'lucide-react'
+import { Building2, Layers, CreditCard, ListFilterPlus } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTranslations } from '@/context/LanguageContext'
 import { Button, Form, Text } from '@/components/ui'
@@ -120,8 +120,16 @@ export default function SetupWizardPage() {
     },
     {
       id: createId(),
+      name: t('landlordSetupDefaultServiceTrash'),
+      unit: 'người/tháng',
+      price: '30000',
+      isMetered: false,
+      autoApplied: true,
+    },
+    {
+      id: createId(),
       name: t('landlordSetupDefaultServiceInternet'),
-      unit: t('landlordSetupDefaultUnitMonth'),
+      unit: 'phòng/tháng',
       price: '100000',
       isMetered: false,
       autoApplied: true,
@@ -144,7 +152,7 @@ export default function SetupWizardPage() {
     area: '22',
     maxOccupants: 2,
     roomTypeIndex: 0,
-    serviceIndices: [0, 1, 2], // default apply initial services
+    serviceIndices: [0, 1, 2, 3], // default apply initial services
   })
 
   // ─── STEP 3: INDIVIDUAL ROOM CUSTOMIZATION OVERRIDES ──────────────────────────
@@ -644,7 +652,7 @@ export default function SetupWizardPage() {
             stepLabel={t('landlordSetupStepNumber')}
             title={t('landlordSetupStep3Title')}
             desc={t('landlordSetupStep3Desc')}
-            icon={<Sparkles className="w-4 h-4" />}
+            icon={<ListFilterPlus className="w-4 h-4" />}
             onClick={() => {
               if (isStep1Valid && isStep2Valid) setStep(3)
             }}
