@@ -160,7 +160,7 @@ export function DashboardUserFooter() {
                   <Text size="2xs" color="secondary" truncate className="leading-snug mb-1.5">
                     {user?.phone || user?.email || ''}
                   </Text>
-                  <Chip variant={getRoleChipVariant()} size="xs">
+                  <Chip variant={getRoleChipVariant()} preventHover size="xs">
                     {getRoleLabel()}
                   </Chip>
                 </div>
@@ -289,12 +289,9 @@ export function DashboardUserFooter() {
               >
                 {user?.name || getRoleLabel()}
               </Text>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
-                <Text size="2xs" color="subtle" truncate className="leading-none">
-                  {getRoleLabel()}
-                </Text>
-              </div>
+              <Text size="2xs" color="subtle" truncate className="leading-none">
+                {getRoleLabel()}
+              </Text>
             </div>
           </div>
           {userMenuOpen ? (
