@@ -75,6 +75,7 @@ interface HouseFormData {
   houseNumber: string
   totalFloor: string
   builtAt: string
+  monthlyPaymentDate: string
   thumbnail: string
   roomTypes: SettingRoomTypeItem[]
   amenities: AmenityItem[]
@@ -92,6 +93,7 @@ const INITIAL_FORM_DATA: HouseFormData = {
   houseNumber: '',
   totalFloor: '',
   builtAt: '',
+  monthlyPaymentDate: '5',
   thumbnail: '',
   roomTypes: [],
   amenities: [],
@@ -209,6 +211,7 @@ export default function LandlordSettingsPage() {
         houseNumber: house.houseNumber || '',
         totalFloor: house.totalFloor ? String(house.totalFloor) : '',
         builtAt: builtAtFormatted,
+        monthlyPaymentDate: house.monthlyPaymentDate ? String(house.monthlyPaymentDate) : '5',
         thumbnail: house.thumbnail || '',
         roomTypes: populatedRoomTypes,
         amenities: loadedAmenities,
@@ -447,6 +450,7 @@ export default function LandlordSettingsPage() {
         houseNumber: formData.houseNumber.trim(),
         totalFloor: formData.totalFloor ? parseInt(formData.totalFloor, 10) : undefined,
         builtAt: formData.builtAt ? new Date(formData.builtAt).toISOString() : undefined,
+        monthlyPaymentDate: formData.monthlyPaymentDate ? parseInt(formData.monthlyPaymentDate, 10) : 5,
         thumbnail: formData.thumbnail || undefined,
         roomTypes: validRoomTypes.map(rt => ({
           id: rt.isNew ? undefined : rt.id,
@@ -711,6 +715,18 @@ export default function LandlordSettingsPage() {
                 value={formData.totalFloor}
                 onChange={e => handleUpdateField('totalFloor', e.target.value)}
                 placeholder={t('landlordSetupTotalFloorPlaceholder')}
+                disabled={isSaving}
+              />
+
+              {/* Monthly Payment Date */}
+              <NumberInput
+                label={t('landlordSetupMonthlyPaymentDateLabel')}
+                helperText={t('landlordSetupMonthlyPaymentDateHint')}
+                min={1}
+                max={31}
+                value={formData.monthlyPaymentDate}
+                onChange={e => handleUpdateField('monthlyPaymentDate', e.target.value)}
+                placeholder="5"
                 disabled={isSaving}
               />
 

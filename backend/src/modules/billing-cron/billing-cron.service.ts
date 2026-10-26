@@ -96,6 +96,28 @@ export class BillingCronService {
         }
       }
     }
+
+    // Process occupied rooms without active contracts (Occupancy-Centric)
+    const rooms = await this.fetchOccupiedRoomsWithoutContractsForDay(targetDay)
+    this.logger.log(
+      `[BillingCron] billing_reminder: ${rooms.length} contract-free room(s) for day ${targetDay}`,
+    )
+    for (const room of rooms) {
+      for (const occ of room.occupants) {
+        try {
+          await this.notificationsService.createBillingReminderNotification({
+            senderId: room.boardingHouse.ownerId,
+            receiverId: occ.tenantId,
+            boardingHouseId: room.boardingHouseId,
+            roomId: room.id,
+          })
+        } catch (err) {
+          this.logger.error(
+            `[BillingCron] Failed billing_reminder for room ${room.id}: ${(err as Error).message}`,
+          )
+        }
+      }
+    }
   }
 
   // ─── Internal: billing_due batch ─────────────────────────────────────────────
@@ -154,6 +176,45 @@ export class BillingCronService {
         }
       }
     }
+
+    // Process occupied rooms without active contracts (Occupancy-Centric)
+    const rooms = await this.fetchOccupiedRoomsWithoutContractsForDay(targetDay)
+    this.logger.log(
+      `[BillingCron] billing_due: ${rooms.length} contract-free room(s) for day ${targetDay}`,
+    )
+    for (const room of rooms) {
+      if (!room.occupants || room.occupants.length === 0) continue
+
+      const hasMeteredServices = room.roomServices.some(
+        rs => rs.service.isMetered && rs.service.status === 'active',
+      )
+
+      try {
+        if (!hasMeteredServices) {
+          await this.invoicesService.generateFlatRateInvoiceForRoom(room.id, new Date())
+        }
+      } catch (err) {
+        this.logger.error(
+          `[BillingCron] Failed flat-rate invoice for room ${room.id}: ${(err as Error).message}`,
+        )
+      }
+
+      for (const occ of room.occupants) {
+        try {
+          await this.notificationsService.createBillingDueNotification({
+            senderId: room.boardingHouse.ownerId,
+            receiverId: occ.tenantId,
+            boardingHouseId: room.boardingHouseId,
+            roomId: room.id,
+            hasMeteredServices,
+          })
+        } catch (err) {
+          this.logger.error(
+            `[BillingCron] Failed billing_due for room ${room.id}: ${(err as Error).message}`,
+          )
+        }
+      }
+    }
   }
 
   // ─── Query helper ─────────────────────────────────────────────────────────────
@@ -164,6 +225,50 @@ export class BillingCronService {
    *
    * Exposed as a separate method to make it independently testable.
    */
+  /**
+   * Fetches all occupied rooms without active contracts whose boarding house
+   * has monthlyPaymentDate = dayOfMonth.
+   */
+  async fetchOccupiedRoomsWithoutContractsForDay(dayOfMonth: number) {
+    return this.prisma.room.findMany({
+      where: {
+        status: 'occupied',
+        contracts: {
+          none: {
+            status: 'active',
+          },
+        },
+        boardingHouse: {
+          monthlyPaymentDate: dayOfMonth,
+        },
+      },
+      select: {
+        id: true,
+        boardingHouseId: true,
+        boardingHouse: {
+          select: {
+            ownerId: true,
+            monthlyPaymentDate: true,
+          },
+        },
+        occupants: {
+          where: { status: 'active' },
+          select: { tenantId: true },
+        },
+        roomServices: {
+          select: {
+            service: {
+              select: {
+                isMetered: true,
+                status: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+
   async fetchActiveContractsForDay(dayOfMonth: number) {
     return this.prisma.contract.findMany({
       where: {

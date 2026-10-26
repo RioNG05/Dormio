@@ -66,6 +66,14 @@ export class PaymentsService {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
       include: {
+        room: {
+          include: {
+            boardingHouse: true,
+            occupants: {
+              where: { status: 'active' },
+            },
+          },
+        },
         contract: {
           include: {
             room: {
@@ -79,18 +87,22 @@ export class PaymentsService {
       },
     })
 
-    if (!invoice || !invoice.contract) {
-      throw new NotFoundException('Không tìm thấy hóa đơn hoặc hợp đồng liên quan.')
+    if (!invoice) {
+      throw new NotFoundException('Không tìm thấy hóa đơn liên quan.')
     }
 
-    // Verify tenant ownership scoping
-    const isTenantParty = invoice.contract.tenantContracts.some(tc => tc.tenantId === userId)
-    if (!isTenantParty) {
+    // Verify tenant ownership scoping (party to contract OR active room occupant)
+    const isTenantParty = invoice.contract?.tenantContracts.some(tc => tc.tenantId === userId)
+    const isRoomOccupant = invoice.room?.occupants.some(o => o.tenantId === userId)
+    if (!isTenantParty && !isRoomOccupant) {
       throw new ForbiddenException('Bạn không có quyền truy cập hoặc thanh toán hóa đơn này.')
     }
 
-    const roomNumber = invoice.contract.room.roomNumber
-    const boardingHouseName = invoice.contract.room.boardingHouse.name
+    const roomNumber = invoice.room?.roomNumber || invoice.contract?.room?.roomNumber || 'Room'
+    const boardingHouseName =
+      invoice.room?.boardingHouse?.name ||
+      invoice.contract?.room?.boardingHouse?.name ||
+      'Dormio'
     const period = this.formatPeriod(invoice.dueDate)
     const amount = Number(invoice.totalAmount)
     const transferSyntax = `TT TRO P${roomNumber} ${period}`
@@ -128,6 +140,14 @@ export class PaymentsService {
       where: { id: invoiceId },
       include: {
         payment: true,
+        room: {
+          include: {
+            boardingHouse: true,
+            occupants: {
+              where: { status: 'active' },
+            },
+          },
+        },
         contract: {
           include: {
             room: {
@@ -141,12 +161,15 @@ export class PaymentsService {
       },
     })
 
-    if (!invoice || !invoice.contract) {
+    if (!invoice) {
       throw new NotFoundException('Không tìm thấy hóa đơn cần thanh toán.')
     }
 
-    // Verify tenant scoping
-    const isTenantParty = invoice.contract.tenantContracts.some(tc => tc.tenantId === userId)
+    // Verify tenant scoping: party to contract OR active room occupant
+    const isTenantParty =
+      Boolean(invoice.contract?.tenantContracts.some(tc => tc.tenantId === userId)) ||
+      Boolean(invoice.room?.occupants.some(o => o.tenantId === userId))
+
     if (!isTenantParty) {
       throw new ForbiddenException('Bạn không có quyền thanh toán hóa đơn này.')
     }
@@ -294,7 +317,7 @@ export class PaymentsService {
         )
       }
 
-      const roomNumber = invoice.contract.room.roomNumber
+      const roomNumber = invoice.room?.roomNumber || invoice.contract?.room?.roomNumber || 'Room'
       const period = this.formatPeriod(invoice.dueDate)
       const syntax = `INV P${roomNumber} ${period}`.substring(0, 25)
 
@@ -320,7 +343,7 @@ export class PaymentsService {
       `${Date.now().toString().slice(-8)}${Math.floor(100 + Math.random() * 900)}`,
     )
 
-    const roomNumber = invoice.contract.room.roomNumber
+    const roomNumber = invoice.room?.roomNumber || invoice.contract?.room?.roomNumber || 'Room'
     const period = this.formatPeriod(invoice.dueDate)
     const syntax = `INV P${roomNumber} ${period}`.substring(0, 25) // PayOS max 25 chars
 

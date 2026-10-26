@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Logger,
@@ -35,6 +36,7 @@ import {
   RoomResponseDto,
 } from './dto/room-response.dto'
 import { UpdateRoomDto } from './dto/update-room.dto'
+import { AddRoomAmenityDto, UpdateRoomAmenityDto } from './dto/manage-room-amenity.dto'
 import { RoomsService } from './rooms.service'
 
 @ApiTags('Rooms')
@@ -209,5 +211,72 @@ export class RoomsController {
   ): Promise<RoomResponseDto> {
     this.logger.log(`PATCH /rooms/${id} called by user ${user.id} for house ${boardingHouseId}`)
     return this.roomsService.updateRoom(boardingHouseId, id, dto)
+  }
+  @Get(':id/amenities')
+  @ApiOperation({
+    summary: 'Get room amenities and available shared amenities (UC-L-05)',
+    description: 'Returns currently attached amenities for this room and available shared amenities from the boarding house pool.',
+  })
+  @ApiOkResponse({ description: 'Room amenities retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Room not found in this property' })
+  async getRoomAmenities(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    this.logger.log(`GET /rooms/${id}/amenities called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.getRoomAmenities(boardingHouseId, id)
+  }
+
+  @Post(':id/amenities')
+  @ApiOperation({
+    summary: 'Attach shared amenity or create new private amenity for a room (UC-L-05)',
+    description: 'Attach an existing shared amenity via amenityId, or create a new private amenity for this room via name.',
+  })
+  @ApiCreatedResponse({ description: 'Amenity attached/created successfully' })
+  @ApiResponse({ status: 404, description: 'Room or shared amenity not found' })
+  async addRoomAmenity(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddRoomAmenityDto,
+  ) {
+    this.logger.log(`POST /rooms/${id}/amenities called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.addRoomAmenity(boardingHouseId, id, dto)
+  }
+
+  @Patch(':id/amenities/:amenityId')
+  @ApiOperation({
+    summary: 'Update an amenity (updating shared modifies all rooms; forking creates private) (UC-L-05)',
+    description: 'Updates amenity attributes. If shared, all rooms using it are updated. If forkForRoom is true, clones into a private amenity for this room.',
+  })
+  @ApiOkResponse({ description: 'Amenity updated successfully' })
+  @ApiResponse({ status: 404, description: 'Room or amenity attachment not found' })
+  async updateRoomAmenity(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('amenityId', ParseUUIDPipe) amenityId: string,
+    @Body() dto: UpdateRoomAmenityDto,
+  ) {
+    this.logger.log(`PATCH /rooms/${id}/amenities/${amenityId} called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.updateRoomAmenity(boardingHouseId, id, amenityId, dto)
+  }
+
+  @Delete(':id/amenities/:amenityId')
+  @ApiOperation({
+    summary: 'Remove an amenity from a room (deletes master record if private) (UC-L-05)',
+    description: 'Detaches amenity from room. If private (isShared = false), completely deletes it from database.',
+  })
+  @ApiOkResponse({ description: 'Amenity removed from room successfully' })
+  @ApiResponse({ status: 404, description: 'Room or amenity attachment not found' })
+  async deleteRoomAmenity(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('amenityId', ParseUUIDPipe) amenityId: string,
+  ) {
+    this.logger.log(`DELETE /rooms/${id}/amenities/${amenityId} called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.deleteRoomAmenity(boardingHouseId, id, amenityId)
   }
 }

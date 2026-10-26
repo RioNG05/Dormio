@@ -461,7 +461,7 @@ export default function RoleDataTab() {
                 value={selectedTenancyId}
                 onChange={e => selectTenancy(e.target.value)}
                 options={tenancies.map(t => ({
-                  value: t.contractId,
+                  value: t.contractId || t.roomId,
                   label: `${t.roomNumber} - ${t.boardingHouseName}`,
                 }))}
               />
@@ -605,7 +605,7 @@ export default function RoleDataTab() {
             {hasContract ? (
               <>
                 <Text as="span" variant="heading" size="sm" weight="black" className="block">
-                  {formatDate(startDate, currentLocale)} - {formatDate(endDate, currentLocale)}
+                  {startDate && endDate ? `${formatDate(startDate, currentLocale)} - ${formatDate(endDate, currentLocale)}` : ''}
                 </Text>
                 <Text
                   as="span"

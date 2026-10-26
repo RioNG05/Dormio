@@ -57,20 +57,46 @@ export class InvoicesService {
   /**
    * Helper to resolve active contract for tenant (supports optional contractId for multi-room scoping)
    */
-  async resolveActiveTenantContract(tenantId: string, contractId?: string) {
-    const whereClause: any = {
-      tenantId,
-      contract: {
-        status: 'active',
-      },
-    }
-
+  /**
+   * Helper to resolve active stay/occupancy for tenant (supports rooms occupied via RoomOccupant or Contract)
+   */
+  async resolveActiveTenantStay(tenantId: string, contractId?: string) {
+    // 1. Try finding by contract
     if (contractId) {
-      whereClause.contractId = contractId
+      const tc = await this.prisma.tenantContract.findFirst({
+        where: {
+          tenantId,
+          contractId,
+          contract: { status: 'active' },
+        },
+        include: {
+          contract: {
+            include: {
+              room: {
+                include: {
+                  boardingHouse: true,
+                },
+              },
+            },
+          },
+        },
+      })
+      if (tc && tc.contract) {
+        return {
+          contract: tc.contract,
+          room: tc.contract.room,
+          roomId: tc.contract.room.id,
+          boardingHouse: tc.contract.room.boardingHouse,
+        }
+      }
     }
 
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: whereClause,
+    // 2. Try finding by any active contract
+    const activeContract = await this.prisma.tenantContract.findFirst({
+      where: {
+        tenantId,
+        contract: { status: 'active' },
+      },
       include: {
         contract: {
           include: {
@@ -85,11 +111,50 @@ export class InvoicesService {
       orderBy: [{ createdAt: 'desc' }],
     })
 
-    if (!tenantContract || !tenantContract.contract) {
-      throw new NotFoundException('No active lease contract found for your account.')
+    if (activeContract && activeContract.contract) {
+      return {
+        contract: activeContract.contract,
+        room: activeContract.contract.room,
+        roomId: activeContract.contract.room.id,
+        boardingHouse: activeContract.contract.room.boardingHouse,
+      }
     }
 
-    return tenantContract.contract
+    // 3. Fallback: check active RoomOccupant
+    const activeOccupant = await this.prisma.roomOccupant.findFirst({
+      where: {
+        tenantId,
+        status: 'active',
+      },
+      include: {
+        room: {
+          include: {
+            boardingHouse: true,
+            contracts: {
+              where: { status: 'active' },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: [{ joinedAt: 'desc' }],
+    })
+
+    if (activeOccupant && activeOccupant.room) {
+      return {
+        contract: activeOccupant.room.contracts?.[0] || null,
+        room: activeOccupant.room,
+        roomId: activeOccupant.room.id,
+        boardingHouse: activeOccupant.room.boardingHouse,
+      }
+    }
+
+    throw new NotFoundException('No active room tenancy or occupancy found for your account.')
+  }
+
+  async resolveActiveTenantContract(tenantId: string, contractId?: string) {
+    const stay = await this.resolveActiveTenantStay(tenantId, contractId)
+    return stay.contract || ({ id: null, roomId: stay.roomId, room: stay.room, boardingHouse: stay.boardingHouse } as any)
   }
 
   /**
@@ -100,12 +165,40 @@ export class InvoicesService {
     contractId?: string,
   ): Promise<TenantInvoicesListResponseDto> {
     this.logger.log(`Fetching invoices for tenant user ${userId} (contractId=${contractId})`)
-    const contract = await this.resolveActiveTenantContract(userId, contractId)
+
+    // 1. Resolve all active rooms where user resides as RoomOccupant
+    const occupants = (await this.prisma.roomOccupant.findMany({
+      where: { tenantId: userId, status: 'active' },
+      select: { roomId: true },
+    })) || []
+    const occupantRoomIds = occupants.map(o => o.roomId)
+
+    // 2. Resolve all contracts where user is party
+    const tenantContracts = (await this.prisma.tenantContract.findMany({
+      where: { tenantId: userId },
+      select: { contractId: true, contract: { select: { roomId: true } } },
+    })) || []
+    const contractIds = tenantContracts.map(tc => tc.contractId)
+    const contractRoomIds = tenantContracts.map(tc => tc.contract?.roomId).filter(Boolean) as string[]
+
+    const allRoomIds = Array.from(new Set([...occupantRoomIds, ...contractRoomIds]))
+
+    const whereClause: Prisma.InvoiceWhereInput = contractId
+      ? {
+          OR: [
+            { contractId },
+            { roomId: { in: allRoomIds } },
+          ],
+        }
+      : {
+          OR: [
+            { roomId: { in: allRoomIds } },
+            { contractId: { in: contractIds } },
+          ],
+        }
 
     const invoices = await this.prisma.invoice.findMany({
-      where: {
-        contractId: contract.id,
-      },
+      where: whereClause,
       include: {
         invoiceItems: {
           include: {
@@ -198,12 +291,106 @@ export class InvoicesService {
    */
   async getTenantInvoiceById(userId: string, invoiceId: string): Promise<TenantInvoiceDto> {
     this.logger.log(`Fetching invoice ${invoiceId} for tenant user ${userId}`)
-    const invoicesList = await this.getTenantInvoices(userId)
-    const invoice = invoicesList.data.find(i => i.id === invoiceId)
-    if (!invoice) {
+
+    const inv = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        room: {
+          include: {
+            occupants: {
+              where: { status: 'active' },
+            },
+          },
+        },
+        contract: {
+          include: {
+            tenantContracts: true,
+          },
+        },
+        invoiceItems: {
+          include: {
+            service: true,
+          },
+        },
+        payment: true,
+        meterReadings: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    })
+
+    if (!inv) {
       throw new NotFoundException('Invoice information not found.')
     }
-    return invoice
+
+    const isOccupant = inv.room?.occupants?.some(o => o.tenantId === userId)
+    const isContractParty = inv.contract?.tenantContracts?.some(tc => tc.tenantId === userId)
+
+    if (!isOccupant && !isContractParty) {
+      throw new ForbiddenException('Bạn không có quyền truy cập hóa đơn này.')
+    }
+
+    const now = new Date()
+    const dueDate = new Date(inv.dueDate)
+    const period = `Month ${String(dueDate.getMonth() + 1).padStart(2, '0')}/${dueDate.getFullYear()}`
+
+    let displayStatus: 'paid' | 'unpaid' | 'overdue' = 'unpaid'
+    if (inv.status === 'paid') {
+      displayStatus = 'paid'
+    } else if (dueDate < now) {
+      displayStatus = 'overdue'
+    } else {
+      displayStatus = 'unpaid'
+    }
+
+    const details: InvoiceItemDetailDto[] = inv.invoiceItems.map(item => {
+      let name = item.service?.name || 'Room rent'
+      const isMetered = item.service?.isMetered ?? false
+      let unit = item.service?.unit || 'month'
+
+      if (!item.serviceId) {
+        name = 'Room rent'
+        unit = 'month'
+      } else if (/electr|\u0111i\u1EC7n/i.test(name)) {
+        name = 'Electricity'
+        unit = 'kWh'
+      } else if (/water|n\u01B0\u1EDBc/i.test(name)) {
+        name = 'Water'
+        unit = 'm³'
+      }
+
+      return {
+        name,
+        value: Number(item.amount),
+        quantity: item.quantity,
+        unit,
+        unitPrice: Number(item.unitPrice),
+        isMetered,
+      }
+    })
+
+    const meterReadings: MeterReadingSummaryDto[] = inv.meterReadings.map(mr => ({
+      serviceId: mr.serviceId,
+      serviceName: mr.service.name,
+      unit: mr.service.unit,
+      readingValue: mr.readingValue !== null ? Number(mr.readingValue) : null,
+      imageUrl: mr.imageUrl,
+      recordedAt: mr.createdAt.toISOString(),
+    }))
+
+    return {
+      id: inv.id,
+      period,
+      amount: Number(inv.totalAmount),
+      status: displayStatus,
+      dueDate: inv.dueDate.toISOString(),
+      createdDate: inv.createdAt.toISOString(),
+      paidDate: inv.payment?.createdAt ? inv.payment.createdAt.toISOString() : null,
+      details,
+      meterReadings,
+    }
   }
 
   /**
@@ -211,11 +398,11 @@ export class InvoicesService {
    */
   async getTenantUsageAnalytics(userId: string): Promise<TenantUsageAnalyticsResponseDto> {
     this.logger.log(`Generating usage analytics for tenant user ${userId}`)
-    const contract = await this.resolveActiveTenantContract(userId)
+    const stay = await this.resolveActiveTenantStay(userId)
 
     const invoices = await this.prisma.invoice.findMany({
       where: {
-        contractId: contract.id,
+        roomId: stay.roomId,
       },
       include: {
         invoiceItems: {
@@ -716,7 +903,7 @@ export class InvoicesService {
 
     // 7. Map database records to response DTO
     const data: LandlordInvoiceItemDto[] = invoices.map(inv => {
-      const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null
+      const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || (inv.room as any)?.occupants?.[0]?.tenant || null
       const tenantName =
         primaryTenant?.userIdentification?.fullName ||
         primaryTenant?.username ||
@@ -856,6 +1043,7 @@ export class InvoicesService {
         room: {
           include: {
             boardingHouse: true,
+            occupants: { where: { status: 'active' }, include: { tenant: { include: { userIdentification: true } } } },
           },
         },
         contract: {
@@ -891,7 +1079,7 @@ export class InvoicesService {
     }
 
     const now = new Date()
-    const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || null
+    const primaryTenant = inv.contract?.tenantContracts[0]?.tenant || (inv.room as any)?.occupants?.[0]?.tenant || null
     const tenantName =
       primaryTenant?.userIdentification?.fullName || primaryTenant?.username || 'Vacant'
     const tenantPhone = primaryTenant?.phoneNumber || ''
@@ -1340,6 +1528,95 @@ export class InvoicesService {
    * UC-L-06 Part 1 Step 3 / Part 3:
    * Automated flat-rate invoice generation on billing day for rooms with NO metered services
    */
+  async generateFlatRateInvoiceForRoom(roomId: string, dueDate: Date): Promise<any> {
+    this.logger.log(`[BillingCron] Generating automated flat-rate invoice for occupied room ${roomId}`)
+
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        roomType: true,
+        roomServices: {
+          where: {
+            service: { isMetered: false, status: 'active' },
+          },
+          include: { service: true },
+        },
+        boardingHouse: true,
+      },
+    })
+
+    if (!room || room.status !== 'occupied') return null
+
+    // Idempotency: verify if an invoice was already generated for this cycle
+    const startOfDay = new Date(dueDate)
+    startOfDay.setHours(0, 0, 0, 0)
+    const endOfDay = new Date(dueDate)
+    endOfDay.setHours(23, 59, 59, 999)
+
+    const existingInvoice = await this.prisma.invoice.findFirst({
+      where: {
+        roomId: room.id,
+        dueDate: { gte: startOfDay, lte: endOfDay },
+      },
+    })
+
+    if (existingInvoice) return existingInvoice
+
+    const rentPriceNum = Number(room.roomType?.price ?? 0)
+    let totalAmount = rentPriceNum
+
+    const lineItemsToCreate: Array<{
+      serviceId: string | null
+      quantity: number
+      unitPrice: any
+      amount: number
+    }> = [
+      {
+        serviceId: null,
+        quantity: 1,
+        unitPrice: new Prisma.Decimal(rentPriceNum),
+        amount: Math.round(rentPriceNum),
+      },
+    ]
+
+    for (const rs of room.roomServices) {
+      const priceNum = Number(rs.service.price)
+      totalAmount += priceNum
+      lineItemsToCreate.push({
+        serviceId: rs.serviceId,
+        quantity: 1,
+        unitPrice: rs.service.price,
+        amount: Math.round(priceNum),
+      })
+    }
+
+    return this.prisma.$transaction(async tx => {
+      const invoice = await tx.invoice.create({
+        data: {
+          roomId: room.id,
+          contractId: null,
+          totalAmount: new Prisma.Decimal(totalAmount),
+          status: 'unpaid',
+          dueDate,
+        },
+      })
+
+      for (const item of lineItemsToCreate) {
+        await tx.invoiceItem.create({
+          data: {
+            invoiceId: invoice.id,
+            serviceId: item.serviceId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            amount: item.amount,
+          },
+        })
+      }
+
+      return invoice
+    })
+  }
+
   async generateFlatRateInvoice(contractId: string, dueDate: Date): Promise<any> {
     this.logger.log(
       `[BillingCron] Generating automated flat-rate invoice for contract ${contractId}`,
@@ -2005,7 +2282,7 @@ export class InvoicesService {
       throw new NotFoundException('Room not found in this boarding house.')
     }
 
-    const primaryTenant = room.contracts[0]?.tenantContracts[0]?.tenant
+    const primaryTenant = room.contracts[0]?.tenantContracts[0]?.tenant || (room as any)?.occupants?.[0]?.tenant
     if (!primaryTenant) {
       throw new BadRequestException('This room currently has no lease contract or primary tenant.')
     }

@@ -471,7 +471,15 @@ export const viTenant = {
     tenantContractNoServices: "Không có dịch vụ đăng ký kèm",
     tenantContractActiveStatus: "Đang hiệu lực",
     tenantContractSignedVerified: "Hợp đồng đã xác thực & ký kết",
-    tenantContractDownloadDoc: "Tải xuống"
+    tenantContractDownloadDoc: "Tải xuống",
+    tenantContractFreeStayTitle: "Đang lưu trú linh hoạt (Chưa tạo hợp đồng văn bản)",
+    tenantContractFreeStayDesc: "Bạn đang thuê và lưu trú tại Phòng {roomNumber} - {houseName}. Bạn có thể sử dụng đầy đủ các dịch vụ, theo dõi chỉ số điện nước và thanh toán hóa đơn hàng tháng qua cổng PayOS. Nếu bạn cần hợp đồng văn bản để đăng ký tạm trú (mẫu CT01/KT3), vui lòng liên hệ chủ trọ để tạo và xuất bản in.",
+    tenantContractFreeStayCode: "Lưu trú linh hoạt",
+    tenantContractIndefinite: "Linh hoạt / Không thời hạn",
+    tenantContractFreeStayNotice: "Bạn đang thuê phòng linh hoạt không bắt buộc hợp đồng văn bản. Hóa đơn và dịch vụ vẫn được cập nhật tự động.",
+    viewRoomSpecs: "Xem chi tiết phòng",
+    tenantViewRoomInfo: "Xem thông tin phòng",
+    tenantViewInvoices: "Xem hóa đơn & thanh toán"
 }
 
 export default viTenant

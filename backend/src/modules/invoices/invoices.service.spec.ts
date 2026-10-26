@@ -179,7 +179,11 @@ describe('InvoicesService', () => {
   const mockPrisma = {
     tenantContract: {
       findFirst: jest.fn(),
-      findMany: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    roomOccupant: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     invoice: {
       findMany: jest.fn(),

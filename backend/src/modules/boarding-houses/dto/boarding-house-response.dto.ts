@@ -71,6 +71,9 @@ export class BoardingHouseResponseDto {
   @ApiPropertyOptional({ example: 5, nullable: true })
   totalFloor: number | null
 
+  @ApiProperty({ example: 5, description: 'Monthly payment day (1-31)' })
+  monthlyPaymentDate: number
+
   @ApiProperty({ example: '2020-01-01T00:00:00.000Z' })
   builtAt: string
 

@@ -12,6 +12,10 @@ describe('MeterReadingsService', () => {
     tenantContract: {
       findFirst: jest.fn(),
     },
+    roomOccupant: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     room: {
       findFirst: jest.fn(),
     },

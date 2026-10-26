@@ -43,6 +43,7 @@ function buildContract(overrides: {
 
 const mockPrisma = {
   contract: { findMany: jest.fn() },
+  room: { findMany: jest.fn().mockResolvedValue([]) },
 }
 
 const mockNotificationsService = {

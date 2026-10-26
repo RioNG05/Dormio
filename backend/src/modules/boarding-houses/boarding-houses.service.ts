@@ -123,6 +123,7 @@ export class BoardingHousesService {
           country: dto.country.trim(),
           totalFloor: dto.totalFloor ?? null,
           builtAt: new Date(dto.builtAt),
+          monthlyPaymentDate: dto.monthlyPaymentDate ?? 5,
           thumbnail: dto.thumbnail ?? null,
           status: 'active',
           deletedAt: new Date('2099-12-31T00:00:00.000Z'),
@@ -163,6 +164,21 @@ export class BoardingHousesService {
         })
         roomTypeIds.push(created.id)
         createdRoomTypes.push(created)
+      }
+
+      // Step 3b — INSERT Amenity[] for shared amenities
+      const sharedAmenityIds: string[] = []
+      for (const amenName of dto.amenities ?? []) {
+        const trimmed = amenName.trim()
+        if (!trimmed) continue
+        const createdAmen = await tx.amenity.create({
+          data: {
+            boardingHouseId: boardingHouse.id,
+            name: trimmed,
+            isShared: true,
+          },
+        })
+        sharedAmenityIds.push(createdAmen.id)
       }
 
       // Step 4 — Quota already validated above; recorded here for audit clarity
@@ -219,6 +235,16 @@ export class BoardingHousesService {
             })
           }
 
+          if (sharedAmenityIds.length > 0) {
+            await tx.roomAmenity.createMany({
+              data: sharedAmenityIds.map(amenityId => ({
+                roomId: room.id,
+                amenityId,
+              })),
+              skipDuplicates: true,
+            })
+          }
+
           roomsCreated++
         }
       } else {
@@ -244,6 +270,16 @@ export class BoardingHousesService {
                   roomId: room.id,
                   serviceId,
                 })),
+              })
+            }
+
+            if (sharedAmenityIds.length > 0) {
+              await tx.roomAmenity.createMany({
+                data: sharedAmenityIds.map(amenityId => ({
+                  roomId: room.id,
+                  amenityId,
+                })),
+                skipDuplicates: true,
               })
             }
 
@@ -334,6 +370,7 @@ export class BoardingHousesService {
           houseNumber: dto.houseNumber.trim(),
           totalFloor: dto.totalFloor,
           builtAt: new Date(dto.builtAt),
+          monthlyPaymentDate: dto.monthlyPaymentDate ?? 5,
           status: 'active',
           deletedAt: new Date('2099-12-31T00:00:00.000Z'),
           services: {
@@ -417,6 +454,7 @@ export class BoardingHousesService {
         houseNumber: house.houseNumber,
         totalFloor: house.totalFloor,
         builtAt: house.builtAt.toISOString(),
+        monthlyPaymentDate: house.monthlyPaymentDate ?? 5,
         status: house.status,
         thumbnail: house.thumbnail ?? null,
         totalRooms: house._count.rooms,
@@ -562,6 +600,7 @@ export class BoardingHousesService {
         ...(dto.houseNumber !== undefined && { houseNumber: dto.houseNumber.trim() }),
         ...(dto.totalFloor !== undefined && { totalFloor: dto.totalFloor }),
         ...(dto.builtAt !== undefined && { builtAt: new Date(dto.builtAt) }),
+        ...(dto.monthlyPaymentDate !== undefined && { monthlyPaymentDate: dto.monthlyPaymentDate }),
       },
       include: {
         services: true,
@@ -1434,6 +1473,7 @@ export class BoardingHousesService {
       houseNumber: string
       totalFloor: number | null
       builtAt: Date
+      monthlyPaymentDate?: number
       status: string
       thumbnail?: string | null
       _count?: { rooms?: number }
@@ -1466,6 +1506,7 @@ export class BoardingHousesService {
       houseNumber: boardingHouse.houseNumber,
       totalFloor: boardingHouse.totalFloor,
       builtAt: boardingHouse.builtAt.toISOString(),
+      monthlyPaymentDate: boardingHouse.monthlyPaymentDate ?? 5,
       status: boardingHouse.status,
       thumbnail: boardingHouse.thumbnail ?? null,
       totalRooms: boardingHouse._count?.rooms ?? boardingHouse.totalRooms ?? 0,

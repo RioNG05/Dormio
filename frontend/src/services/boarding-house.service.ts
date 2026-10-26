@@ -24,6 +24,7 @@ export interface CreateBoardingHousePayload {
   houseNumber: string
   totalFloor?: number
   builtAt: string
+  monthlyPaymentDate?: number
   services: InitialServicePayload[]
   roomTypes: InitialRoomTypePayload[]
 }
@@ -55,6 +56,7 @@ export interface BoardingHouse {
   houseNumber: string
   totalFloor: number | null
   builtAt: string
+  monthlyPaymentDate?: number
   status: 'active' | 'inactive' | 'banned'
   thumbnail?: string | null
   totalRooms?: number
@@ -112,6 +114,7 @@ export interface SetupBoardingHousePayload {
   country: string
   totalFloor?: number
   builtAt: string
+  monthlyPaymentDate?: number
   thumbnail?: string
   amenities?: string[]
   services?: SetupServicePayload[]
@@ -179,6 +182,7 @@ export interface UpdateBoardingHousePayload {
   houseNumber?: string
   totalFloor?: number
   builtAt?: string
+  monthlyPaymentDate?: number
   thumbnail?: string
   roomTypes?: UpdateRoomTypePayload[]
   amenities?: string[]

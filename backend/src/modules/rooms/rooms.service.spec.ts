@@ -17,6 +17,12 @@ describe('RoomsService', () => {
       deleteMany: jest.fn(),
       createMany: jest.fn(),
     },
+    amenity: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    roomAmenity: {
+      createMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
   }
 
   const mockPrisma = {

@@ -213,6 +213,17 @@ export function Step1GeneralInfo({
             onChange={e => onUpdateInfo('builtAt', e.target.value)}
           />
 
+          {/* Monthly Payment Date */}
+          <NumberInput
+            label={t('landlordSetupMonthlyPaymentDateLabel')}
+            helperText={t('landlordSetupMonthlyPaymentDateHint')}
+            min={1}
+            max={31}
+            value={info.monthlyPaymentDate}
+            onChange={e => onUpdateInfo('monthlyPaymentDate', e.target.value)}
+            placeholder="5"
+          />
+
           {/* Cover Photo Upload */}
           <div className="md:col-span-2">
             <CoverPhotoUpload

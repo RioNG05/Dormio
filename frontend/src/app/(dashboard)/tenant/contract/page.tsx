@@ -189,6 +189,42 @@ export default function TenantContractPage() {
     )
   }
 
+  if (!contract && room && boardingHouse) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <Breadcrumb
+          backHref="/tenant"
+          backLabel="Tổng quan"
+          current={t('tenantContractPageTitle')}
+        />
+        <DashboardPageHeader
+          title={t('tenantContractPageTitle')}
+          subtitle={`Phòng ${room.roomNumber} — ${boardingHouse.name}`}
+        />
+        <div className="max-w-xl mx-auto pt-6">
+          <EmptyState
+            icon={<ShieldCheck className="w-10 h-10 text-primary" />}
+            title={t('tenantContractFreeStayTitle')}
+            description={t('tenantContractFreeStayDesc', {
+              roomNumber: room.roomNumber,
+              houseName: boardingHouse.name,
+            })}
+            action={
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Button href="/tenant/room" size="md">
+                  {t('tenantViewRoomInfo')}
+                </Button>
+                <Button href="/tenant/invoices" variant="outline" size="md">
+                  {t('tenantViewInvoices')}
+                </Button>
+              </div>
+            }
+          />
+        </div>
+      </div>
+    )
+  }
+
   if (!contract || !room || !boardingHouse) {
     return (
       <div className="space-y-6">

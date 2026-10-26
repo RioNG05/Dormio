@@ -35,6 +35,7 @@ import {
   RoomResponseDto,
 } from './dto/room-response.dto'
 import { UpdateRoomDto } from './dto/update-room.dto'
+import { AddRoomAmenityDto, UpdateRoomAmenityDto } from './dto/manage-room-amenity.dto'
 
 interface PlannedRoom {
   floor: number
@@ -148,6 +149,11 @@ export class RoomsService {
 
     // 6. Bulk insert in a single transaction
     const createdRooms = await this.prisma.$transaction(async tx => {
+      const sharedAmenities = await tx.amenity.findMany({
+        where: { boardingHouseId, isShared: true },
+        select: { id: true },
+      })
+      const sharedAmenityIds = sharedAmenities.map(a => a.id)
       const rooms: CreatedRoomWithRelations[] = []
       for (const planned of plannedRooms) {
         const room = await tx.room.create({
@@ -174,6 +180,15 @@ export class RoomsService {
             },
           },
         })
+        if (sharedAmenityIds.length > 0) {
+          await tx.roomAmenity.createMany({
+            data: sharedAmenityIds.map(amenityId => ({
+              roomId: room.id,
+              amenityId,
+            })),
+            skipDuplicates: true,
+          })
+        }
         rooms.push(room)
       }
       return rooms
@@ -371,7 +386,7 @@ export class RoomsService {
 
     // 5. Create room and attached services in a transaction
     const created = await this.prisma.$transaction(async tx => {
-      return tx.room.create({
+      const created = await tx.room.create({
         data: {
           boardingHouseId,
           roomNumber: dto.roomNumber.trim(),
@@ -394,6 +409,20 @@ export class RoomsService {
           },
         },
       })
+      const sharedAmenities = await tx.amenity.findMany({
+        where: { boardingHouseId, isShared: true },
+        select: { id: true },
+      })
+      if (sharedAmenities.length > 0) {
+        await tx.roomAmenity.createMany({
+          data: sharedAmenities.map(a => ({
+            roomId: created.id,
+            amenityId: a.id,
+          })),
+          skipDuplicates: true,
+        })
+      }
+      return created
     })
 
     return this.mapRoomToDto(created)
@@ -410,6 +439,11 @@ export class RoomsService {
         roomServices: {
           include: {
             service: true,
+          },
+        },
+        roomAmenities: {
+          include: {
+            amenity: true,
           },
         },
       },
@@ -445,6 +479,11 @@ export class RoomsService {
         roomServices: {
           include: {
             service: true,
+          },
+        },
+        roomAmenities: {
+          include: {
+            amenity: true,
           },
         },
         occupants: {
@@ -663,6 +702,14 @@ export class RoomsService {
       createdAt: mr.createdAt.toISOString(),
     }))
 
+    // Map room amenities
+    const amenities = (room.roomAmenities || []).map(ra => ({
+      id: ra.amenity.id,
+      name: ra.amenity.name,
+      icon: ra.amenity.icon,
+      isShared: ra.amenity.isShared,
+    }))
+
     // Map room services
     const services = room.roomServices.map(rs => ({
       id: rs.service.id,
@@ -691,6 +738,7 @@ export class RoomsService {
         updatedAt: room.updatedAt?.toISOString() ?? null,
       },
       services,
+      amenities,
       occupants,
       currentContract: currentContractDto,
       rentalHistory,
@@ -839,6 +887,248 @@ export class RoomsService {
    * Template renderer for room numbers
    * Supports: {floor}, {floor:02}, {index}, {index:02}
    */
+
+  /**
+   * UC-L-05: List current room amenities + available shared amenities pool
+   */
+  async getRoomAmenities(boardingHouseId: string, roomId: string) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+      include: {
+        roomAmenities: {
+          include: { amenity: true },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
+    }
+
+    const currentAmenities = room.roomAmenities.map(ra => ({
+      id: ra.amenity.id,
+      name: ra.amenity.name,
+      icon: ra.amenity.icon,
+      isShared: ra.amenity.isShared,
+    }))
+
+    const allSharedAmenities = await this.prisma.amenity.findMany({
+      where: { boardingHouseId, isShared: true },
+      orderBy: { name: 'asc' },
+    })
+
+    return {
+      currentAmenities,
+      availableSharedAmenities: allSharedAmenities.filter(
+        sa => !currentAmenities.some(ca => ca.id === sa.id),
+      ),
+    }
+  }
+
+  /**
+   * UC-L-05: Attach existing shared amenity or create new private amenity for this room
+   */
+  async addRoomAmenity(
+    boardingHouseId: string,
+    roomId: string,
+    dto: AddRoomAmenityDto,
+  ) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
+    }
+
+    return this.prisma.$transaction(async tx => {
+      let amenityIdToAttach: string
+
+      if (dto.amenityId) {
+        const existingAmenity = await tx.amenity.findFirst({
+          where: { id: dto.amenityId, boardingHouseId },
+        })
+        if (!existingAmenity) {
+          throw new NotFoundException(`Amenity with ID ${dto.amenityId} was not found`)
+        }
+        amenityIdToAttach = existingAmenity.id
+      } else if (dto.name?.trim()) {
+        const newPrivateAmenity = await tx.amenity.create({
+          data: {
+            boardingHouseId,
+            name: dto.name.trim(),
+            icon: dto.icon?.trim() || null,
+            isShared: false,
+          },
+        })
+        amenityIdToAttach = newPrivateAmenity.id
+      } else {
+        throw new BadRequestException('Either amenityId or name must be provided')
+      }
+
+      await tx.roomAmenity.upsert({
+        where: {
+          roomId_amenityId: {
+            roomId,
+            amenityId: amenityIdToAttach,
+          },
+        },
+        create: {
+          roomId,
+          amenityId: amenityIdToAttach,
+        },
+        update: {},
+      })
+
+      const attached = await tx.amenity.findUnique({
+        where: { id: amenityIdToAttach },
+      })
+      return {
+        id: attached!.id,
+        name: attached!.name,
+        icon: attached!.icon,
+        isShared: attached!.isShared,
+      }
+    })
+  }
+
+  /**
+   * UC-L-05: Update amenity.
+   * If shared, modifies master record across all rooms.
+   * If forkForRoom is true, clones into a private amenity for this room without touching others.
+   */
+  async updateRoomAmenity(
+    boardingHouseId: string,
+    roomId: string,
+    amenityId: string,
+    dto: UpdateRoomAmenityDto,
+  ) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
+    }
+
+    const roomAmenity = await this.prisma.roomAmenity.findUnique({
+      where: {
+        roomId_amenityId: {
+          roomId,
+          amenityId,
+        },
+      },
+      include: { amenity: true },
+    })
+    if (!roomAmenity) {
+      throw new NotFoundException(`Amenity with ID ${amenityId} is not attached to this room`)
+    }
+
+    const existingAmenity = roomAmenity.amenity
+
+    return this.prisma.$transaction(async tx => {
+      if (dto.forkForRoom && existingAmenity.isShared) {
+        await tx.roomAmenity.delete({
+          where: {
+            roomId_amenityId: {
+              roomId,
+              amenityId,
+            },
+          },
+        })
+
+        const forkedAmenity = await tx.amenity.create({
+          data: {
+            boardingHouseId,
+            name: dto.name.trim(),
+            icon: dto.icon !== undefined ? dto.icon?.trim() || null : existingAmenity.icon,
+            isShared: false,
+          },
+        })
+
+        await tx.roomAmenity.create({
+          data: {
+            roomId,
+            amenityId: forkedAmenity.id,
+          },
+        })
+
+        return {
+          id: forkedAmenity.id,
+          name: forkedAmenity.name,
+          icon: forkedAmenity.icon,
+          isShared: false,
+          forked: true,
+        }
+      }
+
+      const updated = await tx.amenity.update({
+        where: { id: amenityId },
+        data: {
+          name: dto.name.trim(),
+          ...(dto.icon !== undefined ? { icon: dto.icon?.trim() || null } : {}),
+        },
+      })
+
+      return {
+        id: updated.id,
+        name: updated.name,
+        icon: updated.icon,
+        isShared: updated.isShared,
+        forked: false,
+      }
+    })
+  }
+
+  /**
+   * UC-L-05: Remove amenity from this room.
+   * If private (isShared = false), also removes from master amenities table.
+   */
+  async deleteRoomAmenity(
+    boardingHouseId: string,
+    roomId: string,
+    amenityId: string,
+  ) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} was not found in this property`)
+    }
+
+    const roomAmenity = await this.prisma.roomAmenity.findUnique({
+      where: {
+        roomId_amenityId: {
+          roomId,
+          amenityId,
+        },
+      },
+      include: { amenity: true },
+    })
+    if (!roomAmenity) {
+      throw new NotFoundException(`Amenity with ID ${amenityId} is not attached to this room`)
+    }
+
+    const isPrivate = !roomAmenity.amenity.isShared
+
+    await this.prisma.$transaction(async tx => {
+      await tx.roomAmenity.delete({
+        where: {
+          roomId_amenityId: {
+            roomId,
+            amenityId,
+          },
+        },
+      })
+
+      if (isPrivate) {
+        await tx.amenity.delete({
+          where: { id: amenityId },
+        })
+      }
+    })
+
+    return { success: true, message: 'Amenity removed from room successfully' }
+  }
+
   private renderRoomNumber(template: string, floor: number, index: number): string {
     return template
       .replace(/\{floor:0?2\}/g, String(floor).padStart(2, '0'))

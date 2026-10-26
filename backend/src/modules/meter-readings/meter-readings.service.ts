@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma'
 import { Injectable, Logger, NotFoundException, BadRequestException, Optional } from '@nestjs/common'
 import { UploadService } from '../upload/upload.service'
 import { randomUUID } from 'crypto'
@@ -126,8 +127,8 @@ export class MeterReadingsService {
     return {
       roomId,
       roomNumber: room.roomNumber,
-      contractId: contract.id,
-      monthlyPaymentDate: contract.monthlyPaymentDate,
+      contractId: contract?.id || null,
+      monthlyPaymentDate: contract?.monthlyPaymentDate || room.boardingHouse?.monthlyPaymentDate || 5,
       meteredServices: items,
       totalMeteredServices: totalCount,
       completedMeteredServices: completedCount,
@@ -361,13 +362,14 @@ export class MeterReadingsService {
       amount: number
     }> = []
 
-    // 5a. Rent item (Contract.rentPrice)
-    const rentPriceNum = Number(contract.rentPrice)
+    // 5a. Rent item (Contract.rentPrice or room.roomType.price)
+    const rawRentPrice = contract?.rentPrice ?? contract?.room?.roomType?.price ?? new Prisma.Decimal(0)
+    const rentPriceNum = Number(rawRentPrice)
     lineItemsToCreate.push({
       serviceId: null,
       title: 'Room rent',
       quantity: 1,
-      unitPrice: contract.rentPrice,
+      unitPrice: rawRentPrice,
       amount: rentPriceNum,
     })
 
@@ -425,7 +427,8 @@ export class MeterReadingsService {
 
     // Compute due date (using monthlyPaymentDate of this cycle)
     const now = new Date()
-    const dueDate = new Date(now.getFullYear(), now.getMonth(), contract.monthlyPaymentDate || 5)
+    const paymentDay = contract?.monthlyPaymentDate || contract?.room?.boardingHouse?.monthlyPaymentDate || 5
+    const dueDate = new Date(now.getFullYear(), now.getMonth(), paymentDay)
     if (dueDate < now) {
       dueDate.setMonth(dueDate.getMonth() + 1)
     }
@@ -438,7 +441,8 @@ export class MeterReadingsService {
 
     const existingInvoice = await this.prisma.invoice.findFirst({
       where: {
-        contractId: contract.id,
+        roomId,
+        ...(contract?.id ? { contractId: contract.id } : { contractId: null }),
         status: 'unpaid',
         dueDate: { gte: startOfMonth, lte: endOfMonth },
       },
@@ -462,7 +466,7 @@ export class MeterReadingsService {
         invoice = await tx.invoice.create({
           data: {
             roomId,
-            contractId: contract.id,
+            contractId: contract?.id || null,
             totalAmount: totalAmountNum,
             status: 'unpaid',
             dueDate,
@@ -537,7 +541,7 @@ export class MeterReadingsService {
       totalAmount: totalAmountNum,
       dueDate: result.invoice.dueDate.toISOString(),
       roomId,
-      contractId: contract.id,
+      contractId: contract?.id || null,
       items: result.items,
       vietQrPayload,
     }
@@ -1271,7 +1275,43 @@ export class MeterReadingsService {
     })
 
     if (!tenantContract || !tenantContract.contract) {
-      throw new NotFoundException('No active lease contract found for this user')
+      const occupant = await this.prisma.roomOccupant.findFirst({
+        where: {
+          tenantId: userId,
+          status: 'active',
+        },
+        include: {
+          room: {
+            include: {
+              boardingHouse: true,
+              roomType: true,
+              contracts: {
+                where: { status: 'active' },
+                take: 1,
+              },
+            },
+          },
+        },
+        orderBy: [{ joinedAt: 'desc' }],
+      })
+
+      if (occupant && occupant.room) {
+        const activeContract = occupant.room.contracts?.[0] || null
+        return {
+          id: `occ-${occupant.id}`,
+          tenantId: userId,
+          contractId: activeContract?.id || null,
+          contract: activeContract || {
+            id: null,
+            roomId: occupant.room.id,
+            room: occupant.room,
+            rentPrice: occupant.room.roomType?.price ?? new Prisma.Decimal(0),
+            monthlyPaymentDate: occupant.room.boardingHouse?.monthlyPaymentDate ?? 5,
+          },
+        } as any
+      }
+
+      throw new NotFoundException('No active room tenancy found for your account.')
     }
 
     return tenantContract

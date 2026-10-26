@@ -1095,6 +1095,7 @@ contract.tenantContracts[0]?.tenant
   async getMyTenancies(userId: string): Promise<TenantTenancyItemDto[]> {
     this.logger.log(`Fetching all active room tenancies for user: ${userId}`)
 
+    // 1. Fetch active tenant contracts
     const tenantContracts = await this.prisma.tenantContract.findMany({
       where: {
         tenantId: userId,
@@ -1117,16 +1118,39 @@ contract.tenantContracts[0]?.tenant
       orderBy: [{ createdAt: 'desc' }],
     })
 
-    return tenantContracts
-      .filter(tc => tc.contract && tc.contract.room && tc.contract.room.boardingHouse)
-      .map(tc => {
+    // 2. Fetch active room occupants
+    const roomOccupants = await this.prisma.roomOccupant.findMany({
+      where: {
+        tenantId: userId,
+        status: 'active',
+      },
+      include: {
+        room: {
+          include: {
+            roomType: true,
+            boardingHouse: true,
+            contracts: {
+              where: { status: 'active' },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: [{ joinedAt: 'desc' }],
+    })
+
+    const tenanciesMap = new Map<string, TenantTenancyItemDto>()
+
+    // Add contract tenancies first
+    for (const tc of tenantContracts) {
+      if (tc.contract && tc.contract.room && tc.contract.room.boardingHouse) {
         const { contract } = tc
         const { room } = contract
         const { boardingHouse } = room
-
         const formattedAddress = this.formatAddress(boardingHouse)
 
-        return {
+        tenanciesMap.set(room.id, {
           contractId: contract.id,
           roomId: room.id,
           roomNumber: room.roomNumber,
@@ -1139,122 +1163,305 @@ contract.tenantContracts[0]?.tenant
           startDate: contract.startDate.toISOString(),
           endDate: contract.endDate.toISOString(),
           coverPhotoUrl: boardingHouse.thumbnail || undefined,
-        }
-      })
+        })
+      }
+    }
+
+    // Add occupancy tenancies (for rooms without contract or not yet added)
+    for (const occ of roomOccupants) {
+      if (occ.room && occ.room.boardingHouse && !tenanciesMap.has(occ.room.id)) {
+        const { room } = occ
+        const { boardingHouse } = room
+        const activeContract = room.contracts?.[0]
+        const formattedAddress = this.formatAddress(boardingHouse)
+
+        tenanciesMap.set(room.id, {
+          contractId: activeContract?.id ?? null,
+          roomId: room.id,
+          roomNumber: room.roomNumber,
+          floor: room.floor,
+          roomTypeName: room.roomType?.name || undefined,
+          boardingHouseId: boardingHouse.id,
+          boardingHouseName: boardingHouse.name,
+          boardingHouseAddress: formattedAddress,
+          rentPrice: activeContract
+            ? Number(activeContract.rentPrice)
+            : Number(room.roomType?.price ?? 0),
+          startDate: activeContract
+            ? activeContract.startDate.toISOString()
+            : occ.joinedAt.toISOString(),
+          endDate: activeContract ? activeContract.endDate.toISOString() : null,
+          coverPhotoUrl: boardingHouse.thumbnail || undefined,
+        })
+      }
+    }
+
+    return Array.from(tenanciesMap.values())
   }
 
   /**
    * Retrieves the full tenancy aggregate for the authenticated tenant:
    * active Contract + Room + BoardingHouse (basic info only, never financials)
    * + active RoomServices (fee structure) + BoardingHouse broadcast Announcements.
+   * Supports rooms occupied via RoomOccupant without requiring a formal contract.
    *
    * @param userId Authenticated tenant's User ID
    * @param contractId Optional Contract UUID for multi-room selection
-   * @returns TenancyDetailsDto or null if no active contract found
+   * @returns TenancyDetailsDto or null if no active tenancy found
    */
   async getMyTenancyDetails(
     userId: string,
     contractId?: string,
   ): Promise<TenancyDetailsDto | null> {
-    const whereClause: any = {
-      tenantId: userId,
-      contract: {
-        status: 'active',
-      },
-    }
-
+    // 1. Try to find via TenantContract
+    let tenantContract: any = null
     if (contractId) {
-      whereClause.contractId = contractId
-    }
-
-    const tenantContract = await this.prisma.tenantContract.findFirst({
-      where: whereClause,
-      include: {
-        contract: {
-          include: {
-            deposit: true,
-            contractDocuments: true,
-            room: {
-              include: {
-                roomType: true,
-                boardingHouse: {
-                  include: {
-                    owner: {
-                      select: {
-                        id: true,
-                        username: true,
-                        phoneNumber: true,
-                        email: true,
-                        userIdentification: {
-                          select: {
-                            fullName: true,
-                          },
+      tenantContract = await this.prisma.tenantContract.findFirst({
+        where: {
+          tenantId: userId,
+          contractId,
+          contract: { status: 'active' },
+        },
+        include: {
+          contract: {
+            include: {
+              deposit: true,
+              contractDocuments: true,
+              room: {
+                include: {
+                  roomType: true,
+                  boardingHouse: {
+                    include: {
+                      owner: {
+                        select: {
+                          id: true,
+                          username: true,
+                          phoneNumber: true,
+                          email: true,
+                          userIdentification: { select: { fullName: true } },
                         },
                       },
                     },
                   },
-                },
-                roomServices: {
-                  where: {
-                    service: {
-                      status: 'active',
-                    },
-                  },
-                  include: {
-                    service: true,
+                  roomServices: {
+                    where: { service: { status: 'active' } },
+                    include: { service: true },
                   },
                 },
               },
             },
           },
         },
+        orderBy: [{ createdAt: 'desc' }],
+      })
+    } else {
+      tenantContract = await this.prisma.tenantContract.findFirst({
+        where: {
+          tenantId: userId,
+          contract: { status: 'active' },
+        },
+        include: {
+          contract: {
+            include: {
+              deposit: true,
+              contractDocuments: true,
+              room: {
+                include: {
+                  roomType: true,
+                  boardingHouse: {
+                    include: {
+                      owner: {
+                        select: {
+                          id: true,
+                          username: true,
+                          phoneNumber: true,
+                          email: true,
+                          userIdentification: { select: { fullName: true } },
+                        },
+                      },
+                    },
+                  },
+                  roomServices: {
+                    where: { service: { status: 'active' } },
+                    include: { service: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ createdAt: 'desc' }],
+      })
+    }
+
+    if (tenantContract && tenantContract.contract) {
+      const { contract } = tenantContract
+      const { room } = contract
+      const { boardingHouse } = room
+
+      const announcements = await this.prisma.notification.findMany({
+        where: {
+          boardingHouseId: boardingHouse.id,
+          receiverId: null,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      })
+
+      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      const formattedAddress = this.formatAddress(boardingHouse)
+      const landlordName =
+        boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Landlord'
+
+      return {
+        contract: {
+          id: contract.id,
+          startDate: contract.startDate,
+          endDate: contract.endDate,
+          rentPrice: Number(contract.rentPrice),
+          monthlyPaymentDate: contract.monthlyPaymentDate,
+          depositAmount: contract.deposit
+            ? Number(contract.deposit.amount)
+            : Number(contract.rentPrice),
+          note: contract.note || undefined,
+          documents: (contract.contractDocuments || []).map(doc => ({
+            id: doc.id,
+            url: doc.url,
+            createdAt: doc.createdAt,
+          })),
+        },
+        room: {
+          id: room.id,
+          roomNumber: room.roomNumber,
+          floor: room.floor,
+          area: room.area ? Number(room.area) : undefined,
+          maxOccupants: room.maxOccupants ?? undefined,
+          roomTypeName: room.roomType?.name,
+        },
+        boardingHouse: {
+          id: boardingHouse.id,
+          name: boardingHouse.name,
+          address: formattedAddress,
+          landlord: {
+            name: landlordName,
+            phoneNumber: boardingHouse.owner.phoneNumber,
+            email: boardingHouse.owner.email || undefined,
+          },
+        },
+        services: (room.roomServices || []).map(rs => ({
+          id: rs.service.id,
+          name: rs.service.name,
+          price: Number(rs.service.price),
+          unit: rs.service.unit,
+          isMetered: rs.service.isMetered,
+        })),
+        announcements: announcements.map(item => {
+          let title = item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content
+          let content = item.content
+          try {
+            if (item.content.trim().startsWith('{')) {
+              const parsed = JSON.parse(item.content)
+              if (parsed.title) title = parsed.title
+              if (parsed.content) content = parsed.content
+            } else if (item.content.includes('\n')) {
+              const lines = item.content.split('\n')
+              title = lines[0]?.trim() || title
+              content = lines.slice(1).join('\n').trim() || content
+            }
+          } catch {}
+          return {
+            id: item.id,
+            title,
+            content,
+            createdAt: item.createdAt,
+            isNew: item.createdAt >= threeDaysAgo,
+          }
+        }),
+      }
+    }
+
+    // 2. If no TenantContract found, check RoomOccupant (Occupancy-Centric fallback)
+    const activeOccupant = await this.prisma.roomOccupant.findFirst({
+      where: {
+        tenantId: userId,
+        status: 'active',
       },
-      orderBy: [{ createdAt: 'desc' }],
+      include: {
+        room: {
+          include: {
+            roomType: true,
+            boardingHouse: {
+              include: {
+                owner: {
+                  select: {
+                    id: true,
+                    username: true,
+                    phoneNumber: true,
+                    email: true,
+                    userIdentification: { select: { fullName: true } },
+                  },
+                },
+              },
+            },
+            roomServices: {
+              where: { service: { status: 'active' } },
+              include: { service: true },
+            },
+            contracts: {
+              where: { status: 'active' },
+              include: {
+                deposit: true,
+                contractDocuments: true,
+              },
+              take: 1,
+            },
+          },
+        },
+      },
+      orderBy: [{ joinedAt: 'desc' }],
     })
 
-    if (!tenantContract || !tenantContract.contract) {
+    if (!activeOccupant || !activeOccupant.room) {
       return null
     }
 
-    const { contract } = tenantContract
-    const { room } = contract
+    const { room } = activeOccupant
     const { boardingHouse } = room
+    const activeContract = room.contracts?.[0] || null
 
-    // Fetch broadcast announcements for this boarding house (receiverId IS NULL)
     const announcements = await this.prisma.notification.findMany({
       where: {
         boardingHouseId: boardingHouse.id,
         receiverId: null,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
       take: 50,
     })
 
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-
     const formattedAddress = this.formatAddress(boardingHouse)
     const landlordName =
       boardingHouse.owner.userIdentification?.fullName || boardingHouse.owner.username || 'Landlord'
 
     return {
-      contract: {
-        id: contract.id,
-        startDate: contract.startDate,
-        endDate: contract.endDate,
-        rentPrice: Number(contract.rentPrice),
-        monthlyPaymentDate: contract.monthlyPaymentDate,
-        depositAmount: contract.deposit
-          ? Number(contract.deposit.amount)
-          : Number(contract.rentPrice),
-        note: contract.note || undefined,
-        documents: contract.contractDocuments.map(doc => ({
-          id: doc.id,
-          url: doc.url,
-          createdAt: doc.createdAt,
-        })),
-      },
+      contract: activeContract
+        ? {
+            id: activeContract.id,
+            startDate: activeContract.startDate,
+            endDate: activeContract.endDate,
+            rentPrice: Number(activeContract.rentPrice),
+            monthlyPaymentDate: activeContract.monthlyPaymentDate,
+            depositAmount: activeContract.deposit
+              ? Number(activeContract.deposit.amount)
+              : Number(activeContract.rentPrice),
+            note: activeContract.note || undefined,
+            documents: (activeContract.contractDocuments || []).map(doc => ({
+              id: doc.id,
+              url: doc.url,
+              createdAt: doc.createdAt,
+            })),
+          }
+        : null,
       room: {
         id: room.id,
         roomNumber: room.roomNumber,
@@ -1269,11 +1476,11 @@ contract.tenantContracts[0]?.tenant
         address: formattedAddress,
         landlord: {
           name: landlordName,
-          phoneNumber: boardingHouse.owner.phoneNumber || '',
+          phoneNumber: boardingHouse.owner.phoneNumber,
           email: boardingHouse.owner.email || undefined,
         },
       },
-      services: room.roomServices.map(rs => ({
+      services: (room.roomServices || []).map(rs => ({
         id: rs.service.id,
         name: rs.service.name,
         price: Number(rs.service.price),
@@ -1283,7 +1490,6 @@ contract.tenantContracts[0]?.tenant
       announcements: announcements.map(item => {
         let title = item.content.length > 40 ? `${item.content.slice(0, 40)}...` : item.content
         let content = item.content
-
         try {
           if (item.content.trim().startsWith('{')) {
             const parsed = JSON.parse(item.content)
@@ -1294,10 +1500,7 @@ contract.tenantContracts[0]?.tenant
             title = lines[0]?.trim() || title
             content = lines.slice(1).join('\n').trim() || content
           }
-        } catch {
-          // Fallback to raw content
-        }
-
+        } catch {}
         return {
           id: item.id,
           title,

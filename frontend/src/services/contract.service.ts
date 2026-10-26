@@ -401,7 +401,7 @@ export async function downloadTenantContractDocument(
 }
 
 export interface TenantTenancyItem {
-  contractId: string
+  contractId?: string | null
   roomId: string
   roomNumber: string
   floor: number
@@ -412,7 +412,7 @@ export interface TenantTenancyItem {
   rentPrice: number
   isPrimary?: boolean
   startDate: string
-  endDate: string
+  endDate?: string | null
   coverPhotoUrl?: string
 }
 

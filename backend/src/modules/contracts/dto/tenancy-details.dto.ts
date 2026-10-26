@@ -117,8 +117,8 @@ export class TenancyAnnouncementDto {
 }
 
 export class TenancyDetailsDto {
-  @ApiProperty({ type: ContractInfoDto })
-  contract: ContractInfoDto
+  @ApiPropertyOptional({ type: ContractInfoDto, nullable: true })
+  contract: ContractInfoDto | null
 
   @ApiProperty({ type: RoomInfoDto })
   room: RoomInfoDto

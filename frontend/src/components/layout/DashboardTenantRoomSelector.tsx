@@ -71,16 +71,17 @@ export function DashboardTenantRoomSelector() {
             </div>
             <div className="max-h-56 overflow-y-auto space-y-1">
               {tenancies.map(t => {
-                const isActive = t.contractId === activeTenancyId
+                const tenancyKey = t.contractId || t.roomId
+                const isActive = tenancyKey === activeTenancyId
                 return (
                   <Button
                     fullWidth
-                    key={t.contractId}
+                    key={tenancyKey}
                     variant="ghost"
                     size="xl"
                     className="px-2"
                     onClick={() => {
-                      selectTenancy(t.contractId)
+                      selectTenancy(tenancyKey)
                       setDropdownOpen(false)
                     }}
                   >

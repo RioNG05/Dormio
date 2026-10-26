@@ -65,6 +65,7 @@ export default function SetupWizardPage() {
     houseNumber: '',
     totalFloor: '3',
     builtAt: new Date().toISOString().slice(0, 10),
+    monthlyPaymentDate: '5',
     thumbnail: '',
   })
 
@@ -516,6 +517,7 @@ export default function SetupWizardPage() {
       country: info.country.trim() || t('landlordSetupCountryDefault'),
       totalFloor: info.totalFloor ? parseInt(info.totalFloor, 10) : undefined,
       builtAt: info.builtAt,
+      monthlyPaymentDate: info.monthlyPaymentDate ? parseInt(info.monthlyPaymentDate, 10) : 5,
       thumbnail: info.thumbnail.trim() || undefined,
       amenities: amenities.filter(a => a.checked).map(a => a.name),
       services: cleanedServices,

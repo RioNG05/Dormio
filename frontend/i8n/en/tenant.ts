@@ -466,7 +466,15 @@ export const enTenant = {
     tenantContractNoServices: "No additional services registered",
     tenantContractActiveStatus: "Active",
     tenantContractSignedVerified: "Verified & Executed Contract",
-    tenantContractDownloadDoc: "Download"
+    tenantContractDownloadDoc: "Download",
+    tenantContractFreeStayTitle: "Flexible Tenancy (No Written Contract)",
+    tenantContractFreeStayDesc: "You are currently residing at Room {roomNumber} - {houseName}. You have full access to services, meter reading tracking, and monthly PayOS bill payments. If you require a written contract for temporary residence registration (CT01/KT3), please contact your landlord to generate and export it.",
+    tenantContractFreeStayCode: "Flexible Tenancy",
+    tenantContractIndefinite: "Flexible / Indefinite",
+    tenantContractFreeStayNotice: "You are in a flexible stay without a mandatory contract. Invoices and services are tracked automatically.",
+    viewRoomSpecs: "View Room Details",
+    tenantViewRoomInfo: "View Room Details",
+    tenantViewInvoices: "View Invoices & Pay"
 }
 
 export default enTenant

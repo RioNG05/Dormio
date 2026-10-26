@@ -174,12 +174,13 @@ export default function TenantOverviewPage() {
     }
   }
 
-  // Resolve room & contract info (real backend data only)
+  // Resolve room & contract info (real backend data only, occupancy-centric)
   const roomInfo = useMemo(() => {
-    if (tenancyData && tenancyData.contract && tenancyData.room) {
+    if (tenancyData && tenancyData.room) {
       const { contract, room, boardingHouse } = tenancyData
-      const start = new Date(contract.startDate)
-      const end = new Date(contract.endDate)
+      const hasContract = Boolean(contract && contract.id)
+      const start = contract?.startDate ? new Date(contract.startDate) : new Date()
+      const end = contract?.endDate ? new Date(contract.endDate) : new Date()
       const now = new Date()
 
       const totalMs = Math.max(1, end.getTime() - start.getTime())
@@ -201,15 +202,16 @@ export default function TenantOverviewPage() {
         phone: boardingHouse?.landlord?.phoneNumber || '',
         phoneDisplay: formatPhoneDisplay(boardingHouse?.landlord?.phoneNumber || ''),
         hotline: '1900 8899',
-        contractCode: `HĐ-${contract.id.slice(-6).toUpperCase()}`,
-        contractStart: formatDateStr(contract.startDate),
-        contractEnd: formatDateStr(contract.endDate),
-        rentPrice: Number(contract.rentPrice) || 0,
-        deposit: Number(contract.depositAmount) || 0,
-        daysElapsed,
-        totalDays,
-        daysRemaining,
-        documentUrl: contract.documents?.[0]?.url || null,
+        hasContract,
+        contractCode: hasContract && contract ? `HĐ-${contract.id.slice(-6).toUpperCase()}` : t('tenantContractFreeStayCode'),
+        contractStart: contract?.startDate ? formatDateStr(contract.startDate) : '',
+        contractEnd: contract?.endDate ? formatDateStr(contract.endDate) : t('tenantContractIndefinite'),
+        rentPrice: Number(contract?.rentPrice) || 0,
+        deposit: Number(contract?.depositAmount) || 0,
+        daysElapsed: hasContract ? daysElapsed : 0,
+        totalDays: hasContract ? totalDays : 0,
+        daysRemaining: hasContract ? daysRemaining : 0,
+        documentUrl: contract?.documents?.[0]?.url || null,
         roomImage:
           'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80',
         amenities: [
@@ -432,28 +434,43 @@ export default function TenantOverviewPage() {
                 </div>
               </div>
 
-              {/* Room Lease Progress Bar */}
-              <div className="px-6 sm:px-8 py-4 bg-surface/70 border-b border-line flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-muted flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    {t('contractDuration')}: {roomInfo.contractStart} &ndash; {roomInfo.contractEnd}
-                  </span>
-                  <span className="text-success">
-                    {t('daysRemaining', { days: roomInfo.daysRemaining })}
-                  </span>
+              {/* Room Lease Progress Bar or Flexible Stay Notice */}
+              {roomInfo.hasContract ? (
+                <div className="px-6 sm:px-8 py-4 bg-surface/70 border-b border-line flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-muted flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      {t('contractDuration')}: {roomInfo.contractStart} &ndash; {roomInfo.contractEnd}
+                    </span>
+                    <span className="text-success">
+                      {t('daysRemaining', { days: roomInfo.daysRemaining })}
+                    </span>
+                  </div>
+                  <div className="w-full bg-line rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.round(
+                          (roomInfo.daysElapsed / Math.max(1, roomInfo.totalDays)) * 100,
+                        )}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-line rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.round(
-                        (roomInfo.daysElapsed / Math.max(1, roomInfo.totalDays)) * 100,
-                      )}%`,
-                    }}
-                  />
+              ) : (
+                <div className="px-6 sm:px-8 py-3.5 bg-primary-soft/40 border-b border-line flex items-center justify-between text-xs font-medium">
+                  <span className="text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <span>{t('tenantContractFreeStayNotice')}</span>
+                  </span>
+                  <Link
+                    href="/tenant/room"
+                    className="text-primary hover:underline font-bold text-xs shrink-0"
+                  >
+                    {t('viewRoomSpecs')}
+                  </Link>
                 </div>
-              </div>
+              )}
 
               {/* Room Details Grid */}
               <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6 bg-card">

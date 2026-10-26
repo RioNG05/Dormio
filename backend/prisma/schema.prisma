@@ -325,7 +325,8 @@ model BoardingHouse {
   status      BoardingHouseStatus @default(active)
   thumbnail   String?
   totalFloor  Int?                @map("total_floor")
-  builtAt     DateTime            @map("built_at")
+  builtAt            DateTime            @map("built_at")
+  monthlyPaymentDate Int                 @default(5) @map("monthly_payment_date")
   createdAt   DateTime            @default(now()) @map("created_at")
   updatedAt   DateTime?           @updatedAt @map("updated_at")
   deletedAt   DateTime            @map("deleted_at")
@@ -347,6 +348,7 @@ model BoardingHouse {
   assets               Asset[]
   assetMaintenanceLogs AssetMaintenanceLog[]
   occupants            RoomOccupant[]
+  amenities            Amenity[]
 
   @@map("boarding_houses")
 }
@@ -439,6 +441,35 @@ model RoomService {
 
   @@map("room_services")
 }
+model Amenity {
+  id              String        @id @default(uuid()) @db.Uuid
+  boardingHouseId String        @map("boarding_house_id") @db.Uuid
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(255)
+  icon            String?       @db.VarChar(100)
+  isShared        Boolean       @default(true) @map("is_shared")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
+
+  roomAmenities RoomAmenity[]
+
+  @@index([boardingHouseId])
+  @@map("amenities")
+}
+
+model RoomAmenity {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  amenityId String   @map("amenity_id") @db.Uuid
+  amenity   Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([roomId, amenityId])
+  @@index([roomId])
+  @@index([amenityId])
+  @@map("room_amenities")
+}
 
 model RoomType {
   id              String        @id @default(uuid()) @db.Uuid
@@ -446,6 +477,7 @@ model RoomType {
   boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
   name            String        @db.VarChar(255)
   description     String?
+  price           Decimal       @default(0) @db.Decimal(12, 2)
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime?     @updatedAt @map("updated_at")
 
@@ -479,6 +511,7 @@ model Room {
   grievences    Grievance[]
   assets        Asset[]
   occupants     RoomOccupant[]
+  roomAmenities RoomAmenity[]
 
   @@unique([boardingHouseId, roomNumber])
   @@index([boardingHouseId])

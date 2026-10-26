@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
 export class TenantTenancyItemDto {
-  @ApiProperty({ description: 'Contract UUID' })
-  contractId: string
+  @ApiPropertyOptional({ description: 'Contract UUID or null if direct occupancy', nullable: true })
+  contractId?: string | null
 
   @ApiProperty({ description: 'Room UUID' })
   roomId: string
@@ -34,8 +34,8 @@ export class TenantTenancyItemDto {
   @ApiProperty({ description: 'Contract start date ISO' })
   startDate: string
 
-  @ApiProperty({ description: 'Contract end date ISO' })
-  endDate: string
+  @ApiPropertyOptional({ description: 'Contract end date ISO or null if no contract', nullable: true })
+  endDate?: string | null
 
   @ApiPropertyOptional({ description: 'Cover photo URL of the boarding house' })
   coverPhotoUrl?: string

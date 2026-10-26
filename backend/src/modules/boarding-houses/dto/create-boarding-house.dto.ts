@@ -11,6 +11,7 @@ import {
   IsString,
   Matches,
   MaxLength,
+  Max,
   Min,
   ValidateNested,
 } from 'class-validator'
@@ -143,6 +144,20 @@ export class CreateBoardingHouseDto {
   @IsInt()
   @Min(1)
   totalFloor?: number
+
+  @ApiPropertyOptional({
+    example: 5,
+    minimum: 1,
+    maximum: 31,
+    default: 5,
+    description: 'Recurring monthly billing payment day (1-31)',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(31)
+  monthlyPaymentDate?: number
 
   @ApiProperty({ example: '2020-01-01', format: 'date', description: 'Property construction date' })
   @IsDateString()

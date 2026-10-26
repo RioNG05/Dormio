@@ -1,3 +1,4 @@
+import { RoomAmenityItemDto } from './manage-room-amenity.dto'
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   ContractStatus,
@@ -274,4 +275,7 @@ export class RoomDashboardResponseDto {
 
   @ApiProperty({ type: [RoomDashboardMeterReadingDto] })
   meterReadings: RoomDashboardMeterReadingDto[]
+
+  @ApiPropertyOptional({ type: [RoomAmenityItemDto] })
+  amenities?: RoomAmenityItemDto[]
 }

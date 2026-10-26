@@ -601,7 +601,7 @@ describe('ContractsService', () => {
 
       const result = await service.getMyTenancyDetails(userId)
 
-      expect(result?.contract.id).toBe('contract-1')
+      expect(result?.contract?.id).toBe('contract-1')
       expect(result?.boardingHouse.name).toBe('Khu trọ An Bình')
       expect(result?.boardingHouse.landlord.name).toBe('Nguyễn Văn Rio')
     })

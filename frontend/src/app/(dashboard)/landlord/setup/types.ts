@@ -35,6 +35,7 @@ export interface GeneralInfoState {
   houseNumber: string
   totalFloor: string
   builtAt: string
+  monthlyPaymentDate: string
   thumbnail: string
 }
 

@@ -42,10 +42,11 @@ export interface OnboardingNotificationParams {
 export interface BillingNotificationParams {
   /** The boarding house owner (landlord) as sender */
   senderId: string
-  /** The primary tenant of the contract */
+  /** The tenant or room occupant */
   receiverId: string
   boardingHouseId: string
-  contractId: string
+  contractId?: string
+  roomId?: string
 }
 
 export interface BillingDueNotificationParams extends BillingNotificationParams {
