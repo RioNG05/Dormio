@@ -1,11 +1,11 @@
 'use client'
 
 import React from 'react'
-import { Home, Banknote, HouseWifi, Building2 } from 'lucide-react'
+import { Home, Banknote, HouseWifi, Building2, Edit2, Plus, Lock } from 'lucide-react'
 import { Button, Text, Chip } from '@/components/ui'
 import { useTranslations } from '@/context/LanguageContext'
 import { Room, defaultRoomServices } from '../../data'
-import { RoomDashboardResponse } from '@/services/room.service'
+import { RoomDashboardResponse, RoomAmenityItem } from '@/services/room.service'
 import { FinancialBreakdown, RoomCustomServiceItem } from './types'
 
 export const getAmenityLabel = (item: string, t: (key: string) => string): string => {
@@ -33,6 +33,7 @@ interface RoomSidebarProps {
   unpaidFinancials: FinancialBreakdown | null
   services?: RoomCustomServiceItem[]
   onUpdateStatus: (newStatus: 'Trống' | 'Đang thuê' | 'Bảo trì' | 'Đặt cọc') => void
+  onOpenManageAmenities?: () => void
 }
 
 export const RoomSidebar: React.FC<RoomSidebarProps> = ({
@@ -42,6 +43,7 @@ export const RoomSidebar: React.FC<RoomSidebarProps> = ({
   unpaidFinancials,
   services,
   onUpdateStatus,
+  onOpenManageAmenities,
 }) => {
   const t = useTranslations('landlord')
 
@@ -50,16 +52,15 @@ export const RoomSidebar: React.FC<RoomSidebarProps> = ({
   const isMaintenance = room.status === 'Bảo trì'
   const isReserved = room.status === 'Đặt cọc'
 
-  const amenitiesList = room.amenities || [
-    'WiFi',
-    'Điều hòa',
-    'Nóng lạnh',
-    'Tủ quần áo',
-    'Giường',
-    'Kệ bếp',
-    'Ban công',
-    'WC riêng',
-  ]
+  // Prioritize live amenities from dashboardData, fallback to room.amenities if provided
+  const liveAmenities: RoomAmenityItem[] =
+    dashboardData?.amenities !== undefined
+      ? dashboardData.amenities
+      : (room.amenities || []).map((name, idx) => ({
+          id: `legacy-${idx}`,
+          name,
+          isShared: true,
+        }))
 
   const activeServices = services && services.length > 0 ? services : defaultRoomServices
 
@@ -183,24 +184,67 @@ export const RoomSidebar: React.FC<RoomSidebarProps> = ({
 
       {/* Tiện nghi phòng */}
       <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
-        <Text
-          as="h2"
-          weight="black"
-          color="default"
-          size="sm"
-          className="flex items-center gap-2 border-b border-line pb-3"
-        >
-          <HouseWifi className="w-4 h-4 text-primary" />{' '}
-          {t('landlordRoomDetailAmenitiesTitle').replace('{count}', String(amenitiesList.length))}
-        </Text>
-
-        <div className="flex flex-wrap gap-2">
-          {amenitiesList.map((item: string, idx: number) => (
-            <Chip key={idx} variant="neutral" size="sm" preventHover>
-              {getAmenityLabel(item, t)}
-            </Chip>
-          ))}
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <Text
+            as="h2"
+            weight="black"
+            color="default"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <HouseWifi className="w-4 h-4 text-primary" />{' '}
+            {t('landlordRoomDetailAmenitiesTitle').replace('{count}', String(liveAmenities.length))}
+          </Text>
+          {onOpenManageAmenities && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onOpenManageAmenities}
+              leftIcon={<Edit2 className="w-3.5 h-3.5 text-primary" />}
+              className="text-xs h-7 px-2"
+            >
+              {t('landlordRoomDetailManageAmenities')}
+            </Button>
+          )}
         </div>
+
+        {liveAmenities.length === 0 ? (
+          <div className="py-3 text-center space-y-2">
+            <Text size="xs" color="secondary">
+              {t('landlordRoomDetailAmenitiesEmpty')}
+            </Text>
+            {onOpenManageAmenities && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onOpenManageAmenities}
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+              >
+                {t('landlordRoomDetailManageAmenities')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {liveAmenities.map(item => (
+              <Chip
+                key={item.id}
+                variant={item.isShared ? 'neutral' : 'warning'}
+                size="sm"
+                preventHover
+                className="flex items-center gap-1.5"
+              >
+                {!item.isShared && <Lock className="w-3 h-3 text-warning" />}
+                <span>{getAmenityLabel(item.name, t)}</span>
+                {!item.isShared && (
+                  <span className="text-[10px] text-warning font-semibold">
+                    ({t('landlordRoomDetailAmenityPrivate')})
+                  </span>
+                )}
+              </Chip>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Quản lý trạng thái phòng */}

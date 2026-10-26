@@ -292,6 +292,7 @@ export interface RoomDashboardResponse {
   rentalHistory: RoomDashboardRentalHistoryItem[]
   invoices: RoomDashboardInvoice[]
   meterReadings: RoomDashboardMeterReading[]
+  amenities?: RoomAmenityItem[]
 }
 
 /**
@@ -307,4 +308,93 @@ export async function getRoomDashboard(
     },
   })
   return res?.data?.room ? res.data : res?.room ? res : (res?.data ?? res)
+}
+
+
+export interface RoomAmenityItem {
+  id: string
+  name: string
+  icon?: string | null
+  isShared: boolean
+}
+
+export interface RoomAmenitiesResponse {
+  currentAmenities: RoomAmenityItem[]
+  availableSharedAmenities: RoomAmenityItem[]
+}
+
+export interface AddRoomAmenityPayload {
+  amenityId?: string
+  name?: string
+  icon?: string
+}
+
+export interface UpdateRoomAmenityPayload {
+  name: string
+  icon?: string
+  forkForRoom?: boolean
+}
+
+/**
+ * Fetch amenities attached to a room and available shared amenities
+ */
+export async function getRoomAmenities(
+  boardingHouseId: string,
+  roomId: string,
+): Promise<RoomAmenitiesResponse> {
+  const res = await api.get<any>(`/v1/rooms/${roomId}/amenities`, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+/**
+ * Attach shared amenity or create new private amenity for a room
+ */
+export async function addRoomAmenity(
+  boardingHouseId: string,
+  roomId: string,
+  payload: AddRoomAmenityPayload,
+): Promise<RoomAmenityItem> {
+  const res = await api.post<any>(`/v1/rooms/${roomId}/amenities`, payload, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+/**
+ * Update amenity (updates master record if shared; forks into private if forkForRoom is true)
+ */
+export async function updateRoomAmenity(
+  boardingHouseId: string,
+  roomId: string,
+  amenityId: string,
+  payload: UpdateRoomAmenityPayload,
+): Promise<RoomAmenityItem & { forked?: boolean }> {
+  const res = await api.patch<any>(`/v1/rooms/${roomId}/amenities/${amenityId}`, payload, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+/**
+ * Remove amenity from room (and deletes if private)
+ */
+export async function deleteRoomAmenity(
+  boardingHouseId: string,
+  roomId: string,
+  amenityId: string,
+): Promise<{ success: boolean; message: string }> {
+  const res = await api.delete<any>(`/v1/rooms/${roomId}/amenities/${amenityId}`, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
 }

@@ -46,6 +46,7 @@ interface TenancyApiResponse {
       area?: number
       maxOccupants?: number
       roomTypeName?: string
+      amenities?: Array<{ id: string; name: string; icon?: string | null; isShared: boolean }>
     }
     boardingHouse: {
       id: string
@@ -309,6 +310,35 @@ export default function TenantRoomPage() {
               ))}
             </div>
           </div>
+
+          {/* Room Amenities */}
+          {room.amenities && room.amenities.length > 0 && (
+            <div className="bg-card rounded-3xl p-6 border border-line shadow-xs space-y-4">
+              <div className="border-b border-line pb-3 flex items-center justify-between">
+                <h3 className="text-sm font-black text-foreground uppercase tracking-wide flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Tiện Nghi Phòng
+                </h3>
+                <span className="text-xs text-muted font-semibold">
+                  {room.amenities.length} tiện nghi
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2.5">
+                {room.amenities.map(amenity => (
+                  <div
+                    key={amenity.id}
+                    className="px-3.5 py-2 bg-surface hover:bg-card-hover rounded-xl border border-line flex items-center gap-2 transition-colors"
+                  >
+                    <span className="text-xs font-bold text-foreground">{amenity.name}</span>
+                    <span className="text-[10px] font-semibold text-muted px-1.5 py-0.5 rounded-md bg-card border border-line">
+                      {amenity.isShared ? 'Chung' : 'Riêng'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Col: Landlord & Quick Links */}

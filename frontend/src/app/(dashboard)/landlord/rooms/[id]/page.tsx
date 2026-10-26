@@ -58,6 +58,7 @@ import { RoomSidebar } from './components/RoomSidebar'
 import { MeterCorrectionModal } from './components/MeterCorrectionModal'
 import { ReportIncidentModal } from './components/ReportIncidentModal'
 import { EditRoomModal } from './components/EditRoomModal'
+import { ManageRoomAmenitiesModal } from './components/ManageRoomAmenitiesModal'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -240,6 +241,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     error: '',
   })
   const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false)
+  const [isManageAmenitiesOpen, setIsManageAmenitiesOpen] = useState(false)
 
   const isRealUuid = Boolean(resolvedParams.id && UUID_REGEX.test(resolvedParams.id))
 
@@ -302,16 +304,9 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           tenant: occupants[0]?.fullName || primaryTenant?.fullName || undefined,
           tenantPhone: occupants[0]?.phoneNumber || primaryTenant?.phoneNumber || undefined,
           tenantCccd: occupants[0]?.identityNumber || primaryTenant?.identityNumber || undefined,
-          amenities: [
-            'WiFi',
-            'Điều hòa',
-            'Nóng lạnh',
-            'Tủ quần áo',
-            'Giường',
-            'Kệ bếp',
-            'Ban công',
-            'WC riêng',
-          ],
+          amenities: (res.amenities && res.amenities.length > 0)
+            ? res.amenities.map((a: any) => a.name)
+            : [],
           notes: activeContract?.note || '',
         }
 
@@ -1048,6 +1043,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           unpaidFinancials={unpaidFinancials}
           services={editServices}
           onUpdateStatus={handleUpdateStatus}
+          onOpenManageAmenities={() => setIsManageAmenitiesOpen(true)}
         />
       </div>
 
@@ -1084,6 +1080,16 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         roomNumber={room.roomNumber}
         onClose={() => setIsIncidentModalOpen(false)}
         onSubmit={handleCreateIncident}
+      />
+
+      {/* MODAL 4: QUẢN LÝ TIỆN NGHI PHÒNG */}
+      <ManageRoomAmenitiesModal
+        isOpen={isManageAmenitiesOpen}
+        boardingHouseId={activeBuilding?.id || ''}
+        roomId={resolvedParams.id}
+        roomNumber={room.roomNumber}
+        onClose={() => setIsManageAmenitiesOpen(false)}
+        onSuccess={loadDashboard}
       />
 
       {/* CONFIRM DELETE MODAL */}

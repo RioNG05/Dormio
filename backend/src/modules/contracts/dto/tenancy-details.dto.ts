@@ -25,6 +25,20 @@ export class BoardingHouseInfoDto {
   landlord: LandlordInfoDto
 }
 
+export class RoomAmenityInfoDto {
+  @ApiProperty({ description: 'Amenity ID' })
+  id: string
+
+  @ApiProperty({ description: 'Amenity name' })
+  name: string
+
+  @ApiPropertyOptional({ description: 'Icon' })
+  icon?: string
+
+  @ApiProperty({ description: 'Is shared' })
+  isShared: boolean
+}
+
 export class RoomInfoDto {
   @ApiProperty({ description: 'Room ID' })
   id: string
@@ -43,6 +57,9 @@ export class RoomInfoDto {
 
   @ApiPropertyOptional({ description: 'Room type name' })
   roomTypeName?: string
+
+  @ApiPropertyOptional({ type: [RoomAmenityInfoDto], description: 'Room amenities' })
+  amenities?: RoomAmenityInfoDto[]
 }
 
 export class ContractDocumentDto {

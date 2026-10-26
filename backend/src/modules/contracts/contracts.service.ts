@@ -820,6 +820,9 @@ export class ContractsService {
             roomServices: {
               include: { service: true },
             },
+                  roomAmenities: {
+                    include: { amenity: true },
+                  },
           },
         },
         tenantContracts: {
@@ -1247,6 +1250,9 @@ contract.tenantContracts[0]?.tenant
                     where: { service: { status: 'active' } },
                     include: { service: true },
                   },
+                  roomAmenities: {
+                    include: { amenity: true },
+                  },
                 },
               },
             },
@@ -1284,6 +1290,9 @@ contract.tenantContracts[0]?.tenant
                   roomServices: {
                     where: { service: { status: 'active' } },
                     include: { service: true },
+                  },
+                  roomAmenities: {
+                    include: { amenity: true },
                   },
                 },
               },
@@ -1337,6 +1346,12 @@ contract.tenantContracts[0]?.tenant
           area: room.area ? Number(room.area) : undefined,
           maxOccupants: room.maxOccupants ?? undefined,
           roomTypeName: room.roomType?.name,
+          amenities: (room.roomAmenities || []).map((ra: any) => ({
+            id: ra.amenity.id,
+            name: ra.amenity.name,
+            icon: ra.amenity.icon,
+            isShared: ra.amenity.isShared,
+          })),
         },
         boardingHouse: {
           id: boardingHouse.id,
@@ -1407,6 +1422,9 @@ contract.tenantContracts[0]?.tenant
               where: { service: { status: 'active' } },
               include: { service: true },
             },
+                  roomAmenities: {
+                    include: { amenity: true },
+                  },
             contracts: {
               where: { status: 'active' },
               include: {
@@ -1469,6 +1487,12 @@ contract.tenantContracts[0]?.tenant
         area: room.area ? Number(room.area) : undefined,
         maxOccupants: room.maxOccupants ?? undefined,
         roomTypeName: room.roomType?.name,
+          amenities: (room.roomAmenities || []).map((ra: any) => ({
+            id: ra.amenity.id,
+            name: ra.amenity.name,
+            icon: ra.amenity.icon,
+            isShared: ra.amenity.isShared,
+          })),
       },
       boardingHouse: {
         id: boardingHouse.id,
