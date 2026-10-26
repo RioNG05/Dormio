@@ -232,7 +232,7 @@ export function Step1GeneralInfo({
               onFileChange={onThumbnailFileChange}
               label={t('landlordSetupThumbnailLabel')}
               hint={t('landlordSetupThumbnailUploadHint')}
-              maxSizeMb={15}
+              maxSizeMb={10}
             />
           </div>
 

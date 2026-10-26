@@ -46,7 +46,7 @@ export function MultiImageUpload({
   onChange,
   folder = 'dormio/posts',
   maxImages = 10,
-  maxSizeMb = 15,
+  maxSizeMb = 10,
   disabled = false,
   error: externalError,
   label,

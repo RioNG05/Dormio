@@ -53,7 +53,7 @@ export function ImageUpload({
   isLoading = false,
   loadingText,
   folder = 'dormio/uploads',
-  maxSizeMb = 15,
+  maxSizeMb = 10,
   accept = 'image/png,image/jpeg,image/webp,image/*',
   aspectRatio = 'card',
   disabled = false,

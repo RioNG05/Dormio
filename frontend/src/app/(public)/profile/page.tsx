@@ -123,8 +123,9 @@ function UniversalProfilePage() {
     }
 
 
-    // Validate file size (max 15MB)
-    const MAX_SIZE = 15 * 1024 * 1024
+
+    // Validate file size (max 10MB)
+    const MAX_SIZE = 10 * 1024 * 1024
     if (file.size > MAX_SIZE) {
       toast.error(t('guestProfileAvatarSizeLimit'))
       if (fileInputRef.current) fileInputRef.current.value = ''

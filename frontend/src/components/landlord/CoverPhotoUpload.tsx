@@ -28,7 +28,7 @@ export function CoverPhotoUpload({
   onFileChange,
   label,
   hint,
-  maxSizeMb = 15,
+  maxSizeMb = 10,
 }: CoverPhotoUploadProps) {
   const t = useTranslations('landlord')
   const fileInputRef = useRef<HTMLInputElement | null>(null)

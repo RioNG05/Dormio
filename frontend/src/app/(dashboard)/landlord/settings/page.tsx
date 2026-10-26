@@ -803,7 +803,7 @@ export default function LandlordSettingsPage() {
                   onChange={url => handleUpdateField('thumbnail', url)}
                   label={t('landlordSetupThumbnailLabel')}
                   hint={t('landlordSetupThumbnailUploadHint')}
-                  maxSizeMb={15}
+                  maxSizeMb={10}
                 />
               </div>
 
