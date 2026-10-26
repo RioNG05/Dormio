@@ -92,6 +92,10 @@ Load these skills (read their SKILL.md) when working on:
     - **Configurable Boarding House Payment Date**: Boarding houses feature a configurable `monthlyPaymentDate` (integer 1–31, default: `5`), selected during onboarding/setup and editable in landlord settings. If a room has no contract, billing defaults to this property payment date. If an active contract specifies a `monthlyPaymentDate`, the contract date applies.
     - **Default Room Rent**: For rooms without contracts, invoice rent amount defaults to `room.roomType.price`. Landlords can adjust or discount this line item directly on the invoice.
 
+20. **Button & Chip Icon Handling (Never Hardcode Size/Shrink on Icons)**:
+    - Both shared components `<Button>` (`src/components/ui/Button.tsx`) and `<Chip>` (`src/components/ui/Chip.tsx`) internally clean/strip size classes and automatically manage icon sizing (`iconSizeClasses[size]` / `CHIP_ICON_DIMENSIONS[size]`, e.g., `w-3 h-3` for `xs`, `w-3.5 h-3.5` for `sm`, `w-4 h-4` for `md`, `w-5 h-5` for `lg`) and apply `shrink-0` to all icons passed to `leftIcon`, `rightIcon`, or standalone icon slots.
+    - **NEVER** pass manual sizing classes (`w-*`, `h-*`, `size-*`) or `shrink-0` to icons used with `<Button>` or `<Chip>`. Pass only the icon element with contextual color or animation classes if needed (e.g. `leftIcon={<UserCircle className="text-primary" />} `, `leftIcon={<Check />} `, `leftIcon={<LogOut />} `).
+
 ## Module Breakdown
 
 ```

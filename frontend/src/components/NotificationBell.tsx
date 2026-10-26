@@ -347,7 +347,7 @@ export default function NotificationBell({
                 variant="ghost"
                 size="xs"
                 onClick={handleMarkAllAsRead}
-                leftIcon={<CheckCheck className="text-primary w-3.5 h-3.5" />}
+                leftIcon={<CheckCheck className="text-primary" />}
                 className="shrink-0"
               >
                 <Text color="brand" size="xs">
@@ -417,13 +417,13 @@ export default function NotificationBell({
                         </Text>
 
                         {hasRedirect ? (
-                          <Button variant="ghost" size="xs" rightIcon={<ChevronRight className="text-accent w-3 h-3" />}>
+                          <Button variant="ghost" size="xs" rightIcon={<ChevronRight className="text-accent" />}>
                             <Text color="orange" size="xs" className="hover:underline">
                               {t('viewDetail')}
                             </Text>
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="xs" leftIcon={<CheckCircle2 className="text-success w-3 h-3" />}>
+                          <Button variant="ghost" size="xs" leftIcon={<CheckCircle2 className="text-success" />}>
                             <Text color="success" size="xs">
                               {t('notificationsSystemAnnouncement')}
                             </Text>

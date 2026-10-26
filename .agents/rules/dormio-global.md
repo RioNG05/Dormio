@@ -273,3 +273,4 @@ Every frontend page, layout, modal, and component MUST strictly satisfy the foll
 - Do NOT build custom empty states with raw divs — always use `<EmptyState>` from `@/components/ui/EmptyState`.
 - Do NOT hardcode colors or ignore dark mode — always use semantic design tokens (`bg-card`, `bg-surface`, `text-foreground`, `border-line`, etc.).
 - Do NOT create non-responsive layouts, fixed desktop-only pixel widths, or modals that overflow mobile viewports.
+- Do NOT pass manual size classes (`w-*`, `h-*`, `size-*`) or `shrink-0` to icons used in `<Button>` or `<Chip>` (`leftIcon`, `rightIcon`) — Button and Chip handle icon sizing and shrinking automatically.

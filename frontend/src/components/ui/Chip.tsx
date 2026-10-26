@@ -36,7 +36,9 @@ export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   size?: ChipSize
   count?: number | string
   countClassName?: string
+  /** Left icon. Chip automatically manages sizing (w-* / h-*) and shrink-0. DO NOT pass manual size classes. */
   leftIcon?: React.ReactNode
+  /** Right icon. Chip automatically manages sizing (w-* / h-*) and shrink-0. DO NOT pass manual size classes. */
   rightIcon?: React.ReactNode
   onRemove?: (e: React.MouseEvent) => void
   /**

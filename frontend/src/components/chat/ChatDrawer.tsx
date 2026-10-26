@@ -88,7 +88,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             </div>
 
             <div className="pt-2 flex justify-center">
-              <Chip variant="success" size="xs" preventHover leftIcon={<Check className="w-3 h-3" />}>
+              <Chip variant="success" size="xs" preventHover leftIcon={<Check />}>
                 Tài khoản Dormio
               </Chip>
             </div>

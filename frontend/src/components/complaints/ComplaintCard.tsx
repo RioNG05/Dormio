@@ -116,7 +116,7 @@ export function ComplaintCard({ item, role, onSelect }: ComplaintCardProps) {
               </Chip>
             ) : (
               item.boardingHouseName && (
-                <Chip variant="neutral" size="xs" preventHover leftIcon={<Building className="w-3 h-3" />}>
+                <Chip variant="neutral" size="xs" preventHover leftIcon={<Building />}>
                   {item.boardingHouseName}
                 </Chip>
               )

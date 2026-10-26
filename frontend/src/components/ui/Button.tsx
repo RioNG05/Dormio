@@ -20,7 +20,9 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     | 'white'
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg'
   isLoading?: boolean
+  /** Left icon. Button automatically manages sizing (w-* / h-*) and shrink-0. DO NOT pass manual size classes. */
   leftIcon?: React.ReactNode
+  /** Right icon. Button automatically manages sizing (w-* / h-*) and shrink-0. DO NOT pass manual size classes. */
   rightIcon?: React.ReactNode
   fullWidth?: boolean | 'responsive'
   rounded?: 'default' | 'full'
