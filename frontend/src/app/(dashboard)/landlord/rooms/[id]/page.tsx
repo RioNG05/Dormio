@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, use, useCallback } from 'react'
+import React, { useState, useEffect, use, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -31,6 +31,8 @@ import {
   getRoomDashboard,
   updateRoom,
   RoomDashboardResponse,
+  RoomAmenityItem,
+  RoomServiceDetailItem,
 } from '@/services/room.service'
 import {
   meterReadingService,
@@ -59,6 +61,7 @@ import { MeterCorrectionModal } from './components/MeterCorrectionModal'
 import { ReportIncidentModal } from './components/ReportIncidentModal'
 import { EditRoomModal } from './components/EditRoomModal'
 import { ManageRoomAmenitiesModal } from './components/ManageRoomAmenitiesModal'
+import { ManageRoomServicesModal } from './components/ManageRoomServicesModal'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -242,12 +245,15 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   })
   const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false)
   const [isManageAmenitiesOpen, setIsManageAmenitiesOpen] = useState(false)
+  const [isManageServicesOpen, setIsManageServicesOpen] = useState(false)
 
   const isRealUuid = Boolean(resolvedParams.id && UUID_REGEX.test(resolvedParams.id))
 
   // Load Dashboard Data (Aggregated query)
-  const loadDashboard = useCallback(async () => {
-    setIsLoading(true)
+  const loadDashboard = useCallback(async (silent = false) => {
+    if (!silent && !dashboardData) {
+      setIsLoading(true)
+    }
     if (isRealUuid && activeBuilding?.id && UUID_REGEX.test(activeBuilding.id)) {
       try {
         const rawRes = await getRoomDashboard(activeBuilding.id, resolvedParams.id)
@@ -420,6 +426,41 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     setInvoicePage(1)
     setMeterPage(1)
   }, [selectedFilterPeriod])
+
+  // Real-time local state update for amenities without full page reload
+  // Real-time local state update for amenities without full page reload
+  const handleAmenitiesChange = useCallback((updatedAmenities: RoomAmenityItem[]) => {
+    setDashboardData(prev => (prev ? { ...prev, amenities: updatedAmenities } : prev))
+    setRoom(prev => (prev ? { ...prev, amenities: updatedAmenities.map(a => a.name) } : null))
+  }, [])
+
+  // Real-time local state update for services without full page reload
+  const handleServicesChange = useCallback((updatedServices: RoomServiceDetailItem[]) => {
+    const mappedServices: RoomCustomServiceItem[] = updatedServices.map(s => ({
+      id: s.id,
+      name: s.name,
+      defaultPrice: Number(s.price).toLocaleString('vi-VN'),
+      customPrice: Number(s.price).toLocaleString('vi-VN'),
+      unit: s.unit ? `đ/${s.unit}` : 'đ/tháng',
+      isCustom: false,
+      isRemovable: false,
+    }))
+    setEditServices(mappedServices)
+    setDashboardData(prev =>
+      prev
+        ? {
+            ...prev,
+            services: updatedServices.map(s => ({
+              id: s.id,
+              name: s.name,
+              price: String(s.price),
+              unit: s.unit,
+              isMetered: s.isMetered,
+            })),
+          }
+        : prev,
+    )
+  }, [])
 
   const handleUpdateStatus = async (
     newDisplayStatus: 'Trống' | 'Đang thuê' | 'Bảo trì' | 'Đặt cọc',
@@ -751,12 +792,20 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   // Filtered meter records and invoices based on selected Filter Period
-  const filteredMeterHistory = meterHistory.filter(
-    m => selectedFilterPeriod === 'all' || m.period === selectedFilterPeriod,
-  )
-  const filteredInvoices = invoicesHistory.filter(
-    inv => selectedFilterPeriod === 'all' || inv.period === selectedFilterPeriod,
-  )
+  const filteredMeterHistory = meterHistory.filter(m => {
+    if (selectedFilterPeriod === 'all') return true
+    if (m.period === selectedFilterPeriod) return true
+    const cleanPeriod = (m.period || '').replace(/^Tháng\s+/i, '').trim()
+    const cleanFilter = selectedFilterPeriod.replace(/^Tháng\s+/i, '').trim()
+    return cleanPeriod === cleanFilter
+  })
+  const filteredInvoices = invoicesHistory.filter(inv => {
+    if (selectedFilterPeriod === 'all') return true
+    if (inv.period === selectedFilterPeriod) return true
+    const cleanPeriod = (inv.period || '').replace(/^Tháng\s+/i, '').trim()
+    const cleanFilter = selectedFilterPeriod.replace(/^Tháng\s+/i, '').trim()
+    return cleanPeriod === cleanFilter
+  })
 
   const totalInvoicePages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE) || 1
   const paginatedInvoices = filteredInvoices.slice(
@@ -800,15 +849,53 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         contractId: currentContract?.id,
       }))
 
-  const availablePeriods = Array.from(
-    new Set([
-      ...meterHistory.map(m => m.period),
-      ...invoicesHistory.map(i => i.period),
-      'Tháng 09/2026',
-      'Tháng 08/2026',
-      'Tháng 07/2026',
-    ]),
-  ).filter(Boolean)
+  // Generate 24 most recent months relative to current month
+  const recent24Months = useMemo(() => {
+    const list: Array<{ value: string; label: string }> = []
+    const now = new Date()
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const y = d.getFullYear()
+      const formattedMonthYear = `${m}/${y}`
+      const periodValue = `Tháng ${formattedMonthYear}`
+      const label =
+        i === 0
+          ? t('landlordRoomDetailFilterCurrentMonth', { month: formattedMonthYear })
+          : t('landlordRoomDetailFilterMonth', { month: formattedMonthYear })
+      list.push({
+        value: periodValue,
+        label,
+      })
+    }
+    return list
+  }, [t])
+
+  // Aggregate available period options (All months + 24 recent months + any older periods from history)
+  const periodFilterOptions = useMemo(() => {
+    const options: Array<{ value: string; label: string }> = [
+      { value: 'all', label: t('landlordRoomDetailFilterAllMonths') },
+      ...recent24Months,
+    ]
+
+    const existingValues = new Set(options.map(o => o.value))
+
+    meterHistory.forEach(m => {
+      if (m.period && !existingValues.has(m.period)) {
+        existingValues.add(m.period)
+        options.push({ value: m.period, label: m.period })
+      }
+    })
+
+    invoicesHistory.forEach(inv => {
+      if (inv.period && !existingValues.has(inv.period)) {
+        existingValues.add(inv.period)
+        options.push({ value: inv.period, label: inv.period })
+      }
+    })
+
+    return options
+  }, [recent24Months, meterHistory, invoicesHistory, t])
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
@@ -966,13 +1053,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               <SelectInput
                 value={selectedFilterPeriod}
                 onChange={e => setSelectedFilterPeriod(e.target.value)}
-                options={[
-                  { value: 'all', label: t('landlordRoomDetailFilterAllMonths') },
-                  ...availablePeriods.map(p => ({
-                    value: p,
-                    label: p,
-                  })),
-                ]}
+                options={periodFilterOptions}
               />
             </div>
           </div>
@@ -1045,6 +1126,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           services={editServices}
           onUpdateStatus={handleUpdateStatus}
           onOpenManageAmenities={() => setIsManageAmenitiesOpen(true)}
+          onOpenManageServices={() => setIsManageServicesOpen(true)}
         />
       </div>
 
@@ -1090,7 +1172,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         roomId={resolvedParams.id}
         roomNumber={room.roomNumber}
         onClose={() => setIsManageAmenitiesOpen(false)}
-        onSuccess={loadDashboard}
+        onAmenitiesChange={handleAmenitiesChange}
+      />
+
+      {/* MODAL 5: QUẢN LÝ DỊCH VỤ PHÒNG */}
+      <ManageRoomServicesModal
+        isOpen={isManageServicesOpen}
+        boardingHouseId={activeBuilding?.id || ''}
+        roomId={resolvedParams.id}
+        roomNumber={room.roomNumber}
+        onClose={() => setIsManageServicesOpen(false)}
+        onServicesChange={handleServicesChange}
       />
 
       {/* CONFIRM DELETE MODAL */}

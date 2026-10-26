@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import {
-  Sparkles,
   Plus,
   Trash2,
   Edit2,
@@ -11,12 +10,14 @@ import {
   Check,
   Building2,
   Lock,
-  Layers,
   CheckCircle2,
+  HouseWifi,
+  X,
 } from 'lucide-react'
 import {
   Button,
   TextInput,
+  SelectInput,
   Text,
   Modal,
   Chip,
@@ -39,9 +40,8 @@ interface ManageRoomAmenitiesModalProps {
   roomNumber: string
   onClose: () => void
   onSuccess?: () => void
+  onAmenitiesChange?: (updatedAmenities: RoomAmenityItem[]) => void
 }
-
-type ActiveTab = 'current' | 'addShared' | 'createPrivate'
 
 export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> = ({
   isOpen,
@@ -50,22 +50,23 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
   roomNumber,
   onClose,
   onSuccess,
+  onAmenitiesChange,
 }) => {
   const t = useTranslations('landlord')
   const tErrors = useTranslations('errors')
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('current')
   const [isLoading, setIsLoading] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  // Data
+  // Current amenities data
   const [currentAmenities, setCurrentAmenities] = useState<RoomAmenityItem[]>([])
-  const [sharedPool, setSharedPool] = useState<RoomAmenityItem[]>([])
 
-  // Form states
-  const [newPrivateName, setNewPrivateName] = useState('')
+  // Inline Add Form state
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false)
+  const [newAmenityName, setNewAmenityName] = useState('')
+  const [newAmenityScope, setNewAmenityScope] = useState<'shared' | 'private'>('shared')
 
   // Edit amenity submodal state
   const [editingAmenity, setEditingAmenity] = useState<RoomAmenityItem | null>(null)
@@ -79,15 +80,17 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
 
   // Load amenities data
   const loadData = useCallback(async () => {
-    if (!boardingHouseId || !roomId) return
+    if (!boardingHouseId || !roomId) return null
     setIsLoading(true)
     setErrorMessage(null)
     try {
       const res = await getRoomAmenities(boardingHouseId, roomId)
-      setCurrentAmenities(res.currentAmenities || [])
-      setSharedPool(res.availableSharedAmenities || [])
+      const current = res.currentAmenities || []
+      setCurrentAmenities(current)
+      return current
     } catch (err: unknown) {
       setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityLoadFailed')))
+      return null
     } finally {
       setIsLoading(false)
     }
@@ -96,8 +99,9 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
   useEffect(() => {
     if (isOpen) {
       loadData()
-      setActiveTab('current')
-      setNewPrivateName('')
+      setIsAddFormOpen(false)
+      setNewAmenityName('')
+      setNewAmenityScope('shared')
       setEditingAmenity(null)
       setEditName('')
       setDeletingAmenity(null)
@@ -117,11 +121,11 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
 
   // Check unsaved changes (Rule 10)
   const isFormDirty = useCallback(() => {
-    const isNewPrivateDirty = newPrivateName.trim().length > 0
+    const isAddDirty = isAddFormOpen && newAmenityName.trim().length > 0
     const isEditDirty =
       editingAmenity !== null && editName.trim() !== (editingAmenity.name || '').trim()
-    return isNewPrivateDirty || isEditDirty
-  }, [newPrivateName, editingAmenity, editName])
+    return isAddDirty || isEditDirty
+  }, [isAddFormOpen, newAmenityName, editingAmenity, editName])
 
   const handleRequestClose = () => {
     if (isFormDirty()) {
@@ -133,13 +137,14 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
 
   const handleForceClose = () => {
     setShowDiscardConfirm(false)
-    setNewPrivateName('')
+    setIsAddFormOpen(false)
+    setNewAmenityName('')
+    setNewAmenityScope('shared')
     setEditingAmenity(null)
     setEditName('')
     setDeletingAmenity(null)
     setErrorMessage(null)
     setSuccessMessage(null)
-    setActiveTab('current')
     onClose()
   }
 
@@ -148,36 +153,24 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
     setEditName('')
   }
 
-  // Attach shared amenity from house pool
-  const handleAttachShared = async (amenityId: string) => {
-    setIsActionLoading(true)
-    setErrorMessage(null)
-    try {
-      await addRoomAmenity(boardingHouseId, roomId, { amenityId })
-      setSuccessMessage(t('landlordRoomDetailAmenityAddSuccess'))
-      await loadData()
-      onSuccess?.()
-    } catch (err: unknown) {
-      setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityAttachFailed')))
-    } finally {
-      setIsActionLoading(false)
-    }
-  }
-
-  // Create new private amenity
-  const handleCreatePrivate = async (e?: React.FormEvent) => {
+  // Create & attach amenity
+  const handleCreateAmenity = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
-    const trimmed = newPrivateName.trim()
+    const trimmed = newAmenityName.trim()
     if (!trimmed) return
 
     setIsActionLoading(true)
     setErrorMessage(null)
     try {
-      await addRoomAmenity(boardingHouseId, roomId, { name: trimmed })
+      await addRoomAmenity(boardingHouseId, roomId, {
+        name: trimmed,
+        isShared: newAmenityScope === 'shared',
+      })
       setSuccessMessage(t('landlordRoomDetailAmenityAddSuccess'))
-      setNewPrivateName('')
-      setActiveTab('current')
-      await loadData()
+      setNewAmenityName('')
+      setIsAddFormOpen(false)
+      const updated = await loadData()
+      if (updated) onAmenitiesChange?.(updated)
       onSuccess?.()
     } catch (err: unknown) {
       setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityCreateFailed')))
@@ -209,7 +202,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       setSuccessMessage(t('landlordRoomDetailAmenityUpdateSuccess'))
       setEditingAmenity(null)
       setEditName('')
-      await loadData()
+      const updated = await loadData()
+      if (updated) onAmenitiesChange?.(updated)
       onSuccess?.()
     } catch (err: unknown) {
       setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityUpdateFailed')))
@@ -228,7 +222,8 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
       await deleteRoomAmenity(boardingHouseId, roomId, deletingAmenity.id)
       setSuccessMessage(t('landlordRoomDetailAmenityRemoveSuccess'))
       setDeletingAmenity(null)
-      await loadData()
+      const updated = await loadData()
+      if (updated) onAmenitiesChange?.(updated)
       onSuccess?.()
     } catch (err: unknown) {
       setErrorMessage(resolveErrorMessage(err, tErrors, t('landlordRoomDetailAmenityRemoveFailed')))
@@ -237,10 +232,6 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
     }
   }
 
-  // Calculate unattached shared amenities
-  const currentAmenityIds = new Set(currentAmenities.map(a => a.id))
-  const unattachedSharedAmenities = sharedPool.filter(a => !currentAmenityIds.has(a.id))
-
   return (
     <>
       <Modal isOpen={isOpen} onClose={handleRequestClose} size="2xl">
@@ -248,13 +239,13 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
           title={t('landlordRoomDetailAmenityModalTitle', { roomNumber })}
           icon={
             <div className="p-2 bg-primary/10 text-primary rounded-xl shrink-0">
-              <Sparkles className="w-5 h-5" />
+              <HouseWifi className="w-5 h-5" />
             </div>
           }
         />
 
-        <Modal.Body className="space-y-5 max-h-[75vh] overflow-y-auto">
-          {/* NOTICE BANNER REQUIRED BY USER */}
+        <Modal.Body className="space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* NOTICE BANNER */}
           <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
             <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div className="space-y-1">
@@ -286,209 +277,178 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             </div>
           )}
 
-          {/* TABS NAVIGATION USING UI BUTTON COMPONENT (RULE 18) */}
-          <div className="flex flex-wrap sm:flex-nowrap border-b border-line pb-3 gap-2">
+          {/* LIST HEADER BAR WITH ADD AMENITY BUTTON */}
+          <div className="flex items-center justify-between gap-3 pb-1 border-b border-line">
+            <Text size="sm" weight="black" color="default">
+              {t('landlordRoomDetailAmenityListTitle', { count: currentAmenities.length })}
+            </Text>
             <Button
-              variant={activeTab === 'current' ? 'primary' : 'outline'}
               size="sm"
-              onClick={() => setActiveTab('current')}
-              leftIcon={<Layers className="w-4 h-4" />}
-              className="w-full sm:w-auto"
+              variant={isAddFormOpen ? 'outline' : 'primary'}
+              onClick={() => {
+                if (isAddFormOpen) {
+                  setIsAddFormOpen(false)
+                  setNewAmenityName('')
+                  setNewAmenityScope('shared')
+                } else {
+                  setIsAddFormOpen(true)
+                }
+              }}
+              leftIcon={isAddFormOpen ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             >
-              {t('landlordRoomDetailAmenityTabCurrent')} ({currentAmenities.length})
-            </Button>
-
-            <Button
-              variant={activeTab === 'addShared' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('addShared')}
-              leftIcon={<Building2 className="w-4 h-4" />}
-              className="w-full sm:w-auto"
-            >
-              {t('landlordRoomDetailAmenityTabAddShared')} ({unattachedSharedAmenities.length})
-            </Button>
-
-            <Button
-              variant={activeTab === 'createPrivate' ? 'primary' : 'outline'}
-              size="sm"
-              onClick={() => setActiveTab('createPrivate')}
-              leftIcon={<Plus className="w-4 h-4" />}
-              className="w-full sm:w-auto"
-            >
-              {t('landlordRoomDetailAmenityTabCreatePrivate')}
+              {isAddFormOpen ? t('landlordRoomDetailAmenityBtnCancel') : t('landlordRoomDetailAmenityBtnAdd')}
             </Button>
           </div>
 
-          {/* TAB 1: CURRENT AMENITIES LIST */}
-          {activeTab === 'current' && (
-            <div className="space-y-3 min-h-[220px]">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-12 text-secondary space-y-2">
-                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <Text size="xs">{t('commonLoading')}</Text>
-                </div>
-              ) : currentAmenities.length === 0 ? (
-                <EmptyState
-                  icon={<Sparkles className="w-8 h-8 text-secondary" />}
-                  title={t('landlordRoomDetailAmenitiesEmpty')}
-                  action={
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => setActiveTab('addShared')}
-                      leftIcon={<Plus className="w-4 h-4" />}
-                    >
-                      {t('landlordRoomDetailAmenityTabAddShared')}
-                    </Button>
-                  }
-                />
-              ) : (
-                <div className="divide-y divide-line border border-line rounded-xl overflow-hidden bg-card">
-                  {currentAmenities.map(item => (
-                    <div
-                      key={item.id}
-                      className="p-3.5 flex items-center justify-between gap-3 hover:bg-surface/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-surface border border-line flex items-center justify-center text-primary shrink-0">
-                          {item.isShared ? (
-                            <Building2 className="w-4 h-4" />
-                          ) : (
-                            <Lock className="w-4 h-4 text-warning" />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <Text size="sm" weight="bold" color="default" className="truncate">
-                            {item.name}
-                          </Text>
-                          <div className="mt-0.5">
-                            {item.isShared ? (
-                              <Chip size="sm" variant="info" preventHover>
-                                {t('landlordRoomDetailAmenityShared')}
-                              </Chip>
-                            ) : (
-                              <Chip size="sm" variant="warning" preventHover>
-                                {t('landlordRoomDetailAmenityPrivate')}
-                              </Chip>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Button
-                          variant="secondary"
-                          size="icon-sm"
-                          onClick={() => handleOpenEdit(item)}
-                          disabled={isActionLoading}
-                          title={t('commonEdit')}
-                        >
-                          <Edit2 />
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="icon-sm"
-                          onClick={() => setDeletingAmenity(item)}
-                          disabled={isActionLoading}
-                          title={t('commonDelete')}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: ATTACH SHARED AMENITIES */}
-          {activeTab === 'addShared' && (
-            <div className="space-y-3 min-h-[220px]">
-              <Text size="xs" color="secondary">
-                {t('landlordRoomDetailAmenityTabAddShared')}
+          {/* INLINE ADD AMENITY FORM */}
+          {isAddFormOpen && (
+            <form
+              onSubmit={handleCreateAmenity}
+              className="p-4 bg-surface/60 border border-line rounded-xl space-y-3.5 transition-all duration-200"
+            >
+              <Text size="xs" weight="black" color="default">
+                {t('landlordRoomDetailAmenityAddFormTitle')}
               </Text>
-              {unattachedSharedAmenities.length === 0 ? (
-                <EmptyState
-                  icon={<Check className="w-8 h-8 text-success" />}
-                  title={t('landlordRoomDetailAmenityAllSharedAttached')}
-                  description={t('landlordRoomDetailAmenityAllSharedAttachedDesc')}
-                  action={
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setActiveTab('createPrivate')}
-                      leftIcon={<Plus className="w-4 h-4" />}
-                    >
-                      {t('landlordRoomDetailAmenityTabCreatePrivate')}
-                    </Button>
-                  }
-                />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {unattachedSharedAmenities.map(item => (
-                    <div
-                      key={item.id}
-                      className="p-3 border border-line rounded-xl bg-card flex items-center justify-between gap-3 shadow-2xs hover:border-primary/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Building2 className="w-4 h-4 text-primary shrink-0" />
-                        <Text size="xs" weight="bold" color="default" className="truncate">
-                          {item.name}
-                        </Text>
-                      </div>
-                      <Button
-                        size="xs"
-                        variant="secondary"
-                        onClick={() => handleAttachShared(item.id)}
-                        disabled={isActionLoading}
-                        leftIcon={<Plus className="w-3.5 h-3.5" />}
-                        className="shrink-0"
-                      >
-                        {t('landlordRoomDetailAmenityBtnAddShared')}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* TAB 3: CREATE PRIVATE AMENITY */}
-          {activeTab === 'createPrivate' && (
-            <form onSubmit={handleCreatePrivate} className="space-y-4 min-h-[220px]">
-              <div className="bg-surface/50 border border-line rounded-xl p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-warning" />
-                  <Text size="xs" weight="black" color="default">
-                    {t('landlordRoomDetailAmenityTabCreatePrivate')}
-                  </Text>
-                </div>
-                <Text size="xs" color="secondary">
-                  {t('landlordRoomDetailAmenityNoticeDesc')}
-                </Text>
+              <TextInput
+                label={t('landlordRoomDetailAmenityNameLabel')}
+                placeholder={t('landlordRoomDetailAmenityNamePlaceholder')}
+                value={newAmenityName}
+                onChange={e => setNewAmenityName(e.target.value)}
+                disabled={isActionLoading}
+                required
+                autoFocus
+              />
 
-                <TextInput
-                  label={t('landlordRoomDetailAmenityNameLabel')}
-                  placeholder={t('landlordRoomDetailAmenityNamePlaceholder')}
-                  value={newPrivateName}
-                  onChange={e => setNewPrivateName(e.target.value)}
+              <SelectInput
+                label={t('landlordRoomDetailAmenityScopeLabel')}
+                value={newAmenityScope}
+                onChange={e => setNewAmenityScope(e.target.value as 'shared' | 'private')}
+                disabled={isActionLoading}
+                options={[
+                  {
+                    value: 'shared',
+                    label: t('landlordRoomDetailAmenityScopeShared'),
+                    description: t('landlordRoomDetailAmenityScopeSharedHint'),
+                  },
+                  {
+                    value: 'private',
+                    label: t('landlordRoomDetailAmenityScopePrivate'),
+                    description: t('landlordRoomDetailAmenityScopePrivateHint'),
+                  },
+                ]}
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => {
+                    setIsAddFormOpen(false)
+                    setNewAmenityName('')
+                    setNewAmenityScope('shared')
+                  }}
                   disabled={isActionLoading}
-                />
-
+                >
+                  {t('landlordRoomDetailAmenityBtnCancel')}
+                </Button>
                 <Button
                   type="submit"
-                  size="md"
                   variant="primary"
-                  disabled={!newPrivateName.trim() || isActionLoading}
+                  size="md"
+                  disabled={!newAmenityName.trim() || isActionLoading}
                   isLoading={isActionLoading}
                   leftIcon={<Plus className="w-4 h-4" />}
                 >
-                  {t('landlordRoomDetailAmenityBtnCreatePrivate')}
+                  {t('landlordRoomDetailAmenityBtnSubmit')}
                 </Button>
               </div>
             </form>
           )}
+
+          {/* CURRENT AMENITIES LIST */}
+          <div className="space-y-3 min-h-[160px]">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 text-secondary space-y-2">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <Text size="xs">{t('commonLoading')}</Text>
+              </div>
+            ) : currentAmenities.length === 0 ? (
+              <EmptyState
+                icon={<HouseWifi className="w-8 h-8 text-secondary" />}
+                title={t('landlordRoomDetailAmenitiesEmpty')}
+                action={
+                  !isAddFormOpen ? (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => setIsAddFormOpen(true)}
+                      leftIcon={<Plus className="w-4 h-4" />}
+                    >
+                      {t('landlordRoomDetailAmenityBtnAdd')}
+                    </Button>
+                  ) : undefined
+                }
+              />
+            ) : (
+              <div className="divide-y divide-line border border-line rounded-xl overflow-hidden bg-card">
+                {currentAmenities.map(item => (
+                  <div
+                    key={item.id}
+                    className="p-3.5 flex items-center justify-between gap-3 hover:bg-surface/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-surface border border-line flex items-center justify-center text-primary shrink-0">
+                        {item.isShared ? (
+                          <Building2 className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-warning" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <Text size="sm" weight="bold" color="default" className="truncate">
+                          {item.name}
+                        </Text>
+                        <div className="mt-0.5">
+                          {item.isShared ? (
+                            <Chip size="sm" variant="info" preventHover>
+                              {t('landlordRoomDetailAmenityShared')}
+                            </Chip>
+                          ) : (
+                            <Chip size="sm" variant="warning" preventHover>
+                              {t('landlordRoomDetailAmenityPrivate')}
+                            </Chip>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        variant="secondary"
+                        size="icon-sm"
+                        onClick={() => handleOpenEdit(item)}
+                        disabled={isActionLoading}
+                        title={t('commonEdit')}
+                      >
+                        <Edit2 />
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="icon-sm"
+                        onClick={() => setDeletingAmenity(item)}
+                        disabled={isActionLoading}
+                        title={t('commonDelete')}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Modal.Body>
 
         <Modal.Footer className="flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 sm:gap-3">
@@ -630,7 +590,7 @@ export const ManageRoomAmenitiesModal: React.FC<ManageRoomAmenitiesModalProps> =
             size="md"
             onClick={handleConfirmDelete}
             isLoading={isActionLoading}
-            leftIcon={<Trash2 className="w-4 h-4" />}
+            leftIcon={<Trash2 />}
             className="w-full sm:w-auto"
           >
             {t('commonDelete')}

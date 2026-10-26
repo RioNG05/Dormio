@@ -37,6 +37,7 @@ import {
 } from './dto/room-response.dto'
 import { UpdateRoomDto } from './dto/update-room.dto'
 import { AddRoomAmenityDto, UpdateRoomAmenityDto } from './dto/manage-room-amenity.dto'
+import { AddRoomServiceDto, UpdateRoomServiceDto } from './dto/manage-room-service.dto'
 import { RoomsService } from './rooms.service'
 
 @ApiTags('Rooms')
@@ -278,5 +279,73 @@ export class RoomsController {
   ) {
     this.logger.log(`DELETE /rooms/${id}/amenities/${amenityId} called by user ${user.id} for house ${boardingHouseId}`)
     return this.roomsService.deleteRoomAmenity(boardingHouseId, id, amenityId)
+  }
+
+  @Get(':id/services')
+  @ApiOperation({
+    summary: 'Get room services (currently attached + available in property pool) (UC-L-03/18)',
+    description: 'Retrieves all services currently attached to the room and all available active services in the property pool.',
+  })
+  @ApiOkResponse({ description: 'Room services retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Room not found in this property' })
+  async getRoomServices(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    this.logger.log(`GET /rooms/${id}/services called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.getRoomServices(boardingHouseId, id)
+  }
+
+  @Post(':id/services')
+  @ApiOperation({
+    summary: 'Attach existing service or create new service for room (UC-L-03/18)',
+    description: 'Attach an existing service via serviceId, or create a new service for this property and attach to room.',
+  })
+  @ApiCreatedResponse({ description: 'Service attached to room successfully' })
+  @ApiResponse({ status: 404, description: 'Room or service not found' })
+  async addRoomService(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddRoomServiceDto,
+  ) {
+    this.logger.log(`POST /rooms/${id}/services called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.addRoomService(boardingHouseId, id, dto)
+  }
+
+  @Patch(':id/services/:serviceId')
+  @ApiOperation({
+    summary: 'Update room service details (UC-L-03/18)',
+    description: 'Updates service attributes (name, price, unit, isMetered).',
+  })
+  @ApiOkResponse({ description: 'Service updated successfully' })
+  @ApiResponse({ status: 404, description: 'Room or service attachment not found' })
+  async updateRoomService(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Body() dto: UpdateRoomServiceDto,
+  ) {
+    this.logger.log(`PATCH /rooms/${id}/services/${serviceId} called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.updateRoomService(boardingHouseId, id, serviceId, dto)
+  }
+
+  @Delete(':id/services/:serviceId')
+  @ApiOperation({
+    summary: 'Detach service from room (UC-L-03/18)',
+    description: 'Detaches service from room by deleting the room_service join record.',
+  })
+  @ApiOkResponse({ description: 'Service removed from room successfully' })
+  @ApiResponse({ status: 404, description: 'Room or service attachment not found' })
+  async deleteRoomService(
+    @CurrentUser() user: JwtPayload,
+    @Headers('x-boarding-house-id') boardingHouseId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+  ) {
+    this.logger.log(`DELETE /rooms/${id}/services/${serviceId} called by user ${user.id} for house ${boardingHouseId}`)
+    return this.roomsService.deleteRoomService(boardingHouseId, id, serviceId)
   }
 }

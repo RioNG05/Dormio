@@ -326,6 +326,7 @@ export interface RoomAmenitiesResponse {
 export interface AddRoomAmenityPayload {
   amenityId?: string
   name?: string
+  isShared?: boolean
   icon?: string
 }
 
@@ -392,6 +393,101 @@ export async function deleteRoomAmenity(
   amenityId: string,
 ): Promise<{ success: boolean; message: string }> {
   const res = await api.delete<any>(`/v1/rooms/${roomId}/amenities/${amenityId}`, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+export interface RoomServiceDetailItem {
+  id: string
+  name: string
+  price: string
+  numericPrice: number
+  unit: string
+  isMetered: boolean
+  autoApplied: boolean
+  status: string
+}
+
+export interface RoomServicesDataResponse {
+  currentServices: RoomServiceDetailItem[]
+  availableServices: RoomServiceDetailItem[]
+}
+
+export interface AddRoomServicePayload {
+  serviceId?: string
+  name?: string
+  price?: number
+  unit?: string
+  isMetered?: boolean
+}
+
+export interface UpdateRoomServicePayload {
+  name?: string
+  price?: number
+  unit?: string
+  isMetered?: boolean
+}
+
+/**
+ * Fetch services attached to a room and available property services
+ */
+export async function getRoomServices(
+  boardingHouseId: string,
+  roomId: string,
+): Promise<RoomServicesDataResponse> {
+  const res = await api.get<any>(`/v1/rooms/${roomId}/services`, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+/**
+ * Attach existing service or create new service for a room
+ */
+export async function addRoomService(
+  boardingHouseId: string,
+  roomId: string,
+  payload: AddRoomServicePayload,
+): Promise<{ success: boolean; serviceId: string; message: string }> {
+  const res = await api.post<any>(`/v1/rooms/${roomId}/services`, payload, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+/**
+ * Update room service details
+ */
+export async function updateRoomService(
+  boardingHouseId: string,
+  roomId: string,
+  serviceId: string,
+  payload: UpdateRoomServicePayload,
+): Promise<{ success: boolean; data: RoomServiceDetailItem; message: string }> {
+  const res = await api.patch<any>(`/v1/rooms/${roomId}/services/${serviceId}`, payload, {
+    headers: {
+      'x-boarding-house-id': boardingHouseId,
+    },
+  })
+  return res?.data ?? res
+}
+
+/**
+ * Detach service from room
+ */
+export async function deleteRoomService(
+  boardingHouseId: string,
+  roomId: string,
+  serviceId: string,
+): Promise<{ success: boolean; message: string }> {
+  const res = await api.delete<any>(`/v1/rooms/${roomId}/services/${serviceId}`, {
     headers: {
       'x-boarding-house-id': boardingHouseId,
     },

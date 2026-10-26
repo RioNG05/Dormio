@@ -16,6 +16,7 @@ import {
   OccupantStatus,
   Prisma,
   RoomStatus,
+  ServiceStatus,
   SubscriptionPackage,
   SubscriptionStatus,
 } from '@prisma'
@@ -36,6 +37,7 @@ import {
 } from './dto/room-response.dto'
 import { UpdateRoomDto } from './dto/update-room.dto'
 import { AddRoomAmenityDto, UpdateRoomAmenityDto } from './dto/manage-room-amenity.dto'
+import { AddRoomServiceDto, UpdateRoomServiceDto } from './dto/manage-room-service.dto'
 
 interface PlannedRoom {
   floor: number
@@ -952,15 +954,39 @@ export class RoomsService {
         }
         amenityIdToAttach = existingAmenity.id
       } else if (dto.name?.trim()) {
-        const newPrivateAmenity = await tx.amenity.create({
-          data: {
-            boardingHouseId,
-            name: dto.name.trim(),
-            icon: dto.icon?.trim() || null,
-            isShared: false,
-          },
-        })
-        amenityIdToAttach = newPrivateAmenity.id
+        const trimmedName = dto.name.trim()
+        const isShared = dto.isShared ?? false
+
+        if (isShared) {
+          let existingShared = await tx.amenity.findFirst({
+            where: {
+              boardingHouseId,
+              name: { equals: trimmedName, mode: 'insensitive' },
+              isShared: true,
+            },
+          })
+          if (!existingShared) {
+            existingShared = await tx.amenity.create({
+              data: {
+                boardingHouseId,
+                name: trimmedName,
+                icon: dto.icon?.trim() || null,
+                isShared: true,
+              },
+            })
+          }
+          amenityIdToAttach = existingShared.id
+        } else {
+          const newPrivateAmenity = await tx.amenity.create({
+            data: {
+              boardingHouseId,
+              name: trimmedName,
+              icon: dto.icon?.trim() || null,
+              isShared: false,
+            },
+          })
+          amenityIdToAttach = newPrivateAmenity.id
+        }
       } else {
         throw new BadRequestException('Either amenityId or name must be provided')
       }
@@ -1127,6 +1153,196 @@ export class RoomsService {
     })
 
     return { success: true, message: 'Amenity removed from room successfully' }
+  }
+
+  /**
+   * UC-L-03/18: Get room services (currently attached + available in property pool)
+   */
+  async getRoomServices(boardingHouseId: string, roomId: string) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+      include: {
+        roomServices: {
+          include: { service: true },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} not found in this property`)
+    }
+
+    const currentServices = room.roomServices.map(rs => ({
+      id: rs.service.id,
+      name: rs.service.name,
+      price: String(rs.service.price),
+      numericPrice: Number(rs.service.price),
+      unit: rs.service.unit,
+      isMetered: rs.service.isMetered,
+      autoApplied: rs.service.autoApplied,
+      status: rs.service.status,
+    }))
+
+    const currentServiceIds = new Set(currentServices.map(s => s.id))
+
+    const allActiveServices = await this.prisma.service.findMany({
+      where: {
+        boardingHouseId,
+        status: ServiceStatus.active,
+      },
+      orderBy: { name: 'asc' },
+    })
+
+    const availableServices = allActiveServices
+      .filter(s => !currentServiceIds.has(s.id))
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        price: String(s.price),
+        numericPrice: Number(s.price),
+        unit: s.unit,
+        isMetered: s.isMetered,
+        autoApplied: s.autoApplied,
+        status: s.status,
+      }))
+
+    return {
+      currentServices,
+      availableServices,
+    }
+  }
+
+  /**
+   * UC-L-03/18: Attach existing service or create new service for room
+   */
+  async addRoomService(boardingHouseId: string, roomId: string, dto: AddRoomServiceDto) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} not found in this property`)
+    }
+
+    return this.prisma.$transaction(async tx => {
+      let targetServiceId = dto.serviceId
+
+      if (targetServiceId) {
+        const existingService = await tx.service.findFirst({
+          where: { id: targetServiceId, boardingHouseId },
+        })
+        if (!existingService) {
+          throw new NotFoundException(`Service with ID ${targetServiceId} not found in this property`)
+        }
+      } else if (dto.name && dto.name.trim()) {
+        const trimmedName = dto.name.trim()
+        const priceVal = dto.price !== undefined ? new Prisma.Decimal(dto.price) : new Prisma.Decimal(0)
+        const unitVal = (dto.unit && dto.unit.trim()) || 'phòng/tháng'
+
+        const newService = await tx.service.create({
+          data: {
+            boardingHouseId,
+            name: trimmedName,
+            price: priceVal,
+            unit: unitVal,
+            isMetered: dto.isMetered ?? false,
+            autoApplied: false,
+            status: ServiceStatus.active,
+          },
+        })
+        targetServiceId = newService.id
+      } else {
+        throw new BadRequestException('Either serviceId or service name must be provided')
+      }
+
+      const alreadyAttached = await tx.roomService.findFirst({
+        where: { roomId, serviceId: targetServiceId },
+      })
+
+      if (!alreadyAttached) {
+        await tx.roomService.create({
+          data: {
+            roomId,
+            serviceId: targetServiceId,
+          },
+        })
+      }
+
+      return { success: true, serviceId: targetServiceId, message: 'Service attached to room successfully' }
+    })
+  }
+
+  /**
+   * UC-L-03/18: Update room service details
+   */
+  async updateRoomService(
+    boardingHouseId: string,
+    roomId: string,
+    serviceId: string,
+    dto: UpdateRoomServiceDto,
+  ) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} not found in this property`)
+    }
+
+    const roomService = await this.prisma.roomService.findFirst({
+      where: { roomId, serviceId },
+      include: { service: true },
+    })
+    if (!roomService) {
+      throw new NotFoundException(`Service with ID ${serviceId} is not attached to this room`)
+    }
+
+    const updateData: Prisma.ServiceUpdateInput = {}
+    if (dto.name !== undefined && dto.name.trim()) updateData.name = dto.name.trim()
+    if (dto.price !== undefined) updateData.price = new Prisma.Decimal(dto.price)
+    if (dto.unit !== undefined && dto.unit.trim()) updateData.unit = dto.unit.trim()
+    if (dto.isMetered !== undefined) updateData.isMetered = dto.isMetered
+
+    const updatedService = await this.prisma.service.update({
+      where: { id: serviceId },
+      data: updateData,
+    })
+
+    return {
+      success: true,
+      data: {
+        id: updatedService.id,
+        name: updatedService.name,
+        price: String(updatedService.price),
+        numericPrice: Number(updatedService.price),
+        unit: updatedService.unit,
+        isMetered: updatedService.isMetered,
+      },
+      message: 'Room service updated successfully',
+    }
+  }
+
+  /**
+   * UC-L-03/18: Detach service from room
+   */
+  async deleteRoomService(boardingHouseId: string, roomId: string, serviceId: string) {
+    const room = await this.prisma.room.findFirst({
+      where: { id: roomId, boardingHouseId },
+    })
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${roomId} not found in this property`)
+    }
+
+    const roomService = await this.prisma.roomService.findFirst({
+      where: { roomId, serviceId },
+    })
+    if (!roomService) {
+      throw new NotFoundException(`Service with ID ${serviceId} is not attached to this room`)
+    }
+
+    await this.prisma.roomService.deleteMany({
+      where: { roomId, serviceId },
+    })
+
+    return { success: true, message: 'Service removed from room successfully' }
   }
 
   private renderRoomNumber(template: string, floor: number, index: number): string {

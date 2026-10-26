@@ -11,14 +11,22 @@ export class AddRoomAmenityDto {
   amenityId?: string
 
   @ApiPropertyOptional({
-    description: 'Name of a new private amenity to create exclusively for this room',
-    example: 'Tủ lạnh mini riêng',
+    description: 'Name of a new amenity to create for this room',
+    example: 'Tủ lạnh mini',
     maxLength: 255,
   })
   @IsOptional()
   @IsString()
   @MaxLength(255)
   name?: string
+
+  @ApiPropertyOptional({
+    description: 'Scope: true if shared across boarding house rooms; false if private to this room',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isShared?: boolean
 
   @ApiPropertyOptional({
     description: 'Icon key for the amenity',

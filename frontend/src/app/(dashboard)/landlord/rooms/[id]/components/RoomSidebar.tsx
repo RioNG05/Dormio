@@ -34,6 +34,7 @@ interface RoomSidebarProps {
   services?: RoomCustomServiceItem[]
   onUpdateStatus: (newStatus: 'Trống' | 'Đang thuê' | 'Bảo trì' | 'Đặt cọc') => void
   onOpenManageAmenities?: () => void
+  onOpenManageServices?: () => void
 }
 
 export const RoomSidebar: React.FC<RoomSidebarProps> = ({
@@ -44,6 +45,7 @@ export const RoomSidebar: React.FC<RoomSidebarProps> = ({
   services,
   onUpdateStatus,
   onOpenManageAmenities,
+  onOpenManageServices,
 }) => {
   const t = useTranslations('landlord')
 
@@ -147,39 +149,71 @@ export const RoomSidebar: React.FC<RoomSidebarProps> = ({
 
       {/* Giá dịch vụ định kỳ với Badge màu sắc */}
       <div className="bg-card rounded-2xl border border-line shadow-xs p-5 space-y-4">
-        <Text
-          as="h2"
-          weight="black"
-          color="default"
-          size="sm"
-          className="flex items-center gap-2 border-b border-line pb-3"
-        >
-          <Banknote className="w-4 h-4 text-primary" /> {t('landlordRoomDetailServicesTitle')}
-        </Text>
-        <div className="space-y-2.5">
-          {activeServices.map((service: RoomCustomServiceItem) => (
-            <div
-              key={service.id}
-              className="flex justify-between items-center p-2.5 bg-surface rounded-xl border border-line"
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <Text
+            as="h2"
+            weight="black"
+            color="default"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Banknote className="w-4 h-4 text-primary" /> {t('landlordRoomDetailServicesTitle')}
+          </Text>
+          {onOpenManageServices && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onOpenManageServices}
+              leftIcon={<Edit2 className="w-3.5 h-3.5 text-primary" />}
+              className="text-xs h-7 px-2"
             >
-              <div className="flex items-center gap-2">
-                <Text as="span" size="xs" weight="black" color="default">
-                  {service.name}
-                </Text>
-                {service.isCustom && (
-                  <span className="bg-warning-soft border border-warning-subtle px-1.5 py-0.5 rounded-md">
-                    <Text as="span" size="2xs" weight="bold" color="warning">
-                      {t('landlordRoomDetailCustomServiceBadge')}
-                    </Text>
-                  </span>
-                )}
-              </div>
-              <Text as="span" size="xs" weight="black" color="brand">
-                {service.customPrice} {service.unit}
-              </Text>
-            </div>
-          ))}
+              {t('landlordRoomDetailManageServices')}
+            </Button>
+          )}
         </div>
+
+        {activeServices.length === 0 ? (
+          <div className="py-3 text-center space-y-2">
+            <Text size="xs" color="secondary">
+              {t('landlordRoomDetailServiceEmpty')}
+            </Text>
+            {onOpenManageServices && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onOpenManageServices}
+                leftIcon={<Plus className="w-3.5 h-3.5" />}
+              >
+                {t('landlordRoomDetailServiceBtnAdd')}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {activeServices.map((service: RoomCustomServiceItem) => (
+              <div
+                key={service.id}
+                className="flex justify-between items-center p-2.5 bg-surface rounded-xl border border-line"
+              >
+                <div className="flex items-center gap-2">
+                  <Text as="span" size="xs" weight="black" color="default">
+                    {service.name}
+                  </Text>
+                  {service.isCustom && (
+                    <span className="bg-warning-soft border border-warning-subtle px-1.5 py-0.5 rounded-md">
+                      <Text as="span" size="2xs" weight="bold" color="warning">
+                        {t('landlordRoomDetailCustomServiceBadge')}
+                      </Text>
+                    </span>
+                  )}
+                </div>
+                <Text as="span" size="xs" weight="black" color="brand">
+                  {service.customPrice} {service.unit}
+                </Text>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tiện nghi phòng */}
