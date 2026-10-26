@@ -329,6 +329,7 @@ export interface RecordLandlordMeterReadingPayload {
   readings: Array<{
     serviceId: string
     readingValue: number
+    initialReadingValue?: number
     imageUrl?: string
   }>
   month?: number

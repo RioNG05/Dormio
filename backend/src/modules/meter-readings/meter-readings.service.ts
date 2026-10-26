@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException, BadRequestException, Optional } from '@nestjs/common'
+import { UploadService } from '../upload/upload.service'
 import { randomUUID } from 'crypto'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { OcrService } from './ocr.service'
@@ -29,6 +30,7 @@ export class MeterReadingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ocrService: OcrService,
+    @Optional() private readonly uploadService?: UploadService,
   ) {}
 
   // ─── 1. Get Active Metered Services & Draft Readings for Tenant ─────────────
@@ -177,6 +179,25 @@ export class MeterReadingsService {
       )
     }
 
+    // Ensure image is uploaded to Cloudinary if it is a Base64 data URL
+    let finalImageUrl = dto.imageUrl
+    if (this.uploadService && dto.imageUrl) {
+      const now = new Date()
+      const currentMonth = now.getMonth() + 1
+      const currentYear = now.getFullYear()
+      const publicId = `meter_${roomId}_${dto.serviceId}_${currentYear}_${currentMonth}`
+      try {
+        finalImageUrl =
+          (await this.uploadService.ensureCloudinaryUrl(
+            dto.imageUrl,
+            'dormio/meter-readings',
+            { publicId, overwrite: true },
+          )) || dto.imageUrl
+      } catch (uploadErr: any) {
+        this.logger.warn(`Failed to upload meter image to Cloudinary: ${uploadErr?.message}`)
+      }
+    }
+
     // Check for existing unbilled draft reading
     const existingDraft = await this.prisma.meterReading.findFirst({
       where: {
@@ -193,7 +214,7 @@ export class MeterReadingsService {
       savedReading = await this.prisma.meterReading.update({
         where: { id: existingDraft.id },
         data: {
-          imageUrl: dto.imageUrl,
+          imageUrl: finalImageUrl,
           readingValue: extractedValue,
         },
       })
@@ -206,7 +227,7 @@ export class MeterReadingsService {
         data: {
           roomId,
           serviceId: dto.serviceId,
-          imageUrl: dto.imageUrl,
+          imageUrl: finalImageUrl,
           readingValue: extractedValue,
           invoiceId: null,
         },
@@ -889,6 +910,50 @@ export class MeterReadingsService {
         throw new BadRequestException(`Service with ID ${item.serviceId} does not belong to this boarding house`)
       }
 
+      // If initial baseline reading is provided and no previous reading exists before this month, record baseline
+      if (item.initialReadingValue !== undefined && item.initialReadingValue !== null) {
+        const existingPrior = await this.prisma.meterReading.findFirst({
+          where: {
+            roomId: dto.roomId,
+            serviceId: item.serviceId,
+            createdAt: { lt: startOfMonth },
+          },
+        })
+
+        if (!existingPrior) {
+          const baselineDate = new Date(startOfMonth.getTime() - 1000)
+          const baselineMonth = targetMonth === 1 ? 12 : targetMonth - 1
+          const baselineYear = targetMonth === 1 ? targetYear - 1 : targetYear
+          await this.prisma.meterReading.create({
+            data: {
+              roomId: dto.roomId,
+              serviceId: item.serviceId,
+              readingValue: item.initialReadingValue,
+              imageUrl: null,
+              billingMonth: baselineMonth,
+              billingYear: baselineYear,
+              createdAt: baselineDate,
+              invoiceId: null,
+            },
+          })
+        }
+      }
+
+      let cleanImageUrl = item.imageUrl || null
+      if (this.uploadService && item.imageUrl) {
+        const publicId = `meter_${dto.roomId}_${item.serviceId}_${targetYear}_${targetMonth}`
+        try {
+          cleanImageUrl =
+            (await this.uploadService.ensureCloudinaryUrl(
+              item.imageUrl,
+              'dormio/meter-readings',
+              { publicId, overwrite: true },
+            )) || item.imageUrl
+        } catch (uploadErr: any) {
+          this.logger.warn(`Failed to upload meter image to Cloudinary: ${uploadErr?.message}`)
+        }
+      }
+
       // Check if a reading already exists for this room, service, in target month/year
       const existingReading = await this.prisma.meterReading.findFirst({
         where: {
@@ -935,7 +1000,7 @@ export class MeterReadingsService {
           where: { id: existingReading.id },
           data: {
             readingValue: item.readingValue,
-            imageUrl: item.imageUrl ?? existingReading.imageUrl,
+            imageUrl: cleanImageUrl ?? existingReading.imageUrl,
             billingMonth: targetMonth,
             billingYear: targetYear,
           },
@@ -979,7 +1044,7 @@ export class MeterReadingsService {
             roomId: dto.roomId,
             serviceId: item.serviceId,
             readingValue: item.readingValue,
-            imageUrl: item.imageUrl || null,
+            imageUrl: cleanImageUrl,
             billingMonth: targetMonth,
             billingYear: targetYear,
             createdAt: recordedDate,
@@ -1051,11 +1116,28 @@ export class MeterReadingsService {
 
     const actionId = dto.actionId || randomUUID()
 
+        let cleanImageUrl = dto.imageUrl
+    if (this.uploadService && dto.imageUrl) {
+      const targetYear = reading.billingYear || reading.createdAt.getFullYear()
+      const targetMonth = reading.billingMonth || (reading.createdAt.getMonth() + 1)
+      const publicId = `meter_${reading.roomId}_${reading.serviceId}_${targetYear}_${targetMonth}`
+      try {
+        cleanImageUrl =
+          (await this.uploadService.ensureCloudinaryUrl(
+            dto.imageUrl,
+            'dormio/meter-readings',
+            { publicId, overwrite: true },
+          )) || dto.imageUrl
+      } catch (uploadErr: any) {
+        this.logger.warn(`Failed to upload meter image to Cloudinary: ${uploadErr?.message}`)
+      }
+    }
+
     const updated = await this.prisma.meterReading.update({
       where: { id: readingId },
       data: {
         readingValue: dto.readingValue,
-        imageUrl: dto.imageUrl ?? reading.imageUrl,
+        imageUrl: cleanImageUrl ?? reading.imageUrl,
       },
       include: { service: true },
     })

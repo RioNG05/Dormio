@@ -348,6 +348,43 @@ export class ContractsService {
         },
       })
 
+      // Record initial baseline meter readings at room handover
+      if (dto.initialMeterReadings && dto.initialMeterReadings.length > 0) {
+        const startDateObj = new Date(dto.startDate)
+        const startMonth = startDateObj.getMonth() + 1
+        const startYear = startDateObj.getFullYear()
+
+        for (const item of dto.initialMeterReadings) {
+          let cleanUrl = item.imageUrl || null
+          if (this.uploadService && item.imageUrl) {
+            const publicId = `meter_${dto.roomId}_${item.serviceId}_${startYear}_${startMonth}_handover`
+            try {
+              cleanUrl =
+                (await this.uploadService.ensureCloudinaryUrl(
+                  item.imageUrl,
+                  'dormio/meter-readings',
+                  { publicId, overwrite: true },
+                )) || item.imageUrl
+            } catch (err: any) {
+              this.logger.warn(`Failed to upload handover meter photo: ${err?.message}`)
+            }
+          }
+
+          await tx.meterReading.create({
+            data: {
+              roomId: dto.roomId,
+              serviceId: item.serviceId,
+              readingValue: new Prisma.Decimal(item.readingValue),
+              imageUrl: cleanUrl,
+              billingMonth: startMonth,
+              billingYear: startYear,
+              createdAt: startDateObj,
+              invoiceId: null,
+            },
+          })
+        }
+      }
+
       return newContract
     })
 
@@ -584,6 +621,43 @@ export class ContractsService {
           },
         },
       })
+
+      // Record initial baseline meter readings at room handover
+      if (dto.initialMeterReadings && dto.initialMeterReadings.length > 0) {
+        const startDateObj = new Date(dto.startDate)
+        const startMonth = startDateObj.getMonth() + 1
+        const startYear = startDateObj.getFullYear()
+
+        for (const item of dto.initialMeterReadings) {
+          let cleanUrl = item.imageUrl || null
+          if (this.uploadService && item.imageUrl) {
+            const publicId = `meter_${dto.roomId}_${item.serviceId}_${startYear}_${startMonth}_handover`
+            try {
+              cleanUrl =
+                (await this.uploadService.ensureCloudinaryUrl(
+                  item.imageUrl,
+                  'dormio/meter-readings',
+                  { publicId, overwrite: true },
+                )) || item.imageUrl
+            } catch (err: any) {
+              this.logger.warn(`Failed to upload handover meter photo: ${err?.message}`)
+            }
+          }
+
+          await tx.meterReading.create({
+            data: {
+              roomId: dto.roomId,
+              serviceId: item.serviceId,
+              readingValue: new Prisma.Decimal(item.readingValue),
+              imageUrl: cleanUrl,
+              billingMonth: startMonth,
+              billingYear: startYear,
+              createdAt: startDateObj,
+              invoiceId: null,
+            },
+          })
+        }
+      }
 
       return newContract
     })

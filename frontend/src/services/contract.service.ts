@@ -38,6 +38,12 @@ export interface TenantSearchResult {
   } | null
 }
 
+export interface InitialMeterReadingPayload {
+  serviceId: string
+  readingValue: number
+  imageUrl?: string | null
+}
+
 export interface CreateContractPlatformPayload {
   roomId: string
   tenantId?: string
@@ -47,6 +53,7 @@ export interface CreateContractPlatformPayload {
   monthlyPaymentDate: number
   rentPaymentCycle?: number
   note?: string
+  initialMeterReadings?: InitialMeterReadingPayload[]
 }
 
 export interface TenantIdentificationPayload {
@@ -78,6 +85,7 @@ export interface CreateContractDirectPayload {
   tenantFullName: string
   tenantEmail?: string
   identification?: TenantIdentificationPayload
+  initialMeterReadings?: InitialMeterReadingPayload[]
 }
 
 export interface ContractItem {

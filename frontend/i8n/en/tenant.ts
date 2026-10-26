@@ -303,6 +303,8 @@ export const enTenant = {
     tenantPreviousCycleLabel: "Previous cycle:",
     tenantReadingRecorded: "Recorded: {value} {unit}",
     tenantRetakePhoto: "Retake",
+    tenantDeletePhoto: "Delete photo",
+    tenantPhotoDeleted: "Meter photo deleted",
     tenantTableHeaderConsumption: "Consumption",
     tenantTableHeaderNewReading: "New Reading",
     tenantTableHeaderOldReading: "Previous Reading",

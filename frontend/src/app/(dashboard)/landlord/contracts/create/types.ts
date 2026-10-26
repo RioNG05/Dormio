@@ -10,6 +10,14 @@ export type ContractFlowType = 'platform' | 'direct'
 
 export type Gender = 'male' | 'female'
 
+export interface HandoverMeterReadingItem {
+  serviceId: string
+  serviceName: string
+  unit: string
+  readingValue: number | ''
+  imageUrl?: string | null
+}
+
 export interface TenantIdentificationState {
   identityNumber: string
   fullName: string
@@ -87,6 +95,14 @@ export interface ContractCreateContextValue {
   setCardBackUrl: (url: string) => void
   previewModalImg: { url: string; title: string } | null
   setPreviewModalImg: (img: { url: string; title: string } | null) => void
+
+  // Initial Handover Meter Readings
+  initialMeterReadings: HandoverMeterReadingItem[]
+  setInitialMeterReadings: React.Dispatch<React.SetStateAction<HandoverMeterReadingItem[]>>
+  updateInitialMeterReading: (
+    serviceId: string,
+    updates: Partial<HandoverMeterReadingItem>,
+  ) => void
 
   // Terms & Financials
   startDate: string

@@ -827,4 +827,141 @@ describe('MeterReadingsService', () => {
       expect(result.data.readingValue).toBe(1540)
     })
   })
-})
+  describe('Cloudinary image handling & overwrite (Phase 2)', () => {
+    let serviceWithUpload: MeterReadingsService
+    const mockUploadService = {
+      ensureCloudinaryUrl: jest.fn(),
+    }
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+      serviceWithUpload = new MeterReadingsService(
+        mockPrisma as any,
+        mockOcrService as any,
+        mockUploadService as any,
+      )
+    })
+
+    it('should convert Base64 to Cloudinary URL with deterministic publicId and overwrite: true in uploadOrUpdateReading', async () => {
+      mockPrisma.tenantContract.findFirst.mockResolvedValue(mockActiveTenantContract)
+      mockPrisma.roomService.findFirst.mockResolvedValue({
+        id: 'rs-1',
+        roomId: mockRoomId,
+        serviceId: mockServiceElectricityId,
+        service: { id: mockServiceElectricityId, name: 'Điện', isMetered: true, status: 'active' },
+      })
+      mockPrisma.meterReading.findFirst.mockResolvedValue(null)
+      mockPrisma.meterReading.create.mockResolvedValue({
+        id: 'mr-new',
+        roomId: mockRoomId,
+        serviceId: mockServiceElectricityId,
+        readingValue: 1420,
+        imageUrl: 'https://res.cloudinary.com/dormio/meter_reading.jpg',
+        createdAt: new Date(),
+        service: { name: 'Điện' },
+      })
+
+      mockUploadService.ensureCloudinaryUrl.mockResolvedValue(
+        'https://res.cloudinary.com/dormio/meter_reading.jpg',
+      )
+
+      const base64Img = 'data:image/jpeg;base64,samplebase64data'
+      await serviceWithUpload.uploadOrUpdateReading(mockUserId, {
+        serviceId: mockServiceElectricityId,
+        imageUrl: base64Img,
+        readingValue: 1420,
+      })
+
+      expect(mockUploadService.ensureCloudinaryUrl).toHaveBeenCalledWith(
+        base64Img,
+        'dormio/meter-readings',
+        expect.objectContaining({
+          publicId: expect.stringMatching(/^meter_/),
+          overwrite: true,
+        }),
+      )
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            imageUrl: 'https://res.cloudinary.com/dormio/meter_reading.jpg',
+          }),
+        }),
+      )
+    })
+
+    it('should convert Base64 to Cloudinary URL in recordLandlordMeterReading with deterministic publicId', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1', boardingHouseId: 'house-1' })
+      mockPrisma.service.findFirst.mockResolvedValue({ id: 's-elec', boardingHouseId: 'house-1', name: 'Điện' })
+      mockPrisma.meterReading.findFirst.mockResolvedValue(null)
+      mockPrisma.meterReading.create.mockResolvedValue({
+        id: 'mr-new',
+        serviceId: 's-elec',
+        readingValue: 1530,
+        imageUrl: 'https://res.cloudinary.com/dormio/landlord_meter.jpg',
+        createdAt: new Date('2026-09-01'),
+        service: { name: 'Điện' },
+      })
+
+      mockUploadService.ensureCloudinaryUrl.mockResolvedValue(
+        'https://res.cloudinary.com/dormio/landlord_meter.jpg',
+      )
+
+      const base64Img = 'data:image/jpeg;base64,landlordbase64'
+      await serviceWithUpload.recordLandlordMeterReading('landlord-1', 'house-1', {
+        roomId: 'room-1',
+        month: 10,
+        year: 2026,
+        readings: [{ serviceId: 's-elec', readingValue: 1530, imageUrl: base64Img }],
+      })
+
+      expect(mockUploadService.ensureCloudinaryUrl).toHaveBeenCalledWith(
+        base64Img,
+        'dormio/meter-readings',
+        expect.objectContaining({
+          publicId: 'meter_room-1_s-elec_2026_10',
+          overwrite: true,
+        }),
+      )
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            imageUrl: 'https://res.cloudinary.com/dormio/landlord_meter.jpg',
+          }),
+        }),
+      )
+    })
+
+    it('should create baseline reading when initialReadingValue is supplied and no prior reading exists', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1', boardingHouseId: 'house-1' })
+      mockPrisma.service.findFirst.mockResolvedValue({ id: 's-elec', boardingHouseId: 'house-1', name: 'Điện' })
+      mockPrisma.meterReading.findFirst.mockResolvedValue(null)
+      mockPrisma.meterReading.create.mockResolvedValue({
+        id: 'mr-new',
+        serviceId: 's-elec',
+        readingValue: 1530,
+        imageUrl: null,
+        createdAt: new Date('2026-10-01'),
+        service: { name: 'Điện' },
+      })
+
+      await serviceWithUpload.recordLandlordMeterReading('landlord-1', 'house-1', {
+        roomId: 'room-1',
+        month: 10,
+        year: 2026,
+        readings: [
+          { serviceId: 's-elec', readingValue: 1530, initialReadingValue: 1450 },
+        ],
+      })
+
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledTimes(2)
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          roomId: 'room-1',
+          serviceId: 's-elec',
+          readingValue: 1450,
+          invoiceId: null,
+        }),
+      })
+    })
+  })
+});

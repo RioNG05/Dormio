@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { CloudinaryService, CloudinaryUploadResult } from './cloudinary.service'
+import { CloudinaryService, CloudinaryUploadResult, CloudinaryUploadOptions } from './cloudinary.service'
 import { UploadImageDto } from './dto/upload-image.dto'
 
 @Injectable()
@@ -11,9 +11,12 @@ export class UploadService {
   /**
    * Upload an image from data URL or remote URL
    */
-  async uploadImage(dto: UploadImageDto): Promise<CloudinaryUploadResult> {
+  async uploadImage(
+    dto: UploadImageDto,
+    options?: CloudinaryUploadOptions,
+  ): Promise<CloudinaryUploadResult> {
     this.logger.log(`Handling upload image request with folder: ${dto.folder ?? 'default'}`)
-    return this.cloudinaryService.uploadImage(dto.image, dto.folder)
+    return this.cloudinaryService.uploadImage(dto.image, dto.folder, options)
   }
 
   /**
@@ -38,6 +41,7 @@ export class UploadService {
   async ensureCloudinaryUrl(
     imageStr?: string,
     folder: string = 'dormio/uploads',
+    options?: CloudinaryUploadOptions,
   ): Promise<string | undefined> {
     if (!imageStr) return undefined
 
@@ -47,7 +51,7 @@ export class UploadService {
     // If it's a data URL, upload to Cloudinary
     if (trimmed.startsWith('data:image/') || trimmed.startsWith('data:application/')) {
       this.logger.log(`Detected base64 data URL, uploading to Cloudinary (${folder})...`)
-      const result = await this.cloudinaryService.uploadImage(trimmed, folder)
+      const result = await this.cloudinaryService.uploadImage(trimmed, folder, options)
       return result.secureUrl || result.url
     }
 

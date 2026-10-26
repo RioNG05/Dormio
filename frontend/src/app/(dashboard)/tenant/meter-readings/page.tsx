@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   AlertCircle,
   RefreshCw,
+  Trash2,
 } from 'lucide-react'
 import { Button, TextInput, Modal, Text, EmptyState } from '@/components/ui'
 import {
@@ -45,6 +46,8 @@ export default function TenantMeterReadingsPage() {
       string,
       {
         readingValue: number | null
+        initialReadingValue?: number | null
+        draftInitialValue?: string
         imageUrl: string | null
         isScanning: boolean
         isSaved: boolean
@@ -73,17 +76,19 @@ export default function TenantMeterReadingsPage() {
 
       // Initialize local state from real backend response
       const stateMap: typeof readingsState = {}
-      ;(res?.meteredServices || []).forEach(s => {
-        const val = s.currentReading?.readingValue ?? null
-        stateMap[s.serviceId] = {
-          readingValue: val,
-          imageUrl: s.currentReading?.imageUrl ?? null,
-          isScanning: false,
-          isSaved: val !== null,
-          isEditing: false,
-          draftValue: val !== null ? String(val) : '',
-        }
-      })
+        ; (res?.meteredServices || []).forEach(s => {
+          const val = s.currentReading?.readingValue ?? null
+          stateMap[s.serviceId] = {
+            readingValue: val,
+            initialReadingValue: null,
+            draftInitialValue: '',
+            imageUrl: s.currentReading?.imageUrl ?? null,
+            isScanning: false,
+            isSaved: val !== null,
+            isEditing: false,
+            draftValue: val !== null ? String(val) : '',
+          }
+        })
       setReadingsState(stateMap)
     } catch (err: any) {
       console.error('Error loading meter services:', err)
@@ -168,18 +173,45 @@ export default function TenantMeterReadingsPage() {
         : 'electricity'
 
       let detectedValue: number | null = null
+      let isAiValid = true
+      let aiErrorMsg = ''
 
       try {
         const aiRes = await meterReadingService.scanMeterWithAi(base64Url, serviceType)
-        if (
-          aiRes?.success &&
-          aiRes.data?.readingValue !== null &&
-          aiRes.data?.readingValue !== undefined
+        if (!aiRes?.success || !aiRes.data?.isValid) {
+          isAiValid = false
+          aiErrorMsg =
+            aiRes?.data?.errorMessage ||
+            aiRes?.message ||
+            t('ocrExtractFailed')
+        } else if (
+          aiRes?.data?.readingValue !== null &&
+          aiRes?.data?.readingValue !== undefined
         ) {
           detectedValue = aiRes.data.readingValue
         }
-      } catch (aiErr) {
-        console.warn('AI Vision scan fallback to backend upload:', aiErr)
+      } catch (aiErr: any) {
+        console.warn('AI Vision scan error:', aiErr)
+        isAiValid = false
+        aiErrorMsg = aiErr?.message || t('ocrExtractFailed')
+      }
+
+      // If AI rejected the photo (not a meter, wrong type, blurred), reject and clear image
+      if (!isAiValid) {
+        toast.error(aiErrorMsg)
+        if (fileInputRefs.current[serviceId]) {
+          fileInputRefs.current[serviceId]!.value = ''
+        }
+        setReadingsState(prev => ({
+          ...prev,
+          [serviceId]: {
+            ...(prev[serviceId] || { readingValue: null, draftValue: '', isSaved: false }),
+            imageUrl: null,
+            isScanning: false,
+            isEditing: true,
+          },
+        }))
+        return
       }
 
       // Call backend upload endpoint with detectedValue (or let backend OCR extract)
@@ -196,7 +228,7 @@ export default function TenantMeterReadingsPage() {
         ...prev,
         [serviceId]: {
           readingValue: finalValue,
-          imageUrl: base64Url,
+          imageUrl: res?.imageUrl || base64Url,
           isScanning: false,
           isSaved: finalValue !== null,
           isEditing: finalValue === null,
@@ -212,16 +244,36 @@ export default function TenantMeterReadingsPage() {
     } catch (err: any) {
       console.error('OCR upload API error:', err)
       toast.error(err?.message || t('ocrExtractFailed'))
+      if (fileInputRefs.current[serviceId]) {
+        fileInputRefs.current[serviceId]!.value = ''
+      }
       setReadingsState(prev => ({
         ...prev,
         [serviceId]: {
           ...(prev[serviceId] || { readingValue: null, draftValue: '', isSaved: false }),
-          imageUrl: base64Url,
+          imageUrl: null,
           isScanning: false,
           isEditing: true,
         },
       }))
     }
+  }
+
+  // Handle photo deletion
+  const handleDeletePhoto = (serviceId: string) => {
+    if (fileInputRefs.current[serviceId]) {
+      fileInputRefs.current[serviceId]!.value = ''
+    }
+    setReadingsState(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...(prev[serviceId] || { readingValue: null, draftValue: '', isSaved: false }),
+        imageUrl: null,
+        isScanning: false,
+        isEditing: true,
+      },
+    }))
+    toast.success(t('photoDeleted'))
   }
 
   // Handle manual correction save
@@ -309,6 +361,20 @@ export default function TenantMeterReadingsPage() {
       return <Droplets className="w-5 h-5 text-sky-500" />
     }
     return <Gauge className="w-5 h-5 text-teal-600" />
+  }
+
+  const getNoHistoryMessage = (serviceName: string) => {
+    const lower = (serviceName || '').toLowerCase()
+    if (lower.includes('điện') || lower.includes('electric')) {
+      return t('tenantMeterNoHistoryElectricity') || 'Phòng chưa có lịch sử ghi nhận số điện'
+    }
+    if (lower.includes('nước') || lower.includes('water')) {
+      return t('tenantMeterNoHistoryWater') || 'Phòng chưa có lịch sử ghi nhận số nước'
+    }
+    return (
+      t('tenantMeterNoHistoryGeneral', { name: serviceName }) ||
+      `Phòng chưa có lịch sử ghi nhận số ${serviceName}`
+    )
   }
 
   // 1. Loading State
@@ -423,9 +489,8 @@ export default function TenantMeterReadingsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                isReadyToConfirm ? 'bg-success-soft text-success' : 'bg-primary-soft text-primary'
-              }`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${isReadyToConfirm ? 'bg-success-soft text-success' : 'bg-primary-soft text-primary'
+                }`}
             >
               {completedCount}/{servicesList.length}
             </div>
@@ -437,19 +502,18 @@ export default function TenantMeterReadingsPage() {
                 {isReadyToConfirm
                   ? t('allMetersReady')
                   : t('metersRemainingCount', {
-                      count: servicesList.length - completedCount,
-                    })}
+                    count: servicesList.length - completedCount,
+                  })}
               </Text>
             </div>
           </div>
 
           <div className="text-right">
             <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                isReadyToConfirm
-                  ? 'bg-success-soft text-success border border-success-subtle'
-                  : 'bg-warning-soft text-warning border border-warning-subtle'
-              }`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${isReadyToConfirm
+                ? 'bg-success-soft text-success border border-success-subtle'
+                : 'bg-warning-soft text-warning border border-warning-subtle'
+                }`}
             >
               {isReadyToConfirm ? (
                 <>
@@ -473,13 +537,11 @@ export default function TenantMeterReadingsPage() {
         {/* Progress bar line */}
         <div className="w-full bg-card-hover h-2.5 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-all duration-500 ${
-              isReadyToConfirm ? 'bg-emerald-500' : 'bg-gradient-to-r from-teal-500 to-cyan-500'
-            }`}
+            className={`h-full transition-all duration-500 ${isReadyToConfirm ? 'bg-emerald-500' : 'bg-gradient-to-r from-teal-500 to-cyan-500'
+              }`}
             style={{
-              width: `${
-                servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
-              }%`,
+              width: `${servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
+                }%`,
             }}
           />
         </div>
@@ -497,7 +559,7 @@ export default function TenantMeterReadingsPage() {
             draftValue: '',
           }
 
-          const prevVal = service.previousReading?.readingValue ?? 0
+          const prevVal = service.previousReading?.readingValue ?? (state.initialReadingValue ?? 0)
           const currentVal = state.readingValue ?? null
           const isAnomaly = currentVal !== null && currentVal < prevVal
           const consumption = currentVal !== null ? Math.max(0, currentVal - prevVal) : null
@@ -506,13 +568,12 @@ export default function TenantMeterReadingsPage() {
           return (
             <div
               key={service.serviceId}
-              className={`bg-card border rounded-2xl p-5 md:p-6 transition-all shadow-sm ${
-                isAnomaly
-                  ? 'border-amber-300 ring-1 ring-amber-100'
-                  : state.readingValue !== null
-                    ? 'border-success-subtle ring-1 ring-emerald-100'
-                    : 'border-line hover:border-teal-300'
-              }`}
+              className={`bg-card border rounded-2xl p-5 md:p-6 transition-all shadow-sm ${isAnomaly
+                ? 'border-amber-300 ring-1 ring-amber-100'
+                : state.readingValue !== null
+                  ? 'border-success-subtle ring-1 ring-emerald-100'
+                  : 'border-line hover:border-teal-300'
+                }`}
             >
               {/* Service Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
@@ -528,17 +589,26 @@ export default function TenantMeterReadingsPage() {
                       <Text as="span" size="xs" color="secondary">
                         {t('unitPriceLabel')} <strong className="text-foreground/90">{formatCurrency(service.unitPrice, locale)} / {service.unit}</strong>
                       </Text>
-                      {service.previousReading && (
+                      {service.previousReading ? (
                         <>
                           <span>•</span>
                           <Text as="span" size="xs" color="secondary">
-                            {t('previousCycleLabel')}{' '}
+                            {t('tenantTableHeaderOldReading') || 'Chỉ số cũ'}:{' '}
                             <strong className="text-foreground/90">
                               {service.previousReading.readingValue.toLocaleString(
                                 locale === 'en' ? 'en-US' : 'vi-VN',
                               )}{' '}
                               {service.unit}
                             </strong>
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <span>•</span>
+                          <Text as="span" size="xs" color="secondary">
+                            <span className="text-amber-600 dark:text-amber-400 font-medium">
+                              {getNoHistoryMessage(service.serviceName)}
+                            </span>
                           </Text>
                         </>
                       )}
@@ -550,11 +620,10 @@ export default function TenantMeterReadingsPage() {
                 <div>
                   {state.readingValue !== null ? (
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                        isAnomaly
-                          ? 'bg-warning-soft text-warning border border-warning-subtle'
-                          : 'bg-success-soft text-success border border-success-subtle'
-                      }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isAnomaly
+                        ? 'bg-warning-soft text-warning border border-warning-subtle'
+                        : 'bg-success-soft text-success border border-success-subtle'
+                        }`}
                     >
                       {isAnomaly ? (
                         <AlertTriangle className="w-3.5 h-3.5 text-warning" />
@@ -628,18 +697,27 @@ export default function TenantMeterReadingsPage() {
                         </div>
                       )}
 
-                      {/* Retake Photo Overlay */}
+                      {/* Photo Actions: Delete & Retake */}
                       {!state.isScanning && (
-                        <Button
-                          variant="ghost"
-                          leftIcon={<Camera />}
-                          onClick={() => fileInputRefs.current[service.serviceId]?.click()}
-                          className="absolute bottom-2 right-2 backdrop-blur-md opacity-90 hover:opacity-100 bg-black/40 text-white hover:bg-black/60"
-                        >
-                          <Text as="span" size="xs" weight="medium" color="inherit">
-                            {t('retakePhoto')}
-                          </Text>
-                        </Button>
+                        <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
+                          <Button
+                            variant='danger'
+                            onClick={() => handleDeletePhoto(service.serviceId)}
+                            title={t('deletePhoto')}
+                            leftIcon={<Trash2 />}
+                          >
+                            <span>{t('deletePhoto')}</span>
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            leftIcon={<Camera />}
+                            onClick={() => fileInputRefs.current[service.serviceId]?.click()}
+                          >
+                            <Text as="span" size="xs" weight="medium" color="inherit">
+                              {t('retakePhoto')}
+                            </Text>
+                          </Button>
+                        </div>
                       )}
                     </div>
                   ) : (
@@ -664,54 +742,91 @@ export default function TenantMeterReadingsPage() {
 
                 {/* Right Column: Extracted Reading & Manual Verification Form */}
                 <div className="md:col-span-7 space-y-4">
-                  <div className="bg-surface/80 border border-line rounded-xl p-4 space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-surface/80 border border-line rounded-xl p-4 space-y-4">
+                    {/* 1. Phần chỉ số cũ (nếu chưa có lịch sử) */}
+                    {service.previousReading == null && (
+                      <div className="space-y-2">
+                        {/* Thông báo ở phía ngoài của phần input chỉ số cũ */}
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
+                          <span>{getNoHistoryMessage(service.serviceName)}</span>
+                        </div>
+
+                        {/* Input ghi chỉ số cũ */}
+                        <div className="space-y-1">
+                          <Text as="span" size="xs" weight="bold" color="secondary">
+                            {t('tenantInitialReadingLabel') || 'Chỉ số cũ'}
+                          </Text>
+                          <TextInput
+                            type="number"
+                            min={0}
+                            step="any"
+                            placeholder={t('tenantInitialReadingPlaceholder') || 'Nhập chỉ số'}
+                            value={
+                              state.draftInitialValue !== undefined
+                                ? state.draftInitialValue
+                                : state.initialReadingValue != null
+                                  ? String(state.initialReadingValue)
+                                  : ''
+                            }
+                            onChange={e => {
+                              const valStr = e.target.value
+                              const parsed = valStr === '' ? null : parseFloat(valStr)
+                              setReadingsState(prev => ({
+                                ...prev,
+                                [service.serviceId]: {
+                                  ...prev[service.serviceId],
+                                  draftInitialValue: valStr,
+                                  initialReadingValue:
+                                    !isNaN(parsed as number) && parsed !== null ? parsed : null,
+                                },
+                              }))
+                            }}
+                            containerClassName="space-y-0"
+                            className="font-mono text-base font-bold bg-card"
+                            rightIcon={<span className="text-xs font-semibold text-muted pr-1">{service.unit}</span>}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 2. Phần chỉ số mới (luôn luôn hiện, không có button Chỉnh sửa thủ công) */}
+                    <div className="space-y-2">
                       <label className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-teal-600" />
                         <Text as="span" size="xs" weight="bold" color="secondary">
-                          {t('meterReadingLabelWithUnit', { unit: service.unit })}
+                          {t('tenantCurrentReadingInput') || 'Chỉ số mới'}
                         </Text>
                       </label>
 
-                      {state.readingValue !== null && !state.isEditing && (
-                        <Button
-                          variant="ghost"
-                          onClick={() =>
-                            setReadingsState(prev => ({
-                              ...prev,
-                              [service.serviceId]: {
-                                ...prev[service.serviceId],
-                                isEditing: true,
-                              },
-                            }))
-                          }
-                          className="hover:underline"
-                        >
-                          <Text as="span" size="xs" weight="bold" color="inherit">
-                            {t('manualEditBtn')}
-                          </Text>
-                        </Button>
-                      )}
-                    </div>
-
-                    {state.isEditing || state.readingValue === null ? (
                       <div className="flex items-center gap-2">
                         <TextInput
                           type="number"
                           step="any"
-                          placeholder={t('enterMeterReadingPlaceholder')}
-                          value={state.draftValue}
-                          onChange={e =>
+                          min={0}
+                          placeholder={t('tenantEnterMeterReadingPlaceholder') || t('enterMeterReadingPlaceholder') || 'Nhập chỉ số...'}
+                          value={
+                            state.draftValue !== undefined
+                              ? state.draftValue
+                              : state.readingValue !== null
+                                ? String(state.readingValue)
+                                : ''
+                          }
+                          onChange={e => {
+                            const valStr = e.target.value
+                            const parsed = valStr === '' ? null : parseFloat(valStr)
                             setReadingsState(prev => ({
                               ...prev,
                               [service.serviceId]: {
                                 ...prev[service.serviceId],
-                                draftValue: e.target.value,
+                                draftValue: valStr,
+                                readingValue: !isNaN(parsed as number) && parsed !== null ? parsed : null,
+                                isSaved: false,
                               },
                             }))
-                          }
+                          }}
                           containerClassName="space-y-0 flex-1"
-                          className="w-full py-2.5 bg-card border-line rounded-lg text-lg font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                          className="w-full py-2.5 bg-card border-line rounded-lg text-lg font-bold text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                           rightIcon={
                             <span className="text-xs font-medium text-muted pr-1">
                               {service.unit}
@@ -721,30 +836,11 @@ export default function TenantMeterReadingsPage() {
 
                         <Button onClick={() => handleSaveCorrection(service.serviceId)}>
                           <Text as="span" size="xs" weight="bold" color="inherit">
-                            {t('btnSaveReading')}
+                            {t('tenantBtnSaveReading') || t('btnSaveReading') || 'Lưu'}
                           </Text>
                         </Button>
                       </div>
-                    ) : (
-                      <div className="flex items-baseline justify-between bg-card border border-success-subtle rounded-lg px-4 py-3">
-                        <div>
-                          <Text as="span" size="2xl" weight="black" color="default" className="tracking-tight">
-                            {state.readingValue.toLocaleString(
-                              locale === 'en' ? 'en-US' : 'vi-VN',
-                            )}
-                          </Text>
-                          <Text as="span" size="xs" weight="bold" color="secondary" className="ml-1.5">
-                            {service.unit}
-                          </Text>
-                        </div>
-                        <span className="text-xs text-success bg-success-soft font-medium px-2 py-0.5 rounded">
-                          <Text as="span" size="xs" weight="bold" color="inherit">
-                            {t('validReadingBadge')}
-                          </Text>
-                        </span>
-                      </div>
-                    )}
-
+                    </div>
                     {/* Calculation Breakdown Preview */}
                     {consumption !== null && (
                       <div className="pt-2 border-t border-line grid grid-cols-2 gap-2 text-xs">
@@ -829,7 +925,7 @@ export default function TenantMeterReadingsPage() {
               <tbody className="divide-y divide-line">
                 {servicesList.map(service => {
                   const current = readingsState[service.serviceId]?.readingValue ?? 0
-                  const prev = service.previousReading?.readingValue ?? 0
+                  const prev = service.previousReading?.readingValue ?? (readingsState[service.serviceId]?.initialReadingValue ?? 0)
                   const diff = Math.max(0, current - prev) || current
 
                   return (

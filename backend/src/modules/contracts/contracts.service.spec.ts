@@ -43,6 +43,9 @@ const mockPrisma = {
     findMany: jest.fn().mockResolvedValue([]),
     count: jest.fn().mockResolvedValue(0),
   },
+  meterReading: {
+    create: jest.fn(),
+  },
   tenantContract: {
     create: jest.fn(),
     findFirst: jest.fn(),
@@ -403,6 +406,48 @@ describe('ContractsService', () => {
       })
       // Verify AuditLogs created
       expect(mockPrisma.auditLog.create).toHaveBeenCalledTimes(2)
+    })
+
+    it('should record baseline meter readings at room handover when initialMeterReadings are supplied', async () => {
+      mockPrisma.room.findFirst.mockResolvedValue({ id: 'room-1' })
+      mockPrisma.deposit.findFirst.mockResolvedValue(null)
+      mockPrisma.roomOccupant.findMany.mockResolvedValue([{ id: 'occ-1', tenantId: 'tenant-user-2' }])
+      mockAuthService.findOrCreateByPhone.mockResolvedValue({
+        id: 'tenant-user-2',
+        phoneNumber: dto.tenantPhoneNumber,
+        username: dto.tenantFullName,
+        email: null,
+      })
+      mockPrisma.userIdentification.findUnique.mockResolvedValue({ id: 'id-existing' })
+      mockPrisma.contract.create.mockResolvedValue({
+        id: 'contract-direct-1',
+        roomId: dto.roomId,
+        status: 'active',
+        rentPrice: new Prisma.Decimal(dto.rentPrice),
+        startDate: new Date(dto.startDate),
+        endDate: new Date(dto.endDate),
+      })
+      mockPrisma.meterReading.create.mockResolvedValue({})
+
+      const dtoWithMeters = {
+        ...dto,
+        initialMeterReadings: [
+          { serviceId: 'service-elec', readingValue: 1450 },
+          { serviceId: 'service-water', readingValue: 25 },
+        ],
+      }
+
+      await service.createDirectContract(landlordId, boardingHouseId, dtoWithMeters)
+
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledTimes(2)
+      expect(mockPrisma.meterReading.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          roomId: 'room-1',
+          serviceId: 'service-elec',
+          readingValue: new Prisma.Decimal(1450),
+          invoiceId: null,
+        }),
+      })
     })
   })
 

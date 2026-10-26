@@ -9,12 +9,13 @@ import {
   Camera,
   CheckCircle2,
   Clock,
-  Sparkles,
   AlertTriangle,
+  AlertCircle,
   Building2,
   Check,
   ArrowRight,
   X,
+  Trash2,
 } from 'lucide-react'
 import {
   Button,
@@ -61,6 +62,8 @@ function LandlordMeterReadingsContent() {
       string,
       {
         readingValue: number | null
+        initialReadingValue?: number | null
+        draftInitialValue?: string
         imageUrl: string | null
         isScanning: boolean
         isEditing: boolean
@@ -160,6 +163,8 @@ function LandlordMeterReadingsContent() {
             const val = s.unbilledReading?.readingValue ?? null
             stateMap[s.serviceId] = {
               readingValue: val,
+              initialReadingValue: null,
+              draftInitialValue: '',
               imageUrl: s.unbilledReading?.imageUrl ?? null,
               isScanning: false,
               isEditing: false,
@@ -298,6 +303,31 @@ function LandlordMeterReadingsContent() {
         : 'electricity'
       const aiRes = await meterReadingService.scanMeterWithAi(base64Url, serviceType)
 
+      // 1. Kiểm tra tính hợp lệ của ảnh từ AI
+      if (!aiRes?.success || !aiRes.data?.isValid) {
+        const errorMsg =
+          aiRes?.data?.errorMessage ||
+          aiRes?.message ||
+          t('landlordMeterRecordInvalidPhoto', { reason: 'Ảnh không phải công tơ hoặc không đọc được số' })
+
+        toast.error(errorMsg)
+
+        if (fileInputRefs.current[serviceId]) {
+          fileInputRefs.current[serviceId]!.value = ''
+        }
+        setReadingsState(prev => ({
+          ...prev,
+          [serviceId]: {
+            ...prev[serviceId],
+            imageUrl: null,
+            isScanning: false,
+            isEditing: true,
+          },
+        }))
+        return
+      }
+
+      // 2. Ảnh hợp lệ và đọc được số
       if (aiRes?.data?.readingValue !== null && aiRes?.data?.readingValue !== undefined) {
         const extractedValue = aiRes.data.readingValue
         setReadingsState(prev => ({
@@ -319,7 +349,7 @@ function LandlordMeterReadingsContent() {
         return
       }
 
-      // If AI could not extract reading value with certainty
+      // 3. Ảnh hợp lệ nhưng AI cần người dùng xác nhận số
       setReadingsState(prev => ({
         ...prev,
         [serviceId]: {
@@ -329,17 +359,40 @@ function LandlordMeterReadingsContent() {
         },
       }))
       toast.info(t('landlordMeterRecordManualEdit'))
-    } catch (err) {
-      console.warn('AI OCR failed, enabling manual editing mode:', err)
+    } catch (err: any) {
+      console.warn('AI OCR failed:', err)
+      const errorMsg = err?.message || 'Có lỗi khi phân tích ảnh qua AI'
+      toast.error(errorMsg)
+      if (fileInputRefs.current[serviceId]) {
+        fileInputRefs.current[serviceId]!.value = ''
+      }
       setReadingsState(prev => ({
         ...prev,
         [serviceId]: {
           ...prev[serviceId],
+          imageUrl: null,
           isScanning: false,
           isEditing: true,
         },
       }))
     }
+  }
+
+  // Handle photo deletion
+  const handleDeletePhoto = (serviceId: string) => {
+    if (fileInputRefs.current[serviceId]) {
+      fileInputRefs.current[serviceId]!.value = ''
+    }
+    setReadingsState(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        imageUrl: null,
+        isScanning: false,
+        isEditing: true,
+      },
+    }))
+    toast.success(t('landlordMeterRecordPhotoDeleted'))
   }
 
   // Manual save value from input
@@ -378,6 +431,17 @@ function LandlordMeterReadingsContent() {
     return <Gauge className="w-5 h-5 text-primary" />
   }
 
+  const getNoHistoryMessage = (serviceName: string) => {
+    const lower = (serviceName || '').toLowerCase()
+    if (lower.includes('điện') || lower.includes('electric')) {
+      return t('landlordMeterNoHistoryElectricity')
+    }
+    if (lower.includes('nước') || lower.includes('water')) {
+      return t('landlordMeterNoHistoryWater')
+    }
+    return t('landlordMeterNoHistoryGeneral', { name: serviceName })
+  }
+
   // Completeness check
   const isReadyToConfirm = useMemo(() => {
     if (servicesList.length === 0) return false
@@ -399,7 +463,8 @@ function LandlordMeterReadingsContent() {
     return servicesList.reduce((acc, s) => {
       const currentVal = readingsState[s.serviceId]?.readingValue
       if (currentVal === null || currentVal === undefined) return acc
-      const prevVal = s.lastReading?.readingValue ?? 0
+      const prevVal =
+        s.lastReading?.readingValue ?? readingsState[s.serviceId]?.initialReadingValue ?? 0
       const consumption = Math.max(0, currentVal - prevVal)
       return acc + consumption * s.unitPrice
     }, 0)
@@ -415,6 +480,10 @@ function LandlordMeterReadingsContent() {
       return {
         serviceId: s.serviceId,
         readingValue: state.readingValue!,
+        initialReadingValue:
+          s.lastReading == null && state.initialReadingValue != null
+            ? state.initialReadingValue
+            : undefined,
         imageUrl: state.imageUrl || undefined,
       }
     })
@@ -438,7 +507,8 @@ function LandlordMeterReadingsContent() {
       // Prepare summary for success modal
       const summaryItems = servicesList.map(s => {
         const currentVal = readingsState[s.serviceId]?.readingValue || 0
-        const prevVal = s.lastReading?.readingValue ?? 0
+        const prevVal =
+          s.lastReading?.readingValue ?? readingsState[s.serviceId]?.initialReadingValue ?? 0
         const consumption = Math.max(0, currentVal - prevVal)
         return {
           name: s.serviceName,
@@ -626,11 +696,10 @@ function LandlordMeterReadingsContent() {
                   { value: '', label: t('landlordMeterSelectRoomPlaceholder') },
                   ...rooms.map(r => ({
                     value: r.id,
-                    label: `Phòng ${r.roomNumber} • Tầng ${r.floor} • (${
-                      r.status === 'occupied'
-                        ? t('landlordMeterRoomStatusOccupied')
-                        : t('landlordMeterRoomStatusAvailable')
-                    })`,
+                    label: `Phòng ${r.roomNumber} • Tầng ${r.floor} • (${r.status === 'occupied'
+                      ? t('landlordMeterRoomStatusOccupied')
+                      : t('landlordMeterRoomStatusAvailable')
+                      })`,
                   })),
                 ]}
                 className="w-full text-sm font-semibold"
@@ -716,18 +785,17 @@ function LandlordMeterReadingsContent() {
                       {isReadyToConfirm
                         ? t('landlordMeterRecordProgressAllDone')
                         : t('landlordMeterRecordProgressRemaining', {
-                            count: servicesList.length - completedCount,
-                          })}
+                          count: servicesList.length - completedCount,
+                        })}
                     </Text>
                   </div>
 
                   <div>
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                        isReadyToConfirm
-                          ? 'bg-success-soft text-success border border-success-subtle'
-                          : 'bg-warning-soft text-warning border border-warning-subtle'
-                      }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isReadyToConfirm
+                        ? 'bg-success-soft text-success border border-success-subtle'
+                        : 'bg-warning-soft text-warning border border-warning-subtle'
+                        }`}
                     >
                       {isReadyToConfirm ? (
                         <>
@@ -747,15 +815,13 @@ function LandlordMeterReadingsContent() {
                 {/* Progress bar line */}
                 <div className="w-full bg-card-hover h-2.5 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-500 rounded-full ${
-                      isReadyToConfirm
-                        ? 'bg-emerald-500'
-                        : 'bg-gradient-to-r from-primary to-teal-500'
-                    }`}
+                    className={`h-full transition-all duration-500 rounded-full ${isReadyToConfirm
+                      ? 'bg-emerald-500'
+                      : 'bg-gradient-to-r from-primary to-teal-500'
+                      }`}
                     style={{
-                      width: `${
-                        servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
-                      }%`,
+                      width: `${servicesList.length > 0 ? (completedCount / servicesList.length) * 100 : 0
+                        }%`,
                     }}
                   />
                 </div>
@@ -772,12 +838,14 @@ function LandlordMeterReadingsContent() {
                     draftValue: '',
                   }
 
-                  const prevVal = service.lastReading?.readingValue ?? 0
+                  const prevVal = service.lastReading?.readingValue ?? (state.initialReadingValue ?? 0)
                   const prevDate = service.lastReading?.createdAt
                     ? new Date(service.lastReading.createdAt).toLocaleDateString(
-                        locale === 'vi' ? 'vi-VN' : 'en-US',
-                      )
-                    : t('landlordMeterPreviousReadingInitial')
+                      locale === 'vi' ? 'vi-VN' : 'en-US',
+                    )
+                    : (state.initialReadingValue != null
+                      ? t('landlordMeterRecordInitialReadingBadge')
+                      : t('landlordMeterPreviousReadingInitial'))
                   const currentVal = state.readingValue ?? null
                   const consumption =
                     currentVal !== null ? Math.max(0, currentVal - prevVal) : null
@@ -788,13 +856,12 @@ function LandlordMeterReadingsContent() {
                   return (
                     <div
                       key={service.serviceId}
-                      className={`bg-card border rounded-3xl p-5 sm:p-6 transition-all shadow-xs space-y-5 ${
-                        state.readingValue !== null
-                          ? isAnomaly
-                            ? 'border-danger-subtle ring-2 ring-rose-500/10'
-                            : 'border-success-subtle ring-2 ring-emerald-500/10'
-                          : 'border-line hover:border-line'
-                      }`}
+                      className={`bg-card border rounded-3xl p-5 sm:p-6 transition-all shadow-xs space-y-5 ${state.readingValue !== null
+                        ? isAnomaly
+                          ? 'border-danger-subtle ring-2 ring-rose-500/10'
+                          : 'border-success-subtle ring-2 ring-emerald-500/10'
+                        : 'border-line hover:border-line'
+                        }`}
                     >
                       {/* Service Card Top Header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-line">
@@ -834,7 +901,9 @@ function LandlordMeterReadingsContent() {
                             </Text>
                           </div>
                           <Text size="3xs" color="subtle" className="text-muted block mt-0.5">
-                            {t('landlordMeterPreviousReadingDate', { date: prevDate })}
+                            {service.lastReading
+                              ? t('landlordMeterPreviousReadingDate', { date: prevDate })
+                              : getNoHistoryMessage(service.serviceName)}
                           </Text>
                         </div>
                       </div>
@@ -859,9 +928,8 @@ function LandlordMeterReadingsContent() {
                               <img
                                 src={state.imageUrl}
                                 alt={service.serviceName}
-                                className={`w-full h-full object-cover transition-opacity ${
-                                  state.isScanning ? 'opacity-40' : 'opacity-90'
-                                }`}
+                                className={`w-full h-full object-cover transition-opacity ${state.isScanning ? 'opacity-40' : 'opacity-90'
+                                  }`}
                               />
 
                               {/* Scanning overlay */}
@@ -874,23 +942,31 @@ function LandlordMeterReadingsContent() {
                                 </div>
                               )}
 
-                              {/* Retake photo button */}
+                              {/* Photo actions: Delete & Retake */}
                               {!state.isScanning && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    fileInputRefs.current[service.serviceId]?.click()
-                                  }
-                                  className="absolute bottom-2.5 right-2.5 px-3 py-1.5 rounded-xl bg-black/75 hover:bg-black text-white text-xs font-bold backdrop-blur-md transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg"
-                                >
-                                  <Camera className="w-3.5 h-3.5 text-teal-300" />
-                                  {t('landlordMeterRecordRetake')}
-                                </button>
+                                <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
+                                  <Button
+                                    variant='danger'
+                                    onClick={() => handleDeletePhoto(service.serviceId)}
+                                    title={t('landlordMeterRecordDeletePhoto')}
+                                    leftIcon={<Trash2 />}
+                                  >
+                                    <span>{t('landlordMeterRecordDeletePhoto')}</span>
+                                  </Button>
+                                  <Button
+                                    variant='secondary'
+                                    onClick={() =>
+                                      fileInputRefs.current[service.serviceId]?.click()
+                                    }
+                                    leftIcon={<Camera />}
+                                  >
+                                    <span>{t('landlordMeterRecordRetake')}</span>
+                                  </Button>
+                                </div>
                               )}
                             </div>
                           ) : (
-                            <button
-                              type="button"
+                            <Button
                               onClick={() => fileInputRefs.current[service.serviceId]?.click()}
                               className="group h-48 rounded-2xl border-2 border-dashed border-line hover:border-primary bg-surface/50 hover:bg-card-hover transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer select-none"
                             >
@@ -902,98 +978,104 @@ function LandlordMeterReadingsContent() {
                                   name: service.serviceName,
                                 })}
                               </Text>
-                              <div className="flex items-center gap-1 mt-1 text-3xs text-muted font-medium">
-                                <Sparkles className="w-3 h-3 text-amber-500" />
-                                <span>AI Gemini Vision OCR</span>
-                              </div>
-                            </button>
+                            </Button>
                           )}
                         </div>
 
                         {/* Right Column: Reading Value & Calculated Cost */}
                         <div className="flex flex-col justify-between bg-surface/50 rounded-2xl p-4 sm:p-5 border border-line space-y-4">
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
+                          <div className="space-y-4">
+                            {/* 1. Phần chỉ số cũ (nếu chưa có lịch sử) */}
+                            {service.lastReading == null && (
+                              <div className="space-y-2">
+                                {/* Thông báo ở phía ngoài của phần input chỉ số cũ */}
+                                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+                                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
+                                  <span>{getNoHistoryMessage(service.serviceName)}</span>
+                                </div>
+
+                                {/* Input ghi chỉ số cũ */}
+                                <div className="space-y-1">
+                                  <Text size="xs" weight="bold" color="subtle">
+                                    {t('landlordMeterRecordInitialReadingLabel')}
+                                  </Text>
+                                  <TextInput
+                                    type="number"
+                                    min={0}
+                                    step="any"
+                                    placeholder={t('landlordMeterRecordInitialReadingPlaceholder')}
+                                    value={
+                                      state.draftInitialValue !== undefined
+                                        ? state.draftInitialValue
+                                        : state.initialReadingValue != null
+                                          ? String(state.initialReadingValue)
+                                          : ''
+                                    }
+                                    onChange={e => {
+                                      const valStr = e.target.value
+                                      const parsed = valStr === '' ? null : parseFloat(valStr)
+                                      setReadingsState(prev => ({
+                                        ...prev,
+                                        [service.serviceId]: {
+                                          ...prev[service.serviceId],
+                                          draftInitialValue: valStr,
+                                          initialReadingValue:
+                                            !isNaN(parsed as number) && parsed !== null ? parsed : null,
+                                        },
+                                      }))
+                                    }}
+                                    containerClassName="space-y-0"
+                                    className="font-mono text-base font-bold bg-card"
+                                    rightIcon={<span className="text-xs font-semibold text-muted pr-1">{service.unit}</span>}
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 2. Phần chỉ số mới (luôn luôn hiện, không có button Chỉnh sửa thủ công) */}
+                            <div className="space-y-1">
                               <Text size="xs" weight="bold" color="subtle">
                                 {t('landlordMeterRecordCardNewReading')}
                               </Text>
-                              {!state.isEditing && (
-                                <Button
-                                  variant="ghost"
-                                  size="xs"
-                                  onClick={() =>
-                                    setReadingsState(prev => ({
-                                      ...prev,
-                                      [service.serviceId]: {
-                                        ...prev[service.serviceId],
-                                        isEditing: true,
-                                        draftValue:
-                                          prev[service.serviceId]?.readingValue !== null
-                                            ? String(prev[service.serviceId]?.readingValue)
-                                            : '',
-                                      },
-                                    }))
-                                  }
-                                >
-                                  {t('landlordMeterRecordManualEdit')}
-                                </Button>
+                              <TextInput
+                                type="number"
+                                min={0}
+                                step="any"
+                                placeholder={t('landlordMeterRecordManualInput')}
+                                value={
+                                  state.draftValue !== undefined
+                                    ? state.draftValue
+                                    : state.readingValue !== null
+                                      ? String(state.readingValue)
+                                      : ''
+                                }
+                                onChange={e => {
+                                  const valStr = e.target.value
+                                  const parsed = valStr === '' ? null : parseFloat(valStr)
+                                  setReadingsState(prev => ({
+                                    ...prev,
+                                    [service.serviceId]: {
+                                      ...prev[service.serviceId],
+                                      draftValue: valStr,
+                                      readingValue: !isNaN(parsed as number) && parsed !== null ? parsed : null,
+                                    },
+                                  }))
+                                }}
+                                containerClassName="w-full space-y-0"
+                                className="font-mono text-base font-bold bg-card"
+                                rightIcon={<span className="text-xs font-semibold text-muted pr-1">{service.unit}</span>}
+                              />
+
+                              {/* Anomaly warning alert */}
+                              {isAnomaly && (
+                                <div className="mt-2 flex items-start gap-2 p-2.5 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs font-semibold">
+                                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                                  <span>
+                                    {t('landlordMeterRecordAnomalyWarning', { old: prevVal })}
+                                  </span>
+                                </div>
                               )}
                             </div>
-
-                            {/* Value Display / Edit Input */}
-                            {state.isEditing ? (
-                              <div className="flex items-center gap-2">
-                                <TextInput
-                                  type="number"
-                                  placeholder={t('landlordMeterRecordManualInput')}
-                                  value={state.draftValue}
-                                  onChange={e =>
-                                    setReadingsState(prev => ({
-                                      ...prev,
-                                      [service.serviceId]: {
-                                        ...prev[service.serviceId],
-                                        draftValue: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  containerClassName="flex-1 space-y-0"
-                                  className="font-mono text-base font-bold"
-                                  autoFocus
-                                />
-                                <Button
-                                  variant="primary"
-                                  size="md"
-                                  onClick={() => handleManualSave(service.serviceId)}
-                                >
-                                  {t('landlordMeterRecordSaveDraft')}
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="flex items-baseline gap-2">
-                                <span
-                                  className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
-                                    currentVal !== null
-                                      ? 'text-foreground'
-                                      : 'text-muted/40'
-                                  }`}
-                                >
-                                  {currentVal !== null ? currentVal : '----'}
-                                </span>
-                                <Text size="sm" weight="bold" color="secondary">
-                                  {service.unit}
-                                </Text>
-                              </div>
-                            )}
-
-                            {/* Anomaly warning alert */}
-                            {isAnomaly && (
-                              <div className="mt-3 flex items-start gap-2 p-2.5 rounded-xl bg-danger-soft border border-danger-subtle text-danger text-xs">
-                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <span>
-                                  {t('landlordMeterRecordAnomalyWarning', { old: prevVal })}
-                                </span>
-                              </div>
-                            )}
                           </div>
 
                           {/* Consumption and Estimated Cost Footer */}
@@ -1038,7 +1120,7 @@ function LandlordMeterReadingsContent() {
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
-                    size="lg"
+                    size="md"
                     onClick={handleCloseAndReset}
                     className="flex-1 sm:flex-none"
                   >
@@ -1046,7 +1128,7 @@ function LandlordMeterReadingsContent() {
                   </Button>
                   <Button
                     variant="primary"
-                    size="lg"
+                    size="md"
                     disabled={!isReadyToConfirm || isSubmitting}
                     onClick={() => setShowConfirmModal(true)}
                     className="flex-1 sm:flex-none shadow-md shadow-primary/20"
@@ -1190,7 +1272,7 @@ function LandlordMeterReadingsContent() {
             <Button
               fullWidth
               variant="primary"
-              size="lg"
+              size="md"
               onClick={handleNextRoom}
               rightIcon={<ArrowRight />}
               className="order-1 sm:order-2 shadow-md shadow-primary/20"
@@ -1200,7 +1282,7 @@ function LandlordMeterReadingsContent() {
             <Button
               fullWidth
               variant="outline"
-              size="lg"
+              size="md"
               onClick={handleCloseAndReset}
               className="order-2 sm:order-1"
             >

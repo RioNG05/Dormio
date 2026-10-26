@@ -27,6 +27,7 @@ import {
   ContractFlowType,
   TenantIdentificationState,
   ContractCreateContextValue,
+  HandoverMeterReadingItem,
 } from '../types'
 
 /**
@@ -122,6 +123,19 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
   const [isSearchingPhone, setIsSearchingPhone] = useState(false)
   const [tenantFound, setTenantFound] = useState<boolean | null>(null)
   const [hasIdentification, setHasIdentification] = useState(false)
+
+  // Initial Handover Meter Readings
+  const [initialMeterReadings, setInitialMeterReadings] = useState<HandoverMeterReadingItem[]>([])
+
+  const updateInitialMeterReading = useCallback(
+    (serviceId: string, updates: Partial<HandoverMeterReadingItem>) => {
+      setInitialMeterReadings(prev =>
+        prev.map(item => (item.serviceId === serviceId ? { ...item, ...updates } : item)),
+      )
+      setIsDirty(true)
+    },
+    [],
+  )
 
   // Identification (CCCD) Fields
   const [identification, setIdentification] = useState<TenantIdentificationState>({
@@ -696,6 +710,26 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
 
   const selectedRoomObj = rooms.find(r => r.id === selectedRoomId)
 
+  useEffect(() => {
+    if (!selectedRoomObj) {
+      setInitialMeterReadings([])
+      return
+    }
+    const meteredServices = selectedRoomObj.services?.filter(s => s.isMetered) || []
+    setInitialMeterReadings(prev => {
+      return meteredServices.map(s => {
+        const existing = prev.find(p => p.serviceId === s.id)
+        return {
+          serviceId: s.id,
+          serviceName: s.name,
+          unit: s.unit || '',
+          readingValue: existing ? existing.readingValue : '',
+          imageUrl: existing?.imageUrl || null,
+        }
+      })
+    })
+  }, [selectedRoomObj])
+
   // Step 1 Validation
   const handleStep1Next = useCallback((): boolean => {
     if (!selectedRoomId) {
@@ -846,6 +880,14 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
         if (isRealApi) {
           if (flowType === 'platform') {
             // Flow A submission
+            const formattedInitialReadings = initialMeterReadings
+              .filter(r => r.readingValue !== '' && !isNaN(Number(r.readingValue)))
+              .map(r => ({
+                serviceId: r.serviceId,
+                readingValue: Number(r.readingValue),
+                imageUrl: r.imageUrl || null,
+              }))
+
             await createPlatformContract(activeBuilding.id, {
               roomId: selectedRoomId,
               startDate: new Date(startDate).toISOString(),
@@ -854,6 +896,8 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
               monthlyPaymentDate: Number(monthlyPaymentDate),
               rentPaymentCycle: Number(rentPaymentCycle),
               note: note || undefined,
+              initialMeterReadings:
+                formattedInitialReadings.length > 0 ? formattedInitialReadings : undefined,
             })
           } else {
             // Flow B submission
@@ -911,6 +955,18 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
               tenantPhoneNumber: tenantPhone,
               tenantFullName: tenantFullName.trim(),
               tenantEmail: tenantEmail?.trim() || undefined,
+            }
+
+            const formattedInitialReadings = initialMeterReadings
+              .filter(r => r.readingValue !== '' && !isNaN(Number(r.readingValue)))
+              .map(r => ({
+                serviceId: r.serviceId,
+                readingValue: Number(r.readingValue),
+                imageUrl: r.imageUrl || null,
+              }))
+
+            if (formattedInitialReadings.length > 0) {
+              payload.initialMeterReadings = formattedInitialReadings
             }
 
             if (identification.identityNumber.trim()) {
@@ -1021,6 +1077,9 @@ export function ContractCreateProvider({ children }: { children: React.ReactNode
     setCardBackUrl,
     previewModalImg,
     setPreviewModalImg,
+    initialMeterReadings,
+    setInitialMeterReadings,
+    updateInitialMeterReading,
     startDate,
     endDate,
     rentPrice,

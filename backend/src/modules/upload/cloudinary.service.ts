@@ -10,6 +10,12 @@ export interface CloudinaryUploadResult {
   bytes: number
 }
 
+export interface CloudinaryUploadOptions {
+  publicId?: string
+  overwrite?: boolean
+  invalidate?: boolean
+}
+
 @Injectable()
 export class CloudinaryService {
   private readonly logger = new Logger(CloudinaryService.name)
@@ -51,6 +57,7 @@ export class CloudinaryService {
   async uploadImage(
     imageDataOrUrl: string,
     folder: string = 'dormio/uploads',
+    options?: CloudinaryUploadOptions,
   ): Promise<CloudinaryUploadResult> {
     if (!this.isConfigured) {
       this.logger.error('Cloudinary not configured in environment variables.')
@@ -62,10 +69,19 @@ export class CloudinaryService {
     try {
       const cleanFolder = (folder || 'dormio/uploads').replace(/^\/+/, '')
       this.logger.log(`Uploading image to Cloudinary folder: ${cleanFolder}...`)
-      const result: UploadApiResponse = await cloudinary.uploader.upload(imageDataOrUrl, {
+
+      const uploadParams: any = {
         folder: cleanFolder,
         resource_type: 'image',
-      })
+      }
+
+      if (options?.publicId) {
+        uploadParams.public_id = options.publicId
+        uploadParams.overwrite = options.overwrite ?? true
+        uploadParams.invalidate = options.invalidate ?? true
+      }
+
+      const result: UploadApiResponse = await cloudinary.uploader.upload(imageDataOrUrl, uploadParams)
 
       this.logger.log(`Uploaded successfully: ${result.secure_url} (publicId: ${result.public_id})`)
       return {

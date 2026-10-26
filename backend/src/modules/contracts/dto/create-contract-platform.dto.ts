@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
+import { InitialMeterReadingDto } from './create-contract-direct.dto'
 import {
   IsUUID,
   IsNotEmpty,
@@ -8,6 +10,8 @@ import {
   Max,
   IsOptional,
   IsString,
+  IsArray,
+  ValidateNested,
 } from 'class-validator'
 
 /**
@@ -75,4 +79,14 @@ export class CreateContractPlatformDto {
   @IsOptional()
   @IsString()
   note?: string
+
+  @ApiPropertyOptional({
+    description: 'Initial utility meter readings recorded at room handover',
+    type: [InitialMeterReadingDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InitialMeterReadingDto)
+  initialMeterReadings?: InitialMeterReadingDto[]
 }

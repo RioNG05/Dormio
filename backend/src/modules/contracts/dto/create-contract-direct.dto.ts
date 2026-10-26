@@ -12,6 +12,7 @@ import {
   IsEnum,
   ValidateNested,
   IsEmail,
+  IsArray,
 } from 'class-validator'
 import { Type } from 'class-transformer'
 import { Gender } from '@prisma'
@@ -120,6 +121,36 @@ export class TenantIdentificationDto {
 /**
  * DTO for creating a contract directly (Flow B - landlord adds tenant directly)
  */
+
+/**
+ * Initial Utility Meter Reading at Handover DTO
+ */
+export class InitialMeterReadingDto {
+  @ApiProperty({
+    description: 'UUID of the metered Service (Electricity, Water)',
+    example: 'd9b2d63d-a233-4123-847e-2972986422b4',
+  })
+  @IsUUID()
+  @IsNotEmpty()
+  serviceId: string
+
+  @ApiProperty({
+    description: 'Initial reading value at room handover',
+    example: 1450,
+  })
+  @IsNumber()
+  @Min(0)
+  readingValue: number
+
+  @ApiPropertyOptional({
+    description: 'Optional handover proof photo (Base64 data URI or remote URL)',
+    example: 'https://res.cloudinary.com/.../meter.jpg',
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string
+}
+
 export class CreateContractDirectDto {
   @ApiProperty({
     description: 'Target room UUID',
@@ -236,4 +267,14 @@ export class CreateContractDirectDto {
   @IsOptional()
   @IsString()
   note?: string
+
+  @ApiPropertyOptional({
+    description: 'Initial utility meter readings recorded at room handover',
+    type: [InitialMeterReadingDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InitialMeterReadingDto)
+  initialMeterReadings?: InitialMeterReadingDto[]
 }

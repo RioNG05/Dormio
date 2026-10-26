@@ -21,6 +21,7 @@ export function Step3ReviewSubmit() {
     rentPaymentCycle,
     rentPrice,
     depositAmount,
+    initialMeterReadings,
     note,
     errorMessage,
     setErrorMessage,
@@ -117,6 +118,30 @@ export function Step3ReviewSubmit() {
             </span>
           </div>
         </div>
+
+        {initialMeterReadings.length > 0 &&
+          initialMeterReadings.some(r => r.readingValue !== '') && (
+            <div className="pt-3 border-t border-line">
+              <span className="text-muted block text-[11px] font-semibold mb-2">
+                {t('landlordContractsReviewHandoverTitle')}:
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {initialMeterReadings
+                  .filter(r => r.readingValue !== '')
+                  .map(r => (
+                    <div
+                      key={r.serviceId}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-background border border-line text-xs"
+                    >
+                      <span className="font-semibold text-foreground">{r.serviceName}</span>
+                      <span className="font-bold text-primary font-mono">
+                        {r.readingValue} {r.unit}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
         {note && (
           <div className="pt-2 border-t border-line">

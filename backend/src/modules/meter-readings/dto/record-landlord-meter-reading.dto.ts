@@ -32,6 +32,15 @@ export class RecordLandlordMeterReadingItemDto {
   readingValue: number
 
   @ApiPropertyOptional({
+    description: 'Optional initial baseline meter reading value if room has no prior readings',
+    example: 1400,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  initialReadingValue?: number
+
+  @ApiPropertyOptional({
     description: 'Optional proof photo image URL',
     example: 'https://res.cloudinary.com/dormio/image/upload/v1234/meter_elec.jpg',
   })
