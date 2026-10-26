@@ -558,7 +558,7 @@ export default function PricingUI({ initialTab }: { initialTab: 'bhms' | 'bhrp' 
                             ? '/pricing/management-system/purchase?pack=plus'
                             : idx === 2
                               ? '/pricing/management-system/purchase?pack=pro'
-                              : '/register/landlord'
+                              : '/register'
                           : (planHref ?? '/register')
                       }
                       fullWidth
