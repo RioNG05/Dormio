@@ -40,6 +40,8 @@ export interface LandlordInvoiceItem {
   paymentMethod?: string
   vietQrUrl?: string
   ocrMeterImage?: string
+  elecMeterImage?: string
+  waterMeterImage?: string
   meterReadings?: LandlordMeterReading[]
 }
 
@@ -145,6 +147,8 @@ export interface CreateManualInvoicePayload {
   waterOld?: number
   waterNew?: number
   waterRate?: number
+  elecImageUrl?: string
+  waterImageUrl?: string
   serviceFees?: Array<{ name: string; amount: number }>
   discount?: number
   note?: string

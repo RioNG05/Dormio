@@ -118,6 +118,12 @@ export class LandlordInvoiceItemDto {
   @ApiPropertyOptional({ description: 'Primary meter reading photo for proof', nullable: true })
   ocrMeterImage?: string
 
+  @ApiPropertyOptional({ description: 'Electricity meter dial photo URL', nullable: true })
+  elecMeterImage?: string
+
+  @ApiPropertyOptional({ description: 'Water meter dial photo URL', nullable: true })
+  waterMeterImage?: string
+
   @ApiPropertyOptional({
     description: 'All attached meter readings for this cycle',
     type: [LandlordMeterReadingDto],

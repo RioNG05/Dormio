@@ -971,6 +971,18 @@ export class InvoicesService {
       const ocrReading = inv.meterReadings.find(mr => Boolean(mr.imageUrl))
       const ocrMeterImage = ocrReading?.imageUrl || undefined
 
+      const elecReading = meterReadings.find(
+        mr => /electr|điện/i.test(mr.serviceName) || mr.unit?.toLowerCase() === 'kwh',
+      )
+      const waterReading = meterReadings.find(
+        mr =>
+          /water|nước/i.test(mr.serviceName) ||
+          mr.unit?.toLowerCase() === 'm³' ||
+          mr.unit?.toLowerCase() === 'm3',
+      )
+      const elecMeterImage = elecReading?.imageUrl || undefined
+      const waterMeterImage = waterReading?.imageUrl || undefined
+
       const vietQrUrl = this.buildVietQrUrl(
         inv.id,
         inv.room.roomNumber,
@@ -1009,6 +1021,8 @@ export class InvoicesService {
               : undefined,
         vietQrUrl,
         ocrMeterImage,
+        elecMeterImage,
+        waterMeterImage,
         meterReadings,
       }
     })
@@ -1130,7 +1144,32 @@ export class InvoicesService {
       }
     }
 
-    const meterReadings: LandlordMeterReadingDto[] = inv.meterReadings.map(mr => ({
+    let attachedMeterReadings = inv.meterReadings
+    if (attachedMeterReadings.length === 0) {
+      const invMonth = inv.dueDate.getMonth() + 1
+      const invYear = inv.dueDate.getFullYear()
+      const fallbackReadings = await this.prisma.meterReading.findMany({
+        where: {
+          roomId: inv.roomId,
+          OR: [
+            { billingMonth: invMonth, billingYear: invYear },
+            {
+              createdAt: {
+                gte: new Date(invYear, invMonth - 2, 1),
+                lte: new Date(invYear, invMonth, 1),
+              },
+            },
+          ],
+        },
+        include: { service: true },
+        orderBy: { createdAt: 'desc' },
+      })
+      if (fallbackReadings.length > 0) {
+        attachedMeterReadings = fallbackReadings
+      }
+    }
+
+    const meterReadings: LandlordMeterReadingDto[] = attachedMeterReadings.map(mr => ({
       serviceId: mr.serviceId,
       serviceName: mr.service.name,
       unit: mr.service.unit,
@@ -1139,8 +1178,20 @@ export class InvoicesService {
       recordedAt: mr.createdAt.toISOString(),
     }))
 
-    const ocrReading = inv.meterReadings.find(mr => Boolean(mr.imageUrl))
+    const ocrReading = attachedMeterReadings.find(mr => Boolean(mr.imageUrl))
     const ocrMeterImage = ocrReading?.imageUrl || undefined
+
+    const elecReading = meterReadings.find(
+      mr => /electr|điện/i.test(mr.serviceName) || mr.unit?.toLowerCase() === 'kwh',
+    )
+    const waterReading = meterReadings.find(
+      mr =>
+        /water|nước/i.test(mr.serviceName) ||
+        mr.unit?.toLowerCase() === 'm³' ||
+        mr.unit?.toLowerCase() === 'm3',
+    )
+    const elecMeterImage = elecReading?.imageUrl || undefined
+    const waterMeterImage = waterReading?.imageUrl || undefined
 
     const vietQrUrl = this.buildVietQrUrl(
       inv.id,
@@ -1180,6 +1231,8 @@ export class InvoicesService {
             : undefined,
       vietQrUrl,
       ocrMeterImage,
+      elecMeterImage,
+      waterMeterImage,
       meterReadings,
     }
   }
@@ -1326,7 +1379,10 @@ export class InvoicesService {
               roomId: room.id,
               serviceId: elecService.id,
               readingValue: new Prisma.Decimal(dto.elecNew),
+              imageUrl: dto.elecImageUrl || null,
               invoiceId: invoice.id,
+              billingMonth: dueDate.getMonth() + 1,
+              billingYear: dueDate.getFullYear(),
             },
           })
         }
@@ -1350,7 +1406,10 @@ export class InvoicesService {
               roomId: room.id,
               serviceId: waterService.id,
               readingValue: new Prisma.Decimal(dto.waterNew),
+              imageUrl: dto.waterImageUrl || null,
               invoiceId: invoice.id,
+              billingMonth: dueDate.getMonth() + 1,
+              billingYear: dueDate.getFullYear(),
             },
           })
         }

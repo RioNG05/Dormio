@@ -87,6 +87,16 @@ export class CreateManualInvoiceDto {
   @Min(0)
   waterRate?: number
 
+  @ApiPropertyOptional({ description: 'Electricity meter reading dial image URL' })
+  @IsOptional()
+  @IsString()
+  elecImageUrl?: string
+
+  @ApiPropertyOptional({ description: 'Water meter reading dial image URL' })
+  @IsOptional()
+  @IsString()
+  waterImageUrl?: string
+
   @ApiPropertyOptional({
     description: 'Other flat service fees (wifi, trash, cleaning, etc.)',
     type: [ServiceFeeItemDto],

@@ -12,12 +12,14 @@ import {
   Calendar,
   AlertTriangle,
   QrCode,
-  X,
   Check,
   Zap,
   Droplets,
   ShieldCheck,
   Send,
+  Loader2,
+  Camera,
+  Eye,
 } from 'lucide-react'
 
 import { useAuth } from '@/context/AuthContext'
@@ -47,6 +49,7 @@ import {
 } from '@/services/landlord-invoice.service'
 import { getRooms, RoomItem } from '@/services/room.service'
 import { formatDate } from '@/utils'
+import { resolveErrorMessage } from '@/utils/error-resolver'
 
 type InvoiceItem = LandlordInvoiceItem
 
@@ -55,6 +58,7 @@ function InvoicesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations('landlord')
+  const tErrors = useTranslations('errors')
   const { toast } = useToast()
 
   const getInvoiceStatusLabel = (status: string) => {
@@ -80,21 +84,42 @@ function InvoicesContent() {
 
   const [isMounted, setIsMounted] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
-  const currentYear = useMemo(() => new Date().getFullYear(), [])
   const [activeTab, setActiveTab] = useState<'all' | 'unpaid' | 'paid' | 'overdue'>('all')
   const [searchTerm, setSearchTerm] = useState(urlSearch)
-  const [selectedMonth, setSelectedMonth] = useState('all')
-  const [selectedYear, setSelectedYear] = useState<string>(() => String(new Date().getFullYear()))
+  const [selectedPeriod, setSelectedPeriod] = useState('all')
 
-  const yearOptions = useMemo(
+  // Generate 24 most recent months relative to current date (Rule #18 & user spec)
+  const recent24Months = useMemo(() => {
+    const list: Array<{ value: string; label: string; month: string; year: string }> = []
+    const now = new Date()
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const y = String(d.getFullYear())
+      const formatted = `${m}/${y}`
+      const label =
+        i === 0
+          ? t('landlordRoomDetailFilterCurrentMonth', { month: formatted })
+          : t('landlordRoomDetailFilterMonth', { month: formatted })
+      list.push({
+        value: formatted,
+        label,
+        month: m,
+        year: y,
+      })
+    }
+    return list
+  }, [t])
+
+  const periodOptions = useMemo(
     () => [
-      { value: 'all', label: t('landlordInvoicesAllYears') },
-      ...Array.from({ length: 5 }, (_, i) => {
-        const y = String(currentYear - i)
-        return { value: y, label: y }
-      }),
+      { value: 'all', label: t('landlordInvoicesAllMonths') },
+      ...recent24Months.map(m => ({
+        value: m.value,
+        label: m.label,
+      })),
     ],
-    [currentYear, t],
+    [recent24Months, t],
   )
 
   // Pagination State (Rule #9: Grid=6, Table=10, 5-page window jumping)
@@ -118,11 +143,45 @@ function InvoicesContent() {
 
   // Modals & Drawer States
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null)
+
+  // Meter data & photos helper for selected invoice
+  const selectedInvoiceMeterData = useMemo(() => {
+    if (!selectedInvoice) return null
+    const elecReading = selectedInvoice.meterReadings?.find(
+      mr => /electr|điện/i.test(mr.serviceName) || mr.unit?.toLowerCase() === 'kwh',
+    )
+    const waterReading = selectedInvoice.meterReadings?.find(
+      mr =>
+        /water|nước/i.test(mr.serviceName) ||
+        mr.unit?.toLowerCase() === 'm³' ||
+        mr.unit?.toLowerCase() === 'm3',
+    )
+    const elecImg =
+      selectedInvoice.elecMeterImage ||
+      elecReading?.imageUrl ||
+      (selectedInvoice.ocrMeterImage && !selectedInvoice.waterMeterImage
+        ? selectedInvoice.ocrMeterImage
+        : undefined)
+    const waterImg = selectedInvoice.waterMeterImage || waterReading?.imageUrl
+    const hasAnyMeterPhoto = Boolean(elecImg || waterImg)
+
+    return {
+      elecReading,
+      waterReading,
+      elecImg,
+      waterImg,
+      hasAnyMeterPhoto,
+    }
+  }, [selectedInvoice])
+
+  const [previewPhoto, setPreviewPhoto] = useState<{
+    url: string
+    title: string
+    sub?: string
+  } | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isOcrModalOpen, setIsOcrModalOpen] = useState(false)
-  const [confirmCloseTarget, setConfirmCloseTarget] = useState<'create' | 'ocr' | 'detail' | null>(
-    null,
-  )
+  const [confirmCloseTarget, setConfirmCloseTarget] = useState<'create' | 'ocr' | null>(null)
 
   // Form State for Create Invoice
   const [createForm, setCreateForm] = useState({
@@ -137,6 +196,8 @@ function InvoicesContent() {
     waterOld: 0,
     waterNew: 0,
     waterRate: 15000,
+    elecImageUrl: '',
+    waterImageUrl: '',
     wifiFee: 100000,
     trashFee: 50000,
     discount: 0,
@@ -147,6 +208,48 @@ function InvoicesContent() {
   // Form State for AI OCR Modal
   const [ocrMeterValue, setOcrMeterValue] = useState('0')
   const [isOcrFormDirty, setIsOcrFormDirty] = useState(false)
+
+  // Reset Create Form (Rule #10)
+  const resetCreateForm = useCallback(() => {
+    const defaultRoom = availableRooms.length > 0 ? availableRooms[0] : null
+    let defaultElec = 3500
+    let defaultWater = 15000
+    if (defaultRoom?.services) {
+      const elec = defaultRoom.services.find(
+        s =>
+          s.isMetered &&
+          (s.name.toLowerCase().includes('điện') || s.name.toLowerCase().includes('electric')),
+      )
+      if (elec) defaultElec = Number(elec.price) || defaultElec
+      const water = defaultRoom.services.find(
+        s =>
+          s.isMetered &&
+          (s.name.toLowerCase().includes('nước') || s.name.toLowerCase().includes('water')),
+      )
+      if (water) defaultWater = Number(water.price) || defaultWater
+    }
+
+    setCreateForm({
+      roomId: defaultRoom ? defaultRoom.id : '',
+      roomName: defaultRoom ? `${t('landlordRoomDetailRoomPrefix')} ${defaultRoom.roomNumber}` : '',
+      tenantName: '',
+      period: `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`,
+      rentAmount: 0,
+      elecOld: 0,
+      elecNew: 0,
+      elecRate: defaultElec,
+      waterOld: 0,
+      waterNew: 0,
+      waterRate: defaultWater,
+      elecImageUrl: '',
+      waterImageUrl: '',
+      wifiFee: 100000,
+      trashFee: 50000,
+      discount: 0,
+      deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
+    })
+    setIsCreateFormDirty(false)
+  }, [availableRooms, t])
 
   useEffect(() => {
     setIsMounted(true)
@@ -178,18 +281,28 @@ function InvoicesContent() {
       .catch(err => {
         console.error('Failed to load rooms:', err)
       })
-  }, [activeBuilding?.id])
+  }, [activeBuilding?.id, t])
 
   // Fetch invoices from backend
   const fetchInvoices = useCallback(async () => {
     if (!activeBuilding?.id) return
     try {
       setIsLoading(true)
+      let queryMonth = 'all'
+      let queryYear = 'all'
+      if (selectedPeriod !== 'all') {
+        const parts = selectedPeriod.split('/')
+        if (parts.length === 2) {
+          queryMonth = parts[0]
+          queryYear = parts[1]
+        }
+      }
+
       const res = await landlordInvoiceService.getLandlordInvoices(activeBuilding.id, {
         search: searchTerm,
         status: activeTab,
-        month: selectedMonth,
-        year: selectedYear,
+        month: queryMonth,
+        year: queryYear,
         page: currentPage,
         limit: pageSize,
       })
@@ -203,15 +316,7 @@ function InvoicesContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [
-    activeBuilding?.id,
-    searchTerm,
-    activeTab,
-    selectedMonth,
-    selectedYear,
-    currentPage,
-    pageSize,
-  ])
+  }, [activeBuilding?.id, searchTerm, activeTab, selectedPeriod, currentPage, pageSize])
 
   useEffect(() => {
     fetchInvoices()
@@ -238,7 +343,6 @@ function InvoicesContent() {
     }
   }, [urlId, urlSearch, invoices])
 
-
   // Calculate Metrics from serverSummary
   const totalInvoicesCount = serverSummary.totalInvoicesCount
   const paidCount = serverSummary.paidCount
@@ -261,9 +365,9 @@ function InvoicesContent() {
     return `${amount.toLocaleString('vi-VN')} ₫`
   }
 
-  // Handlers for Modals
+  // Handlers for Modals (Rule #10)
   const handleOpenCreateModal = () => {
-    setIsCreateFormDirty(false)
+    resetCreateForm()
     setIsCreateModalOpen(true)
   }
 
@@ -272,6 +376,7 @@ function InvoicesContent() {
       setConfirmCloseTarget('create')
     } else {
       setIsCreateModalOpen(false)
+      resetCreateForm()
     }
   }
 
@@ -286,21 +391,24 @@ function InvoicesContent() {
       setConfirmCloseTarget('ocr')
     } else {
       setIsOcrModalOpen(false)
+      setOcrMeterValue('0')
+      setIsOcrFormDirty(false)
     }
   }
 
   const handleConfirmCloseModal = () => {
     if (confirmCloseTarget === 'create') {
       setIsCreateModalOpen(false)
-      setIsCreateFormDirty(false)
+      resetCreateForm()
     } else if (confirmCloseTarget === 'ocr') {
       setIsOcrModalOpen(false)
+      setOcrMeterValue('0')
       setIsOcrFormDirty(false)
     }
     setConfirmCloseTarget(null)
   }
 
-  // Mark Paid Handler with real backend recording ( Part 3)
+  // Mark Paid Handler with real backend recording (Rule #15)
   const handleMarkAsPaid = async (
     invId: string,
     method = t('landlordInvoicesPaymentMethodManual'),
@@ -322,13 +430,13 @@ function InvoicesContent() {
         if (detail?.data) setSelectedInvoice(detail.data)
       }
       toast.success(t('landlordInvoicesBtnConfirmPaid'))
-    } catch (err: any) {
-      console.error('Lỗi cập nhật thanh toán:', err)
-      toast.error(err?.message || t('landlordInvoicesAlertUpdateStatusFailed'))
+    } catch (err: unknown) {
+      console.error('Failed to update invoice payment status:', err)
+      toast.error(resolveErrorMessage(err, tErrors, t('landlordInvoicesAlertUpdateStatusFailed')))
     }
   }
 
-  // Create Manual Invoice Handler
+  // Create Manual Invoice Handler (Rule #15)
   const handleCreateInvoiceSubmit = async () => {
     if (!activeBuilding?.id) return
     if (!createForm.roomId) {
@@ -350,19 +458,21 @@ function InvoicesContent() {
         waterOld: createForm.waterOld,
         waterNew: createForm.waterNew,
         waterRate: createForm.waterRate,
+        elecImageUrl: createForm.elecImageUrl || undefined,
+        waterImageUrl: createForm.waterImageUrl || undefined,
         serviceFees: [
-          { name: 'Internet / Wifi', amount: createForm.wifiFee },
+          { name: 'Wifi', amount: createForm.wifiFee },
           { name: t('landlordInvoicesFeeTrash'), amount: createForm.trashFee },
         ],
         discount: createForm.discount,
       })
       setIsCreateModalOpen(false)
-      setIsCreateFormDirty(false)
+      resetCreateForm()
       toast.success(t('landlordInvoicesBtnSubmitCreate'))
       await fetchInvoices()
-    } catch (err: any) {
-      console.error('Lỗi tạo hóa đơn:', err)
-      toast.error(err?.message || t('landlordInvoicesAlertCreateFailed'))
+    } catch (err: unknown) {
+      console.error('Failed to create manual invoice:', err)
+      toast.error(resolveErrorMessage(err, tErrors, t('landlordInvoicesAlertCreateFailed')))
     } finally {
       setIsSubmitting(false)
     }
@@ -482,37 +592,14 @@ function InvoicesContent() {
         filters={
           <>
             <SelectInput
-              value={selectedMonth}
+              value={selectedPeriod}
               onChange={e => {
-                setSelectedMonth(e.target.value)
+                setSelectedPeriod(e.target.value)
                 setCurrentPage(1)
               }}
               leftIcon={<Calendar className="w-3.5 h-3.5 text-primary" />}
-              containerClassName="w-auto min-w-[130px] space-y-0"
-              options={[
-                { value: 'all', label: t('landlordInvoicesAllMonths') },
-                { value: '01', label: t('landlordInvoicesMonthPrefix').replace('{month}', '01') },
-                { value: '02', label: t('landlordInvoicesMonthPrefix').replace('{month}', '02') },
-                { value: '03', label: t('landlordInvoicesMonthPrefix').replace('{month}', '03') },
-                { value: '04', label: t('landlordInvoicesMonthPrefix').replace('{month}', '04') },
-                { value: '05', label: t('landlordInvoicesMonthPrefix').replace('{month}', '05') },
-                { value: '06', label: t('landlordInvoicesMonthPrefix').replace('{month}', '06') },
-                { value: '07', label: t('landlordInvoicesMonthPrefix').replace('{month}', '07') },
-                { value: '08', label: t('landlordInvoicesMonthPrefix').replace('{month}', '08') },
-                { value: '09', label: t('landlordInvoicesMonthPrefix').replace('{month}', '09') },
-                { value: '10', label: t('landlordInvoicesMonthPrefix').replace('{month}', '10') },
-                { value: '11', label: t('landlordInvoicesMonthPrefix').replace('{month}', '11') },
-                { value: '12', label: t('landlordInvoicesMonthPrefix').replace('{month}', '12') },
-              ]}
-            />
-            <SelectInput
-              value={selectedYear}
-              onChange={e => {
-                setSelectedYear(e.target.value)
-                setCurrentPage(1)
-              }}
-              containerClassName="w-auto min-w-[110px] space-y-0"
-              options={yearOptions}
+              containerClassName="w-auto min-w-[170px] space-y-0"
+              options={periodOptions}
             />
             <SelectInput
               value={activeTab}
@@ -551,13 +638,21 @@ function InvoicesContent() {
       />
 
       {/* Main Content Display (Grid or Table View) */}
-      {invoices.length === 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+          <Text weight="bold" size="sm" color="default">
+            {t('landlordInvoicesLoading')}
+          </Text>
+        </div>
+      ) : invoices.length === 0 ? (
         <EmptyState
           icon={<Receipt className="w-8 h-8" />}
           title={t('landlordInvoicesNoDataTitle')}
           description={t('landlordInvoicesNoDataDesc')}
           action={
             <Button
+              size="md"
               onClick={handleOpenCreateModal}
               leftIcon={<Plus />}
             >
@@ -573,14 +668,14 @@ function InvoicesContent() {
           action={
             <Button
               variant="outline"
+              size="md"
               onClick={() => {
                 setSearchTerm('')
-                setSelectedMonth('all')
-                setSelectedYear('all')
+                setSelectedPeriod('all')
                 setActiveTab('all')
               }}
             >
-              {t('landlordInvoicesBtnResetFilter') || 'Reset'}
+              {t('landlordInvoicesBtnResetFilter')}
             </Button>
           }
         />
@@ -594,12 +689,13 @@ function InvoicesContent() {
             return (
               <Card
                 key={inv.id}
-                className={`space-y-4 flex flex-col justify-between ${isPaid
-                  ? 'border-success-subtle hover:border-emerald-300'
-                  : isOverdue
-                    ? 'border-danger-subtle hover:border-rose-300 bg-rose-50/20'
-                    : 'border-line hover:border-primary/40'
-                  }`}
+                className={`space-y-4 flex flex-col justify-between ${
+                  isPaid
+                    ? 'border-success-subtle hover:border-emerald-300'
+                    : isOverdue
+                      ? 'border-danger-subtle hover:border-rose-300 bg-danger-soft/20'
+                      : 'border-line hover:border-primary/40'
+                }`}
                 onClick={event => {
                   event.stopPropagation()
                   setSelectedInvoice(inv)
@@ -683,13 +779,34 @@ function InvoicesContent() {
                       </Text>
                     </div>
                   </div>
+
+                  {Boolean(
+                    inv.elecMeterImage ||
+                      inv.waterMeterImage ||
+                      inv.ocrMeterImage ||
+                      inv.meterReadings?.some(m => m.imageUrl),
+                  ) && (
+                    <div className="pt-1 flex items-center gap-1.5 text-primary">
+                      <Camera className="w-3.5 h-3.5 shrink-0" />
+                      <Text as="span" size="3xs" weight="bold" color="brand">
+                        {t('landlordInvoicesHasMeterPhotosBadge')}
+                      </Text>
+                    </div>
+                  )}
                 </Card.Body>
 
                 {/* Total & Action Footer */}
                 <Card.Footer className="px-4 sm:px-5 pt-3 pb-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Text as="span" size="3xs" weight="bold" color="secondary" uppercase className="block tracking-wider">
+                      <Text
+                        as="span"
+                        size="3xs"
+                        weight="bold"
+                        color="secondary"
+                        uppercase
+                        className="block tracking-wider"
+                      >
                         {t('landlordInvoicesLabelTotal')}
                       </Text>
                       <Text as="span" size="base" weight="black" color="brand">
@@ -702,7 +819,10 @@ function InvoicesContent() {
                       weight={isOverdue ? 'black' : 'bold'}
                       color={isOverdue ? 'danger' : 'secondary'}
                     >
-                      {t('landlordInvoicesLabelDeadline').replace('{deadline}', formatDate(inv.deadline))}
+                      {t('landlordInvoicesLabelDeadline').replace(
+                        '{deadline}',
+                        formatDate(inv.deadline),
+                      )}
                     </Text>
                   </div>
 
@@ -710,8 +830,12 @@ function InvoicesContent() {
                     <div className="flex items-center justify-end">
                       <Button
                         variant="success"
+                        size="md"
                         fullWidth
-                        onClick={() => handleMarkAsPaid(inv.id)}
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleMarkAsPaid(inv.id)
+                        }}
                         title={t('landlordInvoicesTooltipMarkPaid')}
                         leftIcon={<Check />}
                       >
@@ -757,9 +881,24 @@ function InvoicesContent() {
                       </div>
                     </td>
                     <td className="px-4 py-3.5 whitespace-nowrap">
-                      <Text as="span" size="xs" weight="black" color="default">
-                        {inv.roomName}
-                      </Text>
+                      <div className="flex items-center gap-1.5">
+                        <Text as="span" size="xs" weight="black" color="default">
+                          {inv.roomName}
+                        </Text>
+                        {Boolean(
+                          inv.elecMeterImage ||
+                            inv.waterMeterImage ||
+                            inv.ocrMeterImage ||
+                            inv.meterReadings?.some(m => m.imageUrl),
+                        ) && (
+                          <span
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary-soft text-primary text-[10px] font-bold"
+                            title={t('landlordInvoicesHasMeterPhotosBadge')}
+                          >
+                            <Camera className="w-3 h-3" />
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3.5 whitespace-nowrap">
                       <Text as="span" size="xs" weight="medium" color="default">
@@ -813,7 +952,9 @@ function InvoicesContent() {
                           title={t('landlordInvoicesTooltipMarkPaid')}
                         />
                       ) : (
-                        <Text as="span" size="xs" color="secondary">—</Text>
+                        <Text as="span" size="xs" color="secondary">
+                          —
+                        </Text>
                       )}
                     </td>
                   </TableRow>
@@ -854,12 +995,12 @@ function InvoicesContent() {
               }
               title={
                 <div className="flex items-center gap-2">
-                  <span>
+                  <Text as="span" size="base" weight="black" color="default">
                     {t('landlordInvoicesModalDetailTitle').replace(
                       '{room}',
                       selectedInvoice.roomName,
                     )}
-                  </span>
+                  </Text>
                   <Chip
                     size="sm"
                     preventHover
@@ -881,48 +1022,75 @@ function InvoicesContent() {
             />
 
             {/* Modal Scroll Content */}
-            <Modal.Body className="p-6 space-y-6 text-xs">
+            <Modal.Body className="p-6 space-y-6 text-xs max-h-[75vh] overflow-y-auto">
               {/* Tenant & Building Info Card */}
               <div className="p-4 bg-surface border border-line rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
+                  <Text
+                    as="span"
+                    size="3xs"
+                    weight="extrabold"
+                    color="secondary"
+                    uppercase
+                    className="tracking-wider block"
+                  >
                     {t('landlordInvoicesSectionTenant')}
-                  </span>
-                  <p className="font-black text-sm text-foreground">{selectedInvoice.tenantName}</p>
-                  <p className="text-muted font-semibold">{selectedInvoice.tenantPhone}</p>
+                  </Text>
+                  <Text as="p" size="sm" weight="black" color="default">
+                    {selectedInvoice.tenantName}
+                  </Text>
+                  <Text as="p" size="xs" weight="semibold" color="secondary">
+                    {selectedInvoice.tenantPhone}
+                  </Text>
                 </div>
 
                 <div className="space-y-1 sm:text-right">
-                  <span className="text-[10px] font-extrabold text-muted uppercase tracking-wider block">
+                  <Text
+                    as="span"
+                    size="3xs"
+                    weight="extrabold"
+                    color="secondary"
+                    uppercase
+                    className="tracking-wider block"
+                  >
                     {t('landlordInvoicesSectionDeadlineAndCreated')}
-                  </span>
-                  <p className="font-bold text-foreground">
+                  </Text>
+                  <Text as="p" size="xs" weight="bold" color="default">
                     {t('landlordInvoicesDeadlinePrefix')}{' '}
-                    <span
-                      className={`font-black ${selectedInvoice.status === 'Quá hạn' ? 'text-danger font-extrabold' : 'text-foreground'}`}
+                    <Text
+                      as="span"
+                      weight={selectedInvoice.status === 'Quá hạn' ? 'black' : 'bold'}
+                      color={selectedInvoice.status === 'Quá hạn' ? 'danger' : 'default'}
                     >
                       {selectedInvoice.deadline}
-                    </span>
+                    </Text>
                     {selectedInvoice.status === 'Quá hạn' && (
                       <span className="ml-1.5 px-2 py-0.5 bg-danger-soft text-danger text-[10px] font-black rounded-md border border-danger-subtle">
                         {t('landlordInvoicesStatusOverdue')}
                       </span>
                     )}
-                  </p>
-                  <p className="text-muted font-medium">
+                  </Text>
+                  <Text as="p" size="2xs" weight="medium" color="secondary">
                     {t('landlordInvoicesCreatedPrefix')} {selectedInvoice.createdAt}
-                  </p>
+                  </Text>
                 </div>
               </div>
 
               {/* Fee Breakdown Table */}
               <div className="space-y-3">
-                <h4 className="font-extrabold text-xs text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Text
+                  as="h4"
+                  size="xs"
+                  weight="black"
+                  color="default"
+                  uppercase
+                  className="tracking-wider flex items-center gap-1.5"
+                >
                   <FileText className="w-4 h-4 text-primary" />{' '}
                   {t('landlordInvoicesSectionFeeBreakdown')}
-                </h4>
+                </Text>
 
-                <div className="border border-line rounded-2xl overflow-x-auto custom-scrollbar">
+                <div className="border border-line rounded-2xl overflow-x-auto">
                   <table className="w-full text-xs text-left min-w-[500px]">
                     <thead className="bg-surface border-b border-line font-black text-muted uppercase text-[10px]">
                       <tr>
@@ -936,95 +1104,315 @@ function InvoicesContent() {
                     </thead>
                     <tbody className="divide-y divide-line font-semibold">
                       <tr>
-                        <td className="px-4 py-3 font-bold text-foreground">
-                          {t('landlordInvoicesItemRoomRent').replace(
-                            '{room}',
-                            selectedInvoice.roomName,
-                          )}
+                        <td className="px-4 py-3">
+                          <Text as="span" weight="bold" color="default">
+                            {t('landlordInvoicesItemRoomRent').replace(
+                              '{room}',
+                              selectedInvoice.roomName,
+                            )}
+                          </Text>
                         </td>
-                        <td className="px-4 py-3 text-muted">-</td>
+                        <td className="px-4 py-3">
+                          <Text as="span" color="secondary">
+                            -
+                          </Text>
+                        </td>
                         <td className="px-4 py-3 text-right">
-                          {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
+                          <Text as="span" color="default">
+                            {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
+                          </Text>
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-foreground">
-                          {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
+                        <td className="px-4 py-3 text-right">
+                          <Text as="span" weight="black" color="default">
+                            {selectedInvoice.rentAmount.toLocaleString('vi-VN')} ₫
+                          </Text>
                         </td>
                       </tr>
 
                       <tr>
-                        <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
-                          <Zap className="w-3.5 h-3.5 text-amber-500" />{' '}
-                          {t('landlordInvoicesItemElec')}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Zap className="w-3.5 h-3.5 text-amber-500" />
+                            <Text as="span" weight="bold" color="default">
+                              {t('landlordInvoicesItemElec')}
+                            </Text>
+                          </div>
                         </td>
-                        <td className="px-4 py-3 text-muted">
-                          {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} (
-                          {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
+                        <td className="px-4 py-3">
+                          <Text as="span" color="secondary">
+                            {selectedInvoice.elecOld} &rarr; {selectedInvoice.elecNew} (
+                            {selectedInvoice.elecNew - selectedInvoice.elecOld} kWh)
+                          </Text>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {selectedInvoice.elecRate.toLocaleString('vi-VN')} ₫
+                          <Text as="span" color="default">
+                            {selectedInvoice.elecRate.toLocaleString('vi-VN')} ₫
+                          </Text>
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-foreground">
-                          {(
-                            (selectedInvoice.elecNew - selectedInvoice.elecOld) *
-                            selectedInvoice.elecRate
-                          ).toLocaleString('vi-VN')}{' '}
-                          ₫
+                        <td className="px-4 py-3 text-right">
+                          <Text as="span" weight="black" color="default">
+                            {(
+                              (selectedInvoice.elecNew - selectedInvoice.elecOld) *
+                              selectedInvoice.elecRate
+                            ).toLocaleString('vi-VN')}{' '}
+                            ₫
+                          </Text>
                         </td>
                       </tr>
 
                       <tr>
-                        <td className="px-4 py-3 font-bold text-foreground flex items-center gap-1.5">
-                          <Droplets className="w-3.5 h-3.5 text-vacant" />{' '}
-                          {t('landlordInvoicesItemWater')}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Droplets className="w-3.5 h-3.5 text-primary" />
+                            <Text as="span" weight="bold" color="default">
+                              {t('landlordInvoicesItemWater')}
+                            </Text>
+                          </div>
                         </td>
-                        <td className="px-4 py-3 text-muted">
-                          {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} (
-                          {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
+                        <td className="px-4 py-3">
+                          <Text as="span" color="secondary">
+                            {selectedInvoice.waterOld} &rarr; {selectedInvoice.waterNew} (
+                            {selectedInvoice.waterNew - selectedInvoice.waterOld} m³)
+                          </Text>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {selectedInvoice.waterRate.toLocaleString('vi-VN')} ₫
+                          <Text as="span" color="default">
+                            {selectedInvoice.waterRate.toLocaleString('vi-VN')} ₫
+                          </Text>
                         </td>
-                        <td className="px-4 py-3 text-right font-black text-foreground">
-                          {(
-                            (selectedInvoice.waterNew - selectedInvoice.waterOld) *
-                            selectedInvoice.waterRate
-                          ).toLocaleString('vi-VN')}{' '}
-                          ₫
+                        <td className="px-4 py-3 text-right">
+                          <Text as="span" weight="black" color="default">
+                            {(
+                              (selectedInvoice.waterNew - selectedInvoice.waterOld) *
+                              selectedInvoice.waterRate
+                            ).toLocaleString('vi-VN')}{' '}
+                            ₫
+                          </Text>
                         </td>
                       </tr>
 
                       {selectedInvoice.serviceFees.map((fee, idx) => (
                         <tr key={idx}>
-                          <td className="px-4 py-3 font-bold text-foreground">{fee.name}</td>
-                          <td className="px-4 py-3 text-muted">
-                            {t('landlordInvoicesItemFixedMonthly')}
+                          <td className="px-4 py-3">
+                            <Text as="span" weight="bold" color="default">
+                              {fee.name}
+                            </Text>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Text as="span" color="secondary">
+                              {t('landlordInvoicesItemFixedMonthly')}
+                            </Text>
                           </td>
                           <td className="px-4 py-3 text-right">
-                            {fee.amount.toLocaleString('vi-VN')} ₫
+                            <Text as="span" color="default">
+                              {fee.amount.toLocaleString('vi-VN')} ₫
+                            </Text>
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-foreground">
-                            {fee.amount.toLocaleString('vi-VN')} ₫
+                          <td className="px-4 py-3 text-right">
+                            <Text as="span" weight="black" color="default">
+                              {fee.amount.toLocaleString('vi-VN')} ₫
+                            </Text>
                           </td>
                         </tr>
                       ))}
 
                       {selectedInvoice.discount > 0 && (
                         <tr className="bg-danger-soft">
-                          <td className="px-4 py-3 font-bold text-danger">
-                            {t('landlordInvoicesItemDiscount')}
+                          <td className="px-4 py-3">
+                            <Text as="span" weight="bold" color="danger">
+                              {t('landlordInvoicesItemDiscount')}
+                            </Text>
                           </td>
-                          <td className="px-4 py-3 text-muted">-</td>
-                          <td className="px-4 py-3 text-right text-danger">
-                            -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
+                          <td className="px-4 py-3">
+                            <Text as="span" color="secondary">
+                              -
+                            </Text>
                           </td>
-                          <td className="px-4 py-3 text-right font-black text-danger">
-                            -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
+                          <td className="px-4 py-3 text-right">
+                            <Text as="span" color="danger">
+                              -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
+                            </Text>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Text as="span" weight="black" color="danger">
+                              -{selectedInvoice.discount.toLocaleString('vi-VN')} ₫
+                            </Text>
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              {/* Utility Meter Reading Proof Photos Section (UC-L-06 & User Requirement) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Text
+                    as="h4"
+                    size="xs"
+                    weight="black"
+                    color="default"
+                    uppercase
+                    className="tracking-wider flex items-center gap-1.5"
+                  >
+                    <Camera className="w-4 h-4 text-primary" />{' '}
+                    {t('landlordInvoicesMeterPhotosTitle')}
+                  </Text>
+                  {selectedInvoiceMeterData?.hasAnyMeterPhoto && (
+                    <Chip size="sm" preventHover variant="primary">
+                      {t('landlordInvoicesHasMeterPhotosBadge')}
+                    </Chip>
+                  )}
+                </div>
+
+                <Text as="p" size="2xs" color="secondary">
+                  {t('landlordInvoicesMeterPhotosDesc')}
+                </Text>
+
+                {selectedInvoiceMeterData?.hasAnyMeterPhoto ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Electricity Meter Photo Card */}
+                    <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Zap className="w-4 h-4 text-amber-500" />
+                          <Text as="span" size="xs" weight="black" color="default">
+                            {t('landlordInvoicesElecMeterPhoto')}
+                          </Text>
+                        </div>
+                        <Text as="span" size="2xs" weight="bold" color="warning">
+                          {selectedInvoice.elecNew} kWh
+                        </Text>
+                      </div>
+
+                      {selectedInvoiceMeterData.elecImg ? (
+                        <div
+                          className="relative rounded-xl overflow-hidden border border-line bg-zinc-950 aspect-video flex items-center justify-center cursor-pointer group shadow-2xs hover:border-primary/50 transition-colors"
+                          onClick={() =>
+                            setPreviewPhoto({
+                              url: selectedInvoiceMeterData.elecImg!,
+                              title: `${t('landlordInvoicesElecMeterPhoto')} - ${selectedInvoice.roomName}`,
+                              sub: selectedInvoiceMeterData.elecReading?.recordedAt
+                                ? t('landlordInvoicesPhotoRecordedAt').replace(
+                                    '{time}',
+                                    formatDate(selectedInvoiceMeterData.elecReading.recordedAt),
+                                  )
+                                : t('landlordInvoicesPhotoReadingValue')
+                                    .replace('{value}', String(selectedInvoice.elecNew))
+                                    .replace('{unit}', 'kWh'),
+                            })
+                          }
+                        >
+                          <img
+                            src={selectedInvoiceMeterData.elecImg}
+                            alt={t('landlordInvoicesElecMeterPhoto')}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white">
+                            <Eye className="w-4 h-4" />
+                            <Text as="span" size="xs" weight="bold" color="white">
+                              {t('landlordInvoicesViewFullPhoto')}
+                            </Text>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-line bg-card p-6 text-center space-y-1">
+                          <Camera className="w-6 h-6 text-muted mx-auto" />
+                          <Text as="p" size="2xs" color="secondary">
+                            {t('landlordInvoicesNoElecMeterPhoto')}
+                          </Text>
+                        </div>
+                      )}
+
+                      {selectedInvoiceMeterData.elecReading?.recordedAt && (
+                        <Text as="p" size="3xs" color="secondary">
+                          {t('landlordInvoicesPhotoRecordedAt').replace(
+                            '{time}',
+                            formatDate(selectedInvoiceMeterData.elecReading.recordedAt),
+                          )}
+                        </Text>
+                      )}
+                    </div>
+
+                    {/* Water Meter Photo Card */}
+                    <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Droplets className="w-4 h-4 text-primary" />
+                          <Text as="span" size="xs" weight="black" color="default">
+                            {t('landlordInvoicesWaterMeterPhoto')}
+                          </Text>
+                        </div>
+                        <Text as="span" size="2xs" weight="bold" color="brand">
+                          {selectedInvoice.waterNew} m³
+                        </Text>
+                      </div>
+
+                      {selectedInvoiceMeterData.waterImg ? (
+                        <div
+                          className="relative rounded-xl overflow-hidden border border-line bg-zinc-950 aspect-video flex items-center justify-center cursor-pointer group shadow-2xs hover:border-primary/50 transition-colors"
+                          onClick={() =>
+                            setPreviewPhoto({
+                              url: selectedInvoiceMeterData.waterImg!,
+                              title: `${t('landlordInvoicesWaterMeterPhoto')} - ${selectedInvoice.roomName}`,
+                              sub: selectedInvoiceMeterData.waterReading?.recordedAt
+                                ? t('landlordInvoicesPhotoRecordedAt').replace(
+                                    '{time}',
+                                    formatDate(selectedInvoiceMeterData.waterReading.recordedAt),
+                                  )
+                                : t('landlordInvoicesPhotoReadingValue')
+                                    .replace('{value}', String(selectedInvoice.waterNew))
+                                    .replace('{unit}', 'm³'),
+                            })
+                          }
+                        >
+                          <img
+                            src={selectedInvoiceMeterData.waterImg}
+                            alt={t('landlordInvoicesWaterMeterPhoto')}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white">
+                            <Eye className="w-4 h-4" />
+                            <Text as="span" size="xs" weight="bold" color="white">
+                              {t('landlordInvoicesViewFullPhoto')}
+                            </Text>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-line bg-card p-6 text-center space-y-1">
+                          <Camera className="w-6 h-6 text-muted mx-auto" />
+                          <Text as="p" size="2xs" color="secondary">
+                            {t('landlordInvoicesNoWaterMeterPhoto')}
+                          </Text>
+                        </div>
+                      )}
+
+                      {selectedInvoiceMeterData.waterReading?.recordedAt && (
+                        <Text as="p" size="3xs" color="secondary">
+                          {t('landlordInvoicesPhotoRecordedAt').replace(
+                            '{time}',
+                            formatDate(selectedInvoiceMeterData.waterReading.recordedAt),
+                          )}
+                        </Text>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-surface border border-dashed border-line rounded-2xl flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-card border border-line flex items-center justify-center text-muted shrink-0">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <Text as="p" size="xs" weight="bold" color="default">
+                        {t('landlordInvoicesNoMeterPhotos')}
+                      </Text>
+                      <Text as="p" size="2xs" color="secondary">
+                        {t('landlordInvoicesAttachPhotosHint')}
+                      </Text>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Total Calculation Card & VietQR Section */}
@@ -1040,45 +1428,63 @@ function InvoicesContent() {
                   </div>
 
                   <div className="space-y-1 text-[11px] min-w-0">
-                    <span className="font-extrabold text-primary flex items-center gap-1">
+                    <Text
+                      as="span"
+                      size="xs"
+                      weight="black"
+                      color="brand"
+                      className="flex items-center gap-1"
+                    >
                       <QrCode className="w-3.5 h-3.5" /> {t('landlordInvoicesVietQrAuto')}
-                    </span>
-                    <p className="font-bold text-foreground">{t('landlordInvoicesVietQrBank')}</p>
-                    <p className="font-mono text-foreground/90 font-bold">STK: 0988123456</p>
-                    <p className="text-muted font-medium truncate">
+                    </Text>
+                    <Text as="p" size="xs" weight="bold" color="default">
+                      {t('landlordInvoicesVietQrBank')}
+                    </Text>
+                    <Text as="p" size="xs" weight="bold" color="default" mono>
+                      {t('landlordInvoicesVietQrAccount')}
+                    </Text>
+                    <Text as="p" size="xs" weight="medium" color="secondary" className="truncate">
                       {t('landlordInvoicesVietQrMemo').replace(
                         '{memo}',
                         `${selectedInvoice.id} ${selectedInvoice.roomName.replace(' ', '')}`,
                       )}
-                    </p>
+                    </Text>
                   </div>
                 </div>
 
                 {/* Grand Total */}
                 <div className="p-5 bg-zinc-900 text-white rounded-2xl space-y-2 text-right shadow-inner">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
+                  <Text
+                    as="span"
+                    size="3xs"
+                    weight="bold"
+                    uppercase
+                    color="secondary"
+                    className="tracking-wider block"
+                  >
                     {t('landlordInvoicesGrandTotal')}
-                  </span>
-                  <span className="text-2xl sm:text-3xl font-black text-primary block">
+                  </Text>
+                  <Text as="span" size="2xl" weight="black" color="brand" className="block sm:text-3xl">
                     {selectedInvoice.totalAmount.toLocaleString('vi-VN')} ₫
-                  </span>
+                  </Text>
                   {selectedInvoice.paidAt && (
-                    <span className="text-[10px] font-bold text-emerald-400 block">
+                    <Text as="span" size="3xs" weight="bold" color="success" className="block">
                       {t('landlordInvoicesPaidAtBadgeDetail')
                         .replace('{time}', selectedInvoice.paidAt || '')
                         .replace('{method}', selectedInvoice.paymentMethod || '')}
-                    </span>
+                    </Text>
                   )}
                 </div>
               </div>
             </Modal.Body>
 
-            {/* Modal Footer Actions */}
+            {/* Modal Footer Actions (Rule #18: size="md") */}
             <Modal.Footer className="flex flex-wrap items-center justify-between gap-3 bg-card">
               {/* If UNPAID: Show "Nhắc Thu Tiền Qua Chat" button */}
               {selectedInvoice.status !== 'Đã thu' ? (
                 <Button
                   variant="outline"
+                  size="md"
                   onClick={() => {
                     const roomNum = selectedInvoice.roomId
                     const tenantName = selectedInvoice.tenantName
@@ -1095,18 +1501,20 @@ function InvoicesContent() {
                 /* If PAID: HIDE "Nhắc thu tiền", show Paid Confirmation Status Badge */
                 <div className="flex items-center gap-2 px-3.5 py-2 bg-success-soft border border-success-subtle text-success text-xs font-black rounded-xl">
                   <ShieldCheck className="w-4 h-4 text-success shrink-0" />
-                  <span>
+                  <Text as="span" size="xs" weight="black" color="inherit">
                     {t('landlordInvoicesPaidAtBadge')
                       .replace('{time}', selectedInvoice.paidAt || '')
                       .replace('{method}', selectedInvoice.paymentMethod || '')}
-                  </span>
+                  </Text>
                 </div>
               )}
 
               <div className="flex items-center gap-2">
                 {/* If UNPAID: Show "Xác Nhận Đã Thu Tiền" button */}
                 {selectedInvoice.status !== 'Đã thu' && (
-                  <Button variant="success"
+                  <Button
+                    variant="success"
+                    size="md"
                     onClick={() =>
                       handleMarkAsPaid(selectedInvoice.id, t('landlordInvoicesPaymentMethodManual'))
                     }
@@ -1115,6 +1523,13 @@ function InvoicesContent() {
                     {t('landlordInvoicesBtnConfirmPaid')}
                   </Button>
                 )}
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setSelectedInvoice(null)}
+                >
+                  {t('commonClose')}
+                </Button>
               </div>
             </Modal.Footer>
           </>
@@ -1139,150 +1554,212 @@ function InvoicesContent() {
         />
 
         {/* Modal Form Content */}
-        <Modal.Body className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <SelectInput
-                  label={t('landlordInvoicesFieldRoom')}
-                  value={createForm.roomId}
-                  onChange={e => {
-                    const selectedId = e.target.value
-                    const r = availableRooms.find(rm => rm.id === selectedId)
-                    let elecRate = createForm.elecRate
-                    let waterRate = createForm.waterRate
-                    if (r?.services) {
-                      const elec = r.services.find(
-                        s =>
-                          s.isMetered &&
-                          (s.name.toLowerCase().includes('điện') ||
-                            s.name.toLowerCase().includes('electric')),
-                      )
-                      if (elec) elecRate = Number(elec.price) || elecRate
-                      const water = r.services.find(
-                        s =>
-                          s.isMetered &&
-                          (s.name.toLowerCase().includes('nước') ||
-                            s.name.toLowerCase().includes('water')),
-                      )
-                      if (water) waterRate = Number(water.price) || waterRate
-                    }
-                    setCreateForm({
-                      ...createForm,
-                      roomId: selectedId,
-                      roomName: r ? `${t('landlordRoomDetailRoomPrefix')} ${r.roomNumber}` : '',
-                      elecRate,
-                      waterRate,
-                    })
-                    setIsCreateFormDirty(true)
-                  }}
-                  options={[
-                    { value: '', label: t('landlordInvoicesSelectRoomPlaceholder') },
-                    ...availableRooms.map(r => ({
-                      value: r.id,
-                      label: t('landlordInvoicesRoomOption')
-                        .replace('{roomNumber}', r.roomNumber)
-                        .replace('{floor}', String(r.floor))
-                        .replace(
-                          '{roomType}',
-                          r.roomType?.name || t('landlordInvoicesStandardRoom'),
-                        ),
-                    })),
-                  ]}
-                />
+        <Modal.Body className="p-6 space-y-4 text-xs max-h-[75vh] overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <SelectInput
+              label={t('landlordInvoicesFieldRoom')}
+              value={createForm.roomId}
+              onChange={e => {
+                const selectedId = e.target.value
+                const r = availableRooms.find(rm => rm.id === selectedId)
+                let elecRate = createForm.elecRate
+                let waterRate = createForm.waterRate
+                if (r?.services) {
+                  const elec = r.services.find(
+                    s =>
+                      s.isMetered &&
+                      (s.name.toLowerCase().includes('điện') ||
+                        s.name.toLowerCase().includes('electric')),
+                  )
+                  if (elec) elecRate = Number(elec.price) || elecRate
+                  const water = r.services.find(
+                    s =>
+                      s.isMetered &&
+                      (s.name.toLowerCase().includes('nước') ||
+                        s.name.toLowerCase().includes('water')),
+                  )
+                  if (water) waterRate = Number(water.price) || waterRate
+                }
+                setCreateForm({
+                  ...createForm,
+                  roomId: selectedId,
+                  roomName: r ? `${t('landlordRoomDetailRoomPrefix')} ${r.roomNumber}` : '',
+                  elecRate,
+                  waterRate,
+                })
+                setIsCreateFormDirty(true)
+              }}
+              options={[
+                { value: '', label: t('landlordInvoicesSelectRoomPlaceholder') },
+                ...availableRooms.map(r => ({
+                  value: r.id,
+                  label: t('landlordInvoicesRoomOption')
+                    .replace('{roomNumber}', r.roomNumber)
+                    .replace('{floor}', String(r.floor))
+                    .replace(
+                      '{roomType}',
+                      r.roomType?.name || t('landlordInvoicesStandardRoom'),
+                    ),
+                })),
+              ]}
+            />
 
-                <TextInput
-                  label={t('landlordInvoicesFieldPeriod')}
-                  value={createForm.period}
-                  onChange={e => {
-                    setCreateForm({ ...createForm, period: e.target.value })
-                    setIsCreateFormDirty(true)
-                  }}
-                  placeholder="08/2026"
-                />
-              </div>
+            <TextInput
+              label={t('landlordInvoicesFieldPeriod')}
+              value={createForm.period}
+              onChange={e => {
+                setCreateForm({ ...createForm, period: e.target.value })
+                setIsCreateFormDirty(true)
+              }}
+              placeholder="08/2026"
+            />
+          </div>
 
-              {/* Meter Readings Inputs */}
-              <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
-                <span className="font-black text-xs text-foreground uppercase tracking-wider block">
-                  {t('landlordInvoicesMeterReadingsTitle')}
-                </span>
+          {/* Meter Readings Inputs */}
+          <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+            <Text
+              as="span"
+              size="xs"
+              weight="black"
+              color="default"
+              uppercase
+              className="tracking-wider block"
+            >
+              {t('landlordInvoicesMeterReadingsTitle')}
+            </Text>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <NumberInput
-                    label={t('landlordInvoicesElecOld')}
-                    value={createForm.elecOld}
-                    onChange={e => {
-                      setCreateForm({ ...createForm, elecOld: parseInt(e.target.value) || 0 })
-                      setIsCreateFormDirty(true)
-                    }}
-                  />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <NumberInput
+                label={t('landlordInvoicesElecOld')}
+                value={createForm.elecOld}
+                onChange={e => {
+                  setCreateForm({ ...createForm, elecOld: parseInt(e.target.value) || 0 })
+                  setIsCreateFormDirty(true)
+                }}
+              />
 
-                  <NumberInput
-                    label={t('landlordInvoicesElecNew')}
-                    value={createForm.elecNew}
-                    onChange={e => {
-                      setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 })
-                      setIsCreateFormDirty(true)
-                    }}
-                    labelClassName="text-warning"
-                    className="border-amber-300 text-warning"
-                  />
+              <NumberInput
+                label={t('landlordInvoicesElecNew')}
+                value={createForm.elecNew}
+                onChange={e => {
+                  setCreateForm({ ...createForm, elecNew: parseInt(e.target.value) || 0 })
+                  setIsCreateFormDirty(true)
+                }}
+                labelClassName="text-warning"
+                className="border-warning/40 text-warning"
+              />
 
-                  <NumberInput
-                    label={t('landlordInvoicesWaterOld')}
-                    value={createForm.waterOld}
-                    onChange={e => {
-                      setCreateForm({ ...createForm, waterOld: parseInt(e.target.value) || 0 })
-                      setIsCreateFormDirty(true)
-                    }}
-                  />
+              <NumberInput
+                label={t('landlordInvoicesWaterOld')}
+                value={createForm.waterOld}
+                onChange={e => {
+                  setCreateForm({ ...createForm, waterOld: parseInt(e.target.value) || 0 })
+                  setIsCreateFormDirty(true)
+                }}
+              />
 
-                  <NumberInput
-                    label={t('landlordInvoicesWaterNew')}
-                    value={createForm.waterNew}
-                    onChange={e => {
-                      setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 })
-                      setIsCreateFormDirty(true)
-                    }}
-                    labelClassName="text-info"
-                    className="border-blue-300 text-info"
-                  />
-                </div>
-              </div>
+              <NumberInput
+                label={t('landlordInvoicesWaterNew')}
+                value={createForm.waterNew}
+                onChange={e => {
+                  setCreateForm({ ...createForm, waterNew: parseInt(e.target.value) || 0 })
+                  setIsCreateFormDirty(true)
+                }}
+                labelClassName="text-primary"
+                className="border-primary/40 text-primary"
+              />
+            </div>
+          </div>
 
-              {/* Total Summary preview */}
-              <div className="p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-extrabold text-muted block uppercase">
-                    {t('landlordInvoicesPreviewTotal')}
-                  </span>
-                  <span className="text-xl font-black text-primary">
-                    {(
-                      createForm.rentAmount +
-                      Math.max(0, createForm.elecNew - createForm.elecOld) * createForm.elecRate +
-                      Math.max(0, createForm.waterNew - createForm.waterOld) *
-                      createForm.waterRate +
-                      createForm.wifiFee +
-                      createForm.trashFee -
-                      createForm.discount
-                    ).toLocaleString('vi-VN')}{' '}
-                    ₫
-                  </span>
-                </div>
-                <span className="text-[11px] font-bold text-muted">
-                  {t('landlordInvoicesDeadlinePrefix')} {createForm.deadline}
-                </span>
-              </div>
+          {/* Meter Dial Photos Inputs (Optional) */}
+          <div className="p-4 bg-surface border border-line rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <Text
+                as="span"
+                size="xs"
+                weight="black"
+                color="default"
+                uppercase
+                className="tracking-wider block"
+              >
+                <Camera className="w-4 h-4 inline-block mr-1.5 text-primary" />
+                {t('landlordInvoicesAttachPhotosLabel')}
+              </Text>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => setIsOcrModalOpen(true)}
+                leftIcon={<Sparkles className="w-3.5 h-3.5 text-warning" />}
+              >
+                {t('landlordInvoicesBtnOcrScan')}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <TextInput
+                label={t('landlordInvoicesUploadElecPhoto')}
+                placeholder="https://... hoặc URL ảnh"
+                value={createForm.elecImageUrl}
+                onChange={e => {
+                  setCreateForm({ ...createForm, elecImageUrl: e.target.value })
+                  setIsCreateFormDirty(true)
+                }}
+              />
+
+              <TextInput
+                label={t('landlordInvoicesUploadWaterPhoto')}
+                placeholder="https://... hoặc URL ảnh"
+                value={createForm.waterImageUrl}
+                onChange={e => {
+                  setCreateForm({ ...createForm, waterImageUrl: e.target.value })
+                  setIsCreateFormDirty(true)
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Total Summary preview */}
+          <div className="p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-between">
+            <div>
+              <Text
+                as="span"
+                size="3xs"
+                weight="extrabold"
+                color="secondary"
+                uppercase
+                className="block"
+              >
+                {t('landlordInvoicesPreviewTotal')}
+              </Text>
+              <Text as="span" size="xl" weight="black" color="brand">
+                {(
+                  createForm.rentAmount +
+                  Math.max(0, createForm.elecNew - createForm.elecOld) * createForm.elecRate +
+                  Math.max(0, createForm.waterNew - createForm.waterOld) * createForm.waterRate +
+                  createForm.wifiFee +
+                  createForm.trashFee -
+                  createForm.discount
+                ).toLocaleString('vi-VN')}{' '}
+                ₫
+              </Text>
+            </div>
+            <Text as="span" size="2xs" weight="bold" color="secondary">
+              {t('landlordInvoicesDeadlinePrefix')} {createForm.deadline}
+            </Text>
+          </div>
         </Modal.Body>
 
-        {/* Footer */}
+        {/* Footer (Rule #18: size="md") */}
         <Modal.Footer className="bg-card flex items-center justify-end gap-2">
           <Button
             variant="outline"
+            size="md"
             onClick={handleRequestCloseCreate}
           >
             {t('landlordInvoicesBtnCancel')}
           </Button>
           <Button
+            size="md"
             disabled={isSubmitting}
             isLoading={isSubmitting}
             onClick={handleCreateInvoiceSubmit}
@@ -1312,12 +1789,19 @@ function InvoicesContent() {
         />
 
         {/* Split Screen Content */}
-        <Modal.Body className="p-6">
+        <Modal.Body className="p-6 max-h-[75vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Side: Photo with AI Bounding Box */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Text as="span" size="xs" weight="black" color="default" uppercase className="tracking-wider">
+                <Text
+                  as="span"
+                  size="xs"
+                  weight="black"
+                  color="default"
+                  uppercase
+                  className="tracking-wider"
+                >
                   {t('landlordInvoicesOcrPhotoTitle')}
                 </Text>
                 <Chip size="sm" preventHover variant="success">
@@ -1325,15 +1809,22 @@ function InvoicesContent() {
                 </Chip>
               </div>
 
-              <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-teal-500/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
+              <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-primary/50 bg-zinc-900 h-64 flex items-center justify-center group shadow-inner">
                 <div className="text-center space-y-2">
                   <div className="inline-block px-6 py-3 bg-black/80 rounded-xl border-2 border-emerald-400 font-mono text-3xl font-black text-emerald-400 tracking-widest shadow-[0_0_15px_rgba(52,211,153,0.5)] relative">
                     {ocrMeterValue}
-                    <span className="absolute -top-3 -right-3 px-2 py-0.5 bg-amber-500 text-black text-[9px] font-black rounded-full animate-bounce">
-                      OCR Box
-                    </span>
+                    <Text
+                      as="span"
+                      size="3xs"
+                      weight="black"
+                      className="absolute -top-3 -right-3 px-2 py-0.5 bg-warning text-foreground rounded-full animate-bounce"
+                    >
+                      OCR
+                    </Text>
                   </div>
-                  <Text size="2xs" color="secondary">{t('landlordInvoicesOcrMeterDesc')}</Text>
+                  <Text size="2xs" color="secondary">
+                    {t('landlordInvoicesOcrMeterDesc')}
+                  </Text>
                 </div>
               </div>
             </div>
@@ -1341,7 +1832,14 @@ function InvoicesContent() {
             {/* Right Side: AI Extracted Details & Inputs */}
             <div className="space-y-4 bg-surface p-5 rounded-2xl border border-line flex flex-col justify-between">
               <div className="space-y-4">
-                <Text as="span" size="xs" weight="black" color="default" uppercase className="tracking-wider block">
+                <Text
+                  as="span"
+                  size="xs"
+                  weight="black"
+                  color="default"
+                  uppercase
+                  className="tracking-wider block"
+                >
                   {t('landlordInvoicesOcrDetailsTitle')}
                 </Text>
 
@@ -1350,7 +1848,9 @@ function InvoicesContent() {
                     <Text as="span" size="3xs" weight="extrabold" color="secondary" className="block">
                       {t('landlordInvoicesOcrOldIndex')}
                     </Text>
-                    <Text as="span" size="base" weight="black" color="default">1.318 kWh</Text>
+                    <Text as="span" size="base" weight="black" color="default">
+                      {createForm.elecOld} kWh
+                    </Text>
                   </div>
                   <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30">
                     <TextInput
@@ -1368,17 +1868,25 @@ function InvoicesContent() {
 
                 <div className="p-4 bg-card rounded-xl border border-line space-y-2">
                   <div className="flex justify-between text-xs font-bold text-muted">
-                    <span>{t('landlordInvoicesOcrUsage')}</span>
+                    <Text as="span" size="xs" weight="bold" color="secondary">
+                      {t('landlordInvoicesOcrUsage')}
+                    </Text>
                     <Text as="span" weight="black" color="default">
-                      {Math.max(0, parseInt(ocrMeterValue || '0') - 1318)} kWh
+                      {Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld)} kWh
                     </Text>
                   </div>
                   <div className="flex justify-between text-xs font-bold text-muted">
-                    <span>{t('landlordInvoicesOcrUnitPrice')}</span>
-                    <Text as="span" color="default">3.500 ₫ / kWh</Text>
+                    <Text as="span" size="xs" weight="bold" color="secondary">
+                      {t('landlordInvoicesOcrUnitPrice')}
+                    </Text>
+                    <Text as="span" color="default">
+                      {createForm.elecRate.toLocaleString('vi-VN')} ₫ / kWh
+                    </Text>
                   </div>
                   <div className="border-t border-line pt-2 flex justify-between text-sm font-black text-foreground">
-                    <span>{t('landlordInvoicesOcrAmount')}</span>
+                    <Text as="span" size="sm" weight="black" color="default">
+                      {t('landlordInvoicesOcrAmount')}
+                    </Text>
                     <Text as="span" color="brand" weight="black">
                       {(
                         Math.max(0, parseInt(ocrMeterValue || '0') - createForm.elecOld) *
@@ -1390,16 +1898,23 @@ function InvoicesContent() {
                 </div>
               </div>
 
+              {/* Action buttons (Rule #18: size="md") */}
               <div className="pt-2 flex gap-3">
                 <Button
                   variant="outline"
+                  size="md"
                   onClick={handleRequestCloseOcr}
                   className="flex-1"
                 >
                   {t('landlordInvoicesBtnCancel')}
                 </Button>
                 <Button
+                  size="md"
                   onClick={() => {
+                    setCreateForm(prev => ({
+                      ...prev,
+                      elecNew: parseInt(ocrMeterValue) || prev.elecNew,
+                    }))
                     setIsOcrModalOpen(false)
                     setIsOcrFormDirty(false)
                   }}
@@ -1411,6 +1926,45 @@ function InvoicesContent() {
             </div>
           </div>
         </Modal.Body>
+      </Modal>
+
+      {/* 🔍 LIGHTBOX MODAL: FULL-SIZE METER PHOTO PREVIEW */}
+      <Modal
+        isOpen={Boolean(previewPhoto)}
+        onClose={() => setPreviewPhoto(null)}
+        size="4xl"
+      >
+        {previewPhoto && (
+          <>
+            <Modal.Header
+              icon={
+                <div className="p-3 bg-primary/10 text-primary rounded-2xl">
+                  <Camera className="w-6 h-6" />
+                </div>
+              }
+              title={previewPhoto.title}
+              description={previewPhoto.sub || t('landlordInvoicesPreviewPhotoModalSub')}
+            />
+            <Modal.Body className="p-4 sm:p-6 text-center max-h-[75vh] overflow-y-auto">
+              <div className="rounded-2xl overflow-hidden bg-black/90 p-2 border border-line shadow-inner max-w-2xl mx-auto">
+                <img
+                  src={previewPhoto.url}
+                  alt={previewPhoto.title}
+                  className="max-h-[60vh] w-auto mx-auto object-contain rounded-xl"
+                />
+              </div>
+            </Modal.Body>
+            <Modal.Footer className="bg-card flex items-center justify-end">
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setPreviewPhoto(null)}
+              >
+                {t('commonClose')}
+              </Button>
+            </Modal.Footer>
+          </>
+        )}
       </Modal>
 
       {/* ⚠️ SYSTEM POP-UP CONFIRMATION MODAL (Rule #10 Dormio Standard) */}
@@ -1438,6 +1992,7 @@ function InvoicesContent() {
           <div className="flex items-center gap-3 pt-2">
             <Button
               variant="outline"
+              size="md"
               onClick={() => setConfirmCloseTarget(null)}
               className="flex-1"
             >
@@ -1446,6 +2001,7 @@ function InvoicesContent() {
 
             <Button
               variant="danger"
+              size="md"
               onClick={handleConfirmCloseModal}
               className="flex-1"
             >
