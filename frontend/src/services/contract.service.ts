@@ -429,3 +429,66 @@ export async function getMyTenancies(options?: {
   const data = (res as any)?.data ?? res
   return Array.isArray(data) ? data : []
 }
+
+export interface TenantTenancyDetails {
+  contract: {
+    id: string
+    startDate: string
+    endDate: string
+    rentPrice: number
+    monthlyPaymentDate: number
+    depositAmount: number
+    note?: string
+    documents?: Array<{ id: string; url: string; createdAt: string }>
+  } | null
+  room: {
+    id: string
+    roomNumber: string
+    floor: number
+    area?: number
+    maxOccupants?: number
+    roomTypeName?: string
+  }
+  boardingHouse: {
+    id: string
+    name: string
+    address: string
+    landlord: {
+      name: string
+      phoneNumber: string
+      email?: string
+    }
+  }
+  services?: Array<{
+    id: string
+    name: string
+    price: number
+    unit: string
+    isMetered: boolean
+  }>
+  announcements?: Array<{
+    id: string
+    title: string
+    content: string
+    createdAt: string
+    isNew: boolean
+  }>
+}
+
+/**
+ * Fetches detailed tenancy info for the active tenant
+ */
+export async function getTenantTenancyDetails(
+  contractId?: string,
+  options?: { silent?: boolean },
+): Promise<TenantTenancyDetails | null> {
+  const res = await api.get<{ success: boolean; data: TenantTenancyDetails }>(
+    '/v1/tenant/tenancy',
+    {
+      params: contractId ? { contractId } : undefined,
+      ...options,
+    },
+  )
+  const data = (res as any)?.data ?? res
+  return data && (data.room || data.contract) ? data : null
+}
